@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/</loc>
+    <lastmod>2015-12-12T10:44:00-08:00</lastmod>
+  </url>
+  <url>
     <loc>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/</loc>
     <lastmod>2015-12-10T02:39:41-08:00</lastmod>
   </url>
@@ -207,6 +211,9 @@
     <loc>https://home-assistant.io/developers/rest_api/</loc>
   </url>
   <url>
+    <loc>https://home-assistant.io/getting-started/templating/</loc>
+  </url>
+  <url>
     <loc>https://home-assistant.io/help/trivia/</loc>
   </url>
   <url>
@@ -256,6 +263,9 @@
   </url>
   <url>
     <loc>https://home-assistant.io/blog/categories/community/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/categories/public-service-announcement/</loc>
   </url>
   <url>
     <loc>https://home-assistant.io/blog/posts/2/</loc>
@@ -726,6 +736,9 @@
       <loc>https://home-assistant.io/components/http/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/thermostat.heatmiser/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
     </url>
     <url>
@@ -844,6 +857,9 @@
     </url>
     <url>
       <loc>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/</loc>
     </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>

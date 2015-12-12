@@ -1,0 +1,212 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Templating - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    
+    <meta name="description" content="Instructions how to use the templating feature of Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/getting-started/templating/">
+    
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Templating">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/getting-started/templating/">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Instructions how to use the templating feature of Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+    
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+</head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  
+  <header>
+    <h1 class="title indent">
+      Templating
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <p>The template helper enables one to mathematically manipulate values and use variables to extract values from JSON.</p>
+
+<p>For a complete overview, check the <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 Template documentation</a>.</p>
+
+<h3><a class="title-link" name="states-variable" href="#states-variable"></a> <code>states</code> variable</h3>
+
+<p>The template support has a special <code>states</code> variable:</p>
+
+<ul>
+  <li>Iterating <code>states</code> will yield each state sorted alphabetically by entity id</li>
+  <li>Iterating <code>states.domain</code> will yield each state of that domain sorted alphabetically by entity id</li>
+  <li><code>states.sensor.temperature</code> returns state object for <code>sensor.temperature</code></li>
+</ul>
+
+<p>Example templates and what they could result in:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Template</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>``</td>
+      <td>home</td>
+    </tr>
+    <tr>
+      <td>``</td>
+      <td>senor.thermostat=24, sensor.humidity=40,</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3><a class="title-link" name="mathematical-functions" href="#mathematical-functions"></a> Mathematical functions</h3>
+
+<p>The mathematical methods convert strings to numbers automatically before they are doing their job. This could be useful if you recieve data in the wrong unit of measurement and want to convert it.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>multiply(x)</code></td>
+      <td>Multiplies the value with <code>x</code></td>
+    </tr>
+    <tr>
+      <td><code>round(x)</code></td>
+      <td>Maximau number <code>x</code> of decimal places for the value</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>A sample entry in your <code>configuration.yaml</code> file for a sensor could look like this:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">dweet</span></span>
+  <span class="key">device</span>: <span class="string"><span class="content">temp-sensor012</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'0'</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

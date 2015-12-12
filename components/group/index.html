@@ -100,23 +100,41 @@
   </header>
   <hr class="divider">
 
-  <p>Groups allow the user to combine multiple entities into 1. If all entities are switches or lights they can be controlled as one.</p>
+  <p>Groups allow the user to combine multiple entities into one.</p>
+
+<p>Check the <strong>Set State</strong> page from the <strong>Developer Tools</strong> and browse the <strong>Current entities:</strong> listing for all available entities.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="comment"># A comma seperated list of states that have to be tracked as a single group</span>
-<span class="comment"># Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)</span>
+<span class="key">group</span>:
+  <span class="key">information</span>:
+    - <span class="string"><span class="content">sensor.time</span></span>
+  <span class="key">living_room</span>:
+    - <span class="string"><span class="content">binary_sensor.tv</span></span>
+    - <span class="string"><span class="content">sensor.living_room_temperature</span></span>
+  <span class="key">kitchen</span>:
+    - <span class="string"><span class="content">switch.kitchen_pin_3</span></span>
+    - <span class="string"><span class="content">sensor.oven_temperature</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>If all entities are switches or lights they can be controlled as one with a switch at the top of the card. Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME).</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">group</span>:
   <span class="key">living_room</span>:
-    - <span class="string"><span class="content">light.Bowl</span></span>
-    - <span class="string"><span class="content">light.Ceiling</span></span>
-    - <span class="string"><span class="content">light.TV_back_light</span></span>
+    - <span class="string"><span class="content">light.bowl</span></span>
+    - <span class="string"><span class="content">light.ceiling</span></span>
+    - <span class="string"><span class="content">light.tv_back_light</span></span>
   <span class="key">children</span>:
    - <span class="string"><span class="content">device_tracker.child_1</span></span>
    - <span class="string"><span class="content">device_tracker.child_2</span></span>
 </pre></div>
 </div>
 </div>
+
 
 </article>
 

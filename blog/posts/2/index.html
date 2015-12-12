@@ -27,21 +27,22 @@
     
   
   
-    Alarms, Sonos and iTunes now supported
+    Home Assistant goes geo with OwnTracks
   
   
 
   
   
-     September 19, 2015
+     October 5, 2015
      Paulus Schoutsen
-     two minutes reading time
+     1 minute reading time
     
     
     
     
       
-        release-no...">
+        release-notes
+  ...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -113,6 +114,77 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/">Home Assistant goes geo with OwnTracks</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-10-05T21:49:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 5, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
+
+<ul>
+  <li><a href="/components/device_tracker.owntracks/">OwnTracks platform for the device tracker</a> to get locations for devices</li>
+  <li>Brand new <a href="/components/zone/">zone component</a> to define zones to identify locations and <a href="/components/automation/#zone-trigger">trigger automation</a></li>
+  <li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
+</ul>
+
+<p>We have added a new <a href="/getting-started/presence-detection/">getting started section</a> to get up and running.</p>
+
+<p class="img">
+<img src="/images/screenshots/map.png" />
+Map in Home Assistant showing two people and three zones (home, school, work)
+</p>
+
+<p>Ofcourse more things happened in the last three weeks. I’m moving away from my usual long post to a short summary of highlights:</p>
+
+<p><a href="/components/media_player.plex/">
+<img src="/images/supported_brands/plex.png" style="border:none; box-shadow: none; float: right;" height="50" />
+</a></p>
+
+<ul>
+  <li>Sensor: <a href="/components/sensor.rest/">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt/">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
+  <li>Media Player: <a href="/components/media_player.plex/">Plex platform</a> added (<a href="https://github.com/miniconfig, [@adrienbrault](https://github.com/adrienbrault)">@miniconfig</a></li>
+  <li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Light: <a href="/components/light.limitlessled/">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
+  <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
+</ul>
+
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
@@ -638,62 +710,6 @@ To update to the latest version, run <code>scripts/update</code>. Please report 
 
     
       <a class="btn pull-right" href="/blog/2015/07/11/ip-cameras-arduino-kodi-efergy-support/#read-more">Read on &rarr;</a>
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/06/10/release-notes/">Release notes for June 10, 2015</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-06-10T18:54:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> June 10, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> five minutes reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/06/10/release-notes/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won’t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
-
-<p>This release sets a record for the amount of people involved: 8! <a href="https://github.com/Andythigpen">Andythigpen</a>, <a href="https://github.com/Jamespcole">Jamespcole</a>, <a href="https://github.com/Azelphur">Azelphur</a>, <a href="https://github.com/Fabaff">Fabaff</a>, <a href="https://github.com/Dutchy-">Dutchy-</a>, <a href="https://github.com/Fbradyirl">Fbradyirl</a>, <a href="https://github.com/wind-rider">wind-rider</a> and <a href="https://github.com/ettisan">ettisan</a>, thanks a lot for your contributions!</p>
-
-<p>A big improvement has been brought this release by wind-rider. He took the time to revive the Chromecast support and started improving the media player integration. This triggered other people to join in resulting in a revamped media player experience and support for the Music Player Daemon.</p>
-
-<p class="img">
-  <img src="/images/screenshots/media_player-card.png" />   Example of the new media player cards
-</p>
-
-<p class="note">
-To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
-</p>
-
-
-    
-      <a class="btn pull-right" href="/blog/2015/06/10/release-notes/#read-more">Read on &rarr;</a>
     
   </div>
   </article>

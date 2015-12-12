@@ -27,15 +27,15 @@
     
   
   
-    Release notes for May 14, 2015
+    Release notes for June 10, 2015
   
   
 
   
   
-     May 14, 2015
+     June 10, 2015
      Paulus Schoutsen
-     three minutes reading time
+     five minutes reading time
     
     
     
@@ -43,7 +43,7 @@
       
         release-notes
       
- ...">
+...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -115,6 +115,62 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/06/10/release-notes/">Release notes for June 10, 2015</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-06-10T18:54:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> June 10, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> five minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/06/10/release-notes/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>Wow, almost a month has gone by since the last release and this release is <em>packed</em>. The biggest part of this release is probably one that you won’t notice: the frontend has been upgraded from Polymer 0.5 to the brand new released Polymer 1.0. Polymer has been declared stable by the Google overlords which will allow us to expand functionality that was waiting for this moment to arrive.</p>
+
+<p>This release sets a record for the amount of people involved: 8! <a href="https://github.com/Andythigpen">Andythigpen</a>, <a href="https://github.com/Jamespcole">Jamespcole</a>, <a href="https://github.com/Azelphur">Azelphur</a>, <a href="https://github.com/Fabaff">Fabaff</a>, <a href="https://github.com/Dutchy-">Dutchy-</a>, <a href="https://github.com/Fbradyirl">Fbradyirl</a>, <a href="https://github.com/wind-rider">wind-rider</a> and <a href="https://github.com/ettisan">ettisan</a>, thanks a lot for your contributions!</p>
+
+<p>A big improvement has been brought this release by wind-rider. He took the time to revive the Chromecast support and started improving the media player integration. This triggered other people to join in resulting in a revamped media player experience and support for the Music Player Daemon.</p>
+
+<p class="img">
+  <img src="/images/screenshots/media_player-card.png" />   Example of the new media player cards
+</p>
+
+<p class="note">
+To update to the latest version, run <code>scripts/update</code>. Please report any issues on <a href="https://github.com/balloob/home-assistant/issues">GitHub</a>.
+</p>
+
+
+    
+      <a class="btn pull-right" href="/blog/2015/06/10/release-notes/#read-more">Read on &rarr;</a>
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
@@ -673,70 +729,6 @@ Events are saved in a local database. Google Graphs is used to draw the graph. D
 
     
       <a class="btn pull-right" href="/blog/2015/02/08/looking-at-the-past/#read-more">Read on &rarr;</a>
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/01/24/release-notes/">Release notes for January 24, 2015</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-01-24T18:36:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 24, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/01/24/release-notes/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>I have just merged the latest version of the development branch into master. Here are some of the highlights of this release:</p>
-
-<p><strong>Configuration via the frontend</strong><br /><br />
-Phliips Hue will now be auto discovered and uses the new <code>configurator</code> component to interact with the user to finish the setup process.</p>
-
-<p><strong>Wink Hub support</strong><br /><br />
-Thanks to the work done by John McLaughlin and Geoff Norton we now support the lights, switches and sensors that are connected to the Wink hub.</p>
-
-<p><strong>The getting started guide and component page have been reorganized</strong><br /><br />
-The getting started instructions have been split into separate pages per component and a general overview page. The goal is to have a page per component that describes:</p>
-
-<ul>
-  <li>What it does</li>
-  <li>How to set it up</li>
-  <li>Which states it maintains</li>
-  <li>Which services it provides</li>
-  <li>Additional development tips</li>
-</ul>
-
-<p><strong>More reasonable errors</strong><br /><br />
-Home Assistant should now throw better errors and offer solutions if you do not have the right version of Python 3, forgot to clone the git submodules or install the dependencies.</p>
-
-<p><strong>Streamlined first launch</strong><br /><br />
-Home Assistant now supports <code>--open-ui</code> and <code>--demo-mode</code> command line properties to open the browser automatically and have something to show. Home Assistant now supports to be run without a password, allowing the interface to login automatically on launch.</p>
-
     
   </div>
   </article>

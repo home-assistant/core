@@ -100,7 +100,7 @@
   </header>
   <hr class="divider">
 
-  <p>This MQTT sensor implementation uses the MQTT message payload as the sensor value. If messages in this state_topic are published with <em>RETAIN</em> flag, the sensor will receive an instant update with last known value. Otherwise, the initial state will be undefined.</p>
+  <p>This <code>mqtt</code> sensor platform uses the MQTT message payload as the sensor value. If messages in this <code>state_topic</code> are published with <em>RETAIN</em> flag, the sensor will receive an instant update with last known value. Otherwise, the initial state will be undefined.</p>
 
 <p>To use your MQTT sensor in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -112,7 +112,7 @@
   <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">MQTT Sensor</span><span class="delimiter">&quot;</span></span>
   <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
   <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
-
+  <span class="key">value_template</span>: <span class="string"><span class="content">''</span></span>
 </pre></div>
 </div>
 </div>
@@ -124,7 +124,37 @@
   <li><strong>name</strong> (<em>Optional</em>): The name of the sensor. Default is ‘MQTT Sensor’.</li>
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0.</li>
   <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the units of measurement of the sensor, if any.</li>
+  <li><strong>value_template</strong> (<em>Optional</em>): Defines a template to extract a value from the payload.</li>
 </ul>
+
+<h2><a class="title-link" name="examples" href="#examples"></a> Examples</h2>
+
+<p>In this section you find some real life examples of how to use this sensor.</p>
+
+<h3><a class="title-link" name="get-battery-level" href="#get-battery-level"></a> Get battery level</h3>
+
+<p>If you are using the <a href="components/device_tracker.owntracks/">Owntracks</a> and enable the reporting of the battery level then you can use a MQTT sensor to keep track of your battery. A regular MQTT message from Owntracks looks like this:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>owntracks/tablet/tablet {&quot;_type&quot;:&quot;location&quot;,&quot;lon&quot;:7.21,&quot;t&quot;:&quot;u&quot;,&quot;batt&quot;:92,&quot;tst&quot;:144995643,&quot;tid&quot;:&quot;ta&quot;,&quot;acc&quot;:27,&quot;lat&quot;:46.12}
+</pre></div>
+</div>
+</div>
+
+<p>Thus the trick is extract the battery level from the payload.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yml entry</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">owntracks/tablet/tablet</span><span class="delimiter">&quot;</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Battery Tablet</span><span class="delimiter">&quot;</span></span>
+  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">%</span><span class="delimiter">&quot;</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">''</span></span>
+</pre></div>
+</div>
+</div>
+
 
 </article>
 

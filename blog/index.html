@@ -27,19 +27,21 @@
     
   
   
-    Activating Tasker tasks from Home Assistant using command line switches
+    Philips Hue blocks 3rd party lights
   
   
 
   
   
-     December 10, 2015
-     Rowan Hine
-     three minutes reading time
+     December 12, 2015
+     Paulus Schoutsen
+     1 minute reading time
     
     
     
-  ...">
+    
+      
+        public-service-an...">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
     
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -111,6 +113,69 @@
         
 
             
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/">Philips Hue blocks 3rd party lights</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-12-12T10:44:00-08:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 12, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/public-service-announcement/'>public-service-announcement</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>Philips Hue was one of the first to get smart lights accepted by the mainstream. Their Zigbee-based hub is rock solid, never crashes, great API and worked with other Zigbee light bulbs too. They are a bit expensive but the platform was worth every penny, till now.</p>
+
+<p>Yesterday a thread on <a href="https://www.reddit.com/r/homeautomation/comments/3wet8h/fyi_the_hue_hub_is_now_blocking_third_party/">/r/homeautomation</a> published that Philips Hue now blocks all but their own bulbs and those of “friends of Hue”. I have been able to confirm this in the <a href="http://www2.meethue.com/en-us/support/search/?q=Another+brand">Philips Hue FAQ</a>:</p>
+
+<p class="img">
+<img src="/images/blog/2015-12-philips-hue-3rd-party/philips-hue-faq.png" />
+</p>
+
+<p>This means that after you update your Hue bridge to the latest version:</p>
+
+<ul>
+  <li>As of now, you can still use your existing paired 3rd party light bulbs</li>
+  <li>You cannot pair new 3rd party light bulbs</li>
+  <li>You’re out of luck if for some reason you have to pair existing 3rd party light bulbs again</li>
+  <li>Resetting your hub will force pairing of all your bulbs again</li>
+</ul>
+
+<p>If you own a Philips Hue hub and are using 3rd party light bulbs, make sure you do not upgrade your hub if you want to be able to pair new 3rd party lightbulbs. But do realize that you are sitting on a ticking time bomb.</p>
+
+<p>I have read, but have been unable to confirm it, that resetting your hub will force a software upgrade. So beware of that too.</p>
+
+<p>I will no longer suggest people to buy into the Philips Hue ecosystem.</p>
+
+
+    
+  </div>
+  </article>
+  <hr>
   
   <article class="listing">
     <header>
@@ -625,77 +690,6 @@ Home Assistant will keep track of historical values and allow you to integrate i
 </ul>
 
 <p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command. This has been implemented for the <a href="/components/media_player.itunes/">iTunes platform</a>.</p>
-
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/">Home Assistant goes geo with OwnTracks</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-10-05T21:49:00-07:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 5, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>release-notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
-
-<ul>
-  <li><a href="/components/device_tracker.owntracks/">OwnTracks platform for the device tracker</a> to get locations for devices</li>
-  <li>Brand new <a href="/components/zone/">zone component</a> to define zones to identify locations and <a href="/components/automation/#zone-trigger">trigger automation</a></li>
-  <li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
-</ul>
-
-<p>We have added a new <a href="/getting-started/presence-detection/">getting started section</a> to get up and running.</p>
-
-<p class="img">
-<img src="/images/screenshots/map.png" />
-Map in Home Assistant showing two people and three zones (home, school, work)
-</p>
-
-<p>Ofcourse more things happened in the last three weeks. I’m moving away from my usual long post to a short summary of highlights:</p>
-
-<p><a href="/components/media_player.plex/">
-<img src="/images/supported_brands/plex.png" style="border:none; box-shadow: none; float: right;" height="50" />
-</a></p>
-
-<ul>
-  <li>Sensor: <a href="/components/sensor.rest/">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt/">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-  <li>Media Player: <a href="/components/media_player.plex/">Plex platform</a> added (<a href="https://github.com/miniconfig, [@adrienbrault](https://github.com/adrienbrault)">@miniconfig</a></li>
-  <li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Light: <a href="/components/light.limitlessled/">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
-  <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
-  <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
-</ul>
 
     
   </div>
