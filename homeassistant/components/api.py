@@ -126,7 +126,9 @@ def _handle_get_api_stream(handler, path_match, data):
                 wfile.write(msg.encode("UTF-8"))
                 wfile.flush()
                 handler.server.sessions.extend_validation(session_id)
-            except IOError:
+            except (IOError, ValueError):
+                # IOError: socket errors
+                # ValueError: raised when 'I/O operation on closed file'
                 block.set()
 
     def forward_events(event):
