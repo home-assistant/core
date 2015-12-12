@@ -7,7 +7,7 @@ Tests Home Assistant util methods.
 # pylint: disable=too-many-public-methods
 import unittest
 import homeassistant.core as ha
-
+from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
 
 
@@ -84,3 +84,19 @@ class TestUtilTemplate(unittest.TestCase):
             '',
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json }}', '{ I AM NOT JSON }'))
+
+    def test_render_with_possible_json_value_with_template_error(self):
+        self.assertEqual(
+            'hello',
+            template.render_with_possible_json_value(
+                self.hass, '{{ value_json', 'hello'))
+
+    def test_render_with_possible_json_value_with_template_error_error_value(self):
+        self.assertEqual(
+            '-',
+            template.render_with_possible_json_value(
+                self.hass, '{{ value_json', 'hello', '-'))
+
+    def test_raise_exception_on_error(self):
+        with self.assertRaises(TemplateError):
+            template.render(self.hass, '{{ invalid_syntax')
