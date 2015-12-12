@@ -1,7 +1,7 @@
 """
 homeassistant.components.sensor.rest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The rest sensor will consume JSON responses sent by an exposed REST API.
+The rest sensor will consume responses sent by an exposed REST API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
