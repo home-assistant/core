@@ -6,7 +6,12 @@ Template utility methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods
 import json
+import logging
+import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from homeassistant.exceptions import TemplateError
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def render_with_possible_json_value(hass, template, value):
@@ -20,7 +25,11 @@ def render_with_possible_json_value(hass, template, value):
     except ValueError:
         pass
 
-    return render(hass, template, variables)
+    try:
+        return render(hass, template, variables)
+    except TemplateError:
+        _LOGGER.exception('Error parsing value')
+        return value
 
 
 def render(hass, template, variables=None, **kwargs):
@@ -28,9 +37,12 @@ def render(hass, template, variables=None, **kwargs):
     if variables is not None:
         kwargs.update(variables)
 
-    return ENV.from_string(template, {
-        'states': AllStates(hass)
-    }).render(kwargs)
+    try:
+        return ENV.from_string(template, {
+            'states': AllStates(hass)
+        }).render(kwargs)
+    except jinja2.TemplateError as err:
+        raise TemplateError(err)
 
 
 class AllStates(object):
