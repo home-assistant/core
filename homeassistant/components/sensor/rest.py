@@ -9,7 +9,6 @@ https://home-assistant.io/components/sensor.rest/
 from datetime import timedelta
 import logging
 import requests
-import jinja2.exceptions
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.util import template, Throttle
@@ -58,18 +57,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('No route to resource/endpoint. '
                       'Please check the URL in the configuration file.')
         return False
-
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    data = response.text
-    if value_template is not None:
-        try:
-            template.render_with_possible_json_value(hass,
-                                                     value_template,
-                                                     data)
-        except jinja2.exceptions.UndefinedError:
-            _LOGGER.error('Template "%s" not found in response: "%s"',
-                          value_template, data)
-            return False
 
     if use_get:
         rest = RestDataGet(resource, verify_ssl)
@@ -121,7 +108,7 @@ class RestSensor(Entity):
         else:
             if self._value_template is not None:
                 value = template.render_with_possible_json_value(
-                    self._hass, self._value_template, value)
+                    self._hass, self._value_template, value, 'N/A')
             self._state = value
 
 
