@@ -177,3 +177,6 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
+
+# homeassistant.components.fritz
+https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
