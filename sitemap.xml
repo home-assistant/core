@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/</loc>
+    <lastmod>2015-12-13T10:05:00-08:00</lastmod>
+  </url>
+  <url>
     <loc>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/</loc>
     <lastmod>2015-12-12T10:44:00-08:00</lastmod>
   </url>
@@ -266,6 +270,15 @@
   </url>
   <url>
     <loc>https://home-assistant.io/blog/categories/public-service-announcement/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/2/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/3/</loc>
+  </url>
+  <url>
+    <loc>https://home-assistant.io/blog/posts/4/</loc>
   </url>
     <url>
       <loc>https://home-assistant.io/components/automation/</loc>
@@ -727,6 +740,9 @@
       <loc>https://home-assistant.io/components/http/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/sensor.dweet/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/components/thermostat.heatmiser/</loc>
     </url>
     <url>
@@ -851,6 +867,9 @@
     </url>
     <url>
       <loc>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/</loc>
     </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>

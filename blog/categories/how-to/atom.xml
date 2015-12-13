@@ -4,7 +4,7 @@
   <title><![CDATA[Category: how-to | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-12T11:44:59-08:00</updated>
+  <updated>2015-12-13T10:45:37-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,111 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Set up encryption using Let's Encrypt]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/"/>
+    <updated>2015-12-13T10:05:00-08:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt</id>
+    <content type="html"><![CDATA[<p>Exposing your Home Assistant instance outside of your network always has been tricky. You have to set up port forwarding on your router and most likely add a dynamic DNS service to work around your ISP changing your IP. After this you would be able to use Home Assistant from anywhere but there is one big red flag: no encryption.</p>
+
+<p>This tutorial will take you through the steps to setup a dynamic DNS for your IP and allow trusted encrypted connection to it - for free using <a href="https://duckdns.org">DuckDNS</a> and <a href="https://letsencrypt.org">Let’s Encrypt</a>.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-lets-encrypt/letsencrypt-secured.png" />
+</p>
+
+<!--more-->
+
+<h3><a class='title-link' name='requirements' href='#requirements'></a> Requirements </h3>
+
+<p>The DuckDNS part of this tutorial has no requirements but there are a few requirements as of now to run the Let’s Encrypt client.</p>
+
+<ul>
+  <li>Direct connection to the internet or admin access to your router to set up port forwarding</li>
+  <li>A machine running a Unix-ish OS that include Python 2.6 or 2.7 (Docker can be used)</li>
+</ul>
+
+<p><img src="https://home-assistant.io/images/supported_brands/duckdns.png" style="clear: right; border:none; box-shadow: none; float: right; margin-left: 8px; margin-bottom: 8px;" width="60" /></p>
+
+<h3><a class='title-link' name='duckdns' href='#duckdns'></a> DuckDNS </h3>
+
+<p>The first step is to set up <a href="https://duckdns.org">DuckDNS</a>. This is a free dynamic DNS service that you can use to get a DuckDNS.org subdomain to point at your house. A dynamic DNS service works by having your home computer tell DuckDNS.org every 5 minutes what its IP is so that DuckDNS can make sure your domain name is set up correctly.</p>
+
+<p>For this example we will assume our domain is hass-example.duckdns.org.</p>
+
+<p>First step is to acquire and set up our domain name. For this, go to <a href="https://duckdns.org">DuckDNS</a>, log in with any of the supported login providers and add a domain. After this check out their <a href="https://www.duckdns.org/install.jsp">installation instructions</a> to finish your installation of DuckDNS. If you’re on a Raspberry Pi, see ‘Pi’ in the category ‘Operating Systems’.</p>
+
+<p><img src="https://home-assistant.io/images/supported_brands/letsencrypt.png" style="clear: right; border:none; box-shadow: none; float: right; margin-left: 8px; margin-bottom: 8px;" width="60" /></p>
+
+<h3><a class='title-link' name='lets-encrypt' href='#lets-encrypt'></a> Let’s Encrypt </h3>
+
+<p><a href="https://letsencrypt.org">Let’s Encrypt</a> is a free, automated, and open certificate authority (CA). We will use this to acquire a certificate that can be used to encrypted our connection with Home Assistant.</p>
+
+<p>Let’s Encrypt will give you a free 90-day certificate if you pass their domain validation challenge. Domains are validated by having certain data be accessible on your domain for Let’s Encrypt (<a href="https://letsencrypt.org/howitworks/technology/">they describe it better themselves</a>).</p>
+
+<p>Assuming that your home is behind a router, the first thing to do is to set up port forwarding from your router to your computer that will run Let’s Encrypt. For the Let’s Encrypt set up we need to temporary forward ports <code>80</code> (http connections) and <code>443</code> (https connections). This can be set up by accessing your router admin interface (<a href="http://portforward.com">Site with port forwarding instructions per router</a>).</p>
+
+<p>Now you’re ready to run Let’s Encrypt:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ git clone https://github.com/letsencrypt/letsencrypt
+[…]
+$ cd letsencrypt
+$ ./letsencrypt-auto certonly --email $ ./letsencrypt-auto certonly --email your@email.address -d hass-example.duckdns.org
+Updating letsencrypt and virtual environment dependencies.......
+Running with virtualenv: sudo /path/letsencrypt/bin/letsencrypt certonly --email your@e-mail.address -d hass-example.duckdns.org
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at
+   /etc/letsencrypt/live/hass-example.duckdns.org/fullchain.pem. Your cert
+   will expire on 2016-03-12. To obtain a new version of the
+   certificate in the future, simply run Let's Encrypt again.
+ - If like Let's Encrypt, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+</pre></div>
+</div>
+</div>
+
+<p>If you’re using Docker, run the following command to generate the required keys:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>sudo mkdir /etc/letsencrypt /var/lib/letsencrypt
+sudo docker run -it --rm -p 443:443 -p 80:80 --name letsencrypt \
+                -v &quot;/etc/letsencrypt:/etc/letsencrypt&quot; \
+                -v &quot;/var/lib/letsencrypt:/var/lib/letsencrypt&quot; \
+                quay.io/letsencrypt/letsencrypt:latest certonly \
+                --email your@e-mail.address -d hass-example.duckdns.org
+</pre></div>
+</div>
+</div>
+
+<p>With either method your certificate will be generated and put in the directory <code>/etc/letsencrypt/live/hass-example.duckdns.org</code>. As the lifetime is only 90 days, you will have to repeat this every 90 days.</p>
+
+<p><img width="60" src="https://home-assistant.io/images/favicon-192x192.png" style="float: right; border:none; box-shadow: none;" /></p>
+
+<h3><a class='title-link' name='home-assistant' href='#home-assistant'></a> Home Assistant </h3>
+
+<p>Before updating the Home Assistant configuration, we have to update the port forwarding at your router config. We can drop the port forwarding for port <code>80</code> as we no longer care about unecrypted messages. Update port <code>443</code> to forward to port <code>8123</code> on the computer that will run Home Assistant.</p>
+
+<p>The final step is to point Home Assistant at the generated certificates. Before you do this, make sure that the user running Home Assistant has read access to the folder that holds the certificates.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">http</span>:
+  <span class="key">ssl_certificate</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/fullchain.pem</span></span>
+  <span class="key">ssl_key</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/privkey.pem</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>You can now navigate to https://hass-example.duckdns.org and enjoy encryption!</p>
+
+<p><em>Big thanks to Fabian Affolter for his help and feedback on this article.</em></p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Activating Tasker tasks from Home Assistant using command line switches]]></title>
@@ -649,187 +754,6 @@ Glances web server started on http://0.0.0.0:61208/
 </p>
 
 <p><a href="https://github.com/nicolargo/glances">Glances</a> has a couple of optional dependencies which are extenting the range of provided information. This means that it would be possible to get details about the RAID system, HDD temperature, IP addresses, sensors, etc., please create a <a href="https://github.com/balloob/home-assistant/pulls">Pull request</a> with your additions or a <a href="https://github.com/balloob/home-assistant/issues/new">Feature request</a> if you want see more details in your Home Assistant frontend.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
-    <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
-    <updated>2015-09-13T09:28:00-07:00</updated>
-    <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
-    <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
-
-<p>It is now possible to disable your irregation system if it is going to be cloudy tomorrow or tweet if your smoke alarm goes off.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/splash.png" />
-</p>
-
-<p>Head over to the <a href="/components/ifttt/">setup instructions</a> to get started with IFTTT. Click the read more button for some example recipes.</p>
-
-<!--more-->
-
-<p>In each of the following examples, make sure to replace the XXX in the url with your correct host address and api password.</p>
-
-<h2><a class='title-link' name='turn-off-irregation-system-when-not-needed' href='#turn-off-irregation-system-when-not-needed'></a> Turn off irregation system when not needed </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-weather.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/switch/turn_off?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “switch.irrigation” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='tweet-when-important-events-happen' href='#tweet-when-important-events-happen'></a> Tweet when important events happen </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-twitter.png" />
-</p>
-
-<p>This will tweet a message when an MQTT message is received that the smoke alarm has been triggered. Setup Maker channel with event name <code>HA_FIRE_ALARM</code> and Twitter channel to tweet the message in <code>value1</code>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Configuration.yaml entry</span>
-<span class="key">automation</span>:
-- <span class="string"><span class="content">alias: Post a tweet when fire alarm is triggered</span></span>
-  <span class="key">trigger</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
-    <span class="key">mqtt_topic</span>: <span class="string"><span class="content">home/alarm/fire</span></span>
-    <span class="key">mqtt_payload</span>: <span class="string"><span class="content">'on'</span></span>
-
-  <span class="key">action</span>:
-    <span class="key">service</span>: <span class="string"><span class="content">ifttt.trigger</span></span>
-    <span class="key">data</span>: <span class="string"><span class="content">{&quot;event&quot;:&quot;HA_FIRE_ALARM&quot;, &quot;value1&quot;:&quot;The fire alarm just triggered!&quot;}</span></span>
-</pre></div>
-</div>
-</div>
-
-<h2><a class='title-link' name='turn-on-lights-when-i-get-home' href='#turn-on-lights-when-i-get-home'></a> Turn on lights when I get home </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-geo.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “light.kitchen” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='flash-lights-when-a-new-pr-comes-in-for-home-assistant' href='#flash-lights-when-a-new-pr-comes-in-for-home-assistant'></a> Flash lights when a new PR comes in for Home Assistant </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-github.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/services/light/turn_on?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-    <tr>
-      <td>BODY</td>
-      <td>{ “entity_id”: “group.all_lights”, “flash”:”yes” }</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2><a class='title-link' name='fire-events-when-pressing-the-do-button' href='#fire-events-when-pressing-the-do-button'></a> Fire events when pressing the DO button </h2>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-09-ifttt/recipe-do.png" />
-</p>
-
-<p>Maker channel setup:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Field</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>URL</td>
-      <td>http://xxx.xxx.xxx.xxx:8123/api/events/do_button_pressed?api_password=xxxxxxxx</td>
-    </tr>
-    <tr>
-      <td>METHOD</td>
-      <td>POST</td>
-    </tr>
-    <tr>
-      <td>CONTENT TYPE</td>
-      <td>application/json</td>
-    </tr>
-  </tbody>
-</table>
 ]]></content>
   </entry>
   

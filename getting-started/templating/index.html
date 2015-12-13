@@ -107,7 +107,32 @@
 
 <p>For a complete overview, check the <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 Template documentation</a>.</p>
 
-<h3><a class="title-link" name="states-variable" href="#states-variable"></a> <code>states</code> variable</h3>
+<h3><a class="title-link" name="accessing-variables" href="#accessing-variables"></a> Accessing variables</h3>
+
+<p>The <a href="http://jinja.pocoo.org/docs/dev/templates/#variables">variables</a> are handled the same way as in Python.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>{{ value.x }}</code> or <code>{{ value.['x'] }}</code></td>
+      <td>Normal value</td>
+    </tr>
+    <tr>
+      <td><code>{{ value_json.x }}</code></td>
+      <td>JSON value</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The evaluation leads to an empty string if it’s unsuccessful and printed or iterated over.</p>
+
+<h3><a class="title-link" name="the-states-variable" href="#the-states-variable"></a> The <code>states</code> variable</h3>
 
 <p>The template support has a special <code>states</code> variable:</p>
 
@@ -128,11 +153,11 @@
   </thead>
   <tbody>
     <tr>
-      <td>``</td>
+      <td><code>{{ states.device_tracker.paulus.state }}</code></td>
       <td>home</td>
     </tr>
     <tr>
-      <td>``</td>
+      <td><code>{% for state in states.sensor %}{{ state.entity_id }}={{ state.state }}, {% endfor %}</code></td>
       <td>senor.thermostat=24, sensor.humidity=40,</td>
     </tr>
   </tbody>
@@ -140,7 +165,7 @@
 
 <h3><a class="title-link" name="mathematical-functions" href="#mathematical-functions"></a> Mathematical functions</h3>
 
-<p>The mathematical methods convert strings to numbers automatically before they are doing their job. This could be useful if you recieve data in the wrong unit of measurement and want to convert it.</p>
+<p>The mathematical methods convert strings to numbers automatically before they are doing their job. This could be useful if you recieve data in the wrong unit of measurement and want to convert it. They are used like the standard <a href="http://jinja.pocoo.org/docs/dev/templates/#filters">Jinja2 filters</a>.</p>
 
 <table>
   <thead>
@@ -156,19 +181,19 @@
     </tr>
     <tr>
       <td><code>round(x)</code></td>
-      <td>Maximau number <code>x</code> of decimal places for the value</td>
+      <td>Maximal number <code>x</code> of decimal places for the value</td>
     </tr>
   </tbody>
 </table>
 
-<p>A sample entry in your <code>configuration.yaml</code> file for a sensor could look like this:</p>
+<p>A sample sensor entry for your <code>configuration.yaml</code> file could look like this:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">sensor</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">dweet</span></span>
   <span class="key">device</span>: <span class="string"><span class="content">temp-sensor012</span></span>
-  <span class="key">value_template</span>: <span class="string"><span class="content">'0'</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.temperature | multiply(1.02) | round(2) }}'</span></span>
   <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
 </pre></div>
 </div>
