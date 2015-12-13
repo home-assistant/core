@@ -11,7 +11,6 @@ import logging
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
-from homeassistant.config import get_default_config_dir
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
