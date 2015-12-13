@@ -109,8 +109,6 @@ def _handle_get_local(handler, path_match, data):
     """
     req_file = util.sanitize_path(path_match.group('file'))
 
-    path = os.path.join(get_default_config_dir(), 'www', req_file)
-    if not os.path.isfile(path):
-        return False
+    path = handler.server.hass.config.path('www', req_file)
 
     handler.write_file(path)
