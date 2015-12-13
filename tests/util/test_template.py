@@ -100,3 +100,11 @@ class TestUtilTemplate(unittest.TestCase):
     def test_raise_exception_on_error(self):
         with self.assertRaises(TemplateError):
             template.render(self.hass, '{{ invalid_syntax')
+
+    def test_is_state(self):
+        self.hass.states.set('test.object', 'available')
+        self.assertEqual(
+            'yes',
+            template.render(
+                self.hass,
+                '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'))
