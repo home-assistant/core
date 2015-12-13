@@ -41,8 +41,9 @@ def render(hass, template, variables=None, **kwargs):
 
     try:
         return ENV.from_string(template, {
-            'states': AllStates(hass)
-        }).render(kwargs)
+            'states': AllStates(hass),
+            'is_state': hass.states.is_state
+        }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
 
