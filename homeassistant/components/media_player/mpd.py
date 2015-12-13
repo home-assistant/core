@@ -141,13 +141,13 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """ Title of current playing media. """
-        name = self.currentsong['name']
+        name = self.currentsong.get('name', None)
         title = self.currentsong['title']
 
-        if name:
-            return '{}: {}'.format(name, title)
-        else:
+        if name is None:
             return title
+        else:
+            return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):
