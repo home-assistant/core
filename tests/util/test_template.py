@@ -101,6 +101,14 @@ class TestUtilTemplate(unittest.TestCase):
         with self.assertRaises(TemplateError):
             template.render(self.hass, '{{ invalid_syntax')
 
+    def test_if_state_exists(self):
+        self.hass.states.set('test.object', 'available')
+        self.assertEqual(
+            'exists',
+            template.render(
+                self.hass,
+                '{% if states.test.object %}exists{% else %}not exists{% endif %}'))
+
     def test_is_state(self):
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
@@ -108,3 +116,12 @@ class TestUtilTemplate(unittest.TestCase):
             template.render(
                 self.hass,
                 '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'))
+
+    def test_states_function(self):
+        self.hass.states.set('test.object', 'available')
+        self.assertEqual(
+            'available',
+            template.render(self.hass, '{{ states("test.object") }}'))
+        self.assertEqual(
+            'unknown',
+            template.render(self.hass, '{{ states("test.object2") }}'))
