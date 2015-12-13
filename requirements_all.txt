@@ -178,5 +178,5 @@ pydispatcher==2.0.5
 # homeassistant.components.heatmiser
 heatmiserV3==0.9.1
 
-# homeassistant.components.seansor.dweet
+# homeassistant.components.sensor.dweet
 dweepy==0.2.0
