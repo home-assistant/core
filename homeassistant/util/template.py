@@ -9,6 +9,7 @@ import json
 import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,8 +42,9 @@ def render(hass, template, variables=None, **kwargs):
 
     try:
         return ENV.from_string(template, {
-            'states': AllStates(hass)
-        }).render(kwargs)
+            'states': AllStates(hass),
+            'is_state': hass.states.is_state
+        }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
 
@@ -58,6 +60,10 @@ class AllStates(object):
     def __iter__(self):
         return iter(sorted(self._hass.states.all(),
                            key=lambda state: state.entity_id))
+
+    def __call__(self, entity_id):
+        state = self._hass.states.get(entity_id)
+        return STATE_UNKNOWN if state is None else state.state
 
 
 class DomainStates(object):
@@ -95,6 +101,13 @@ def multiply(value, amount):
         # If value can't be converted to float
         return value
 
-ENV = ImmutableSandboxedEnvironment()
+
+class TemplateEnvironment(ImmutableSandboxedEnvironment):
+    """ Home Assistant template environment. """
+
+    def is_safe_callable(self, obj):
+        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+
+ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
