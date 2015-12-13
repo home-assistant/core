@@ -178,12 +178,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
-        # Read query input
-        data = parse_qs(url.query)
-
-        # parse_qs gives a list for each value, take the latest element
-        for key in data:
-            data[key] = data[key][-1]
+        # Read query input. parse_qs gives a list for each value, we want last
+        data = {key: data[-1] for key, data in parse_qs(url.query).items()}
 
         # Did we get post input ?
         content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
