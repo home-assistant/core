@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-13T10:45:37-08:00</updated>
+  <updated>2015-12-13T12:31:07-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -105,6 +105,7 @@ sudo docker run -it --rm -p 443:443 -p 80:80 --name letsencrypt \
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">http</span>:
+  <span class="key">api_password</span>: <span class="string"><span class="content">YOUR_SECRET_PASSWORD</span></span>
   <span class="key">ssl_certificate</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/fullchain.pem</span></span>
   <span class="key">ssl_key</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/privkey.pem</span></span>
 </pre></div>
