@@ -145,9 +145,7 @@ class MpdDevice(MediaPlayerDevice):
         title = self.currentsong['title']
 
         if name:
-            separator = ': '
-            nameandtitle = (name, title)
-            return separator.join(nameandtitle)
+            return '{}: {}'.format(name, title)
         else:
             return title
 
