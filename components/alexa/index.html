@@ -1,0 +1,264 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Alexa / Amazon Echo - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Instructions how to connect Alexa/Amazon Echo to Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/alexa/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Alexa / Amazon Echo">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/alexa/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to connect Alexa/Amazon Echo to Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@balloob">
+    <meta name="twitter:title" content="Alexa / Amazon Echo">
+    <meta name="twitter:description" content="Instructions how to connect Alexa/Amazon Echo to Home Assistant.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'> Home Assistant
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Alexa / Amazon Echo
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>The Alexa component allows you to integrate Home Assistant into Alexa/Amazon Echo. This component will allow you to query information within Home Assistant by using your voice. There are no supported sentences out of the box as of now, you will have to define them all yourself. This component does not yet allow the control of devices connected to Home Assistant.</p>
+
+<h3>Requirements before using</h3>
+<p>Amazon requires the endpoint of a skill to be hosted via SSL. Self-signed certificates are ok because our skills will only run in development mode. Read more on <a href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/">our blog</a> about how to set up encryption for Home Assistant. If you are unable to get https up and running, consider using <a href="https://forums.developer.amazon.com/forums/thread.jspa?messageID=18604">this AWS Lambda proxy for Alexa skills</a>.</p>
+
+<p>To get started with Alexa skills:<br />
+ - log in to <a href="https://developer.amazon.com">Amazon developer console</a><br />
+ - Go to Apps &amp; Services =&gt; Alexa =&gt; Alexa Skill Kit - Get Started<br />
+ - Add a new skill<br />
+   - Name: Home Assistant<br />
+   - Invocation name: home assistant (or be creative, up to you)<br />
+   - Version: 1.0<br />
+   - Endpoint: https / https://YOUR_HOST/api/alexa?api_password=YOUR_API_PASSWORD</p>
+
+<h3>Configuring your Amazon Alexa skill</h3>
+
+<p>Alexa works based on intents. Each intent has a name and variable slots. For example, a <code>LocateIntent</code> with a slot that contains a <code>User</code>. Example intent schema:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+  <span class="key"><span class="delimiter">&quot;</span><span class="content">intents</span><span class="delimiter">&quot;</span></span>: [
+    {
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">intent</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">LocateIntent</span><span class="delimiter">&quot;</span></span>,
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">slots</span><span class="delimiter">&quot;</span></span>: [
+      {
+          <span class="key"><span class="delimiter">&quot;</span><span class="content">name</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">User</span><span class="delimiter">&quot;</span></span>,
+          <span class="key"><span class="delimiter">&quot;</span><span class="content">type</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">AMAZON.US_FIRST_NAME</span><span class="delimiter">&quot;</span></span>
+        }]
+    },
+    {
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">intent</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">WhereAreWeIntent</span><span class="delimiter">&quot;</span></span>,
+      <span class="key"><span class="delimiter">&quot;</span><span class="content">slots</span><span class="delimiter">&quot;</span></span>: []
+    }
+  ]
+}
+</pre></div>
+</div>
+</div>
+
+<p>To bind these intents to sentences said by users you define utterances. Example utterances can look like this:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>LocateIntent Where is {User}
+LocateIntent Where's {User}
+LocateIntent Where {User} is
+LocateIntent Where did {User} go
+
+WhereAreWeIntent where we are
+</pre></div>
+</div>
+</div>
+
+<p>This means that we can now ask Alexa things like:</p>
+
+<ul>
+  <li>Alexa, ask Home Assistant where Paul is</li>
+  <li>Alexa, ask Home Assistant where we are</li>
+</ul>
+
+<h3>Configuring Home Assistant</h3>
+
+<p>Out of the box, the component will do nothing. You have to teach it about all intents you want it to answer to. The way it works is that the answer for each intent is based on a templates that you define. Each template will have access to the existing state as per the <code>states</code> variable but will also have access to all variables defined in the intent.</p>
+
+<p>The values of <code>speech/text</code>, <code>card/title</code> and <code>card/content</code> will be parsed as a template.</p>
+
+<p>Configuring the Alexa component for the above intents would look like this:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>
+<span class="comment"># Example configuration.yaml entry</span>
+<span class="key">alexa</span>:
+  <span class="key">intents</span>:
+    <span class="key">WhereAreWeIntent</span>:
+      <span class="key">speech</span>:
+        <span class="key">type</span>: <span class="string"><span class="content">plaintext</span></span>
+        <span class="key">text</span>: <span class="string"><span class="delimiter">&gt;</span><span class="content">
+          {%- if is_state('device_tracker.paulus', 'home') and
+                 is_state('device_tracker.anne_therese', 'home') -%}
+            You are both home, you silly
+          {%- else -%}
+           Anne Therese is at {{ states(&quot;device_tracker.anne_therese&quot;) }} and
+           Paulus is at {{ states(&quot;device_tracker.paulus&quot;) }}
+          {% endif %}</span></span>
+
+    <span class="key">LocateIntent</span>:
+      <span class="key">speech</span>:
+        <span class="key">type</span>: <span class="string"><span class="content">plaintext</span></span>
+        <span class="key">text</span>: <span class="string"><span class="delimiter">&gt;</span><span class="content">
+          {%- for state in states.device_tracker -%}
+            {%- if state.name[:4].lower() == User.lower() -%}
+              {{ state.name }} is at {{ state.state }}
+            {%- endif -%}
+          {%- else -%}
+            I am sorry, I do not know where {{ User }} is.
+          {%- endfor -%}</span></span>
+      <span class="key">card</span>:
+        <span class="key">type</span>: <span class="string"><span class="content">simple</span></span>
+        <span class="key">title</span>: <span class="string"><span class="content">Sample title</span></span>
+        <span class="key">content</span>: <span class="string"><span class="content">Some more content</span></span>
+</pre></div>
+</div>
+</div>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/amazon-echo.png' />
+  </div>
+    <div class='section'>
+    <h1 class="title delta">Category Voice</h1>
+    <ul class='divided'>
+        <li>
+            Alexa / Amazon Echo
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
+</p>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

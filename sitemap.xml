@@ -746,6 +746,12 @@
       <loc>https://home-assistant.io/components/thermostat.heatmiser/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/alexa/</loc>
+    </url>
+    <url>
+      <loc>https://home-assistant.io/components/device_tracker.fritz/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
     </url>
     <url>

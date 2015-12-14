@@ -107,7 +107,7 @@
   <hr class="divider">
   
 
-  <p>Home Assistant uses <a href="https://www.polymer-project.org/">Polymer</a> for the UI and <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> for all data management.</p>
+  <p>Home Assistant uses <a href="https://www.polymer-project.org/">Polymer</a> for the UI and <a href="http://optimizely.github.io/nuclear-js/">NuclearJS</a> for maintaing the app state.</p>
 
 <ul>
   <li>Polymer allows building encapsulated custom HTML elements.<br />
@@ -120,8 +120,9 @@
 Do not use development mode in production. Home Assistant uses aggressive caching to improve the mobile experience. This is disabled during development so that you do not have to restart the server in between changes.
 </p>
 
-<h1><a class="title-link" name="turning-on-development-mode" href="#turning-on-development-mode"></a> Turning on development mode</h1>
-<p>Home Assistant will by default serve the compiled version of the frontend. To change it so that each component and JavaScript are served separately, update your <code>configuration.yaml</code> to have these lines:</p>
+<h2><a class="title-link" name="setting-up-the-environment" href="#setting-up-the-environment"></a> Setting up the environment</h2>
+
+<p>Home Assistant will by default serve the compiled version of the frontend. To enable development mode for Home Assistant, update your <code>configuration.yaml</code> to have these lines:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">http</span>:
@@ -130,33 +131,33 @@ Do not use development mode in production. Home Assistant uses aggressive cachin
 </div>
 </div>
 
-<p>Next step is to get the frontend code. When you clone the Home Assistant repository, the frontend repository is not cloned by default. You will have to do this by running from the command line:</p>
+<p>Next step is to get the frontend code. When you clone the Home Assistant repository, the frontend repository is not cloned by default. You can setup the frontend development environment by running:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ git submodule update --init
+  <div class="code"><pre>$ script/setup
 </pre></div>
 </div>
 </div>
 
-<p>After checking out the frontend code, you will have to install the frontend dependencies. Firing off a build of the frontend by running <code>script/build_frontend</code> will ensure they get installed.</p>
+<h2><a class="title-link" name="development" href="#development"></a> Development</h2>
 
-<p>Once this is done, you can start editting the webcomponents in the folder <code>homeassistant/components/frontend/www_static/home-assistant-polymer/src</code>. To see the changes you’ve made, simply refresh your browser.</p>
-
-<h2><a class="title-link" name="enabling-javascript-backend-development" href="#enabling-javascript-backend-development"></a> Enabling JavaScript backend development</h2>
-
-<p>Polymer is only providing a UI toolkit for Home Assistant. All data management and interaction with the server is done by <code>home-assistant-js</code> leveraging NuclearJS. To enable JavaScript development:</p>
+<p>While you are developing, you need to have webpack running to have your JavaScript changes be made available.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ cd homeassistant/components/frontend/www_static/home-assistant-polymer/
-$ npm run setup_js_dev
+  <div class="code"><pre>$ cd homeassistant/components/frontend/www_static/home-assistant-polymer
 $ npm run js_dev
 </pre></div>
 </div>
 </div>
 
-<p><code>npm run js_dev</code> will start the process that will ensure that your latest changes to the JavaScript files will be loaded when you refresh the page. This command has to be always running while working on home-assistant-js.</p>
+<p>The source code for the frontend can be found in two different directories:</p>
 
-<p>After your changes have been accepted into the <code>home-assistant-js</code> repository, we’ll have to update Home Assistant Polymer to use the latest version. This can be done by updating <code>package.json</code>. Look for the line that contains <code>home-assistant-js</code> and update the SHA to the SHA of your commit.</p>
+<ul>
+  <li>UI: <code>homeassistant/components/frontend/www_static/home-assistant-polymer/src/</code></li>
+  <li>Core: <code>homeassistant/components/frontend/www_static/home-assistant-polymer/node_modules/home-assistant-js/src/</code></li>
+</ul>
+
+<p>After your changes have been accepted into the home-assistant-js repository, you’ll have to update Home Assistant Polymer to use the latest version of it. This can be done by updating <code>package.json</code>. Look for the line that contains home-assistant-js and update the SHA to the SHA of the last commit.</p>
 
 <h1><a class="title-link" name="building-the-polymer-frontend" href="#building-the-polymer-frontend"></a> Building the Polymer frontend</h1>
 
