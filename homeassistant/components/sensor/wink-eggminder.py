@@ -10,8 +10,8 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/w1ll1am23/python-wink/archive/'
-                'master.zip'
+REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
+                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
                 '#python-wink==0.2']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
