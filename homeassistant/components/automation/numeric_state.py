@@ -85,8 +85,7 @@ def if_action(hass, config):
     def if_numeric_state():
         """ Test numeric state condition. """
         state = hass.states.get(entity_id)
-        return state is not None and _in_range(state, above, below,
-                                               renderer)
+        return state is not None and _in_range(state, above, below, renderer)
 
     return if_numeric_state
 
