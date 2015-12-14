@@ -92,12 +92,7 @@ def if_action(hass, config):
 
 def _in_range(state, range_start, range_end, renderer):
     """ Checks if value is inside the range """
-
-    if renderer is not None:
-        value = renderer({'value': state})
-    else:
-        # If no renderer is provided, just assume they want the state
-        value = state.state
+    value = state.state if renderer is None else renderer({'value': state})
 
     try:
         value = float(value)
