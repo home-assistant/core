@@ -7,7 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import logging
+
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.util import template
 import homeassistant.components.mqtt as mqtt
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,13 +37,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get('state_topic', None),
         config.get('qos', DEFAULT_QOS),
         config.get('payload_on', DEFAULT_PAYLOAD_ON),
-        config.get('payload_off', DEFAULT_PAYLOAD_OFF))])
+        config.get('payload_off', DEFAULT_PAYLOAD_OFF),
+        config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttBinarySensor(BinarySensorDevice):
     """ Represents a binary sensor that is updated by MQTT. """
-    def __init__(self, hass, name, state_topic, qos, payload_on, payload_off):
+    def __init__(self, hass, name, state_topic, qos, payload_on, payload_off,
+                 value_template):
         self._hass = hass
         self._name = name
         self._state = False
@@ -51,6 +56,9 @@ class MqttBinarySensor(BinarySensorDevice):
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
+            if value_template is not None:
+                payload = template.render_with_possible_json_value(
+                    hass, value_template, payload)
             if payload == self._payload_on:
                 self._state = True
                 self.update_ha_state()
