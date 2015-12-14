@@ -10,8 +10,8 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
+REQUIREMENTS = ['https://github.com/w1ll1am23/python-wink/archive/'
+                'master.zip'
                 '#python-wink==0.2']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -41,7 +41,7 @@ class WinkEggMinder(Entity):
     @property
     def state(self):
         """ Returns the state. """
-        return self.egg_count
+        return self.wink.state()
 
     @property
     def unique_id(self):
@@ -53,12 +53,11 @@ class WinkEggMinder(Entity):
         """ Returns the name of the sensor if any. """
         return self.wink.name()
 
-    @property
     def update(self):
       """ Update state of the Egg Minder. """
       self.wink.updateState()
 
-    @property
-    def egg_count(self):
-        """ The number of eggs """
-        return self.wink.state()
+    #@property
+    #def egg_count(self):
+    #    """ The number of eggs """
+    #    return self.wink.state()
