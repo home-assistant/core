@@ -41,7 +41,7 @@ def trigger(hass, config, action):
     if value_template is not None:
         renderer = lambda value: template.render(hass,
                                                  value_template,
-                                                 {'value': value})
+                                                 {'state': value})
     else:
         renderer = lambda value: value.state
 
@@ -82,7 +82,7 @@ def if_action(hass, config):
     if value_template is not None:
         renderer = lambda value: template.render(hass,
                                                  value_template,
-                                                 {'value': value})
+                                                 {'state': value})
     else:
         renderer = lambda value: value.state
 
