@@ -21,14 +21,14 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_TURN_OFF,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
+    SUPPORT_TURN_ON, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['python-mpd2==0.5.4']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 # pylint: disable=unused-argument
@@ -141,7 +141,13 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """ Title of current playing media. """
-        return self.currentsong['title']
+        name = self.currentsong.get('name', None)
+        title = self.currentsong['title']
+
+        if name is None:
+            return title
+        else:
+            return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):
@@ -163,8 +169,12 @@ class MpdDevice(MediaPlayerDevice):
         return SUPPORT_MPD
 
     def turn_off(self):
-        """ Service to exit the running MPD. """
+        """ Service to send the MPD the command to stop playing. """
         self.client.stop()
+
+    def turn_on(self):
+        """ Service to send the MPD the command to start playing. """
+        self.client.play()
 
     def set_volume_level(self, volume):
         """ Sets volume """

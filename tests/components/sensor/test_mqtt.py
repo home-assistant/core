@@ -47,7 +47,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'state_format': 'json:val'
+                'value_template': '{{ value_json.val }}'
             }
         }))
 
@@ -56,4 +56,3 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
 
         self.assertEqual('100', state.state)
-

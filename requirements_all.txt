@@ -4,9 +4,13 @@ pyyaml>=3.11,<4
 pytz>=2015.4
 pip>=7.0.0
 vincenty==0.1.3
+jinja2>=2.8
 
 # homeassistant.components.arduino
 PyMata==2.07a
+
+# homeassistant.components.device_tracker.icloud
+https://github.com/picklepete/pyicloud/archive/80f6cd6decc950514b8dc43b30c5bded81b34d5f.zip#pyicloud==0.8.0
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3
@@ -21,10 +25,13 @@ pysnmp==4.2.5
 netdisco==0.5.2
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/5645f843b64ac4f6e59dfb96233a07083c5e10c1.zip#python-ecobee==0.0.3
+https://github.com/nkgilley/python-ecobee-api/archive/92a2f330cbaf601d0618456fdd97e5a8c42c1c47.zip#python-ecobee==0.0.4
 
 # homeassistant.components.ifttt
 pyfttt==0.3
+
+# homeassistant.components.influxdb
+influxdb==2.10.0
 
 # homeassistant.components.isy994
 PyISY==1.0.5
@@ -79,9 +86,6 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # homeassistant.components.mqtt
 paho-mqtt==1.1
 
-# homeassistant.components.mqtt
-jsonpath-rw==1.4.0
-
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.9.0
 
@@ -114,6 +118,9 @@ py-cpuinfo==0.1.6
 
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
+
+# homeassistant.components.sensor.dweet
+dweepy==0.2.0
 
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.3
@@ -156,8 +163,11 @@ orvibo==1.0.1
 # homeassistant.components.switch.wemo
 pywemo==0.3.3
 
+# homeassistant.components.thermostat.heatmiser
+heatmiserV3==0.9.1
+
 # homeassistant.components.thermostat.honeywell
-evohomeclient==0.2.3
+evohomeclient==0.2.4
 
 # homeassistant.components.thermostat.nest
 python-nest==2.6.0

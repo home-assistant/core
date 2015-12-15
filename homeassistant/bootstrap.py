@@ -275,7 +275,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                               datefmt='%y-%m-%d %H:%M:%S'))
         logger = logging.getLogger('')
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)  # this sets the minimum log level
+        logger.setLevel(logging.NOTSET)  # this sets the minimum log level
 
     else:
         _LOGGER.error(
