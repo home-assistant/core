@@ -56,8 +56,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if value_template is None:
             return lambda value: value
         else:
-            return lambda value: template.render_with_possible_json_value(
-                hass, value_template, value, 'N/A')
+            return lambda value: template.render(hass,
+                                                 value_template,
+                                                 {'value': value})
 
     dev = []
 
