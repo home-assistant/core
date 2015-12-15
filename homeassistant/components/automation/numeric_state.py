@@ -39,17 +39,19 @@ def trigger(hass, config, action):
         return False
 
     if value_template is not None:
-        renderer = lambda value: template.render(hass, value_template, value)
+        renderer = lambda value: template.render(hass,
+                                                 value_template,
+                                                 {'value': value})
     else:
-        renderer = None
+        renderer = lambda value: value.state
 
     # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
 
         # Fire action if we go from outside range into range
-        if _in_range(to_s, above, below, renderer) and \
-           (from_s is None or not _in_range(from_s, above, below, renderer)):
+        if _in_range(above, below, renderer(to_s)) and \
+           (from_s is None or not _in_range(above, below, renderer(from_s))):
             action()
 
     track_state_change(
@@ -78,22 +80,22 @@ def if_action(hass, config):
         return None
 
     if value_template is not None:
-        renderer = lambda value: template.render(hass, value_template, value)
+        renderer = lambda value: template.render(hass,
+                                                 value_template,
+                                                 {'value': value})
     else:
-        renderer = None
+        renderer = lambda value: value.state
 
     def if_numeric_state():
         """ Test numeric state condition. """
         state = hass.states.get(entity_id)
-        return state is not None and _in_range(state, above, below, renderer)
+        return state is not None and _in_range(above, below, renderer(state))
 
     return if_numeric_state
 
 
-def _in_range(state, range_start, range_end, renderer):
+def _in_range(range_start, range_end, value):
     """ Checks if value is inside the range """
-    value = state.state if renderer is None else renderer({'value': state})
-
     try:
         value = float(value)
     except ValueError:
