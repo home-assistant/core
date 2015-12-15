@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
@@ -24,7 +24,7 @@ CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
+    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE | SUPPORT_PLAY_MEDIA
 KNOWN_HOSTS = []
 
 # pylint: disable=invalid-name
@@ -260,6 +260,10 @@ class CastDevice(MediaPlayerDevice):
     def media_seek(self, position):
         """ Seek the media to a specific location. """
         self.cast.media_controller.seek(position)
+
+    def play_media(self, media_type, media_id):
+        """ Plays media from a URL """
+        self.cast.media_controller.play_media(media_id, media_type)
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
