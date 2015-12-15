@@ -295,7 +295,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -314,7 +314,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -333,7 +333,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -352,7 +352,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -371,7 +371,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -390,7 +390,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute[2] }}',
+                    'value_template': '{{ state.attributes.test_attribute[2] }}',
                     'below': 10,
                 },
                 'action': {
@@ -409,7 +409,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute | multiply(10) }}',
+                    'value_template': '{{ state.attributes.test_attribute | multiply(10) }}',
                     'below': 10,
                 },
                 'action': {
@@ -428,7 +428,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ value.attributes.test_attribute }}',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
