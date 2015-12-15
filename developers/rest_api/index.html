@@ -22,7 +22,7 @@
     <meta property="og:description" content="Home Assistant Rest API documentation">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
-    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@balloob">
     <meta name="twitter:title" content="Rest API">
     <meta name="twitter:description" content="Home Assistant Rest API documentation">
@@ -121,7 +121,7 @@
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>curl -X GET \
     -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
-    http://localhost:8123/api/
+    http://localhost:8123/ENDPOINT
 </pre></div>
 </div>
 </div>
@@ -131,7 +131,7 @@
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="keyword">from</span> <span class="include">requests</span> <span class="keyword">import</span> <span class="include">get</span>
 
-url = <span class="string"><span class="delimiter">'</span><span class="content">http://localhost:8123/api/</span><span class="delimiter">'</span></span>
+url = <span class="string"><span class="delimiter">'</span><span class="content">http://localhost:8123/ENDPOINT</span><span class="delimiter">'</span></span>
 headers = {<span class="string"><span class="delimiter">'</span><span class="content">x-ha-access</span><span class="delimiter">'</span></span>: <span class="string"><span class="delimiter">'</span><span class="content">YOUR_PASSWORD</span><span class="delimiter">'</span></span>,
            <span class="string"><span class="delimiter">'</span><span class="content">content-type</span><span class="delimiter">'</span></span>: <span class="string"><span class="delimiter">'</span><span class="content">application/json</span><span class="delimiter">'</span></span>}
 
@@ -158,13 +158,21 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <p>The API supports the following actions:</p>
 
-<h4><a class="title-link" name="get-api" href="#get-api"></a> GET /api</h4>
+<h4><a class="title-link" name="get-api" href="#get-api"></a> GET /api/</h4>
 <p>Returns message if API is up and running.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>{
   <span class="key"><span class="delimiter">&quot;</span><span class="content">message</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">API running.</span><span class="delimiter">&quot;</span></span>
 }
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/
 </pre></div>
 </div>
 </div>
@@ -197,6 +205,14 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </div>
 </div>
 
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/config
+</pre></div>
+</div>
+</div>
+
 <h4><a class="title-link" name="get-apibootstrap" href="#get-apibootstrap"></a> GET /api/bootstrap</h4>
 <p>Returns all data needed to bootstrap Home Assistant.</p>
 
@@ -207,6 +223,14 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
     <span class="key"><span class="delimiter">&quot;</span><span class="content">services</span><span class="delimiter">&quot;</span></span>: [<span class="error">.</span><span class="error">.</span><span class="error">.</span>],
     <span class="key"><span class="delimiter">&quot;</span><span class="content">states</span><span class="delimiter">&quot;</span></span>: [<span class="error">.</span><span class="error">.</span><span class="error">.</span>]
 }
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/bootstrap
 </pre></div>
 </div>
 </div>
@@ -225,6 +249,14 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
       <span class="key"><span class="delimiter">&quot;</span><span class="content">listener_count</span><span class="delimiter">&quot;</span></span>: <span class="integer">2</span>
     }
 ]
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/events
 </pre></div>
 </div>
 </div>
@@ -248,6 +280,14 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
       ]
     }
 ]
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/services
 </pre></div>
 </div>
 </div>
@@ -277,6 +317,14 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </div>
 </div>
 
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/states
+</pre></div>
+</div>
+</div>
+
 <h4><a class="title-link" name="get-apistatesltentity_id" href="#get-apistatesltentity_id"></a> GET /api/states/&lt;entity_id&gt;</h4>
 <p>Returns a state object for specified entity_id. Returns 404 if not found.</p>
 
@@ -294,10 +342,16 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 </div>
 </div>
 
+<p>Sample <code>curl</code> command:</p>
+
+<p><code>$ curl -X GET -H "x-ha-access: YOUR_PASSWORD" \
+        http://IP_ADDRESS:8123/api/states/sensor.kitchen_temperature
+</code></p>
+
 <h4><a class="title-link" name="post-apistatesltentity_id" href="#post-apistatesltentity_id"></a> POST /api/states/&lt;entity_id&gt;</h4>
 <p>Updates or creates the current state of an entity.</p>
 
-<p>Expects a JSON object that has atleast a state attribute:</p>
+<p>Expects a JSON object that has at least a state attribute:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>{
@@ -323,6 +377,16 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
     <span class="key"><span class="delimiter">&quot;</span><span class="content">last_changed</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">23:24:33 28-10-2013</span><span class="delimiter">&quot;</span></span>,
     <span class="key"><span class="delimiter">&quot;</span><span class="content">state</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">below_horizon</span><span class="delimiter">&quot;</span></span>
 }
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X POST -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
+      -d '{&quot;state&quot;: &quot;25&quot;, &quot;attributes&quot;: {&quot;unit_of_measurement&quot;: &quot;°C&quot;}}' \
+      http://localhost:8123/api/states/sensor.kitchen_temperature
 </pre></div>
 </div>
 </div>
@@ -383,6 +447,16 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
         <span class="key"><span class="delimiter">&quot;</span><span class="content">state</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">on</span><span class="delimiter">&quot;</span></span>
     }
 ]
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X POST -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
+      -d '{&quot;entity_id&quot;: &quot;switch.christmas_lights&quot;, &quot;state&quot;: &quot;on&quot;}' \
+      http://localhost:8123/api/services/switch/turn_on
 </pre></div>
 </div>
 </div>
