@@ -3775,6 +3775,7 @@ case"touchend":return this.addPointerListenerEnd(t,e,i,n);case"touchmove":return
 
     .column {
       max-width: 500px;
+      overflow-x: hidden;
     }
 
     .zone-card {
@@ -3789,6 +3790,12 @@ case"touchend":return this.addPointerListenerEnd(t,e,i,n);case"touchmove":return
 
       .zone-card {
         margin-left: 0;
+      }
+    }
+
+    @media (max-width: 599px) {
+      .column {
+        max-width: 600px;
       }
     }</style><template><div class="main"><template is="dom-if" if="[[cards._badges.length]]"><div class="badges"><template is="dom-if" if="[[cards._demo]]"><ha-demo-badge></ha-demo-badge></template><ha-badges-card states="[[cards._badges]]"></ha-badges-card></div></template><template is="dom-if" if="[[!cards._badges.length]]"><div class="no-badges"></div></template><div class="horizontal layout"><template is="dom-repeat" items="[[cards._columns]]" as="column"><template is="dom-if" if="[[computeShouldRenderColumn(index, column)]]"><div class="column flex-1"><template is="dom-if" if="[[computeShowIntroduction(index, showIntroduction, cards)]]"><div class="zone-card"><ha-introduction-card show-hide-instruction="[[computeShowHideInstruction(states, cards)]]"></ha-introduction-card></div></template><template is="dom-repeat" items="[[column]]" as="domain"><div class="zone-card"><ha-domain-card domain="[[domain]]" states="[[computeStatesOfCard(cards, domain)]]" group-entity="[[computeGroupEntityOfCard(cards, domain)]]"></ha-domain-card></div></template></div></template></template></div></div></template></dom-module><dom-module id="partial-zone" assetpath="layouts/"><style>:host {
       display: block;
