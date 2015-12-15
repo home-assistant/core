@@ -13,6 +13,7 @@ import requests
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, \
     DEVICE_DEFAULT_NAME
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import template, Throttle
 
@@ -55,10 +56,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """ Creates renderer based on variable_template value """
         if value_template is None:
             return lambda value: value
-        else:
-            return lambda value: template.render(hass,
-                                                 value_template,
-                                                 {'value': value})
+
+        def _render(value):
+            try:
+                return template.render(hass, value_template, {'value': value})
+            except TemplateError:
+                _LOGGER.exception('Error parsing value')
+                return value
+
+        return _render
 
     dev = []
 
