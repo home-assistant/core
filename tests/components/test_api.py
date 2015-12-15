@@ -422,10 +422,10 @@ class TestAPI(unittest.TestCase):
         with closing(requests.get(_url(const.URL_API_STREAM),
                                   stream=True, headers=HA_HEADERS)) as req:
 
-            self.assertEqual(listen_count + 1, self._listen_count())
             data = self._stream_next_event(req)
-
             self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 1, self._listen_count())
 
             hass.bus.fire('test_event')
             hass.pool.block_till_done()
@@ -441,11 +441,10 @@ class TestAPI(unittest.TestCase):
                                       'restrict': 'test_event1,test_event3'}),
                                   stream=True, headers=HA_HEADERS)) as req:
 
-            self.assertEqual(listen_count + 2, self._listen_count())
-
             data = self._stream_next_event(req)
-
             self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 2, self._listen_count())
 
             hass.bus.fire('test_event1')
             hass.pool.block_till_done()
