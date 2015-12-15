@@ -3,7 +3,7 @@ homeassistant.components.egg_minder.wink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink Egg Minder.
 For more details about this platform, please refer to the documentation at
-at https://home-assistant.io/components/sensor.wink/
+at https://home-assistant.io/components/sensor.wink-eggminder/
 """
 import logging
 
@@ -11,8 +11,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
-                '#python-wink==0.2']
+                'e66277ddb8ba51df34e810f784088c3c8582984a.zip'
+                '#python-wink==0.2.1']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """

@@ -12,9 +12,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
-                '#python-wink==0.2']
-
+                'e66277ddb8ba51df34e810f784088c3c8582984a.zip'
+                '#python-wink==0.2.1']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
