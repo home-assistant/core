@@ -42,7 +42,7 @@ class WinkLockDevice(LockDevice):
     @property
     def unique_id(self):
         """ Returns the id of this wink lock """
-        return "{}.{}".format(self.__class__, self.wink.deviceId())
+        return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
@@ -51,7 +51,7 @@ class WinkLockDevice(LockDevice):
 
     def update(self):
         """ Update the state of the lock. """
-        self.wink.updateState()
+        self.wink.update_state()
 
     @property
     def is_locked(self):
@@ -60,8 +60,8 @@ class WinkLockDevice(LockDevice):
 
     def lock(self):
         """ Lock the device. """
-        self.wink.setState(True)
+        self.wink.set_state(True)
 
     def unlock(self):
         """ Unlock the device. """
-        self.wink.setState(False)
+        self.wink.set_state(False)
