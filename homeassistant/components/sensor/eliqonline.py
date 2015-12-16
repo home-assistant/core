@@ -20,15 +20,12 @@ history:
 import logging
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['eliqonline==1.0.11']
 DEFAULT_NAME = "ELIQ Energy Usage"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -78,7 +75,6 @@ class EliqSensor(Entity):
         """ Returns the state of the device. """
         return self._state
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data """
         response = self.api.get_data_now(channelid=self.channel_id)
