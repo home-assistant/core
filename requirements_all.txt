@@ -63,7 +63,7 @@ https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-https://github.com/balloob/python-wink/archive/42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip#python-wink==0.2
+https://github.com/bradsk88/python-wink/archive/91c8e9a5df24c8dd1a5267dc29a00a40c11d826a.zip#python-wink==0.3
 
 # homeassistant.components.media_player.cast
 pychromecast==0.6.12
