@@ -12,9 +12,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/bradsk88/python-wink/archive/'
-                'd3fcce7528bd031a2c05363a108628acc4eb03aa.zip'
-                '#python-wink==0.3.1']
+REQUIREMENTS = ['python-wink==0.3.1']
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Wink lights. """
