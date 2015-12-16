@@ -27,13 +27,20 @@ def trigger(hass, config, action):
     # Get all entity ids
     all_entity_ids = hass.states.entity_ids()
 
-    # pylint: disable=unused-argument
+    # Local variable to keep track of if the action has already been triggered
+    already_triggered = False
+
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
+        nonlocal already_triggered
+        template_result = _check_template(hass, value_template)
 
         # Check to see if template returns true
-        if _check_template(hass, value_template):
+        if template_result and not already_triggered:
+            already_triggered = True
             action()
+        elif not template_result:
+            already_triggered = False
 
     track_state_change(hass, all_entity_ids, state_automation_listener)
 

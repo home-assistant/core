@@ -274,15 +274,19 @@ class TestAutomationTemplate(unittest.TestCase):
 
         self.hass.states.set('test.entity', 'work')
         self.hass.pool.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set('test.entity', 'not_home')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
 
         self.hass.states.set('test.entity', 'home')
         self.hass.pool.block_till_done()
-        self.assertEqual(3, len(self.calls))
+        self.assertEqual(2, len(self.calls))
 
     def test_if_action(self):
         automation.setup(self.hass, {
