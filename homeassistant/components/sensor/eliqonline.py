@@ -38,8 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if access_token is None:
         _LOGGER.error(
-            "Configuration Error"
-            "Please make sure you have configured your access token " +
+            "Configuration Error: "
+            "Please make sure you have configured your access token "
             "that can be aquired from https://my.eliq.se/user/settings/api")
         return False
 
