@@ -17,9 +17,9 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
-                '#python-wink==0.2']
+REQUIREMENTS = ['https://github.com/bradsk88/python-wink/archive/'
+                '91c8e9a5df24c8dd1a5267dc29a00a40c11d826a.zip'
+                '#python-wink==0.3']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -61,14 +61,15 @@ def setup(hass, config):
 
 class WinkToggleDevice(ToggleEntity):
     """ Represents a Wink toogle (switch) device. """
+    import pywink
 
-    def __init__(self, wink):
+    def __init__(self, wink: pywink.WinkBinarySwitch):
         self.wink = wink
 
     @property
     def unique_id(self):
         """ Returns the id of this Wink switch. """
-        return "{}.{}".format(self.__class__, self.wink.deviceId())
+        return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
@@ -89,12 +90,12 @@ class WinkToggleDevice(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        self.wink.setState(True)
+        self.wink.set_state(True)
 
     def turn_off(self):
         """ Turns the switch off. """
-        self.wink.setState(False)
+        self.wink.set_state(False)
 
     def update(self):
         """ Update state of the light. """
-        self.wink.updateState()
+        self.wink.update_state()
