@@ -17,8 +17,8 @@ from homeassistant.const import (
 
 DOMAIN = "wink"
 REQUIREMENTS = ['https://github.com/bradsk88/python-wink/archive/'
-                '91c8e9a5df24c8dd1a5267dc29a00a40c11d826a.zip'
-                '#python-wink==0.3.0']
+                'd3fcce7528bd031a2c05363a108628acc4eb03aa.zip'
+                '#python-wink==0.3.1']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
