@@ -37,12 +37,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME, DEFAULT_NAME)
     channel_id = config.get("channel_id")
 
-    if not access_token:
+    if access_token is None:
         _LOGGER.error(
             "Configuration Error"
             "Please make sure you have configured your access token " +
             "that can be aquired from https://my.eliq.se/user/settings/api")
-        return None
+        return False
 
     api = eliqonline.API(access_token)
     add_devices([EliqSensor(api, channel_id, name)])
