@@ -1,16 +1,20 @@
 """
-homeassistant.components.media_player.twitch
+homeassistant.components.sensor.twitch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Twitch stream status.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.twitch/
+https://home-assistant.io/components/sensor.twitch/
 """
 
-from homeassistant.const import STATE_PLAYING, STATE_OFF
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_ENTITY_PICTURE
 
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_TYPE_CHANNEL)
+STATE_STREAMING = 'streaming'
+STATE_OFFLINE = 'offline'
+ATTR_GAME = 'game'
+ATTR_TITLE = 'title'
+ICON = 'mdi:twitch'
 
 REQUIREMENTS = ['python-twitch==1.2.0']
 DOMAIN = 'twitch'
@@ -20,19 +24,20 @@ DOMAIN = 'twitch'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Twitch platform. """
     add_devices(
-        [TwitchDevice(channel) for channel in config.get('channels', [])])
+        [TwitchSensor(channel) for channel in config.get('channels', [])])
 
 
-class TwitchDevice(MediaPlayerDevice):
+class TwitchSensor(Entity):
     """ Represents an Twitch channel. """
 
     # pylint: disable=abstract-method
     def __init__(self, channel):
         self._channel = channel
-        self._state = STATE_OFF
+        self._state = STATE_OFFLINE
         self._preview = None
         self._game = None
         self._title = None
+        self.update()
 
     @property
     def should_poll(self):
@@ -40,8 +45,13 @@ class TwitchDevice(MediaPlayerDevice):
         return True
 
     @property
+    def name(self):
+        """ Returns the name of the device. """
+        return self._channel
+
+    @property
     def state(self):
-        """ State of the player. """
+        """ State of the sensor. """
         return self._state
 
     # pylint: disable=no-member
@@ -53,35 +63,20 @@ class TwitchDevice(MediaPlayerDevice):
             self._game = stream.get('channel').get('game')
             self._title = stream.get('channel').get('status')
             self._preview = stream.get('preview').get('small')
-            self._state = STATE_PLAYING
+            self._state = STATE_STREAMING
         else:
-            self._state = STATE_OFF
+            self._state = STATE_OFFLINE
 
     @property
-    def name(self):
-        """ Channel name. """
-        return self._channel
+    def state_attributes(self):
+        """ Returns the state attributes. """
+        if self._state == STATE_STREAMING:
+            return {
+                ATTR_GAME: self._game,
+                ATTR_TITLE: self._title,
+                ATTR_ENTITY_PICTURE: self._preview
+            }
 
     @property
-    def media_title(self):
-        """ Channel title. """
-        return self._title
-
-    @property
-    def app_name(self):
-        """ Game name. """
-        return self._game
-
-    @property
-    def media_image_url(self):
-        """ Image preview url of the live stream. """
-        return self._preview
-
-    @property
-    def media_content_type(self):
-        """ Media type (channel). """
-        return MEDIA_TYPE_CHANNEL
-
-    def media_pause(self):
-        """ Must implement because UI can pause. """
-        pass
+    def icon(self):
+        return ICON
