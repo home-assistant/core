@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heatmiser thermostat. """
 
-    import heatmiserV3
+    from heatmiserV3 import connection as HMC
 
     ipaddress = str(config[CONF_IPADDRESS])
     port = str(config[CONF_PORT])
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       CONF_IPADDRESS, CONF_PORT)
         return False
 
-    serport = heatmiserV3.connection.connection(ipaddress, port)
+    serport = HMC.connection(ipaddress, port)
     serport.open()
 
     tstats = []
@@ -58,8 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HeatmiserV3Thermostat(ThermostatDevice):
     """ Represents a HeatmiserV3 thermostat. """
+    from heatmiserV3 import heatmiser
 
     def __init__(self, device, name, serport):
+
         self.device = device
         self.serport = serport
         self._current_temperature = None
@@ -99,7 +101,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
     def set_temperature(self, temperature):
         """ Set new target temperature """
         temperature = int(temperature)
-        heatmiserV3.heatmiser.hmSendAddress(
+        self.heatmiser.hmSendAddress(
             self._id,
             18,
             temperature,
@@ -108,7 +110,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
         self._target_temperature = int(temperature)
 
     def update(self):
-        self.dcb = heatmiserV3.heatmiser.hmReadAddress(
+        self.dcb = self.heatmiser.hmReadAddress(
             self._id,
             'prt',
             self.serport)
