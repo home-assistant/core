@@ -12,8 +12,8 @@ from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['https://github.com/bradsk88/python-wink/archive/'
-                '91c8e9a5df24c8dd1a5267dc29a00a40c11d826a.zip'
-                '#python-wink==0.3.0']
+                'd3fcce7528bd031a2c05363a108628acc4eb03aa.zip'
+                '#python-wink==0.3.1']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
