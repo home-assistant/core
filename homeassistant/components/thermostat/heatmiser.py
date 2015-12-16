@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heatmiser thermostat. """
 
-    from heatmiserV3 import connection as HMC
+    from heatmiserV3 import heatmiser, connection
 
     ipaddress = str(config[CONF_IPADDRESS])
     port = str(config[CONF_PORT])
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       CONF_IPADDRESS, CONF_PORT)
         return False
 
-    serport = HMC.connection(ipaddress, port)
+    serport = connection.connection(ipaddress, port)
     serport.open()
 
     tstats = []
@@ -49,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for tstat in tstats:
         add_devices([
             HeatmiserV3Thermostat(
+                heatmiser,
                 tstat.get("id"),
                 tstat.get("name"),
                 serport)
@@ -58,10 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HeatmiserV3Thermostat(ThermostatDevice):
     """ Represents a HeatmiserV3 thermostat. """
-    from heatmiserV3 import heatmiser
 
-    def __init__(self, device, name, serport):
-
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, heatmiser, device, name, serport):
+        self.heatmiser = heatmiser
         self.device = device
         self.serport = serport
         self._current_temperature = None
