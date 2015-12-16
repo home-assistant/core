@@ -76,9 +76,6 @@ plexapi==1.1.0
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
 
-# homeassistant.components.media_player.twitch
-python-twitch==1.2.0
-
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
 
@@ -146,6 +143,9 @@ https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc7045
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
+
+# homeassistant.components.sensor.twitch
+python-twitch==1.2.0
 
 # homeassistant.components.sun
 astral==0.8.1
