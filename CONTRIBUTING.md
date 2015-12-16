@@ -17,8 +17,7 @@ For help on building your component, please see the [developer documentation](ht
 
 After you finish adding support for your device:
 
- - Add a link to the website of your device/service/component in the "examples" listing of the `README.md` file.
- - Add any new dependencies to `requirements_all.txt` if needed. There is no ordering right now, so just add it to the end of the file.
+ - Add any new dependencies to `requirements_all.txt` if needed. Use `script/gen_requirements_all.py`.
  - Update the `.coveragerc` file to exclude your platform if there are no tests available.
  - Provide some documentation for [home-assistant.io](https://home-assistant.io/). It's OK to just add a docstring with configuration details (sample entry for `configuration.yaml` file and alike) to the file header as a start. Visit the [website documentation](https://home-assistant.io/developers/website/) for further information on contributing to [home-assistant.io](https://github.com/balloob/home-assistant.io).
  - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `./script/lint`.
