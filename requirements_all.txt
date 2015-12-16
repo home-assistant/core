@@ -158,7 +158,7 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 hikvision==0.4
 
 # homeassistant.components.switch.orvibo
-orvibo==1.0.1
+orvibo==1.1.0
 
 # homeassistant.components.switch.wemo
 pywemo==0.3.3
