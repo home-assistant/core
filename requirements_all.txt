@@ -148,6 +148,9 @@ https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc7045
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.sensor.twitch
+python-twitch==1.2.0
+
 # homeassistant.components.sun
 astral==0.8.1
 
