@@ -59,7 +59,6 @@ https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
-# homeassistant.components.sensor.wink-eggminder
 # homeassistant.components.switch.wink
 https://github.com/balloob/python-wink/archive/42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip#python-wink==0.2
 
