@@ -18,7 +18,6 @@ history:
 """
 
 import logging
-from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
