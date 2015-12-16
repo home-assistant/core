@@ -61,9 +61,8 @@ def setup(hass, config):
 
 class WinkToggleDevice(ToggleEntity):
     """ Represents a Wink toogle (switch) device. """
-    import pywink
 
-    def __init__(self, wink: pywink.WinkBinarySwitch):
+    def __init__(self, wink):
         self.wink = wink
 
     @property

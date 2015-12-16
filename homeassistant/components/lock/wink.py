@@ -37,9 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WinkLockDevice(LockDevice):
     """ Represents a Wink lock. """
 
-    import pywink
-
-    def __init__(self, wink: pywink.WinkLock):
+    def __init__(self, wink):
         self.wink = wink
 
     @property

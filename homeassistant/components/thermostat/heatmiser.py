@@ -10,7 +10,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.heatmiser/
 """
 import logging
-import heatmiserV3
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 
@@ -25,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heatmiser thermostat. """
+
+    import heatmiserV3
 
     ipaddress = str(config[CONF_IPADDRESS])
     port = str(config[CONF_PORT])
