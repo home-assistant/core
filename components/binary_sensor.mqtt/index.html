@@ -117,6 +117,7 @@
   <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
   <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
   <span class="key">payload_of</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ template }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -129,6 +130,7 @@
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0.</li>
   <li><strong>payload_on</strong> (<em>Optional</em>): The payload that represents on state. Default is “ON”.</li>
   <li><strong>payload_off</strong> (<em>Optional</em>): The payload that represents  state. Default is “OFF”.</li>
+  <li><strong>value_template</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract a value from the payload.</li>
 </ul>
 
 <p>For a quick check you can use the commandline tools shipped with <code>mosquitto</code> to send MQTT messages. Set the state of your sensor manually:</p>

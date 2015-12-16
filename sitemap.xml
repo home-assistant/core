@@ -752,6 +752,9 @@
       <loc>https://home-assistant.io/components/device_tracker.fritz/</loc>
     </url>
     <url>
+      <loc>https://home-assistant.io/components/device_tracker.icloud/</loc>
+    </url>
+    <url>
       <loc>https://home-assistant.io/cookbook/automation_for_rainy_days/</loc>
     </url>
     <url>

@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-14T18:33:55-08:00</updated>
+  <updated>2015-12-16T07:13:38-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -121,11 +121,21 @@ sudo docker run -it --rm -p 443:443 -p 80:80 --name letsencrypt \
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[Philips Hue blocks 3rd party lights]]></title>
+    <title type="html"><![CDATA[[Update: decision reversed!] Philips Hue blocks 3rd party lights]]></title>
     <link href="https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/"/>
     <updated>2015-12-12T10:44:00-08:00</updated>
     <id>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs</id>
-    <content type="html"><![CDATA[<p>Philips Hue was one of the first to get smart lights accepted by the mainstream. Their Zigbee-based hub is rock solid, never crashes, great API and worked with other Zigbee light bulbs too. They are a bit expensive but the platform was worth every penny, till now.</p>
+    <content type="html"><![CDATA[<p><strong>Update Dec 16</strong>: Great news! Philips has decided to <a href="http://www.developers.meethue.com/documentation/friends-hue-update">reverse their decision</a> and is working on a software update to allow 3rd party light bulbs again.</p>
+
+<p class="img">
+<img src="https://home-assistant.io/images/blog/2015-12-philips-hue-3rd-party/philips-hue-reversed-faq.png" />
+Philips Hue FAQ entries regarding reversing the decision.
+</p>
+
+<p><em>Original post:</em></p>
+
+<!--more-->
+<p>Philips Hue was one of the first to get smart lights accepted by the mainstream. Their Zigbee-based hub is rock solid, never crashes, great API and worked with other Zigbee light bulbs too. They are a bit expensive but the platform was worth every penny, till now.</p>
 
 <p>Yesterday a thread on <a href="https://www.reddit.com/r/homeautomation/comments/3wet8h/fyi_the_hue_hub_is_now_blocking_third_party/">/r/homeautomation</a> published that Philips Hue now blocks all but their own bulbs and those of “friends of Hue”. I have been able to confirm this in the <a href="http://www2.meethue.com/en-us/support/search/?q=Another+brand">Philips Hue FAQ</a> (Update Dec 14: they have removed the entries - <a href="https://home-assistant.io/images/blog/2015-12-philips-hue-3rd-party/mirror.png">mirror here</a>):</p>
 

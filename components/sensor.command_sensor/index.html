@@ -115,8 +115,7 @@
   <span class="key">command</span>: <span class="string"><span class="content">SENSOR_COMMAND</span></span>
   <span class="key">name</span>: <span class="string"><span class="content">Command sensor</span></span>
   <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
-  <span class="key">correction_factor</span>: <span class="string"><span class="content">0.4921</span></span>
-  <span class="key">decimal_places</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ template }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -127,8 +126,7 @@
   <li><strong>command</strong> (<em>Required</em>): The action to take to get the value.</li>
   <li><strong>name</strong> (<em>Optional</em>): Name of the command sensor.</li>
   <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
-  <li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
-  <li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value.</li>
+  <li><strong>value_template</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract a value from the payload.</li>
 </ul>
 
 <h2><a class="title-link" name="examples" href="#examples"></a> Examples</h2>
@@ -168,7 +166,7 @@
     <span class="key">name</span>: <span class="string"><span class="content">CPU Temperature</span></span>
     <span class="key">command</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cat /sys/class/thermal/thermal_zone0/temp</span><span class="delimiter">&quot;</span></span>
     <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
-    <span class="key">correction_factor</span>: <span class="string"><span class="content">0.001</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value | multiply(0.001) }}'</span></span>
 </pre></div>
 </div>
 </div>

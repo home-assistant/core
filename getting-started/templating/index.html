@@ -107,9 +107,15 @@
   <hr class="divider">
   
 
-  <p>The template helper enables one to mathematically manipulate values and use variables to extract values from JSON.</p>
+  <p>The template helper enables one to mathematically manipulate values and use variables to extract values from JSON. If the entity has template support then the <code>value_template</code> key can be set in the <code>configuration.yaml</code> file.</p>
 
-<p>For a complete overview, check the <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 Template documentation</a>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">value_template</span>: <span class="string"><span class="content">'{{ value.x }}'</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>For a complete overview, check the <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 documentation</a>.</p>
 
 <h3><a class="title-link" name="accessing-variables" href="#accessing-variables"></a> Accessing variables</h3>
 

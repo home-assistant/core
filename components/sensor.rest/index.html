@@ -115,10 +115,8 @@
   <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS/ENDPOINT</span></span>
   <span class="key">method</span>: <span class="string"><span class="content">GET</span></span>
   <span class="key">name</span>: <span class="string"><span class="content">REST GET sensor</span></span>
-  <span class="key">variable</span>: <span class="string"><span class="content">'return_value'</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ template }}'</span></span>
   <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
-  <span class="key">correction_factor</span>: <span class="string"><span class="content">0.01</span></span>
-  <span class="key">decimal_places</span>: <span class="string"><span class="content">0</span></span>
 </pre></div>
 </div>
 </div>
@@ -131,12 +129,10 @@
   <span class="key">platform</span>: <span class="string"><span class="content">rest</span></span>
   <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS/ENDPOINT</span></span>
   <span class="key">method</span>: <span class="string"><span class="content">POST</span></span>
-  <span class="key">variable</span>: <span class="string"><span class="content">'temperature' or ['Temperatures', 0, 'CurrentReading']</span></span>
+  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ template }}'</span></span>
   <span class="key">payload</span>: <span class="string"><span class="content">'{ &quot;device&quot; : &quot;heater&quot; }'</span></span>
   <span class="key">name</span>: <span class="string"><span class="content">REST POST sensor</span></span>
   <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
-  <span class="key">correction_factor</span>: <span class="string"><span class="content">0.0001</span></span>
-  <span class="key">decimal_places</span>: <span class="string"><span class="content">0</span></span>
 </pre></div>
 </div>
 </div>
@@ -146,12 +142,10 @@
 <ul>
   <li><strong>resource</strong> (<em>Required</em>): The resource or endpoint that contains the value.</li>
   <li><strong>method</strong> (<em>Optional</em>): The method of the request. Default is GET.</li>
-  <li><strong>variable</strong> (<em>Optional</em>): Defines the variable or a list of element for complex responses to extract, if any.</li>
+  <li><strong>value_template</strong> (<em>Required</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the value.</li>
   <li><strong>payload</strong> (<em>Optional</em>): The payload to send with a POST request. Usualy formed as a dictionary-</li>
   <li><strong>name</strong> (<em>Optional</em>): Name of the REST sensor.</li>
   <li><strong>unit_of_measurement</strong> (<em>Optional</em>): Defines the unit of measurement of the sensor, if any.</li>
-  <li><strong>correction_factor</strong> (<em>Optional</em>): A float value to do some basic calculations.</li>
-  <li><strong>decimal_places</strong> (<em>Optional</em>): Number of decimal places of the value.</li>
 </ul>
 
 <p class="note warning">
@@ -182,7 +176,7 @@ Make sure that the URL matches exactly your endpoint or resource.
   - <span class="string"><span class="content">platform: rest</span></span>
     <span class="key">resource</span>: <span class="string"><span class="content">http://ip.jsontest.com</span></span>
     <span class="key">name</span>: <span class="string"><span class="content">External IP</span></span>
-    <span class="key">variable</span>: <span class="string"><span class="content">'ip'</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.ip }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -198,10 +192,8 @@ Make sure that the URL matches exactly your endpoint or resource.
   - <span class="string"><span class="content">platform: rest</span></span>
     <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADRRESS:61208/api/2/mem/used</span></span>
     <span class="key">name</span>: <span class="string"><span class="content">Used mem</span></span>
-    <span class="key">variable</span>: <span class="string"><span class="content">'used'</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.used| multiply(0.000000954) | round(0) }}'</span></span>
     <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">MB</span></span>
-    <span class="key">correction_factor</span>: <span class="string"><span class="content">0.000000954</span></span>
-    <span class="key">decimal_places</span>: <span class="string"><span class="content">0</span></span>
 </pre></div>
 </div>
 </div>
