@@ -39,7 +39,7 @@ def setup(hass, config):
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
             ('switch', pywink.get_switches, DISCOVER_SWITCHES),
             ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays,
-                DISCOVER_SENSORS),
+             DISCOVER_SENSORS),
             ('lock', pywink.get_locks, DISCOVER_LOCKS)):
 
         if func_exists():
