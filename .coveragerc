@@ -39,7 +39,9 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/geofancy.py
+    homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/netgear.py
@@ -84,6 +86,7 @@ omit =
     homeassistant/components/sensor/command_sensor.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dweet.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
@@ -97,6 +100,7 @@ omit =
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/command_switch.py
