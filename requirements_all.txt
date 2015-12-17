@@ -12,6 +12,9 @@ PyMata==2.07a
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.7.2
 
+# homeassistant.components.conversation
+fuzzywuzzy==0.8.0
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3
 
