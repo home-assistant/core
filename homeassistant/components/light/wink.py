@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['python-wink==0.3.1']
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Wink lights. """
     import pywink
