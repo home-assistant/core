@@ -13,6 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['python-wink==0.3.1']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
     import pywink
