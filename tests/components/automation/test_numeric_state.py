@@ -295,7 +295,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -314,7 +314,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -333,7 +333,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -352,7 +352,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -371,7 +371,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {
@@ -384,13 +384,51 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_template_list(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'value_template': '{{ state.attributes.test_attribute[2] }}',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 3 is below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': [11, 15, 3] })
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_template_string(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'value_template': '{{ state.attributes.test_attribute | multiply(10) }}',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+        # 9 is below 10
+        self.hass.states.set('test.entity', 'entity', { 'test_attribute': '0.9' })
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_not_fires_on_attribute_change_with_attribute_not_below_multiple_attributes(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'attribute': 'test_attribute',
+                    'value_template': '{{ state.attributes.test_attribute }}',
                     'below': 10,
                 },
                 'action': {

@@ -42,7 +42,7 @@ class WinkLight(WinkToggleDevice):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is not None:
-            self.wink.set_state(True, brightness / 255)
+            self.wink.set_state(True, brightness=brightness / 255)
 
         else:
             self.wink.set_state(True)
