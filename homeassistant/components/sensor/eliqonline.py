@@ -1,22 +1,11 @@
 """
 homeassistant.components.sensor.eliqonline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-monitors home energy use for the eliq online service
+Monitors home energy use for the eliq online service.
 
-api documentation:
-  https://my.eliq.se/knowledge/sv-SE/49-eliq-online/299-eliq-online-api
-
-access to api access token:
-  https://my.eliq.se/user/settings/api
-
-current energy use:
-  https://my.eliq.se/api/datanow?accesstoken=<token>
-
-history:
-  https://my.eliq.se/api/data?startdate=2015-12-14&intervaltype=6min&accesstoken=<token>
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.eliqonline/
 """
-
 import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
@@ -28,7 +17,7 @@ DEFAULT_NAME = "ELIQ Energy Usage"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up the sensors """
+    """ Set up the Eliq sensor. """
 
     import eliqonline
 
@@ -75,6 +64,6 @@ class EliqSensor(Entity):
         return self._state
 
     def update(self):
-        """ Gets the latest data """
+        """ Gets the latest data. """
         response = self.api.get_data_now(channelid=self.channel_id)
         self._state = int(response.power)
