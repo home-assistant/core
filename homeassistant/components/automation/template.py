@@ -8,9 +8,8 @@ at https://home-assistant.io/components/automation/#template-trigger
 """
 import logging
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_VALUE_TEMPLATE, EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.event import track_state_change
 from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,13 +23,10 @@ def trigger(hass, config, action):
         _LOGGER.error("Missing configuration key %s", CONF_VALUE_TEMPLATE)
         return False
 
-    # Get all entity ids
-    all_entity_ids = hass.states.entity_ids()
-
     # Local variable to keep track of if the action has already been triggered
     already_triggered = False
 
-    def state_automation_listener(entity, from_s, to_s):
+    def event_listener(event):
         """ Listens for state changes and calls action. """
         nonlocal already_triggered
         template_result = _check_template(hass, value_template)
@@ -42,8 +38,7 @@ def trigger(hass, config, action):
         elif not template_result:
             already_triggered = False
 
-    track_state_change(hass, all_entity_ids, state_automation_listener)
-
+    hass.bus.listen(EVENT_STATE_CHANGED, event_listener)
     return True
 
 
