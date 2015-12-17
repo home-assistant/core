@@ -11,7 +11,6 @@ import logging
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
-from homeassistant.config import get_default_config_dir
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
@@ -109,8 +108,6 @@ def _handle_get_local(handler, path_match, data):
     """
     req_file = util.sanitize_path(path_match.group('file'))
 
-    path = os.path.join(get_default_config_dir(), 'www', req_file)
-    if not os.path.isfile(path):
-        return False
+    path = handler.server.hass.config.path('www', req_file)
 
     handler.write_file(path)

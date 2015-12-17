@@ -14,3 +14,10 @@ class InvalidEntityFormatError(HomeAssistantError):
 class NoEntitySpecifiedError(HomeAssistantError):
     """ When no entity is specified. """
     pass
+
+
+class TemplateError(HomeAssistantError):
+    """ Error during template rendering. """
+    def __init__(self, exception):
+        super().__init__('{}: {}'.format(exception.__class__.__name__,
+                                         exception))
