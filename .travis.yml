@@ -8,3 +8,5 @@ install:
   - script/bootstrap_server
 script:
   - script/cibuild
+matrix:
+  fast_finish: true
