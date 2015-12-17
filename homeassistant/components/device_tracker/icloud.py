@@ -32,7 +32,7 @@ def setup_scanner(hass, config, see):
 
     if username is None or password is None:
         _LOGGER.error('Must specify a username and password')
-        return
+        return False
 
     try:
         _LOGGER.info('Logging into iCloud Account')
@@ -42,7 +42,7 @@ def setup_scanner(hass, config, see):
                               verify=True)
     except PyiCloudFailedLoginException as error:
         _LOGGER.exception('Error logging into iCloud Service: %s', error)
-        return
+        return False
 
     def keep_alive(now):
         """ Keeps authenticating iCloud connection. """
@@ -83,3 +83,5 @@ def setup_scanner(hass, config, see):
         minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)),
         second=0
     )
+
+    return True
