@@ -33,6 +33,7 @@ omit =
     homeassistant/components/*/rfxtrx.py
 
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
     homeassistant/components/device_tracker/actiontec.py
