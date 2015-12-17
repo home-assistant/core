@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if resource not in SENSOR_TYPES:
             _LOGGER.error('Sensor type: "%s" does not exist', resource)
         else:
-            dev.append(GlancesSensor(rest, resource))
+            dev.append(GlancesSensor(rest, config.get('name'), resource))
 
     add_devices(dev)
 
@@ -87,9 +87,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GlancesSensor(Entity):
     """ Implements a Glances sensor. """
 
-    def __init__(self, rest, sensor_type):
+    def __init__(self, rest, name, sensor_type):
         self.rest = rest
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._name = name
         self.type = sensor_type
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -98,7 +98,10 @@ class GlancesSensor(Entity):
     @property
     def name(self):
         """ The name of the sensor. """
-        return self._name
+        if self._name is None:
+            return SENSOR_TYPES[self.type][0]
+        else:
+            return '{} {}'.format(self._name, SENSOR_TYPES[self.type][0])
 
     @property
     def unit_of_measurement(self):

@@ -10,7 +10,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.heatmiser/
 """
 import logging
-import heatmiserV3
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 
@@ -26,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the heatmiser thermostat. """
 
+    from heatmiserV3 import heatmiser, connection
+
     ipaddress = str(config[CONF_IPADDRESS])
     port = str(config[CONF_PORT])
 
@@ -34,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       CONF_IPADDRESS, CONF_PORT)
         return False
 
-    serport = heatmiserV3.connection.connection(ipaddress, port)
+    serport = connection.connection(ipaddress, port)
     serport.open()
 
     tstats = []
@@ -48,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for tstat in tstats:
         add_devices([
             HeatmiserV3Thermostat(
+                heatmiser,
                 tstat.get("id"),
                 tstat.get("name"),
                 serport)
@@ -58,7 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HeatmiserV3Thermostat(ThermostatDevice):
     """ Represents a HeatmiserV3 thermostat. """
 
-    def __init__(self, device, name, serport):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, heatmiser, device, name, serport):
+        self.heatmiser = heatmiser
         self.device = device
         self.serport = serport
         self._current_temperature = None
@@ -98,7 +102,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
     def set_temperature(self, temperature):
         """ Set new target temperature """
         temperature = int(temperature)
-        heatmiserV3.heatmiser.hmSendAddress(
+        self.heatmiser.hmSendAddress(
             self._id,
             18,
             temperature,
@@ -107,7 +111,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
         self._target_temperature = int(temperature)
 
     def update(self):
-        self.dcb = heatmiserV3.heatmiser.hmReadAddress(
+        self.dcb = self.heatmiser.hmReadAddress(
             self._id,
             'prt',
             self.serport)
