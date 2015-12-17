@@ -69,7 +69,7 @@ https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d
 python-wink==0.3.1
 
 # homeassistant.components.media_player.cast
-pychromecast==0.6.12
+# pychromecast==0.6.12
 
 # homeassistant.components.media_player.kodi
 jsonrpc-requests==0.1
