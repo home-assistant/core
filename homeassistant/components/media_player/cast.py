@@ -6,6 +6,7 @@ Provides functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
+# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
