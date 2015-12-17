@@ -13,6 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 REQUIREMENTS = ['python-wink==0.3.1']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Wink platform. """
     import pywink
@@ -62,6 +63,7 @@ class WinkSensorDevice(Entity):
         """ True if door is open. """
         return self.wink.state()
 
+
 class WinkEggMinder(Entity):
     """ Represents a Wink Egg Minder. """
 
@@ -84,5 +86,5 @@ class WinkEggMinder(Entity):
         return self.wink.name()
 
     def update(self):
-    	""" Update state of the Egg Minder. """
-    	self.wink.update_state()
+        """ Update state of the Egg Minder. """
+        self.wink.update_state()
