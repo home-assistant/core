@@ -6,6 +6,33 @@ API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors.html
+
+
+New features:
+
+New MySensors component.
+Updated MySensors Sensor platform.
+New MySensors Switch platform.
+Multiple gateways are now supported.
+
+Configuration.yaml:
+
+mysensors:
+  port:
+    - '/dev/ttyUSB0'
+    - '/dev/ttyACM1'
+  debug: true
+  persistence: true
+  persistence_file:
+    - 'path/to/.homeassistant/mysensors.json'
+    - 'path/to/.homeassistant/mysensors2.json'
+  version: '1.5'
+
+sensor:
+  platform: mysensors
+
+switch:
+  platform: mysensors
 """
 import logging
 
