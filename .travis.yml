@@ -5,6 +5,8 @@ python:
   - 3.4
   - 3.5
 install:
+  - python3 setup.py -q develop
+  - script/gen_requirements_all.py validate
   - script/bootstrap_server
 script:
   - script/cibuild
