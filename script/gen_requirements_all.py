@@ -13,7 +13,6 @@ import sys
 COMMENT_REQUIREMENTS = [
     'RPi.GPIO',
     'Adafruit_Python_DHT',
-    'pychromecast==0.6.12'
 ]
 
 
