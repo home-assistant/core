@@ -89,8 +89,6 @@ class RestBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """ True if the binary sensor is on. """
-        print("### UPDATE ", self.rest.data)
-
         if self.rest.data is False:
             return False
         else:
