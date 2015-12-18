@@ -51,11 +51,14 @@ class API(object):
     """ Object to pass around Home Assistant API location and credentials. """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, host, api_password=None, port=None):
+    def __init__(self, host, api_password=None, port=None, use_ssl=False):
         self.host = host
         self.port = port or SERVER_PORT
         self.api_password = api_password
-        self.base_url = "http://{}:{}".format(host, self.port)
+        if use_ssl:
+            self.base_url = "https://{}:{}".format(host, self.port)
+        else:
+            self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
         self._headers = {}
 
