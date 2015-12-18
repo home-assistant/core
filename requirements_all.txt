@@ -118,8 +118,8 @@ py-cpuinfo==0.1.6
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.3
 
-# homeassistant.components.sensor.mysensors
-https://github.com/MartinHjelmare/pymysensors/archive/fifo_queue.zip#pymysensors==0.3
+# homeassistant.components.mysensors
+https://github.com/theolind/pymysensors/archive/2aa8f32908e8c5bb3e5c77c5851db778f8635792.zip#pymysensors==0.3
 
 # homeassistant.components.sensor.openweathermap
 pyowm==2.2.1

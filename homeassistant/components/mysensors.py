@@ -25,8 +25,8 @@ CONF_VERSION = 'version'
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
 REQUIREMENTS = [
-    'https://github.com/MartinHjelmare/pymysensors/archive/fifo_queue.zip'
-    '#pymysensors==0.3']
+    'https://github.com/theolind/pymysensors/archive/'
+    '2aa8f32908e8c5bb3e5c77c5851db778f8635792.zip#pymysensors==0.3']
 _LOGGER = logging.getLogger(__name__)
 ATTR_PORT = 'port'
 ATTR_DEVICES = 'devices'
