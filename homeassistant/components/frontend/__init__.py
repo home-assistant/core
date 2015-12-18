@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 FRONTEND_URLS = [
     URL_ROOT, '/logbook', '/history', '/map', '/devService', '/devState',
-    '/devEvent', '/devInfo', '/states']
+    '/devEvent', '/devInfo', '/devTemplate', '/states']
 
 _FINGERPRINT = re.compile(r'^(\w+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
