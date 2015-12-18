@@ -13,7 +13,7 @@
     <meta name='viewport' content='width=device-width, user-scalable=no'>
     <meta name='theme-color' content='#03a9f4'>
     <style>
-      #init {
+      #ha-init-skeleton {
         display: -webkit-flex;
         display: flex;
         -webkit-flex-direction: column;
@@ -34,7 +34,7 @@
     <link rel='import' href='/static/{{ app_url }}' async>
   </head>
   <body fullbleed>
-    <div id='init'><img src='/static/favicon-192x192.png' height='192'></div>
+    <div id='ha-init-skeleton'><img src='/static/favicon-192x192.png' height='192'></div>
     <script>
       var webComponentsSupported = ('registerElement' in document &&
                                     'import' in document.createElement('link') &&
