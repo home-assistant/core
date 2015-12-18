@@ -7,25 +7,25 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Hikvision camera - Home Assistant</title>
+    <title>Send a reminder - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="Instructions how to integrate Hikvision camera's into Home Assistant.">
+    <meta name="description" content="Send a reminder">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/switch.hikvision/">
+    <link rel="canonical" href="https://home-assistant.io/cookbook/send_a_reminder/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Hikvision camera">
+    <meta property="og:title" content="Send a reminder">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/switch.hikvision/">
+    <meta property="og:url" content="https://home-assistant.io/cookbook/send_a_reminder/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to integrate Hikvision camera's into Home Assistant.">
+    <meta property="og:description" content="Send a reminder">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@balloob">
-    <meta name="twitter:title" content="Hikvision camera">
-    <meta name="twitter:description" content="Instructions how to integrate Hikvision camera's into Home Assistant.">
+    <meta name="twitter:title" content="Send a reminder">
+    <meta name="twitter:description" content="Send a reminder">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -97,84 +97,57 @@
         
 
           <article class="page">
+
+  
   <header>
     <h1 class="title indent">
-      Hikvision camera
+      Send a Reminder
     </h1>
   </header>
   <hr class="divider">
+  
 
-  <p>This hikvisioncam switch platform allows you to control your motion detection setting on your <a href="http://www.hikvision.com/">Hikvision</a> camera.</p>
+  <h4><a class="title-link" name="send-a-reminder" href="#send-a-reminder"></a> Send a reminder</h4>
+<p>Always forget to eat lunch? Let Home Assistant send you a reminder.</p>
 
-<p class="note warning">
-Currently works using default https port only.
-</p>
-
-<p>To use your Hikvision cam in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<p>Add a <a href="/components/notify/">notify platform</a> of your choice</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">switch</span>:
-    <span class="key">platform</span>: <span class="string"><span class="content">hikvisioncam</span></span>
-    <span class="key">host</span>: <span class="string"><span class="content">192.168.1.32</span></span>
-    <span class="key">name</span>: <span class="string"><span class="content">Hikvision Cam 1 Motion Detection</span></span>
-    <span class="key">username</span>: <span class="string"><span class="content">USERNAME</span></span>
-    <span class="key">password</span>: <span class="string"><span class="content">PASSWORD</span></span>
+  <div class="code"><pre><span class="key">notify</span>:
+  - <span class="string"><span class="content">platform: xmpp</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">jabber</span></span>
+    <span class="key">sender</span>: <span class="string"><span class="content">YOUR_JID</span></span>
+    <span class="key">password</span>: <span class="string"><span class="content">YOUR_JABBER_ACCOUNT_PASSWORD</span></span>
+    <span class="key">recipient</span>: <span class="string"><span class="content">YOUR_RECIPIENT</span></span>
 </pre></div>
 </div>
 </div>
 
-<p>Configuration variables:</p>
+<p>and automation part to your <code>configuration.yaml</code> file.</p>
 
-<ul>
-  <li><strong>host</strong> <em>Required</em>: The IP address of your Hikvision camera, eg. 192.168.1.32</li>
-  <li><strong>name</strong> <em>Optional</em>: This parameter allows you to override the name of your camera.</li>
-  <li><strong>username</strong> <em>Required</em>: The username for accessing your Hikvision camera.</li>
-  <li><strong>password</strong> <em>Required</em>: The password to access your Hikvision camera.</li>
-</ul>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  - <span class="string"><span class="content">alias: Send message at a given time</span></span>
+    <span class="key">trigger</span>:
+      <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
+      <span class="key">hours</span>: <span class="string"><span class="content">12</span></span>
+      <span class="key">minutes</span>: <span class="string"><span class="content">15</span></span>
+      <span class="key">seconds</span>: <span class="string"><span class="content">0</span></span>
+    <span class="key">action</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">notify.jabber</span></span>
+      <span class="key">data</span>:
+        <span class="key">message</span>: <span class="string"><span class="content">'Time for lunch'</span></span>
+</pre></div>
+</div>
+</div>
+
+
 
 </article>
 
 
         </div>
 
-        
-        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
-          <div class="grid">
-  
-  
-    <section class="aside-module grid__item one-whole lap-one-half">
-  <div class='brand-logo-container section'>
-      <img src='/images/supported_brands/hikvision.png' />
-  </div>
-    <div class='section'>
-      This is a platform for
-      <a href='/components/switch/'>the Switches component</a>.
-    </div>
-    <div class='section'>
-    <h1 class="title delta">Category Camera</h1>
-    <ul class='divided'>
-        <li>
-            <a href='/components/camera.foscam/'>Foscam IP camera</a>
-        </li>
-        <li>
-            <a href='/components/camera.generic/'>Generic IP Camera</a>
-        </li>
-        <li>
-            <a href='/components/camera.mjpeg/'>Generic MJPEG IP Camera</a>
-        </li>
-        <li>
-            Hikvision camera
-        </li>
-        <li>
-            <a href='/components/ifttt.manything/'>ManyThing</a>
-        </li>
-    </ul>
-    </div>
-</section>
-  
-</div>
-        </aside>
         
       </div>
     </div>

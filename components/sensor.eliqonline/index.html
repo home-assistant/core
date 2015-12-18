@@ -7,25 +7,25 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Glances - Home Assistant</title>
+    <title>Eliqonline sensor - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="Instructions how to integrate Glances sensors into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Eliqonline devices within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/sensor.glances/">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.eliqonline/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Glances">
+    <meta property="og:title" content="Eliqonline sensor">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/sensor.glances/">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.eliqonline/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to integrate Glances sensors into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Eliqonline devices within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@balloob">
-    <meta name="twitter:title" content="Glances">
-    <meta name="twitter:description" content="Instructions how to integrate Glances sensors into Home Assistant.">
+    <meta name="twitter:title" content="Eliqonline sensor">
+    <meta name="twitter:description" content="Instructions how to integrate Eliqonline devices within Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -99,55 +99,22 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      Glances
+      Eliqonline sensor
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The glances sensor platform is consuming the system information provided by the <a href="https://github.com/nicolargo/glances">Glances</a> API. This enables one to track remote host and display their stats in Home Assistant.</p>
+  <p>Integrate your <a href="http://eliq.se">Eliqonline</a> smart meter information into Home Assistant. To get an app token, log in to your <a href="https://my.eliq.se/user/settings/api">Eliqonline</a> account.</p>
 
-<p>This sensors needs a running instance of <code>glances</code> on the host. The minimal supported version of <code>glances</code> is 2.3:</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>glances -w
-Glances web server started on http://0.0.0.0:61208/
-</pre></div>
-</div>
-</div>
-
-<p>Check if you are able to access the API located at <code>http://IP_ADRRESS:61208/api/2</code>. The details about your memory usage is provided as a JSON response. If so, you are good to proceed.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET http://IP_ADDRESS:61208/api/2/mem/free
-{&quot;free&quot;: 203943936}
-</pre></div>
-</div>
-</div>
-
-<p>To enable the glances sensor, add the following lines to your <code>configuration.yaml</code>:</p>
+<p>To enable this sensor in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">glances</span></span>
-  <span class="key">name</span>: <span class="string"><span class="content">Glances sensor</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">IP_ADDRESS</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">61208</span></span>
-  <span class="key">resources</span>:
-    - <span class="string"><span class="content">'disk_use_percent'</span></span>
-    - <span class="string"><span class="content">'disk_use'</span></span>
-    - <span class="string"><span class="content">'disk_free'</span></span>
-    - <span class="string"><span class="content">'memory_use_percent'</span></span>
-    - <span class="string"><span class="content">'memory_use'</span></span>
-    - <span class="string"><span class="content">'memory_free'</span></span>
-    - <span class="string"><span class="content">'swap_use_percent'</span></span>
-    - <span class="string"><span class="content">'swap_use'</span></span>
-    - <span class="string"><span class="content">'swap_free'</span></span>
-    - <span class="string"><span class="content">'processor_load'</span></span>
-    - <span class="string"><span class="content">'process_running'</span></span>
-    - <span class="string"><span class="content">'process_total'</span></span>
-    - <span class="string"><span class="content">'process_thread'</span></span>
-    - <span class="string"><span class="content">'process_sleeping'</span></span>
+  <span class="key">platform</span>: <span class="string"><span class="content">eliqonline</span></span>
+  <span class="key">access_token</span>: <span class="string"><span class="content">ACCESS_TOKEN</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Power consumption </span></span>
+  <span class="key">channel_id</span>: <span class="string"><span class="content">CHANNEL_ID</span></span>
 </pre></div>
 </div>
 </div>
@@ -155,28 +122,12 @@ Glances web server started on http://0.0.0.0:61208/
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>host</strong> (<em>Required</em>): The IP address of your host, eg. 192.168.1.32.</li>
-  <li><strong>port</strong> (<em>Option</em>): The network port to connect to. Default is 61208.</li>
-  <li><strong>name</strong> (<em>Optional</em>): Name of the Glances sensor.</li>
-  <li><strong>resources</strong> (<em>Required</em>): Entries to monitor.
-    <ul>
-      <li><strong>‘disk_use_percent’</strong>: Used disk space in percent</li>
-      <li><strong>‘disk_use’</strong>: Used disk space</li>
-      <li><strong>‘disk_free’</strong>: Free disk space</li>
-      <li><strong>‘memory_use_percent’</strong>: Used memory in percent</li>
-      <li><strong>‘memory_use’</strong>: Used memory</li>
-      <li><strong>‘memory_free’</strong>: Free memory</li>
-      <li><strong>‘swap_use_percent’</strong>: Used swap space in percent</li>
-      <li><strong>‘swap_use’</strong>: Used swap space</li>
-      <li><strong>‘swap_free’</strong>: Free swap space</li>
-      <li><strong>‘processor_load’</strong>: Load</li>
-      <li><strong>‘process_running’</strong>: Number of running processes</li>
-      <li><strong>‘process_total’</strong>: Total number of processes</li>
-      <li><strong>‘process_thread’</strong>: Number of threads</li>
-      <li><strong>‘process_sleeping’</strong>: Number of sleeping processes</li>
-    </ul>
-  </li>
+  <li><strong>access_token</strong> (<em>Required</em>): The Access Token for your account.</li>
+  <li><strong>channel_id</strong> (<em>Required</em>): Channel ID of your device.</li>
+  <li><strong>name</strong> (<em>Optional</em>): The name of the sensor, eg. the city.</li>
 </ul>
+
+<p>For details please check the <a href="https://my.eliq.se/knowledge/sv-SE/49-eliq-online/299-eliq-online-api">API documentation</a>.</p>
 
 
 </article>
@@ -191,7 +142,7 @@ Glances web server started on http://0.0.0.0:61208/
   
     <section class="aside-module grid__item one-whole lap-one-half">
   <div class='brand-logo-container section'>
-      <img src='/images/supported_brands/glances.png' />
+      <img src='/images/supported_brands/eliq.png' />
   </div>
     <div class='section'>
     <h1 class="title delta">Category Sensor</h1>
@@ -215,10 +166,10 @@ Glances web server started on http://0.0.0.0:61208/
             <a href='/components/sensor.efergy/'>Efergy sensor</a>
         </li>
         <li>
-            <a href='/components/sensor.eliqonline/'>Eliqonline sensor</a>
+            Eliqonline sensor
         </li>
         <li>
-            Glances
+            <a href='/components/sensor.glances/'>Glances</a>
         </li>
         <li>
             <a href='/components/sensor.mqtt/'>MQTT sensor</a>

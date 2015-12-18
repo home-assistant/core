@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: branding | Home Assistant]]></title>
+  <title><![CDATA[Category: Branding | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/branding/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-16T07:13:38-08:00</updated>
+  <updated>2015-12-17T19:00:26-08:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -26,6 +26,15 @@
 <img src="/images/blog/ha-logo-history.png" />
 The old logo, the new detailed logo and the new simple logo.
 </p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Website launched!]]></title>
+    <link href="https://home-assistant.io/blog/2014/12/18/website-launched/"/>
+    <updated>2014-12-18T23:24:45-08:00</updated>
+    <id>https://home-assistant.io/blog/2014/12/18/website-launched</id>
+    <content type="html"><![CDATA[<p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
 ]]></content>
   </entry>
   
