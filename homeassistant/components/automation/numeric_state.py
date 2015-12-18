@@ -99,7 +99,8 @@ def _in_range(range_start, range_end, value):
     try:
         value = float(value)
     except ValueError:
-        _LOGGER.warning("Missing value in numeric check")
+        _LOGGER.warning("Value returned from template is not a number: %s",
+                        value)
         return False
 
     if range_start is not None and range_end is not None:
