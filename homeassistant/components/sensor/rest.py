@@ -136,18 +136,13 @@ class RestSensor(Entity):
             try:
                 if value is not None:
                     value = RestSensor.extract_value(value, self._variable)
-                    if self._corr_factor is not None \
-                            and self._decimal_places is not None:
-                        self._state = round(
-                            (float(value) *
-                             float(self._corr_factor)),
-                            self._decimal_places)
-                    elif self._corr_factor is not None \
-                            and self._decimal_places is None:
-                        self._state = round(float(value) *
-                                            float(self._corr_factor))
-                    else:
-                        self._state = value
+                    if self._corr_factor is not None:
+                        value = float(value) * float(self._corr_factor)
+                    if self._decimal_places is not None:
+                        value = round(value, self._decimal_places)
+                    if self._decimal_places == 0:
+                        value = int(value)
+                    self._state = value
             except ValueError:
                 self._state = RestSensor.extract_value(value, self._variable)
 

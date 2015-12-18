@@ -66,17 +66,30 @@ class TestAPI(unittest.TestCase):
 
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):
-        req = requests.get(
-            _url(const.URL_API_STATES_ENTITY.format("test")))
+        req = requests.get(_url(const.URL_API))
 
         self.assertEqual(401, req.status_code)
 
     def test_access_denied_with_wrong_password(self):
         req = requests.get(
-            _url(const.URL_API_STATES_ENTITY.format("test")),
+            _url(const.URL_API),
             headers={const.HTTP_HEADER_HA_AUTH: 'wrongpassword'})
 
         self.assertEqual(401, req.status_code)
+
+    def test_access_with_password_in_url(self):
+        req = requests.get(
+            "{}?api_password={}".format(_url(const.URL_API), API_PASSWORD))
+
+        self.assertEqual(200, req.status_code)
+
+    def test_access_via_session(self):
+        session = requests.Session()
+        req = session.get(_url(const.URL_API), headers=HA_HEADERS)
+        self.assertEqual(200, req.status_code)
+
+        req = session.get(_url(const.URL_API))
+        self.assertEqual(200, req.status_code)
 
     def test_api_list_state_entities(self):
         """ Test if the debug interface allows us to list state entities. """

@@ -268,7 +268,15 @@ class TestState(unittest.TestCase):
 
     def test_copy(self):
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
-        self.assertEqual(state, state.copy())
+        # Patch dt_util.utcnow() so we know last_updated got copied too
+        with patch('homeassistant.core.dt_util.utcnow',
+                   return_value=dt_util.utcnow() + timedelta(seconds=10)):
+            copy = state.copy()
+        self.assertEqual(state.entity_id, copy.entity_id)
+        self.assertEqual(state.state, copy.state)
+        self.assertEqual(state.attributes, copy.attributes)
+        self.assertEqual(state.last_changed, copy.last_changed)
+        self.assertEqual(state.last_updated, copy.last_updated)
 
     def test_dict_conversion(self):
         state = ha.State('domain.hello', 'world', {'some': 'attr'})

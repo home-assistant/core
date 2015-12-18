@@ -35,8 +35,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         data,
         config.get('name', DEFAULT_NAME),
         config.get('unit_of_measurement'),
-        config.get('correction_factor', 1.0),
-        config.get('decimal_places', 0)
+        config.get('correction_factor', None),
+        config.get('decimal_places', None)
     )])
 
 
@@ -49,7 +49,7 @@ class CommandSensor(Entity):
         self._name = name
         self._state = False
         self._unit_of_measurement = unit_of_measurement
-        self._corr_factor = float(corr_factor)
+        self._corr_factor = corr_factor
         self._decimal_places = decimal_places
         self.update()
 
@@ -76,10 +76,12 @@ class CommandSensor(Entity):
         try:
             if value is not None:
                 if self._corr_factor is not None:
-                    self._state = round((float(value) * self._corr_factor),
-                                        self._decimal_places)
-                else:
-                    self._state = value
+                    value = float(value) * float(self._corr_factor)
+                if self._decimal_places is not None:
+                    value = round(value, self._decimal_places)
+                if self._decimal_places == 0:
+                    value = int(value)
+                self._state = value
         except ValueError:
             self._state = value
 
