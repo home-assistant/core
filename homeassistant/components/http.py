@@ -6,16 +6,17 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-import json
-import threading
-import logging
-import time
-import gzip
-import os
 from datetime import timedelta
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+import gzip
 from http import cookies
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import json
+import logging
+import os
 from socketserver import ThreadingMixIn
+import ssl
+import threading
+import time
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
@@ -36,7 +37,8 @@ CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
-CONF_SESSIONS_ENABLED = "sessions_enabled"
+CONF_SSL_CERTIFICATE = 'ssl_certificate'
+CONF_SSL_KEY = 'ssl_key'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -58,11 +60,13 @@ def setup(hass, config):
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development)
+            development, ssl_certificate, ssl_key)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -74,7 +78,8 @@ def setup(hass, config):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
+    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+                              ssl_certificate is not None)
 
     return True
 
@@ -89,7 +94,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development):
+                 hass, api_password, development, ssl_certificate, ssl_key):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
@@ -98,12 +103,19 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.development = development
         self.paths = []
         self.sessions = SessionStore()
+        self.use_ssl = ssl_certificate is not None
 
         # We will lazy init this one if needed
         self.event_forwarder = None
 
         if development:
             _LOGGER.info("running http in development mode")
+
+        if ssl_certificate is not None:
+            wrap_kwargs = {'certfile': ssl_certificate}
+            if ssl_key is not None:
+                wrap_kwargs['keyfile'] = ssl_key
+            self.socket = ssl.wrap_socket(self.socket, **wrap_kwargs)
 
     def start(self):
         """ Starts the HTTP server. """
@@ -113,8 +125,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
+        protocol = 'https' if self.use_ssl else 'http'
+
         _LOGGER.info(
-            "Starting web interface at http://%s:%d", *self.server_address)
+            "Starting web interface at %s://%s:%d",
+            protocol, self.server_address[0], self.server_address[1])
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
@@ -187,17 +202,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        if self.server.api_password is None:
-            self.authenticated = True
-        elif HTTP_HEADER_HA_AUTH in self.headers:
-            api_password = self.headers.get(HTTP_HEADER_HA_AUTH)
-
-            if not api_password and DATA_API_PASSWORD in data:
-                api_password = data[DATA_API_PASSWORD]
-
-            self.authenticated = api_password == self.server.api_password
-        else:
-            self.authenticated = self.verify_session()
+        self.authenticated = (self.server.api_password is None
+                              or self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password
+                              or data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password
+                              or self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
