@@ -10,7 +10,7 @@ from datetime import timedelta
 import logging
 import requests
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import (CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
 from homeassistant.util import template, Throttle
 from homeassistant.helpers.entity import Entity
 
@@ -47,15 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = requests.post(resource, data=payload, timeout=10,
                                      verify=verify_ssl)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error('Missing resource or schema in configuration. '
-                      'Add http:// to your URL.')
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('No route to resource/endpoint. '
-                      'Please check the URL in the configuration file.')
+        _LOGGER.error("No route to resource/endpoint: %s",  resource)
         return False
 
     if use_get:
@@ -78,7 +77,7 @@ class RestSensor(Entity):
         self._hass = hass
         self.rest = rest
         self._name = name
-        self._state = 'n/a'
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self.update()
@@ -108,7 +107,7 @@ class RestSensor(Entity):
         else:
             if self._value_template is not None:
                 value = template.render_with_possible_json_value(
-                    self._hass, self._value_template, value, 'N/A')
+                    self._hass, self._value_template, value, STATE_UNKNOWN)
             self._state = value
 
 
@@ -131,8 +130,8 @@ class RestDataGet(object):
                 del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data['error'] = STATE_UNKNOWN
 
 
 # pylint: disable=too-few-public-methods
@@ -155,5 +154,5 @@ class RestDataPost(object):
                 del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data['error'] = STATE_UNKNOWN
