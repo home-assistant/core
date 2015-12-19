@@ -18,7 +18,7 @@ DEFAULT_BODY_ON = "ON"
 DEFAULT_BODY_OFF = "OFF"
 
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument,
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Get REST switch. """
 
@@ -32,11 +32,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint. "
-                      "Please check the IP address in the configuration file.")
+        _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
     add_devices_callback([RestSwitch(
