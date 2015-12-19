@@ -1,12 +1,11 @@
 """
 homeassistant.components.sensor.twitch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Twitch stream status.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A sensor for the Twitch stream status.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
 """
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ENTITY_PICTURE
 
@@ -46,7 +45,7 @@ class TwitchSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """ Returns the name of the sensor. """
         return self._channel
 
     @property
