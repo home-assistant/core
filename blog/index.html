@@ -19,55 +19,14 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/blog/">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="  
-  
-  
-    
-  
-  
-    Set up encryption using Let's Encrypt
-  
-  
-
-  
-  
-     December 13, 2015
-     Paulus Schoutsen
-     four minutes reading time
-    
-    
-    
-    
-      
-        How-To
-    ...">
+    <meta property="og:description" content="">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="@balloob">
+    <meta name="twitter:site" content="@home_assistant">
+    
     <meta name="twitter:title" content="Home Assistant">
-    <meta name="twitter:description" content="  
-  
-  
-    
-  
-  
-    Set up encryption using Let's Encrypt
-  
-  
-
-  
-  
-     December 13, 2015
-     Paulus Schoutsen
-     four minutes reading time
-    
-    
-    
-    
-      
-        How-To
-    ...">
+    <meta name="twitter:description" content="">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -717,13 +676,6 @@ Home Assistant will keep track of historical values and allow you to integrate i
           <div class="grid">
   
   
-    <section id="site-search" class="aside-module grid__item one-whole lap-one-half">
-  <form action="https://www.google.com/search" method="get">
-    <input type="hidden" name="q" value="site:https://home-assistant.io" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search home-assistant.io"/>
-    <button type="submit"><i class="icon-search"></i></button>
-  </form>
-</section>
     <section class="aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">About Home Assistant</h1>
   <ul class="divided">
@@ -731,10 +683,11 @@ Home Assistant will keep track of historical values and allow you to integrate i
       Home Assistant is an open-source home automation platform running on Python 3. Track and control all devices at home and automate control.
     </li>
     <li><a href='/getting-started/'>Get started with Home Assistant</a></li>
-    <li><a href='/demo/'>Open the online demo</a></li>
-    <li><a href='https://github.com/balloob/home-assistant/'>Browse code on GitHub</a></li>
+    <li><a href='/demo/'>Try the online demo</a></li>
+    <li><a class="twitter-follow-button" href="https://twitter.com/Home_Assistant">Follow Home Assistant on Twitter</a></li>
   </ul>
 </section>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.async=true;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 
     
       <section class="aside-module grid__item one-whole lap-one-half">
@@ -742,29 +695,38 @@ Home Assistant will keep track of historical values and allow you to integrate i
   <ul class="divided">
     
     
-      <li><a href="/blog/categories/Architecture/">Architecture</a></li>
+      <li><a href="/blog/categories/architecture/">Architecture</a></li>
     
-      <li><a href="/blog/categories/Branding/">Branding</a></li>
+      <li><a href="/blog/categories/branding/">Branding</a></li>
     
-      <li><a href="/blog/categories/Community/">Community</a></li>
+      <li><a href="/blog/categories/community/">Community</a></li>
     
-      <li><a href="/blog/categories/ESP8266/">ESP8266</a></li>
+      <li><a href="/blog/categories/esp8266/">ESP8266</a></li>
     
-      <li><a href="/blog/categories/How-To/">How To</a></li>
+      <li><a href="/blog/categories/how-to/">How To</a></li>
     
-      <li><a href="/blog/categories/MQTT/">MQTT</a></li>
+      <li><a href="/blog/categories/mqtt/">MQTT</a></li>
     
-      <li><a href="/blog/categories/Public-Service-Announcement/">Public Service Announcement</a></li>
+      <li><a href="/blog/categories/public-service-announcement/">Public Service Announcement</a></li>
     
-      <li><a href="/blog/categories/Release-Notes/">Release Notes</a></li>
+      <li><a href="/blog/categories/release-notes/">Release Notes</a></li>
     
-      <li><a href="/blog/categories/Survey/">Survey</a></li>
+      <li><a href="/blog/categories/survey/">Survey</a></li>
     
-      <li><a href="/blog/categories/User-Stories/">User Stories</a></li>
+      <li><a href="/blog/categories/user-stories/">User Stories</a></li>
     
   </ul>
 </section>
     
+
+    <section id="site-search" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Search</h1>
+  <form action="https://www.google.com/search" method="get">
+    <input type="hidden" name="q" value="site:https://home-assistant.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search home-assistant.io"/>
+    <button type="submit"><i class="icon-search"></i></button>
+  </form>
+</section>
   
 </div>
         </aside>
@@ -776,9 +738,15 @@ Home Assistant will keep track of historical values and allow you to integrate i
       <div class="grid-wrapper">
   <div class="grid">
     <div class="grid__item">
-      <p class="copyright">
-  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
-</p>
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
     </div>
   </div>
 </div>

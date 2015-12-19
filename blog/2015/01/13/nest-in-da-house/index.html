@@ -23,7 +23,8 @@
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:site" content="@balloob">
+    <meta name="twitter:site" content="@home_assistant">
+    <meta name="twitter:creator" content="@balloob">
     <meta name="twitter:title" content="Nest in the house!">
     <meta name="twitter:description" content="Home Assistant has added Nest to its list of supported products.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
@@ -162,13 +163,6 @@ password=YOUR_PASSWORD
           <div class="grid">
   
   
-    <section id="site-search" class="aside-module grid__item one-whole lap-one-half">
-  <form action="https://www.google.com/search" method="get">
-    <input type="hidden" name="q" value="site:https://home-assistant.io" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search home-assistant.io"/>
-    <button type="submit"><i class="icon-search"></i></button>
-  </form>
-</section>
     <section class="aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">About Home Assistant</h1>
   <ul class="divided">
@@ -176,23 +170,22 @@ password=YOUR_PASSWORD
       Home Assistant is an open-source home automation platform running on Python 3. Track and control all devices at home and automate control.
     </li>
     <li><a href='/getting-started/'>Get started with Home Assistant</a></li>
-    <li><a href='/demo/'>Open the online demo</a></li>
-    <li><a href='https://github.com/balloob/home-assistant/'>Browse code on GitHub</a></li>
+    <li><a href='/demo/'>Try the online demo</a></li>
+    <li><a class="twitter-follow-button" href="https://twitter.com/Home_Assistant">Follow Home Assistant on Twitter</a></li>
   </ul>
 </section>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.async=true;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 
     
-      
       <section class="sharing aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Share this post</h1>
   
   <a href="//twitter.com/share"
      class="twitter-share-button"
+     data-via="home_assistant"
+     data-related="home_assistant"
      data-url="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/"
      data-counturl="https://home-assistant.io/blog/2015/01/13/nest-in-da-house/" >Tweet</a>
-  
-  
-  <div class="g-plusone" data-size="standard"></div>
   
   
     <div class="fb-share-button" style='top: -6px;'
@@ -200,30 +193,26 @@ password=YOUR_PASSWORD
          data-layout="button_count">
     </div>
   
+  
+  <div class="g-plusone" data-size="standard"></div>
+  
 </section>
 
-<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
-
 <script src="https://apis.google.com/js/platform.js" async defer></script>
-
 <script>
   window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '338291289691179',
-      xfbml      : true,
-      version    : 'v2.2'
-    });
+    FB.init({appId: '338291289691179', xfbml: true, version: 'v2.2'});
   };
 
   (function(d, s, id){
      var js, fjs = d.getElementsByTagName(s)[0];
      if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
+     js = d.createElement(s); js.id = id; js.async = true;
      js.src = "//connect.facebook.net/en_US/sdk.js";
      fjs.parentNode.insertBefore(js, fjs);
    }(document, 'script', 'facebook-jssdk'));
 </script>
-<section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+      <section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Recent Posts</h1>
   <ul class="divided">
     
@@ -259,8 +248,16 @@ password=YOUR_PASSWORD
     
   </ul>
 </section>
-
     
+
+    <section id="site-search" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Search</h1>
+  <form action="https://www.google.com/search" method="get">
+    <input type="hidden" name="q" value="site:https://home-assistant.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search home-assistant.io"/>
+    <button type="submit"><i class="icon-search"></i></button>
+  </form>
+</section>
   
 </div>
         </aside>
@@ -272,9 +269,15 @@ password=YOUR_PASSWORD
       <div class="grid-wrapper">
   <div class="grid">
     <div class="grid__item">
-      <p class="copyright">
-  <span class="credit">Powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>. Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.</span>
-</p>
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
     </div>
   </div>
 </div>
