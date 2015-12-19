@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s",  resource)
+        _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
     if use_get:
