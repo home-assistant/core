@@ -4,7 +4,7 @@
   <title><![CDATA[Category: ESP8266 | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/esp8266/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Report the temperature with ESP8266 to MQTT]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/"/>
-    <updated>2015-10-11T12:10:00-07:00</updated>
+    <updated>2015-10-11T19:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt</id>
     <content type="html"><![CDATA[
 <p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>

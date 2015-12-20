@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Set up encryption using Let's Encrypt]]></title>
     <link href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/"/>
-    <updated>2015-12-13T10:05:00-08:00</updated>
+    <updated>2015-12-13T18:05:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt</id>
     <content type="html"><![CDATA[<p>Exposing your Home Assistant instance outside of your network always has been tricky. You have to set up port forwarding on your router and most likely add a dynamic DNS service to work around your ISP changing your IP. After this you would be able to use Home Assistant from anywhere but there is one big red flag: no encryption.</p>
 
@@ -123,7 +123,7 @@ sudo docker run -it --rm -p 443:443 -p 80:80 --name letsencrypt \
   <entry>
     <title type="html"><![CDATA[[Update: decision reversed!] Philips Hue blocks 3rd party lights]]></title>
     <link href="https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/"/>
-    <updated>2015-12-12T10:44:00-08:00</updated>
+    <updated>2015-12-12T18:44:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs</id>
     <content type="html"><![CDATA[<p><strong>Update Dec 16</strong>: Great news! Philips has decided to <a href="http://www.developers.meethue.com/documentation/friends-hue-update">reverse their decision</a> and is working on a software update to allow 3rd party light bulbs again.</p>
 
@@ -165,7 +165,7 @@ Philips Hue FAQ entries regarding 3rd party light bulbs.
   <entry>
     <title type="html"><![CDATA[Activating Tasker tasks from Home Assistant using command line switches]]></title>
     <link href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"/>
-    <updated>2015-12-10T02:39:41-08:00</updated>
+    <updated>2015-12-10T10:39:41+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-12-tasker/tasker-logo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
 In this tutorial I will explain how you can activate Tasker tasks from Home Assistant command line switches. We are going to set up a switch that when toggled will make your Android device say either “On” or “Off”.</p>
@@ -234,7 +234,7 @@ requests.get(<span class="string"><span class="delimiter">'</span><span class="c
   <entry>
     <title type="html"><![CDATA[InfluxDB and Grafana]]></title>
     <link href="https://home-assistant.io/blog/2015/12/07/influxdb-and-grafana/"/>
-    <updated>2015-12-07T06:15:13-08:00</updated>
+    <updated>2015-12-07T14:15:13+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/07/influxdb-and-grafana</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><img src="https://home-assistant.io/images/supported_brands/grafana.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
 The <a href="https://influxdb.com/">InfluxDB</a> database is a so-called time series database primarly designed to store sensor data and real-time analytics.</p>
@@ -354,7 +354,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[0.9: Rollershutters, locks, binary sensors and InfluxDB]]></title>
     <link href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"/>
-    <updated>2015-12-06T11:29:00-08:00</updated>
+    <updated>2015-12-06T19:29:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support</id>
     <content type="html"><![CDATA[<p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
 
@@ -383,7 +383,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[Community Highlights]]></title>
     <link href="https://home-assistant.io/blog/2015/12/05/community-highlights/"/>
-    <updated>2015-12-05T23:39:00-08:00</updated>
+    <updated>2015-12-05T23:39:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/05/community-highlights</id>
     <content type="html"><![CDATA[<p>From time to time we come along things that are worth sharing with fellow Home Assisters. Here a list of some cool stuff from last week:</p>
 
@@ -402,7 +402,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[Survey November 2015]]></title>
     <link href="https://home-assistant.io/blog/2015/11/22/survey-november-2015/"/>
-    <updated>2015-11-22T06:51:18-08:00</updated>
+    <updated>2015-11-22T14:51:18+00:00</updated>
     <id>https://home-assistant.io/blog/2015/11/22/survey-november-2015</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-11-survey/releases.png" style="float: right; margin-left: 8px; margin-bottom: 8px;" height="120" />Around a week ago we started with the first survey. Now 30 people have participated. Thank you very much if you did. We think that’s enough time to have some “only partially representative” data. It’s hard to tell how many Home Assistant users are out there. Currently there are 215 members in our <a href="https://gitter.im/balloob/home-assistant">Gitter chat room</a> and last week <a href="https://pypi.python.org/pypi/homeassistant/">PyPI</a> counted 5063 downloads.</p>
 
@@ -488,7 +488,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ]]></title>
     <link href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"/>
-    <updated>2015-11-16T20:27:00-08:00</updated>
+    <updated>2015-11-16T21:27:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
 
@@ -535,7 +535,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[0.7.6: Amazon FireTV, Radiotherm thermostats]]></title>
     <link href="https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported/"/>
-    <updated>2015-10-26T18:10:00-07:00</updated>
+    <updated>2015-10-26T18:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported</id>
     <content type="html"><![CDATA[<p>After two weeks of hard work I’m proud to announce the release of Home Assistant v0.7.6. For this release the main focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by <a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="https://home-assistant.io/components/">component section</a> on the website has gotten a complete revamp.</p>
 
@@ -585,7 +585,7 @@ This makes more sense as most people run Home Assistant as a daemon</p>
   <entry>
     <title type="html"><![CDATA[Report the temperature with ESP8266 to MQTT]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/"/>
-    <updated>2015-10-11T12:10:00-07:00</updated>
+    <updated>2015-10-11T19:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt</id>
     <content type="html"><![CDATA[
 <p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>
@@ -951,7 +951,7 @@ Adafruit_HDC1000 hdc = Adafruit_HDC1000();
   <entry>
     <title type="html"><![CDATA[0.7.5: Blinkstick, SNMP, Telegram]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"/>
-    <updated>2015-10-11T10:10:00-07:00</updated>
+    <updated>2015-10-11T17:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support</id>
     <content type="html"><![CDATA[<p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
 
@@ -979,7 +979,7 @@ Adafruit_HDC1000 hdc = Adafruit_HDC1000();
   <entry>
     <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
     <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
-    <updated>2015-10-05T21:49:00-07:00</updated>
+    <updated>2015-10-05T21:49:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
     <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
 
@@ -1018,7 +1018,7 @@ Map in Home Assistant showing two people and three zones (home, school, work)
   <entry>
     <title type="html"><![CDATA[Alarms, Sonos and iTunes now supported]]></title>
     <link href="https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support/"/>
-    <updated>2015-09-19T21:47:00-07:00</updated>
+    <updated>2015-09-19T21:47:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/19/alarm-sonos-and-itunes-support</id>
     <content type="html"><![CDATA[<p>It’s like someone opened a can of rock solid developers and emptied it above our <a href="https://gitter.im/balloob/home-assistant">chat channel</a> because it exploded with great conversations and solid contributions. Featured in release 0.7.3: Sonos, iTunes, Alarm component and Automation upgrade.</p>
 
@@ -1081,7 +1081,7 @@ Automation has gotten a lot of love. It now supports conditions, multiple trigge
   <entry>
     <title type="html"><![CDATA[Remote Monitoring with Glances]]></title>
     <link href="https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant/"/>
-    <updated>2015-09-18T02:00:00-07:00</updated>
+    <updated>2015-09-18T09:00:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/supported_brands/glances.png" style="border:none; box-shadow: none; float: right;" height="80" /><br />
 Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">feature requests</a> I started looking into the available options to do monitoring of remote hosts. The feature request is about displaying system information in a similar way than the <a href="https://home-assistant.io/components/sensor.systemmonitor/">systemmonitor</a> sensor does it for the local system. After a while I started to think that it would be a nice addition for a small home network where no full-blown system monitoring setup is present.</p>
@@ -1165,7 +1165,7 @@ Glances web server started on http://0.0.0.0:61208/
   <entry>
     <title type="html"><![CDATA[Home Assistant meets IFTTT]]></title>
     <link href="https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt/"/>
-    <updated>2015-09-13T09:28:00-07:00</updated>
+    <updated>2015-09-13T16:28:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/13/home-assistant-meets-ifttt</id>
     <content type="html"><![CDATA[<p>Today we announce the release of Home Assistant v0.7.2 which includes brand new support by <a href="https://github.com/sfam">@sfam</a> to integrate with <a href="https://ifttt.com">IFTTT</a>. IFTTT stands for If This, Then That and is a webservice that integrates with almost every possible webservice out there. Adding Home Assistant to this mix means Home Assistant can connect with all via IFTTT.</p>
 
@@ -1346,7 +1346,7 @@ Glances web server started on http://0.0.0.0:61208/
   <entry>
     <title type="html"><![CDATA[Using MQTT with Home Assistant]]></title>
     <link href="https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/"/>
-    <updated>2015-09-11T02:19:38-07:00</updated>
+    <updated>2015-09-11T09:19:38+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant</id>
     <content type="html"><![CDATA[
 <p><img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="80" /> <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn’t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn’t matter if the data is coming from a human, a web service, or a device.</p>
@@ -1668,7 +1668,7 @@ PubSubClient client(ethClient);
   <entry>
     <title type="html"><![CDATA[0.7: Better UI and improved distribution]]></title>
     <link href="https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/"/>
-    <updated>2015-08-31T14:12:00-07:00</updated>
+    <updated>2015-08-31T21:12:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution</id>
     <content type="html"><![CDATA[<p>As Home Assistant is gaining more and more users we started to feel the pain from not having a proper release mechanism. We had no version numbering and required users to checkout the source using Git to get started. On top of that, as the number of devices that we support keeps raising, so did the number of dependencies that are used. That’s why we decided to change the way we roll. From now on:</p>
 
@@ -1789,7 +1789,7 @@ PubSubClient client(ethClient);
   <entry>
     <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
     <link href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/"/>
-    <updated>2015-08-26T08:12:00-07:00</updated>
+    <updated>2015-08-26T15:12:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant</id>
     <content type="html"><![CDATA[<p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
 
@@ -1933,7 +1933,7 @@ PubSubClient client(ethClient);
   <entry>
     <title type="html"><![CDATA[Verisure devices and modern TP-Link routers now supported]]></title>
     <link href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"/>
-    <updated>2015-08-17T20:00:00-07:00</updated>
+    <updated>2015-08-17T20:00:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support</id>
     <content type="html"><![CDATA[<p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
 
@@ -1967,7 +1967,7 @@ PubSubClient client(ethClient);
   <entry>
     <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>
     <link href="https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/"/>
-    <updated>2015-08-09T18:01:00-07:00</updated>
+    <updated>2015-08-09T18:01:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support</id>
     <content type="html"><![CDATA[<p>It’s time for the August release and there is some serious good stuff this time. The core of Home Assistant has gone some serious clean up and a bump in test coverage thanks to <a href="https://github.com/balloob">@balloob</a>. If you’re a developer, make sure you read up on <a href="https://github.com/balloob/home-assistant/pull/251">the deprecation notices</a>. <a href="https://github.com/fabaff">@fabaff</a> did another great round of documentating all the various components.</p>
 

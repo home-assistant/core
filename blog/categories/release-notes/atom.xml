@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Release-Notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[0.9: Rollershutters, locks, binary sensors and InfluxDB]]></title>
     <link href="https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support/"/>
-    <updated>2015-12-06T11:29:00-08:00</updated>
+    <updated>2015-12-06T19:29:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/06/locks-rollershutters-binary-sensors-and-influxdb-support</id>
     <content type="html"><![CDATA[<p>It’s been a few weeks but we managed to polish a nice new release of Home Assistant for y’all!</p>
 
@@ -45,7 +45,7 @@
   <entry>
     <title type="html"><![CDATA[0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights ]]></title>
     <link href="https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/"/>
-    <updated>2015-11-16T20:27:00-08:00</updated>
+    <updated>2015-11-16T21:27:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
 
@@ -92,7 +92,7 @@
   <entry>
     <title type="html"><![CDATA[0.7.6: Amazon FireTV, Radiotherm thermostats]]></title>
     <link href="https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported/"/>
-    <updated>2015-10-26T18:10:00-07:00</updated>
+    <updated>2015-10-26T18:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/26/firetv-and-radiotherm-now-supported</id>
     <content type="html"><![CDATA[<p>After two weeks of hard work I’m proud to announce the release of Home Assistant v0.7.6. For this release the main focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by <a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a complete revamp.</p>
 
@@ -142,7 +142,7 @@ This makes more sense as most people run Home Assistant as a daemon</p>
   <entry>
     <title type="html"><![CDATA[0.7.5: Blinkstick, SNMP, Telegram]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"/>
-    <updated>2015-10-11T10:10:00-07:00</updated>
+    <updated>2015-10-11T17:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support</id>
     <content type="html"><![CDATA[<p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
 
@@ -170,7 +170,7 @@ This makes more sense as most people run Home Assistant as a daemon</p>
   <entry>
     <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
     <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
-    <updated>2015-10-05T21:49:00-07:00</updated>
+    <updated>2015-10-05T21:49:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
     <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
 

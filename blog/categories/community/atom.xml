@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Community | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/community/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Community Highlights]]></title>
     <link href="https://home-assistant.io/blog/2015/12/05/community-highlights/"/>
-    <updated>2015-12-05T23:39:00-08:00</updated>
+    <updated>2015-12-05T23:39:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/05/community-highlights</id>
     <content type="html"><![CDATA[<p>From time to time we come along things that are worth sharing with fellow Home Assisters. Here a list of some cool stuff from last week:</p>
 

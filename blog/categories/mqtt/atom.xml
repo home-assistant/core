@@ -4,7 +4,7 @@
   <title><![CDATA[Category: MQTT | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/mqtt/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Report the temperature with ESP8266 to MQTT]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/"/>
-    <updated>2015-10-11T12:10:00-07:00</updated>
+    <updated>2015-10-11T19:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt</id>
     <content type="html"><![CDATA[
 <p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>
@@ -382,7 +382,7 @@ Adafruit_HDC1000 hdc = Adafruit_HDC1000();
   <entry>
     <title type="html"><![CDATA[Using MQTT with Home Assistant]]></title>
     <link href="https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant/"/>
-    <updated>2015-09-11T02:19:38-07:00</updated>
+    <updated>2015-09-11T09:19:38+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/11/different-ways-to-use-mqtt-with-home-assistant</id>
     <content type="html"><![CDATA[
 <p><img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="80" /> <a href="https://en.wikipedia.org/wiki/MQTT">MQTT</a> support was added to Home Assistant recently. The <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> will enable you to do all sort of things. Most likely you will use it to communicate with your devices. But Home Assistant doesn’t care where the data is coming from or is limited to real hardware as long as there is MQTT support. This means that it doesn’t matter if the data is coming from a human, a web service, or a device.</p>

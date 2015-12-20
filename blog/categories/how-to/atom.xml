@@ -4,7 +4,7 @@
   <title><![CDATA[Category: How-To | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Set up encryption using Let's Encrypt]]></title>
     <link href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/"/>
-    <updated>2015-12-13T10:05:00-08:00</updated>
+    <updated>2015-12-13T18:05:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt</id>
     <content type="html"><![CDATA[<p>Exposing your Home Assistant instance outside of your network always has been tricky. You have to set up port forwarding on your router and most likely add a dynamic DNS service to work around your ISP changing your IP. After this you would be able to use Home Assistant from anywhere but there is one big red flag: no encryption.</p>
 
@@ -123,7 +123,7 @@ sudo docker run -it --rm -p 443:443 -p 80:80 --name letsencrypt \
   <entry>
     <title type="html"><![CDATA[Activating Tasker tasks from Home Assistant using command line switches]]></title>
     <link href="https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches/"/>
-    <updated>2015-12-10T02:39:41-08:00</updated>
+    <updated>2015-12-10T10:39:41+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/10/activating-tasker-tasks-from-home-assistant-using-command-line-switches</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-12-tasker/tasker-logo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
 In this tutorial I will explain how you can activate Tasker tasks from Home Assistant command line switches. We are going to set up a switch that when toggled will make your Android device say either “On” or “Off”.</p>
@@ -192,7 +192,7 @@ requests.get(<span class="string"><span class="delimiter">'</span><span class="c
   <entry>
     <title type="html"><![CDATA[InfluxDB and Grafana]]></title>
     <link href="https://home-assistant.io/blog/2015/12/07/influxdb-and-grafana/"/>
-    <updated>2015-12-07T06:15:13-08:00</updated>
+    <updated>2015-12-07T14:15:13+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/07/influxdb-and-grafana</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/supported_brands/influxdb.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><img src="https://home-assistant.io/images/supported_brands/grafana.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 12px;" width="200" /><br />
 The <a href="https://influxdb.com/">InfluxDB</a> database is a so-called time series database primarly designed to store sensor data and real-time analytics.</p>
@@ -312,7 +312,7 @@ $ sudo systemctl status grafana-server
   <entry>
     <title type="html"><![CDATA[Report the temperature with ESP8266 to MQTT]]></title>
     <link href="https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt/"/>
-    <updated>2015-10-11T12:10:00-07:00</updated>
+    <updated>2015-10-11T19:10:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/10/11/measure-temperature-with-esp8266-and-report-to-mqtt</id>
     <content type="html"><![CDATA[
 <p>I recently learned about the ESP8266, a $5 chip that includes WiFi and is Arduino compatible. This means that all your DIY projects can now be done for a fraction of the price.</p>
@@ -678,7 +678,7 @@ Adafruit_HDC1000 hdc = Adafruit_HDC1000();
   <entry>
     <title type="html"><![CDATA[Remote Monitoring with Glances]]></title>
     <link href="https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant/"/>
-    <updated>2015-09-18T02:00:00-07:00</updated>
+    <updated>2015-09-18T09:00:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/09/18/monitoring-with-glances-and-home-assistant</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/supported_brands/glances.png" style="border:none; box-shadow: none; float: right;" height="80" /><br />
 Inspried by a <a href="https://github.com/balloob/home-assistant/issues/310">feature requests</a> I started looking into the available options to do monitoring of remote hosts. The feature request is about displaying system information in a similar way than the <a href="/components/sensor.systemmonitor/">systemmonitor</a> sensor does it for the local system. After a while I started to think that it would be a nice addition for a small home network where no full-blown system monitoring setup is present.</p>

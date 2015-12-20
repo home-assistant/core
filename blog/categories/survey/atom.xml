@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Survey | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/survey/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Survey November 2015]]></title>
     <link href="https://home-assistant.io/blog/2015/11/22/survey-november-2015/"/>
-    <updated>2015-11-22T06:51:18-08:00</updated>
+    <updated>2015-11-22T14:51:18+00:00</updated>
     <id>https://home-assistant.io/blog/2015/11/22/survey-november-2015</id>
     <content type="html"><![CDATA[<p><img src="https://home-assistant.io/images/blog/2015-11-survey/releases.png" style="float: right; margin-left: 8px; margin-bottom: 8px;" height="120" />Around a week ago we started with the first survey. Now 30 people have participated. Thank you very much if you did. We think that’s enough time to have some “only partially representative” data. It’s hard to tell how many Home Assistant users are out there. Currently there are 215 members in our <a href="https://gitter.im/balloob/home-assistant">Gitter chat room</a> and last week <a href="https://pypi.python.org/pypi/homeassistant/">PyPI</a> counted 5063 downloads.</p>
 

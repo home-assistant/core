@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Public-Service-Announcement | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/public-service-announcement/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[[Update: decision reversed!] Philips Hue blocks 3rd party lights]]></title>
     <link href="https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs/"/>
-    <updated>2015-12-12T10:44:00-08:00</updated>
+    <updated>2015-12-12T18:44:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/12/12/philips-hue-blocks-3rd-party-bulbs</id>
     <content type="html"><![CDATA[<p><strong>Update Dec 16</strong>: Great news! Philips has decided to <a href="http://www.developers.meethue.com/documentation/friends-hue-update">reverse their decision</a> and is working on a software update to allow 3rd party light bulbs again.</p>
 

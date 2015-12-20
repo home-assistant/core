@@ -4,7 +4,7 @@
   <title><![CDATA[Category: User-Stories | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/user-stories/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-19T10:19:36-08:00</updated>
+  <updated>2015-12-20T05:53:58+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -16,7 +16,7 @@
   <entry>
     <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
     <link href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/"/>
-    <updated>2015-08-26T08:12:00-07:00</updated>
+    <updated>2015-08-26T15:12:00+00:00</updated>
     <id>https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant</id>
     <content type="html"><![CDATA[<p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
 
