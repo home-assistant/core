@@ -33,32 +33,34 @@ omit =
     homeassistant/components/*/rfxtrx.py
 
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/geofancy.py
+    homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
-    homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/owntracks.py
+    homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
-    homeassistant/components/device_tracker/snmp.py
+    homeassistant/components/device_tracker/ubus.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/ifttt.py
     homeassistant/components/influxdb.py
     homeassistant/components/keyboard.py
-    homeassistant/components/light/hue.py
-    homeassistant/components/light/mqtt.py
-    homeassistant/components/light/limitlessled.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/limitlessled.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/firetv.py
@@ -66,9 +68,8 @@ omit =
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/plex.py
-    homeassistant/components/media_player/squeezebox.py
     homeassistant/components/media_player/sonos.py
-    homeassistant/components/notify/file.py
+    homeassistant/components/media_player/squeezebox.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
@@ -81,10 +82,11 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
-    homeassistant/components/sensor/command_sensor.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dweet.py
     homeassistant/components/sensor/efergy.py
+    homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
@@ -96,10 +98,11 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
+    homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
-    homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
@@ -108,6 +111,7 @@ omit =
     homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
     homeassistant/components/thermostat/nest.py

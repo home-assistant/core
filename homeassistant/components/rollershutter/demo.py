@@ -1,7 +1,7 @@
 """
 homeassistant.components.rollershutter.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Demo platform for rollorshutter component.
+Demo platform for the rollorshutter component.
 """
 from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
@@ -9,7 +9,7 @@ from homeassistant.components.rollershutter import RollershutterDevice
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Demo binary sensors. """
+    """ Sets up the Demo rollershutters. """
     add_devices([
         DemoRollershutter(hass, 'Kitchen Window', 0),
         DemoRollershutter(hass, 'Living Room Window', 100),
@@ -17,7 +17,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoRollershutter(RollershutterDevice):
-    """ Represents a rollershutter within Home Assistant. """
+    """ Represents a rollershutter.. """
     # pylint: disable=no-self-use
 
     def __init__(self, hass, name, position):
@@ -29,14 +29,17 @@ class DemoRollershutter(RollershutterDevice):
 
     @property
     def name(self):
+        """ Returns the name of the rollershutter. """
         return self._name
 
     @property
     def should_poll(self):
+        """ No polling needed for a demo rollershutter. """
         return False
 
     @property
     def current_position(self):
+        """ Returns the current position of the rollershutter. """
         return self._position
 
     def move_up(self, **kwargs):
@@ -62,11 +65,13 @@ class DemoRollershutter(RollershutterDevice):
             self._listener = None
 
     def _listen(self):
+        """ Listens for changes. """
         if self._listener is None:
             self._listener = track_utc_time_change(self.hass,
                                                    self._time_changed)
 
     def _time_changed(self, now):
+        """ Track time changes. """
         if self._moving_up:
             self._position -= 10
         else:

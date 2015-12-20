@@ -11,9 +11,11 @@ import logging
 
 import requests
 
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, \
+    DEVICE_DEFAULT_NAME
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import template, Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,36 +52,50 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     arest = ArestData(resource)
 
+    def make_renderer(value_template):
+        """ Creates renderer based on variable_template value """
+        if value_template is None:
+            return lambda value: value
+
+        def _render(value):
+            try:
+                return template.render(hass, value_template, {'value': value})
+            except TemplateError:
+                _LOGGER.exception('Error parsing value')
+                return value
+
+        return _render
+
     dev = []
 
     if var_conf is not None:
-        for variable in config['monitored_variables']:
+        for variable in var_conf:
             if variable['name'] not in response['variables']:
                 _LOGGER.error('Variable: "%s" does not exist',
                               variable['name'])
                 continue
 
+            renderer = make_renderer(variable.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(arest,
                                    resource,
                                    config.get('name', response['name']),
                                    variable['name'],
                                    variable=variable['name'],
                                    unit_of_measurement=variable.get(
-                                       'unit_of_measurement')))
+                                       ATTR_UNIT_OF_MEASUREMENT),
+                                   renderer=renderer))
 
     if pins is not None:
         for pinnum, pin in pins.items():
+            renderer = make_renderer(pin.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(ArestData(resource, pinnum),
                                    resource,
                                    config.get('name', response['name']),
                                    pin.get('name'),
                                    pin=pinnum,
                                    unit_of_measurement=pin.get(
-                                       'unit_of_measurement'),
-                                   corr_factor=pin.get('correction_factor',
-                                                       None),
-                                   decimal_places=pin.get('decimal_places',
-                                                          None)))
+                                       ATTR_UNIT_OF_MEASUREMENT),
+                                   renderer=renderer))
 
     add_devices(dev)
 
@@ -89,8 +105,7 @@ class ArestSensor(Entity):
     """ Implements an aREST sensor for exposed variables. """
 
     def __init__(self, arest, resource, location, name, variable=None,
-                 pin=None, unit_of_measurement=None, corr_factor=None,
-                 decimal_places=None):
+                 pin=None, unit_of_measurement=None, renderer=None):
         self.arest = arest
         self._resource = resource
         self._name = '{} {}'.format(location.title(), name.title()) \
@@ -99,8 +114,7 @@ class ArestSensor(Entity):
         self._pin = pin
         self._state = 'n/a'
         self._unit_of_measurement = unit_of_measurement
-        self._corr_factor = corr_factor
-        self._decimal_places = decimal_places
+        self._renderer = renderer
         self.update()
 
         if self._pin is not None:
@@ -126,18 +140,11 @@ class ArestSensor(Entity):
 
         if 'error' in values:
             return values['error']
-        elif 'value' in values:
-            if self._corr_factor is not None \
-                    and self._decimal_places is not None:
-                return round((float(values['value']) *
-                              float(self._corr_factor)), self._decimal_places)
-            elif self._corr_factor is not None \
-                    and self._decimal_places is None:
-                return round(float(values['value']) * float(self._corr_factor))
-            else:
-                return values['value']
-        else:
-            return values.get(self._variable, 'n/a')
+
+        value = self._renderer(values.get('value',
+                                          values.get(self._variable,
+                                                     'N/A')))
+        return value
 
     def update(self):
         """ Gets the latest data from aREST API. """
