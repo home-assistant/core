@@ -24,12 +24,6 @@ DEFAULT_OPTIMISTIC = False
 
 DEPENDENCIES = ['mqtt']
 
-CONF_TOPICS = [typ + topic
-               for typ in ('', 'brightness_', 'rgb_')
-               for topic in ('state_topic', 'command_topic')]
-CONF_VALUE_TEMPLATES = [typ + '_value_template'
-                        for typ in ('state', 'brightness', 'rgb')]
-
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add MQTT Light. """
@@ -41,7 +35,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback([MqttLight(
         hass,
         config.get('name', DEFAULT_NAME),
-        {key: config.get(key) for key in CONF_TOPICS},
+        {key: config.get(key) for key in
+         (typ + topic
+          for typ in ('', 'brightness_', 'rgb_')
+          for topic in ('state_topic', 'command_topic'))},
         {key: config.get(key + '_value_template')
          for key in ('state', 'brightness', 'rgb')},
         config.get('qos', DEFAULT_QOS),
