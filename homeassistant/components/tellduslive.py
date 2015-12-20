@@ -38,6 +38,9 @@ from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
 
+from tellcore.constants import (
+    TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
+
 DOMAIN = "tellduslive"
 DISCOVER_SWITCHES = "tellduslive.switches"
 DISCOVER_SENSORS = "tellduslive.sensors"
@@ -73,6 +76,11 @@ class TelldusLiveData(object):
         
 
     def request(self, what, params={}):
+        supported_methods = TELLSTICK_TURNON \
+                            | TELLSTICK_TURNOFF \
+                            | TELLSTICK_TOGGLE
+        params.update({"supportedMethods": supported_methods,
+                       'extras': 'coordinate,timezone,tzoffset'})
         return self.client.request(what, params)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -85,11 +93,8 @@ class TelldusLiveData(object):
         return response["sensor"]
 
     def get_sensors(self):
-        _LOGGER.info("Maybe updating sensors")
         updated_sensors = self._update_sensors()
-        if updated_sensors is None:
-            _LOGGER.info("Not actually updating sensors yet")
-        else:
+        if updated_sensors is not None:
             _LOGGER.info("tellduslive data updated successfully.")
             self.sensors = updated_sensors
         return self.sensors
