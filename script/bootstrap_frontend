@@ -1,5 +1,7 @@
 echo "Bootstrapping frontend..."
+git submodule update
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
 npm install
+bower install
 npm run setup_js_dev
 cd ../../../../..

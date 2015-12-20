@@ -9,6 +9,7 @@ https://home-assistant.io/components/conversation/
 import logging
 import re
 
+
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -21,9 +22,13 @@ ATTR_TEXT = "text"
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
+REQUIREMENTS = ['fuzzywuzzy==0.8.0']
+
 
 def setup(hass, config):
     """ Registers the process service. """
+    from fuzzywuzzy import process as fuzzyExtract
+
     logger = logging.getLogger(__name__)
 
     def process(service):
@@ -42,9 +47,11 @@ def setup(hass, config):
 
         name, command = match.groups()
 
-        entity_ids = [
-            state.entity_id for state in hass.states.all()
-            if state.name.lower() == name]
+        entities = {state.entity_id: state.name for state in hass.states.all()}
+
+        entity_ids = fuzzyExtract.extractOne(name,
+                                             entities,
+                                             score_cutoff=65)[2]
 
         if not entity_ids:
             logger.error(
