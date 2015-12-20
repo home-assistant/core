@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.components import (
-    group, discovery, wink, isy994, verisure, zwave)
+    group, discovery, wink, isy994, verisure, zwave, tellduslive)
 
 DOMAIN = 'switch'
 SCAN_INTERVAL = 30
@@ -40,6 +40,7 @@ DISCOVERY_PLATFORMS = {
     isy994.DISCOVER_SWITCHES: 'isy994',
     verisure.DISCOVER_SWITCHES: 'verisure',
     zwave.DISCOVER_SWITCHES: 'zwave',
+    tellduslive.DISCOVER_SWITCHES: 'tellduslive',
 }
 
 PROP_TO_ATTR = {
