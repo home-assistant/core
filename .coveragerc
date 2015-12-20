@@ -98,6 +98,7 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
+    homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
