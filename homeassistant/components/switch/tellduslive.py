@@ -8,50 +8,57 @@ https://home-assistant.io/components/switch.tellduslive/
 """
 import logging
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
-                                 ATTR_FRIENDLY_NAME)
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components import tellduslive
 from homeassistant.helpers.entity import ToggleEntity
 
-SIGNAL_REPETITIONS = 1
-REQUIREMENTS = ['tellive-py==0.5.2']
 _LOGGER = logging.getLogger(__name__)
+DEPENDENCIES = ['tellduslive']
 
-
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Tellstick switches. """
-    pass
+    switches = tellduslive.NETWORK.get_switches()
+    # fixme: metadata groups etc
+    add_devices([TelldusLiveSwitch(switch["name"], 
+                                   switch["id"]) \
+                 for switch in switches])
 
-class TellstickSwitchDevice(ToggleEntity):
+class TelldusLiveSwitch(ToggleEntity):
     """ Represents a Tellstick switch. """
     
-    def __init__(self, tellstick_device, signal_repetitions):
-        pass
+    def __init__(self, name, switch_id):
+        self._name = name
+        self._id = switch_id
 
     @property
     def should_poll(self):
         """ Tells Home Assistant not to poll this entity. """
-        return False
+        return True
 
     @property
     def name(self):
         """ Returns the name of the switch if any. """
-        return self.tellstick_device.name
+        return self._name
 
     @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
+    def state(self):
+        """ Returns the state. """
+        return STATE_UNKNOWN
 
-    @property
-    def is_on(self):
-        """ True if switch is on. """
-        pass
+    #@property
+    #def state_attributes(self):
+    #    """ Returns optional state attributes. """
+    #    pass
+
+    #@property
+    #def is_on(self):
+    #    """ True if switch is on. """
+    #    pass
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        self.update_ha_state()
+        pass
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
-        self.update_ha_state()
+        pass
