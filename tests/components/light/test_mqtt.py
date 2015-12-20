@@ -62,6 +62,15 @@ class TestLightMQTT(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
+    def test_fail_setup_if_no_command_topic(self):
+        self.assertTrue(light.setup(self.hass, {
+            'light': {
+                'platform': 'mqtt',
+                'name': 'test',
+            }
+        }))
+        self.assertIsNone(self.hass.states.get('light.test'))
+
     def test_no_color_or_brightness_if_no_topics(self):
         self.assertTrue(light.setup(self.hass, {
             'light': {
