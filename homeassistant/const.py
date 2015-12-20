@@ -145,6 +145,9 @@ SERVICE_ALARM_TRIGGER = "alarm_trigger"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
 
+SERVICE_OPEN = "open"
+SERVICE_CLOSE = "close"
+
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
 SERVICE_STOP = 'stop'
