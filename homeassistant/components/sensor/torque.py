@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.torque/
 """
 
 import re
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers.entity import Entity
 
 
@@ -15,16 +16,13 @@ DOMAIN = 'torque'
 DEPENDENCIES = ['http']
 SENSOR_EMAIL_FIELD = 'eml'
 DEFAULT_NAME = 'vehicle'
-HTTP_RESPONSE = 'OK'
-HTTP_VERB = 'GET'
 ENTITY_NAME_FORMAT = '{0} {1}'
 
-API_PATH = r'/api/torque'
+API_PATH = '/api/torque'
 SENSOR_NAME_KEY = r'userFullName(\w+)'
 SENSOR_UNIT_KEY = r'userUnit(\w+)'
 SENSOR_VALUE_KEY = r'k(\w+)'
 
-PATH_MATCH = re.compile(API_PATH)
 NAME_KEY = re.compile(SENSOR_NAME_KEY)
 UNIT_KEY = re.compile(SENSOR_UNIT_KEY)
 VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
@@ -50,7 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def _receive_data(handler, path_match, data):
         """ Received data from Torque. """
-        handler.write_json_message(HTTP_RESPONSE)
+        handler.send_response(HTTP_OK)
+        handler.end_headers()
 
         if email is not None and email != data[SENSOR_EMAIL_FIELD]:
             return
@@ -80,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     units.get(pid, None))
                 add_devices([sensors[pid]])
 
-    hass.http.register_path(HTTP_VERB, PATH_MATCH, _receive_data)
+    hass.http.register_path('GET', API_PATH, _receive_data)
     return True
 
 
