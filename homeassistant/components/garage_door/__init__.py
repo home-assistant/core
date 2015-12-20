@@ -97,16 +97,16 @@ class GarageDoorDevice(Entity):
         return None
 
     def close(self):
-        """ Locks the lock. """
+        """ Closes the garage door. """
         raise NotImplementedError()
 
     def open(self):
-        """ Unlocks the lock. """
+        """ Opens the garage door. """
         raise NotImplementedError()
 
     @property
     def state(self):
-        locked = self.is_closed
-        if locked is None:
+        closed = self.is_closed
+        if closed is None:
             return STATE_UNKNOWN
-        return STATE_CLOSED if locked else STATE_OPEN
+        return STATE_CLOSED if closed else STATE_OPEN

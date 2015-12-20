@@ -8,10 +8,10 @@ https://home-assistant.io/components/garage_door.wink/
 """
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.garage_door import GarageDoorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.3.2']
+REQUIREMENTS = ['python-wink==0.3.1']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -29,10 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         pywink.set_bearer_token(token)
 
-    add_devices(WinkGarageDoorDevice(door) for door in pywink.get_garage_door())
+    add_devices(WinkGarageDoorDevice(door) for door in pywink.get_garage_doors())
 
 
-class WinkGarageDoorkDevice(LockDevice):
+class WinkGarageDoorDevice(GarageDoorDevice):
     """ Represents a Wink garage door. """
 
     def __init__(self, wink):
@@ -55,12 +55,12 @@ class WinkGarageDoorkDevice(LockDevice):
     @property
     def is_closed(self):
         """ True if device is closed. """
-        return self.wink.state()
+        return self.wink.state() == 0
 
     def close(self):
         """ Close the device. """
-        self.wink.set_state(True)
+        self.wink.set_state(0)
 
     def open(self):
         """ Open the device. """
-        self.wink.set_state(False)
+        self.wink.set_state(1)

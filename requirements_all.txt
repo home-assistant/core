@@ -67,7 +67,7 @@ https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
 # homeassistant.components.garage_door.wink
-python-wink==0.3.2
+python-wink==0.3.1
 
 # homeassistant.components.media_player.cast
 pychromecast==0.6.13
