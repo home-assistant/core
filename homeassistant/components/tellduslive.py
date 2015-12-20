@@ -63,6 +63,7 @@ class TelldusLiveData(object):
         private_key = config[DOMAIN].get(CONF_PRIVATE_KEY)
         token = config[DOMAIN].get(CONF_TOKEN)
         token_secret = config[DOMAIN].get(CONF_TOKEN_SECRET)
+
         from tellive.client import LiveClient
         self.sensors = []
         self.client = LiveClient(public_key = public_key,
@@ -72,13 +73,10 @@ class TelldusLiveData(object):
         
 
     def request(self, what, params={}):
-        response = self.client.request(what, params)
-        #from pprint import pprint
-        #pprint(response)
-        return response
+        return self.client.request(what, params)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_sensors(self):
+    def _update_sensors(self):
         """ Get the latest data from telldus live """
         _LOGGER.info("Updating sensors for real")
         params = { "includeValues": 1,
@@ -88,7 +86,7 @@ class TelldusLiveData(object):
 
     def get_sensors(self):
         _LOGGER.info("Maybe updating sensors")
-        updated_sensors = self.update_sensors()
+        updated_sensors = self._update_sensors()
         if updated_sensors is None:
             _LOGGER.info("Not actually updating sensors yet")
         else:
@@ -105,7 +103,6 @@ def setup(hass, config):
     """ Setup the tellduslive component """
 
     # later: aquire an app key and authenticate using username + password
-
     if not validate_config(config, {DOMAIN: [ CONF_PUBLIC_KEY, 
                                               CONF_PRIVATE_KEY, 
                                               CONF_TOKEN, 
@@ -119,7 +116,6 @@ def setup(hass, config):
     global NETWORK
     NETWORK = TelldusLiveData(config)
     
-    # Load components for the devices in the Wink that we support
     for component_name, discovery_type in (
             ('switch', DISCOVER_SWITCHES),
             ('sensor',  DISCOVER_SENSORS)):
