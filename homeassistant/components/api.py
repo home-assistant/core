@@ -12,16 +12,19 @@ import threading
 import json
 
 import homeassistant.core as ha
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
+from homeassistant.util import template
 from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
     URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_ERROR_LOG, URL_API_LOG_OUT,
-    EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
+    URL_API_TEMPLATE, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY)
+    HTTP_UNPROCESSABLE_ENTITY, HTTP_HEADER_CONTENT_TYPE,
+    CONTENT_TYPE_TEXT_PLAIN)
 
 
 DOMAIN = 'api'
@@ -91,6 +94,9 @@ def setup(hass, config):
 
     hass.http.register_path('POST', URL_API_LOG_OUT, _handle_post_api_log_out)
 
+    hass.http.register_path('POST', URL_API_TEMPLATE,
+                            _handle_post_api_template)
+
     return True
 
 
@@ -120,22 +126,23 @@ def _handle_get_api_stream(handler, path_match, data):
             try:
                 wfile.write(msg.encode("UTF-8"))
                 wfile.flush()
-                handler.server.sessions.extend_validation(session_id)
-            except IOError:
+            except (IOError, ValueError):
+                # IOError: socket errors
+                # ValueError: raised when 'I/O operation on closed file'
                 block.set()
 
     def forward_events(event):
         """ Forwards events to the open request. """
         nonlocal gracefully_closed
 
-        if block.is_set() or event.event_type == EVENT_TIME_CHANGED or \
-           restrict and event.event_type not in restrict:
+        if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
             return
         elif event.event_type == EVENT_HOMEASSISTANT_STOP:
             gracefully_closed = True
             block.set()
             return
 
+        handler.server.sessions.extend_validation(session_id)
         write_message(json.dumps(event, cls=rem.JSONEncoder))
 
     handler.send_response(HTTP_OK)
@@ -143,7 +150,11 @@ def _handle_get_api_stream(handler, path_match, data):
     session_id = handler.set_session_cookie_header()
     handler.end_headers()
 
-    hass.bus.listen(MATCH_ALL, forward_events)
+    if restrict:
+        for event in restrict:
+            hass.bus.listen(event, forward_events)
+    else:
+        hass.bus.listen(MATCH_ALL, forward_events)
 
     while True:
         write_message(STREAM_PING_PAYLOAD)
@@ -157,7 +168,11 @@ def _handle_get_api_stream(handler, path_match, data):
         _LOGGER.info("Found broken event stream to %s, cleaning up",
                      handler.client_address[0])
 
-    hass.bus.remove_listener(MATCH_ALL, forward_events)
+    if restrict:
+        for event in restrict:
+            hass.bus.remove_listener(event, forward_events)
+    else:
+        hass.bus.remove_listener(MATCH_ALL, forward_events)
 
 
 def _handle_get_api_config(handler, path_match, data):
@@ -357,6 +372,22 @@ def _handle_post_api_log_out(handler, path_match, data):
     handler.send_response(HTTP_OK)
     handler.destroy_session()
     handler.end_headers()
+
+
+def _handle_post_api_template(handler, path_match, data):
+    """ Log user out. """
+    template_string = data.get('template', '')
+
+    try:
+        rendered = template.render(handler.server.hass, template_string)
+
+        handler.send_response(HTTP_OK)
+        handler.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+        handler.end_headers()
+        handler.wfile.write(rendered.encode('utf-8'))
+    except TemplateError as e:
+        handler.write_json_message(str(e), HTTP_UNPROCESSABLE_ENTITY)
+        return
 
 
 def _services_json(hass):

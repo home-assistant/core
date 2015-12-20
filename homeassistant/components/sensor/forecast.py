@@ -147,17 +147,8 @@ class ForeCastSensor(Entity):
                 self._state = data.nearestStormBearing
             elif self.type == 'precip_intensity':
                 self._state = data.precipIntensity
-                if data.precipIntensity == 0:
-                    self._state = 'None'
-                    self._unit_of_measurement = ''
-                else:
-                    self._state = data.precipIntensity
             elif self.type == 'precip_type':
-                if data.precipType is None:
-                    self._state = 'None'
-                    self._unit_of_measurement = ''
-                else:
-                    self._state = data.precipType
+                self._state = data.precipType
             elif self.type == 'precip_probability':
                 self._state = round(data.precipProbability * 100, 1)
             elif self.type == 'dew_point':

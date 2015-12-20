@@ -10,8 +10,9 @@ import logging
 import subprocess
 from datetime import timedelta
 
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import template, Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,25 +33,24 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     data = CommandSensorData(config.get('command'))
 
     add_devices_callback([CommandSensor(
+        hass,
         data,
         config.get('name', DEFAULT_NAME),
         config.get('unit_of_measurement'),
-        config.get('correction_factor', 1.0),
-        config.get('decimal_places', 0)
+        config.get(CONF_VALUE_TEMPLATE)
     )])
 
 
 # pylint: disable=too-many-arguments
 class CommandSensor(Entity):
     """ Represents a sensor that is returning a value of a shell commands. """
-    def __init__(self, data, name, unit_of_measurement, corr_factor,
-                 decimal_places):
+    def __init__(self, hass, data, name, unit_of_measurement, value_template):
+        self._hass = hass
         self.data = data
         self._name = name
         self._state = False
         self._unit_of_measurement = unit_of_measurement
-        self._corr_factor = float(corr_factor)
-        self._decimal_places = decimal_places
+        self._value_template = value_template
         self.update()
 
     @property
@@ -73,14 +73,10 @@ class CommandSensor(Entity):
         self.data.update()
         value = self.data.value
 
-        try:
-            if value is not None:
-                if self._corr_factor is not None:
-                    self._state = round((float(value) * self._corr_factor),
-                                        self._decimal_places)
-                else:
-                    self._state = value
-        except ValueError:
+        if self._value_template is not None:
+            self._state = template.render_with_possible_json_value(
+                self._hass, self._value_template, value, 'N/A')
+        else:
             self._state = value
 
 
