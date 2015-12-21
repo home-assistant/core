@@ -38,6 +38,7 @@ sensor:
 import logging
 import datetime
 import urllib.request
+import requests
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
@@ -161,61 +162,64 @@ class YrSensor(Entity):
         self._weather.update()
         now = datetime.datetime.now()
         # check if data should be updated
-        if now > self._update:
-            time_data = self._weather.data['product']['time']
+        if now <= self._update:
+            return
 
-            # pylint: disable=consider-using-enumerate
-            # find sensor
-            for k in range(len(time_data)):
-                valid_from = datetime.datetime.strptime(time_data[k]['@from'],
-                                                        "%Y-%m-%dT%H:%M:%SZ")
-                valid_to = datetime.datetime.strptime(time_data[k]['@to'],
-                                                      "%Y-%m-%dT%H:%M:%SZ")
-                self._update = valid_to
-                self._info = "Forecast between " + time_data[k]['@from'] \
-                    + " and " + time_data[k]['@to'] + ". "
+        time_data = self._weather.data['product']['time']
 
-                temp_data = time_data[k]['location']
-                if self.type in temp_data and now < valid_to:
-                    if self.type == 'precipitation' and valid_from < now:
-                        self._state = temp_data[self.type]['@value']
-                        return
-                    elif self.type == 'symbol' and valid_from < now:
-                        self._state = temp_data[self.type]['@number']
-                        return
-                    elif self.type == 'temperature':
-                        self._state = temp_data[self.type]['@value']
-                        return
-                    elif self.type == 'windSpeed':
-                        self._state = temp_data[self.type]['@mps']
-                        return
-                    elif self.type == 'pressure':
-                        self._state = temp_data[self.type]['@value']
-                        return
-                    elif self.type == 'windDirection':
-                        self._state = float(temp_data[self.type]['@deg'])
-                        return
-                    elif self.type == 'humidity':
-                        self._state = temp_data[self.type]['@value']
-                        return
-                    elif self.type == 'fog':
-                        self._state = temp_data[self.type]['@percent']
-                        return
-                    elif self.type == 'cloudiness':
-                        self._state = temp_data[self.type]['@percent']
-                        return
-                    elif self.type == 'lowClouds':
-                        self._state = temp_data[self.type]['@percent']
-                        return
-                    elif self.type == 'mediumClouds':
-                        self._state = temp_data[self.type]['@percent']
-                        return
-                    elif self.type == 'highClouds':
-                        self._state = temp_data[self.type]['@percent']
-                        return
-                    elif self.type == 'dewpointTemperature':
-                        self._state = temp_data[self.type]['@value']
-                        return
+        # pylint: disable=consider-using-enumerate
+        # find sensor
+        for k in range(len(time_data)):
+            valid_from = datetime.datetime.strptime(time_data[k]['@from'],
+                                                    "%Y-%m-%dT%H:%M:%SZ")
+            valid_to = datetime.datetime.strptime(time_data[k]['@to'],
+                                                  "%Y-%m-%dT%H:%M:%SZ")
+            self._update = valid_to
+            self._info = "Forecast between " + time_data[k]['@from'] \
+                + " and " + time_data[k]['@to'] + ". "
+
+            temp_data = time_data[k]['location']
+            if self.type not in temp_data and now >= valid_to:
+                continue
+            if self.type == 'precipitation' and valid_from < now:
+                self._state = temp_data[self.type]['@value']
+                return
+            elif self.type == 'symbol' and valid_from < now:
+                self._state = temp_data[self.type]['@number']
+                return
+            elif self.type == 'temperature':
+                self._state = temp_data[self.type]['@value']
+                return
+            elif self.type == 'windSpeed':
+                self._state = temp_data[self.type]['@mps']
+                return
+            elif self.type == 'pressure':
+                self._state = temp_data[self.type]['@value']
+                return
+            elif self.type == 'windDirection':
+                self._state = float(temp_data[self.type]['@deg'])
+                return
+            elif self.type == 'humidity':
+                self._state = temp_data[self.type]['@value']
+                return
+            elif self.type == 'fog':
+                self._state = temp_data[self.type]['@percent']
+                return
+            elif self.type == 'cloudiness':
+                self._state = temp_data[self.type]['@percent']
+                return
+            elif self.type == 'lowClouds':
+                self._state = temp_data[self.type]['@percent']
+                return
+            elif self.type == 'mediumClouds':
+                self._state = temp_data[self.type]['@percent']
+                return
+            elif self.type == 'highClouds':
+                self._state = temp_data[self.type]['@percent']
+                return
+            elif self.type == 'dewpointTemperature':
+                self._state = temp_data[self.type]['@value']
+                return
 
 
 # pylint: disable=too-few-public-methods
@@ -233,19 +237,20 @@ class YrData(object):
         """ Gets the latest data from yr.no """
         now = datetime.datetime.now()
         # check if new will be available
-        if now > self._nextrun:
-            try:
-                response = urllib.request.urlopen(self._url)
-            except urllib.error.URLError:
-                return
-            if response.status != 200:
-                return
-            data = response.read().decode('utf-8')
+        if now <= self._nextrun:
+            return
+        try:
+            response = requests.get(self._url)
+        except requests.RequestException:
+            return
+        if response.status_code != 200:
+            return
+        data = response.text
 
-            import xmltodict
-            self.data = xmltodict.parse(data)['weatherdata']
-            model = self.data['meta']['model']
-            if '@nextrun' not in model:
-                model = model[0]
-            self._nextrun = datetime.datetime.strptime(model['@nextrun'],
-                                                       "%Y-%m-%dT%H:%M:%SZ")
+        import xmltodict
+        self.data = xmltodict.parse(data)['weatherdata']
+        model = self.data['meta']['model']
+        if '@nextrun' not in model:
+            model = model[0]
+        self._nextrun = datetime.datetime.strptime(model['@nextrun'],
+                                                   "%Y-%m-%dT%H:%M:%SZ")
