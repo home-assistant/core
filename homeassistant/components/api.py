@@ -12,6 +12,7 @@ import threading
 import json
 
 import homeassistant.core as ha
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
 from homeassistant.util import template
@@ -377,11 +378,16 @@ def _handle_post_api_template(handler, path_match, data):
     """ Log user out. """
     template_string = data.get('template', '')
 
-    handler.send_response(HTTP_OK)
-    handler.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
-    handler.end_headers()
-    handler.wfile.write(
-        template.render(handler.server.hass, template_string).encode('utf-8'))
+    try:
+        rendered = template.render(handler.server.hass, template_string)
+
+        handler.send_response(HTTP_OK)
+        handler.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+        handler.end_headers()
+        handler.wfile.write(rendered.encode('utf-8'))
+    except TemplateError as e:
+        handler.write_json_message(str(e), HTTP_UNPROCESSABLE_ENTITY)
+        return
 
 
 def _services_json(hass):
