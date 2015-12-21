@@ -141,7 +141,11 @@ https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc7045
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.sensor.yr
+xmltodict
+
 # homeassistant.components.sun
+# homeassistant.components.sensor.yr
 astral==0.8.1
 
 # homeassistant.components.switch.edimax
@@ -170,6 +174,3 @@ https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
-
-# homeassistant.components.sensor.yr
-xmltodict
