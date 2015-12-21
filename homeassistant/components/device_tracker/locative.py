@@ -1,10 +1,10 @@
 """
-homeassistant.components.device_tracker.geofancy
+homeassistant.components.device_tracker.locative
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Geofancy platform for the device tracker.
+Locative platform for the device tracker.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.geofancy/
+https://home-assistant.io/components/device_tracker.locative/
 """
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
@@ -13,32 +13,32 @@ DEPENDENCIES = ['http']
 
 _SEE = 0
 
-URL_API_GEOFANCY_ENDPOINT = "/api/geofancy"
+URL_API_LOCATIVE_ENDPOINT = "/api/locative"
 
 
 def setup_scanner(hass, config, see):
-    """ Set up an endpoint for the Geofancy app. """
+    """ Set up an endpoint for the Locative app. """
 
     # Use a global variable to keep setup_scanner compact when using a callback
     global _SEE
     _SEE = see
 
     # POST would be semantically better, but that currently does not work
-    # since Geofancy sends the data as key1=value1&key2=value2
+    # since Locative sends the data as key1=value1&key2=value2
     # in the request body, while Home Assistant expects json there.
 
     hass.http.register_path(
-        'GET', URL_API_GEOFANCY_ENDPOINT, _handle_get_api_geofancy)
+        'GET', URL_API_LOCATIVE_ENDPOINT, _handle_get_api_locative)
 
     return True
 
 
-def _handle_get_api_geofancy(handler, path_match, data):
-    """ Geofancy message received. """
+def _handle_get_api_locative(handler, path_match, data):
+    """ Locative message received. """
 
     if not isinstance(data, dict):
         handler.write_json_message(
-            "Error while parsing Geofancy message.",
+            "Error while parsing Locative message.",
             HTTP_INTERNAL_SERVER_ERROR)
         return
     if 'latitude' not in data or 'longitude' not in data:
@@ -67,4 +67,4 @@ def _handle_get_api_geofancy(handler, path_match, data):
 
     _SEE(dev_id=device_entity_id, gps=gps_coords, location_name=data['id'])
 
-    handler.write_json_message("Geofancy message processed")
+    handler.write_json_message("Locative message processed")
