@@ -39,7 +39,8 @@ class EntityComponent(object):
         self.is_polling = False
 
         self.config = None
-        self.lock = Lock()
+        # Because updating state might cause an entity to be found
+        self.lock = RLock()
 
     def setup(self, config):
         """
