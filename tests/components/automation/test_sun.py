@@ -139,3 +139,251 @@ class TestAutomationSun(unittest.TestCase):
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    def test_if_action_before_before(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 10, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'before': 'sunrise',
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_action_after_before(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'before': 'sunrise',
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_action_before_after(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 13, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'after': 'sunrise',
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_action_before_and_after_during(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '10:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '15:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 12, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'after': 'sunrise',
+                        'before': 'sunset'
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_action_before_and_after_before(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '10:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '15:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 8, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'after': 'sunrise',
+                        'before': 'sunset'
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_action_before_and_after_after(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '10:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '15:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 16, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'after': 'sunrise',
+                        'before': 'sunset'
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_action_offset_before(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 14, 59, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'before': 'sunrise',
+                        'before_offset': '+1:00:00'
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_action_offset_after(self):
+        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
+            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+        })
+
+        now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
+        entity_id = 'domain.test_entity'
+
+        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+                   return_value=now):
+            automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'sun',
+                        'after': 'sunrise',
+                        'after_offset': '+1:00:00'
+                    },
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            })
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
