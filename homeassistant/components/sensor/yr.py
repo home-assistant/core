@@ -135,7 +135,7 @@ class YrSensor(Entity):
     def state_attributes(self):
         """ Returns state attributes. """
         data = {}
-        data[''] = self._info + "Weather forecast from yr.no, delivered by the"\
+        data[''] = "Weather forecast from yr.no, delivered by the"\
             " Norwegian Meteorological Institute and the NRK"
         if self.type == 'symbol':
             symbol_nr = self._state
