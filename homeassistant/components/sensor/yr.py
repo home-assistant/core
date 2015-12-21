@@ -111,7 +111,6 @@ class YrSensor(Entity):
     """ Implements an Yr.no sensor. """
 
     def __init__(self, sensor_type, weather):
-        self.client_name = 'yr'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
@@ -124,7 +123,7 @@ class YrSensor(Entity):
 
     @property
     def name(self):
-        return '{} {}'.format(self.client_name, self._name)
+        return self._name
 
     @property
     def state(self):
