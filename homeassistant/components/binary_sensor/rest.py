@@ -23,7 +23,7 @@ DEFAULT_METHOD = 'GET'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
-# pylint: disable=unused-variable, logging-too-many-args
+# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the REST binary sensor. """
 
