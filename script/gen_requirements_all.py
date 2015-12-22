@@ -8,10 +8,11 @@ import importlib
 import os
 import pkgutil
 import re
+import sys
 
 COMMENT_REQUIREMENTS = [
     'RPi.GPIO',
-    'Adafruit_Python_DHT'
+    'Adafruit_Python_DHT',
 ]
 
 
@@ -67,8 +68,9 @@ def gather_modules():
             reqs.setdefault(req, []).append(package)
 
     if errors:
-        print("Found errors")
-        print('\n'.join(errors))
+        print("******* ERROR")
+        print("Errors while importing: ", ', '.join(errors))
+        print("Make sure you import 3rd party libraries inside methods.")
         return None
 
     output.append('# Home Assistant core')
@@ -94,6 +96,12 @@ def write_file(data):
         req_file.write(data)
 
 
+def validate_file(data):
+    """ Validates if requirements_all.txt is up to date. """
+    with open('requirements_all.txt', 'r') as req_file:
+        return data == ''.join(req_file)
+
+
 def main():
     """ Main """
     if not os.path.isfile('requirements_all.txt'):
@@ -103,7 +111,16 @@ def main():
     data = gather_modules()
 
     if data is None:
-        return
+        sys.exit(1)
+
+    if sys.argv[-1] == 'validate':
+        if validate_file(data):
+            print("requirements_all.txt is up to date.")
+            sys.exit(0)
+        print("******* ERROR")
+        print("requirements_all.txt is not up to date")
+        print("Please run script/gen_requirements_all.py")
+        sys.exit(1)
 
     write_file(data)
 

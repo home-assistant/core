@@ -14,9 +14,7 @@ from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/picklepete/pyicloud/archive/'
-                '80f6cd6decc950514b8dc43b30c5bded81b34d5f.zip'
-                '#pyicloud==0.8.0']
+REQUIREMENTS = ['pyicloud==0.7.2']
 
 CONF_INTERVAL = 'interval'
 DEFAULT_INTERVAL = 8
@@ -34,7 +32,7 @@ def setup_scanner(hass, config, see):
 
     if username is None or password is None:
         _LOGGER.error('Must specify a username and password')
-        return
+        return False
 
     try:
         _LOGGER.info('Logging into iCloud Account')
@@ -44,7 +42,7 @@ def setup_scanner(hass, config, see):
                               verify=True)
     except PyiCloudFailedLoginException as error:
         _LOGGER.exception('Error logging into iCloud Service: %s', error)
-        return
+        return False
 
     def keep_alive(now):
         """ Keeps authenticating iCloud connection. """
@@ -85,3 +83,5 @@ def setup_scanner(hass, config, see):
         minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)),
         second=0
     )
+
+    return True

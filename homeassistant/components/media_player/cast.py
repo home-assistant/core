@@ -6,6 +6,7 @@ Provides functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
+# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
@@ -19,7 +20,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
-REQUIREMENTS = ['pychromecast==0.6.12']
+REQUIREMENTS = ['pychromecast==0.6.13']
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
