@@ -26,9 +26,7 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
     sensors = tellduslive.NETWORK.get_sensors()
-    # fixme: metadata groups etc
     devices = []
-    print(sensors)
     for component in sensors:
         for sensor in component["data"]:
             # one component can have more than one sensor
@@ -70,4 +68,5 @@ class TelldusLiveSensor(Entity):
             for sensor in component["data"]:
                 if component["id"] == self.sensor_id and \
                    sensor["name"] == self.sensor_type:
+                    # do we need/want decimals? for now, no
                     self._state = int(round(float(sensor["value"])))
