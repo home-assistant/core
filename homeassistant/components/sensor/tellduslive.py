@@ -17,8 +17,8 @@ from homeassistant.components import tellduslive
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tellduslive']
 
-SENSOR_TYPE_TEMP="temp"
-SENSOR_TYPE_HUMIDITY="humidity"
+SENSOR_TYPE_TEMP = "temp"
+SENSOR_TYPE_HUMIDITY = "humidity"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
