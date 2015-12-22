@@ -17,9 +17,12 @@ from homeassistant.components import tellduslive
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tellduslive']
 
+SENSOR_TYPE_TEMP="temp"
+SENSOR_TYPE_HUMIDITY="humidity"
+
 SENSOR_TYPES = {
-    'temp': ['Temperature', TEMP_CELCIUS],
-    'humidity': ['Humidity', '%'],
+    SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
+    SENSOR_TYPE_HUMIDITY: ['Humidity', '%', "mdi:water"],
 }
 
 
@@ -46,6 +49,7 @@ class TelldusLiveSensor(Entity):
         self._state = None
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._icon = SENSOR_TYPES[sensor_type][2]
         self.update()
 
     @property
@@ -62,6 +66,10 @@ class TelldusLiveSensor(Entity):
     def unit_of_measurement(self):
         return self._unit_of_measurement
 
+    @property
+    def icon(self):
+        return self._icon
+
     def update(self):
         sensors = tellduslive.NETWORK.get_sensors()
         for component in sensors:
@@ -69,7 +77,7 @@ class TelldusLiveSensor(Entity):
                 if component["id"] == self.sensor_id and \
                    sensor["name"] == self.sensor_type:
                     self._state = float(sensor["value"])
-                    if self.sensor_type == "temp":
+                    if self.sensor_type == SENSOR_TYPE_TEMP:
                         self._state = round(self._state, 1)
-                    elif self.sensor_type == "humidity":
+                    elif self.sensor_type == SENSOR_TYPE_HUMIDITY:
                         self._state = int(round(self._state))
