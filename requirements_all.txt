@@ -147,10 +147,6 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 # homeassistant.components.sensor.systemmonitor
 psutil==3.2.2
 
-# homeassistant.components.sensor.tellduslive
-# homeassistant.components.switch.tellduslive
-tellive-py==0.5.2
-
 # homeassistant.components.sensor.temper
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
 
@@ -179,6 +175,9 @@ orvibo==1.1.0
 
 # homeassistant.components.switch.wemo
 pywemo==0.3.3
+
+# homeassistant.components.tellduslive
+tellive-py==0.5.2
 
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
