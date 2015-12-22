@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-22T04:36:27+00:00</updated>
+  <updated>2015-12-22T09:41:30+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,67 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.10: Amazon Echo, iCloud, Dweet.io, Twitch and templating support!]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/22/amazon-echo-icloud-and-templates/"/>
+    <updated>2015-12-22T09:30:00+00:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/22/amazon-echo-icloud-and-templates</id>
+    <content type="html"><![CDATA[<p>Alrighty, it’s time for Home Assistant 0.10. A lot amazing things have changed and sadly we also had to introduce a bunch of backwards incompatible changes. I would like to give a big shoutout to Philip Lundrigan (<a href="https://github.com/philipbl">@philipbl</a>) who put a lot in effort in helping the migration to move towards using templates for a wide variety of platforms.</p>
+
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe></center>
+
+<p><img src="https://home-assistant.io/images/supported_brands/icloud.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/heatmiser.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/dweet.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/amazon-echo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/eliq.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
+
+<ul>
+  <li>Device tracker: <a href="https://home-assistant.io/components/device_tracker.icloud/">iCloud</a> platform added (<a href="https://github.com/xorso">@xorso</a>, <a href="https://github.com/kevinpanaro">@kevinpanaro</a>)</li>
+  <li>Frontend: Improved caching using service workers if served over SSL (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Sensor: <a href="https://home-assistant.io/components/sensor.twitch/">Twitch</a> platform added (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li><a href="https://home-assistant.io/getting-started/templating/">Template</a> support (<a href="https://github.com/balloob">@balloob</a>, <a href="https://github.com/philipbl">@philipbl</a>, <a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="https://home-assistant.io/components/thermostat.heatmiser/">Heatmiser</a> platform added (<a href="https://github.com/andylockran">@andylockran</a>)</li>
+  <li>Sensor: <a href="https://home-assistant.io/components/sensor.dweet/">Dweet.io</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li><a href="https://home-assistant.io/components/alexa/">Alexa/Amazon echo</a> component added (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Device Tracker: <a href="https://home-assistant.io/components/device_tracker.fritzbox/">FritzBox</a> platform added (<a href="https://github.com/deisi">@deisi</a>, <a href="https://github.com/caiuspb">@caiuspb</a>)</li>
+  <li>Sensor: <a href="https://home-assistant.io/components/sensor.wink/">Wink</a> now supports the Egg minders (<a href="https://github.com/w1ll1am23">@w1ll1am23</a>)</li>
+  <li>Sensor: <a href="https://home-assistant.io/components/sensor.eliqonline/">ELIQ Online</a> platform added (<a href="https://github.com/molobrakos">@molobrakos</a>)</li>
+  <li>Binary sensor: <a href="https://home-assistant.io/components/binary_sensor.rest/">REST</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Sensor: <a href="https://home-assistant.io/components/sensor.torque/">Torque (OBD2)</a> platform added (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+</ul>
+
+<!--more-->
+
+<h3>Templates</h3>
+
+<p>This release introduces templates. This will allow you to parse data before it gets processed or create messages for notifications on the fly based on data within Home Assistant. The notification component and the new Alexa/Amazon Echo component are both using the new template functionality to render responses. A template editor has been added to the developer tool section in the app so you can get instant feedback if your templates are working or not.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>The temperature at home is {{ states('sensor.temperature') }}.
+</pre></div>
+</div>
+</div>
+
+<p>More information and examples can be found in the <a href="https://home-assistant.io/getting-started/templating/">template documentation</a>.</p>
+
+<h3>Breaking changes</h3>
+
+<p>Templates will now be the only way to extract data from ‘raw’ sources like REST, CommandSensor or MQTT. This will replace any specific option that used to do this before. This means that <code>precision</code>, <code>factor</code>, <code>attribute</code> or <code>json_path</code> etc will no longer work.</p>
+
+<p>Affected components and platforms:</p>
+
+<ul>
+  <li>sensor: <a href="https://home-assistant.io/components/sensor.arest/">arest</a></li>
+  <li>sensor: <a href="https://home-assistant.io/components/sensor.command_sensor/">command_sensor</a></li>
+  <li>sensor: <a href="https://home-assistant.io/components/sensor.rest/">rest</a></li>
+  <li>sensor: <a href="https://home-assistant.io/components/sensor.mqtt/">MQTT</a></li>
+  <li>switch: <a href="https://home-assistant.io/components/switch.mqtt/">MQTT</a></li>
+  <li>rollershutter: <a href="https://home-assistant.io/components/rollershutter.mqtt/">MQTT</a></li>
+  <li>light: <a href="https://home-assistant.io/components/light.mqtt/">MQTT</a></li>
+  <li>binary_sensor: <a href="https://home-assistant.io/components/binary_sensor.mqtt/">MQTT</a></li>
+  <li>automation: <a href="https://home-assistant.io/components/automation/#numeric-state-trigger/">numeric_state</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Set up encryption using Let's Encrypt]]></title>
@@ -1958,130 +2019,6 @@ PubSubClient client(ethClient);
   <span class="key">hygrometers</span>: <span class="string"><span class="content">0</span></span>
   <span class="key">smartplugs</span>: <span class="string"><span class="content">1</span></span>
   <span class="key">thermometers</span>: <span class="string"><span class="content">0</span></span>
-</pre></div>
-</div>
-</div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported]]></title>
-    <link href="https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/"/>
-    <updated>2015-08-09T18:01:00+00:00</updated>
-    <id>https://home-assistant.io/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support</id>
-    <content type="html"><![CDATA[<p>It’s time for the August release and there is some serious good stuff this time. The core of Home Assistant has gone some serious clean up and a bump in test coverage thanks to <a href="https://github.com/balloob">@balloob</a>. If you’re a developer, make sure you read up on <a href="https://github.com/balloob/home-assistant/pull/251">the deprecation notices</a>. <a href="https://github.com/fabaff">@fabaff</a> did another great round of documentating all the various components.</p>
-
-<p><strong>MQTT Support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/mqtt.png" style="border:none; box-shadow: none; float: right;" height="50" /> The big new addition in this release is the support for the MQTT protocol by <a href="https://github.com/fabaff">@fabaff</a> with some help from <a href="https://github.com/balloob">@balloob</a>. It will now be possible to integrate any IoT device that talks via MQTT. For the initial release we support connecting Home Assistant to a broker (no TLS yet). Components can now subscribe and publish to MQTT topics (<a href="https://github.com/balloob/home-assistant/blob/dev/config/custom_components/mqtt_example.py">see the example</a>) and also support for the automation component <a href="https://home-assistant.io/components/automation/#mqtt-based-automation/">has been added</a>. For more information, see <a href="https://home-assistant.io/components/mqtt/">the MQTT component page</a>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">mqtt</span>:
-  <span class="key">broker</span>: <span class="string"><span class="content">IP_ADDRESS_BROKER</span></span>
-  <span class="comment"># All the other options are optional:</span>
-  <span class="key">port</span>: <span class="string"><span class="content">1883</span></span>
-  <span class="key">keepalive</span>: <span class="string"><span class="content">60</span></span>
-  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">your_username</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">your_secret_password</span></span>
-</pre></div>
-</div>
-</div>
-
-<!--more-->
-
-<p><strong>Raspberry PI GPIO Support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/raspberry-pi.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/gbarba">@gbarba</a> has contributed support to use the general purpose input and output pins on a Raspberry PI as switches inside Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">switch</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">rpi_gpio</span></span>
-  <span class="key">ports</span>:
-    <span class="key">11</span>: <span class="string"><span class="content">Fan Office</span></span>
-    <span class="key">12</span>: <span class="string"><span class="content">Light Desk</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>ASUSWRT based routers</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/asus.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/persandstrom">@persandstrom</a> has contributed support to do prescence detection using ASUSWRT based routers.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">device_tracker</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">asuswrt</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">YOUR_ROUTER_IP</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">YOUR_ADMIN_USERNAME</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">YOUR_ADMIN_PASSWORD</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Logitech Squeezebox media player support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/logitech.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/persandstrom">@persandstrom</a> also contributed support for the Logitech Squeezebox media player. This allows you to control your Logitech Squeezebox from Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">media_player</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">squeezebox</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.21</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">9090</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">user</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">password</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Slack notification support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/slack.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/jamespcole">@jamespcole</a> has contributed a Slack platform for the notification platform. This allows you to deliver messages to any channel.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">slack</span></span>
-  <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-  <span class="key">default_channel</span>: <span class="string"><span class="content">'#general'</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Edimax Smart Switches support</strong><br />
-<img src="https://home-assistant.io/images/supported_brands/edimax.png" style="border:none; box-shadow: none; float: right;" height="50" /> <a href="https://github.com/rkabadi">@rkabadi</a> has contributed support for integrating Edimax Smart Switches into Home Assistant.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">switch</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">edimax</span></span>
-  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.32</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
-  <span class="key">name</span>: <span class="string"><span class="content">Edimax Smart Plug</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>RFXtrx sensor support</strong><br />
-<a href="https://github.com/danielhiversen">@danielhiversen</a> has contributed support for RFXtrx sensors. It supports sensors that communicate in the frequency range of 433.92 MHz.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  - <span class="string"><span class="content">platform: rfxtrx</span></span>
-    <span class="key">device</span>: <span class="string"><span class="content">PATH_TO_DEVICE</span></span>
-</pre></div>
-</div>
-</div>
-
-<p>The path to your device, e.g. <code>/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0</code></p>
-
-<p><strong>TEMPer temperature sensor support</strong><br />
-Support for Temper temperature sensors has been contributed by <a href="https://github.com/rkabadi">@rkabadi</a>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">temper</span></span>
 </pre></div>
 </div>
 </div>

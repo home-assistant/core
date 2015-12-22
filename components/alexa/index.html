@@ -61,6 +61,7 @@
       <li><a href='/getting-started/devices/'>Adding devices</a></li>
       <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
       <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -108,17 +109,32 @@
 
   <p>The Alexa component allows you to integrate Home Assistant into Alexa/Amazon Echo. This component will allow you to query information within Home Assistant by using your voice. There are no supported sentences out of the box as of now, you will have to define them all yourself. This component does not yet allow the control of devices connected to Home Assistant.</p>
 
+<p style="text-align: center;">
+&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
+</p>
+
 <h3>Requirements before using</h3>
 <p>Amazon requires the endpoint of a skill to be hosted via SSL. Self-signed certificates are ok because our skills will only run in development mode. Read more on <a href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/">our blog</a> about how to set up encryption for Home Assistant. If you are unable to get https up and running, consider using <a href="https://forums.developer.amazon.com/forums/thread.jspa?messageID=18604">this AWS Lambda proxy for Alexa skills</a>.</p>
 
-<p>To get started with Alexa skills:<br />
- - log in to <a href="https://developer.amazon.com">Amazon developer console</a><br />
- - Go to Apps &amp; Services =&gt; Alexa =&gt; Alexa Skill Kit - Get Started<br />
- - Add a new skill<br />
-   - Name: Home Assistant<br />
-   - Invocation name: home assistant (or be creative, up to you)<br />
-   - Version: 1.0<br />
-   - Endpoint: https / https://YOUR_HOST/api/alexa?api_password=YOUR_API_PASSWORD</p>
+<p>To get started with Alexa skills:</p>
+
+<ul>
+  <li>Log in to <a href="https://developer.amazon.com">Amazon developer console</a></li>
+  <li>Go to Apps &amp; Services =&gt; Alexa =&gt; Alexa Skill Kit - Get Started</li>
+  <li>Add a new skill
+    <ul>
+      <li>Name: Home Assistant</li>
+      <li>Invocation name: home assistant (or be creative, up to you)</li>
+      <li>Version: 1.0</li>
+      <li>Endpoint:
+        <ul>
+          <li>https</li>
+          <li>https://YOUR_HOST/api/alexa?api_password=YOUR_API_PASSWORD</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
 
 <h3>Configuring your Amazon Alexa skill</h3>
 
@@ -167,9 +183,9 @@ WhereAreWeIntent where we are
 
 <h3>Configuring Home Assistant</h3>
 
-<p>Out of the box, the component will do nothing. You have to teach it about all intents you want it to answer to. The way it works is that the answer for each intent is based on a templates that you define. Each template will have access to the existing state as per the <code>states</code> variable but will also have access to all variables defined in the intent.</p>
+<p>Out of the box, the component will do nothing. You have to teach it about all intents you want it to answer to. The way it works is that the answer for each intent is based on <a href="/getting-started/templating/">templates</a> that you define. Each template will have access to the existing states via the <code>states</code> variable but will also have access to all variables defined in the intent.</p>
 
-<p>The values of <code>speech/text</code>, <code>card/title</code> and <code>card/content</code> will be parsed as a template.</p>
+<p>You can use <a href="/getting-started/templating/">templates</a> for the values of <code>speech/text</code>, <code>card/title</code> and <code>card/content</code>.</p>
 
 <p>Configuring the Alexa component for the above intents would look like this:</p>
 
@@ -186,8 +202,8 @@ WhereAreWeIntent where we are
                  is_state('device_tracker.anne_therese', 'home') -%}
             You are both home, you silly
           {%- else -%}
-           Anne Therese is at {{ states(&quot;device_tracker.anne_therese&quot;) }} and
-           Paulus is at {{ states(&quot;device_tracker.paulus&quot;) }}
+            Anne Therese is at {{ states(&quot;device_tracker.anne_therese&quot;) }} and
+            Paulus is at {{ states(&quot;device_tracker.paulus&quot;) }}
           {% endif %}</span></span>
 
     <span class="key">LocateIntent</span>:
@@ -195,7 +211,7 @@ WhereAreWeIntent where we are
         <span class="key">type</span>: <span class="string"><span class="content">plaintext</span></span>
         <span class="key">text</span>: <span class="string"><span class="delimiter">&gt;</span><span class="content">
           {%- for state in states.device_tracker -%}
-            {%- if state.name[:4].lower() == User.lower() -%}
+            {%- if state.name.lower() == User.lower() -%}
               {{ state.name }} is at {{ state.state }}
             {%- endif -%}
           {%- else -%}

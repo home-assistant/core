@@ -61,6 +61,7 @@
       <li><a href='/getting-started/devices/'>Adding devices</a></li>
       <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
       <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -109,110 +110,127 @@
   <hr class="divider">
   
 
-  <p>The template helper enables one to mathematically manipulate values, use variables to extract values from JSON, and create customized messages to send with the <a href="components/notify/">notification component</a>. If the entity has template support then the <code>value_template</code> key can be set and used (eg. <code>message:</code> in <code>data:</code> of an automation rule) in the <code>configuration.yaml</code> file.</p>
+  <p class="note">
+This is an advanced feature of Home Assistant. You need a basic understanding of the <a href="/developers/architecture/">Home Assistant architecture</a>, especially states.
+</p>
+
+<p>Templating is a powerful feature in Home Assistant that allows the user control over information that is going into and out of the system. It is used for:</p>
+
+<ul>
+  <li>Formatting outgoing messages in, for example, the <a href="/components/notify/">notify</a> and <a href="/components/alexa/">alexa</a> components.</li>
+  <li>Process incoming data from sources that provide raw data, like <a href="/components/mqtt/">MQTT</a>, <a href="/components/sensor.rest/">Rest sensor</a> or the <a href="/components/sensor.command_line/">command line sensor</a>.</li>
+</ul>
+
+<h2><a class="title-link" name="building-templates" href="#building-templates"></a> Building templates</h2>
+
+<p>Templating in Home Assistant is powered by the Jinja2 templating engine. This means that we are using their syntax and make some custom Home Assistant variables available to templates during rendering. We will not go over the basics of the syntax, as Jinja2 does a lot better job at this in their <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 documentation</a>.</p>
+
+<p class="note">
+The frontend has a template editor developer tool to help develop and debug templates.
+</p>
+
+<p>Templates can get pretty big pretty fast. To keep a clear overview, consider using YAML multiline strings to define your templates:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="key">value_template</span>: <span class="string"><span class="content">'{{ value.x }}'</span></span>
+  <div class="code"><pre><span class="key">script</span>:
+  <span class="key">msg_who_is_home</span>:
+    <span class="key">sequence</span>:
+      - <span class="string"><span class="content">service: notify.notify</span></span>
+        <span class="key">data</span>:
+          <span class="key">message</span>: <span class="string"><span class="delimiter">&gt;</span><span class="content">
+            {% if is_state('device_tracker.paulus', 'home') %}
+              Ha, Paulus is home!
+            {% else %}
+              Paulus is at {{ states('device_tracker.paulus')) }}.
+            {% endif %}</span></span>
 </pre></div>
 </div>
 </div>
 
-<p>To check your templates on-the-fly checkout the <strong>Template Editor</strong> from the <strong>Developer Tools</strong>.</p>
+<h3><a class="title-link" name="home-assistant-template-extensions" href="#home-assistant-template-extensions"></a> Home Assistant template extensions</h3>
 
-<p>For a complete overview, check the <a href="http://jinja.pocoo.org/docs/dev/templates/">Jinja2 documentation</a>.</p>
-
-<h3><a class="title-link" name="accessing-variables" href="#accessing-variables"></a> Accessing variables</h3>
-
-<p>The <a href="http://jinja.pocoo.org/docs/dev/templates/#variables">variables</a> are handled the same way as in Python.</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Method</th>
-      <th>description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>{{ value.x }}</code> or <code>{{ value.['x'] }}</code></td>
-      <td>Normal value</td>
-    </tr>
-    <tr>
-      <td><code>{{ value_json.x }}</code></td>
-      <td>JSON value</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>The evaluation leads to an empty string if it’s unsuccessful and printed or iterated over.</p>
-
-<h3><a class="title-link" name="the-states-variable" href="#the-states-variable"></a> The <code>states</code> variable</h3>
-
-<p>The template support has a special <code>states</code> variable:</p>
+<p>Home Assistant adds extensions to allow templates to access all of the current states:</p>
 
 <ul>
   <li>Iterating <code>states</code> will yield each state sorted alphabetically by entity id</li>
   <li>Iterating <code>states.domain</code> will yield each state of that domain sorted alphabetically by entity id</li>
   <li><code>states.sensor.temperature</code> returns state object for <code>sensor.temperature</code></li>
+  <li><code>states('device_tracker.paulus')</code> will return the state string (not the object) of given entity or <code>unknown</code> if it doesn’t exist.</li>
+  <li><code>is_state('device_tracker.paulus', 'home')</code> will test if given entity is specified state.</li>
+  <li>Filter <code>multiply(x)</code> will convert input to number and multiply it with <code>x</code></li>
+  <li>Filter <code>round(x)</code> will convert input to number and round it to <code>x</code> decimals.</li>
 </ul>
 
-<p>Example templates and what they could result in:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Template</th>
-      <th>Output</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>{{ states.device_tracker.paulus.state }}</code></td>
-      <td>home</td>
-    </tr>
-    <tr>
-      <td><code>{% for state in states.sensor %}{{ state.entity_id }}={{ state.state }}, {% endfor %}</code></td>
-      <td>senor.thermostat=24, sensor.humidity=40,</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3><a class="title-link" name="mathematical-functions" href="#mathematical-functions"></a> Mathematical functions</h3>
-
-<p>The mathematical methods convert strings to numbers automatically before they are doing their job. This could be useful if you recieve data in the wrong unit of measurement and want to convert it. They are used like the standard <a href="http://jinja.pocoo.org/docs/dev/templates/#filters">Jinja2 filters</a>.</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>Method</th>
-      <th>description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>multiply(x)</code></td>
-      <td>Multiplies the value with <code>x</code></td>
-    </tr>
-    <tr>
-      <td><code>round(x)</code></td>
-      <td>Maximal number <code>x</code> of decimal places for the value</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>A sample sensor entry for your <code>configuration.yaml</code> file could look like this:</p>
+<h4><a class="title-link" name="examples" href="#examples"></a> Examples</h4>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">dweet</span></span>
-  <span class="key">device</span>: <span class="string"><span class="content">temp-sensor012</span></span>
-  <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.temperature | multiply(1.02) | round(2) }}'</span></span>
-  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
+  <div class="code"><pre>
+# Next two statements result in same value if state exists
+# Second one will result in an error if state does not exist
+{{ states('device_tracker.paulus') }}
+{{ states.device_tracker.paulus.state }}
+
+# Print an attribute if state is defined
+{% if states.device_tracker.paulus %}
+{{ states.device_tracker.paulus.attributes.battery }}
+{% else %}
+??
+{% endif %}
+
+# Print out a list of all the sensor states
+{% for state in states.sensor %}
+  {{ state.entity_id }}={{ state.state }},
+{% endfor %}
+
+{% if is_state('device_tracker.paulus', 'home') %}
+  Ha, Paulus is home!
+{% else %}
+  Paulus is at {{ states('device_tracker.paulus')) }}.
+{% endif %}
+
+{{ states.sensor.temperature | multiply(10) | round(2) }}
+
+{% if states('sensor.temperature') | float &gt; 20 %}
+  It is warm!
+{%endif %}
 </pre></div>
 </div>
 </div>
 
+<h2><a class="title-link" name="processing-incoming-data" href="#processing-incoming-data"></a> Processing incoming data</h2>
+
+<p>The other part of templating is processing incoming data. It will allow you to modify incoming data and extract only the data that you care about. This will work only for platforms and components that mentioned support for this in their documentation.</p>
+
+<p>It depends per component or platform but it is common to be able to define a template using the <code>value_template</code> configuration key. When a new value arrives, your template will be rendered while having access to the following values on top of the usual Home Assistant extensions:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>value</code></td>
+      <td>The incoming value.</td>
+    </tr>
+    <tr>
+      <td><code>value_json</code></td>
+      <td>The incoming value parsed as JSON.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre># Incoming value:
+{&quot;primes&quot;: [2, 3, 5, 7, 11, 13]}
+
+# Extract third prime number
+{{ value_json.primes[2] }}
+</pre></div>
+</div>
+</div>
 
 
 </article>

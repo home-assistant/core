@@ -61,6 +61,7 @@
       <li><a href='/getting-started/devices/'>Adding devices</a></li>
       <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
       <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -257,6 +258,19 @@
 </div>
 </div>
 
+<h4><a class="title-link" name="template-trigger" href="#template-trigger"></a> Template trigger</h4>
+
+<p>Template triggers work by evaluating a <a href="/getting-started/templating/">template</a> on each state change. The trigger will fire if the state change caused the template to render ‘true’. This is achieved by having the template result in a true boolean expression (<code>{{ is_state('device_tracker.paulus', 'home') }}</code>) or by having the template render ‘true’ (example below).</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">template</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{% if is_state('device_tracker.paulus', 'home') %}true{% endif %}'</span></span>
+</pre></div>
+</div>
+</div>
+
 <h4><a class="title-link" name="time-trigger" href="#time-trigger"></a> Time trigger</h4>
 
 <p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific point in time each day. Alternatively, you can also match if the hour, minute or second of the current time has a specific value. For example, by only setting minutes in the config to 5 it will trigger every hour when it is 5 minutes past whole.  You cannot use <code>after</code> together with hour, minute or second.</p>
@@ -333,6 +347,8 @@
     <span class="comment"># At least one of the following required</span>
     <span class="key">above</span>: <span class="string"><span class="content">17</span></span>
     <span class="key">below</span>: <span class="string"><span class="content">25</span></span>
+    <span class="comment"># Optional</span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ state.attributes.battery }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -347,6 +363,21 @@
     <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
     <span class="key">entity_id</span>: <span class="string"><span class="content">device_tracker.paulus</span></span>
     <span class="key">state</span>: <span class="string"><span class="content">not_home</span></span>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="template-condition" href="#template-condition"></a> Template condition</h4>
+
+<p>The template condition will test if <a href="/getting-started/templating/">given template</a> renders a value equal to true. This is achieved by having the template result in a true boolean expression or by having the template render ‘true’.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">template</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ state.attributes.battery &gt; 50 }}'</span></span>
+    <span class="comment"># Or value_template could be:</span>
+    <span class="comment"># {% if state.attributes.battery &gt; 50 %}true{% else %}false{% endif %}</span>
 </pre></div>
 </div>
 </div>
@@ -434,6 +465,7 @@ INFO [homeassistant.components.automation] Initialized rule Rain is over
 <p>The Logbook component will show a line entry when an automation is triggered.  You can look at the previous entry to determine which trigger in the rule triggered the event.</p>
 
 <p><img src="/images/components/automation/logbook.png" alt="Logbook example" /></p>
+
 
 </article>
 

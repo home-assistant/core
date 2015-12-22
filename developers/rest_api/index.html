@@ -61,6 +61,7 @@
       <li><a href='/getting-started/devices/'>Adding devices</a></li>
       <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
       <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
       <li><a href='/cookbook'>Configuration cookbook</a></li>
     </ul>
   </li>
@@ -346,9 +347,23 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <p>Sample <code>curl</code> command:</p>
 
-<p><code>$ curl -X GET -H "x-ha-access: YOUR_PASSWORD" \
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
         http://IP_ADDRESS:8123/api/states/sensor.kitchen_temperature
-</code></p>
+</pre></div>
+</div>
+</div>
+
+<h4><a class="title-link" name="get-apierror_log" href="#get-apierror_log"></a> GET /api/error_log</h4>
+<p>Retrieve all errors logged during the current session of Home Assistant as a plaintext response.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>15-12-20 11:02:50 homeassistant.components.recorder: Found unfinished sessions
+15-12-20 11:03:03 netdisco.ssdp: Error fetching description at http://192.168.1.1:8200/rootDesc.xml
+15-12-20 11:04:36 homeassistant.components.alexa: Received unknown intent HelpIntent
+</pre></div>
+</div>
+</div>
 
 <h4><a class="title-link" name="post-apistatesltentity_id" href="#post-apistatesltentity_id"></a> POST /api/states/&lt;entity_id&gt;</h4>
 <p>Updates or creates the current state of an entity.</p>
@@ -387,8 +402,8 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ curl -X POST -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
-      -d '{&quot;state&quot;: &quot;25&quot;, &quot;attributes&quot;: {&quot;unit_of_measurement&quot;: &quot;°C&quot;}}' \
-      http://localhost:8123/api/states/sensor.kitchen_temperature
+       -d '{&quot;state&quot;: &quot;25&quot;, &quot;attributes&quot;: {&quot;unit_of_measurement&quot;: &quot;°C&quot;}}' \
+       http://localhost:8123/api/states/sensor.kitchen_temperature
 </pre></div>
 </div>
 </div>
@@ -457,15 +472,34 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ curl -X POST -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
-      -d '{&quot;entity_id&quot;: &quot;switch.christmas_lights&quot;, &quot;state&quot;: &quot;on&quot;}' \
-      http://localhost:8123/api/services/switch/turn_on
+       -d '{&quot;entity_id&quot;: &quot;switch.christmas_lights&quot;, &quot;state&quot;: &quot;on&quot;}' \
+       http://localhost:8123/api/services/switch/turn_on
 </pre></div>
 </div>
 </div>
 
 <p class="note">
-The result will include any changed states that changed while the service was being executed, even if their change was the result of something else happening in the system. 
+The result will include any changed states that changed while the service was being executed, even if their change was the result of something else happening in the system.
 </p>
+
+<h4><a class="title-link" name="post-apitemplate" href="#post-apitemplate"></a> POST /api/template</h4>
+<p>Render a Home Assistant template. <a href="/getting-started/templating/">See template docs for more information.</a></p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>{
+    <span class="key"><span class="delimiter">&quot;</span><span class="content">template</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Paulus is at {{ states('device_tracker.paulus') }}!</span><span class="delimiter">&quot;</span></span>
+}
+</pre></div>
+</div>
+</div>
+
+<p>Returns the rendered template in plain text.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>Paulus is at work!
+</pre></div>
+</div>
+</div>
 
 <h4><a class="title-link" name="post-apievent_forwarding" href="#post-apievent_forwarding"></a> POST /api/event_forwarding</h4>
 <p>Setup event forwarding to another Home Assistant instance.</p>

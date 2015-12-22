@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Release-Notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-22T04:36:27+00:00</updated>
+  <updated>2015-12-22T09:41:30+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,67 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.10: Amazon Echo, iCloud, Dweet.io, Twitch and templating support!]]></title>
+    <link href="https://home-assistant.io/blog/2015/12/22/amazon-echo-icloud-and-templates/"/>
+    <updated>2015-12-22T09:30:00+00:00</updated>
+    <id>https://home-assistant.io/blog/2015/12/22/amazon-echo-icloud-and-templates</id>
+    <content type="html"><![CDATA[<p>Alrighty, it’s time for Home Assistant 0.10. A lot amazing things have changed and sadly we also had to introduce a bunch of backwards incompatible changes. I would like to give a big shoutout to Philip Lundrigan (<a href="https://github.com/philipbl">@philipbl</a>) who put a lot in effort in helping the migration to move towards using templates for a wide variety of platforms.</p>
+
+<center><iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe></center>
+
+<p><img src="https://home-assistant.io/images/supported_brands/icloud.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/heatmiser.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/dweet.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/amazon-echo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/eliq.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
+
+<ul>
+  <li>Device tracker: <a href="/components/device_tracker.icloud/">iCloud</a> platform added (<a href="https://github.com/xorso">@xorso</a>, <a href="https://github.com/kevinpanaro">@kevinpanaro</a>)</li>
+  <li>Frontend: Improved caching using service workers if served over SSL (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Sensor: <a href="/components/sensor.twitch/">Twitch</a> platform added (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li><a href="/getting-started/templating/">Template</a> support (<a href="https://github.com/balloob">@balloob</a>, <a href="https://github.com/philipbl">@philipbl</a>, <a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.heatmiser/">Heatmiser</a> platform added (<a href="https://github.com/andylockran">@andylockran</a>)</li>
+  <li>Sensor: <a href="/components/sensor.dweet/">Dweet.io</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li><a href="/components/alexa/">Alexa/Amazon echo</a> component added (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.fritzbox/">FritzBox</a> platform added (<a href="https://github.com/deisi">@deisi</a>, <a href="https://github.com/caiuspb">@caiuspb</a>)</li>
+  <li>Sensor: <a href="/components/sensor.wink/">Wink</a> now supports the Egg minders (<a href="https://github.com/w1ll1am23">@w1ll1am23</a>)</li>
+  <li>Sensor: <a href="/components/sensor.eliqonline/">ELIQ Online</a> platform added (<a href="https://github.com/molobrakos">@molobrakos</a>)</li>
+  <li>Binary sensor: <a href="/components/binary_sensor.rest/">REST</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
+  <li>Sensor: <a href="/components/sensor.torque/">Torque (OBD2)</a> platform added (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+</ul>
+
+<!--more-->
+
+<h3>Templates</h3>
+
+<p>This release introduces templates. This will allow you to parse data before it gets processed or create messages for notifications on the fly based on data within Home Assistant. The notification component and the new Alexa/Amazon Echo component are both using the new template functionality to render responses. A template editor has been added to the developer tool section in the app so you can get instant feedback if your templates are working or not.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>The temperature at home is {{ states('sensor.temperature') }}.
+</pre></div>
+</div>
+</div>
+
+<p>More information and examples can be found in the <a href="/getting-started/templating/">template documentation</a>.</p>
+
+<h3>Breaking changes</h3>
+
+<p>Templates will now be the only way to extract data from ‘raw’ sources like REST, CommandSensor or MQTT. This will replace any specific option that used to do this before. This means that <code>precision</code>, <code>factor</code>, <code>attribute</code> or <code>json_path</code> etc will no longer work.</p>
+
+<p>Affected components and platforms:</p>
+
+<ul>
+  <li>sensor: <a href="/components/sensor.arest/">arest</a></li>
+  <li>sensor: <a href="/components/sensor.command_sensor/">command_sensor</a></li>
+  <li>sensor: <a href="/components/sensor.rest/">rest</a></li>
+  <li>sensor: <a href="/components/sensor.mqtt/">MQTT</a></li>
+  <li>switch: <a href="/components/switch.mqtt/">MQTT</a></li>
+  <li>rollershutter: <a href="/components/rollershutter.mqtt/">MQTT</a></li>
+  <li>light: <a href="/components/light.mqtt/">MQTT</a></li>
+  <li>binary_sensor: <a href="/components/binary_sensor.mqtt/">MQTT</a></li>
+  <li>automation: <a href="/components/automation/#numeric-state-trigger">numeric_state</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.9: Rollershutters, locks, binary sensors and InfluxDB]]></title>
@@ -164,45 +225,6 @@ This makes more sense as most people run Home Assistant as a daemon</p>
 </ul>
 
 <p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command. This has been implemented for the <a href="/components/media_player.itunes/">iTunes platform</a>.</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Home Assistant goes geo with OwnTracks]]></title>
-    <link href="https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks/"/>
-    <updated>2015-10-05T21:49:00+00:00</updated>
-    <id>https://home-assistant.io/blog/2015/10/05/home-assistant-goes-geo-with-owntracks</id>
-    <content type="html"><![CDATA[<p>A few weeks have past and it is time again for another release: version 0.7.4. This time we’re very glad to be able to introduce brand new integration with OwnTracks to allow tracking of people on a map. The geo support consists of three different parts:</p>
-
-<ul>
-  <li><a href="/components/device_tracker.owntracks/">OwnTracks platform for the device tracker</a> to get locations for devices</li>
-  <li>Brand new <a href="/components/zone/">zone component</a> to define zones to identify locations and <a href="/components/automation/#zone-trigger">trigger automation</a></li>
-  <li>A map in the UI to see all this (<a href="/demo/">see it in action in the demo</a>)</li>
-</ul>
-
-<p>We have added a new <a href="/getting-started/presence-detection/">getting started section</a> to get up and running.</p>
-
-<p class="img">
-<img src="https://home-assistant.io/images/screenshots/map.png" />
-Map in Home Assistant showing two people and three zones (home, school, work)
-</p>
-
-<p>Ofcourse more things happened in the last three weeks. I’m moving away from my usual long post to a short summary of highlights:</p>
-
-<p><a href="https://home-assistant.io/components/media_player.plex/">
-<img src="https://home-assistant.io/images/supported_brands/plex.png" style="border:none; box-shadow: none; float: right;" height="50" />
-</a></p>
-
-<ul>
-  <li>Sensor: <a href="/components/sensor.rest/">rest platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.mqtt/">MQTT platform</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-  <li>Media Player: <a href="/components/media_player.plex/">Plex platform</a> added (<a href="https://github.com/miniconfig, [@adrienbrault](https://github.com/adrienbrault)">@miniconfig</a></li>
-  <li>Dev Tools: services can now show description of fields (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>MQTT: Support for certificates and improved error reporting (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Light: <a href="/components/light.limitlessled/">limitlessled platform</a> extended with white light support (<a href="https://github.com/auchter">@auchter</a>)</li>
-  <li>Fuzzy matching for scenes (<a href="https://github.com/pavoni">@pavoni</a>)</li>
-  <li>Scene support for media player (<a href="https://github.com/maddox">@maddox</a>)</li>
-</ul>
 ]]></content>
   </entry>
   
