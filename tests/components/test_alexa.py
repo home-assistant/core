@@ -149,6 +149,45 @@ class TestAlexa(unittest.TestCase):
         text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
         self.assertEqual('You told us your sign is virgo.', text)
 
+    def test_intent_request_with_slots_but_no_value(self):
+        data = {
+            'version': '1.0',
+            'session': {
+                'new': False,
+                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'application': {
+                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                },
+                'attributes': {
+                    'supportedHoroscopePeriods': {
+                        'daily': True,
+                        'weekly': False,
+                        'monthly': False
+                    }
+                },
+                'user': {
+                    'userId': 'amzn1.account.AM3B00000000000000000000000'
+                }
+            },
+            'request': {
+                'type': 'IntentRequest',
+                'requestId': ' amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'timestamp': '2015-05-13T12:34:56Z',
+                'intent': {
+                    'name': 'GetZodiacHoroscopeIntent',
+                    'slots': {
+                        'ZodiacSign': {
+                            'name': 'ZodiacSign',
+                        }
+                    }
+                }
+            }
+        }
+        req = _req(data)
+        self.assertEqual(200, req.status_code)
+        text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
+        self.assertEqual('You told us your sign is .', text)
+
     def test_intent_request_without_slots(self):
         data = {
             'version': '1.0',
