@@ -10,6 +10,8 @@ import logging
 import subprocess
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,22 +24,36 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
 
     for dev_name, properties in switches.items():
+        if 'statecmd' in properties and CONF_VALUE_TEMPLATE not in properties:
+            _LOGGER.warn("Specify a %s when using statemcd",
+                         CONF_VALUE_TEMPLATE)
+            continue
         devices.append(
             CommandSwitch(
+                hass,
                 properties.get('name', dev_name),
                 properties.get('oncmd', 'true'),
-                properties.get('offcmd', 'true')))
+                properties.get('offcmd', 'true'),
+                properties.get('statecmd', False),
+                properties.get(CONF_VALUE_TEMPLATE, False)))
 
     add_devices_callback(devices)
 
 
 class CommandSwitch(SwitchDevice):
     """ Represents a switch that can be togggled using shell commands. """
-    def __init__(self, name, command_on, command_off):
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, hass, name, command_on, command_off,
+                 command_state, value_template):
+
+        self._hass = hass
         self._name = name
         self._state = False
         self._command_on = command_on
         self._command_off = command_off
+        self._command_state = command_state
+        self._value_template = value_template
 
     @staticmethod
     def _switch(command):
@@ -51,10 +67,21 @@ class CommandSwitch(SwitchDevice):
 
         return success
 
+    @staticmethod
+    def _query_state(command):
+        """ Execute state command. """
+        _LOGGER.info('Running state command: %s', command)
+
+        try:
+            return_value = subprocess.check_output(command, shell=True)
+            return return_value.strip().decode('utf-8')
+        except subprocess.CalledProcessError:
+            _LOGGER.error('Command failed: %s', command)
+
     @property
     def should_poll(self):
         """ No polling needed. """
-        return False
+        return True
 
     @property
     def name(self):
@@ -66,14 +93,24 @@ class CommandSwitch(SwitchDevice):
         """ True if device is on. """
         return self._state
 
+    def update(self):
+        """ Update device state. """
+        if self._command_state and self._value_template:
+            payload = CommandSwitch._query_state(self._command_state)
+            payload = template.render_with_possible_json_value(
+                self._hass, self._value_template, payload)
+            self._state = (payload == "True")
+
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         if CommandSwitch._switch(self._command_on):
-            self._state = True
-        self.update_ha_state()
+            if not self._command_state:
+                self._state = True
+                self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
         if CommandSwitch._switch(self._command_off):
-            self._state = False
-        self.update_ha_state()
+            if not self._command_state:
+                self._state = False
+                self.update_ha_state()
