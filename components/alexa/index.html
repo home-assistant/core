@@ -109,11 +109,11 @@
 
   <p>The Alexa component allows you to integrate Home Assistant into Alexa/Amazon Echo. This component will allow you to query information within Home Assistant by using your voice. There are no supported sentences out of the box as of now, you will have to define them all yourself. This component does not yet allow the control of devices connected to Home Assistant.</p>
 
-<p style="text-align: center;">
-&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;
-</p>
+<div class="videoWrapper">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe>
+</div>
 
-<h3>Requirements before using</h3>
+<h3><a class="title-link" name="requirements-before-using" href="#requirements-before-using"></a> Requirements before using</h3>
 <p>Amazon requires the endpoint of a skill to be hosted via SSL. Self-signed certificates are ok because our skills will only run in development mode. Read more on <a href="https://home-assistant.io/blog/2015/12/13/setup-encryption-using-lets-encrypt/">our blog</a> about how to set up encryption for Home Assistant. If you are unable to get https up and running, consider using <a href="https://forums.developer.amazon.com/forums/thread.jspa?messageID=18604">this AWS Lambda proxy for Alexa skills</a>.</p>
 
 <p>To get started with Alexa skills:</p>
@@ -136,7 +136,7 @@
   </li>
 </ul>
 
-<h3>Configuring your Amazon Alexa skill</h3>
+<h3><a class="title-link" name="configuring-your-amazon-alexa-skill" href="#configuring-your-amazon-alexa-skill"></a> Configuring your Amazon Alexa skill</h3>
 
 <p>Alexa works based on intents. Each intent has a name and variable slots. For example, a <code>LocateIntent</code> with a slot that contains a <code>User</code>. Example intent schema:</p>
 
@@ -181,7 +181,7 @@ WhereAreWeIntent where we are
   <li>Alexa, ask Home Assistant where we are</li>
 </ul>
 
-<h3>Configuring Home Assistant</h3>
+<h3><a class="title-link" name="configuring-home-assistant" href="#configuring-home-assistant"></a> Configuring Home Assistant</h3>
 
 <p>Out of the box, the component will do nothing. You have to teach it about all intents you want it to answer to. The way it works is that the answer for each intent is based on <a href="/getting-started/templating/">templates</a> that you define. Each template will have access to the existing states via the <code>states</code> variable but will also have access to all variables defined in the intent.</p>
 

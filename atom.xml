@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-22T09:49:54+00:00</updated>
+  <updated>2015-12-22T17:15:04+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -20,7 +20,9 @@
     <id>https://home-assistant.io/blog/2015/12/22/amazon-echo-icloud-and-templates</id>
     <content type="html"><![CDATA[<p>Alrighty, it’s time for Home Assistant 0.10. A lot amazing things have changed and sadly we also had to introduce a bunch of backwards incompatible changes. I would like to give a big shoutout to Philip Lundrigan (<a href="https://github.com/philipbl">@philipbl</a>) who put a lot in effort in helping the migration to move towards using templates for a wide variety of platforms.</p>
 
-<center><iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe></center>
+<div class="videoWrapper">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe>
+</div>
 
 <p><img src="https://home-assistant.io/images/supported_brands/icloud.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/heatmiser.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/dweet.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/amazon-echo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/eliq.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
 
@@ -452,7 +454,7 @@ $ sudo systemctl status grafana-server
 
 <p>The next thing is a show-off of some of the cool stuff people do with Home Assistant. This is miniconfig talking to Home Assistant using the Amazon Echo!</p>
 
-<div style="width: 560px; margin: 0 auto 16px;">
+<div class="videoWrapper">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/9QQjklnSQKY" frameborder="0" allowfullscreen=""></iframe>
 </div>
 
