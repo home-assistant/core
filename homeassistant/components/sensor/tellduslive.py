@@ -68,5 +68,8 @@ class TelldusLiveSensor(Entity):
             for sensor in component["data"]:
                 if component["id"] == self.sensor_id and \
                    sensor["name"] == self.sensor_type:
-                    # do we need/want decimals? for now, no
-                    self._state = int(round(float(sensor["value"])))
+                    self._state = float(sensor["value"])
+                    if self.sensor_type == "temp":
+                        self._state = round(self._state, 1)
+                    elif self.sensor_type == "humidity": 
+                        self._state = int(round(self._state))
