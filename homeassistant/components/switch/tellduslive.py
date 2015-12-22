@@ -19,7 +19,8 @@ from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tellduslive']
-STATES = {0:                 STATE_UNKNOWN,
+TELLSTICK_UNKNOWN = 0
+STATES = {TELLSTICK_UNKNOWN: STATE_UNKNOWN,
           TELLSTICK_TURNON:  STATE_ON,
           TELLSTICK_TURNOFF: STATE_OFF}
 
@@ -27,11 +28,10 @@ STATES = {0:                 STATE_UNKNOWN,
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Tellstick switches. """
     switches = tellduslive.NETWORK.get_switches()
-    # fixme: metadata groups etc
     add_devices([TelldusLiveSwitch(switch["name"],
                                    switch["id"],
                                    STATES[switch["state"]])
-                 for switch in switches])
+                 for switch in switches if switch["type"] == "device"])
 
 
 class TelldusLiveSwitch(ToggleEntity):
