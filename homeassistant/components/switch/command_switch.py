@@ -25,8 +25,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     for dev_name, properties in switches.items():
         if 'statecmd' in properties and CONF_VALUE_TEMPLATE not in properties:
-            _LOGGER.warn("Specify a %s when using statemcd",
-                         CONF_VALUE_TEMPLATE)
+            _LOGGER.warning("Specify a %s when using statemcd",
+                            CONF_VALUE_TEMPLATE)
             continue
         devices.append(
             CommandSwitch(
