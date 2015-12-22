@@ -71,5 +71,5 @@ class TelldusLiveSensor(Entity):
                     self._state = float(sensor["value"])
                     if self.sensor_type == "temp":
                         self._state = round(self._state, 1)
-                    elif self.sensor_type == "humidity": 
+                    elif self.sensor_type == "humidity":
                         self._state = int(round(self._state))
