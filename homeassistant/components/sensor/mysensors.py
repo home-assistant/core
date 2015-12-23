@@ -18,7 +18,7 @@ from homeassistant.const import (
 import homeassistant.components.mysensors as mysensors
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['mysensors']
+DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -41,19 +41,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mysensors.CONST.Presentation.S_CUSTOM,
         mysensors.CONST.Presentation.S_DUST,
         mysensors.CONST.Presentation.S_SCENE_CONTROLLER,
-        mysensors.CONST.Presentation.S_COLOR_SENSOR,
-        mysensors.CONST.Presentation.S_MULTIMETER,
     ]
     not_v_types = [
         mysensors.CONST.SetReq.V_ARMED,
-        mysensors.CONST.SetReq.V_STATUS,
         mysensors.CONST.SetReq.V_LIGHT,
         mysensors.CONST.SetReq.V_LOCK_STATUS,
     ]
-    v_types = []
-    for _, member in mysensors.CONST.SetReq.__members__.items():
-        if all(test != member.value for test in not_v_types):
-            v_types.append(member)
+    if float(mysensors.VERSION) >= 1.5:
+        s_types.extend([
+            mysensors.CONST.Presentation.S_COLOR_SENSOR,
+            mysensors.CONST.Presentation.S_MULTIMETER,
+        ])
+        not_v_types.extend([mysensors.CONST.SetReq.V_STATUS, ])
+    v_types = [member for member in mysensors.CONST.SetReq
+               if member.value not in not_v_types]
 
     @mysensors.mysensors_update
     def _sensor_update(gateway, port, devices, nid):

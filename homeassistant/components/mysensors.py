@@ -18,6 +18,16 @@ Multiple gateways are now supported.
 Configuration.yaml:
 
 mysensors:
+  gateways:
+    - port: '/dev/ttyUSB0'
+      persistence_file: 'path/mysensors.json'
+    - port: '/dev/ttyACM1'
+      persistence_file: 'path/mysensors2.json'
+  debug: true
+  persistence: true
+  version: '1.5'
+
+mysensors:
   port:
     - '/dev/ttyUSB0'
     - '/dev/ttyACM1'
@@ -36,18 +46,23 @@ switch:
 """
 import logging
 
-from homeassistant.helpers import (validate_config)
+from homeassistant.helpers import validate_config
+import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELCIUS)
+    TEMP_CELCIUS,
+    CONF_PLATFORM)
 
+CONF_GATEWAYS = 'gateways'
 CONF_PORT = 'port'
 CONF_DEBUG = 'debug'
 CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
+DEFAULT_VERSION = '1.4'
+VERSION = None
 
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
@@ -61,29 +76,31 @@ ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
 ATTR_UPDATE_TYPE = 'update_type'
 
+COMPONENTS_WITH_MYSENSORS_PLATFORM = [
+    'sensor',
+    'switch',
+]
+
 IS_METRIC = None
 CONST = None
 GATEWAYS = None
 EVENT_MYSENSORS_NODE_UPDATE = 'MYSENSORS_NODE_UPDATE'
 
 
-def setup(hass, config):  # noqa
-    """ Setup the MySensors component. """
-    # pylint:disable=no-name-in-module
+def setup(hass, config):
+    """Setup the MySensors component."""
     import mysensors.mysensors as mysensors
 
     if not validate_config(config,
-                           {DOMAIN: [CONF_PORT]},
+                           {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
         return False
 
-    version = config[DOMAIN].get(CONF_VERSION, '1.4')
+    global VERSION
+    VERSION = config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION)
 
     global CONST
-    if version == '1.4':
-        import mysensors.const_14 as const
-        CONST = const
-    elif version == '1.5':
+    if VERSION == '1.5':
         import mysensors.const_15 as const
         CONST = const
     else:
@@ -95,7 +112,14 @@ def setup(hass, config):  # noqa
     global IS_METRIC
     IS_METRIC = (hass.config.temperature_unit == TEMP_CELCIUS)
 
-    def callback_generator(port, devices):
+    # Setup mysensors platforms
+    mysensors_config = config.copy()
+    for component in COMPONENTS_WITH_MYSENSORS_PLATFORM:
+        mysensors_config[component] = {CONF_PLATFORM: 'mysensors'}
+        if not bootstrap.setup_component(hass, component, mysensors_config):
+            return False
+
+    def callback_factory(port, devices):
         """Return a new callback function. Run once per gateway setup."""
         def node_update(update_type, nid):
             """Callback for node updates from the MySensors gateway."""
@@ -107,7 +131,7 @@ def setup(hass, config):  # noqa
                 ATTR_UPDATE_TYPE: update_type,
                 ATTR_NODE_ID: nid
             })
-            return
+
         return node_update
 
     def setup_gateway(port, persistence, persistence_file):
@@ -116,17 +140,16 @@ def setup(hass, config):  # noqa
         gateway = mysensors.SerialGateway(port,
                                           persistence=persistence,
                                           persistence_file=persistence_file,
-                                          protocol_version=version)
-        gateway.event_callback = callback_generator(port, devices)
+                                          protocol_version=VERSION)
+        gateway.event_callback = callback_factory(port, devices)
         gateway.metric = IS_METRIC
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
         gateway.start()
 
         def persistence_update(event):
             """Callback to trigger update from persistence file."""
-            for _ in range(2):
-                for nid in gateway.sensors:
-                    gateway.event_callback('persistence', nid)
+            for nid in gateway.sensors:
+                gateway.event_callback('persistence', nid)
 
         if persistence:
             hass.bus.listen_once(
@@ -134,32 +157,23 @@ def setup(hass, config):  # noqa
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                              lambda event: gateway.stop())
+
         return gateway
-
-    port = config[DOMAIN].get(CONF_PORT)
-    persistence_file = config[DOMAIN].get(
-        CONF_PERSISTENCE_FILE, hass.config.path('mysensors.pickle'))
-
-    if isinstance(port, str):
-        port = [port]
-    if isinstance(persistence_file, str):
-        persistence_file = [persistence_file]
 
     # Setup all ports from config
     global GATEWAYS
     GATEWAYS = {}
-    for index, port_item in enumerate(port):
-        persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
-        try:
-            persistence_f_item = persistence_file[index]
-        except IndexError:
-            _LOGGER.exception(
-                'No persistence_file is set for port %s,'
-                ' disabling persistence', port_item)
-            persistence = False
-            persistence_f_item = None
-        GATEWAYS[port_item] = setup_gateway(
-            port_item, persistence, persistence_f_item)
+    conf_gateways = config[DOMAIN][CONF_GATEWAYS]
+    if isinstance(conf_gateways, dict):
+        conf_gateways = [conf_gateways]
+    persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
+    for index, gway in enumerate(conf_gateways):
+        port = gway[CONF_PORT]
+        persistence_file = gway.get(
+            CONF_PERSISTENCE_FILE,
+            hass.config.path('mysensors{}.pickle'.format(index + 1)))
+        GATEWAYS[port] = setup_gateway(
+            port, persistence, persistence_file)
 
     return True
 
@@ -174,7 +188,6 @@ def mysensors_update(platform_type):
         if nid not in devices:
             devices[nid] = {}
         node = devices[nid]
-        new_devices = []
         # Get platform specific S_TYPES, V_TYPES, class and add_devices.
         (platform_s_types,
          platform_v_types,
@@ -183,7 +196,7 @@ def mysensors_update(platform_type):
         for child_id, child in gateway.sensors[nid].children.items():
             if child_id not in node:
                 node[child_id] = {}
-            for value_type, _ in child.values.items():
+            for value_type in child.values.keys():
                 if (value_type not in node[child_id] and
                         child.type in platform_s_types and
                         value_type in platform_v_types):
@@ -191,15 +204,13 @@ def mysensors_update(platform_type):
                         gateway.sensors[nid].sketch_name, nid, child.id)
                     node[child_id][value_type] = platform_class(
                         port, nid, child_id, name, value_type)
-                    new_devices.append(node[child_id][value_type])
-                elif (child.type in platform_s_types and
-                      value_type in platform_v_types):
+                    _LOGGER.info('adding new device: %s',
+                                 node[child_id][value_type])
+                    add_devices([node[child_id][value_type]])
+                if (child.type in platform_s_types and
+                        value_type in platform_v_types):
                     node[child_id][value_type].update_sensor(
                         child.values, gateway.sensors[nid].battery_level)
-        if new_devices:
-            _LOGGER.info('adding new devices: %s', new_devices)
-            add_devices(new_devices)
-        return
     return wrapper
 
 
@@ -215,5 +226,4 @@ def event_update(update):
                       event.data[ATTR_PORT],
                       event.data[ATTR_DEVICES],
                       event.data[ATTR_NODE_ID])
-        return
     return wrapper

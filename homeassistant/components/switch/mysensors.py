@@ -17,7 +17,7 @@ from homeassistant.const import (
 import homeassistant.components.mysensors as mysensors
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['mysensors']
+DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,18 +30,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mysensors.CONST.Presentation.S_LIGHT,
         mysensors.CONST.Presentation.S_BINARY,
         mysensors.CONST.Presentation.S_LOCK,
-        mysensors.CONST.Presentation.S_SPRINKLER,
-        mysensors.CONST.Presentation.S_WATER_LEAK,
-        mysensors.CONST.Presentation.S_SOUND,
-        mysensors.CONST.Presentation.S_VIBRATION,
-        mysensors.CONST.Presentation.S_MOISTURE,
     ]
     v_types = [
         mysensors.CONST.SetReq.V_ARMED,
-        mysensors.CONST.SetReq.V_STATUS,
         mysensors.CONST.SetReq.V_LIGHT,
         mysensors.CONST.SetReq.V_LOCK_STATUS,
     ]
+    if float(mysensors.VERSION) >= 1.5:
+        s_types.extend([
+            mysensors.CONST.Presentation.S_SPRINKLER,
+            mysensors.CONST.Presentation.S_WATER_LEAK,
+            mysensors.CONST.Presentation.S_SOUND,
+            mysensors.CONST.Presentation.S_VIBRATION,
+            mysensors.CONST.Presentation.S_MOISTURE,
+        ])
+        v_types.extend([mysensors.CONST.SetReq.V_STATUS, ])
 
     @mysensors.mysensors_update
     def _sensor_update(gateway, port, devices, nid):
