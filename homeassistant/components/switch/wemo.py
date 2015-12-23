@@ -11,15 +11,21 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
-REQUIREMENTS = ['pywemo==0.3.3']
+# REQUIREMENTS = ['pywemo==0.3.3']
 _LOGGER = logging.getLogger(__name__)
 
+_WEMO_SUBSCRIPTION_REGISTRY = None
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
     import pywemo
     import pywemo.discovery as discovery
+
+    global _WEMO_SUBSCRIPTION_REGISTRY
+    if  _WEMO_SUBSCRIPTION_REGISTRY is None:
+        _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
+        _WEMO_SUBSCRIPTION_REGISTRY.start()
 
     if discovery_info is not None:
         location = discovery_info[2]
@@ -46,6 +52,21 @@ class WemoSwitch(SwitchDevice):
         self.wemo = wemo
         self.insight_params = None
         self.maker_params = None
+
+        global _WEMO_SUBSCRIPTION_REGISTRY
+        _WEMO_SUBSCRIPTION_REGISTRY.register(wemo)
+        _WEMO_SUBSCRIPTION_REGISTRY.on(wemo, 'BinaryState', self._update_callback)
+        _WEMO_SUBSCRIPTION_REGISTRY.on(wemo, 'attributeList', self._update_callback)
+
+    def _update_callback(self, _device, _params):
+        _LOGGER.info('Subscription update for  %s, sevice=%s params=%s', self.name, _device, _params)
+        # import pdb; pdb.set_trace()
+        self.update()
+
+    @property
+    def should_poll(self):
+        """ No polling should be needed with subscriptions, but leave in for initial version in case of issues. """
+        return True
 
     @property
     def unique_id(self):
