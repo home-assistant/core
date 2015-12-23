@@ -1,7 +1,7 @@
 # coding: utf-8
 """ Constants used by Home Assistant components. """
 
-__version__ = "0.10.0.dev0"
+__version__ = "0.11.0.dev0"
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -24,6 +24,8 @@ CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
+
+CONF_VALUE_TEMPLATE = "value_template"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -165,6 +167,7 @@ URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
 URL_API_ERROR_LOG = "/api/error_log"
 URL_API_LOG_OUT = "/api/log_out"
+URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
