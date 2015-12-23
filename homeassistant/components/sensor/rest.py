@@ -126,7 +126,7 @@ class RestDataGet(object):
         try:
             response = requests.get(self._resource, timeout=10,
                                     verify=self._verify_ssl)
-            if 'error' in self.data:
+            if isinstance(self.data, dict) and 'error' in self.data:
                 del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
@@ -150,7 +150,7 @@ class RestDataPost(object):
         try:
             response = requests.post(self._resource, data=self._payload,
                                      timeout=10, verify=self._verify_ssl)
-            if 'error' in self.data:
+            if isinstance(self.data, dict) and 'error' in self.data:
                 del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
