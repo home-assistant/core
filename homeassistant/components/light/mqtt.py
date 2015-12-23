@@ -6,23 +6,23 @@ Allows to configure a MQTT light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt/
 """
+from functools import partial
 import logging
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (Light,
                                             ATTR_BRIGHTNESS, ATTR_RGB_COLOR)
+from homeassistant.util.template import render_with_possible_json_value
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "MQTT Light"
+DEFAULT_NAME = 'MQTT Light'
 DEFAULT_QOS = 0
-DEFAULT_PAYLOAD_ON = "on"
-DEFAULT_PAYLOAD_OFF = "off"
+DEFAULT_PAYLOAD_ON = 'ON'
+DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 
 DEPENDENCIES = ['mqtt']
-
-# pylint: disable=unused-argument
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -35,18 +35,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback([MqttLight(
         hass,
         config.get('name', DEFAULT_NAME),
-        {
-            "state_topic": config.get('state_topic'),
-            "command_topic": config.get('command_topic'),
-            "brightness_state_topic": config.get('brightness_state_topic'),
-            "brightness_command_topic": config.get('brightness_command_topic'),
-            "rgb_state_topic": config.get('rgb_state_topic'),
-            "rgb_command_topic": config.get('rgb_command_topic')
-        },
+        {key: config.get(key) for key in
+         (typ + topic
+          for typ in ('', 'brightness_', 'rgb_')
+          for topic in ('state_topic', 'command_topic'))},
+        {key: config.get(key + '_value_template')
+         for key in ('state', 'brightness', 'rgb')},
         config.get('qos', DEFAULT_QOS),
         {
-            "on": config.get('payload_on', DEFAULT_PAYLOAD_ON),
-            "off": config.get('payload_off', DEFAULT_PAYLOAD_OFF)
+            'on': config.get('payload_on', DEFAULT_PAYLOAD_ON),
+            'off': config.get('payload_off', DEFAULT_PAYLOAD_OFF)
         },
         config.get('optimistic', DEFAULT_OPTIMISTIC))])
 
@@ -55,7 +53,7 @@ class MqttLight(Light):
     """ Provides a MQTT light. """
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-    def __init__(self, hass, name, topic, qos, payload, optimistic):
+    def __init__(self, hass, name, topic, templates, qos, payload, optimistic):
 
         self._hass = hass
         self._name = name
@@ -68,8 +66,13 @@ class MqttLight(Light):
                                        topic["brightness_state_topic"] is None)
         self._state = False
 
+        templates = {key: ((lambda value: value) if tpl is None else
+                           partial(render_with_possible_json_value, hass, tpl))
+                     for key, tpl in templates.items()}
+
         def state_received(topic, payload, qos):
             """ A new MQTT message has been received. """
+            payload = templates['state'](payload)
             if payload == self._payload["on"]:
                 self._state = True
             elif payload == self._payload["off"]:
@@ -83,7 +86,7 @@ class MqttLight(Light):
 
         def brightness_received(topic, payload, qos):
             """ A new MQTT message for the brightness has been received. """
-            self._brightness = int(payload)
+            self._brightness = int(templates['brightness'](payload))
             self.update_ha_state()
 
         if self._topic["brightness_state_topic"] is not None:
@@ -95,7 +98,8 @@ class MqttLight(Light):
 
         def rgb_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            self._rgb = [int(val) for val in payload.split(',')]
+            self._rgb = [int(val) for val in
+                         templates['rgb'](payload).split(',')]
             self.update_ha_state()
 
         if self._topic["rgb_state_topic"] is not None:
