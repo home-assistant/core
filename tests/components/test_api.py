@@ -5,10 +5,11 @@ tests.test_component_http
 Tests Home Assistant HTTP component does what it should do.
 """
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
+from contextlib import closing
 import json
-from unittest.mock import patch
 import tempfile
+import unittest
+from unittest.mock import patch
 
 import requests
 
@@ -326,6 +327,30 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(1, len(test_value))
 
+    def test_api_template(self):
+        """ Test template API. """
+        hass.states.set('sensor.temperature', 10)
+
+        req = requests.post(
+            _url(const.URL_API_TEMPLATE),
+            data=json.dumps({"template":
+                            '{{ states.sensor.temperature.state }}'}),
+            headers=HA_HEADERS)
+
+        self.assertEqual('10', req.text)
+
+    def test_api_template_error(self):
+        """ Test template API. """
+        hass.states.set('sensor.temperature', 10)
+
+        req = requests.post(
+            _url(const.URL_API_TEMPLATE),
+            data=json.dumps({"template":
+                            '{{ states.sensor.temperature.state'}),
+            headers=HA_HEADERS)
+
+        self.assertEqual(422, req.status_code)
+
     def test_api_event_forward(self):
         """ Test setting up event forwarding. """
 
@@ -401,3 +426,61 @@ class TestAPI(unittest.TestCase):
                 }),
             headers=HA_HEADERS)
         self.assertEqual(200, req.status_code)
+
+    def test_stream(self):
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM),
+                                  stream=True, headers=HA_HEADERS)) as req:
+
+            data = self._stream_next_event(req)
+            self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 1, self._listen_count())
+
+            hass.bus.fire('test_event')
+            hass.pool.block_till_done()
+
+            data = self._stream_next_event(req)
+
+            self.assertEqual('test_event', data['event_type'])
+
+    def test_stream_with_restricted(self):
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM),
+                                  data=json.dumps({
+                                      'restrict': 'test_event1,test_event3'}),
+                                  stream=True, headers=HA_HEADERS)) as req:
+
+            data = self._stream_next_event(req)
+            self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 2, self._listen_count())
+
+            hass.bus.fire('test_event1')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event2')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event3')
+            hass.pool.block_till_done()
+
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event1', data['event_type'])
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event3', data['event_type'])
+
+    def _stream_next_event(self, stream):
+        data = b''
+        last_new_line = False
+        for dat in stream.iter_content(1):
+            if dat == b'\n' and last_new_line:
+                break
+            data += dat
+            last_new_line = dat == b'\n'
+
+        conv = data.decode('utf-8').strip()[6:]
+
+        return conv if conv == 'ping' else json.loads(conv)
+
+    def _listen_count(self):
+        """ Return number of event listeners. """
+        return sum(hass.bus.listeners.values())

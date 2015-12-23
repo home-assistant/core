@@ -1,10 +1,18 @@
 cd "$(dirname "$0")/.."
 
-echo "Update the submodule to latest version..."
-git submodule update
-
 echo "Installing dependencies..."
-python3 -m pip install --upgrade -r requirements_all.txt
+python3 -m pip install -r requirements_all.txt
+
+REQ_STATUS=$?
 
 echo  "Installing development dependencies.."
-python3 -m pip install --upgrade flake8 pylint coveralls pytest pytest-cov
+python3 -m pip install flake8 pylint coveralls pytest pytest-cov
+
+REQ_DEV_STATUS=$?
+
+if [ $REQ_DEV_STATUS -eq 0 ]
+then
+  exit $REQ_STATUS
+else
+  exit $REQ_DEV_STATUS
+fi

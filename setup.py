@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 from setuptools import setup, find_packages
 from homeassistant.const import __version__
@@ -14,7 +15,8 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'pytz>=2015.4',
     'pip>=7.0.0',
-    'vincenty==0.1.3'
+    'vincenty==0.1.3',
+    'jinja2>=2.8'
 ]
 
 setup(

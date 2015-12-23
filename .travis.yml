@@ -2,11 +2,16 @@ sudo: false
 language: python
 cache:
   directories:
-    - $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/
+    - $HOME/.cache/pip
+    # - "$HOME/virtualenv/python$TRAVIS_PYTHON_VERSION"
 python:
-  - 3.4.2
-  - 3.5.0
+  - 3.4
+  - 3.5
 install:
+  # Validate requirements_all.txt on Python 3.5
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.5' ]]; then python3 setup.py develop; script/gen_requirements_all.py validate; fi
   - script/bootstrap_server
 script:
   - script/cibuild
+matrix:
+  fast_finish: true

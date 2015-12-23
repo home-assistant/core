@@ -87,7 +87,13 @@ class Thermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
-        return (self.target_temperature_low + self.target_temperature_high) / 2
+        if self.hvac_mode == 'heat' or self.hvac_mode == 'auxHeatOnly':
+            return self.target_temperature_low
+        elif self.hvac_mode == 'cool':
+            return self.target_temperature_high
+        else:
+            return (self.target_temperature_low +
+                    self.target_temperature_high) / 2
 
     @property
     def target_temperature_low(self):
