@@ -78,6 +78,7 @@ def setup(hass, config=None):
 
     # Set log filter for all log handler
     for handler in logging.root.handlers:
+        handler.setLevel(logging.NOTSET)
         handler.addFilter(HomeAssistantLogFilter(logfilter))
 
     return True
