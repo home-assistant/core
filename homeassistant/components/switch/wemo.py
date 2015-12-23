@@ -66,6 +66,7 @@ class WemoSwitch(SwitchDevice):
             'Subscription update for  %s, sevice=%s params=%s',
             self.name, _device, _params)
         self.update()
+        self.update_ha_state()
 
     @property
     def should_poll(self):
