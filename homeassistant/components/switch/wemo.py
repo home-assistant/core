@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
 
+
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
@@ -23,7 +24,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import pywemo.discovery as discovery
 
     global _WEMO_SUBSCRIPTION_REGISTRY
-    if  _WEMO_SUBSCRIPTION_REGISTRY is None:
+    if _WEMO_SUBSCRIPTION_REGISTRY is None:
         _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
         _WEMO_SUBSCRIPTION_REGISTRY.start()
 
@@ -53,19 +54,23 @@ class WemoSwitch(SwitchDevice):
         self.insight_params = None
         self.maker_params = None
 
-        global _WEMO_SUBSCRIPTION_REGISTRY
         _WEMO_SUBSCRIPTION_REGISTRY.register(wemo)
-        _WEMO_SUBSCRIPTION_REGISTRY.on(wemo, 'BinaryState', self._update_callback)
-        _WEMO_SUBSCRIPTION_REGISTRY.on(wemo, 'attributeList', self._update_callback)
+        _WEMO_SUBSCRIPTION_REGISTRY.on(
+            wemo, 'BinaryState', self._update_callback)
+        _WEMO_SUBSCRIPTION_REGISTRY.on(
+            wemo, 'attributeList', self._update_callback)
 
     def _update_callback(self, _device, _params):
-        _LOGGER.info('Subscription update for  %s, sevice=%s params=%s', self.name, _device, _params)
-        # import pdb; pdb.set_trace()
+        """ Called by the wemo device callback to update state. """
+        _LOGGER.info(
+            'Subscription update for  %s, sevice=%s params=%s',
+            self.name, _device, _params)
         self.update()
 
     @property
     def should_poll(self):
-        """ No polling should be needed with subscriptions, but leave in for initial version in case of issues. """
+        """ No polling should be needed with subscriptions """
+        # but leave in for initial version in case of issues.
         return True
 
     @property
