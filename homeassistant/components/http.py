@@ -178,12 +178,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
-        # Read query input
-        data = parse_qs(url.query)
-
-        # parse_qs gives a list for each value, take the latest element
-        for key in data:
-            data[key] = data[key][-1]
+        # Read query input. parse_qs gives a list for each value, we want last
+        data = {key: data[-1] for key, data in parse_qs(url.query).items()}
 
         # Did we get post input ?
         content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
@@ -363,13 +359,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def set_session_cookie_header(self):
         """ Add the header for the session cookie and return session id. """
         if not self.authenticated:
-            return
+            return None
 
         session_id = self.get_cookie_session_id()
 
         if session_id is not None:
             self.server.sessions.extend_validation(session_id)
-            return
+            return session_id
 
         self.send_header(
             'Set-Cookie',
@@ -426,10 +422,10 @@ def session_valid_time():
 
 class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
-    def __init__(self, enabled=True):
+    def __init__(self):
         """ Set up the session store """
         self._sessions = {}
-        self.lock = threading.RLock()
+        self._lock = threading.RLock()
 
     @util.Throttle(SESSION_CLEAR_INTERVAL)
     def _remove_expired(self):
@@ -441,7 +437,7 @@ class SessionStore(object):
 
     def is_valid(self, key):
         """ Return True if a valid session is given. """
-        with self.lock:
+        with self._lock:
             self._remove_expired()
 
             return (key in self._sessions and
@@ -449,17 +445,19 @@ class SessionStore(object):
 
     def extend_validation(self, key):
         """ Extend a session validation time. """
-        with self.lock:
+        with self._lock:
+            if key not in self._sessions:
+                return
             self._sessions[key] = session_valid_time()
 
     def destroy(self, key):
         """ Destroy a session by key. """
-        with self.lock:
+        with self._lock:
             self._sessions.pop(key, None)
 
     def create(self):
         """ Creates a new session. """
-        with self.lock:
+        with self._lock:
             session_id = util.get_random_string(20)
 
             while session_id in self._sessions:
