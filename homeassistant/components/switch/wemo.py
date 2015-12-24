@@ -11,7 +11,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
 
-# REQUIREMENTS = ['pywemo==0.3.3']
+REQUIREMENTS = ['pywemo==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
@@ -56,9 +56,7 @@ class WemoSwitch(SwitchDevice):
 
         _WEMO_SUBSCRIPTION_REGISTRY.register(wemo)
         _WEMO_SUBSCRIPTION_REGISTRY.on(
-            wemo, 'BinaryState', self._update_callback)
-        _WEMO_SUBSCRIPTION_REGISTRY.on(
-            wemo, 'attributeList', self._update_callback)
+            wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _params):
         """ Called by the wemo device callback to update state. """
