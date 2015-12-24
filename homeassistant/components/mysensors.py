@@ -26,23 +26,6 @@ mysensors:
   debug: true
   persistence: true
   version: '1.5'
-
-mysensors:
-  port:
-    - '/dev/ttyUSB0'
-    - '/dev/ttyACM1'
-  debug: true
-  persistence: true
-  persistence_file:
-    - 'path/to/.homeassistant/mysensors.json'
-    - 'path/to/.homeassistant/mysensors2.json'
-  version: '1.5'
-
-sensor:
-  platform: mysensors
-
-switch:
-  platform: mysensors
 """
 import logging
 
@@ -70,11 +53,8 @@ REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
     '2aa8f32908e8c5bb3e5c77c5851db778f8635792.zip#pymysensors==0.3']
 _LOGGER = logging.getLogger(__name__)
-ATTR_PORT = 'port'
-ATTR_DEVICES = 'devices'
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
-ATTR_UPDATE_TYPE = 'update_type'
 
 COMPONENTS_WITH_MYSENSORS_PLATFORM = [
     'sensor',
@@ -84,11 +64,11 @@ COMPONENTS_WITH_MYSENSORS_PLATFORM = [
 IS_METRIC = None
 CONST = None
 GATEWAYS = None
-EVENT_MYSENSORS_NODE_UPDATE = 'MYSENSORS_NODE_UPDATE'
 
 
 def setup(hass, config):
     """Setup the MySensors component."""
+    # pylint: disable=too-many-locals
     import mysensors.mysensors as mysensors
 
     if not validate_config(config,
@@ -119,18 +99,17 @@ def setup(hass, config):
         if not bootstrap.setup_component(hass, component, mysensors_config):
             return False
 
-    def callback_factory(port, devices):
+    import homeassistant.components.sensor.mysensors as mysensors_sensor
+    import homeassistant.components.switch.mysensors as mysensors_switch
+
+    def callback_factory(gateway, port, devices):
         """Return a new callback function. Run once per gateway setup."""
         def node_update(update_type, nid):
             """Callback for node updates from the MySensors gateway."""
             _LOGGER.info('update %s: node %s', update_type, nid)
 
-            hass.bus.fire(EVENT_MYSENSORS_NODE_UPDATE, {
-                ATTR_PORT: port,
-                ATTR_DEVICES: devices,
-                ATTR_UPDATE_TYPE: update_type,
-                ATTR_NODE_ID: nid
-            })
+            mysensors_sensor.sensor_update(gateway, port, devices, nid)
+            mysensors_switch.sensor_update(gateway, port, devices, nid)
 
         return node_update
 
@@ -141,7 +120,7 @@ def setup(hass, config):
                                           persistence=persistence,
                                           persistence_file=persistence_file,
                                           protocol_version=VERSION)
-        gateway.event_callback = callback_factory(port, devices)
+        gateway.event_callback = callback_factory(gateway, port, devices)
         gateway.metric = IS_METRIC
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
         gateway.start()
@@ -211,19 +190,4 @@ def mysensors_update(platform_type):
                         value_type in platform_v_types):
                     node[child_id][value_type].update_sensor(
                         child.values, gateway.sensors[nid].battery_level)
-    return wrapper
-
-
-def event_update(update):
-    """Decorator for callback function for mysensor event updates."""
-    def wrapper(event):
-        """Wrapper function in the decorator."""
-        _LOGGER.info(
-            'update %s: node %s', event.data[ATTR_UPDATE_TYPE],
-            event.data[ATTR_NODE_ID])
-        sensor_update = update(event)
-        sensor_update(GATEWAYS[event.data[ATTR_PORT]],
-                      event.data[ATTR_PORT],
-                      event.data[ATTR_DEVICES],
-                      event.data[ATTR_NODE_ID])
     return wrapper
