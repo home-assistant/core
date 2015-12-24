@@ -20,11 +20,24 @@ import homeassistant.components.mysensors as mysensors
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
+ADD_DEVICES = None
+S_TYPES = None
+V_TYPES = None
+
+
+@mysensors.mysensors_update
+def sensor_update(gateway, port, devices, nid):
+    """Internal callback for sensor updates."""
+    return (S_TYPES, V_TYPES, MySensorsSensor, ADD_DEVICES)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for sensors."""
     # Define the S_TYPES and V_TYPES that the platform should handle as states.
-    s_types = [
+    global ADD_DEVICES
+    ADD_DEVICES = add_devices
+    global S_TYPES
+    S_TYPES = [
         mysensors.CONST.Presentation.S_TEMP,
         mysensors.CONST.Presentation.S_HUM,
         mysensors.CONST.Presentation.S_BARO,
@@ -48,25 +61,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mysensors.CONST.SetReq.V_LOCK_STATUS,
     ]
     if float(mysensors.VERSION) >= 1.5:
-        s_types.extend([
+        S_TYPES.extend([
             mysensors.CONST.Presentation.S_COLOR_SENSOR,
             mysensors.CONST.Presentation.S_MULTIMETER,
         ])
         not_v_types.extend([mysensors.CONST.SetReq.V_STATUS, ])
-    v_types = [member for member in mysensors.CONST.SetReq
+    global V_TYPES
+    V_TYPES = [member for member in mysensors.CONST.SetReq
                if member.value not in not_v_types]
-
-    @mysensors.mysensors_update
-    def _sensor_update(gateway, port, devices, nid):
-        """Internal callback for sensor updates."""
-        return (s_types, v_types, MySensorsSensor, add_devices)
-
-    @mysensors.event_update
-    def event_update(event):
-        """Callback for event updates from the MySensors component."""
-        return _sensor_update
-
-    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, event_update)
 
 
 class MySensorsSensor(Entity):
@@ -100,18 +102,6 @@ class MySensorsSensor(Entity):
         self.value_type = value_type
         self.battery_level = 0
         self._values = {}
-
-    def as_dict(self):
-        """Return a dict representation of this entity."""
-        return {
-            'port': self.port,
-            'name': self._name,
-            'node_id': self.node_id,
-            'child_id': self.child_id,
-            'battery_level': self.battery_level,
-            'value_type': self.value_type,
-            'values': self._values,
-        }
 
     @property
     def should_poll(self):

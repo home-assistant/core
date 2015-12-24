@@ -19,11 +19,24 @@ import homeassistant.components.mysensors as mysensors
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
+ADD_DEVICES = None
+S_TYPES = None
+V_TYPES = None
+
+
+@mysensors.mysensors_update
+def sensor_update(gateway, port, devices, nid):
+    """Internal callback for sensor updates."""
+    return (S_TYPES, V_TYPES, MySensorsSwitch, ADD_DEVICES)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for switches."""
     # Define the S_TYPES and V_TYPES that the platform should handle as states.
-    s_types = [
+    global ADD_DEVICES
+    ADD_DEVICES = add_devices
+    global S_TYPES
+    S_TYPES = [
         mysensors.CONST.Presentation.S_DOOR,
         mysensors.CONST.Presentation.S_MOTION,
         mysensors.CONST.Presentation.S_SMOKE,
@@ -31,32 +44,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mysensors.CONST.Presentation.S_BINARY,
         mysensors.CONST.Presentation.S_LOCK,
     ]
-    v_types = [
+    global V_TYPES
+    V_TYPES = [
         mysensors.CONST.SetReq.V_ARMED,
         mysensors.CONST.SetReq.V_LIGHT,
         mysensors.CONST.SetReq.V_LOCK_STATUS,
     ]
     if float(mysensors.VERSION) >= 1.5:
-        s_types.extend([
+        S_TYPES.extend([
             mysensors.CONST.Presentation.S_SPRINKLER,
             mysensors.CONST.Presentation.S_WATER_LEAK,
             mysensors.CONST.Presentation.S_SOUND,
             mysensors.CONST.Presentation.S_VIBRATION,
             mysensors.CONST.Presentation.S_MOISTURE,
         ])
-        v_types.extend([mysensors.CONST.SetReq.V_STATUS, ])
-
-    @mysensors.mysensors_update
-    def _sensor_update(gateway, port, devices, nid):
-        """Internal callback for sensor updates."""
-        return (s_types, v_types, MySensorsSwitch, add_devices)
-
-    @mysensors.event_update
-    def event_update(event):
-        """Callback for event updates from the MySensors component."""
-        return _sensor_update
-
-    hass.bus.listen(mysensors.EVENT_MYSENSORS_NODE_UPDATE, event_update)
+        V_TYPES.extend([mysensors.CONST.SetReq.V_STATUS, ])
 
 
 class MySensorsSwitch(SwitchDevice):
@@ -90,18 +92,6 @@ class MySensorsSwitch(SwitchDevice):
         self.value_type = value_type
         self.battery_level = 0
         self._values = {}
-
-    def as_dict(self):
-        """Return a dict representation of this entity."""
-        return {
-            'port': self.port,
-            'name': self._name,
-            'node_id': self.node_id,
-            'child_id': self.child_id,
-            'battery_level': self.battery_level,
-            'value_type': self.value_type,
-            'values': self._values,
-        }
 
     @property
     def should_poll(self):
