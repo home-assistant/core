@@ -67,8 +67,8 @@ def if_action(hass, config):
         return None
 
     # Make sure configuration keys have the right value
-    if before is not None and before not in (EVENT_SUNRISE, EVENT_SUNSET) or \
-       after is not None and after not in (EVENT_SUNRISE, EVENT_SUNSET):
+    if before not in (None, EVENT_SUNRISE, EVENT_SUNSET) or \
+       after not in (None, EVENT_SUNRISE, EVENT_SUNSET):
         logging.getLogger(__name__).error(
             "%s and %s can only be set to %s or %s",
             CONF_BEFORE, CONF_AFTER, EVENT_SUNRISE, EVENT_SUNSET)
