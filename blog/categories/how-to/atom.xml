@@ -4,7 +4,7 @@
   <title><![CDATA[Category: How-To | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/how-to/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2015-12-23T02:38:34+00:00</updated>
+  <updated>2015-12-24T00:45:41+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -217,7 +217,7 @@ The <a href="https://influxdb.com/">InfluxDB</a> database is a so-called time se
 </div>
 </div>
 
-<p>If everything went well, then the web interface of the ddatabase should be accessible at <a href="http://localhost:8083/">http://localhost:8083/</a>. Create a database <code>home_assistant</code> to use with Home Assistant either with the web interface or the commandline tool <code>influx</code>.</p>
+<p>If everything went well, then the web interface of the database should be accessible at <a href="http://localhost:8083/">http://localhost:8083/</a>. Create a database <code>home_assistant</code> to use with Home Assistant either with the web interface or the commandline tool <code>influx</code>.</p>
 
 <p class="img">
   <img src="https://home-assistant.io/images/blog/2015-12-influxdb/influxdb-frontend.png" />

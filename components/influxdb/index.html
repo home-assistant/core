@@ -107,7 +107,7 @@
   </header>
   <hr class="divider">
 
-  <p>The <code>influxdb</code> component makes it possible to transfer all state changes to an external <a href="https://influxdb.com/">InfluxDB</a> database.</p>
+  <p>The <code>influxdb</code> component makes it possible to transfer all state changes to an external <a href="https://influxdb.com/">InfluxDB</a> database. For more details, <a href="/blog/2015/12/07/influxdb-and-grafana/">see the blog post on InfluxDB</a>.</p>
 
 <p>To use the <code>influxdb</code> component in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -128,7 +128,7 @@
 <ul>
   <li><strong>host</strong> (<em>Required</em>): IP address of your database host, eg. http://192.168.1.10.</li>
   <li><strong>port</strong> (<em>Optional</em>): Port to use. Defaults to 8086.</li>
-  <li><strong>database</strong> (<em>Optional</em>): Name of the database to use. Defaults to <code>home_assistant</code></li>
+  <li><strong>database</strong> (<em>Optional</em>): Name of the database to use. Defaults to <code>home_assistant</code>. The database must already exist.</li>
   <li><strong>username</strong> (<em>Optional</em>): The username of the database user.</li>
   <li><strong>password</strong> (<em>Optional</em>): The password for the database user account.</li>
 </ul>
