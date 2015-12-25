@@ -31,9 +31,6 @@ are limited to one request every 10 minutes
 from datetime import timedelta
 import logging
 
-from tellcore.constants import (
-    TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
-
 from homeassistant.loader import get_component
 from homeassistant import bootstrap
 from homeassistant.util import Throttle
@@ -59,7 +56,6 @@ NETWORK = None
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
-
 class TelldusLiveData(object):
     """ Gets the latest data and update the states. """
 
@@ -70,21 +66,30 @@ class TelldusLiveData(object):
         token_secret = config[DOMAIN].get(CONF_TOKEN_SECRET)
 
         from tellive.client import LiveClient
-        self.sensors = []
-        self.client = LiveClient(public_key=public_key,
-                                 private_key=private_key,
-                                 access_token=token,
-                                 access_secret=token_secret)
+        from tellive.live import TelldusLive
+
+        self._sensors = []
+        self._client = LiveClient(public_key=public_key,
+                                  private_key=private_key,
+                                  access_token=token,
+                                  access_secret=token_secret)
+        self._api = TelldusLive(self._client)
+
 
     def request(self, what, params=None):
         """ Sends a request to the tellstick live API """
-        supported_methods = TELLSTICK_TURNON \
-            | TELLSTICK_TURNOFF \
-            | TELLSTICK_TOGGLE
         params = params or dict()
-        params.update({"supportedMethods": supported_methods,
+
+        from tellcore.constants import (
+            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
+
+        SUPPORTED_METHODS = TELLSTICK_TURNON \
+                            | TELLSTICK_TURNOFF \
+                            | TELLSTICK_TOGGLE
+
+        params.update({"supportedMethods": SUPPORTED_METHODS,
                        'extras': 'coordinate,timezone,tzoffset'})
-        return self.client.request(what, params)
+        return self._client.request(what, params)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_sensors(self):
@@ -100,19 +105,18 @@ class TelldusLiveData(object):
         updated_sensors = self._update_sensors()
         if updated_sensors is not None:
             _LOGGER.info("tellduslive data updated successfully.")
-            self.sensors = updated_sensors
-        return self.sensors
+            self._sensors = updated_sensors
+        return self._sensors
 
     def get_switches(self):
         """ Get the configured switches """
-        response = self.request("devices/list")
-        return response["device"]
-
+        return self._api.devices()
+        
 
 def setup(hass, config):
     """ Setup the tellduslive component """
 
-    # later: aquire an app key and authenticate using username + password
+    # fixme: aquire app key and provide authentication using username + password
     if not validate_config(config, {DOMAIN: [CONF_PUBLIC_KEY,
                                              CONF_PRIVATE_KEY,
                                              CONF_TOKEN,
@@ -126,6 +130,7 @@ def setup(hass, config):
     global NETWORK
     NETWORK = TelldusLiveData(config)
 
+    # fixme: discover newly plugged in devices as well
     for component_name, discovery_type in (
             ('switch', DISCOVER_SWITCHES),
             ('sensor', DISCOVER_SENSORS)):
