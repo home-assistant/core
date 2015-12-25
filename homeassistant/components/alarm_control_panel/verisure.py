@@ -77,20 +77,20 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
         verisure.MY_PAGES.alarm.set(code, 'DISARMED')
+        _LOGGER.info('verisure alarm disarming')
         verisure.MY_PAGES.alarm.wait_while_pending()
         verisure.update_alarm()
-        _LOGGER.info('disarming verisure alarm')
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
         verisure.MY_PAGES.alarm.set(code, 'ARMED_HOME')
+        _LOGGER.info('verisure alarm arming home')
         verisure.MY_PAGES.alarm.wait_while_pending()
         verisure.update_alarm()
-        _LOGGER.info('arming home verisure alarm')
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
         verisure.MY_PAGES.alarm.set(code, 'ARMED_AWAY')
+        _LOGGER.info('verisure alarm arming away')
         verisure.MY_PAGES.alarm.wait_while_pending()
         verisure.update_alarm()
-        _LOGGER.info('arming away')
