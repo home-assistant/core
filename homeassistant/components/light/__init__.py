@@ -229,7 +229,8 @@ def setup(hass, config):
         if dat.get(ATTR_FLASH) in (FLASH_SHORT, FLASH_LONG):
             params[ATTR_FLASH] = dat[ATTR_FLASH]
 
-        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE, EFFECT_RANDOM):
+        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE,
+                                    EFFECT_RANDOM):
             params[ATTR_EFFECT] = dat[ATTR_EFFECT]
 
         for light in target_lights:
