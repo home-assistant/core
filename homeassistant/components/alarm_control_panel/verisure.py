@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     alarms.extend([
         VerisureAlarm(value)
-        for value in verisure.get_alarm_status().values()
+        for value in verisure.ALARM_STATUS.values()
         if verisure.SHOW_ALARM
         ])
 
@@ -42,7 +42,6 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, alarm_status):
         self._id = alarm_status.id
-        self._device = verisure.MY_PAGES.DEVICE_ALARM
         self._state = STATE_UNKNOWN
 
     @property
@@ -62,36 +61,36 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """ Update alarm status """
-        verisure.update()
+        verisure.update_alarm()
 
-        if verisure.STATUS[self._device][self._id].status == 'unarmed':
+        if verisure.ALARM_STATUS[self._id].status == 'unarmed':
             self._state = STATE_ALARM_DISARMED
-        elif verisure.STATUS[self._device][self._id].status == 'armedhome':
+        elif verisure.ALARM_STATUS[self._id].status == 'armedhome':
             self._state = STATE_ALARM_ARMED_HOME
-        elif verisure.STATUS[self._device][self._id].status == 'armedaway':
+        elif verisure.ALARM_STATUS[self._id].status == 'armedaway':
             self._state = STATE_ALARM_ARMED_AWAY
-        elif verisure.STATUS[self._device][self._id].status != 'pending':
+        elif verisure.ALARM_STATUS[self._id].status != 'pending':
             _LOGGER.error(
                 'Unknown alarm state %s',
-                verisure.STATUS[self._device][self._id].status)
+                verisure.ALARM_STATUS[self._id].status)
 
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        verisure.MY_PAGES.set_alarm_status(
-            code,
-            verisure.MY_PAGES.ALARM_DISARMED)
-        _LOGGER.warning('disarming')
+        verisure.MY_PAGES.alarm.set(code, 'DISARMED')
+        verisure.MY_PAGES.alarm.wait_while_pending()
+        verisure.update_alarm()
+        _LOGGER.info('disarming verisure alarm')
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        verisure.MY_PAGES.set_alarm_status(
-            code,
-            verisure.MY_PAGES.ALARM_ARMED_HOME)
-        _LOGGER.warning('arming home')
+        verisure.MY_PAGES.alarm.set(code, 'ARMED_HOME')
+        verisure.MY_PAGES.alarm.wait_while_pending()
+        verisure.update_alarm()
+        _LOGGER.info('arming home verisure alarm')
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        verisure.MY_PAGES.set_alarm_status(
-            code,
-            verisure.MY_PAGES.ALARM_ARMED_AWAY)
-        _LOGGER.warning('arming away')
+        verisure.MY_PAGES.alarm.set(code, 'ARMED_AWAY')
+        verisure.MY_PAGES.alarm.wait_while_pending()
+        verisure.update_alarm()
+        _LOGGER.info('arming away')
