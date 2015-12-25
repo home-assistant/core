@@ -71,7 +71,7 @@ class SystemMonitorSensor(Entity):
 
     @property
     def icon(self):
-        return SENSOR_TYPES[self.type]
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
