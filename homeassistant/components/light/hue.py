@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import socket
+import random
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -20,7 +21,7 @@ from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
-    ATTR_EFFECT, EFFECT_COLORLOOP, ATTR_RGB_COLOR)
+    ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -233,6 +234,9 @@ class HueLight(Light):
 
         if effect == EFFECT_COLORLOOP:
             command['effect'] = 'colorloop'
+        elif effect == EFFECT_RANDOM:
+            command['hue'] = random.randrange(0,65535)
+            command['sat'] = random.randrange(150,254)
         else:
             command['effect'] = 'none'
 
