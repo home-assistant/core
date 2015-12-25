@@ -68,7 +68,7 @@ class SystemMonitorSensor(Entity):
     @property
     def name(self):
         return self._name.rstrip()
-        
+
     @property
     def state(self):
         """ Returns the state of the device. """
