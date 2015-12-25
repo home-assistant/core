@@ -68,29 +68,6 @@ class SystemMonitorSensor(Entity):
     @property
     def name(self):
         return self._name.rstrip()
-
-    @property
-    def icon(self):
-        return {
-            'disk_use_percent': 'mdi:harddisk',
-            'disk_use': 'mdi:harddisk',
-            'disk_free': 'mdi:harddisk',
-            'memory_use_percent': 'mdi:memory',
-            'memory_use': 'mdi:memory',
-            'memory_free': 'mdi:memory',
-            'swap_use_percent': 'mdi:harddisk',
-            'swap_use': 'mdi:harddisk',
-            'swap_free': 'mdi:harddisk',
-            'processor_use': 'mdi:memory',
-            'process': 'mdi:memory',
-            'network_out': 'server:network',
-            'network_in': 'server:network',
-            'packets_out': 'server:network',
-            'packets_in': 'server:network',
-            'ipv4_address': 'server:network',
-            'ipv6_address': 'server:network',
-            'last_boot': 'mdi:clock',
-            'since_last_boot': 'mdi:clock' }.get(self.type)
         
     @property
     def state(self):
