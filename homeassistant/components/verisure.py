@@ -118,16 +118,19 @@ def reconnect():
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
 def update_alarm():
+    """ Updates the status of alarms. """
     update_component(MY_PAGES.alarm.get, ALARM_STATUS)
 
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
 def update_climate():
+    """ Updates the status of climate sensors. """
     update_component(MY_PAGES.climate.get, CLIMATE_STATUS)
 
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
 def update_smartplug():
+    """ Updates the status of smartplugs. """
     update_component(MY_PAGES.smartplug.get, SMARTPLUG_STATUS)
 
 
