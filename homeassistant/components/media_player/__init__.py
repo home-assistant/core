@@ -154,7 +154,6 @@ def mute_volume(hass, mute, entity_id=None):
 
 def set_volume_level(hass, volume, entity_id=None):
     """ Send the media player the command for volume down. """
-    print("AAAAAAAAAAAAAAAAAAAA")
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
 
     if entity_id:
@@ -232,11 +231,9 @@ def setup(hass, config):
 
     def volume_set_service(service):
         """ Set specified volume on the media player. """
-        print(service.data)
         target_players = component.extract_from_service(service)
 
         if ATTR_MEDIA_VOLUME_LEVEL not in service.data:
-            print('returning')
             return
 
         volume = service.data[ATTR_MEDIA_VOLUME_LEVEL]
