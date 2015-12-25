@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches.extend([
         VerisureSmartplug(value)
-        for value in verisure.get_smartplug_status().values()
+        for value in verisure.SMARTPLUG_STATUS.values()
         if verisure.SHOW_SMARTPLUGS
         ])
 
@@ -36,31 +36,29 @@ class VerisureSmartplug(SwitchDevice):
     """ Represents a Verisure smartplug. """
     def __init__(self, smartplug_status):
         self._id = smartplug_status.id
-        self.status_on = verisure.MY_PAGES.SMARTPLUG_ON
-        self.status_off = verisure.MY_PAGES.SMARTPLUG_OFF
 
     @property
     def name(self):
         """ Get the name (location) of the smartplug. """
-        return verisure.get_smartplug_status()[self._id].location
+        return verisure.SMARTPLUG_STATUS[self._id].location
 
     @property
     def is_on(self):
         """ Returns True if on """
-        plug_status = verisure.get_smartplug_status()[self._id].status
-        return plug_status == self.status_on
+        plug_status = verisure.SMARTPLUG_STATUS[self._id].status
+        return plug_status == 'on'
 
     def turn_on(self):
         """ Set smartplug status on. """
-        verisure.MY_PAGES.set_smartplug_status(
-            self._id,
-            self.status_on)
+        verisure.MY_PAGES.smartplug.set(self._id, 'on')
+        verisure.MY_PAGES.smartplug.wait_while_updating(self._id, 'on')
+        verisure.update_smartplug()
 
     def turn_off(self):
         """ Set smartplug status off. """
-        verisure.MY_PAGES.set_smartplug_status(
-            self._id,
-            self.status_off)
+        verisure.MY_PAGES.smartplug.set(self._id, 'off')
+        verisure.MY_PAGES.smartplug.wait_while_updating(self._id, 'off')
+        verisure.update_smartplug()
 
     def update(self):
-        verisure.update()
+        verisure.update_smartplug()
