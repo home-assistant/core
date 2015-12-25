@@ -235,8 +235,8 @@ class HueLight(Light):
         if effect == EFFECT_COLORLOOP:
             command['effect'] = 'colorloop'
         elif effect == EFFECT_RANDOM:
-            command['hue'] = random.randrange(0,65535)
-            command['sat'] = random.randrange(150,254)
+            command['hue'] = random.randrange(0, 65535)
+            command['sat'] = random.randrange(150, 254)
         else:
             command['effect'] = 'none'
 
