@@ -91,6 +91,7 @@ omit =
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
+    homeassistant/components/light/wemo.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/firetv.py
