@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         mac = discovery_info[3]
         device = discovery.device_from_description(location, mac)
 
-        if device:
+        if device and isinstance(device, pywemo.Switch):
             add_devices_callback([WemoSwitch(device)])
 
         return
