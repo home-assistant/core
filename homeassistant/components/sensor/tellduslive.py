@@ -39,17 +39,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              sensor["name"]))
     add_devices(devices)
 
-
 class TelldusLiveSensor(Entity):
     """ Represents a Telldus Live sensor. """
 
     def __init__(self, sensor_id, sensor_name, sensor_type):
-        self.sensor_id = sensor_id
-        self.sensor_type = sensor_type
+        self._sensor_id = sensor_id
+        self._sensor_type = sensor_type
         self._state = None
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._icon = SENSOR_TYPES[sensor_type][2]
         self.update()
 
     @property
@@ -64,20 +61,20 @@ class TelldusLiveSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        return self._unit_of_measurement
+        return SENSOR_TYPES[self._sensor_type][1]
 
     @property
     def icon(self):
-        return self._icon
+        return SENSOR_TYPES[self._sensor_type][2]
 
     def update(self):
         sensors = tellduslive.NETWORK.get_sensors()
         for component in sensors:
             for sensor in component["data"]:
-                if component["id"] == self.sensor_id and \
-                   sensor["name"] == self.sensor_type:
+                if component["id"] == self._sensor_id and \
+                   sensor["name"] == self._sensor_type:
                     self._state = float(sensor["value"])
-                    if self.sensor_type == SENSOR_TYPE_TEMP:
+                    if self._sensor_type == SENSOR_TYPE_TEMP:
                         self._state = round(self._state, 1)
-                    elif self.sensor_type == SENSOR_TYPE_HUMIDITY:
+                    elif self._sensor_type == SENSOR_TYPE_HUMIDITY:
                         self._state = int(round(self._state))
