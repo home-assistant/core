@@ -51,8 +51,7 @@ class TelldusLiveSwitch(ToggleEntity):
         STATES = {self.TELLSTICK_TURNON:  STATE_ON,
                   self.TELLSTICK_TURNOFF: STATE_OFF}
         switches = tellduslive.NETWORK.get_switches()
-        #from pprint import pprint
-        #pprint(switches)
+
         for switch in switches:
             if switch["id"] == self._id:
                 self._state = STATES[switch["state"]]
