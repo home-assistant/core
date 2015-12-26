@@ -59,59 +59,97 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 class TelldusLiveData(object):
     """ Gets the latest data and update the states. """
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
+
         public_key = config[DOMAIN].get(CONF_PUBLIC_KEY)
         private_key = config[DOMAIN].get(CONF_PRIVATE_KEY)
         token = config[DOMAIN].get(CONF_TOKEN)
         token_secret = config[DOMAIN].get(CONF_TOKEN_SECRET)
 
+        self._hass = hass
+        self._config = config
+
         from tellive.client import LiveClient
         from tellive.live import TelldusLive
 
-        self._sensors = []
+        self._sensors  = []
+        self._switches = []
+
         self._client = LiveClient(public_key=public_key,
                                   private_key=private_key,
                                   access_token=token,
                                   access_secret=token_secret)
         self._api = TelldusLive(self._client)
+        
+        self._update()
+        _LOGGER.info("got %d switches" % len(self._switches))
+        _LOGGER.info("got %d sensors" % len(self._sensors))
 
-
-    def request(self, what, params=None):
+    def _request(self, what, params):
         """ Sends a request to the tellstick live API """
-        params = params or dict()
+        return self._client.request(what, params)
 
+    def _setup_component(self, name, discovery_type):
+        """ Send discovery event if component not yet discovered """
+        component = get_component(name)
+        if component.DOMAIN not in self._hass.config.components:
+            bootstrap.setup_component(self._hass, component.DOMAIN, self._config)
+            _LOGGER.debug("firing discovery event: " + discovery_type)
+            self._hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+                ATTR_SERVICE: discovery_type,
+                ATTR_DISCOVERED: {}
+            })
+        # fixme: also discover new sensors/switches as they are plugged in?
+
+    def check_request(self, what, params):
+        """ Make request, check if successful """
+        return self._request(what, params) == "success"
+
+    def _update_switches(self):
+        _LOGGER.info("Updating switches from Telldus Live")
         from tellcore.constants import (
             TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
-
+        
         SUPPORTED_METHODS = TELLSTICK_TURNON \
                             | TELLSTICK_TURNOFF \
                             | TELLSTICK_TOGGLE
+        
+        params = {'supportedMethods': SUPPORTED_METHODS}
 
-        params.update({"supportedMethods": SUPPORTED_METHODS,
-                       'extras': 'coordinate,timezone,tzoffset'})
-        return self._client.request(what, params)
+        self._switches = self._request("devices/list", params)["device"]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+        # filter out any group of switches
+        self._switches = [ switch for switch in self._switches if switch["type"] == "device" ]
+
+        if len(self._switches):
+            self._setup_component('switch', DISCOVER_SWITCHES)
+        
+    @Throttle(MIN_TIME_BETWEEN_UPDATES) # according to API documentation
     def _update_sensors(self):
         """ Get the latest data from Telldus Live """
-        _LOGGER.info("Updating sensors for real")
+        _LOGGER.info("Updating sensors from Telldus Live")
+
         params = {"includeValues": 1,
                   "includeScale": 1}
-        response = self.request("sensors/list", params)
-        return response["sensor"]
+
+        self._sensors  = self._request("sensors/list", params)["sensor"]
+
+        if len(self._sensors):
+            self._setup_component('sensor', DISCOVER_SENSORS)
 
     def get_sensors(self):
         """ Get the latest (possibly cached) sensor values """
-        updated_sensors = self._update_sensors()
-        if updated_sensors is not None:
-            _LOGGER.info("tellduslive data updated successfully.")
-            self._sensors = updated_sensors
+        self._update_sensors()
         return self._sensors
 
     def get_switches(self):
         """ Get the configured switches """
-        return self._api.devices()
+        self._update_switches()
+        return self._switches
         
+    def _update(self):
+        self._update_sensors()
+        self._update_switches()
 
 def setup(hass, config):
     """ Setup the tellduslive component """
@@ -127,18 +165,9 @@ def setup(hass, config):
             "that can be aquired from https://api.telldus.com/keys/index")
         return False
 
-    global NETWORK
-    NETWORK = TelldusLiveData(config)
+    # fixme: validate key?
 
-    # fixme: discover newly plugged in devices as well
-    for component_name, discovery_type in (
-            ('switch', DISCOVER_SWITCHES),
-            ('sensor', DISCOVER_SENSORS)):
-        component = get_component(component_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
-        _LOGGER.debug("firing discovery event: " + discovery_type)
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-            ATTR_SERVICE: discovery_type,
-            ATTR_DISCOVERED: {}
-        })
+    global NETWORK
+    NETWORK = TelldusLiveData(hass, config)
+
     return True
