@@ -15,12 +15,8 @@ class TestSensorYr(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
-        latitude = 32.87336
-        longitude = 117.22743
-
-        # Compare it with the real data
-        self.hass.config.latitude = latitude
-        self.hass.config.longitude = longitude
+        self.hass.config.latitude = 32.87336
+        self.hass.config.longitude = 117.22743
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -30,6 +26,7 @@ class TestSensorYr(unittest.TestCase):
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'yr',
+                'elevation': 0,
             }
         }))
         state = self.hass.states.get('sensor.yr_symbol')
@@ -42,7 +39,14 @@ class TestSensorYr(unittest.TestCase):
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'yr',
-                'monitored_conditions': {'pressure', 'windDirection', 'humidity', 'fog', 'windSpeed'}
+                'elevation': 0,
+                'monitored_conditions': {
+                    'pressure',
+                    'windDirection',
+                    'humidity',
+                    'fog',
+                    'windSpeed'
+                }
             }
         }))
         state = self.hass.states.get('sensor.yr_symbol')
