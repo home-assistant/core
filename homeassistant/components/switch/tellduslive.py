@@ -38,7 +38,7 @@ class TelldusLiveSwitch(ToggleEntity):
     @property
     def should_poll(self):
         """ Tells Home Assistant to poll this entity. """
-        return True
+        return False
 
     @property
     def name(self):
@@ -46,25 +46,28 @@ class TelldusLiveSwitch(ToggleEntity):
         return self._name
 
     def update(self):
-        from tellcore.constants import (
-            TELLSTICK_TURNON, TELLSTICK_TURNOFF)
-        states = {TELLSTICK_TURNON:  STATE_ON,
-                  TELLSTICK_TURNOFF: STATE_OFF}
+        from tellive.live import const
         state = tellduslive.NETWORK.get_switch_state(self._id)
-        self._state = states[state]
+        if state == const.TELLSTICK_TURNON:
+            self._state = STATE_ON
+        elif state == const.TELLSTICK_TURNOFF:
+            self._state = STATE_OFF
+        else:
+            self._state = STATE_UNKNOWN
 
     @property
     def is_on(self):
         """ True if switch is on. """
-        self.update()
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         if tellduslive.NETWORK.turn_switch_on(self._id):
             self._state = STATE_ON
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         if tellduslive.NETWORK.turn_switch_off(self._id):
             self._state = STATE_OFF
+            self.update_ha_state()
