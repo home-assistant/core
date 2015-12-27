@@ -29,6 +29,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _WEMO_SUBSCRIPTION_REGISTRY.start()
         def stop_wemo(event):
             """ Shutdown Wemo subscriptions and subscription thread on exit"""
+            _LOGGER.info("Shutting down subscriptions.")
             _WEMO_SUBSCRIPTION_REGISTRY.stop()
 
         hass.bus.listen_once(hass.EVENT_HOMEASSISTANT_STOP, stop_wemo)
@@ -66,8 +67,8 @@ class WemoSwitch(SwitchDevice):
     def _update_callback(self, _device, _params):
         """ Called by the wemo device callback to update state. """
         _LOGGER.info(
-            'Subscription update for  %s, sevice=%s params=%s',
-            self.name, _device, _params)
+            'Subscription update for  %s, sevice=%s',
+            self.name, _device)
         self.update_ha_state(True)
 
     @property
