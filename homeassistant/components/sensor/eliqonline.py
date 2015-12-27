@@ -63,6 +63,10 @@ class EliqSensor(Entity):
         """ Returns the state of the device. """
         return self._state
 
+    @property
+    def icon(self):
+        return "mdi:speedometer"
+
     def update(self):
         """ Gets the latest data. """
         response = self.api.get_data_now(channelid=self.channel_id)
