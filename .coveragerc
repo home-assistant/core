@@ -15,6 +15,10 @@ omit =
     homeassistant/components/*/modbus.py
 
     homeassistant/components/*/tellstick.py
+
+    homeassistant/components/tellduslive.py
+    homeassistant/components/*/tellduslive.py
+
     homeassistant/components/*/vera.py
 
     homeassistant/components/ecobee.py
