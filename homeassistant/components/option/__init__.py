@@ -10,6 +10,7 @@ import logging
 
 import os
 
+from homeassistant.components import cec
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import SERVICE_SET_OPTION, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
@@ -27,6 +28,7 @@ ATTR_OPTIONS = "options"
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_PLATFORMS = {
+    cec.DISCOVER_OPTION: 'cec',
 }
 
 DEVICE_NAME = 'Active HDMI device'
