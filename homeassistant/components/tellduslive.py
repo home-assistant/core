@@ -116,7 +116,8 @@ class TelldusLiveData(object):
 
     def check_request(self, what, **params):
         """ Make request, check result if successful """
-        return self._request(what, **params) == "success"
+        response = self._request(what, **params)
+        return response['status'] == "success"
 
     def validate_session(self):
         """ Make a dummy request to see if the session is valid """
@@ -164,7 +165,8 @@ class TelldusLiveData(object):
     def get_switch_state(self, switch_id):
         """ returns state of switch. """
         _LOGGER.info("Updating switch state from Telldus Live")
-        return int(self._request("device/info", id=switch_id)["state"])
+        response = self._request("device/info", id=switch_id)["state"]
+        return int(response)
 
     def turn_switch_on(self, switch_id):
         """ turn switch off """
