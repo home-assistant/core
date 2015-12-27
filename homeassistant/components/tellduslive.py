@@ -134,7 +134,7 @@ class TelldusLiveData(object):
         self._sensors = self._request("sensors/list")["sensor"]
 
     def _update_switches(self):
-        """ Get the configured switches """
+        """ Get the configured switches from Telldus Live"""
         _LOGGER.info("Updating switches from Telldus Live")
         self._switches = self._request("devices/list")["device"]
         # filter out any group of switches
@@ -158,7 +158,9 @@ class TelldusLiveData(object):
             if component["id"] == sensor_id:
                 for sensor in component["data"]:
                     if sensor["name"] == sensor_name:
-                        return sensor["value"]
+                        return (sensor["value"],
+                                component["battery"],
+                                component["lastUpdated"])
 
     def get_switch_state(self, switch_id):
         """ returns state of switch. """
