@@ -93,15 +93,10 @@ def if_action(hass, config):
     else:
         after_func = lambda: sun.next_setting_utc(hass) + after_offset
 
-    # This is needed for testing
-    time_func = dt_util.utcnow
-
     def time_if():
         """ Validate time based if-condition """
 
-        # This is needed for testing.
-        nonlocal time_func
-        now = time_func()
+        now = dt_util.utcnow()
         before = before_func()
         after = after_func()
 
