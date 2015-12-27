@@ -8,7 +8,6 @@ https://home-assistant.io/components/sun/
 """
 import logging
 from datetime import timedelta
-import urllib
 
 import homeassistant.util as util
 from homeassistant.util import location as location_util, dt as dt_util
