@@ -193,8 +193,6 @@ def setup(hass, config):
             "that can be aquired from https://api.telldus.com/keys/index")
         return False
 
-    # fixme: validate key?
-
     global NETWORK
     NETWORK = TelldusLiveData(hass, config)
 
