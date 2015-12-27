@@ -54,6 +54,11 @@ class EliqSensor(Entity):
         return self._name
 
     @property
+    def icon(self):
+        """ Returns icon. """
+        return "mdi:speedometer"
+
+    @property
     def unit_of_measurement(self):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
@@ -62,10 +67,6 @@ class EliqSensor(Entity):
     def state(self):
         """ Returns the state of the device. """
         return self._state
-
-    @property
-    def icon(self):
-        return "mdi:speedometer"
 
     def update(self):
         """ Gets the latest data. """
