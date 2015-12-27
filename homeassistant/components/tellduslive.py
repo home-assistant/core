@@ -96,12 +96,11 @@ class TelldusLiveData(object):
     def _request(self, what, **params):
         """ Sends a request to the tellstick live API """
 
-        from tellcore.constants import (
-            TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
+        from tellive.live import const
 
-        supported_methods = TELLSTICK_TURNON \
-            | TELLSTICK_TURNOFF \
-            | TELLSTICK_TOGGLE
+        supported_methods = const.TELLSTICK_TURNON \
+            | const.TELLSTICK_TURNOFF \
+            | const.TELLSTICK_TOGGLE
 
         default_params = {'supportedMethods': supported_methods,
                           "includeValues": 1,
