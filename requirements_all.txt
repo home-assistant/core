@@ -188,7 +188,7 @@ python-nest==2.6.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-https://github.com/persandstrom/python-verisure/archive/0f53c1d6a9e370566a78e36093b02fbd5144b75d.zip#python-verisure==0.4.1
+vsure==0.4.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
