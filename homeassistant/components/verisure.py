@@ -28,10 +28,7 @@ DISCOVER_SWITCHES = 'verisure.switches'
 DISCOVER_ALARMS = 'verisure.alarm_control_panel'
 
 DEPENDENCIES = ['alarm_control_panel']
-REQUIREMENTS = [
-    'https://github.com/persandstrom/python-verisure/archive/'
-    '0f53c1d6a9e370566a78e36093b02fbd5144b75d.zip#python-verisure==0.4.1'
-    ]
+REQUIREMENTS = ['vsure==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
