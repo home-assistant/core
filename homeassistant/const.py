@@ -149,6 +149,8 @@ SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
 SERVICE_STOP = 'stop'
 
+SERVICE_SET_OPTION = 'set_option'
+
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
