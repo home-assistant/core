@@ -27,6 +27,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if _WEMO_SUBSCRIPTION_REGISTRY is None:
         _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
         _WEMO_SUBSCRIPTION_REGISTRY.start()
+        def stop_wemo(event):
+            """ Shutdown Wemo subscriptions and subscription thread on exit"""
+            _WEMO_SUBSCRIPTION_REGISTRY.stop()
+
+        hass.bus.listen_once(hass.EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     if discovery_info is not None:
         location = discovery_info[2]
@@ -63,8 +68,7 @@ class WemoSwitch(SwitchDevice):
         _LOGGER.info(
             'Subscription update for  %s, sevice=%s params=%s',
             self.name, _device, _params)
-        self.update()
-        self.update_ha_state()
+        self.update_ha_state(True)
 
     @property
     def should_poll(self):
