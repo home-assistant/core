@@ -25,11 +25,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                    switch["id"])
                  for switch in switches if switch["type"] == "device"])
 
+
 class TelldusLiveSwitch(ToggleEntity):
     """ Represents a Tellstick switch. """
-
-    from tellcore.constants import (
-        TELLSTICK_TURNON, TELLSTICK_TURNOFF)
 
     def __init__(self, name, switch_id):
         self._name = name
@@ -46,16 +44,15 @@ class TelldusLiveSwitch(ToggleEntity):
     def name(self):
         """ Returns the name of the switch if any. """
         return self._name
-        
-    def update(self):
-        STATES = {self.TELLSTICK_TURNON:  STATE_ON,
-                  self.TELLSTICK_TURNOFF: STATE_OFF}
-        switches = tellduslive.NETWORK.get_switches()
 
-        for switch in switches:
-            if switch["id"] == self._id:
-                self._state = STATES[switch["state"]]
-                   
+    def update(self):
+        from tellcore.constants import (
+            TELLSTICK_TURNON, TELLSTICK_TURNOFF)
+        states = {TELLSTICK_TURNON:  STATE_ON,
+                  TELLSTICK_TURNOFF: STATE_OFF}
+        state = tellduslive.NETWORK.get_switch_state(self._id)
+        self._state = states[state]
+
     @property
     def is_on(self):
         """ True if switch is on. """
@@ -64,12 +61,10 @@ class TelldusLiveSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        if tellduslive.NETWORK.check_request("device/turnOn",
-                                             {"id": self._id}):
+        if tellduslive.NETWORK.turn_switch_on(self._id):
             self._state = STATE_ON
-                
+
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
-        if tellduslive.NETWORK.check_request("device/turnOff",
-                                             {"id": self._id}):
+        if tellduslive.NETWORK.turn_switch_off(self._id):
             self._state = STATE_OFF
