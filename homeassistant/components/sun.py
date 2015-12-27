@@ -11,7 +11,7 @@ from datetime import timedelta
 import urllib
 
 import homeassistant.util as util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.helpers.entity import Entity
@@ -111,21 +111,13 @@ def setup(hass, config):
     platform_config = config.get(DOMAIN, {})
 
     elevation = platform_config.get(CONF_ELEVATION)
+    if elevation is None:
+        elevation = location_util.elevation(latitude, longitude)
 
-    from astral import Location, GoogleGeocoder
+    from astral import Location
 
     location = Location(('', '', latitude, longitude, hass.config.time_zone,
-                         elevation or 0))
-
-    if elevation is None:
-        google = GoogleGeocoder()
-        try:
-            google._get_elevation(location)  # pylint: disable=protected-access
-            _LOGGER.info(
-                'Retrieved elevation from Google: %s', location.elevation)
-        except urllib.error.URLError:
-            # If no internet connection available etc.
-            pass
+                         elevation))
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
