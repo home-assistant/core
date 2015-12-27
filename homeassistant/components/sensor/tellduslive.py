@@ -30,6 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
     sensors = tellduslive.NETWORK.get_sensors()
     devices = []
+    print(sensors)
     for component in sensors:
         for sensor in component["data"]:
             # one component can have more than one sensor
@@ -38,6 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              component["name"],
                                              sensor["name"]))
     add_devices(devices)
+
 
 class TelldusLiveSensor(Entity):
     """ Represents a Telldus Live sensor. """
@@ -68,13 +70,10 @@ class TelldusLiveSensor(Entity):
         return SENSOR_TYPES[self._sensor_type][2]
 
     def update(self):
-        sensors = tellduslive.NETWORK.get_sensors()
-        for component in sensors:
-            for sensor in component["data"]:
-                if component["id"] == self._sensor_id and \
-                   sensor["name"] == self._sensor_type:
-                    self._state = float(sensor["value"])
-                    if self._sensor_type == SENSOR_TYPE_TEMP:
-                        self._state = round(self._state, 1)
-                    elif self._sensor_type == SENSOR_TYPE_HUMIDITY:
-                        self._state = int(round(self._state))
+        self._state = tellduslive.NETWORK.get_sensor_value(self._sensor_id,
+                                                           self._sensor_type)
+        self._state = float(self._state)
+        if self._sensor_type == SENSOR_TYPE_TEMP:
+            self._state = round(self._state, 1)
+        elif self._sensor_type == SENSOR_TYPE_HUMIDITY:
+            self._state = int(round(self._state))

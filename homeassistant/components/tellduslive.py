@@ -56,6 +56,7 @@ NETWORK = None
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
+
 class TelldusLiveData(object):
     """ Gets the latest data and update the states. """
 
@@ -66,13 +67,10 @@ class TelldusLiveData(object):
         token = config[DOMAIN].get(CONF_TOKEN)
         token_secret = config[DOMAIN].get(CONF_TOKEN_SECRET)
 
-        self._hass = hass
-        self._config = config
-
         from tellive.client import LiveClient
         from tellive.live import TelldusLive
 
-        self._sensors  = []
+        self._sensors = []
         self._switches = []
 
         self._client = LiveClient(public_key=public_key,
@@ -80,65 +78,71 @@ class TelldusLiveData(object):
                                   access_token=token,
                                   access_secret=token_secret)
         self._api = TelldusLive(self._client)
-        
-        self._update()
-        _LOGGER.info("got %d switches" % len(self._switches))
-        _LOGGER.info("got %d sensors" % len(self._sensors))
 
-    def _request(self, what, params):
-        """ Sends a request to the tellstick live API """
-        return self._client.request(what, params)
-
-    def _setup_component(self, name, discovery_type):
+    def update(self, hass, config):
         """ Send discovery event if component not yet discovered """
-        component = get_component(name)
-        if component.DOMAIN not in self._hass.config.components:
-            bootstrap.setup_component(self._hass, component.DOMAIN, self._config)
-            _LOGGER.debug("firing discovery event: " + discovery_type)
-            self._hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: discovery_type,
-                ATTR_DISCOVERED: {}
-            })
-        # fixme: also discover new sensors/switches as they are plugged in?
+        self._update_sensors()
+        self._update_switches()
+        for component_name, found_devices, discovery_type in \
+            (('sensor', self._sensors, DISCOVER_SENSORS),
+             ('switch', self._switches, DISCOVER_SWITCHES)):
+            if len(found_devices):
+                component = get_component(component_name)
+                bootstrap.setup_component(hass, component.DOMAIN, config)
+                hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
+                              {ATTR_SERVICE: discovery_type,
+                               ATTR_DISCOVERED: {}})
 
-    def check_request(self, what, params):
-        """ Make request, check if successful """
-        return self._request(what, params) == "success"
+    def _request(self, what, **params):
+        """ Sends a request to the tellstick live API """
 
-    def _update_switches(self):
-        _LOGGER.info("Updating switches from Telldus Live")
         from tellcore.constants import (
             TELLSTICK_TURNON, TELLSTICK_TURNOFF, TELLSTICK_TOGGLE)
-        
-        SUPPORTED_METHODS = TELLSTICK_TURNON \
-                            | TELLSTICK_TURNOFF \
-                            | TELLSTICK_TOGGLE
-        
-        params = {'supportedMethods': SUPPORTED_METHODS}
 
-        self._switches = self._request("devices/list", params)["device"]
+        supported_methods = TELLSTICK_TURNON \
+            | TELLSTICK_TURNOFF \
+            | TELLSTICK_TOGGLE
 
-        # filter out any group of switches
-        self._switches = [ switch for switch in self._switches if switch["type"] == "device" ]
+        default_params = {'supportedMethods': supported_methods,
+                          "includeValues": 1,
+                          "includeScale": 1}
 
-        if len(self._switches):
-            self._setup_component('switch', DISCOVER_SWITCHES)
-        
-    @Throttle(MIN_TIME_BETWEEN_UPDATES) # according to API documentation
+        params.update(default_params)
+
+        # room for improvement: the telllive library doesn't seem to
+        # re-use sessions, instead it opens a new session for each request
+        # this needs to be fixed
+        response = self._client.request(what, params)
+        return response
+
+    def check_request(self, what, **params):
+        """ Make request, check result if successful """
+        return self._request(what, **params) == "success"
+
+    def validate_session(self):
+        """ Make a dummy request to see if the session is valid """
+        try:
+            response = self._request("user/profile")
+            return 'email' in response
+        except RuntimeError:
+            return False
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_sensors(self):
-        """ Get the latest data from Telldus Live """
+        """ Get the latest sensor data from Telldus Live """
         _LOGGER.info("Updating sensors from Telldus Live")
+        self._sensors = self._request("sensors/list")["sensor"]
 
-        params = {"includeValues": 1,
-                  "includeScale": 1}
-
-        self._sensors  = self._request("sensors/list", params)["sensor"]
-
-        if len(self._sensors):
-            self._setup_component('sensor', DISCOVER_SENSORS)
+    def _update_switches(self):
+        """ Get the configured switches """
+        _LOGGER.info("Updating switches from Telldus Live")
+        self._switches = self._request("devices/list")["device"]
+        # filter out any group of switches
+        self._switches = [switch for switch in self._switches
+                          if switch["type"] == "device"]
 
     def get_sensors(self):
-        """ Get the latest (possibly cached) sensor values """
+        """ Get the configured sensors """
         self._update_sensors()
         return self._sensors
 
@@ -146,19 +150,41 @@ class TelldusLiveData(object):
         """ Get the configured switches """
         self._update_switches()
         return self._switches
-        
-    def _update(self):
+
+    def get_sensor_value(self, sensor_id, sensor_name):
+        """ Get the latest (possibly cached) sensor value """
         self._update_sensors()
-        self._update_switches()
+        for component in self._sensors:
+            if component["id"] == sensor_id:
+                for sensor in component["data"]:
+                    if sensor["name"] == sensor_name:
+                        return sensor["value"]
+
+    def get_switch_state(self, switch_id):
+        """ returns state of switch. """
+        _LOGGER.info("Updating switch state from Telldus Live")
+        return int(self._request("device/info", id=switch_id)["state"])
+
+    def turn_switch_on(self, switch_id):
+        """ turn switch off """
+        return self.check_request("device/turnOn", id=switch_id)
+
+    def turn_switch_off(self, switch_id):
+        """ turn switch on """
+        return self.check_request("device/turnOff", id=switch_id)
+
 
 def setup(hass, config):
     """ Setup the tellduslive component """
 
-    # fixme: aquire app key and provide authentication using username + password
-    if not validate_config(config, {DOMAIN: [CONF_PUBLIC_KEY,
-                                             CONF_PRIVATE_KEY,
-                                             CONF_TOKEN,
-                                             CONF_TOKEN_SECRET]}, _LOGGER):
+    # fixme: aquire app key and provide authentication
+    # using username + password
+    if not validate_config(config,
+                           {DOMAIN: [CONF_PUBLIC_KEY,
+                                     CONF_PRIVATE_KEY,
+                                     CONF_TOKEN,
+                                     CONF_TOKEN_SECRET]},
+                           _LOGGER):
         _LOGGER.error(
             "Configuration Error: "
             "Please make sure you have configured your keys "
@@ -169,5 +195,14 @@ def setup(hass, config):
 
     global NETWORK
     NETWORK = TelldusLiveData(hass, config)
+
+    if not NETWORK.validate_session():
+        _LOGGER.error(
+            "Authentication Error: "
+            "Please make sure you have configured your keys "
+            "that can be aquired from https://api.telldus.com/keys/index")
+        return False
+
+    NETWORK.update(hass, config)
 
     return True
