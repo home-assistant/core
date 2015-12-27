@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if _WEMO_SUBSCRIPTION_REGISTRY is None:
         _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
         _WEMO_SUBSCRIPTION_REGISTRY.start()
+
         def stop_wemo(event):
             """ Shutdown Wemo subscriptions and subscription thread on exit"""
             _LOGGER.info("Shutting down subscriptions.")
