@@ -73,8 +73,9 @@ def _process_config(scene_config):
 
     for entity_id in c_entities:
         if isinstance(c_entities[entity_id], dict):
-            state = c_entities[entity_id].pop('state', None)
-            attributes = c_entities[entity_id]
+            entity_attrs = c_entities[entity_id].copy()
+            state = entity_attrs.pop('state', None)
+            attributes = entity_attrs
         else:
             state = c_entities[entity_id]
             attributes = {}
