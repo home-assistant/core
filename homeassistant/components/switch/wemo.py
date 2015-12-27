@@ -9,7 +9,7 @@ https://home-assistant.io/components/switch.wemo/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
+from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP
 
 REQUIREMENTS = ['pywemo==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             _LOGGER.info("Shutting down subscriptions.")
             _WEMO_SUBSCRIPTION_REGISTRY.stop()
 
-        hass.bus.listen_once(hass.EVENT_HOMEASSISTANT_STOP, stop_wemo)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     if discovery_info is not None:
         location = discovery_info[2]
