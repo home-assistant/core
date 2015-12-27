@@ -95,6 +95,5 @@ class TelldusLiveSensor(Entity):
             self._state = int(round(self._state))
 
         self._battery_level = round(self._battery_level * 100 / 255)  # percent
-        self._battery_level = "%d %%" % self._battery_level
 
         self._last_update = str(datetime.fromtimestamp(self._last_update))
