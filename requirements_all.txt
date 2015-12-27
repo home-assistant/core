@@ -161,7 +161,6 @@ python-twitch==1.2.0
 xmltodict
 
 # homeassistant.components.sun
-# homeassistant.components.sensor.yr
 astral==0.8.1
 
 # homeassistant.components.switch.edimax
