@@ -175,6 +175,9 @@ orvibo==1.1.0
 # homeassistant.components.switch.wemo
 pywemo==0.3.3
 
+# homeassistant.components.tellduslive
+tellive-py==0.5.2
+
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
 
