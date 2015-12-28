@@ -161,7 +161,6 @@ python-twitch==1.2.0
 xmltodict
 
 # homeassistant.components.sun
-# homeassistant.components.sensor.yr
 astral==0.8.1
 
 # homeassistant.components.switch.edimax
@@ -174,7 +173,10 @@ hikvision==0.4
 orvibo==1.1.0
 
 # homeassistant.components.switch.wemo
-pywemo==0.3.3
+pywemo==0.3.4
+
+# homeassistant.components.tellduslive
+tellive-py==0.5.2
 
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
@@ -189,7 +191,7 @@ python-nest==2.6.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60f7f35854390d59be.zip#python-verisure==0.2.6
+vsure==0.4.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
