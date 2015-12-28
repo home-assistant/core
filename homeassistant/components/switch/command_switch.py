@@ -24,10 +24,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     devices = []
 
     for dev_name, properties in switches.items():
-        if 'statecmd' in properties and CONF_VALUE_TEMPLATE not in properties:
-            _LOGGER.warning("Specify a %s when using statemcd",
-                            CONF_VALUE_TEMPLATE)
-            continue
         devices.append(
             CommandSwitch(
                 hass,
@@ -68,8 +64,8 @@ class CommandSwitch(SwitchDevice):
         return success
 
     @staticmethod
-    def _query_state(command):
-        """ Execute state command. """
+    def _query_state_value(command):
+        """ Execute state command for return value. """
         _LOGGER.info('Running state command: %s', command)
 
         try:
@@ -78,10 +74,16 @@ class CommandSwitch(SwitchDevice):
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', command)
 
+    @staticmethod
+    def _query_state_code(command):
+        """ Execute state command for return code. """
+        _LOGGER.info('Running state command: %s', command)
+        return subprocess.call(command, shell=True) == 0
+
     @property
     def should_poll(self):
-        """ No polling needed. """
-        return True
+        """ Only poll if we have statecmd. """
+        return self._command_state is not None
 
     @property
     def name(self):
@@ -93,13 +95,23 @@ class CommandSwitch(SwitchDevice):
         """ True if device is on. """
         return self._state
 
+    def _query_state(self):
+        """ Query for state. """
+        if not self._command_state:
+            _LOGGER.error('No state command specified')
+            return
+        if self._value_template:
+            return CommandSwitch._query_state_value(self._command_state)
+        return CommandSwitch._query_state_code(self._command_state)
+
     def update(self):
         """ Update device state. """
-        if self._command_state and self._value_template:
-            payload = CommandSwitch._query_state(self._command_state)
-            payload = template.render_with_possible_json_value(
-                self._hass, self._value_template, payload)
-            self._state = (payload == "True")
+        if self._command_state:
+            payload = str(self._query_state())
+            if self._value_template:
+                payload = template.render_with_possible_json_value(
+                    self._hass, self._value_template, payload)
+            self._state = (payload.lower() == "true")
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
