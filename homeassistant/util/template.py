@@ -5,9 +5,12 @@ homeassistant.util.template
 Template utility methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods
+import os
 import json
 import logging
 import jinja2
+import importlib
+import pkgutil
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import TemplateError
@@ -111,3 +114,28 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+
+
+def load_custom_filters(root):
+    # load custom filters into ENV
+    global ENV
+    try:
+        root_module = importlib.import_module(root)
+        prefix = root_module.__name__+'.'
+    except ImportError as err:
+        _LOGGER.exception(err)
+        return
+        
+    for importer,modname,ispkg in pkgutil.iter_modules(root_module.__path__, prefix):
+        try:
+            module = importlib.import_module(modname)
+        except ImportError as err:
+            _LOGGER.exception(err)
+            pass
+    if 'hass_custom_filters' in dir(root_module):
+        for fname,func in root_module.hass_custom_filters.items():
+            ENV.filters[fname] = func
+            _LOGGER.info('Registered filter %s' % fname)
+
+
+load_custom_filters('homeassistant.util.filters')
