@@ -206,7 +206,8 @@ class YrData(object):
         if self._nextrun is not None and dt_util.utcnow() <= self._nextrun:
             return
         try:
-            response = requests.get(self._url)
+            with requests.Session() as sess:
+                response = sess.get(self._url)
         except requests.RequestException:
             return
         if response.status_code != 200:
