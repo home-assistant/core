@@ -132,10 +132,9 @@ def load_custom_filters(root):
         except ImportError as err:
             _LOGGER.exception(err)
             pass
-    if 'hass_custom_filters' in dir(root_module):
-        for fname,func in root_module.hass_custom_filters.items():
-            ENV.filters[fname] = func
-            _LOGGER.info('Registered filter %s' % fname)
+    for fname,func in root_module.hass_custom_filters.items():
+        ENV.filters[fname] = func
+        _LOGGER.info('Registered filter %s' % fname)
 
 
 load_custom_filters('homeassistant.util.filters')
