@@ -115,7 +115,6 @@ def main():
 
     if sys.argv[-1] == 'validate':
         if validate_file(data):
-            print("requirements_all.txt is up to date.")
             sys.exit(0)
         print("******* ERROR")
         print("requirements_all.txt is not up to date")
