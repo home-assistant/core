@@ -136,7 +136,7 @@
 
 <p>Once tracked, a file will be created in your config dir called <code>known_devices.yaml</code>. Edit this file to adjust which devices to be tracked. Here you can also setup a URL for each device to be used as the entity picture and set whether the device will be show in the UI when in the away state.</p>
 
-<p>Multiple device trackers can be used in parallel, such as <a href="/components/device_tracker.owntracks/">Owntracks</a> and <a href="/components/device_tracker.nmap_scanner/">Nmap</a>. The state of the device will be determined by the source that reported last.</p>
+<p>Multiple device trackers can be used in parallel, such as <a href="/components/device_tracker.owntracks/">Owntracks</a> and <a href="/components/device_tracker.nmap_scanner/">Nmap</a>. The state of the device will be determined by the source that reported last. Device tracker will look for global settings (track_new_devices, consider_home and home_interval) under the configuration of the first platform.</p>
 
 </article>
 
