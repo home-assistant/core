@@ -144,13 +144,14 @@ class MpdDevice(MediaPlayerDevice):
         name = self.currentsong.get('name', None)
         title = self.currentsong.get('title', None)
 
-        if name is None:
+        if name is None and title is None:
+            return "No information received from MPD" 
+        elif name is None:
             return title
+        elif title is None:
+            return name 
         else:
-            if title is None:
-                return name
-            else:
-                return '{}: {}'.format(name, title)
+            return '{}: {}'.format(name, title)
 
     @property
     def media_artist(self):
