@@ -145,11 +145,11 @@ class MpdDevice(MediaPlayerDevice):
         title = self.currentsong.get('title', None)
 
         if name is None and title is None:
-            return "No information received from MPD" 
+             return "None"
         elif name is None:
             return title
         elif title is None:
-            return name 
+            return name
         else:
             return '{}: {}'.format(name, title)
 
