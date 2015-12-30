@@ -173,7 +173,8 @@ class HueLight(Light):
     """ Represents a Hue light """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, light_id, info, bridge, update_lights, bridge_type='hue'):
+    def __init__(self, light_id, info, bridge, update_lights,
+                 bridge_type='hue'):
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
