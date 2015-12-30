@@ -33,7 +33,6 @@ def setup_scanner(hass, config, see):
     return True
 
 
-# TODO: What happens with HA turns off?
 def _handle_get_api_locative(hass, see, handler, path_match, data):
     """ Locative message received. """
 
@@ -58,26 +57,31 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
         if "zone.{}".format(location_name.lower()) in zones:
             see(dev_id=device, location_name=location_name)
-            handler.write_json_message("Set new location to {}".format(location_name))
+            handler.write_json_message(
+                "Set new location to {}".format(location_name))
         else:
             see(dev_id=device, gps=gps_coords)
-            handler.write_json_message("Set new location to {}".format(gps_coords))
+            handler.write_json_message(
+                "Set new location to {}".format(gps_coords))
 
     elif direction == 'exit':
-        current_zone = hass.states.get("{}.{}".format("device_tracker", device)).state
+        current_zone = hass.states.get(
+            "{}.{}".format("device_tracker", device)).state
 
         if current_zone.lower() == location_name.lower():
             see(dev_id=device, location_name=STATE_NOT_HOME)
             handler.write_json_message("Set new location to not home")
         else:
-            # Ignore the message if it is telling us to exit a zone that we aren't
-            # currently in. This occurs when a zone is entered before the previous
-            # zone was exited. The enter message will be sent first, then the exit
-            # message will be sent second.
-            handler.write_json_message("Ignoring transition to {}".format(location_name))
+            # Ignore the message if it is telling us to exit a zone that we
+            # aren't currently in. This occurs when a zone is entered before
+            # the previous zone was exited. The enter message will be sent
+            # first, then the exit message will be sent second.
+            handler.write_json_message(
+                "Ignoring transition to {}".format(location_name))
 
     else:
-        handler.write_json_message("Received unidentified message: {}".format(direction))
+        handler.write_json_message(
+            "Received unidentified message: {}".format(direction))
         _LOGGER.error("Received unidentified message from Locative: %s",
                       direction)
 
@@ -115,4 +119,3 @@ def _check_data(handler, data):
         return False
 
     return True
-
