@@ -77,7 +77,12 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
             # the previous zone was exited. The enter message will be sent
             # first, then the exit message will be sent second.
             handler.write_json_message(
-                "Ignoring transition to {}".format(location_name))
+                "Ignoring transition from {}".format(location_name))
+
+    elif direction == 'test':
+        # In the app, a test message can be sent. Just return something to
+        # the user to let them know that it works.
+        handler.write_text("Received test message.")
 
     else:
         handler.write_json_message(
