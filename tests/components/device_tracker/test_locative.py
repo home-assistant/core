@@ -36,24 +36,6 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
 
     hass = ha.HomeAssistant()
 
-    # Set up a couple of zones
-    bootstrap.setup_component(hass, zone.DOMAIN, {
-        zone.DOMAIN: [
-            {
-                'name': 'Home',
-                'latitude': 41.7855,
-                'longitude': -110.7367,
-                'radius': 200
-            },
-            {
-                'name': 'Work',
-                'latitude': 41.5855,
-                'longitude': -110.9367,
-                'radius': 100
-            }
-        ]
-    })
-
     # Set up server
     bootstrap.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
@@ -120,12 +102,6 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(copy))
         self.assertEqual(422, req.status_code)
 
-        # Bad longitude
-        copy = data.copy()
-        copy['longitude'] = 'hello world'
-        req = requests.get(_url(copy))
-        self.assertEqual(422, req.status_code)
-
         # Test message
         copy = data.copy()
         copy['trigger'] = 'test'
@@ -139,7 +115,7 @@ class TestLocative(unittest.TestCase):
         self.assertEqual(422, req.status_code)
 
 
-    def test_known_zone(self, update_config):
+    def test_enter_and_exit(self, update_config):
         """ Test when there is a known zone """
         data = {
             'latitude': 40.7855,
@@ -173,36 +149,22 @@ class TestLocative(unittest.TestCase):
         state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
         self.assertEqual(state_name, 'home')
 
-
-    def test_unknown_zone(self, update_config):
-        """ Test when there is no known zone """
-        data = {
-            'latitude': 40.7855,
-            'longitude': -111.7367,
-            'device': '123',
-            'id': 'Foobar',
-            'trigger': 'enter'
-        }
-
-        # Enter Foobar
-        req = requests.get(_url(data))
-        self.assertEqual(200, req.status_code)
-
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
-        self.assertEqual(state.state, 'not_home')
-        self.assertEqual(state.attributes['latitude'], data['latitude'])
-        self.assertEqual(state.attributes['longitude'], data['longitude'])
-
         data['trigger'] = 'exit'
 
-        # Exit Foobar
+        # Exit Home
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'not_home')
 
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
-        self.assertEqual(state.state, 'not_home')
-        self.assertEqual(state.attributes['latitude'], data['latitude'])
-        self.assertEqual(state.attributes['longitude'], data['longitude'])
+        data['id'] = 'work'
+        data['trigger'] = 'enter'
+
+        # Enter Work
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'work')
 
 
     def test_exit_after_enter(self, update_config):
