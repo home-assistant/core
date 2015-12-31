@@ -173,7 +173,7 @@ hikvision==0.4
 orvibo==1.1.0
 
 # homeassistant.components.switch.wemo
-pywemo==0.3.4
+pywemo==0.3.7
 
 # homeassistant.components.tellduslive
 tellive-py==0.5.2
