@@ -136,6 +136,11 @@ class VeraSensor(Entity):
         attr['Vera Device Id'] = self.vera_device.vera_device_id
         return attr
 
+    @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False
+
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
             self.vera_device.refresh_value('CurrentTemperature')
