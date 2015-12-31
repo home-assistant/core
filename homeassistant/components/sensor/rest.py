@@ -102,13 +102,13 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if 'error' in value:
-            self._state = value['error']
-        else:
-            if self._value_template is not None:
-                value = template.render_with_possible_json_value(
-                    self._hass, self._value_template, value, STATE_UNKNOWN)
-            self._state = value
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            value = template.render_with_possible_json_value(
+                self._hass, self._value_template, value, STATE_UNKNOWN)
+
+        self._state = value
 
 
 # pylint: disable=too-few-public-methods
@@ -118,7 +118,7 @@ class RestDataGet(object):
     def __init__(self, resource, verify_ssl):
         self._resource = resource
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -126,12 +126,10 @@ class RestDataGet(object):
         try:
             response = requests.get(self._resource, timeout=10,
                                     verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to resource/endpoint: %s", self._resource)
-            self.data['error'] = STATE_UNKNOWN
+            self.data = None
 
 
 # pylint: disable=too-few-public-methods
@@ -142,7 +140,7 @@ class RestDataPost(object):
         self._resource = resource
         self._payload = payload
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -150,9 +148,7 @@ class RestDataPost(object):
         try:
             response = requests.post(self._resource, data=self._payload,
                                      timeout=10, verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to resource/endpoint: %s", self._resource)
-            self.data['error'] = STATE_UNKNOWN
+            self.data = None
