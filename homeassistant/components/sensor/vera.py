@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['#pyvera==0.2.0']
 
@@ -60,7 +60,8 @@ def get_devices(hass, config):
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
-            vera_sensors.append(VeraSensor(device, controller, extra_data))
+            vera_sensors.append(
+                VeraSensor(device, vera_controller, extra_data))
 
     return vera_sensors
 
