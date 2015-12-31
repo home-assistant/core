@@ -78,11 +78,12 @@ def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server. """
     hass.stop()
 
-
+# Stub out update_config or else Travis CI raises an exception
+@patch('homeassistant.components.device_tracker.update_config')
 class TestLocative(unittest.TestCase):
     """ Test Locative """
 
-    def test_missing_data(self):
+    def test_missing_data(self, update_config):
         data = {
             'latitude': 1.0,
             'longitude': 1.1,
@@ -138,7 +139,7 @@ class TestLocative(unittest.TestCase):
         self.assertEqual(422, req.status_code)
 
 
-    def test_known_zone(self):
+    def test_known_zone(self, update_config):
         """ Test when there is a known zone """
         data = {
             'latitude': 40.7855,
@@ -173,7 +174,7 @@ class TestLocative(unittest.TestCase):
         self.assertEqual(state_name, 'home')
 
 
-    def test_unknown_zone(self):
+    def test_unknown_zone(self, update_config):
         """ Test when there is no known zone """
         data = {
             'latitude': 40.7855,
@@ -204,7 +205,7 @@ class TestLocative(unittest.TestCase):
         self.assertEqual(state.attributes['longitude'], data['longitude'])
 
 
-    def test_exit_after_enter(self):
+    def test_exit_after_enter(self, update_config):
         """ Test when an exit message comes after an enter message """
 
         data = {
@@ -240,7 +241,3 @@ class TestLocative(unittest.TestCase):
 
         state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
         self.assertEqual(state.state, 'work')
-
-        print(req.text)
-
-
