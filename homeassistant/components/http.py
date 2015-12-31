@@ -302,8 +302,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self.end_headers()
 
-        if message is not None:
-            self.wfile.write(message.encode("UTF-8"))
+        self.wfile.write(message.encode("UTF-8"))
 
     def write_file(self, path, cache_headers=True):
         """ Returns a file to the user. """
