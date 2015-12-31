@@ -144,6 +144,11 @@ class VeraSwitch(ToggleEntity):
         self.is_on_status = False
 
     @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False
+
+    @property
     def is_on(self):
         """ True if device is on. """
         return self.is_on_status
