@@ -19,7 +19,7 @@ from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['#pyvera==0.2.1']
+REQUIREMENTS = ['pyvera==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
