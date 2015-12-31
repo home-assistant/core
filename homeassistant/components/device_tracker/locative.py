@@ -10,7 +10,7 @@ import logging
 from functools import partial
 
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR, STATE_NOT_HOME)
+    HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,11 +57,11 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
         if "zone.{}".format(location_name) in zones:
             see(dev_id=device, location_name=location_name)
             handler.write_text(
-                "Set new location to {}".format(location_name))
+                "Setting location to {}".format(location_name))
         else:
             see(dev_id=device, gps=gps_coords)
             handler.write_text(
-                "Set new location to {}".format(gps_coords))
+                "Setting location to {}".format(gps_coords))
 
     elif direction == 'exit':
         current_zone = hass.states.get(
@@ -69,14 +69,14 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
         if current_zone == location_name:
             see(dev_id=device, location_name=STATE_NOT_HOME)
-            handler.write_text("Set new location to not home")
+            handler.write_text("Setting location to not home")
         else:
             # Ignore the message if it is telling us to exit a zone that we
             # aren't currently in. This occurs when a zone is entered before
             # the previous zone was exited. The enter message will be sent
             # first, then the exit message will be sent second.
             handler.write_text(
-                'Ignoring exit from "{}". Already in "{}".'.format(
+                'Ignoring exit from {} (already in {})'.format(
                     location_name,
                     current_zone.split('.')[-1]))
 
@@ -94,13 +94,6 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
 
 def _check_data(handler, data):
-    if not isinstance(data, dict):
-        handler.write_text("Error while parsing Locative message.",
-                           HTTP_INTERNAL_SERVER_ERROR)
-        _LOGGER.error("Error while parsing Locative message: "
-                      "data is not a dict.")
-        return False
-
     if 'latitude' not in data or 'longitude' not in data:
         handler.write_text("Latitude and longitude not specified.",
                            HTTP_UNPROCESSABLE_ENTITY)
