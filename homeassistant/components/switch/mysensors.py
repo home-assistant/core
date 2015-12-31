@@ -7,6 +7,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors.html
 """
 import logging
+from collections import defaultdict
 
 from homeassistant.components.switch import SwitchDevice
 
@@ -24,49 +25,50 @@ S_TYPES = None
 V_TYPES = None
 
 
-@mysensors.mysensors_update
-def sensor_update(gateway, port, devices, nid):
-    """Internal callback for sensor updates."""
-    return (S_TYPES, V_TYPES, MySensorsSwitch, ADD_DEVICES)
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for switches."""
-    # Define the S_TYPES and V_TYPES that the platform should handle as states.
-    global ADD_DEVICES
-    ADD_DEVICES = add_devices
-    global S_TYPES
-    S_TYPES = [
-        mysensors.CONST.Presentation.S_DOOR,
-        mysensors.CONST.Presentation.S_MOTION,
-        mysensors.CONST.Presentation.S_SMOKE,
-        mysensors.CONST.Presentation.S_LIGHT,
-        mysensors.CONST.Presentation.S_BINARY,
-        mysensors.CONST.Presentation.S_LOCK,
-    ]
-    global V_TYPES
-    V_TYPES = [
-        mysensors.CONST.SetReq.V_ARMED,
-        mysensors.CONST.SetReq.V_LIGHT,
-        mysensors.CONST.SetReq.V_LOCK_STATUS,
-    ]
-    if float(mysensors.VERSION) >= 1.5:
-        S_TYPES.extend([
-            mysensors.CONST.Presentation.S_SPRINKLER,
-            mysensors.CONST.Presentation.S_WATER_LEAK,
-            mysensors.CONST.Presentation.S_SOUND,
-            mysensors.CONST.Presentation.S_VIBRATION,
-            mysensors.CONST.Presentation.S_MOISTURE,
-        ])
-        V_TYPES.extend([mysensors.CONST.SetReq.V_STATUS, ])
+    # Only act if loaded via mysensors by discovery event.
+    # Otherwise gateway is not setup.
+    if discovery_info is None:
+        return
+
+    for gateway in mysensors.GATEWAYS.values():
+        # Define the S_TYPES and V_TYPES that the platform should handle as
+        # states.
+        s_types = [
+            gateway.const.Presentation.S_DOOR,
+            gateway.const.Presentation.S_MOTION,
+            gateway.const.Presentation.S_SMOKE,
+            gateway.const.Presentation.S_LIGHT,
+            gateway.const.Presentation.S_BINARY,
+            gateway.const.Presentation.S_LOCK,
+        ]
+        v_types = [
+            gateway.const.SetReq.V_ARMED,
+            gateway.const.SetReq.V_LIGHT,
+            gateway.const.SetReq.V_LOCK_STATUS,
+        ]
+        if float(gateway.version) >= 1.5:
+            s_types.extend([
+                gateway.const.Presentation.S_SPRINKLER,
+                gateway.const.Presentation.S_WATER_LEAK,
+                gateway.const.Presentation.S_SOUND,
+                gateway.const.Presentation.S_VIBRATION,
+                gateway.const.Presentation.S_MOISTURE,
+            ])
+            v_types.extend([gateway.const.SetReq.V_STATUS, ])
+
+        devices = defaultdict(list)
+        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
+            s_types, v_types, devices, add_devices, MySensorsSwitch))
 
 
 class MySensorsSwitch(SwitchDevice):
     """Represent the value of a MySensors child node."""
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    # pylint: disable=too-many-arguments
 
-    def __init__(self, port, node_id, child_id, name, value_type):
+    def __init__(self, gateway, node_id, child_id, name, value_type):
         """Setup class attributes on instantiation.
 
         Args:
@@ -85,7 +87,7 @@ class MySensorsSwitch(SwitchDevice):
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
         """
-        self.port = port
+        self.gateway = gateway
         self.node_id = node_id
         self.child_id = child_id
         self._name = name
@@ -135,30 +137,31 @@ class MySensorsSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the switch on."""
-        mysensors.GATEWAYS[self.port].set_child_value(
+        self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
         self._values[self.value_type] = STATE_ON
         self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
-        mysensors.GATEWAYS[self.port].set_child_value(
+        self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
         self._values[self.value_type] = STATE_OFF
         self.update_ha_state()
 
-    def update_sensor(self, values, battery_level):
+    def update(self):
         """Update the controller with the latest value from a sensor."""
-        for value_type, value in values.items():
+        node = self.gateway.sensors[self.node_id]
+        child = node.children[self.child_id]
+        for value_type, value in child.values.items():
             _LOGGER.info(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
-            if value_type == mysensors.CONST.SetReq.V_ARMED or \
-               value_type == mysensors.CONST.SetReq.V_STATUS or \
-               value_type == mysensors.CONST.SetReq.V_LIGHT or \
-               value_type == mysensors.CONST.SetReq.V_LOCK_STATUS:
+            if value_type == self.gateway.const.SetReq.V_ARMED or \
+               value_type == self.gateway.const.SetReq.V_STATUS or \
+               value_type == self.gateway.const.SetReq.V_LIGHT or \
+               value_type == self.gateway.const.SetReq.V_LOCK_STATUS:
                 self._values[value_type] = (
                     STATE_ON if int(value) == 1 else STATE_OFF)
             else:
                 self._values[value_type] = value
-        self.battery_level = battery_level
-        self.update_ha_state()
+        self.battery_level = node.battery_level

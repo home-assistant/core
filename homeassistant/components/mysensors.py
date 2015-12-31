@@ -29,14 +29,19 @@ mysensors:
 """
 import logging
 
+try:
+    import mysensors.mysensors as mysensors
+except ImportError:
+    mysensors = None
+
 from homeassistant.helpers import validate_config
 import homeassistant.bootstrap as bootstrap
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELCIUS,
-    CONF_PLATFORM)
+    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
+    TEMP_CELCIUS,)
 
 CONF_GATEWAYS = 'gateways'
 CONF_PORT = 'port'
@@ -45,7 +50,6 @@ CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
 DEFAULT_VERSION = '1.4'
-VERSION = None
 
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
@@ -56,86 +60,54 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
 
-COMPONENTS_WITH_MYSENSORS_PLATFORM = [
-    'sensor',
-    'switch',
-]
-
-IS_METRIC = None
-CONST = None
 GATEWAYS = None
+SCAN_INTERVAL = 30
+
+DISCOVER_SENSORS = "mysensors.sensors"
+DISCOVER_SWITCHES = "mysensors.switches"
+
+# Maps discovered services to their platforms
+DISCOVERY_COMPONENTS = [
+    ('sensor', DISCOVER_SENSORS),
+    ('switch', DISCOVER_SWITCHES),
+]
 
 
 def setup(hass, config):
     """Setup the MySensors component."""
     # pylint: disable=too-many-locals
-    import mysensors.mysensors as mysensors
 
     if not validate_config(config,
                            {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
         return False
 
-    global VERSION
-    VERSION = config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION)
+    global mysensors  # pylint: disable=invalid-name
+    if mysensors is None:
+        import mysensors.mysensors as _mysensors
+        mysensors = _mysensors
 
-    global CONST
-    if VERSION == '1.5':
-        import mysensors.const_15 as const
-        CONST = const
-    else:
-        import mysensors.const_14 as const
-        CONST = const
+    version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
+    is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
 
-    # Just assume celcius means that the user wants metric for now.
-    # It may make more sense to make this a global config option in the future.
-    global IS_METRIC
-    IS_METRIC = (hass.config.temperature_unit == TEMP_CELCIUS)
-
-    # Setup mysensors platforms
-    mysensors_config = config.copy()
-    for component in COMPONENTS_WITH_MYSENSORS_PLATFORM:
-        mysensors_config[component] = {CONF_PLATFORM: 'mysensors'}
-        if not bootstrap.setup_component(hass, component, mysensors_config):
-            return False
-
-    import homeassistant.components.sensor.mysensors as mysensors_sensor
-    import homeassistant.components.switch.mysensors as mysensors_switch
-
-    def callback_factory(gateway, port, devices):
-        """Return a new callback function. Run once per gateway setup."""
-        def node_update(update_type, nid):
-            """Callback for node updates from the MySensors gateway."""
-            _LOGGER.info('update %s: node %s', update_type, nid)
-
-            mysensors_sensor.sensor_update(gateway, port, devices, nid)
-            mysensors_switch.sensor_update(gateway, port, devices, nid)
-
-        return node_update
-
-    def setup_gateway(port, persistence, persistence_file):
+    def setup_gateway(port, persistence, persistence_file, version):
         """Return gateway after setup of the gateway."""
-        devices = {}    # keep track of devices added to HA
-        gateway = mysensors.SerialGateway(port,
-                                          persistence=persistence,
-                                          persistence_file=persistence_file,
-                                          protocol_version=VERSION)
-        gateway.event_callback = callback_factory(gateway, port, devices)
-        gateway.metric = IS_METRIC
+        gateway = GatewayWrapper(
+            port, persistence, persistence_file, version)
+        # pylint: disable=attribute-defined-outside-init
+        gateway.metric = is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
-        gateway.start()
 
-        def persistence_update(event):
-            """Callback to trigger update from persistence file."""
-            for nid in gateway.sensors:
-                gateway.event_callback('persistence', nid)
+        def gw_start(event):
+            """Callback to trigger start of gateway and any persistence."""
+            gateway.start()
+            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                                 lambda event: gateway.stop())
+            if persistence:
+                for node_id in gateway.sensors:
+                    gateway.event_callback('persistence', node_id)
 
-        if persistence:
-            hass.bus.listen_once(
-                EVENT_HOMEASSISTANT_START, persistence_update)
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             lambda event: gateway.stop())
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, gw_start)
 
         return gateway
 
@@ -146,48 +118,99 @@ def setup(hass, config):
     if isinstance(conf_gateways, dict):
         conf_gateways = [conf_gateways]
     persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
+
     for index, gway in enumerate(conf_gateways):
         port = gway[CONF_PORT]
         persistence_file = gway.get(
             CONF_PERSISTENCE_FILE,
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
         GATEWAYS[port] = setup_gateway(
-            port, persistence, persistence_file)
+            port, persistence, persistence_file, version)
+
+    for (component, discovery_service) in DISCOVERY_COMPONENTS:
+        # Ensure component is loaded
+        if not bootstrap.setup_component(hass, component, config):
+            return False
+        # Fire discovery event
+        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
+            ATTR_SERVICE: discovery_service,
+            ATTR_DISCOVERED: {}})
 
     return True
 
 
-def mysensors_update(platform_type):
-    """Decorator for callback function for mysensor updates."""
-    def wrapper(gateway, port, devices, nid):
-        """Wrapper function in the decorator."""
-        if gateway.sensors[nid].sketch_name is None:
-            _LOGGER.info('No sketch_name: node %s', nid)
+def pf_callback_factory(
+        s_types, v_types, devices, add_devices, entity_class):
+    """Return a new callback for the platform."""
+    def mysensors_callback(gateway, node_id):
+        """Callback for mysensors platform."""
+        if gateway.sensors[node_id].sketch_name is None:
+            _LOGGER.info('No sketch_name: node %s', node_id)
             return
-        if nid not in devices:
-            devices[nid] = {}
-        node = devices[nid]
-        # Get platform specific S_TYPES, V_TYPES, class and add_devices.
-        (platform_s_types,
-         platform_v_types,
-         platform_class,
-         add_devices) = platform_type(gateway, port, devices, nid)
-        for child_id, child in gateway.sensors[nid].children.items():
-            if child_id not in node:
-                node[child_id] = {}
+        # previously discovered, just update state with latest info
+        if node_id in devices:
+            for entity in devices[node_id]:
+                entity.update_ha_state(True)
+            return
+
+        # First time we see this node, detect sensors
+        for child in gateway.sensors[node_id].children.values():
+            name = '{} {}.{}'.format(
+                gateway.sensors[node_id].sketch_name, node_id, child.id)
+
             for value_type in child.values.keys():
-                if (value_type not in node[child_id] and
-                        child.type in platform_s_types and
-                        value_type in platform_v_types):
-                    name = '{} {}.{}'.format(
-                        gateway.sensors[nid].sketch_name, nid, child.id)
-                    node[child_id][value_type] = platform_class(
-                        port, nid, child_id, name, value_type)
-                    _LOGGER.info('adding new device: %s',
-                                 node[child_id][value_type])
-                    add_devices([node[child_id][value_type]])
-                if (child.type in platform_s_types and
-                        value_type in platform_v_types):
-                    node[child_id][value_type].update_sensor(
-                        child.values, gateway.sensors[nid].battery_level)
-    return wrapper
+                if child.type not in s_types or value_type not in v_types:
+                    continue
+
+                devices[node_id].append(
+                    entity_class(gateway, node_id, child.id, name, value_type))
+        if devices[node_id]:
+            _LOGGER.info('adding new devices: %s', devices[node_id])
+            add_devices(devices[node_id])
+        for entity in devices[node_id]:
+            entity.update_ha_state(True)
+    return mysensors_callback
+
+
+class GatewayWrapper(mysensors.SerialGateway):
+    """Gateway wrapper class, by subclassing serial gateway."""
+
+    def __init__(self, port, persistence, persistence_file, version):
+        """Setup class attributes on instantiation.
+
+        Args:
+        port: Port of gateway to wrap.
+        persistence: Persistence, true or false.
+        persistence_file: File to store persistence info.
+        version: Version of mysensors API.
+
+        Attributes:
+        version (str): Version of mysensors API.
+        platform_callbacks (list): Callback functions, one per platform.
+        const (module): Mysensors API constants.
+        """
+        super().__init__(port, event_callback=self.callback_factory(),
+                         persistence=persistence,
+                         persistence_file=persistence_file,
+                         protocol_version=version)
+        self.version = version
+        self.platform_callbacks = []
+        self.const = self.get_const()
+
+    def get_const(self):
+        """Get mysensors API constants."""
+        if self.version == '1.5':
+            import mysensors.const_15 as const
+        else:
+            import mysensors.const_14 as const
+        return const
+
+    def callback_factory(self):
+        """Return a new callback function."""
+        def node_update(update_type, node_id):
+            """Callback for node updates from the MySensors gateway."""
+            _LOGGER.info('update %s: node %s', update_type, node_id)
+            for callback in self.platform_callbacks:
+                callback(self, node_id)
+
+        return node_update
