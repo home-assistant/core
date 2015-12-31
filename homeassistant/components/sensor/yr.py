@@ -36,17 +36,17 @@ sensor:
 
 """
 import logging
-import datetime
-import urllib.request
+
 import requests
 
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import location, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUIREMENTS = ['xmltodict', 'astral==0.8.1']
+REQUIREMENTS = ['xmltodict']
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -73,19 +73,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    from astral import Location, GoogleGeocoder
-    location = Location(('', '', hass.config.latitude, hass.config.longitude,
-                         hass.config.time_zone, 0))
+    elevation = config.get('elevation')
 
-    google = GoogleGeocoder()
-    try:
-        google._get_elevation(location)  # pylint: disable=protected-access
-        _LOGGER.info(
-            'Retrieved elevation from Google: %s', location.elevation)
-        elevation = location.elevation
-    except urllib.error.URLError:
-        # If no internet connection available etc.
-        elevation = 0
+    if elevation is None:
+        elevation = location.elevation(hass.config.latitude,
+                                       hass.config.longitude)
 
     coordinates = dict(lat=hass.config.latitude,
                        lon=hass.config.longitude, msl=elevation)
@@ -116,9 +108,8 @@ class YrSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._weather = weather
-        self._info = ''
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._update = datetime.datetime.fromtimestamp(0)
+        self._update = None
 
         self.update()
 
@@ -134,14 +125,15 @@ class YrSensor(Entity):
     @property
     def state_attributes(self):
         """ Returns state attributes. """
-        data = {}
-        data[''] = "Weather forecast from yr.no, delivered by the"\
-            " Norwegian Meteorological Institute and the NRK"
+        data = {
+            'about': "Weather forecast from yr.no, delivered by the"
+                     " Norwegian Meteorological Institute and the NRK"
+        }
         if self.type == 'symbol':
             symbol_nr = self._state
-            data[ATTR_ENTITY_PICTURE] = "http://api.met.no/weatherapi/weathericon/1.1/" \
-                                        "?symbol=" + str(symbol_nr) + \
-                                        ";content_type=image/png"
+            data[ATTR_ENTITY_PICTURE] = \
+                "http://api.met.no/weatherapi/weathericon/1.1/" \
+                "?symbol={0};content_type=image/png".format(symbol_nr)
 
         return data
 
@@ -150,76 +142,50 @@ class YrSensor(Entity):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """ Return True if entity has to be polled for state. """
-        return True
-
-    # pylint: disable=too-many-branches, too-many-return-statements
     def update(self):
         """ Gets the latest data from yr.no and updates the states. """
 
-        self._weather.update()
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         # check if data should be updated
-        if now <= self._update:
+        if self._update is not None and now <= self._update:
             return
 
-        time_data = self._weather.data['product']['time']
+        self._weather.update()
 
-        # pylint: disable=consider-using-enumerate
         # find sensor
-        for k in range(len(time_data)):
-            valid_from = datetime.datetime.strptime(time_data[k]['@from'],
-                                                    "%Y-%m-%dT%H:%M:%SZ")
-            valid_to = datetime.datetime.strptime(time_data[k]['@to'],
-                                                  "%Y-%m-%dT%H:%M:%SZ")
-            self._update = valid_to
-            self._info = "Forecast between " + time_data[k]['@from'] \
-                + " and " + time_data[k]['@to'] + ". "
+        for time_entry in self._weather.data['product']['time']:
+            valid_from = dt_util.str_to_datetime(
+                time_entry['@from'], "%Y-%m-%dT%H:%M:%SZ")
+            valid_to = dt_util.str_to_datetime(
+                time_entry['@to'], "%Y-%m-%dT%H:%M:%SZ")
 
-            temp_data = time_data[k]['location']
-            if self.type not in temp_data and now >= valid_to:
+            loc_data = time_entry['location']
+
+            if self.type not in loc_data or now >= valid_to:
                 continue
+
+            self._update = valid_to
+
             if self.type == 'precipitation' and valid_from < now:
-                self._state = temp_data[self.type]['@value']
-                return
+                self._state = loc_data[self.type]['@value']
+                break
             elif self.type == 'symbol' and valid_from < now:
-                self._state = temp_data[self.type]['@number']
-                return
-            elif self.type == 'temperature':
-                self._state = temp_data[self.type]['@value']
-                return
+                self._state = loc_data[self.type]['@number']
+                break
+            elif self.type == ('temperature', 'pressure', 'humidity',
+                               'dewpointTemperature'):
+                self._state = loc_data[self.type]['@value']
+                break
             elif self.type == 'windSpeed':
-                self._state = temp_data[self.type]['@mps']
-                return
-            elif self.type == 'pressure':
-                self._state = temp_data[self.type]['@value']
-                return
+                self._state = loc_data[self.type]['@mps']
+                break
             elif self.type == 'windDirection':
-                self._state = float(temp_data[self.type]['@deg'])
-                return
-            elif self.type == 'humidity':
-                self._state = temp_data[self.type]['@value']
-                return
-            elif self.type == 'fog':
-                self._state = temp_data[self.type]['@percent']
-                return
-            elif self.type == 'cloudiness':
-                self._state = temp_data[self.type]['@percent']
-                return
-            elif self.type == 'lowClouds':
-                self._state = temp_data[self.type]['@percent']
-                return
-            elif self.type == 'mediumClouds':
-                self._state = temp_data[self.type]['@percent']
-                return
-            elif self.type == 'highClouds':
-                self._state = temp_data[self.type]['@percent']
-                return
-            elif self.type == 'dewpointTemperature':
-                self._state = temp_data[self.type]['@value']
-                return
+                self._state = float(loc_data[self.type]['@deg'])
+                break
+            elif self.type in ('fog', 'cloudiness', 'lowClouds',
+                               'mediumClouds', 'highClouds'):
+                self._state = loc_data[self.type]['@percent']
+                break
 
 
 # pylint: disable=too-few-public-methods
@@ -230,17 +196,18 @@ class YrData(object):
         self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
             'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
 
-        self._nextrun = datetime.datetime.fromtimestamp(0)
+        self._nextrun = None
+        self.data = {}
         self.update()
 
     def update(self):
         """ Gets the latest data from yr.no """
-        now = datetime.datetime.now()
         # check if new will be available
-        if now <= self._nextrun:
+        if self._nextrun is not None and dt_util.utcnow() <= self._nextrun:
             return
         try:
-            response = requests.get(self._url)
+            with requests.Session() as sess:
+                response = sess.get(self._url)
         except requests.RequestException:
             return
         if response.status_code != 200:
@@ -252,5 +219,5 @@ class YrData(object):
         model = self.data['meta']['model']
         if '@nextrun' not in model:
             model = model[0]
-        self._nextrun = datetime.datetime.strptime(model['@nextrun'],
-                                                   "%Y-%m-%dT%H:%M:%SZ")
+        self._nextrun = dt_util.str_to_datetime(model['@nextrun'],
+                                                "%Y-%m-%dT%H:%M:%SZ")

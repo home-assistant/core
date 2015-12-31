@@ -7,6 +7,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/verisure/
 """
 import logging
+import time
+
 from datetime import timedelta
 
 from homeassistant import bootstrap
@@ -26,15 +28,14 @@ DISCOVER_SWITCHES = 'verisure.switches'
 DISCOVER_ALARMS = 'verisure.alarm_control_panel'
 
 DEPENDENCIES = ['alarm_control_panel']
-REQUIREMENTS = [
-    'https://github.com/persandstrom/python-verisure/archive/'
-    '9873c4527f01b1ba1f72ae60f7f35854390d59be.zip#python-verisure==0.2.6'
-]
+REQUIREMENTS = ['vsure==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 MY_PAGES = None
-STATUS = {}
+ALARM_STATUS = {}
+SMARTPLUG_STATUS = {}
+CLIMATE_STATUS = {}
 
 VERISURE_LOGIN_ERROR = None
 VERISURE_ERROR = None
@@ -47,7 +48,7 @@ SHOW_SMARTPLUGS = True
 # if wrong password was given don't try again
 WRONG_PASSWORD_GIVEN = False
 
-MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_REQUESTS = timedelta(seconds=1)
 
 
 def setup(hass, config):
@@ -59,10 +60,6 @@ def setup(hass, config):
         return False
 
     from verisure import MyPages, LoginError, Error
-
-    STATUS[MyPages.DEVICE_ALARM] = {}
-    STATUS[MyPages.DEVICE_CLIMATE] = {}
-    STATUS[MyPages.DEVICE_SMARTPLUG] = {}
 
     global SHOW_THERMOMETERS, SHOW_HYGROMETERS, SHOW_ALARM, SHOW_SMARTPLUGS
     SHOW_THERMOMETERS = int(config[DOMAIN].get('thermometers', '1'))
@@ -84,7 +81,9 @@ def setup(hass, config):
         _LOGGER.error('Could not log in to verisure mypages, %s', ex)
         return False
 
-    update()
+    update_alarm()
+    update_climate()
+    update_smartplug()
 
     # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
@@ -101,24 +100,10 @@ def setup(hass, config):
     return True
 
 
-def get_alarm_status():
-    """ Return a list of status overviews for alarm components. """
-    return STATUS[MY_PAGES.DEVICE_ALARM]
-
-
-def get_climate_status():
-    """ Return a list of status overviews for alarm components. """
-    return STATUS[MY_PAGES.DEVICE_CLIMATE]
-
-
-def get_smartplug_status():
-    """ Return a list of status overviews for alarm components. """
-    return STATUS[MY_PAGES.DEVICE_SMARTPLUG]
-
-
 def reconnect():
     """ Reconnect to verisure mypages. """
     try:
+        time.sleep(1)
         MY_PAGES.login()
     except VERISURE_LOGIN_ERROR as ex:
         _LOGGER.error("Could not login to Verisure mypages, %s", ex)
@@ -129,19 +114,31 @@ def reconnect():
 
 
 @Throttle(MIN_TIME_BETWEEN_REQUESTS)
-def update():
+def update_alarm():
+    """ Updates the status of alarms. """
+    update_component(MY_PAGES.alarm.get, ALARM_STATUS)
+
+
+@Throttle(MIN_TIME_BETWEEN_REQUESTS)
+def update_climate():
+    """ Updates the status of climate sensors. """
+    update_component(MY_PAGES.climate.get, CLIMATE_STATUS)
+
+
+@Throttle(MIN_TIME_BETWEEN_REQUESTS)
+def update_smartplug():
+    """ Updates the status of smartplugs. """
+    update_component(MY_PAGES.smartplug.get, SMARTPLUG_STATUS)
+
+
+def update_component(get_function, status):
     """ Updates the status of verisure components. """
     if WRONG_PASSWORD_GIVEN:
         _LOGGER.error('Wrong password')
         return
-
     try:
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_ALARM):
-            STATUS[MY_PAGES.DEVICE_ALARM][overview.id] = overview
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_CLIMATE):
-            STATUS[MY_PAGES.DEVICE_CLIMATE][overview.id] = overview
-        for overview in MY_PAGES.get_overview(MY_PAGES.DEVICE_SMARTPLUG):
-            STATUS[MY_PAGES.DEVICE_SMARTPLUG][overview.id] = overview
-    except ConnectionError as ex:
+        for overview in get_function():
+            status[overview.id] = overview
+    except (ConnectionError, VERISURE_ERROR) as ex:
         _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
         reconnect()
