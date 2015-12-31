@@ -20,10 +20,6 @@ import homeassistant.components.mysensors as mysensors
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
-ADD_DEVICES = None
-S_TYPES = None
-V_TYPES = None
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for switches."""
