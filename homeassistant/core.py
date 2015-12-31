@@ -468,6 +468,13 @@ class StateMachine(object):
         return (entity_id in self._states and
                 self._states[entity_id].state == state)
 
+    def is_state_attr(self, entity_id, name, value):
+        """Test if entity exists and has a state attribute set to value."""
+        entity_id = entity_id.lower()
+
+        return (entity_id in self._states and
+                self._states[entity_id].attributes.get(name, None) == value)
+
     def remove(self, entity_id):
         """Remove the state of an entity.
 
