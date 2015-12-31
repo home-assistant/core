@@ -11,10 +11,11 @@ from functools import partial
 
 from homeassistant.const import (
     HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
+from homeassistant.components.device_tracker import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['http', 'zone']
+DEPENDENCIES = ['http']
 
 URL_API_LOCATIVE_ENDPOINT = "/api/locative"
 
@@ -43,31 +44,15 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
     location_name = data['id'].lower()
     direction = data['trigger']
 
-    try:
-        gps_coords = (float(data['latitude']), float(data['longitude']))
-    except ValueError:
-        handler.write_text("Invalid latitude / longitude format.",
-                           HTTP_UNPROCESSABLE_ENTITY)
-        _LOGGER.error("Received invalid latitude / longitude format.")
-        return
-
     if direction == 'enter':
-        zones = [state for state in hass.states.entity_ids('zone')]
-
-        if "zone.{}".format(location_name) in zones:
-            see(dev_id=device, location_name=location_name)
-            handler.write_text(
-                "Setting location to {}".format(location_name))
-        else:
-            see(dev_id=device, gps=gps_coords)
-            handler.write_text(
-                "Setting location to {}".format(gps_coords))
+        see(dev_id=device, location_name=location_name)
+        handler.write_text("Setting location to {}".format(location_name))
 
     elif direction == 'exit':
-        current_zone = hass.states.get(
-            "{}.{}".format("device_tracker", device)).state
+        current_state = hass.states.get(
+            "{}.{}".format(DOMAIN, device)).state
 
-        if current_zone == location_name:
+        if current_state == location_name:
             see(dev_id=device, location_name=STATE_NOT_HOME)
             handler.write_text("Setting location to not home")
         else:
@@ -77,8 +62,7 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
             # first, then the exit message will be sent second.
             handler.write_text(
                 'Ignoring exit from {} (already in {})'.format(
-                    location_name,
-                    current_zone.split('.')[-1]))
+                    location_name, current_state))
 
     elif direction == 'test':
         # In the app, a test message can be sent. Just return something to
