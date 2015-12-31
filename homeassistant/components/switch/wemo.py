@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.3.4']
+REQUIREMENTS = ['pywemo==0.3.7']
 _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
