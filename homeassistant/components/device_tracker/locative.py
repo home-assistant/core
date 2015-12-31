@@ -40,7 +40,7 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
         return
 
     device = data['device'].replace('-', '')
-    location_name = data['id']
+    location_name = data['id'].lower()
     direction = data['trigger']
 
     try:
@@ -53,9 +53,8 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
     if direction == 'enter':
         zones = [state for state in hass.states.entity_ids('zone')]
-        _LOGGER.info(zones)
 
-        if "zone.{}".format(location_name.lower()) in zones:
+        if "zone.{}".format(location_name) in zones:
             see(dev_id=device, location_name=location_name)
             handler.write_text(
                 "Set new location to {}".format(location_name))
@@ -68,7 +67,7 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
         current_zone = hass.states.get(
             "{}.{}".format("device_tracker", device)).state
 
-        if current_zone.lower() == location_name.lower():
+        if current_zone == location_name:
             see(dev_id=device, location_name=STATE_NOT_HOME)
             handler.write_text("Set new location to not home")
         else:
@@ -77,7 +76,9 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
             # the previous zone was exited. The enter message will be sent
             # first, then the exit message will be sent second.
             handler.write_text(
-                "Ignoring transition from {}".format(location_name))
+                'Ignoring exit from "{}". Already in "{}".'.format(
+                    location_name,
+                    current_zone.split('.')[-1]))
 
     elif direction == 'test':
         # In the app, a test message can be sent. Just return something to
@@ -86,7 +87,8 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
     else:
         handler.write_text(
-            "Received unidentified message: {}".format(direction))
+            "Received unidentified message: {}".format(direction),
+            HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Received unidentified message from Locative: %s",
                       direction)
 
