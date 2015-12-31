@@ -46,8 +46,8 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
     try:
         gps_coords = (float(data['latitude']), float(data['longitude']))
     except ValueError:
-        handler.write_json_message("Invalid latitude / longitude format.",
-                                   HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_text("Invalid latitude / longitude format.",
+                           HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Received invalid latitude / longitude format.")
         return
 
@@ -57,11 +57,11 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
         if "zone.{}".format(location_name.lower()) in zones:
             see(dev_id=device, location_name=location_name)
-            handler.write_json_message(
+            handler.write_text(
                 "Set new location to {}".format(location_name))
         else:
             see(dev_id=device, gps=gps_coords)
-            handler.write_json_message(
+            handler.write_text(
                 "Set new location to {}".format(gps_coords))
 
     elif direction == 'exit':
@@ -70,13 +70,13 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
         if current_zone.lower() == location_name.lower():
             see(dev_id=device, location_name=STATE_NOT_HOME)
-            handler.write_json_message("Set new location to not home")
+            handler.write_text("Set new location to not home")
         else:
             # Ignore the message if it is telling us to exit a zone that we
             # aren't currently in. This occurs when a zone is entered before
             # the previous zone was exited. The enter message will be sent
             # first, then the exit message will be sent second.
-            handler.write_json_message(
+            handler.write_text(
                 "Ignoring transition from {}".format(location_name))
 
     elif direction == 'test':
@@ -85,7 +85,7 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
         handler.write_text("Received test message.")
 
     else:
-        handler.write_json_message(
+        handler.write_text(
             "Received unidentified message: {}".format(direction))
         _LOGGER.error("Received unidentified message from Locative: %s",
                       direction)
@@ -93,33 +93,33 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
 def _check_data(handler, data):
     if not isinstance(data, dict):
-        handler.write_json_message("Error while parsing Locative message.",
-                                   HTTP_INTERNAL_SERVER_ERROR)
+        handler.write_text("Error while parsing Locative message.",
+                           HTTP_INTERNAL_SERVER_ERROR)
         _LOGGER.error("Error while parsing Locative message: "
                       "data is not a dict.")
         return False
 
     if 'latitude' not in data or 'longitude' not in data:
-        handler.write_json_message("Latitude and longitude not specified.",
-                                   HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_text("Latitude and longitude not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Latitude and longitude not specified.")
         return False
 
     if 'device' not in data:
-        handler.write_json_message("Device id not specified.",
-                                   HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_text("Device id not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Device id not specified.")
         return False
 
     if 'id' not in data:
-        handler.write_json_message("Location id not specified.",
-                                   HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_text("Location id not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Location id not specified.")
         return False
 
     if 'trigger' not in data:
-        handler.write_json_message("Trigger is not specified.",
-                                   HTTP_UNPROCESSABLE_ENTITY)
+        handler.write_text("Trigger is not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
         _LOGGER.error("Trigger is not specified.")
         return False
 
