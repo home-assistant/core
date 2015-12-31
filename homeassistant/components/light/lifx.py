@@ -20,10 +20,12 @@ REQUIREMENTS = ['https://github.com/avaidyam/lazylights/archive/'
                 'master.zip'
                 '#lazylights==3.0.0']
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return LIFX lights. """
     bulbs = lazylights.find_bulbs(timeout=5)
     add_devices_callback([LIFXLight(n) for n in bulbs])
+
 
 class LIFXLight(Light):
     """ Provides a LIFX bulb. """
