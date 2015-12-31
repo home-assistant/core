@@ -16,9 +16,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
-                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
-                '#python-vera==0.1.1']
+REQUIREMENTS = ['#pyvera==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
