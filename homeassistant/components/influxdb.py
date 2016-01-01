@@ -7,7 +7,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
-
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
 from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
@@ -77,6 +76,10 @@ def setup(hass, config):
             _state = 0
         else:
             _state = state.state
+            try:
+                _state = float(_state)
+            except ValueError:
+                pass
 
         measurement = state.attributes.get('unit_of_measurement', state.domain)
 
