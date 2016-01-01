@@ -1,36 +1,20 @@
 """
 homeassistant.components.zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Allows defintion of zones in Home Assistant.
 
-zone:
-  name: School
-  latitude: 32.8773367
-  longitude: -117.2494053
-  # Optional radius in meters (default: 100)
-  radius: 250
-  # Optional icon to show instead of name
-  # See https://www.google.com/design/icons/
-  # Example: home, work, group-work, shopping-cart, social:people
-  icon: group-work
-
-zone 2:
-  name: Work
-  latitude: 32.8753367
-  longitude: -117.2474053
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zone/
 """
 import logging
 
 from homeassistant.const import (
-    ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
+    ATTR_HIDDEN, ATTR_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
 from homeassistant.helpers import extract_domain_configs, generate_entity_id
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
 
 DOMAIN = "zone"
-DEPENDENCIES = []
 ENTITY_ID_FORMAT = 'zone.{}'
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
 STATE = 'zoning'
@@ -40,8 +24,7 @@ DEFAULT_NAME = 'Unnamed zone'
 ATTR_RADIUS = 'radius'
 DEFAULT_RADIUS = 100
 
-ATTR_ICON = 'icon'
-ICON_HOME = 'home'
+ICON_HOME = 'mdi:home'
 
 
 def active_zone(hass, latitude, longitude, radius=0):
@@ -125,7 +108,7 @@ class Zone(Entity):
         self.latitude = latitude
         self.longitude = longitude
         self.radius = radius
-        self.icon = icon
+        self._icon = icon
 
     def should_poll(self):
         return False
@@ -140,13 +123,14 @@ class Zone(Entity):
         return STATE
 
     @property
+    def icon(self):
+        return self._icon
+
+    @property
     def state_attributes(self):
-        attr = {
+        return {
             ATTR_HIDDEN: True,
             ATTR_LATITUDE: self.latitude,
             ATTR_LONGITUDE: self.longitude,
             ATTR_RADIUS: self.radius,
         }
-        if self.icon:
-            attr[ATTR_ICON] = self.icon
-        return attr

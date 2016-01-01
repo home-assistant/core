@@ -2,6 +2,9 @@
 homeassistant.components.thermostat.nest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for Nest thermostats.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.nest/
 """
 import socket
 import logging
@@ -44,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ])
     except socket.error:
         logger.error(
-            "Connection error logging into the nest web service"
+            "Connection error logging into the nest web service."
         )
 
 

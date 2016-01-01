@@ -4,19 +4,9 @@ homeassistant.components.notify.xmpp
 Jabber (XMPP) notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.xmpp.html
+https://home-assistant.io/components/notify.xmpp/
 """
 import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-try:
-    import sleekxmpp
-
-except ImportError:
-    _LOGGER.exception(
-        "Unable to import sleekxmpp. "
-        "Did you maybe not install the 'SleekXMPP' package?")
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
@@ -24,32 +14,20 @@ from homeassistant.components.notify import (
 
 REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def get_service(hass, config):
     """ Get the Jabber (XMPP) notification service. """
 
-    if not validate_config(config,
-                           {DOMAIN: ['sender',
-                                     'password',
-                                     'recipient']},
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: ['sender', 'password', 'recipient']},
                            _LOGGER):
         return None
 
-    try:
-        SendNotificationBot(config[DOMAIN]['sender'] + '/home-assistant',
-                            config[DOMAIN]['password'],
-                            config[DOMAIN]['recipient'],
-                            '')
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to contact jabber server."
-            "Please check your credentials.")
-
-        return None
-
-    return XmppNotificationService(config[DOMAIN]['sender'],
-                                   config[DOMAIN]['password'],
-                                   config[DOMAIN]['recipient'])
+    return XmppNotificationService(config['sender'],
+                                   config['password'],
+                                   config['recipient'])
 
 
 # pylint: disable=too-few-public-methods
@@ -65,40 +43,40 @@ class XmppNotificationService(BaseNotificationService):
         """ Send a message to a user. """
 
         title = kwargs.get(ATTR_TITLE)
-        data = title + ": " + message
+        data = "{}: {}".format(title, message) if title else message
 
-        SendNotificationBot(self._sender + '/home-assistant',
-                            self._password,
-                            self._recipient,
-                            data)
+        send_message(self._sender + '/home-assistant', self._password,
+                     self._recipient, data)
 
 
-class SendNotificationBot(sleekxmpp.ClientXMPP):
-    """ Service for sending Jabber (XMPP) messages. """
+def send_message(sender, password, recipient, message):
+    """ Send a message over XMPP. """
+    import sleekxmpp
 
-    def __init__(self, jid, password, recipient, msg):
+    class SendNotificationBot(sleekxmpp.ClientXMPP):
+        """ Service for sending Jabber (XMPP) messages. """
 
-        super(SendNotificationBot, self).__init__(jid, password)
+        def __init__(self):
+            super(SendNotificationBot, self).__init__(sender, password)
 
-        logging.basicConfig(level=logging.ERROR)
+            logging.basicConfig(level=logging.ERROR)
 
-        self.recipient = recipient
-        self.msg = msg
+            self.use_tls = True
+            self.use_ipv6 = False
+            self.add_event_handler('failed_auth', self.check_credentials)
+            self.add_event_handler('session_start', self.start)
+            self.connect()
+            self.process()
 
-        self.use_tls = True
-        self.use_ipv6 = False
-        self.add_event_handler('failed_auth', self.check_credentials)
-        self.add_event_handler('session_start', self.start)
-        self.connect()
-        self.process(block=False)
+        def start(self, event):
+            """ Starts the communication and sends the message. """
+            self.send_presence()
+            self.get_roster()
+            self.send_message(mto=recipient, mbody=message, mtype='chat')
+            self.disconnect(wait=True)
 
-    def start(self, event):
-        """ Starts the communication and sends the message. """
-        self.send_presence()
-        self.get_roster()
-        self.send_message(mto=self.recipient, mbody=self.msg, mtype='chat')
-        self.disconnect(wait=True)
+        def check_credentials(self, event):
+            """" Disconnect from the server if credentials are invalid. """
+            self.disconnect()
 
-    def check_credentials(self, event):
-        """" Disconnect from the server if credentials are invalid. """
-        self.disconnect()
+    SendNotificationBot()

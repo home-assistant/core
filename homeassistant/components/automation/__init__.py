@@ -1,8 +1,10 @@
 """
 homeassistant.components.automation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Allows to setup simple automation rules via the config file.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/automation/
 """
 import logging
 
@@ -121,7 +123,7 @@ def _migrate_old_config(config):
 
     _LOGGER.warning(
         'You are using an old configuration format. Please upgrade: '
-        'https://home-assistant.io/components/automation.html')
+        'https://home-assistant.io/components/automation/')
 
     new_conf = {
         CONF_TRIGGER: dict(config),

@@ -1,25 +1,10 @@
 """
 homeassistant.components.device_tracker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to keep track of devices.
 
-device_tracker:
-  platform: netgear
-
-  # Optional
-
-  # How many seconds to wait after not seeing device to consider it not home
-  consider_home: 180
-
-  # Seconds between each scan
-  interval_seconds: 12
-
-  # New found devices auto found
-  track_new_devices: yes
-
-  # Maximum distance from home we consider people home
-  range_home: 100
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/device_tracker/
 """
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 # pylint: disable=too-many-locals

@@ -1,0 +1,15 @@
+notify:
+  description: Send a notification
+
+  fields:
+    message:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+
+    title:
+      description: Optional title for your notification.
+      example: 'Your Garage Door Friend'
+
+    target:
+      description: Target of the notification. Optional depending on the platform
+      example: platform specific

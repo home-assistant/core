@@ -124,6 +124,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
         mat = _matcher
 
+        # pylint: disable=too-many-boolean-expressions
         if mat(now.year, year) and \
            mat(now.month, month) and \
            mat(now.day, day) and \

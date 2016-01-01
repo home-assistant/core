@@ -2,39 +2,9 @@
 homeassistant.components.sensor.dht
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adafruit DHT temperature and humidity sensor.
-You need a Python3 compatible version of the Adafruit_Python_DHT library
-(e.g. https://github.com/mala-zaba/Adafruit_Python_DHT,
-also see requirements.txt).
-As this requires access to the GPIO, you will need to run home-assistant
-as root.
 
-Configuration:
-
-To use the Adafruit DHT sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: dht
-  sensor: DHT22
-  pin: 23
-  monitored_conditions:
-    - temperature
-    - humidity
-
-Variables:
-
-sensor
-*Required
-The sensor type, DHT11, DHT22 or AM2302
-
-pin
-*Required
-The pin the sensor is connected to, something like
-'P8_11' for Beaglebone, '23' for Raspberry Pi
-
-monitored_conditions
-*Optional
-Conditions to monitor. Available conditions are temperature and humidity.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.dht/
 """
 import logging
 from datetime import timedelta

@@ -4,7 +4,7 @@ homeassistant.components.device_tracker.nmap
 Device tracker platform that supports scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.nmap_scanner.html
+https://home-assistant.io/components/device_tracker.nmap_scanner/
 """
 import logging
 from datetime import timedelta
@@ -98,7 +98,7 @@ class NmapDeviceScanner(object):
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-F --host-timeout 5"
+        options = "-F --host-timeout 5s"
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

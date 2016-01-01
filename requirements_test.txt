@@ -1,0 +1,6 @@
+flake8>=2.5.0
+pylint>=1.5.1
+coveralls>=1.1
+pytest>=2.6.4
+pytest-cov>=2.2.0
+betamax>=0.5.1

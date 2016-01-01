@@ -4,36 +4,8 @@ homeassistant.components.sensor.arduino
 Support for getting information from Arduino pins. Only analog pins are
 supported.
 
-Configuration:
-
-To use the arduino sensor you will need to add something like the following
-to your configuration.yaml file.
-
-sensor:
-  platform: arduino
-  pins:
-    7:
-      name: Door switch
-      type: analog
-    0:
-      name: Brightness
-      type: analog
-
-Variables:
-
-pins
-*Required
-An array specifying the digital pins to use on the Arduino board.
-
-These are the variables for the pins array:
-
-name
-*Required
-The name for the pin that will be used in the frontend.
-
-type
-*Required
-The type of the pin: 'analog'.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.arduino/
 """
 import logging
 
