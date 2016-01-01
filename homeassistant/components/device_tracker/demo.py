@@ -1,7 +1,6 @@
 """
 homeassistant.components.device_tracker.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Demo platform for the device tracker.
 
 device_tracker:

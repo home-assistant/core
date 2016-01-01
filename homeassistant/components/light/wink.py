@@ -2,6 +2,9 @@
 homeassistant.components.light.wink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink lights.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.wink/
 """
 import logging
 
@@ -9,9 +12,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                'c2b700e8ca866159566ecf5e644d9c297f69f257.zip'
-                '#python-wink==0.1']
+REQUIREMENTS = ['python-wink==0.3.1']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -42,10 +43,10 @@ class WinkLight(WinkToggleDevice):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is not None:
-            self.wink.setState(True, brightness / 255)
+            self.wink.set_state(True, brightness=brightness / 255)
 
         else:
-            self.wink.setState(True)
+            self.wink.set_state(True)
 
     @property
     def state_attributes(self):

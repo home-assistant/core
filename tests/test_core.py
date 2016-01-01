@@ -21,7 +21,7 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
@@ -268,7 +268,15 @@ class TestState(unittest.TestCase):
 
     def test_copy(self):
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
-        self.assertEqual(state, state.copy())
+        # Patch dt_util.utcnow() so we know last_updated got copied too
+        with patch('homeassistant.core.dt_util.utcnow',
+                   return_value=dt_util.utcnow() + timedelta(seconds=10)):
+            copy = state.copy()
+        self.assertEqual(state.entity_id, copy.entity_id)
+        self.assertEqual(state.state, copy.state)
+        self.assertEqual(state.attributes, copy.attributes)
+        self.assertEqual(state.last_changed, copy.last_changed)
+        self.assertEqual(state.last_updated, copy.last_updated)
 
     def test_dict_conversion(self):
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
@@ -312,6 +320,18 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue(self.states.is_state('light.Bowl', 'on'))
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
+
+    def test_is_state_attr(self):
+        """ Test is_state_attr method. """
+        self.states.set("light.Bowl", "on", {"brightness": 100})
+        self.assertTrue(
+            self.states.is_state_attr('light.Bowl', 'brightness', 100))
+        self.assertFalse(
+            self.states.is_state_attr('light.Bowl', 'friendly_name', 200))
+        self.assertFalse(
+            self.states.is_state_attr('light.Bowl', 'friendly_name', 'Bowl'))
+        self.assertFalse(
+            self.states.is_state_attr('light.Non_existing', 'brightness', 100))
 
     def test_entity_ids(self):
         """ Test get_entity_ids method. """
@@ -555,6 +575,7 @@ class TestConfig(unittest.TestCase):
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
+            'version': __version__,
         }
 
         self.assertEqual(expected, self.config.as_dict())

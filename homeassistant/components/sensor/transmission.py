@@ -3,61 +3,15 @@ homeassistant.components.sensor.transmission
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Monitors Transmission BitTorrent client API.
 
-Configuration:
-
-To use the Transmission sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: transmission
-  name: Transmission
-  host: 192.168.1.26
-  port: 9091
-  username: YOUR_USERNAME
-  password: YOUR_PASSWORD
-  monitored_variables:
-    - 'current_status'
-    - 'download_speed'
-    - 'upload_speed'
-
-Variables:
-
-host
-*Required
-This is the IP address of your Transmission daemon, e.g. 192.168.1.32
-
-port
-*Optional
-The port your Transmission daemon uses, defaults to 9091. Example: 8080
-
-username
-*Required
-Your Transmission username.
-
-password
-*Required
-Your Transmission password.
-
-name
-*Optional
-The name to use when displaying this Transmission instance.
-
-monitored_variables
-*Required
-Variables to monitor. See the configuration example above for a
-list of all available variables to monitor.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.transmission/
 """
-from homeassistant.util import Throttle
 from datetime import timedelta
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-
-from homeassistant.helpers.entity import Entity
-# pylint: disable=no-name-in-module, import-error
-import transmissionrpc
-
-from transmissionrpc.error import TransmissionError
-
 import logging
+
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.util import Throttle
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
@@ -74,6 +28,9 @@ _THROTTLED_REFRESH = None
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Transmission sensors. """
+    import transmissionrpc
+    from transmissionrpc.error import TransmissionError
+
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
@@ -138,6 +95,8 @@ class TransmissionSensor(Entity):
 
     def refresh_transmission_data(self):
         """ Calls the throttled Transmission refresh method. """
+        from transmissionrpc.error import TransmissionError
+
         if _THROTTLED_REFRESH is not None:
             try:
                 _THROTTLED_REFRESH()

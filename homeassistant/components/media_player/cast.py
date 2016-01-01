@@ -3,23 +3,10 @@ homeassistant.components.media_player.chromecast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides functionality to interact with Cast devices on the network.
 
-WARNING: This platform is currently not working due to a changed Cast API.
-
-Configuration:
-
-To use the chromecast integration you will need to add something like the
-following to your configuration.yaml file.
-
-media_player:
-  platform: chromecast
-  host: 192.168.1.9
-
-Variables:
-
-host
-*Optional
-Use only if you don't want to scan for devices.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.cast/
 """
+# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
@@ -29,16 +16,16 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
-REQUIREMENTS = ['pychromecast==0.6.12']
+REQUIREMENTS = ['pychromecast==0.6.13']
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
+    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE | SUPPORT_PLAY_MEDIA
 KNOWN_HOSTS = []
 
 # pylint: disable=invalid-name
@@ -274,6 +261,10 @@ class CastDevice(MediaPlayerDevice):
     def media_seek(self, position):
         """ Seek the media to a specific location. """
         self.cast.media_controller.seek(position)
+
+    def play_media(self, media_type, media_id):
+        """ Plays media from a URL """
+        self.cast.media_controller.play_media(media_id, media_type)
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """

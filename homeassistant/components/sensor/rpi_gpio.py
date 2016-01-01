@@ -1,49 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 homeassistant.components.sensor.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a binary state sensor using RPi GPIO.
-To avoid having to run Home Assistant as root when using this component,
-run a Raspbian version released at or after September 29, 2015.
 
-sensor:
-  platform: rpi_gpio
-  pull_mode: "UP"
-  value_high: "Active"
-  value_low: "Inactive"
-  ports:
-    11: PIR Office
-    12: PIR Bedroom
-
-Variables:
-
-pull_mode
-*Optional
-The internal pull to use (UP or DOWN). Default is UP.
-
-value_high
-*Optional
-The value of the sensor when the port is HIGH. Default is "HIGH".
-
-value_low
-*Optional
-The value of the sensor when the port is LOW. Default is "LOW".
-
-bouncetime
-*Optional
-The time in milliseconds for port debouncing. Default is 50ms.
-
-ports
-*Required
-An array specifying the GPIO ports to use and the name to use in the frontend.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.rpi_gpio/
 """
+# pylint: disable=import-error
 import logging
 from homeassistant.helpers.entity import Entity
 
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    GPIO = None
 from homeassistant.const import (DEVICE_DEFAULT_NAME,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
@@ -60,10 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Raspberry PI GPIO ports. """
-    if GPIO is None:
-        _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
-        return
-    # pylint: disable=no-member
+    import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
 
     sensors = []
@@ -96,6 +59,7 @@ class RPiGPIOSensor(Entity):
     def __init__(self, port_name, port_num, pull_mode,
                  value_high, value_low, bouncetime):
         # pylint: disable=no-member
+        import RPi.GPIO as GPIO
         self._name = port_name or DEVICE_DEFAULT_NAME
         self._port = port_num
         self._pull = GPIO.PUD_DOWN if pull_mode == "DOWN" else GPIO.PUD_UP

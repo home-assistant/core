@@ -2,19 +2,26 @@
 homeassistant.components.light.hue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hue lights.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.hue/
 """
+import json
 import logging
+import os
 import socket
+import random
 from datetime import timedelta
 from urllib.parse import urlparse
 
 from homeassistant.loader import get_component
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_TRANSITION,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, ATTR_EFFECT,
-    EFFECT_COLORLOOP)
+    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
+    ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
+    ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -28,20 +35,36 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
+def _find_host_from_config(hass):
+    """ Attempt to detect host based on existing configuration. """
+    path = hass.config.path(PHUE_CONFIG_FILE)
+
+    if not os.path.isfile(path):
+        return None
+
+    try:
+        with open(path) as inp:
+            return next(json.loads(''.join(inp)).keys().__iter__())
+    except (ValueError, AttributeError, StopIteration):
+        # ValueError if can't parse as JSON
+        # AttributeError if JSON value is not a dict
+        # StopIteration if no keys
+        return None
+
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
-    try:
-        # pylint: disable=unused-variable
-        import phue  # noqa
-    except ImportError:
-        _LOGGER.exception("Error while importing dependency phue.")
-
-        return
-
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
         host = config.get(CONF_HOST, None)
+
+        if host is None:
+            host = _find_host_from_config(hass)
+
+        if host is None:
+            _LOGGER.error('No host found in configuration')
+            return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
@@ -123,6 +146,7 @@ def request_configuration(host, hass, add_devices_callback):
 
         return
 
+    # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
         setup_bridge(host, hass, add_devices_callback)
@@ -162,9 +186,14 @@ class HueLight(Light):
         return self.info['state']['bri']
 
     @property
-    def color_xy(self):
+    def xy_color(self):
         """ XY color value. """
         return self.info['state'].get('xy')
+
+    @property
+    def color_temp(self):
+        """ CT color value. """
+        return self.info['state'].get('ct')
 
     @property
     def is_on(self):
@@ -178,15 +207,19 @@ class HueLight(Light):
         command = {'on': True}
 
         if ATTR_TRANSITION in kwargs:
-            # Transition time is in 1/10th seconds and cannot exceed
-            # 900 seconds.
-            command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
+            command['transitiontime'] = kwargs[ATTR_TRANSITION] * 10
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
+        elif ATTR_RGB_COLOR in kwargs:
+            command['xy'] = color_util.color_RGB_to_xy(
+                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+
+        if ATTR_COLOR_TEMP in kwargs:
+            command['ct'] = kwargs[ATTR_COLOR_TEMP]
 
         flash = kwargs.get(ATTR_FLASH)
 
@@ -201,6 +234,9 @@ class HueLight(Light):
 
         if effect == EFFECT_COLORLOOP:
             command['effect'] = 'colorloop'
+        elif effect == EFFECT_RANDOM:
+            command['hue'] = random.randrange(0, 65535)
+            command['sat'] = random.randrange(150, 254)
         else:
             command['effect'] = 'none'
 

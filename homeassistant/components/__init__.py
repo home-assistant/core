@@ -1,7 +1,6 @@
 """
 homeassistant.components
 ~~~~~~~~~~~~~~~~~~~~~~~~
-
 This package contains components that can be plugged into Home Assistant.
 
 Component design guidelines:
@@ -12,7 +11,6 @@ Each component that tracks states should create state entity names in the
 format "<DOMAIN>.<OBJECT_ID>".
 
 Each component should publish services only under its own domain.
-
 """
 import itertools as it
 import logging

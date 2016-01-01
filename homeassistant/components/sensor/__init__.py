@@ -2,14 +2,17 @@
 homeassistant.components.sensor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various sensors that can be monitored.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sensor/
 """
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import wink, zwave, isy994, verisure
+from homeassistant.components import (wink, zwave, isy994,
+                                      verisure, ecobee, tellduslive)
 
 DOMAIN = 'sensor'
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -19,7 +22,9 @@ DISCOVERY_PLATFORMS = {
     wink.DISCOVER_SENSORS: 'wink',
     zwave.DISCOVER_SENSORS: 'zwave',
     isy994.DISCOVER_SENSORS: 'isy994',
-    verisure.DISCOVER_SENSORS: 'verisure'
+    verisure.DISCOVER_SENSORS: 'verisure',
+    ecobee.DISCOVER_SENSORS: 'ecobee',
+    tellduslive.DISCOVER_SENSORS: 'tellduslive',
 }
 
 

@@ -5,7 +5,7 @@ Device tracker platform that supports scanning a Netgear router for device
 presence.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.netgear.html
+https://home-assistant.io/components/device_tracker.netgear/
 """
 import logging
 from datetime import timedelta

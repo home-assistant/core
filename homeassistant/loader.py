@@ -167,7 +167,7 @@ def load_order_components(components):
         load_order.update(comp_load_order)
 
     # Push some to first place in load order
-    for comp in ('recorder', 'introduction'):
+    for comp in ('logger', 'recorder', 'introduction'):
         if comp in load_order:
             load_order.promote(comp)
 
@@ -193,7 +193,7 @@ def _load_order_component(comp_name, load_order, loading):
 
     loading.add(comp_name)
 
-    for dependency in component.DEPENDENCIES:
+    for dependency in getattr(component, 'DEPENDENCIES', []):
         # Check not already loaded
         if dependency in load_order:
             continue

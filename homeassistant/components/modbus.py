@@ -3,27 +3,8 @@ homeassistant.components.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Modbus component, using pymodbus (python3 branch).
 
-Configuration:
-
-To use the Modbus component you will need to add something like the following
-to your configuration.yaml file.
-
-#Modbus TCP
-modbus:
-    type: tcp
-    host: 127.0.0.1
-    port: 2020
-
-#Modbus RTU
-modbus:
-    type: serial
-    method: rtu
-    port: /dev/ttyUSB0
-    baudrate: 9600
-    stopbits: 1
-    bytesize: 8
-    parity: N
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/modbus/
 """
 import logging
 
@@ -32,7 +13,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
 
 DOMAIN = "modbus"
 
-DEPENDENCIES = []
 REQUIREMENTS = ['https://github.com/bashwork/pymodbus/archive/'
                 'd7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0']
 

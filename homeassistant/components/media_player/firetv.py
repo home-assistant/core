@@ -1,47 +1,11 @@
 """
 homeassistant.components.media_player.firetv
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Provides functionality to interact with FireTV devices.
 
-Provides control over an Amazon Fire TV (/stick) via
-python-firetv, a Python 2.x module with a helper script
-that exposes a HTTP server to fetch state and perform
-actions.
-
-Steps to configure your Amazon Fire TV stick with Home Assistant:
-
-1. Turn on ADB Debugging on your Amazon Fire TV:
-    a. From the main (Launcher) screen, select Settings.
-    b. Select System > Developer Options.
-    c. Select ADB Debugging.
-2. Find Amazon Fire TV device IP:
-    a. From the main (Launcher) screen, select Settings.
-    b. Select System > About > Network.
-3. `pip install firetv[firetv-server]` into a Python 2.x environment
-4. `firetv-server -d <fire tv device IP>:5555`, background the process
-5. Configure Home Assistant as follows:
-
-media_player:
-  platform: firetv
-  # optional: where firetv-server is running (default is 'localhost:5556')
-  host: localhost:5556
-  # optional: device id (default is 'default')
-  device: livingroom-firetv
-  # optional: friendly name (default is 'Amazon Fire TV')
-  name: My Amazon Fire TV
-
-Note that python-firetv has support for multiple Amazon Fire TV devices.
-If you have more than one configured, be sure to specify the device id used.
-Run `firetv-server -h` and/or view the source for complete capabilities.
-
-Possible states are:
- - off (TV screen is dark)
- - standby (standard UI is active - not apps)
- - idle (screen saver is active)
- - play (video is playing)
- - pause (video is paused)
- - disconnected (can't communicate with device)
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.firetv/
 """
-
 import logging
 import requests
 
@@ -69,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the firetv platform. """
+    """ Sets up the FireTV platform. """
     host = config.get('host', 'localhost:5556')
     device_id = config.get('device', 'default')
     try:
@@ -85,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info(
                 'Device %s accessible and ready for control', device_id)
         else:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 'Device %s is not registered with firetv-server', device_id)
     except requests.exceptions.RequestException:
         _LOGGER.error('Could not connect to firetv-server at %s', host)
@@ -94,12 +58,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FireTV(object):
     """ firetv-server client.
 
-    Should a native Python 3 ADB module become available,
-    python-firetv can support Python 3, it can be added
-    as a dependency, and this class can be dispensed of.
+    Should a native Python 3 ADB module become available, python-firetv can
+    support Python 3, it can be added as a dependency, and this class can be
+    dispensed of.
 
-    For now, it acts as a client to the firetv-server
-    HTTP server (which must be running via Python 2).
+    For now, it acts as a client to the firetv-server HTTP server (which must
+    be running via Python 2).
     """
 
     def __init__(self, host, device_id):
@@ -108,10 +72,7 @@ class FireTV(object):
 
     @property
     def state(self):
-        """ Get the device state.
-
-        An exception means UNKNOWN state.
-        """
+        """ Get the device state. An exception means UNKNOWN state. """
         try:
             response = requests.get(
                 DEVICE_STATE_URL.format(
@@ -126,11 +87,7 @@ class FireTV(object):
             return STATE_UNKNOWN
 
     def action(self, action_id):
-        """ Perform an action on the device.
-
-        There is no action acknowledgment, so exceptions
-        result in a pass.
-        """
+        """ Perform an action on the device. """
         try:
             requests.get(
                 DEVICE_ACTION_URL.format(
@@ -193,7 +150,7 @@ class FireTVDevice(MediaPlayerDevice):
         self._firetv.action('turn_off')
 
     def media_play(self):
-        """ Send play commmand. """
+        """ Send play command. """
         self._firetv.action('media_play')
 
     def media_pause(self):

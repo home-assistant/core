@@ -1,60 +1,22 @@
 """
 homeassistant.components.light.vera
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Vera lights. This component is useful if you wish for switches
-connected to your Vera controller to appear as lights in Home Assistant.
-All switches will be added as a light unless you exclude them in the config.
+Support for Vera lights.
 
-Configuration:
-
-To use the Vera lights you will need to add something like the following to
-your configuration.yaml file.
-
-light:
-  platform: vera
-  vera_controller_url: http://YOUR_VERA_IP:3480/
-  device_data:
-    12:
-      name: My awesome switch
-      exclude: true
-    13:
-      name: Another switch
-
-Variables:
-
-vera_controller_url
-*Required
-This is the base URL of your vera controller including the port number if not
-running on 80. Example: http://192.168.1.21:3480/
-
-device_data
-*Optional
-This contains an array additional device info for your Vera devices. It is not
-required and if not specified all lights configured in your Vera controller
-will be added with default values. You should use the id of your vera device
-as the key for the device within device_data.
-
-These are the variables for the device_data array:
-
-name
-*Optional
-This parameter allows you to override the name of your Vera device in the HA
-interface, if not specified the value configured for the device in your Vera
-will be used.
-
-exclude
-*Optional
-This parameter allows you to exclude the specified device from Home Assistant,
-it should be set to "true" if you want this device excluded.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.vera/
 """
 import logging
+import time
+
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
 
-REQUIREMENTS = ['https://github.com/balloob/home-assistant-vera-api/archive/'
-                'a8f823066ead6c7da6fb5e7abaf16fef62e63364.zip'
-                '#python-vera==0.1']
+from homeassistant.components.light import ATTR_BRIGHTNESS
+
+REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
+                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
+                '#python-vera==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +39,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     controller = veraApi.VeraController(base_url)
     devices = []
     try:
-        devices = controller.get_devices(['Switch', 'On/Off Switch'])
+        devices = controller.get_devices([
+            'Switch',
+            'On/Off Switch',
+            'Dimmable Switch'])
     except RequestException:
         # There was a network related error connecting to the vera controller
         _LOGGER.exception("Error communicating with Vera API")
@@ -89,6 +54,28 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
-            lights.append(VeraSwitch(device, extra_data))
+            lights.append(VeraLight(device, extra_data))
 
     add_devices_callback(lights)
+
+
+class VeraLight(VeraSwitch):
+    """ Represents a Vera Light, including dimmable. """
+
+    @property
+    def state_attributes(self):
+        attr = super().state_attributes or {}
+
+        if self.vera_device.is_dimmable:
+            attr[ATTR_BRIGHTNESS] = self.vera_device.get_brightness()
+
+        return attr
+
+    def turn_on(self, **kwargs):
+        if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
+            self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
+        else:
+            self.vera_device.switch_on()
+
+        self.last_command_send = time.time()
+        self.is_on_status = True

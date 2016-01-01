@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 from setuptools import setup, find_packages
 from homeassistant.const import __version__
@@ -9,22 +10,15 @@ DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
-# PACKAGE_DATA = \
-#     {'homeassistant.components.frontend': ['index.html.template'],
-#      'homeassistant.components.frontend.www_static': ['*.*'],
-#      'homeassistant.components.frontend.www_static.images': ['*.*'],
-#      'homeassistant.components.mqtt': ['*.crt'],
-#      'homeassistant.startup': ['*.*']}
-
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2015.4',
     'pip>=7.0.0',
-    'vincenty==0.1.2'
+    'vincenty==0.1.3',
+    'jinja2>=2.8',
 ]
 
-    # package_data=PACKAGE_DATA,
 setup(
     name=PACKAGE_NAME,
     version=__version__,
@@ -39,6 +33,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
@@ -52,5 +47,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.4',
         'Topic :: Home Automation'
-    ]
+    ],
 )

@@ -10,7 +10,7 @@ from collections import defaultdict
 from homeassistant.exceptions import NoEntitySpecifiedError
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON,
     DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
@@ -62,6 +62,11 @@ class Entity(object):
         return None
 
     @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return None
+
+    @property
     def hidden(self):
         """ Suggestion if the entity should be hidden from UIs. """
         return False
@@ -101,6 +106,9 @@ class Entity(object):
 
         if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
             attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        if ATTR_ICON not in attr and self.icon:
+            attr[ATTR_ICON] = self.icon
 
         if self.hidden:
             attr[ATTR_HIDDEN] = self.hidden
