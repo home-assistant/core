@@ -4,36 +4,8 @@ homeassistant.components.switch.arduino
 Support for switching Arduino pins on and off. So far only digital pins are
 supported.
 
-Configuration:
-
-To use the arduino switch you will need to add something like the following
-to your configuration.yaml file.
-
-switch:
-  platform: arduino
-  pins:
-    11:
-      name: Fan Office
-      type: digital
-    12:
-      name: Light Desk
-      type: digital
-
-Variables:
-
-pins
-*Required
-An array specifying the digital pins to use on the Arduino board.
-
-These are the variables for the pins array:
-
-name
-*Required
-The name for the pin that will be used in the frontend.
-
-type
-*Required
-The type of the pin: 'digital'.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.arduino/
 """
 import logging
 

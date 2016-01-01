@@ -1,7 +1,6 @@
 """
 homeassistant.components.discovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
@@ -18,8 +17,7 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "discovery"
-DEPENDENCIES = []
-REQUIREMENTS = ['netdisco==0.4.2']
+REQUIREMENTS = ['netdisco==0.5.2']
 
 SCAN_INTERVAL = 300  # seconds
 
@@ -28,6 +26,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_SONOS = 'sonos'
+SERVICE_PLEX = 'plex_mediaserver'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "switch",
@@ -35,6 +34,7 @@ SERVICE_HANDLERS = {
     SERVICE_HUE: "light",
     SERVICE_NETGEAR: 'device_tracker',
     SERVICE_SONOS: 'media_player',
+    SERVICE_PLEX: 'media_player',
 }
 
 
@@ -88,6 +88,7 @@ def setup(hass, config):
                 ATTR_DISCOVERED: info
             })
 
+    # pylint: disable=unused-argument
     def start_discovery(event):
         """ Start discovering. """
         netdisco = DiscoveryService(SCAN_INTERVAL)

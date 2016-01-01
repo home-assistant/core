@@ -1,25 +1,30 @@
 """
 homeassistant.components.notify
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to notify people.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/notify/
 """
 from functools import partial
 import logging
 import os
 
+import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform
+from homeassistant.util import template
 
 from homeassistant.const import CONF_NAME
 
 DOMAIN = "notify"
-DEPENDENCIES = []
 
 # Title of notification
 ATTR_TITLE = "title"
 ATTR_TITLE_DEFAULT = "Home Assistant"
+
+# Target of the notification (user, device, etc)
+ATTR_TARGET = 'target'
 
 # Text to notify user of
 ATTR_MESSAGE = "message"
@@ -29,9 +34,16 @@ SERVICE_NOTIFY = "notify"
 _LOGGER = logging.getLogger(__name__)
 
 
-def send_message(hass, message):
+def send_message(hass, message, title=None):
     """ Send a notification message. """
-    hass.services.call(DOMAIN, SERVICE_NOTIFY, {ATTR_MESSAGE: message})
+    data = {
+        ATTR_MESSAGE: message
+    }
+
+    if title is not None:
+        data[ATTR_TITLE] = title
+
+    hass.services.call(DOMAIN, SERVICE_NOTIFY, data)
 
 
 def setup(hass, config):
@@ -43,16 +55,15 @@ def setup(hass, config):
 
     for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         # get platform
-        notify_implementation = get_component(
-            'notify.{}'.format(platform))
+        notify_implementation = bootstrap.prepare_setup_platform(
+            hass, config, DOMAIN, platform)
 
         if notify_implementation is None:
             _LOGGER.error("Unknown notification service specified.")
             continue
 
         # create platform service
-        notify_service = notify_implementation.get_service(
-            hass, {DOMAIN: p_config})
+        notify_service = notify_implementation.get_service(hass, p_config)
 
         if notify_service is None:
             _LOGGER.error("Failed to initialize notification service %s",
@@ -67,9 +78,12 @@ def setup(hass, config):
             if message is None:
                 return
 
-            title = call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+            title = template.render(
+                hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
+            target = call.data.get(ATTR_TARGET)
+            message = template.render(hass, message)
 
-            notify_service.send_message(message, title=title)
+            notify_service.send_message(message, title=title, target=target)
 
         # register service
         service_call_handler = partial(notify_message, notify_service)

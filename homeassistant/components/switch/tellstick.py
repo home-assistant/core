@@ -3,37 +3,30 @@ homeassistant.components.switch.tellstick
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Tellstick switches.
 
-Because the tellstick sends its actions via radio and from most
-receivers it's impossible to know if the signal was received or not.
-Therefore you can configure the switch to try to send each signal repeatedly
-with the config parameter signal_repetitions (default is 1).
-signal_repetitions: 3
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.tellstick/
 """
 import logging
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  ATTR_FRIENDLY_NAME)
 from homeassistant.helpers.entity import ToggleEntity
-import tellcore.constants as tellcore_constants
-from tellcore.library import DirectCallbackDispatcher
-SINGAL_REPETITIONS = 1
 
+SIGNAL_REPETITIONS = 1
 REQUIREMENTS = ['tellcore-py==1.1.2']
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Tellstick switches. """
-    try:
-        import tellcore.telldus as telldus
-    except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
-        return
+    import tellcore.telldus as telldus
+    import tellcore.constants as tellcore_constants
+    from tellcore.library import DirectCallbackDispatcher
 
     core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
 
-    signal_repetitions = config.get('signal_repetitions', SINGAL_REPETITIONS)
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     switches_and_lights = core.devices()
 
@@ -65,13 +58,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class TellstickSwitchDevice(ToggleEntity):
     """ Represents a Tellstick switch. """
-    last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
-                              tellcore_constants.TELLSTICK_TURNOFF)
 
     def __init__(self, tellstick_device, signal_repetitions):
+        import tellcore.constants as tellcore_constants
+
         self.tellstick_device = tellstick_device
         self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self.signal_repetitions = signal_repetitions
+
+        self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
+                                       tellcore_constants.TELLSTICK_TURNOFF)
 
     @property
     def should_poll(self):
@@ -91,6 +87,8 @@ class TellstickSwitchDevice(ToggleEntity):
     @property
     def is_on(self):
         """ True if switch is on. """
+        import tellcore.constants as tellcore_constants
+
         last_command = self.tellstick_device.last_sent_command(
             self.last_sent_command_mask)
 

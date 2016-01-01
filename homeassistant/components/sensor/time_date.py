@@ -3,27 +3,8 @@ homeassistant.components.sensor.time_date
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Date and Time service.
 
-Configuration:
-
-To use the Date and Time sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: time_date
-  display_options:
-    - 'time'
-    - 'date'
-    - 'date_time'
-    - 'time_date'
-    - 'time_utc'
-    - 'beat'
-
-Variables:
-
-display_options
-*Required
-The variable you wish to display. See the configuration example above for a
-list of all available variables.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.time_date/
 """
 import logging
 

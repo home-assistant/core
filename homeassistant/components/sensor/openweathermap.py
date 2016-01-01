@@ -3,43 +3,8 @@ homeassistant.components.sensor.openweathermap
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OpenWeatherMap (OWM) service.
 
-Configuration:
-
-To use the OpenWeatherMap sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: openweathermap
-  api_key: YOUR_APP_KEY
-  forecast: 0 or 1
-  monitored_conditions:
-    - weather
-    - temperature
-    - wind_speed
-    - humidity
-    - pressure
-    - clouds
-    - rain
-    - snow
-
-Variables:
-
-api_key
-*Required
-To retrieve this value log into your account at http://openweathermap.org/
-
-forecast
-*Optional
-Enables the forecast. The default is to display the current conditions.
-
-monitored_conditions
-*Required
-Conditions to monitor. See the configuration example above for a
-list of all available conditions to monitor.
-
-Details for the API : http://bugs.openweathermap.org/projects/api/wiki
-
-Only metric measurements are supported at the moment.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.openweathermap/
 """
 import logging
 from datetime import timedelta

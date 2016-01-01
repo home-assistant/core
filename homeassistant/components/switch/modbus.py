@@ -3,35 +3,9 @@ homeassistant.components.switch.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus switches.
 
-Configuration:
-
-To use the Modbus switches you will need to add something like the following to
-your configuration.yaml file.
-
-sensor:
-    platform: modbus
-    slave: 1
-    registers:
-        24:
-            bits:
-                0:
-                    name: My switch
-                2:
-                    name: My other switch
-    coils:
-        0:
-            name: My coil switch
-
-VARIABLES:
-
-    - "slave" = slave number (ignored and can be omitted if not serial Modbus)
-    - "registers" contains a list of relevant registers to read from
-    - it must contain a "bits" section, listing relevant bits
-    - "coils" contains a list of relevant coils to read from/write to
-
-    - each named bit will create a switch
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.modbus/
 """
-
 import logging
 
 import homeassistant.components.modbus as modbus

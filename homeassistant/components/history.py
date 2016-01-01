@@ -1,8 +1,10 @@
 """
 homeassistant.components.history
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provide pre-made queries on top of the recorder component.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/history/
 """
 import re
 from datetime import timedelta

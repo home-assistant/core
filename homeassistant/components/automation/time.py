@@ -4,7 +4,7 @@ homeassistant.components.automation.time
 Offers time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation.html#time-trigger
+at https://home-assistant.io/components/automation/#time-trigger
 """
 import logging
 

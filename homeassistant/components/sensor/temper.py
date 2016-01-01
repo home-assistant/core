@@ -3,13 +3,8 @@ homeassistant.components.sensor.temper
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for getting temperature from TEMPer devices.
 
-Configuration:
-
-To use the temper sensors you will need to add something like the following to
-your configuration.yaml file.
-
-sensor:
-    platform: temper
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.temper/
 """
 import logging
 from homeassistant.helpers.entity import Entity

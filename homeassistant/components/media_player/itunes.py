@@ -1,38 +1,14 @@
 """
 homeassistant.components.media_player.itunes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides an interface to iTunes-API (https://github.com/maddox/itunes-api)
+Provides an interface to iTunes API.
 
-The iTunes media player will allow you to control your iTunes instance. You
-can play/pause/next/previous/mute, adjust volume, etc.
-
-In addition to controlling iTunes, your available AirPlay endpoints will be
-added as media players as well. You can then individually address them append
-turn them on, turn them off, or adjust their volume.
-
-Configuration:
-
-To use iTunes you will need to add something like the following to
-your configuration.yaml file.
-
-media_player:
-  platform: itunes
-  name: iTunes
-  host: http://192.168.1.16
-  port: 8181
-
-Variables:
-
-name
-*Optional
-The name of the device.
-
-url
-*Required
-URL of your running version of iTunes-API. Example: http://192.168.1.50:8181
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.itunes/
 """
 import logging
+
+import requests
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_PAUSE,
@@ -42,8 +18,6 @@ from homeassistant.components.media_player import (
     ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_MEDIA_COMMANDS)
 from homeassistant.const import (
     STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_ON)
-
-import requests
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,11 +131,9 @@ class Itunes(object):
         path = '/airplay_devices/' + device_id + '/volume'
         return self._request('PUT', path, {'level': level})
 
-# pylint: disable=unused-argument
-# pylint: disable=abstract-method
+
+# pylint: disable=unused-argument, abstract-method
 # pylint: disable=too-many-instance-attributes
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the itunes platform. """
 
@@ -179,7 +151,6 @@ class ItunesDevice(MediaPlayerDevice):
     """ Represents a iTunes-API instance. """
 
     # pylint: disable=too-many-public-methods
-
     def __init__(self, name, host, port, add_devices):
         self._name = name
         self._host = host

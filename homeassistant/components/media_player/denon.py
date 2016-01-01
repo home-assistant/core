@@ -2,42 +2,9 @@
 homeassistant.components.media_player.denon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides an interface to Denon Network Receivers.
-Developed for a Denon DRA-N5, see
-http://www.denon.co.uk/chg/product/compactsystems/networkmusicsystems/ceolpiccolo
 
-A few notes:
-    - As long as this module is active and connected, the receiver does
-      not seem to accept additional telnet connections.
-
-    - Be careful with the volume. 50% or even 100% are very loud.
-
-    - To be able to wake up the receiver, activate the "remote" setting
-      in the receiver's settings.
-
-    - Play and pause are supported, toggling is not possible.
-
-    - Seeking cannot be implemented as the UI sends absolute positions.
-      Only seeking via simulated button presses is possible.
-
-Configuration:
-
-To use your Denon you will need to add something like the following to
-your config/configuration.yaml:
-
-media_player:
-  platform: denon
-  name: Music station
-  host: 192.168.0.123
-
-Variables:
-
-host
-*Required
-The ip of the player. Example: 192.168.0.123
-
-name
-*Optional
-The name of the device.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.denon/
 """
 import telnetlib
 import logging
@@ -67,13 +34,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_HOST)
         return False
 
-    add_devices([
-        DenonDevice(
-            config.get('name', 'Music station'),
-            config.get('host'))
-    ])
-
-    return True
+    denon = DenonDevice(
+        config.get("name", "Music station"),
+        config.get("host")
+    )
+    if denon.update():
+        add_devices([denon])
+        return True
+    else:
+        return False
 
 
 class DenonDevice(MediaPlayerDevice):
@@ -84,28 +53,41 @@ class DenonDevice(MediaPlayerDevice):
     def __init__(self, name, host):
         self._name = name
         self._host = host
-        self._telnet = telnetlib.Telnet(self._host)
+        self._pwstate = "PWSTANDBY"
+        self._volume = 0
+        self._muted = False
+        self._mediasource = ""
 
-    def query(self, message):
-        """ Send request and await response from server """
+    @classmethod
+    def telnet_request(cls, telnet, command):
+        """ Executes `command` and returns the response. """
+        telnet.write(command.encode("ASCII") + b"\r")
+        return telnet.read_until(b"\r", timeout=0.2).decode("ASCII").strip()
+
+    def telnet_command(self, command):
+        """ Establishes a telnet connection and sends `command`. """
+        telnet = telnetlib.Telnet(self._host)
+        telnet.write(command.encode("ASCII") + b"\r")
+        telnet.read_very_eager()  # skip response
+        telnet.close()
+
+    def update(self):
         try:
-            # unspecified command, should be ignored
-            self._telnet.write("?".encode('UTF-8') + b'\r')
-        except (EOFError, BrokenPipeError, ConnectionResetError):
-            self._telnet.open(self._host)
+            telnet = telnetlib.Telnet(self._host)
+        except ConnectionRefusedError:
+            return False
 
-        self._telnet.read_very_eager()  # skip what is not requested
+        self._pwstate = self.telnet_request(telnet, "PW?")
+        # PW? sends also SISTATUS, which is not interesting
+        telnet.read_until(b"\r", timeout=0.2)
 
-        self._telnet.write(message.encode('ASCII') + b'\r')
-        # timeout 200ms, defined by protocol
-        resp = self._telnet.read_until(b'\r', timeout=0.2)\
-            .decode('UTF-8').strip()
+        volume_str = self.telnet_request(telnet, "MV?")[len("MV"):]
+        self._volume = int(volume_str) / 60
+        self._muted = (self.telnet_request(telnet, "MU?") == "MUON")
+        self._mediasource = self.telnet_request(telnet, "SI?")[len("SI"):]
 
-        if message == "PW?":
-            # workaround; PW? sends also SISTATUS
-            self._telnet.read_until(b'\r', timeout=0.2)
-
-        return resp
+        telnet.close()
+        return True
 
     @property
     def name(self):
@@ -115,10 +97,9 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def state(self):
         """ Returns the state of the device. """
-        pwstate = self.query('PW?')
-        if pwstate == "PWSTANDBY":
+        if self._pwstate == "PWSTANDBY":
             return STATE_OFF
-        if pwstate == "PWON":
+        if self._pwstate == "PWON":
             return STATE_ON
 
         return STATE_UNKNOWN
@@ -126,17 +107,17 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """ Volume level of the media player (0..1). """
-        return int(self.query('MV?')[len('MV'):]) / 60
+        return self._volume
 
     @property
     def is_volume_muted(self):
         """ Boolean if volume is currently muted. """
-        return self.query('MU?') == "MUON"
+        return self._muted
 
     @property
     def media_title(self):
         """ Current media source. """
-        return self.query('SI?')[len('SI'):]
+        return self._mediasource
 
     @property
     def supported_media_commands(self):
@@ -145,24 +126,24 @@ class DenonDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """ turn_off media player. """
-        self.query('PWSTANDBY')
+        self.telnet_command("PWSTANDBY")
 
     def volume_up(self):
         """ volume_up media player. """
-        self.query('MVUP')
+        self.telnet_command("MVUP")
 
     def volume_down(self):
         """ volume_down media player. """
-        self.query('MVDOWN')
+        self.telnet_command("MVDOWN")
 
     def set_volume_level(self, volume):
         """ set volume level, range 0..1. """
         # 60dB max
-        self.query('MV' + str(round(volume * 60)).zfill(2))
+        self.telnet_command("MV" + str(round(volume * 60)).zfill(2))
 
     def mute_volume(self, mute):
         """ mute (true) or unmute (false) media player. """
-        self.query('MU' + ('ON' if mute else 'OFF'))
+        self.telnet_command("MU" + ("ON" if mute else "OFF"))
 
     def media_play_pause(self):
         """ media_play_pause media player. """
@@ -170,22 +151,22 @@ class DenonDevice(MediaPlayerDevice):
 
     def media_play(self):
         """ media_play media player. """
-        self.query('NS9A')
+        self.telnet_command("NS9A")
 
     def media_pause(self):
         """ media_pause media player. """
-        self.query('NS9B')
+        self.telnet_command("NS9B")
 
     def media_next_track(self):
         """ Send next track command. """
-        self.query('NS9D')
+        self.telnet_command("NS9D")
 
     def media_previous_track(self):
-        self.query('NS9E')
+        self.telnet_command("NS9E")
 
     def media_seek(self, position):
         raise NotImplementedError()
 
     def turn_on(self):
         """ turn the media player on. """
-        self.query('PWON')
+        self.telnet_command("PWON")
