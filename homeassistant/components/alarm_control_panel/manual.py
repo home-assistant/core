@@ -4,7 +4,7 @@ homeassistant.components.alarm_control_panel.manual
 Support for manual alarms.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.manual.html
+https://home-assistant.io/components/alarm_control_panel.manual/
 """
 import logging
 import datetime
@@ -17,8 +17,6 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = []
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
@@ -76,9 +74,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
             return STATE_ALARM_PENDING
 
         if self._state == STATE_ALARM_TRIGGERED and self._trigger_time:
-            if self._state_ts + self._trigger_time > dt_util.utcnow():
+            if self._state_ts + self._pending_time > dt_util.utcnow():
                 return STATE_ALARM_PENDING
-            elif dt_util.utcnow() >= self._state_ts + (2 * self._trigger_time):
+            elif (self._state_ts + self._pending_time +
+                  self._trigger_time) < dt_util.utcnow():
                 return STATE_ALARM_DISARMED
 
         return self._state
@@ -134,11 +133,11 @@ class ManualAlarm(alarm.AlarmControlPanel):
         if self._trigger_time:
             track_point_in_time(
                 self._hass, self.update_ha_state,
-                self._state_ts + self._trigger_time)
+                self._state_ts + self._pending_time)
 
             track_point_in_time(
                 self._hass, self.update_ha_state,
-                self._state_ts + 2 * self._trigger_time)
+                self._state_ts + self._pending_time + self._trigger_time)
 
     def _validate_code(self, code, state):
         """ Validate given code. """

@@ -4,28 +4,8 @@ homeassistant.components.sensor.worldclock
 The Worldclock sensor let you display the current time of a different time
 zone.
 
-Configuration:
-
-To use the Worldclock sensor you will need to add something like the
-following to your configuration.yaml file.
-
-sensor:
-  platform: worldclock
-  time_zone: America/New_York
-  name: New York
-
-Variables:
-
-time_zone
-*Required
-Time zone you want to display.
-
-name
-*Optional
-Name of the sensor to use in the frontend.
-
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.worldclock.html
+https://home-assistant.io/components/sensor.worldclock/
 """
 import logging
 

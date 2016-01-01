@@ -3,13 +3,16 @@
 cd "$(dirname "$0")/.."
 
 echo "Checking style with flake8..."
+tput setaf 1
 flake8 --exclude www_static homeassistant
-
 FLAKE8_STATUS=$?
+tput sgr0
 
 echo "Checking style with pylint..."
+tput setaf 1
 pylint homeassistant
 PYLINT_STATUS=$?
+tput sgr0
 
 if [ $FLAKE8_STATUS -eq 0 ]
 then

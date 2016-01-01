@@ -1,7 +1,7 @@
 # coding: utf-8
 """ Constants used by Home Assistant components. """
 
-__version__ = "0.7.6.dev0"
+__version__ = "0.11.0.dev0"
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -24,6 +24,8 @@ CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
+
+CONF_VALUE_TEMPLATE = "value_template"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -53,6 +55,8 @@ STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
 STATE_ALARM_PENDING = 'pending'
 STATE_ALARM_TRIGGERED = 'triggered'
+STATE_LOCKED = 'locked'
+STATE_UNLOCKED = 'unlocked'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -74,6 +78,9 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE = "entity_picture"
 
+# Icon to use in the frontend
+ATTR_ICON = "icon"
+
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
@@ -92,6 +99,9 @@ ATTR_BATTERY_LEVEL = "battery_level"
 
 # For devices which support an armed state
 ATTR_ARMED = "device_armed"
+
+# For devices which support a locked state
+ATTR_LOCKED = "locked"
 
 # For sensors that support 'tripping', eg. motion and door sensors
 ATTR_TRIPPED = "device_tripped"
@@ -132,6 +142,13 @@ SERVICE_ALARM_ARM_HOME = "alarm_arm_home"
 SERVICE_ALARM_ARM_AWAY = "alarm_arm_away"
 SERVICE_ALARM_TRIGGER = "alarm_trigger"
 
+SERVICE_LOCK = "lock"
+SERVICE_UNLOCK = "unlock"
+
+SERVICE_MOVE_UP = 'move_up'
+SERVICE_MOVE_DOWN = 'move_down'
+SERVICE_STOP = 'stop'
+
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
@@ -148,6 +165,9 @@ URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
+URL_API_ERROR_LOG = "/api/error_log"
+URL_API_LOG_OUT = "/api/log_out"
+URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
@@ -170,3 +190,4 @@ HTTP_HEADER_EXPIRES = "Expires"
 
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
+CONTENT_TYPE_TEXT_PLAIN = 'text/plain'

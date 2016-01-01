@@ -1,56 +1,16 @@
 """
 homeassistant.components.mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-MQTT component, using paho-mqtt. This component needs a MQTT broker like
-Mosquitto or Mosca. The Eclipse Foundation is running a public MQTT server
-at iot.eclipse.org. If you prefer to use that one, keep in mind to adjust
-the topic/client ID and that your messages are public.
+MQTT component, using paho-mqtt.
 
-Configuration:
-
-To use MQTT you will need to add something like the following to your
-config/configuration.yaml.
-
-mqtt:
-  broker: 127.0.0.1
-
-Or, if you want more options:
-
-mqtt:
-  broker: 127.0.0.1
-  port: 1883
-  client_id: home-assistant-1
-  keepalive: 60
-  username: your_username
-  password: your_secret_password
-  certificate: /home/paulus/dev/addtrustexternalcaroot.crt
-
-Variables:
-
-broker
-*Required
-This is the IP address of your MQTT broker, e.g. 192.168.1.32.
-
-port
-*Optional
-The network port to connect to. Default is 1883.
-
-client_id
-*Optional
-Client ID that Home Assistant will use. Has to be unique on the server.
-Default is a random generated one.
-
-keepalive
-*Optional
-The keep alive in seconds for this client. Default is 60.
-
-certificate
-*Optional
-Certificate to use for encrypting the connection to the broker.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mqtt/
 """
 import logging
 import os
 import socket
+import time
+
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
@@ -67,11 +27,11 @@ MQTT_CLIENT = None
 DEFAULT_PORT = 1883
 DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
+DEFAULT_RETAIN = False
 
 SERVICE_PUBLISH = 'publish'
-EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
+EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
-DEPENDENCIES = []
 REQUIREMENTS = ['paho-mqtt==1.1']
 
 CONF_BROKER = 'broker'
@@ -85,9 +45,12 @@ CONF_CERTIFICATE = 'certificate'
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_QOS = 'qos'
+ATTR_RETAIN = 'retain'
+
+MAX_RECONNECT_WAIT = 300  # seconds
 
 
-def publish(hass, topic, payload, qos=None):
+def publish(hass, topic, payload, qos=None, retain=None):
     """ Send an MQTT message. """
     data = {
         ATTR_TOPIC: topic,
@@ -95,6 +58,10 @@ def publish(hass, topic, payload, qos=None):
     }
     if qos is not None:
         data[ATTR_QOS] = qos
+
+    if retain is not None:
+        data[ATTR_RETAIN] = retain
+
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
@@ -107,9 +74,7 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
                      event.data[ATTR_QOS])
 
     hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
-
-    if topic not in MQTT_CLIENT.topics:
-        MQTT_CLIENT.subscribe(topic, qos)
+    MQTT_CLIENT.subscribe(topic, qos)
 
 
 def setup(hass, config):
@@ -158,9 +123,10 @@ def setup(hass, config):
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
         qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
+        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         if msg_topic is None or payload is None:
             return
-        MQTT_CLIENT.publish(msg_topic, payload, qos)
+        MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
@@ -169,44 +135,42 @@ def setup(hass, config):
     return True
 
 
-# This is based on one of the paho-mqtt examples:
-# http://git.eclipse.org/c/paho/org.eclipse.paho.mqtt.python.git/tree/examples/sub-class.py
 # pylint: disable=too-many-arguments
-class MQTT(object):  # pragma: no cover
+class MQTT(object):
     """ Implements messaging service for MQTT. """
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password, certificate):
         import paho.mqtt.client as mqtt
 
-        self.hass = hass
-        self._progress = {}
-        self.topics = {}
+        self.userdata = {
+            'hass': hass,
+            'topics': {},
+            'progress': {},
+        }
 
         if client_id is None:
             self._mqttc = mqtt.Client()
         else:
             self._mqttc = mqtt.Client(client_id)
 
+        self._mqttc.user_data_set(self.userdata)
+
         if username is not None:
             self._mqttc.username_pw_set(username, password)
         if certificate is not None:
             self._mqttc.tls_set(certificate)
 
-        self._mqttc.on_subscribe = self._mqtt_on_subscribe
-        self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
-        self._mqttc.on_connect = self._mqtt_on_connect
-        self._mqttc.on_message = self._mqtt_on_message
+        self._mqttc.on_subscribe = _mqtt_on_subscribe
+        self._mqttc.on_unsubscribe = _mqtt_on_unsubscribe
+        self._mqttc.on_connect = _mqtt_on_connect
+        self._mqttc.on_disconnect = _mqtt_on_disconnect
+        self._mqttc.on_message = _mqtt_on_message
+
         self._mqttc.connect(broker, port, keepalive)
 
-    def publish(self, topic, payload, qos):
+    def publish(self, topic, payload, qos, retain):
         """ Publish a MQTT message. """
-        self._mqttc.publish(topic, payload, qos)
-
-    def unsubscribe(self, topic):
-        """ Unsubscribe from topic. """
-        result, mid = self._mqttc.unsubscribe(topic)
-        _raise_on_error(result)
-        self._progress[mid] = topic
+        self._mqttc.publish(topic, payload, qos, retain)
 
     def start(self):
         """ Run the MQTT client. """
@@ -218,58 +182,96 @@ class MQTT(object):  # pragma: no cover
 
     def subscribe(self, topic, qos):
         """ Subscribe to a topic. """
-        if topic in self.topics:
+        if topic in self.userdata['topics']:
             return
         result, mid = self._mqttc.subscribe(topic, qos)
         _raise_on_error(result)
-        self._progress[mid] = topic
-        self.topics[topic] = None
+        self.userdata['progress'][mid] = topic
+        self.userdata['topics'][topic] = None
 
-    def _mqtt_on_connect(self, mqttc, obj, flags, result_code):
-        """ On connect, resubscribe to all topics we were subscribed to. """
-        if result_code != 0:
-            _LOGGER.error('Unable to connect to the MQTT broker: %s', {
-                1: 'Incorrect protocol version',
-                2: 'Invalid client identifier',
-                3: 'Server unavailable',
-                4: 'Bad username or password',
-                5: 'Not authorised'
-            }.get(result_code))
-            self._mqttc.disconnect()
-            return
-
-        old_topics = self.topics
-        self._progress = {}
-        self.topics = {}
-        for topic, qos in old_topics.items():
-            # qos is None if we were in process of subscribing
-            if qos is not None:
-                self._mqttc.subscribe(topic, qos)
-
-    def _mqtt_on_subscribe(self, mqttc, obj, mid, granted_qos):
-        """ Called when subscribe succesfull. """
-        topic = self._progress.pop(mid, None)
-        if topic is None:
-            return
-        self.topics[topic] = granted_qos
-
-    def _mqtt_on_unsubscribe(self, mqttc, obj, mid, granted_qos):
-        """ Called when subscribe succesfull. """
-        topic = self._progress.pop(mid, None)
-        if topic is None:
-            return
-        self.topics.pop(topic, None)
-
-    def _mqtt_on_message(self, mqttc, obj, msg):
-        """ Message callback """
-        self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
-            ATTR_TOPIC: msg.topic,
-            ATTR_QOS: msg.qos,
-            ATTR_PAYLOAD: msg.payload.decode('utf-8'),
-        })
+    def unsubscribe(self, topic):
+        """ Unsubscribe from topic. """
+        result, mid = self._mqttc.unsubscribe(topic)
+        _raise_on_error(result)
+        self.userdata['progress'][mid] = topic
 
 
-def _raise_on_error(result):  # pragma: no cover
+def _mqtt_on_message(mqttc, userdata, msg):
+    """ Message callback """
+    userdata['hass'].bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
+        ATTR_TOPIC: msg.topic,
+        ATTR_QOS: msg.qos,
+        ATTR_PAYLOAD: msg.payload.decode('utf-8'),
+    })
+
+
+def _mqtt_on_connect(mqttc, userdata, flags, result_code):
+    """ On connect, resubscribe to all topics we were subscribed to. """
+    if result_code != 0:
+        _LOGGER.error('Unable to connect to the MQTT broker: %s', {
+            1: 'Incorrect protocol version',
+            2: 'Invalid client identifier',
+            3: 'Server unavailable',
+            4: 'Bad username or password',
+            5: 'Not authorised'
+        }.get(result_code, 'Unknown reason'))
+        mqttc.disconnect()
+        return
+
+    old_topics = userdata['topics']
+
+    userdata['topics'] = {}
+    userdata['progress'] = {}
+
+    for topic, qos in old_topics.items():
+        # qos is None if we were in process of subscribing
+        if qos is not None:
+            mqttc.subscribe(topic, qos)
+
+
+def _mqtt_on_subscribe(mqttc, userdata, mid, granted_qos):
+    """ Called when subscribe successful. """
+    topic = userdata['progress'].pop(mid, None)
+    if topic is None:
+        return
+    userdata['topics'][topic] = granted_qos
+
+
+def _mqtt_on_unsubscribe(mqttc, userdata, mid, granted_qos):
+    """ Called when subscribe successful. """
+    topic = userdata['progress'].pop(mid, None)
+    if topic is None:
+        return
+    userdata['topics'].pop(topic, None)
+
+
+def _mqtt_on_disconnect(mqttc, userdata, result_code):
+    """ Called when being disconnected. """
+    # When disconnected because of calling disconnect()
+    if result_code == 0:
+        return
+
+    tries = 0
+    wait_time = 0
+
+    while True:
+        try:
+            if mqttc.reconnect() == 0:
+                _LOGGER.info('Successfully reconnected to the MQTT server')
+                break
+        except socket.error:
+            pass
+
+        wait_time = min(2**tries, MAX_RECONNECT_WAIT)
+        _LOGGER.warning(
+            'Disconnected from MQTT (%s). Trying to reconnect in %ss',
+            result_code, wait_time)
+        # It is ok to sleep here as we are in the MQTT thread.
+        time.sleep(wait_time)
+        tries += 1
+
+
+def _raise_on_error(result):
     """ Raise error if error result. """
     if result != 0:
         raise HomeAssistantError('Error talking to MQTT: {}'.format(result))

@@ -4,30 +4,8 @@ homeassistant.components.sensor.swiss_public_transport
 The Swiss public transport sensor will give you the next two departure times
 from a given location to another one. This sensor is limited to Switzerland.
 
-Configuration:
-
-To use the Swiss public transport sensor you will need to add something like
-the following to your configuration.yaml file.
-
-sensor:
-  platform: swiss_public_transport
-  from: STATION_ID
-  to: STATION_ID
-
-Variables:
-
-from
-*Required
-Start station/stop of your trip. To search for the ID of the station, use the
-an URL like this: http://transport.opendata.ch/v1/locations?query=Wankdorf
-to query for the station. If the score is 100 ("score":"100" in the response),
-it is a perfect match.
-
-to
-*Required
-Destination station/stop of the trip. Same procedure as for the start station.
-
-Details for the API : http://transport.opendata.ch
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.swiss_public_transport/
 """
 import logging
 from datetime import timedelta
@@ -39,6 +17,12 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'
+
+ATTR_DEPARTURE_TIME1 = 'Next departure'
+ATTR_DEPARTURE_TIME2 = 'Next on departure'
+ATTR_START = 'Start'
+ATTR_TARGET = 'Destination'
+ATTR_REMAINING_TIME = 'Remaining time'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -60,8 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(
             "Unable to determine stations. "
             "Check your settings and/or the availability of opendata.ch")
-
-        return None
+        return False
 
     dev = []
     data = PublicTransportData(journey)
@@ -75,7 +58,9 @@ class SwissPublicTransportSensor(Entity):
 
     def __init__(self, data, journey):
         self.data = data
-        self._name = '{}-{}'.format(journey[2], journey[3])
+        self._name = 'Next Departure'
+        self._from = journey[2]
+        self._to = journey[3]
         self.update()
 
     @property
@@ -88,12 +73,26 @@ class SwissPublicTransportSensor(Entity):
         """ Returns the state of the device. """
         return self._state
 
+    @property
+    def state_attributes(self):
+        """ Returns the state attributes. """
+        if self._times is not None:
+            return {
+                ATTR_DEPARTURE_TIME1: self._times[0],
+                ATTR_DEPARTURE_TIME2: self._times[1],
+                ATTR_START: self._from,
+                ATTR_TARGET: self._to,
+                ATTR_REMAINING_TIME: '{}'.format(
+                    ':'.join(str(self._times[2]).split(':')[:2]))
+            }
+
     # pylint: disable=too-many-branches
     def update(self):
         """ Gets the latest data from opendata.ch and updates the states. """
-        times = self.data.update()
+        self.data.update()
+        self._times = self.data.times
         try:
-            self._state = ', '.join(times)
+            self._state = self._times[0]
         except TypeError:
             pass
 
@@ -105,6 +104,7 @@ class PublicTransportData(object):
     def __init__(self, journey):
         self.start = journey[0]
         self.destination = journey[1]
+        self.times = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -117,16 +117,21 @@ class PublicTransportData(object):
             'to=' + self.destination + '&' +
             'fields[]=connections/from/departureTimestamp/&' +
             'fields[]=connections/',
-            timeout=10)
+            timeout=30)
         connections = response.json()['connections'][:2]
 
         try:
-            return [
+            self.times = [
                 dt_util.datetime_to_time_str(
                     dt_util.as_local(dt_util.utc_from_timestamp(
                         item['from']['departureTimestamp']))
                 )
                 for item in connections
             ]
+            self.times.append(
+                dt_util.as_local(
+                    dt_util.utc_from_timestamp(
+                        connections[0]['from']['departureTimestamp'])) -
+                dt_util.as_local(dt_util.utcnow()))
         except KeyError:
-            return ['n/a']
+            self.times = ['n/a']

@@ -5,9 +5,12 @@
 
 cd "$(dirname "$0")/.."
 
-script/lint
-
-LINT_STATUS=$?
+if [ "$NO_LINT" = "1" ]; then
+  LINT_STATUS=0
+else
+  script/lint
+  LINT_STATUS=$?
+fi
 
 echo "Running tests..."
 

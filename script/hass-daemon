@@ -53,7 +53,7 @@ stop() {
     return 1
   fi
   echo 'Stopping service…' >&2
-  kill -3 $(cat "$PID_FILE")
+  kill $(cat "$PID_FILE")
   while ps -p $(cat "$PID_FILE") > /dev/null 2>&1; do sleep 1;done;
   echo 'Service stopped' >&2
 }

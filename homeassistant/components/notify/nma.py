@@ -4,10 +4,12 @@ homeassistant.components.notify.nma
 NMA (Notify My Android) notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.nma.html
+https://home-assistant.io/components/notify.nma/
 """
 import logging
 import xml.etree.ElementTree as ET
+
+import requests
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
@@ -21,31 +23,20 @@ _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 def get_service(hass, config):
     """ Get the NMA notification service. """
 
-    if not validate_config(config,
+    if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY]},
                            _LOGGER):
         return None
 
-    try:
-        # pylint: disable=unused-variable
-        from requests import Session
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import requests. "
-            "Did you maybe not install the 'Requests' package?")
-
-        return None
-
-    nma = Session()
-    response = nma.get(_RESOURCE + 'verify',
-                       params={"apikey": config[DOMAIN][CONF_API_KEY]})
+    response = requests.get(_RESOURCE + 'verify',
+                            params={"apikey": config[CONF_API_KEY]})
     tree = ET.fromstring(response.content)
 
     if tree[0].tag == 'error':
         _LOGGER.error("Wrong API key supplied. %s", tree[0].text)
-    else:
-        return NmaNotificationService(config[DOMAIN][CONF_API_KEY])
+        return None
+
+    return NmaNotificationService(config[CONF_API_KEY])
 
 
 # pylint: disable=too-few-public-methods
@@ -53,26 +44,20 @@ class NmaNotificationService(BaseNotificationService):
     """ Implements notification service for NMA. """
 
     def __init__(self, api_key):
-        # pylint: disable=no-name-in-module, unused-variable
-        from requests import Session
-
         self._api_key = api_key
-        self._data = {"apikey": self._api_key}
-
-        self.nma = Session()
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
-        title = kwargs.get(ATTR_TITLE)
+        data = {
+            "apikey": self._api_key,
+            "application": 'home-assistant',
+            "event": kwargs.get(ATTR_TITLE),
+            "description": message,
+            "priority": 0,
+        }
 
-        self._data['application'] = 'home-assistant'
-        self._data['event'] = title
-        self._data['description'] = message
-        self._data['priority'] = 0
-
-        response = self.nma.get(_RESOURCE + 'notify',
-                                params=self._data)
+        response = requests.get(_RESOURCE + 'notify', params=data)
         tree = ET.fromstring(response.content)
 
         if tree[0].tag == 'error':

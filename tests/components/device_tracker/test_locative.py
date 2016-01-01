@@ -1,0 +1,205 @@
+"""
+tests.components.device_tracker.locative
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tests the locative device tracker component.
+"""
+
+import unittest
+from unittest.mock import patch
+
+import requests
+
+from homeassistant import bootstrap, const
+import homeassistant.core as ha
+import homeassistant.components.device_tracker as device_tracker
+import homeassistant.components.http as http
+import homeassistant.components.zone as zone
+
+SERVER_PORT = 8126
+HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
+
+hass = None
+
+
+def _url(data={}):
+    """ Helper method to generate urls. """
+    data = "&".join(["{}={}".format(name, value) for name, value in data.items()])
+    return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
+
+
+@patch('homeassistant.components.http.util.get_local_ip',
+       return_value='127.0.0.1')
+def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+    """ Initalizes a Home Assistant server. """
+    global hass
+
+    hass = ha.HomeAssistant()
+
+    # Set up server
+    bootstrap.setup_component(hass, http.DOMAIN, {
+        http.DOMAIN: {
+            http.CONF_SERVER_PORT: SERVER_PORT
+        }
+    })
+
+    # Set up API
+    bootstrap.setup_component(hass, 'api')
+
+    # Set up device tracker
+    bootstrap.setup_component(hass, device_tracker.DOMAIN, {
+        device_tracker.DOMAIN: {
+            'platform': 'locative'
+        }
+    })
+
+    hass.start()
+
+
+def tearDownModule():   # pylint: disable=invalid-name
+    """ Stops the Home Assistant server. """
+    hass.stop()
+
+# Stub out update_config or else Travis CI raises an exception
+@patch('homeassistant.components.device_tracker.update_config')
+class TestLocative(unittest.TestCase):
+    """ Test Locative """
+
+    def test_missing_data(self, update_config):
+        data = {
+            'latitude': 1.0,
+            'longitude': 1.1,
+            'device': '123',
+            'id': 'Home',
+            'trigger': 'enter'
+        }
+
+        # No data
+        req = requests.get(_url({}))
+        self.assertEqual(422, req.status_code)
+
+        # No latitude
+        copy = data.copy()
+        del copy['latitude']
+        req = requests.get(_url(copy))
+        self.assertEqual(422, req.status_code)
+
+        # No device
+        copy = data.copy()
+        del copy['device']
+        req = requests.get(_url(copy))
+        self.assertEqual(422, req.status_code)
+
+        # No location
+        copy = data.copy()
+        del copy['id']
+        req = requests.get(_url(copy))
+        self.assertEqual(422, req.status_code)
+
+        # No trigger
+        copy = data.copy()
+        del copy['trigger']
+        req = requests.get(_url(copy))
+        self.assertEqual(422, req.status_code)
+
+        # Test message
+        copy = data.copy()
+        copy['trigger'] = 'test'
+        req = requests.get(_url(copy))
+        self.assertEqual(200, req.status_code)
+
+        # Unknown trigger
+        copy = data.copy()
+        copy['trigger'] = 'foobar'
+        req = requests.get(_url(copy))
+        self.assertEqual(422, req.status_code)
+
+
+    def test_enter_and_exit(self, update_config):
+        """ Test when there is a known zone """
+        data = {
+            'latitude': 40.7855,
+            'longitude': -111.7367,
+            'device': '123',
+            'id': 'Home',
+            'trigger': 'enter'
+        }
+
+        # Enter the Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'home')
+
+        data['id'] = 'HOME'
+        data['trigger'] = 'exit'
+
+        # Exit Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'not_home')
+
+        data['id'] = 'hOmE'
+        data['trigger'] = 'enter'
+
+        # Enter Home again
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'home')
+
+        data['trigger'] = 'exit'
+
+        # Exit Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'not_home')
+
+        data['id'] = 'work'
+        data['trigger'] = 'enter'
+
+        # Enter Work
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        self.assertEqual(state_name, 'work')
+
+
+    def test_exit_after_enter(self, update_config):
+        """ Test when an exit message comes after an enter message """
+
+        data = {
+            'latitude': 40.7855,
+            'longitude': -111.7367,
+            'device': '123',
+            'id': 'Home',
+            'trigger': 'enter'
+        }
+
+        # Enter Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+
+        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        self.assertEqual(state.state, 'home')
+
+        data['id'] = 'Work'
+
+        # Enter Work
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+
+        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        self.assertEqual(state.state, 'work')
+
+        data['id'] = 'Home'
+        data['trigger'] = 'exit'
+
+        # Exit Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+
+        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        self.assertEqual(state.state, 'work')

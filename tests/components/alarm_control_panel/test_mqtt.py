@@ -101,7 +101,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_home(self.hass)
         self.hass.pool.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_HOME', 0),
+        self.assertEqual(('alarm/command', 'ARM_HOME', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
     def test_arm_home_not_publishes_mqtt_with_invalid_code(self):
@@ -130,7 +130,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_away(self.hass)
         self.hass.pool.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_AWAY', 0),
+        self.assertEqual(('alarm/command', 'ARM_AWAY', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
     def test_arm_away_not_publishes_mqtt_with_invalid_code(self):
@@ -159,7 +159,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_disarm(self.hass)
         self.hass.pool.block_till_done()
-        self.assertEqual(('alarm/command', 'DISARM', 0),
+        self.assertEqual(('alarm/command', 'DISARM', 0, False),
                          self.mock_publish.mock_calls[-1][1])
 
     def test_disarm_not_publishes_mqtt_with_invalid_code(self):

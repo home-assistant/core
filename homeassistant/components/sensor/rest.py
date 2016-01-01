@@ -1,17 +1,17 @@
 """
 homeassistant.components.sensor.rest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The rest sensor will consume JSON responses sent by an exposed REST API.
+The rest sensor will consume responses sent by an exposed REST API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rest.html
+https://home-assistant.io/components/sensor.rest/
 """
+from datetime import timedelta
 import logging
 import requests
-from json import loads
-from datetime import timedelta
 
-from homeassistant.util import Throttle
+from homeassistant.const import (CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
+from homeassistant.util import template, Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,28 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = requests.post(resource, data=payload, timeout=10,
                                      verify=verify_ssl)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error('Missing resource or schema in configuration. '
-                      'Add http:// to your URL.')
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('No route to resource/endpoint. '
-                      'Please check the URL in the configuration file.')
-        return False
-
-    try:
-        data = loads(response.text)
-    except ValueError:
-        _LOGGER.error('No valid JSON in the response in: %s', data)
-        return False
-
-    try:
-        RestSensor.extract_value(data, config.get('variable'))
-    except KeyError:
-        _LOGGER.error('Variable "%s" not found in response: "%s"',
-                      config.get('variable'), data)
+        _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
     if use_get:
@@ -76,38 +62,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif use_post:
         rest = RestDataPost(resource, payload, verify_ssl)
 
-    add_devices([RestSensor(rest,
+    add_devices([RestSensor(hass,
+                            rest,
                             config.get('name', DEFAULT_NAME),
-                            config.get('variable'),
                             config.get('unit_of_measurement'),
-                            config.get('correction_factor', None),
-                            config.get('decimal_places', None))])
+                            config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments
 class RestSensor(Entity):
     """ Implements a REST sensor. """
 
-    def __init__(self, rest, name, variable, unit_of_measurement, corr_factor,
-                 decimal_places):
+    def __init__(self, hass, rest, name, unit_of_measurement, value_template):
+        self._hass = hass
         self.rest = rest
         self._name = name
-        self._variable = variable
-        self._state = 'n/a'
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
-        self._corr_factor = corr_factor
-        self._decimal_places = decimal_places
+        self._value_template = value_template
         self.update()
-
-    @classmethod
-    def extract_value(cls, data, variable):
-        """ Extracts the value using a key name or a path. """
-        if isinstance(variable, list):
-            for variable_item in variable:
-                data = data[variable_item]
-            return data
-        else:
-            return data[variable]
 
     @property
     def name(self):
@@ -129,26 +102,13 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if 'error' in value:
-            self._state = value['error']
-        else:
-            try:
-                if value is not None:
-                    value = RestSensor.extract_value(value, self._variable)
-                    if self._corr_factor is not None \
-                            and self._decimal_places is not None:
-                        self._state = round(
-                            (float(value) *
-                             float(self._corr_factor)),
-                            self._decimal_places)
-                    elif self._corr_factor is not None \
-                            and self._decimal_places is None:
-                        self._state = round(float(value) *
-                                            float(self._corr_factor))
-                    else:
-                        self._state = value
-            except ValueError:
-                self._state = RestSensor.extract_value(value, self._variable)
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            value = template.render_with_possible_json_value(
+                self._hass, self._value_template, value, STATE_UNKNOWN)
+
+        self._state = value
 
 
 # pylint: disable=too-few-public-methods
@@ -158,7 +118,7 @@ class RestDataGet(object):
     def __init__(self, resource, verify_ssl):
         self._resource = resource
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -166,12 +126,10 @@ class RestDataGet(object):
         try:
             response = requests.get(self._resource, timeout=10,
                                     verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
-            self.data = response.json()
+            self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data = None
 
 
 # pylint: disable=too-few-public-methods
@@ -182,7 +140,7 @@ class RestDataPost(object):
         self._resource = resource
         self._payload = payload
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -190,9 +148,7 @@ class RestDataPost(object):
         try:
             response = requests.post(self._resource, data=self._payload,
                                      timeout=10, verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
-            self.data = response.json()
+            self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data = None

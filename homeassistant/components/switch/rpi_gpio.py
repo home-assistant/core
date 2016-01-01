@@ -3,31 +3,9 @@ homeassistant.components.switch.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to control the GPIO pins of a Raspberry Pi.
 
-Note: To use RPi GPIO, Home Assistant must be run as root.
-
-Configuration:
-
-To use the Raspberry GPIO switches you will need to add something like the
-following to your configuration.yaml file.
-
-switch:
-  platform: rpi_gpio
-  invert_logic: false
-  ports:
-    11: Fan Office
-    12: Light Desk
-
-Variables:
-
-invert_logic
-*Optional
-If true, inverts the output logic to ACTIVE LOW. Default is false (ACTIVE HIGH)
-
-ports
-*Required
-An array specifying the GPIO ports to use and the name to use in the frontend.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.rpi_gpio/
 """
-
 import logging
 try:
     import RPi.GPIO as GPIO

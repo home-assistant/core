@@ -3,50 +3,8 @@ homeassistant.components.modbus
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus sensors.
 
-Configuration:
-
-To use the Modbus sensors you will need to add something like the following to
-your configuration.yaml file.
-
-sensor:
-    platform: modbus
-    slave: 1
-    registers:
-        16:
-            name: My integer sensor
-            unit: C
-        24:
-            bits:
-                0:
-                    name: My boolean sensor
-                2:
-                    name: My other boolean sensor
-    coils:
-        0:
-            name: My coil switch
-
-Variables:
-
-slave
-*Required
-Slave number (ignored and can be omitted if not serial Modbus).
-
-unit
-*Required
-Unit to attach to value (optional, ignored for boolean sensors).
-
-registers
-*Required
-Contains a list of relevant registers to read from. It can contain a
-"bits" section, listing relevant bits.
-
-coils
-*Optional
-Contains a list of relevant coils to read from.
-
-Note:
-- Each named register will create an integer sensor.
-- Each named bit will create a boolean sensor.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.modbus/
 """
 import logging
 

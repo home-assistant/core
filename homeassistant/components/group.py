@@ -1,10 +1,11 @@
 """
 homeassistant.components.group
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Provides functionality to group devices that can be turned on or off.
-"""
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/group/
+"""
 import homeassistant.core as ha
 from homeassistant.helpers import generate_entity_id
 from homeassistant.helpers.event import track_state_change
@@ -16,7 +17,6 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 
 DOMAIN = "group"
-DEPENDENCIES = []
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
