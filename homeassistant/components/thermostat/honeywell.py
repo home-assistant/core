@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_AWAY_TEMP = "away_temperature"
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the honeywel thermostat. """
@@ -26,10 +27,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     try:
-        away_temp = float(config.get(CONF_AWAY_TEMP,16))
+        away_temp = float(config.get(CONF_AWAY_TEMP, 16))
     except ValueError:
         _LOGGER.error("value entered for item {} should convert to a number"
                       .format(CONF_AWAY_TEMP))
+        return False
     if username is None or password is None:
         _LOGGER.error("Missing required configuration items %s or %s",
                       CONF_USERNAME, CONF_PASSWORD)
@@ -40,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
-            add_devices([RoundThermostat(evo_api, zone['id'], i == 0,away_temp)])
+            add_devices([RoundThermostat(evo_api, zone['id'], i == 0, away_temp)])
     except socket.error:
         _LOGGER.error(
                 "Connection error logging into the honeywell evohome web service"
