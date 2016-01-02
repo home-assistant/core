@@ -42,7 +42,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
-            add_devices([RoundThermostat(evo_api, zone['id'], i == 0, away_temp)])
+            add_devices([RoundThermostat(evo_api,
+                                         zone['id'],
+                                         i == 0,
+                                         away_temp)])
     except socket.error:
         _LOGGER.error(
                 "Connection error logging into the honeywell evohome web service"
