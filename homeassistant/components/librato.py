@@ -100,7 +100,7 @@ def setup(hass, config):
                     metrics_queue.add(
                         (namespace + 'states.' + state.entity_id + '.' + key),
                         value)
-                except ValueError:
+                except (TypeError, ValueError):
                     pass
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics_listener)
