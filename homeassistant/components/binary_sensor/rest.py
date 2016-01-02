@@ -47,15 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = requests.post(resource, data=payload, timeout=10,
                                      verify=verify_ssl)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error('Missing resource or schema in configuration. '
-                      'Add http:// to your URL.')
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('No route to resource/endpoint: %s',
-                      resource)
+        _LOGGER.error('No route to resource/endpoint: %s', resource)
         return False
 
     if use_get:

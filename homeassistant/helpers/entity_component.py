@@ -113,12 +113,16 @@ class EntityComponent(object):
 
     def _update_entity_states(self, now):
         """ Update the states of all the entities. """
+        with self.lock:
+            # We copy the entities because new entities might be detected
+            # during state update causing deadlocks.
+            entities = list(entity for entity in self.entities.values()
+                            if entity.should_poll)
+
         self.logger.info("Updating %s entities", self.domain)
 
-        with self.lock:
-            for entity in self.entities.values():
-                if entity.should_poll:
-                    entity.update_ha_state(True)
+        for entity in entities:
+            entity.update_ha_state(True)
 
     def _entity_discovered(self, service, info):
         """ Called when a entity is discovered. """
