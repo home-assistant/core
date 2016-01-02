@@ -22,10 +22,14 @@ DEPENDENCIES = ['tellduslive']
 
 SENSOR_TYPE_TEMP = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"
+SENSOR_TYPE_RAINRATE = "rrate"
+SENSOR_TYPE_RAINTOTAL = "rtot"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
     SENSOR_TYPE_HUMIDITY: ['Humidity', '%', "mdi:water"],
+	SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm', "mdi:water"],
+	SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', "mdi:water"],
 }
 
 
