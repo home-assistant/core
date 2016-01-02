@@ -27,6 +27,7 @@ SENSOR_TYPE_RAINTOTAL = "rtot"
 SENSOR_TYPE_WINDDIRECTION = "wdir"
 SENSOR_TYPE_WINDAVERAGE = "wavg"
 SENSOR_TYPE_WINDGUST = "wgust"
+SENSOR_TYPE_WATT = "watt"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
@@ -36,6 +37,7 @@ SENSOR_TYPES = {
 	SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', ""],
 	SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', ""],
 	SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', ""],
+	SENSOR_TYPE_WATT: ['Watt', 'W', ""],
 }
 
 
