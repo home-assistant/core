@@ -56,6 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RoundThermostat(ThermostatDevice):
     """ Represents a Honeywell Round Connected thermostat. """
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, device, zone_id, master, away_temp):
         self.device = device
         self._current_temperature = None
