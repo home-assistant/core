@@ -59,7 +59,7 @@ tellcore-py==1.1.2
 # homeassistant.components.light.vera
 # homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
-https://github.com/pavoni/home-assistant-vera-api/archive/efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip#python-vera==0.1.1
+pyvera==0.2.1
 
 # homeassistant.components.wink
 # homeassistant.components.light.wink
@@ -157,6 +157,9 @@ transmissionrpc==0.11
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
 
+# homeassistant.components.sensor.yr
+xmltodict
+
 # homeassistant.components.sun
 astral==0.8.1
 
@@ -170,7 +173,10 @@ hikvision==0.4
 orvibo==1.1.0
 
 # homeassistant.components.switch.wemo
-pywemo==0.3.3
+pywemo==0.3.7
+
+# homeassistant.components.tellduslive
+tellive-py==0.5.2
 
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
@@ -185,7 +191,7 @@ python-nest==2.6.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-https://github.com/persandstrom/python-verisure/archive/9873c4527f01b1ba1f72ae60f7f35854390d59be.zip#python-verisure==0.2.6
+vsure==0.4.3
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

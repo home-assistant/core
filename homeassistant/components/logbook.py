@@ -28,7 +28,7 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
 """
 
-EVENT_LOGBOOK_ENTRY = 'LOGBOOK_ENTRY'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 GROUP_BY_MINUTES = 15
 
@@ -204,7 +204,7 @@ def humanify(events):
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
 
-            elif event.event_type == EVENT_LOGBOOK_ENTRY:
+            elif event.event_type.lower() == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
                 entity_id = event.data.get(ATTR_ENTITY_ID)
                 if domain is None and entity_id is not None:
