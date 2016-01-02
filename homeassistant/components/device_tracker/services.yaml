@@ -9,7 +9,7 @@ see:
       example: 'FF:FF:FF:FF:FF:FF'
 
     dev_id:
-      description: Id of device (find id in tracked_devices.yaml)
+      description: Id of device (find id in known_devices.yaml)
       example: 'phonedave'
 
     host_name:
