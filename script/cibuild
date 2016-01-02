@@ -5,7 +5,7 @@
 
 cd "$(dirname "$0")/.."
 
-if [ "$TRAVIS_PYTHON_VERSION" != "3.4" ]; then
+if [ "$TRAVIS_PYTHON_VERSION" != "3.5" ]; then
   NO_LINT=1
 fi
 

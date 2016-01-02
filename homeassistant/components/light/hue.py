@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import socket
+import random
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -20,7 +21,7 @@ from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
-    ATTR_EFFECT, EFFECT_COLORLOOP, ATTR_RGB_COLOR)
+    ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -120,10 +121,17 @@ def setup_bridge(host, hass, add_devices_callback):
 
         new_lights = []
 
+        api_name = api.get('config').get('name')
+        if api_name == 'RaspBee-GW':
+            bridge_type = 'deconz'
+        else:
+            bridge_type = 'hue'
+
         for light_id, info in api_states.items():
             if light_id not in lights:
                 lights[light_id] = HueLight(int(light_id), info,
-                                            bridge, update_lights)
+                                            bridge, update_lights,
+                                            bridge_type=bridge_type)
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
@@ -162,11 +170,14 @@ def request_configuration(host, hass, add_devices_callback):
 class HueLight(Light):
     """ Represents a Hue light """
 
-    def __init__(self, light_id, info, bridge, update_lights):
+    # pylint: disable=too-many-arguments
+    def __init__(self, light_id, info, bridge, update_lights,
+                 bridge_type='hue'):
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights
+        self.bridge_type = bridge_type
 
     @property
     def unique_id(self):
@@ -226,14 +237,17 @@ class HueLight(Light):
             command['alert'] = 'lselect'
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
-        else:
+        elif self.bridge_type == 'hue':
             command['alert'] = 'none'
 
         effect = kwargs.get(ATTR_EFFECT)
 
         if effect == EFFECT_COLORLOOP:
             command['effect'] = 'colorloop'
-        else:
+        elif effect == EFFECT_RANDOM:
+            command['hue'] = random.randrange(0, 65535)
+            command['sat'] = random.randrange(150, 254)
+        elif self.bridge_type == 'hue':
             command['effect'] = 'none'
 
         self.bridge.set_light(self.light_id, command)
