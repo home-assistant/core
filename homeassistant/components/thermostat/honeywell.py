@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                          away_temp)])
     except socket.error:
         _LOGGER.error(
-                "Connection error logging into the honeywell evohome web service"
+            "Connection error logging into the honeywell evohome web service"
         )
         return False
 
