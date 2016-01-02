@@ -86,7 +86,9 @@ class TestComponentsLibrato(unittest.TestCase):
             {
                 'battery_level': 99,
                 'another_floatish': '0.5',
-                'string': 'string'
+                'string': 'string',
+                'auto': 'ignored',
+                'node_id': 'also ignored'
             })
         mock_state_change_event(self.hass, state)
         self.hass.pool.block_till_done()
