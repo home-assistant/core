@@ -29,8 +29,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         away_temp = float(config.get(CONF_AWAY_TEMP, 16))
     except ValueError:
-        _LOGGER.error("value entered for item {} should convert to a number"
-                      .format(CONF_AWAY_TEMP))
+        _LOGGER.error("value entered for item %s should convert to a number",
+                      CONF_AWAY_TEMP)
         return False
     if username is None or password is None:
         _LOGGER.error("Missing required configuration items %s or %s",
