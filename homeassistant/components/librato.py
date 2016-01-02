@@ -50,24 +50,6 @@ def setup(hass, config):
 
         with metrics.new_queue() as metrics_queue:
 
-            # First, count the event using service-side aggregation.
-            # http://support.metrics.librato.com/knowledgebase/articles/215845
-            if isinstance(state.entity_id, str):
-                attributes_hash = {
-                    'summarize_function': 'sum',
-                    'aggregate': True
-                }
-                metrics_queue.add(
-                    (namespace +
-                     'events.' +
-                     state.entity_id +
-                     '.' +
-                     event.event_type),
-                    1,
-                    attributes=attributes_hash)
-            else:
-                return
-
             # Attempt to parse the state and try to transform it into a float.
             _state = None
             if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):

@@ -41,21 +41,6 @@ class TestComponentsLibrato(unittest.TestCase):
             }))
 
     @patch('librato.queue.Queue.add')
-    def test_event_submitted(self, mock_librato):
-        """ Test that events are recorded even for unknown states """
-        self.assertTrue(librato_component.setup(self.hass, {
-                'librato': {
-                    'user': 'foo',
-                    'token': 'foo'
-                }
-            }))
-
-        state = ha.State('test.entity', 'string state')
-        mock_state_change_event(self.hass, state)
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, mock_librato.call_count)
-
-    @patch('librato.queue.Queue.add')
     def test_state_submitted(self, mock_librato):
         """ Test that known states are submitted """
         self.assertTrue(librato_component.setup(self.hass, {
@@ -68,7 +53,7 @@ class TestComponentsLibrato(unittest.TestCase):
         state = ha.State('test.entity',STATE_ON)
         mock_state_change_event(self.hass, state)
         self.hass.pool.block_till_done()
-        self.assertEqual(2, mock_librato.call_count)
+        self.assertEqual(1, mock_librato.call_count)
 
     @patch('librato.queue.Queue.add')
     def test_attributes_submitted(self, mock_librato):
@@ -92,4 +77,4 @@ class TestComponentsLibrato(unittest.TestCase):
             })
         mock_state_change_event(self.hass, state)
         self.hass.pool.block_till_done()
-        self.assertEqual(4, mock_librato.call_count)
+        self.assertEqual(3, mock_librato.call_count)
