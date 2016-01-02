@@ -124,9 +124,7 @@ def setup_bridge(host, hass, add_devices_callback):
         api_name = api.get('config').get('name')
         if api_name == 'RaspBee-GW':
             bridge_type = 'deconz'
-            _LOGGER.info("Found DeCONZ gateway (%s)", api_name)
         else:
-            _LOGGER.info("Found Hue bridge (%s)", api_name)
             bridge_type = 'hue'
 
         for light_id, info in api_states.items():
