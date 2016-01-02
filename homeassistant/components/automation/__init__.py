@@ -123,7 +123,7 @@ def _migrate_old_config(config):
 
     _LOGGER.warning(
         'You are using an old configuration format. Please upgrade: '
-        'https://home-assistant.io/components/automation.html')
+        'https://home-assistant.io/components/automation/')
 
     new_conf = {
         CONF_TRIGGER: dict(config),

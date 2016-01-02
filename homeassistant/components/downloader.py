@@ -15,7 +15,6 @@ from homeassistant.helpers import validate_config
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
-DEPENDENCIES = []
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 

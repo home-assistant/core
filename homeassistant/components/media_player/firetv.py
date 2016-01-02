@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info(
                 'Device %s accessible and ready for control', device_id)
         else:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 'Device %s is not registered with firetv-server', device_id)
     except requests.exceptions.RequestException:
         _LOGGER.error('Could not connect to firetv-server at %s', host)

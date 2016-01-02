@@ -12,9 +12,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '9eb39eaba0717922815e673ad1114c685839d890.zip'
-                '#python-wink==0.1.1']
+REQUIREMENTS = ['python-wink==0.3.1']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -45,10 +43,10 @@ class WinkLight(WinkToggleDevice):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is not None:
-            self.wink.setState(True, brightness / 255)
+            self.wink.set_state(True, brightness=brightness / 255)
 
         else:
-            self.wink.setState(True)
+            self.wink.set_state(True)
 
     @property
     def state_attributes(self):

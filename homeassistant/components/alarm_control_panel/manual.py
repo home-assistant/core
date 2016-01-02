@@ -18,8 +18,6 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = []
-
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120

@@ -67,7 +67,7 @@ def create_default_config(config_dir, detect_location=True):
         Returns path to new config file if success, None if failed. """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
-    info = {attr: default for attr, default, *_ in DEFAULT_CONFIG}
+    info = {attr: default for attr, default, _, _ in DEFAULT_CONFIG}
 
     location_info = detect_location and loc_util.detect_location_info()
 

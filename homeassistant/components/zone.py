@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
 
 DOMAIN = "zone"
-DEPENDENCIES = []
 ENTITY_ID_FORMAT = 'zone.{}'
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
 STATE = 'zoning'

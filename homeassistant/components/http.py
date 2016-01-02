@@ -6,24 +6,22 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-import json
-import threading
-import logging
-import time
-import gzip
-import os
-import random
-import string
 from datetime import timedelta
-from homeassistant.util import Throttle
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+import gzip
 from http import cookies
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import json
+import logging
+import os
 from socketserver import ThreadingMixIn
+import ssl
+import threading
+import time
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON,
+    SERVER_PORT, CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CONTENT_ENCODING, HTTP_HEADER_VARY, HTTP_HEADER_CONTENT_LENGTH,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_EXPIRES, HTTP_OK, HTTP_UNAUTHORIZED,
@@ -34,51 +32,43 @@ import homeassistant.util.dt as date_util
 import homeassistant.bootstrap as bootstrap
 
 DOMAIN = "http"
-DEPENDENCIES = []
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
-CONF_SESSIONS_ENABLED = "sessions_enabled"
+CONF_SSL_CERTIFICATE = 'ssl_certificate'
+CONF_SSL_KEY = 'ssl_key'
 
 DATA_API_PASSWORD = 'api_password'
 
 # Throttling time in seconds for expired sessions check
-MIN_SEC_SESSION_CLEARING = timedelta(seconds=20)
+SESSION_CLEAR_INTERVAL = timedelta(seconds=20)
 SESSION_TIMEOUT_SECONDS = 1800
 SESSION_KEY = 'sessionId'
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config=None):
+def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
-    if config is None or DOMAIN not in config:
-        config = {DOMAIN: {}}
+    conf = config.get(DOMAIN, {})
 
-    api_password = util.convert(config[DOMAIN].get(CONF_API_PASSWORD), str)
-
-    no_password_set = api_password is None
-
-    if no_password_set:
-        api_password = util.get_random_string()
+    api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
 
     # If no server host is given, accept all incoming requests
-    server_host = config[DOMAIN].get(CONF_SERVER_HOST, '0.0.0.0')
-
-    server_port = config[DOMAIN].get(CONF_SERVER_PORT, SERVER_PORT)
-
-    development = str(config[DOMAIN].get(CONF_DEVELOPMENT, "")) == "1"
-
-    sessions_enabled = config[DOMAIN].get(CONF_SESSIONS_ENABLED, True)
+    server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
+    server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
+    development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development, no_password_set, sessions_enabled)
+            development, ssl_certificate, ssl_key)
     except OSError:
-        # Happens if address already in use
+        # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
         return False
 
@@ -88,7 +78,8 @@ def setup(hass, config=None):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
+    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+                              ssl_certificate is not None)
 
     return True
 
@@ -103,23 +94,28 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development, no_password_set,
-                 sessions_enabled):
+                 hass, api_password, development, ssl_certificate, ssl_key):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
         self.hass = hass
         self.api_password = api_password
         self.development = development
-        self.no_password_set = no_password_set
         self.paths = []
-        self.sessions = SessionStore(sessions_enabled)
+        self.sessions = SessionStore()
+        self.use_ssl = ssl_certificate is not None
 
         # We will lazy init this one if needed
         self.event_forwarder = None
 
         if development:
             _LOGGER.info("running http in development mode")
+
+        if ssl_certificate is not None:
+            wrap_kwargs = {'certfile': ssl_certificate}
+            if ssl_key is not None:
+                wrap_kwargs['keyfile'] = ssl_key
+            self.socket = ssl.wrap_socket(self.socket, **wrap_kwargs)
 
     def start(self):
         """ Starts the HTTP server. """
@@ -129,8 +125,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
+        protocol = 'https' if self.use_ssl else 'http'
+
         _LOGGER.info(
-            "Starting web interface at http://%s:%d", *self.server_address)
+            "Starting web interface at %s://%s:%d",
+            protocol, self.server_address[0], self.server_address[1])
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
@@ -162,12 +161,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, req, client_addr, server):
         """ Contructor, call the base constructor and set up session """
-        self._session = None
+        # Track if this was an authenticated request
+        self.authenticated = False
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
     def log_message(self, fmt, *arguments):
         """ Redirect built-in log to HA logging """
-        if self.server.no_password_set:
+        if self.server.api_password is None:
             _LOGGER.info(fmt, *arguments)
         else:
             _LOGGER.info(
@@ -178,12 +178,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
-        # Read query input
-        data = parse_qs(url.query)
-
-        # parse_qs gives a list for each value, take the latest element
-        for key in data:
-            data[key] = data[key][-1]
+        # Read query input. parse_qs gives a list for each value, we want last
+        data = {key: data[-1] for key, data in parse_qs(url.query).items()}
 
         # Did we get post input ?
         content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
@@ -202,18 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self._session = self.get_session()
-        if self.server.no_password_set:
-            api_password = self.server.api_password
-        else:
-            api_password = self.headers.get(HTTP_HEADER_HA_AUTH)
-
-            if not api_password and DATA_API_PASSWORD in data:
-                api_password = data[DATA_API_PASSWORD]
-
-            if not api_password and self._session is not None:
-                api_password = self._session.cookie_values.get(
-                    CONF_API_PASSWORD)
+        self.authenticated = (self.server.api_password is None
+                              or self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password
+                              or data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password
+                              or self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -246,18 +236,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         # Did we find a handler for the incoming request?
         if handle_request_method:
-
             # For some calls we need a valid password
-            if require_auth and api_password != self.server.api_password:
+            if require_auth and not self.authenticated:
                 self.write_json_message(
                     "API password missing or incorrect.", HTTP_UNAUTHORIZED)
+                return
 
-            else:
-                if self._session is None and require_auth:
-                    self._session = self.server.sessions.create(
-                        api_password)
-
-                handle_request_method(self, path_match, data)
+            handle_request_method(self, path_match, data)
 
         elif path_matched_but_not_method:
             self.send_response(HTTP_METHOD_NOT_ALLOWED)
@@ -308,18 +293,30 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
 
-    def write_file(self, path):
+    def write_text(self, message, status_code=HTTP_OK):
+        """ Helper method to return a text message to the caller. """
+        self.send_response(status_code)
+        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+
+        self.set_session_cookie_header()
+
+        self.end_headers()
+
+        self.wfile.write(message.encode("UTF-8"))
+
+    def write_file(self, path, cache_headers=True):
         """ Returns a file to the user. """
         try:
             with open(path, 'rb') as inp:
-                self.write_file_pointer(self.guess_type(path), inp)
+                self.write_file_pointer(self.guess_type(path), inp,
+                                        cache_headers)
 
         except IOError:
             self.send_response(HTTP_NOT_FOUND)
             self.end_headers()
             _LOGGER.exception("Unable to serve %s", path)
 
-    def write_file_pointer(self, content_type, inp):
+    def write_file_pointer(self, content_type, inp, cache_headers=True):
         """
         Helper function to write a file pointer to the user.
         Does not do error handling.
@@ -329,7 +326,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_response(HTTP_OK)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
 
-        self.set_cache_header()
+        if cache_headers:
+            self.set_cache_header()
         self.set_session_cookie_header()
 
         if do_gzip:
@@ -356,123 +354,126 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def set_cache_header(self):
         """ Add cache headers if not in development """
-        if not self.server.development:
-            # 1 year in seconds
-            cache_time = 365 * 86400
+        if self.server.development:
+            return
 
-            self.send_header(
-                HTTP_HEADER_CACHE_CONTROL,
-                "public, max-age={}".format(cache_time))
-            self.send_header(
-                HTTP_HEADER_EXPIRES,
-                self.date_time_string(time.time()+cache_time))
+        # 1 year in seconds
+        cache_time = 365 * 86400
+
+        self.send_header(
+            HTTP_HEADER_CACHE_CONTROL,
+            "public, max-age={}".format(cache_time))
+        self.send_header(
+            HTTP_HEADER_EXPIRES,
+            self.date_time_string(time.time()+cache_time))
 
     def set_session_cookie_header(self):
-        """ Add the header for the session cookie """
-        if self.server.sessions.enabled and self._session is not None:
-            existing_sess_id = self.get_current_session_id()
-
-            if existing_sess_id != self._session.session_id:
-                self.send_header(
-                    'Set-Cookie',
-                    SESSION_KEY+'='+self._session.session_id)
-
-    def get_session(self):
-        """ Get the requested session object from cookie value """
-        if self.server.sessions.enabled is not True:
+        """ Add the header for the session cookie and return session id. """
+        if not self.authenticated:
             return None
 
-        session_id = self.get_current_session_id()
+        session_id = self.get_cookie_session_id()
+
         if session_id is not None:
-            session = self.server.sessions.get(session_id)
-            if session is not None:
-                session.reset_expiry()
-            return session
+            self.server.sessions.extend_validation(session_id)
+            return session_id
 
-        return None
+        self.send_header(
+            'Set-Cookie',
+            '{}={}'.format(SESSION_KEY, self.server.sessions.create())
+        )
 
-    def get_current_session_id(self):
+        return session_id
+
+    def verify_session(self):
+        """ Verify that we are in a valid session. """
+        return self.get_cookie_session_id() is not None
+
+    def get_cookie_session_id(self):
         """
             Extracts the current session id from the
-            cookie or returns None if not set
+            cookie or returns None if not set or invalid
         """
+        if 'Cookie' not in self.headers:
+            return None
+
         cookie = cookies.SimpleCookie()
+        try:
+            cookie.load(self.headers["Cookie"])
+        except cookies.CookieError:
+            return None
 
-        if self.headers.get('Cookie', None) is not None:
-            cookie.load(self.headers.get("Cookie"))
+        morsel = cookie.get(SESSION_KEY)
 
-        if cookie.get(SESSION_KEY, False):
-            return cookie[SESSION_KEY].value
+        if morsel is None:
+            return None
+
+        session_id = cookie[SESSION_KEY].value
+
+        if self.server.sessions.is_valid(session_id):
+            return session_id
 
         return None
 
+    def destroy_session(self):
+        """ Destroys session. """
+        session_id = self.get_cookie_session_id()
 
-class ServerSession:
-    """ A very simple session class """
-    def __init__(self, session_id):
-        """ Set up the expiry time on creation """
-        self._expiry = 0
-        self.reset_expiry()
-        self.cookie_values = {}
-        self.session_id = session_id
+        if session_id is None:
+            return
 
-    def reset_expiry(self):
-        """ Resets the expiry based on current time """
-        self._expiry = date_util.utcnow() + timedelta(
-            seconds=SESSION_TIMEOUT_SECONDS)
+        self.send_header('Set-Cookie', '')
+        self.server.sessions.destroy(session_id)
 
-    @property
-    def is_expired(self):
-        """ Return true if the session is expired based on the expiry time """
-        return self._expiry < date_util.utcnow()
+
+def session_valid_time():
+    """ Time till when a session will be valid. """
+    return date_util.utcnow() + timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
 
 class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
-    def __init__(self, enabled=True):
+    def __init__(self):
         """ Set up the session store """
         self._sessions = {}
-        self.enabled = enabled
-        self.session_lock = threading.RLock()
+        self._lock = threading.RLock()
 
-    @Throttle(MIN_SEC_SESSION_CLEARING)
-    def remove_expired(self):
+    @util.Throttle(SESSION_CLEAR_INTERVAL)
+    def _remove_expired(self):
         """ Remove any expired sessions. """
-        if self.session_lock.acquire(False):
-            try:
-                keys = []
-                for key in self._sessions.keys():
-                    keys.append(key)
+        now = date_util.utcnow()
+        for key in [key for key, valid_time in self._sessions.items()
+                    if valid_time < now]:
+            self._sessions.pop(key)
 
-                for key in keys:
-                    if self._sessions[key].is_expired:
-                        del self._sessions[key]
-                        _LOGGER.info("Cleared expired session %s", key)
-            finally:
-                self.session_lock.release()
+    def is_valid(self, key):
+        """ Return True if a valid session is given. """
+        with self._lock:
+            self._remove_expired()
 
-    def add(self, key, session):
-        """ Add a new session to the list of tracked sessions """
-        self.remove_expired()
-        with self.session_lock:
-            self._sessions[key] = session
+            return (key in self._sessions and
+                    self._sessions[key] > date_util.utcnow())
 
-    def get(self, key):
-        """ get a session by key """
-        self.remove_expired()
-        session = self._sessions.get(key, None)
-        if session is not None and session.is_expired:
-            return None
-        return session
+    def extend_validation(self, key):
+        """ Extend a session validation time. """
+        with self._lock:
+            if key not in self._sessions:
+                return
+            self._sessions[key] = session_valid_time()
 
-    def create(self, api_password):
-        """ Creates a new session and adds it to the sessions """
-        if self.enabled is not True:
-            return None
+    def destroy(self, key):
+        """ Destroy a session by key. """
+        with self._lock:
+            self._sessions.pop(key, None)
 
-        chars = string.ascii_letters + string.digits
-        session_id = ''.join([random.choice(chars) for i in range(20)])
-        session = ServerSession(session_id)
-        session.cookie_values[CONF_API_PASSWORD] = api_password
-        self.add(session_id, session)
-        return session
+    def create(self):
+        """ Creates a new session. """
+        with self._lock:
+            session_id = util.get_random_string(20)
+
+            while session_id in self._sessions:
+                session_id = util.get_random_string(20)
+
+            self._sessions[session_id] = session_valid_time()
+
+            return session_id

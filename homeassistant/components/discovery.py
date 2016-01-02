@@ -17,8 +17,7 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "discovery"
-DEPENDENCIES = []
-REQUIREMENTS = ['netdisco==0.5.1']
+REQUIREMENTS = ['netdisco==0.5.2']
 
 SCAN_INTERVAL = 300  # seconds
 

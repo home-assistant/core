@@ -9,7 +9,6 @@ https://home-assistant.io/components/script/
 """
 import logging
 from datetime import timedelta
-import homeassistant.util.dt as date_util
 from itertools import islice
 import threading
 
@@ -17,6 +16,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import slugify, split_entity_id
+import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, STATE_ON, SERVICE_TURN_ON,
     SERVICE_TURN_OFF)
@@ -73,11 +73,12 @@ def setup(hass, config):
 
     for object_id, cfg in config[DOMAIN].items():
         if object_id != slugify(object_id):
-            _LOGGER.warn("Found invalid key for script: %s. Use %s instead.",
-                         object_id, slugify(object_id))
+            _LOGGER.warning("Found invalid key for script: %s. Use %s instead",
+                            object_id, slugify(object_id))
             continue
-        if not cfg.get(CONF_SEQUENCE):
-            _LOGGER.warn("Missing key 'sequence' for script %s", object_id)
+        if not isinstance(cfg.get(CONF_SEQUENCE), list):
+            _LOGGER.warning("Key 'sequence' for script %s should be a list",
+                            object_id)
             continue
         alias = cfg.get(CONF_ALIAS, object_id)
         script = Script(hass, object_id, alias, cfg[CONF_SEQUENCE])
@@ -200,7 +201,7 @@ class Script(ToggleEntity):
                      self._last_action)
         domain, service = split_entity_id(conf_service)
         data = action.get(CONF_SERVICE_DATA, {})
-        self.hass.services.call(domain, service, data)
+        self.hass.services.call(domain, service, data, True)
 
     def _fire_event(self, action):
         """ Fires an event. """

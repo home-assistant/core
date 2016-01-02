@@ -82,7 +82,7 @@ def _setup_component(hass, domain, config):
         return True
     component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in component.DEPENDENCIES
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
                     if dep not in hass.config.components]
 
     if missing_deps:
@@ -106,7 +106,7 @@ def _setup_component(hass, domain, config):
 
     # Assumption: if a component does not depend on groups
     # it communicates with devices
-    if group.DOMAIN not in component.DEPENDENCIES:
+    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
         hass.pool.add_worker()
 
     hass.bus.fire(
@@ -133,14 +133,13 @@ def prepare_setup_platform(hass, config, domain, platform_name):
         return platform
 
     # Load dependencies
-    if hasattr(platform, 'DEPENDENCIES'):
-        for component in platform.DEPENDENCIES:
-            if not setup_component(hass, component, config):
-                _LOGGER.error(
-                    'Unable to prepare setup for platform %s because '
-                    'dependency %s could not be initialized', platform_path,
-                    component)
-                return None
+    for component in getattr(platform, 'DEPENDENCIES', []):
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because '
+                'dependency %s could not be initialized', platform_path,
+                component)
+            return None
 
     if not _handle_requirements(hass, platform, platform_path):
         return None
@@ -276,7 +275,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                               datefmt='%y-%m-%d %H:%M:%S'))
         logger = logging.getLogger('')
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)  # this sets the minimum log level
+        logger.setLevel(logging.INFO)
 
     else:
         _LOGGER.error(

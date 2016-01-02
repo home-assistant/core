@@ -98,7 +98,7 @@ class NmapDeviceScanner(object):
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-F --host-timeout 5"
+        options = "-F --host-timeout 5s"
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

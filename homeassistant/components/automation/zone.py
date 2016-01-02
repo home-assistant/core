@@ -46,6 +46,7 @@ def trigger(hass, config, action):
         from_match = _in_zone(hass, zone_entity_id, from_s) if from_s else None
         to_match = _in_zone(hass, zone_entity_id, to_s)
 
+        # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
             action()

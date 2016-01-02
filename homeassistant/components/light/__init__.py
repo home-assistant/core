@@ -21,7 +21,6 @@ import homeassistant.util.color as color_util
 
 
 DOMAIN = "light"
-DEPENDENCIES = []
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
@@ -51,6 +50,7 @@ FLASH_LONG = "long"
 # Apply an effect to the light, can be EFFECT_COLORLOOP
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
@@ -229,7 +229,8 @@ def setup(hass, config):
         if dat.get(ATTR_FLASH) in (FLASH_SHORT, FLASH_LONG):
             params[ATTR_FLASH] = dat[ATTR_FLASH]
 
-        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE):
+        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE,
+                                    EFFECT_RANDOM):
             params[ATTR_EFFECT] = dat[ATTR_EFFECT]
 
         for light in target_lights:

@@ -10,7 +10,6 @@ import logging
 from collections import OrderedDict
 
 DOMAIN = 'logger'
-DEPENDENCIES = []
 
 LOGSEVERITY = {
     'CRITICAL': 50,
@@ -77,8 +76,12 @@ def setup(hass, config=None):
 
         logfilter[LOGGER_LOGS] = logs
 
+    logger = logging.getLogger('')
+    logger.setLevel(logging.NOTSET)
+
     # Set log filter for all log handler
     for handler in logging.root.handlers:
+        handler.setLevel(logging.NOTSET)
         handler.addFilter(HomeAssistantLogFilter(logfilter))
 
     return True

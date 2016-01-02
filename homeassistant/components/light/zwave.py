@@ -6,15 +6,13 @@ Support for Z-Wave lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.zwave/
 """
+# Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from openzwave.network import ZWaveNetwork
-from pydispatch import dispatcher
-
-import homeassistant.components.zwave as zwave
+from threading import Timer
 
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-from threading import Timer
+import homeassistant.components.zwave as zwave
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -51,6 +49,9 @@ class ZwaveDimmer(Light):
     """ Provides a Z-Wave dimmer. """
     # pylint: disable=too-many-arguments
     def __init__(self, value):
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
+
         self._value = value
         self._node = value.node
 

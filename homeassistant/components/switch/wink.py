@@ -11,9 +11,7 @@ import logging
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '9eb39eaba0717922815e673ad1114c685839d890.zip'
-                '#python-wink==0.1.1']
+REQUIREMENTS = ['python-wink==0.3.1']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

@@ -97,5 +97,5 @@ class EfergySensor(Entity):
                 self._state = response.json()['sum']
             else:
                 self._state = 'Unknown'
-        except RequestException:
+        except (RequestException, ValueError):
             _LOGGER.warning('Could not update status for %s', self.name)
