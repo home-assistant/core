@@ -116,7 +116,7 @@ class AlexaResponse(object):
         self.should_end_session = True
         if intent is not None and 'slots' in intent:
             self.variables = {key: value['value'] for key, value
-                              in intent['slots'].items()}
+                              in intent['slots'].items() if 'value' in value}
         else:
             self.variables = {}
 

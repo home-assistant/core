@@ -15,6 +15,10 @@ omit =
     homeassistant/components/*/modbus.py
 
     homeassistant/components/*/tellstick.py
+
+    homeassistant/components/tellduslive.py
+    homeassistant/components/*/tellduslive.py
+
     homeassistant/components/*/vera.py
 
     homeassistant/components/ecobee.py
@@ -41,7 +45,6 @@ omit =
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
-    homeassistant/components/device_tracker/geofancy.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
@@ -98,6 +101,7 @@ omit =
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
+    homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py

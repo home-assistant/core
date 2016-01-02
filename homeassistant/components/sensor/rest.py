@@ -10,7 +10,7 @@ from datetime import timedelta
 import logging
 import requests
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import (CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
 from homeassistant.util import template, Throttle
 from homeassistant.helpers.entity import Entity
 
@@ -47,15 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             response = requests.post(resource, data=payload, timeout=10,
                                      verify=verify_ssl)
         if not response.ok:
-            _LOGGER.error('Response status is "%s"', response.status_code)
+            _LOGGER.error("Response status is '%s'", response.status_code)
             return False
     except requests.exceptions.MissingSchema:
-        _LOGGER.error('Missing resource or schema in configuration. '
-                      'Add http:// to your URL.')
+        _LOGGER.error("Missing resource or schema in configuration. "
+                      "Add http:// or https:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('No route to resource/endpoint. '
-                      'Please check the URL in the configuration file.')
+        _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
     if use_get:
@@ -78,7 +77,7 @@ class RestSensor(Entity):
         self._hass = hass
         self.rest = rest
         self._name = name
-        self._state = 'n/a'
+        self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self.update()
@@ -103,13 +102,13 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if 'error' in value:
-            self._state = value['error']
-        else:
-            if self._value_template is not None:
-                value = template.render_with_possible_json_value(
-                    self._hass, self._value_template, value, 'N/A')
-            self._state = value
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            value = template.render_with_possible_json_value(
+                self._hass, self._value_template, value, STATE_UNKNOWN)
+
+        self._state = value
 
 
 # pylint: disable=too-few-public-methods
@@ -119,7 +118,7 @@ class RestDataGet(object):
     def __init__(self, resource, verify_ssl):
         self._resource = resource
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -127,12 +126,10 @@ class RestDataGet(object):
         try:
             response = requests.get(self._resource, timeout=10,
                                     verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data = None
 
 
 # pylint: disable=too-few-public-methods
@@ -143,7 +140,7 @@ class RestDataPost(object):
         self._resource = resource
         self._payload = payload
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -151,9 +148,7 @@ class RestDataPost(object):
         try:
             response = requests.post(self._resource, data=self._payload,
                                      timeout=10, verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
             self.data = response.text
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint.")
-            self.data['error'] = 'N/A'
+            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
+            self.data = None

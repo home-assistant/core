@@ -6,7 +6,7 @@ python3 -m pip install -r requirements_all.txt
 REQ_STATUS=$?
 
 echo  "Installing development dependencies.."
-python3 -m pip install flake8 pylint coveralls pytest pytest-cov
+python3 -m pip install -r requirements_test.txt
 
 REQ_DEV_STATUS=$?
 
