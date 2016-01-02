@@ -96,7 +96,6 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    #@Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data with a shell command. """
         _LOGGER.info('Running command: %s', self.command)
