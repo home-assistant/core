@@ -1,10 +1,10 @@
 """
-homeassistant.components.option
+homeassistant.components.select
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to interface with options, where one option out of an option group can be selected.
+Component that allows to select one possible option out of a selection of options.
 
 For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/option/
+at https://home-assistant.io/components/select/
 """
 import logging
 
@@ -15,21 +15,21 @@ from homeassistant.const import SERVICE_SET_OPTION, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-DOMAIN = 'option'
+DOMAIN = 'select'
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# strings that represents the desired option
+# string that represents the desired option
 ATTR_OPTION = "option"
+
+# string that represents all available options
 ATTR_OPTIONS = "options"
 
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_PLATFORMS = {
 }
-
-DEVICE_NAME = 'Active HDMI device'
 
 
 def set_option(hass, option, entity_id=None):
@@ -43,7 +43,7 @@ def set_option(hass, option, entity_id=None):
 
 
 def setup(hass, config):
-    """ Setup options. """
+    """ Setup selects. """
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
@@ -53,8 +53,8 @@ def setup(hass, config):
         # Get and validate data
         dat = service.data
 
-        # Convert the entity ids to valid light ids
-        target_options = component.extract_from_service(service)
+        # Convert the entity ids to valid select ids
+        target_selects = component.extract_from_service(service)
 
         option = service.data.get(ATTR_OPTION)
 
@@ -64,12 +64,12 @@ def setup(hass, config):
                 SERVICE_SET_OPTION, ATTR_OPTION)
 
         else:
-            for target_option in target_options:
-                target_option.switch(option)
+            for target_select in target_selects:
+                target_select.select(option)
 
-            for target_option in target_options:
-                if target_option.should_poll:
-                    target_option.update_ha_state(True)
+            for target_select in target_selects:
+                if target_select.should_poll:
+                    target_select.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -83,22 +83,12 @@ def setup(hass, config):
     return True
 
 
-class OptionDevice(Entity):
-    """ Represents an option within Home Assistant. """
-
-    @property
-    def name(self):
-        """ Returns the name of the entity. """
-        return DEVICE_NAME
+class SelectableDevice(Entity):
+    """ Represents a select within Home Assistant. """
 
     @property
     def state(self):
-        """ Returns the state of the entity. """
-        return self.option
-
-    @property
-    def option(self):
-        """ Returns the active option of the entity. """
+        """ Returns the selected option of the entity. """
         return None
 
     @property
@@ -106,7 +96,7 @@ class OptionDevice(Entity):
         """ Returns the list of available options for this entity. """
         return []
 
-    def switch(self, option, **kwargs):
+    def select(self, option, **kwargs):
         """ Select the option 'option' for this entity. """
         pass
 
@@ -114,7 +104,6 @@ class OptionDevice(Entity):
     def state_attributes(self):
         """ Returns optional state attributes. """
         data = {
-            ATTR_OPTION: self.option,
             ATTR_OPTIONS: self.options,
         }
 

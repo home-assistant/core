@@ -1,10 +1,10 @@
 """
-homeassistant.components.option.demo
+homeassistant.components.select.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Demo platform that has two fake options.
+Demo platform that has two fake select boxes.
 """
-from homeassistant.components.option import OptionDevice
+from homeassistant.components.select import SelectableDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 
@@ -12,13 +12,13 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return demo switches. """
     add_devices_callback([
-        DemoOption('Channel', ['Channel 1', 'Channel 2', 'Channel 3'], 'Channel 1', None),
-        DemoOption('Level', ['Level 1', 'Level 2'], 'Level 2', 'mdi:air-conditioner')
+        DemoSelect('Channel', ['Channel 1', 'Channel 2', 'Channel 3'], 'Channel 1', None),
+        DemoSelect('Level', ['Level 1', 'Level 2'], 'Level 2', 'mdi:air-conditioner')
     ])
 
 
-class DemoOption(OptionDevice):
-    """ Provides a demo option. """
+class DemoSelect(SelectableDevice):
+    """ Provides a demo select. """
     def __init__(self, name, options, active_option, icon):
         self._name = name or DEVICE_DEFAULT_NAME
         self._options = options
@@ -27,7 +27,7 @@ class DemoOption(OptionDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo switch. """
+        """ No polling needed for a demo select. """
         return False
 
     @property
@@ -41,16 +41,16 @@ class DemoOption(OptionDevice):
         return self._icon
 
     @property
-    def option(self):
-        """ Returns the state of the entity. """
+    def state(self):
+        """ Returns the last selected option. """
         return self._active_option
 
     @property
     def options(self):
-        """ Returns the state of the entity. """
+        """ Returns the available options. """
         return self._options
 
-    def switch(self, option, **kwargs):
-        """ Turn the entity to option 'option'. """
+    def select(self, option, **kwargs):
+        """ Selects the option 'option'. """
         self._active_option = option
         self.update_ha_state()

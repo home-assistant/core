@@ -1,0 +1,13 @@
+# Describes the format for available selects
+
+set_option:
+  description: Selects an option
+
+  fields:
+    entity_id:
+      description: Name(s) of the selectable entity
+      example: 'fan.select'
+
+    option:
+      description: Name of the option to select
+      example: 'Level 1'
