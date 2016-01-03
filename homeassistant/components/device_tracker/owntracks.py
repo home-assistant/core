@@ -49,8 +49,8 @@ def setup_scanner(hass, config, see):
             kwargs['battery'] = data['batt']
 
         see(**kwargs)
-        
-    
+
+
     def owntracks_event_update(topic, payload, qos):
         """ MQTT event (geofences) received. """
 
@@ -67,20 +67,21 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
-            
+
         # check if in "home" fence or other zone
         location = ''
         if data['event'] == 'enter':
-            
+
             if data['desc'] == 'home':
                 location = STATE_HOME
             else:
                 location = data['desc']
-            
+
         elif data['event'] == 'leave':
             location = STATE_NOT_HOME
         else:
-            logging.getLogger(__name__).error('Misformatted mqtt msgs, _type=transition, event=%s', data['event'])
+            logging.getLogger(__name__).error('Misformatted mqtt msgs, _type=transition, event=%s',
+                                              data['event'])
             return
 
         parts = topic.split('/')
@@ -94,10 +95,10 @@ def setup_scanner(hass, config, see):
             kwargs['gps_accuracy'] = data['acc']
 
         see(**kwargs)
-    
-        
+
+
     use_events = config.get(CONF_TRANSITION_EVENTS)
-   
+
     if use_events:
         mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
     else:
