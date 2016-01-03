@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Command Sensor"
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+DEFAULT_MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-argument
@@ -31,6 +31,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         return False
 
     data = CommandSensorData(config.get('command'))
+
+    min_time = config.get('min_interval')
+    if min_time is None:
+        min_time = DEFAULT_MIN_TIME_BETWEEN_UPDATES
+    else:
+        min_time = timedelta(minutes=min_time)
+
+    data.update = Throttle(min_time)(data.update)
 
     add_devices_callback([CommandSensor(
         hass,
@@ -88,7 +96,6 @@ class CommandSensorData(object):
         self.command = command
         self.value = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data with a shell command. """
         _LOGGER.info('Running command: %s', self.command)
