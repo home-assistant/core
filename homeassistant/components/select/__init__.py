@@ -11,12 +11,14 @@ import logging
 import os
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import SERVICE_SET_OPTION, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'select'
 SCAN_INTERVAL = 30
+
+SERVICE_SET_OPTION = 'set_option'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
