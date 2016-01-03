@@ -1,6 +1,6 @@
 """
 homeassistant.components.device_tracker.owntracks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 OwnTracks platform for the device tracker.
 
 For more details about this platform, please refer to the documentation at
@@ -17,6 +17,7 @@ DEPENDENCIES = ['mqtt']
 CONF_TRANSITION_EVENTS = 'use_events'
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
+
 
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
@@ -50,7 +51,6 @@ def setup_scanner(hass, config, see):
 
         see(**kwargs)
 
-
     def owntracks_event_update(topic, payload, qos):
         """ MQTT event (geofences) received. """
 
@@ -67,7 +67,6 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
-
         # check if in "home" fence or other zone
         location = ''
         if data['event'] == 'enter':
@@ -80,8 +79,9 @@ def setup_scanner(hass, config, see):
         elif data['event'] == 'leave':
             location = STATE_NOT_HOME
         else:
-            logging.getLogger(__name__).error('Misformatted mqtt msgs, _type=transition, event=%s',
-                                              data['event'])
+            logging.getLogger(__name__).error(
+                'Misformatted mqtt msgs, _type=transition, event=%s',
+                data['event'])
             return
 
         parts = topic.split('/')
@@ -95,7 +95,6 @@ def setup_scanner(hass, config, see):
             kwargs['gps_accuracy'] = data['acc']
 
         see(**kwargs)
-
 
     use_events = config.get(CONF_TRANSITION_EVENTS)
 
