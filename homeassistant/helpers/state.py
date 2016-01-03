@@ -1,5 +1,6 @@
 """Helpers that help with state related things."""
 from collections import defaultdict
+import json
 import logging
 
 from homeassistant.core import State
@@ -82,10 +83,12 @@ def reproduce_state(hass, states, blocking=False):
             service_domain = state.domain
 
         # We group service calls for entities by service call
-        key = (service_domain, service, tuple(state.attributes.items()))
+        # json used to create a hashable version of dict with maybe lists in it
+        key = (service_domain, service,
+               json.dumps(state.attributes, sort_keys=True))
         to_call[key].append(state.entity_id)
 
     for (service_domain, service, service_data), entity_ids in to_call.items():
-        data = dict(service_data)
+        data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
         hass.services.call(service_domain, service, data, blocking)

@@ -91,6 +91,25 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, last_call.service)
         self.assertEqual(['light.test'], last_call.data.get('entity_id'))
 
+    def test_reproduce_state_with_complex_service_data(self):
+        calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
+
+        self.hass.states.set('light.test', 'off')
+
+        complex_data = ['hello', {'11': '22'}]
+
+        state.reproduce_state(self.hass, ha.State('light.test', 'on', {
+            'complex': complex_data
+        }))
+
+        self.hass.pool.block_till_done()
+
+        self.assertTrue(len(calls) > 0)
+        last_call = calls[-1]
+        self.assertEqual('light', last_call.domain)
+        self.assertEqual(SERVICE_TURN_ON, last_call.service)
+        self.assertEqual(complex_data, last_call.data.get('complex'))
+
     def test_reproduce_state_with_group(self):
         light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
