@@ -82,21 +82,21 @@ def if_action(hass, config):
     if before is None:
         before_func = lambda: None
     elif before == EVENT_SUNRISE:
-        before_func = lambda: sun.next_rising_utc(hass) + before_offset
+        before_func = lambda: sun.next_rising(hass) + before_offset
     else:
-        before_func = lambda: sun.next_setting_utc(hass) + before_offset
+        before_func = lambda: sun.next_setting(hass) + before_offset
 
     if after is None:
         after_func = lambda: None
     elif after == EVENT_SUNRISE:
-        after_func = lambda: sun.next_rising_utc(hass) + after_offset
+        after_func = lambda: sun.next_rising(hass) + after_offset
     else:
-        after_func = lambda: sun.next_setting_utc(hass) + after_offset
+        after_func = lambda: sun.next_setting(hass) + after_offset
 
     def time_if():
         """ Validate time based if-condition """
 
-        now = dt_util.utcnow()
+        now = dt_util.now()
         before = before_func()
         after = after_func()
 
