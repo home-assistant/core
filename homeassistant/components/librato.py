@@ -13,6 +13,8 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
 
 _LOGGER = logging.getLogger(__name__)
 
+logging.getLogger("librato").setLevel(logging.WARNING)
+
 DOMAIN = "librato"
 DEPENDENCIES = []
 
