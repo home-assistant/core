@@ -73,5 +73,5 @@ class EliqSensor(Entity):
         try:
             response = self.api.get_data_now(channelid=self.channel_id)
             self._state = int(response.power)
-        except TypeError: # raised by eliqonline library on any HTTP error
+        except TypeError:  # raised by eliqonline library on any HTTP error
             pass
