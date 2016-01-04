@@ -46,6 +46,7 @@ class EliqSensor(Entity):
 
         self.api = api
         self.channel_id = channel_id
+        self.update()
 
     @property
     def name(self):
@@ -69,5 +70,8 @@ class EliqSensor(Entity):
 
     def update(self):
         """ Gets the latest data. """
-        response = self.api.get_data_now(channelid=self.channel_id)
-        self._state = int(response.power)
+        try:
+            response = self.api.get_data_now(channelid=self.channel_id)
+            self._state = int(response.power)
+        except:
+            pass
