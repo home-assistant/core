@@ -46,7 +46,6 @@ class EliqSensor(Entity):
 
         self.api = api
         self.channel_id = channel_id
-        self.update()
 
     @property
     def name(self):
