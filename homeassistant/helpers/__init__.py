@@ -36,7 +36,7 @@ def extract_entity_ids(hass, service):
     service_ent_id = service.data[ATTR_ENTITY_ID]
 
     if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id.lower()])
+        return group.expand_entity_ids(hass, [service_ent_id])
 
     return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
 
