@@ -51,15 +51,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = NetAtmoData(authorization)
 
-    module_name = 'Salon'
-
     dev = []
     try:
-        for variable in config['monitored_conditions']:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(NetAtmoSensor( data, module_name, variable, unit))
+        for module_name, monitored_conditions in config['modules'].items():
+            for variable in monitored_conditions:
+                if variable not in SENSOR_TYPES:
+                    _LOGGER.error('Sensor type: "%s" does not exist', variable)
+                else:
+                    dev.append(NetAtmoSensor(data, module_name, variable, unit))
     except KeyError:
         pass
 
@@ -72,7 +71,7 @@ class NetAtmoSensor(Entity):
 
     def __init__(self, netatmo_data, module_name, sensor_type, temp_unit):
         self.client_name = 'NetAtmo'
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._name = module_name + '_' + SENSOR_TYPES[sensor_type][0]
         self.netatmo_data = netatmo_data
         self.module_name = module_name
         self.temp_unit = temp_unit
