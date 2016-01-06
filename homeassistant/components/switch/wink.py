@@ -30,3 +30,5 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pywink.set_bearer_token(token)
 
     add_devices(WinkToggleDevice(switch) for switch in pywink.get_switches())
+    add_devices(WinkToggleDevice(switch) for switch in
+                pywink.get_powerstrip_outlets())
