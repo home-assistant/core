@@ -91,7 +91,10 @@ def setup(hass, config):
                 try:
                     value = float(attributes[key])
                     metrics_queue.add(
-                        (namespace + 'states.' + state.entity_id + '.' + key),
+                        '{}states.{}.{}'.format(
+                            namespace,
+                            state.entity_id,
+                            key),
                         value)
                 except (TypeError, ValueError):
                     pass
