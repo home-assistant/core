@@ -20,7 +20,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', ''],
     'wind_speed': ['Wind speed', 'm/s'],
     'humidity': ['Humidity', '%'],
-    'pressure': ['Pressure', 'hPa'],
+    'pressure': ['Pressure', 'mbar'],
     'clouds': ['Cloud coverage', '%'],
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm']
