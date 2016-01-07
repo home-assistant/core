@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from homeassistant.loader import get_component
 import homeassistant.util as util
 import homeassistant.util.color as color_util
-from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_HOST, CONF_FILENAME, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
@@ -35,9 +35,9 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-def _find_host_from_config(hass):
+def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
     """ Attempt to detect host based on existing configuration. """
-    path = hass.config.path(PHUE_CONFIG_FILE)
+    path = hass.config.path(filename)
 
     if not os.path.isfile(path):
         return None
@@ -54,13 +54,14 @@ def _find_host_from_config(hass):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
+    filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
         host = config.get(CONF_HOST, None)
 
         if host is None:
-            host = _find_host_from_config(hass)
+            host = _find_host_from_config(hass, filename)
 
         if host is None:
             _LOGGER.error('No host found in configuration')
@@ -70,17 +71,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    setup_bridge(host, hass, add_devices_callback)
+    setup_bridge(host, hass, add_devices_callback, filename)
 
 
-def setup_bridge(host, hass, add_devices_callback):
+def setup_bridge(host, hass, add_devices_callback, filename):
     """ Setup a phue bridge based on host parameter. """
     import phue
 
     try:
         bridge = phue.Bridge(
             host,
-            config_file_path=hass.config.path(PHUE_CONFIG_FILE))
+            config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
 
@@ -89,7 +90,7 @@ def setup_bridge(host, hass, add_devices_callback):
     except phue.PhueRegistrationException:
         _LOGGER.warning("Connected to Hue at %s but not registered.", host)
 
-        request_configuration(host, hass, add_devices_callback)
+        request_configuration(host, hass, add_devices_callback, filename)
 
         return
 
@@ -142,7 +143,7 @@ def setup_bridge(host, hass, add_devices_callback):
     update_lights()
 
 
-def request_configuration(host, hass, add_devices_callback):
+def request_configuration(host, hass, add_devices_callback, filename):
     """ Request configuration steps from the user. """
     configurator = get_component('configurator')
 
@@ -156,7 +157,7 @@ def request_configuration(host, hass, add_devices_callback):
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """ Actions to do when our configuration callback is called. """
-        setup_bridge(host, hass, add_devices_callback)
+        setup_bridge(host, hass, add_devices_callback, filename)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Philips Hue", hue_configuration_callback,

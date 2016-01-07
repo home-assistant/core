@@ -1,39 +1,10 @@
 """
 homeassistant.components.sensor.yr
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Yr.no weather service.
 
-Configuration:
-
-Will show a symbol for the current weather as default:
-sensor:
-  platform: yr
-
-Will show temperatue and wind direction:
-sensor:
-  platform: yr
-  monitored_conditions:
-    - temperature
-    - windDirection
-
-Will show all available sensors:
-sensor:
-  platform: yr
-  monitored_conditions:
-    - temperature
-    - symbol
-    - precipitation
-    - windSpeed
-    - pressure
-    - windDirection
-    - humidity
-    - fog
-    - cloudiness
-    - lowClouds
-    - mediumClouds
-    - highClouds
-    - dewpointTemperature
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.yr/
 """
 import logging
 
@@ -67,7 +38,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the yr.no sensor. """
+    """ Get the Yr.no sensor. """
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
