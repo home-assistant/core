@@ -61,11 +61,10 @@ def setup(hass, config):
                 _state = 0
             else:
                 _state = state.state
-                if _state and isinstance(_state, str):
-                    try:
-                        _state = float(_state)
-                    except ValueError:
-                        _state = None
+                try:
+                    _state = float(_state)
+                except ValueError:
+                    _state = None
 
                 if _state and isinstance(_state, int):
                     _state = float(_state)
