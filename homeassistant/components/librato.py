@@ -71,7 +71,7 @@ def setup(hass, config):
 
             if _state is not None:
                 metrics_queue.add(
-                    (namespace + 'states.' + state.entity_id),
+                    '{}states.{}'.format(namespace, state.entity_id),
                     _state)
 
             # Now inspect the attributes and submit anything that looks like a
