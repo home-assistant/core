@@ -35,7 +35,7 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 def config_from_file(filename, config=None):
-    ''' Small configuration file management function'''
+    """ Small configuration file management function. """
     if config:
         # We're writing configuration
         try:
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
-    ''' Setup a plexserver based on host parameter'''
+    """ Setup a plexserver based on host parameter. """
     import plexapi.server
     import plexapi.exceptions
 
