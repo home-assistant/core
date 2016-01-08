@@ -66,7 +66,7 @@ pyvera==0.2.2
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.3.1
+python-wink==0.4.0
 
 # homeassistant.components.media_player.cast
 pychromecast==0.6.13
