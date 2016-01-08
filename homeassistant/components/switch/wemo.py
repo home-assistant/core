@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.3.7']
+REQUIREMENTS = ['pywemo==0.3.8']
 _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
@@ -69,15 +69,14 @@ class WemoSwitch(SwitchDevice):
     def _update_callback(self, _device, _params):
         """ Called by the wemo device callback to update state. """
         _LOGGER.info(
-            'Subscription update for  %s, sevice=%s',
-            self.name, _device)
+            'Subscription update for  %s',
+            _device)
         self.update_ha_state(True)
 
     @property
     def should_poll(self):
-        """ No polling should be needed with subscriptions """
-        # but leave in for initial version in case of issues.
-        return True
+        """ No polling needed with subscriptions """
+        return False
 
     @property
     def unique_id(self):
