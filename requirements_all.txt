@@ -16,7 +16,7 @@ fuzzywuzzy==0.8.0
 pyicloud==0.7.2
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.3
+pynetgear==0.3.1
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.4.3
@@ -59,7 +59,7 @@ tellcore-py==1.1.2
 # homeassistant.components.light.vera
 # homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
-pyvera==0.2.1
+pyvera==0.2.2
 
 # homeassistant.components.wink
 # homeassistant.components.light.wink
