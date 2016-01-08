@@ -15,7 +15,8 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
-    'f468d0926b1bc018df66896f5d67585343b56dda.zip']
+    '59d157d03db0aa167730044667591adea4457ca8.zip'
+    '#lnetatmo==0.3.0.dev1']
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the NetAtmo sensor. """
 
     try:
-        from lnetatmo import lnetatmo
+        import lnetatmo
 
     except ImportError:
         _LOGGER.exception(
@@ -138,13 +139,13 @@ class NetAtmoData(object):
     """ Gets the latest data from NetAtmo. """
 
     def __init__(self, auth):
-        from lnetatmo import DeviceList
 
         self.auth = auth
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        import lnetatmo
         """ Gets the latest data from NetAtmo. """
-        devList = DeviceList(self.auth)
+        devList = lnetatmo.DeviceList(self.auth)
         self.data = devList.lastData(exclude=3600)
