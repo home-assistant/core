@@ -7,14 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/...
 """
 import logging
-from homeassistant.components.sensor import lnetatmo
 from datetime import timedelta
 
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = []
+REQUIREMENTS = [
+    'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
+    'f468d0926b1bc018df66896f5d67585343b56dda.zip']
+
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'temperature': ['Temperature', ''],
@@ -30,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the NetAtmo sensor. """
 
     try:
-        from homeassistant.components.sensor import lnetatmo
+        from lnetatmo import lnetatmo
 
     except ImportError:
         _LOGGER.exception(
@@ -136,11 +138,13 @@ class NetAtmoData(object):
     """ Gets the latest data from NetAtmo. """
 
     def __init__(self, auth):
+        from lnetatmo import DeviceList
+
         self.auth = auth
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from NetAtmo. """
-        devList = lnetatmo.DeviceList(self.auth)
+        devList = DeviceList(self.auth)
         self.data = devList.lastData(exclude=3600)
