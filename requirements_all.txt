@@ -191,7 +191,7 @@ python-nest==2.6.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-vsure==0.4.3
+vsure==0.4.5
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
