@@ -86,5 +86,4 @@ class VeraLight(VeraSwitch):
         else:
             self.vera_device.switch_on()
 
-        self.last_command_send = time.time()
         self.is_on_status = True
