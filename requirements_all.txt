@@ -143,6 +143,9 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
+# homeassistant.components.scsgate
+scsgate==0.1.0
+
 # homeassistant.components.sensor.bitcoin
 blockchain==1.2.1
 
