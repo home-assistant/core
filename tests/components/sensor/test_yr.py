@@ -4,12 +4,14 @@ tests.components.sensor.test_yr
 
 Tests Yr sensor.
 """
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 
 import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
+import homeassistant.util.dt as dt_util
 
 
 @pytest.mark.usefixtures('betamax_session')
@@ -26,14 +28,18 @@ class TestSensorYr:
         self.hass.stop()
 
     def test_default_setup(self, betamax_session):
+        now = datetime(2016, 1, 5, 1, tzinfo=dt_util.UTC)
+
         with patch('homeassistant.components.sensor.yr.requests.Session',
                    return_value=betamax_session):
-            assert sensor.setup(self.hass, {
-                'sensor': {
-                    'platform': 'yr',
-                    'elevation': 0,
-                }
-            })
+            with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+                       return_value=now):
+                assert sensor.setup(self.hass, {
+                    'sensor': {
+                        'platform': 'yr',
+                        'elevation': 0,
+                    }
+                })
 
         state = self.hass.states.get('sensor.yr_symbol')
 
