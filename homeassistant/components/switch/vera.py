@@ -87,8 +87,6 @@ class VeraSwitch(ToggleEntity):
         else:
             self._name = self.vera_device.name
         self.is_on_status = False
-        # for debouncing status check after command is sent
-        self.last_command_send = 0
 
         self.controller.register(vera_device)
         self.controller.on(
@@ -132,12 +130,10 @@ class VeraSwitch(ToggleEntity):
         return attr
 
     def turn_on(self, **kwargs):
-        self.last_command_send = time.time()
         self.vera_device.switch_on()
         self.is_on_status = True
 
     def turn_off(self, **kwargs):
-        self.last_command_send = time.time()
         self.vera_device.switch_off()
         self.is_on_status = False
 
@@ -152,10 +148,7 @@ class VeraSwitch(ToggleEntity):
         return self.is_on_status
 
     def update(self):
-        # We need to debounce the status call after turning switch on or off
-        # because the vera has some lag in updating the device status
         try:
-            if (self.last_command_send + 5) < time.time():
-                self.is_on_status = self.vera_device.is_switched_on()
+            self.is_on_status = self.vera_device.is_switched_on()
         except RequestException:
             _LOGGER.warning('Could not update status for %s', self.name)
