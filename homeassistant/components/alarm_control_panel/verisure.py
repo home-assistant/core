@@ -67,7 +67,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_DISARMED
         elif verisure.ALARM_STATUS[self._id].status == 'armedhome':
             self._state = STATE_ALARM_ARMED_HOME
-        elif verisure.ALARM_STATUS[self._id].status == 'armedaway':
+        elif verisure.ALARM_STATUS[self._id].status == 'armed':
             self._state = STATE_ALARM_ARMED_AWAY
         elif verisure.ALARM_STATUS[self._id].status != 'pending':
             _LOGGER.error(
