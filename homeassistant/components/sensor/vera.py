@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pyvera==0.2.2']
+REQUIREMENTS = ['pyvera==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,9 +85,7 @@ class VeraSensor(Entity):
         self.current_value = ''
         self._temperature_units = None
 
-        self.controller.register(vera_device)
-        self.controller.on(
-            vera_device, self._update_callback)
+        self.controller.register(vera_device, self._update_callback)
 
     def _update_callback(self, _device):
         """ Called by the vera device callback to update state. """
