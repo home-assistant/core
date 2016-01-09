@@ -135,7 +135,7 @@ python-forecastio==1.3.3
 https://github.com/theolind/pymysensors/archive/d4b809c2167650691058d1e29bfd2c4b1792b4b0.zip#pymysensors==0.3
 
 # homeassistant.components.sensor.openweathermap
-pyowm==2.2.1
+pyowm==2.3.0
 
 # homeassistant.components.sensor.rpi_gpio
 # homeassistant.components.switch.rpi_gpio
