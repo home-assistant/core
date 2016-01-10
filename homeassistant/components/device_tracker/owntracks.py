@@ -71,7 +71,7 @@ def setup_scanner(hass, config, see):
         location = ''
         if data['event'] == 'enter':
 
-            if data['desc'] == 'home':
+            if data['desc'].lower() == 'home':
                 location = STATE_HOME
             else:
                 location = data['desc']
