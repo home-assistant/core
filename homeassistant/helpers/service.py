@@ -13,11 +13,16 @@ _LOGGER = logging.getLogger(__name__)
 
 def call_from_config(hass, config, blocking=False):
     """Call a service based on a config hash."""
-    if CONF_SERVICE not in config:
+    if not isinstance(config, dict) or CONF_SERVICE not in config:
         _LOGGER.error('Missing key %s: %s', CONF_SERVICE, config)
         return
 
-    domain, service = split_entity_id(config[CONF_SERVICE])
+    try:
+        domain, service = split_entity_id(config[CONF_SERVICE])
+    except ValueError:
+        _LOGGER.error('Invalid service specified: %s', config[CONF_SERVICE])
+        return
+
     service_data = config.get(CONF_SERVICE_DATA)
 
     if service_data is None:
