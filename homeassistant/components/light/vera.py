@@ -7,7 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.vera/
 """
 import logging
-import time
 
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
