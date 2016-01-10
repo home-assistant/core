@@ -7,11 +7,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.vera/
 """
 import logging
-import time
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.switch import SwitchDevice
 
 from homeassistant.const import (
@@ -138,7 +136,6 @@ class VeraSwitch(SwitchDevice):
         self._state = STATE_ON
         self.update_ha_state()
 
-
     def turn_off(self, **kwargs):
         self.vera_device.switch_off()
         self._state = STATE_OFF
@@ -153,4 +150,3 @@ class VeraSwitch(SwitchDevice):
     def is_on(self):
         """ True if device is on. """
         return self._state == STATE_ON
-
