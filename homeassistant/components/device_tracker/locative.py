@@ -6,12 +6,16 @@ Locative platform for the device tracker.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
 """
+import logging
+from functools import partial
+
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY, HTTP_INTERNAL_SERVER_ERROR)
+    HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
+from homeassistant.components.device_tracker import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-
-_SEE = 0
 
 URL_API_LOCATIVE_ENDPOINT = "/api/locative"
 
@@ -19,52 +23,83 @@ URL_API_LOCATIVE_ENDPOINT = "/api/locative"
 def setup_scanner(hass, config, see):
     """ Set up an endpoint for the Locative app. """
 
-    # Use a global variable to keep setup_scanner compact when using a callback
-    global _SEE
-    _SEE = see
-
     # POST would be semantically better, but that currently does not work
     # since Locative sends the data as key1=value1&key2=value2
     # in the request body, while Home Assistant expects json there.
 
     hass.http.register_path(
-        'GET', URL_API_LOCATIVE_ENDPOINT, _handle_get_api_locative)
+        'GET', URL_API_LOCATIVE_ENDPOINT,
+        partial(_handle_get_api_locative, hass, see))
 
     return True
 
 
-def _handle_get_api_locative(handler, path_match, data):
+def _handle_get_api_locative(hass, see, handler, path_match, data):
     """ Locative message received. """
 
-    if not isinstance(data, dict):
-        handler.write_json_message(
-            "Error while parsing Locative message.",
-            HTTP_INTERNAL_SERVER_ERROR)
+    if not _check_data(handler, data):
         return
+
+    device = data['device'].replace('-', '')
+    location_name = data['id'].lower()
+    direction = data['trigger']
+
+    if direction == 'enter':
+        see(dev_id=device, location_name=location_name)
+        handler.write_text("Setting location to {}".format(location_name))
+
+    elif direction == 'exit':
+        current_state = hass.states.get(
+            "{}.{}".format(DOMAIN, device)).state
+
+        if current_state == location_name:
+            see(dev_id=device, location_name=STATE_NOT_HOME)
+            handler.write_text("Setting location to not home")
+        else:
+            # Ignore the message if it is telling us to exit a zone that we
+            # aren't currently in. This occurs when a zone is entered before
+            # the previous zone was exited. The enter message will be sent
+            # first, then the exit message will be sent second.
+            handler.write_text(
+                'Ignoring exit from {} (already in {})'.format(
+                    location_name, current_state))
+
+    elif direction == 'test':
+        # In the app, a test message can be sent. Just return something to
+        # the user to let them know that it works.
+        handler.write_text("Received test message.")
+
+    else:
+        handler.write_text(
+            "Received unidentified message: {}".format(direction),
+            HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error("Received unidentified message from Locative: %s",
+                      direction)
+
+
+def _check_data(handler, data):
     if 'latitude' not in data or 'longitude' not in data:
-        handler.write_json_message(
-            "Location not specified.",
-            HTTP_UNPROCESSABLE_ENTITY)
-        return
-    if 'device' not in data or 'id' not in data:
-        handler.write_json_message(
-            "Device id or location id not specified.",
-            HTTP_UNPROCESSABLE_ENTITY)
-        return
+        handler.write_text("Latitude and longitude not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error("Latitude and longitude not specified.")
+        return False
 
-    try:
-        gps_coords = (float(data['latitude']), float(data['longitude']))
-    except ValueError:
-        # If invalid latitude / longitude format
-        handler.write_json_message(
-            "Invalid latitude / longitude format.",
-            HTTP_UNPROCESSABLE_ENTITY)
-        return
+    if 'device' not in data:
+        handler.write_text("Device id not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error("Device id not specified.")
+        return False
 
-    # entity id's in Home Assistant must be alphanumerical
-    device_uuid = data['device']
-    device_entity_id = device_uuid.replace('-', '')
+    if 'id' not in data:
+        handler.write_text("Location id not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error("Location id not specified.")
+        return False
 
-    _SEE(dev_id=device_entity_id, gps=gps_coords, location_name=data['id'])
+    if 'trigger' not in data:
+        handler.write_text("Trigger is not specified.",
+                           HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error("Trigger is not specified.")
+        return False
 
-    handler.write_json_message("Locative message processed")
+    return True

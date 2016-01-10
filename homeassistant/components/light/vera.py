@@ -14,9 +14,9 @@ from homeassistant.components.switch.vera import VeraSwitch
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 
-REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
-                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
-                '#python-vera==0.1.1']
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+
+REQUIREMENTS = ['pyvera==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,19 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     device_data = config.get('device_data', {})
 
-    controller = veraApi.VeraController(base_url)
+    vera_controller, created = veraApi.init_controller(base_url)
+
+    if created:
+        def stop_subscription(event):
+            """ Shutdown Vera subscriptions and subscription thread on exit"""
+            _LOGGER.info("Shutting down subscriptions.")
+            vera_controller.stop()
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+
     devices = []
     try:
-        devices = controller.get_devices([
+        devices = vera_controller.get_devices([
             'Switch',
             'On/Off Switch',
             'Dimmable Switch'])
@@ -54,7 +63,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
-            lights.append(VeraLight(device, extra_data))
+            lights.append(VeraLight(device, vera_controller, extra_data))
 
     add_devices_callback(lights)
 
