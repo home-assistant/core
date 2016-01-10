@@ -4,11 +4,9 @@ tests.helpers.test_service
 
 Test service helpers.
 """
-from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.helpers import service
 
@@ -37,3 +35,34 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(['hello.world', 'sensor.beer'],
                          self.calls[-1].data.get('entity_id'))
+
+    def test_not_mutate_input(self):
+        orig = {
+            'service': 'test_domain.test_service',
+            'entity_id': 'hello.world, sensor.beer',
+            'data': {
+                'hello': 1,
+            },
+        }
+        service.call_from_config(self.hass, orig)
+        self.hass.pool.block_till_done()
+        self.assertEqual({
+            'service': 'test_domain.test_service',
+            'entity_id': 'hello.world, sensor.beer',
+            'data': {
+                'hello': 1,
+            },
+        }, orig)
+
+    @patch('homeassistant.helpers.service._LOGGER.error')
+    def test_fail_silently_if_no_service(self, mock_log):
+        service.call_from_config(self.hass, None)
+        self.assertEqual(1, mock_log.call_count)
+
+        service.call_from_config(self.hass, {})
+        self.assertEqual(2, mock_log.call_count)
+
+        service.call_from_config(self.hass, {
+            'service': 'invalid'
+        })
+        self.assertEqual(3, mock_log.call_count)
