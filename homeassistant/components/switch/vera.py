@@ -12,12 +12,16 @@ from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchDevice
+
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TRIPPED,
     ATTR_ARMED,
     ATTR_LAST_TRIP_TIME,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_OFF)
 
 REQUIREMENTS = ['pyvera==0.2.3']
 
@@ -60,7 +64,7 @@ def get_devices(hass, config):
 
     vera_switches = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(device.device_id, {})
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
@@ -75,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(get_devices(hass, config))
 
 
-class VeraSwitch(ToggleEntity):
+class VeraSwitch(SwitchDevice):
     """ Represents a Vera Switch. """
 
     def __init__(self, vera_device, controller, extra_data=None):
@@ -86,15 +90,17 @@ class VeraSwitch(ToggleEntity):
             self._name = self.extra_data.get('name')
         else:
             self._name = self.vera_device.name
-        self.is_on_status = False
+        self._state = STATE_OFF
 
         self.controller.register(vera_device, self._update_callback)
 
     def _update_callback(self, _device):
         """ Called by the vera device callback to update state. """
-        _LOGGER.info(
-            'Subscription update for  %s', self.name)
-        self.update_ha_state(True)
+        if self.vera_device.is_switched_on():
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+        self.update_ha_state()
 
     @property
     def name(self):
@@ -129,12 +135,14 @@ class VeraSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         self.vera_device.switch_on()
-        self.is_on_status = True
+        self._state = STATE_ON
+        self.update_ha_state()
 
 
     def turn_off(self, **kwargs):
         self.vera_device.switch_off()
-        self.is_on_status = False
+        self._state = STATE_OFF
+        self.update_ha_state()
 
     @property
     def should_poll(self):
@@ -144,7 +152,5 @@ class VeraSwitch(ToggleEntity):
     @property
     def is_on(self):
         """ True if device is on. """
-        return self.is_on_status
+        return self._state == STATE_ON
 
-    def update(self):
-        self.is_on_status = self.vera_device.is_switched_on()

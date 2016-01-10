@@ -56,7 +56,7 @@ def get_devices(hass, config):
 
     vera_sensors = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(device.device_id, {})
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
@@ -89,12 +89,10 @@ class VeraSensor(Entity):
 
     def _update_callback(self, _device):
         """ Called by the vera device callback to update state. """
-        _LOGGER.info(
-            'Subscription update for  %s', self.name)
         self.update_ha_state(True)
 
     def __str__(self):
-        return "%s %s %s" % (self.name, self.vera_device.deviceId, self.state)
+        return "%s %s %s" % (self.name, self.vera_device.device_id, self.state)
 
     @property
     def state(self):
