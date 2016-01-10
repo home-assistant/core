@@ -14,7 +14,7 @@ from homeassistant.components.switch.vera import VeraSwitch
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON
 
 REQUIREMENTS = ['pyvera==0.2.3']
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     lights = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(device.device_id, {})
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
@@ -86,4 +86,5 @@ class VeraLight(VeraSwitch):
         else:
             self.vera_device.switch_on()
 
-        self.is_on_status = True
+        self._state = STATE_ON
+        self.update_ha_state()
