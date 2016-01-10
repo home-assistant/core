@@ -12,7 +12,8 @@ New features:
 
 New MySensors component.
 Updated MySensors Sensor platform.
-New MySensors Switch platform.
+New MySensors Switch platform. Currently only in optimistic mode (compare
+with MQTT).
 Multiple gateways are now supported.
 
 Configuration.yaml:
@@ -28,11 +29,6 @@ mysensors:
   version: '1.5'
 """
 import logging
-
-try:
-    import mysensors.mysensors as mysensors
-except ImportError:
-    mysensors = None
 
 from homeassistant.helpers import validate_config
 import homeassistant.bootstrap as bootstrap
@@ -55,10 +51,11 @@ DOMAIN = 'mysensors'
 DEPENDENCIES = []
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    '2aa8f32908e8c5bb3e5c77c5851db778f8635792.zip#pymysensors==0.3']
+    '005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4']
 _LOGGER = logging.getLogger(__name__)
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
+ATTR_PORT = 'port'
 
 GATEWAYS = None
 SCAN_INTERVAL = 30
@@ -82,21 +79,22 @@ def setup(hass, config):
                            _LOGGER):
         return False
 
-    global mysensors  # pylint: disable=invalid-name
-    if mysensors is None:
-        import mysensors.mysensors as _mysensors
-        mysensors = _mysensors
+    import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
     is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
 
     def setup_gateway(port, persistence, persistence_file, version):
         """Return gateway after setup of the gateway."""
-        gateway = GatewayWrapper(
-            port, persistence, persistence_file, version)
-        # pylint: disable=attribute-defined-outside-init
+        gateway = mysensors.SerialGateway(port, event_callback=None,
+                                          persistence=persistence,
+                                          persistence_file=persistence_file,
+                                          protocol_version=version)
         gateway.metric = is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
+        gateway = GatewayWrapper(gateway, version)
+        # pylint: disable=attribute-defined-outside-init
+        gateway.event_callback = gateway.callback_factory()
 
         def gw_start(event):
             """Callback to trigger start of gateway and any persistence."""
@@ -172,30 +170,46 @@ def pf_callback_factory(
     return mysensors_callback
 
 
-class GatewayWrapper(mysensors.SerialGateway):
+class GatewayWrapper(object):
     """Gateway wrapper class, by subclassing serial gateway."""
 
-    def __init__(self, port, persistence, persistence_file, version):
+    def __init__(self, gateway, version):
         """Setup class attributes on instantiation.
 
         Args:
-        port: Port of gateway to wrap.
-        persistence: Persistence, true or false.
-        persistence_file: File to store persistence info.
-        version: Version of mysensors API.
+        gateway (mysensors.SerialGateway): Gateway to wrap.
+        version (str): Version of mysensors API.
 
         Attributes:
+        _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
         version (str): Version of mysensors API.
         platform_callbacks (list): Callback functions, one per platform.
         const (module): Mysensors API constants.
+        __initialised (bool): True if GatewayWrapper is initialised.
         """
-        super().__init__(port, event_callback=self.callback_factory(),
-                         persistence=persistence,
-                         persistence_file=persistence_file,
-                         protocol_version=version)
+        self._wrapped_gateway = gateway
         self.version = version
         self.platform_callbacks = []
         self.const = self.get_const()
+        self.__initialised = True
+
+    def __getattr__(self, name):
+        """See if this object has attribute name."""
+        # Do not use hasattr, it goes into infinite recurrsion
+        if name in self.__dict__:
+            # this object has it
+            return getattr(self, name)
+        # proxy to the wrapped object
+        return getattr(self._wrapped_gateway, name)
+
+    def __setattr__(self, name, value):
+        """See if this object has attribute name then set to value."""
+        if '_GatewayWrapper__initialised' not in self.__dict__:
+            return object.__setattr__(self, name, value)
+        elif name in self.__dict__:
+            object.__setattr__(self, name, value)
+        else:
+            object.__setattr__(self._wrapped_gateway, name, value)
 
     def get_const(self):
         """Get mysensors API constants."""
