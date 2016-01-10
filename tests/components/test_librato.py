@@ -83,6 +83,8 @@ class TestComponentsLibrato(unittest.TestCase):
 
     @patch('librato.queue.Queue.add')
     def test_periodic_metrics(self, mock_librato):
+        now = datetime(2016, 1, 9, 23, 00, 00, tzinfo=dt_util.UTC)
+        fire_time_changed(self.hass, now)
         self.assertTrue(librato_component.setup(self.hass, {
                 'librato': {
                     'user': 'foo',
@@ -99,10 +101,8 @@ class TestComponentsLibrato(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(2, mock_librato.call_count)
 
-        now = dt_util.utcnow()
-        for i in range(60):
-            future = now + timedelta(seconds=i)
-            fire_time_changed(self.hass, future)
-            self.hass.pool.block_till_done()
+        future = datetime(2016, 1, 9, 23, 00, 59, tzinfo=dt_util.UTC)
+        fire_time_changed(self.hass, future)
+        self.hass.pool.block_till_done()
 
         self.assertEqual(3, mock_librato.call_count)
