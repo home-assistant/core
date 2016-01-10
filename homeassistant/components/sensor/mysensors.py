@@ -78,14 +78,14 @@ class MySensorsSensor(Entity):
         """Setup class attributes on instantiation.
 
         Args:
-        gateway (str): Gateway.
+        gateway (GatewayWrapper): Gateway object.
         node_id (str): Id of node.
         child_id (str): Id of child.
         name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
 
         Attributes:
-        gateway (str): Gateway.
+        gateway (GatewayWrapper): Gateway object.
         node_id (str): Id of node.
         child_id (str): Id of child.
         _name (str): Entity name.
@@ -154,6 +154,7 @@ class MySensorsSensor(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         data = {
+            mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
