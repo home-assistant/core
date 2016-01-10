@@ -117,6 +117,14 @@ class TestUtilTemplate(unittest.TestCase):
                 self.hass,
                 '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'))
 
+    def test_is_state_attr(self):
+        self.hass.states.set('test.object', 'available', {'mode': 'on'})
+        self.assertEqual(
+            'yes',
+            template.render(
+                self.hass,
+                '{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}'))
+
     def test_states_function(self):
         self.hass.states.set('test.object', 'available')
         self.assertEqual(
