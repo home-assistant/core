@@ -31,6 +31,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST, ATTR_APP_ID, ATTR_APP_NAME, ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_SEEK_POSITION)
 
+ATTR_ACTIVE_CHILD = 'active_child'
+
 CONF_ATTRS = 'attributes'
 CONF_CHILDREN = 'children'
 CONF_COMMANDS = 'commands'
@@ -38,6 +40,7 @@ CONF_PLATFORM = 'platform'
 CONF_SERVICE = 'service'
 CONF_SERVICE_DATA = 'service_data'
 CONF_STATE = 'state'
+
 OFF_STATES = [STATE_IDLE, STATE_OFF]
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
@@ -338,11 +341,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def device_state_attributes(self):
-        """
-        Extra attributes a device wants to expose.
-        Not supported for Universal Media Player.
-        """
-        return None
+        """ Extra attributes a device wants to expose. """
+        active_child = self.active_child_state
+        return {ATTR_ACTIVE_CHILD: active_child.entity_id} \
+            if active_child else {}
 
     def turn_on(self):
         """ turn the media player on. """
