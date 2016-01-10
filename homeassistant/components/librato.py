@@ -110,6 +110,6 @@ def setup(hass, config):
     def periodic_metrics(now):
         """ Load all states and submit metrics. """
         metrics_for_states(hass.states.all())
-    track_utc_time_change(hass, periodic_metrics, second=60)
+    track_utc_time_change(hass, periodic_metrics, second=59)
 
     return True
