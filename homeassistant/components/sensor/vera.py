@@ -13,11 +13,9 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['https://github.com/pavoni/home-assistant-vera-api/archive/'
-                'efdba4e63d58a30bc9b36d9e01e69858af9130b8.zip'
-                '#python-vera==0.1.1']
+REQUIREMENTS = ['pyvera==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +35,16 @@ def get_devices(hass, config):
 
     device_data = config.get('device_data', {})
 
-    vera_controller = veraApi.VeraController(base_url)
+    vera_controller, created = veraApi.init_controller(base_url)
+
+    if created:
+        def stop_subscription(event):
+            """ Shutdown Vera subscriptions and subscription thread on exit"""
+            _LOGGER.info("Shutting down subscriptions.")
+            vera_controller.stop()
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+
     categories = ['Temperature Sensor', 'Light Sensor', 'Sensor']
     devices = []
     try:
@@ -53,7 +60,8 @@ def get_devices(hass, config):
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
-            vera_sensors.append(VeraSensor(device, extra_data))
+            vera_sensors.append(
+                VeraSensor(device, vera_controller, extra_data))
 
     return vera_sensors
 
@@ -66,8 +74,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VeraSensor(Entity):
     """ Represents a Vera Sensor. """
 
-    def __init__(self, vera_device, extra_data=None):
+    def __init__(self, vera_device, controller, extra_data=None):
         self.vera_device = vera_device
+        self.controller = controller
         self.extra_data = extra_data
         if self.extra_data and self.extra_data.get('name'):
             self._name = self.extra_data.get('name')
@@ -75,6 +84,16 @@ class VeraSensor(Entity):
             self._name = self.vera_device.name
         self.current_value = ''
         self._temperature_units = None
+
+        self.controller.register(vera_device)
+        self.controller.on(
+            vera_device, self._update_callback)
+
+    def _update_callback(self, _device):
+        """ Called by the vera device callback to update state. """
+        _LOGGER.info(
+            'Subscription update for  %s', self.name)
+        self.update_ha_state(True)
 
     def __str__(self):
         return "%s %s %s" % (self.name, self.vera_device.deviceId, self.state)
@@ -116,6 +135,11 @@ class VeraSensor(Entity):
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
         return attr
+
+    @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False
 
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
