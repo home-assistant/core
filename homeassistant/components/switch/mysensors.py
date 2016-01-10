@@ -36,7 +36,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             gateway.const.Presentation.S_MOTION,
             gateway.const.Presentation.S_SMOKE,
             gateway.const.Presentation.S_LIGHT,
-            gateway.const.Presentation.S_BINARY,
             gateway.const.Presentation.S_LOCK,
         ]
         v_types = [
@@ -46,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ]
         if float(gateway.version) >= 1.5:
             s_types.extend([
+                gateway.const.Presentation.S_BINARY,
                 gateway.const.Presentation.S_SPRINKLER,
                 gateway.const.Presentation.S_WATER_LEAK,
                 gateway.const.Presentation.S_SOUND,
@@ -68,14 +68,14 @@ class MySensorsSwitch(SwitchDevice):
         """Setup class attributes on instantiation.
 
         Args:
-        port (str): Gateway port.
+        gateway (GatewayWrapper): Gateway object.
         node_id (str): Id of node.
         child_id (str): Id of child.
         name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
 
         Attributes:
-        port (str): Gateway port.
+        gateway (GatewayWrapper): Gateway object
         node_id (str): Id of node.
         child_id (str): Id of child.
         _name (str): Entity name.
@@ -112,6 +112,7 @@ class MySensorsSwitch(SwitchDevice):
     def state_attributes(self):
         """Return the state attributes."""
         data = {
+            mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
