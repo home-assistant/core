@@ -14,7 +14,7 @@ import requests
 from homeassistant.const import (STATE_UNKNOWN)
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELCIUS, CONF_USERNAME, CONF_PASSWORD
 
 SENSOR_TYPES = {
     'Temperature': [TEMP_CELCIUS],
@@ -30,15 +30,20 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
+CONF_ID = 'client_id'
+CONF_SECRET = 'client_secret'
+
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Gets a list of the available stations and sets up the sensors. """
 
-    client_id = config.get('client_id', None)
-    client_secret = config.get('client_secret', None)
-    username = config.get('username', None)
-    password = config.get('password', None)
+    client_id = config.get(CONF_ID, None)
+    client_secret = config.get(CONF_SECRET, None)
+    username = config.get(CONF_USERNAME, None)
+    password = config.get(CONF_PASSWORD, None)
+    cred = {CONF_ID: client_id, CONF_SECRET: client_secret,
+            CONF_USERNAME: username, CONF_PASSWORD: password}
     dev = list()
     request = requests.post("https://api.netatmo.net/oauth2/token",
                             data={'grant_type': 'password',
@@ -50,13 +55,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     request = requests.get(SENSOR_URL + access_token, timeout=10).json()
     for device in request["body"]["devices"]:
         for data_type in device["data_type"]:
-            dev.append(NetatmoSensor(hass, client_id, client_secret,
-                                     username, password, data_type,
+            dev.append(NetatmoSensor(hass, cred, data_type,
                                      device["module_name"]))
         for module in device["modules"]:
             for data_type in module["data_type"]:
-                dev.append(NetatmoSensor(hass, client_id, client_secret,
-                                         username, password, data_type,
+                dev.append(NetatmoSensor(hass, cred, data_type,
                                          module["module_name"]))
     add_devices(dev)
 
@@ -65,13 +68,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NetatmoSensor(Entity):
     """ Implements a netatmo sensor. """
 
-    def __init__(self, hass, client_id, client_secret, username,
-                 password, data_type, module_name):
+    def __init__(self, hass, cred, data_type, module_name):
         self._hass = hass
-        self._client_id = client_id
-        self._client_secret = client_secret
-        self._username = username
-        self._password = password
+        self._cred = cred
         self._state = STATE_UNKNOWN
         self._data_type = data_type
         self._name = module_name
@@ -98,10 +97,10 @@ class NetatmoSensor(Entity):
         """ Gets the latest data from Netatmo API and updates the state. """
         request = requests.post("https://api.netatmo.net/oauth2/token",
                                 data={'grant_type': 'password',
-                                      'client_id': self._client_id,
-                                      'client_secret': self._client_secret,
-                                      'username': self._username,
-                                      'password': self._password})
+                                      'client_id': self._cred[CONF_ID],
+                                      'client_secret': self._cred[CONF_SECRET],
+                                      'username': self._cred[CONF_USERNAME],
+                                      'password': self._cred[CONF_PASSWORD]},
                                 timeout=10)
         access_token = request.json()["access_token"]
         request = requests.get(SENSOR_URL + access_token, timeout=10).json()
