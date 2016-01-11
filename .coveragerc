@@ -93,6 +93,7 @@ omit =
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/mysensors.py
+    homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
