@@ -21,7 +21,7 @@ SENSOR_TYPES = {
     'Humidity': ['%'],
     'CO2': ['ppm'],
     'Noise': ['dB'],
-    'Pressure': ['mb']
+    'Pressure': ['mBar']
 }
 
 sensor_url = "https://api.netatmo.com//api/getstationsdata?access_token="
