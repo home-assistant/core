@@ -8,7 +8,8 @@ https://home-assistant.io/components/...
 """
 import logging
 from datetime import timedelta
-from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD,
+                                 TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celcius_to_fahrenheit
@@ -28,7 +29,8 @@ SENSOR_TYPES = {
 }
 
 # Return cached results if last scan was less then this time ago
-# NetAtmo Data is uploaded to server every 10mn so this time should not be under
+# NetAtmo Data is uploaded to server every 10mn
+# so this time should not be under
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 
@@ -47,8 +49,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
-    authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None), config.get('secret_key', None),
-                                        config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None))
+    authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None),
+                                        config.get('secret_key', None),
+                                        config.get(CONF_USERNAME, None),
+                                        config.get(CONF_PASSWORD, None))
 
     if not authorization:
         _LOGGER.error(
@@ -60,18 +64,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     try:
-        """ Iterate each module """
+        # Iterate each module
         for module_name, monitored_conditions in config['modules'].items():
-            """ Test if module exist """
-            if module_name not in    data.get_module_names():
+            # Test if module exist """
+            if module_name not in data.get_module_names():
                 _LOGGER.error('Module name: "%s" not found', module_name)
                 continue
-            """ Only create sensor for monitored """
+            # Only create sensor for monitored """
             for variable in monitored_conditions:
                 if variable not in SENSOR_TYPES:
                     _LOGGER.error('Sensor type: "%s" does not exist', variable)
                 else:
-                    dev.append(NetAtmoSensor(data, module_name, variable, unit))
+                    dev.append(
+                        NetAtmoSensor(data, module_name, variable, unit))
     except KeyError:
         pass
 
@@ -79,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 class NetAtmoSensor(Entity):
     """ Implements a NetAtmo sensor. """
 
@@ -119,7 +125,8 @@ class NetAtmoSensor(Entity):
                 self._state = round(data['Temperature'],
                                     1)
             elif self.temp_unit == TEMP_FAHRENHEIT:
-                converted_temperature = celcius_to_fahrenheit(data['Temperature'])
+                converted_temperature = celcius_to_fahrenheit(
+                    data['Temperature'])
                 self._state = round(converted_temperature, 1)
             else:
                 self._state = round(data['Temperature'], 1)
@@ -141,14 +148,15 @@ class NetAtmoData(object):
         self.auth = auth
         self.data = None
 
-    def get_module_names (self) :
+    def get_module_names(self):
+        """ Return all module available on the API as a list. """
         self.update()
         return self.data.keys()
 
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """ Call the NetAtmo API to update the data. """
         import lnetatmo
-        """ Gets the latest data from NetAtmo. """
-        devList = lnetatmo.DeviceList(self.auth)
-        self.data = devList.lastData(exclude=3600)
+        # Gets the latest data from NetAtmo. """
+        dev_list = lnetatmo.DeviceList(self.auth)
+        self.data = dev_list.lastData(exclude=3600)
