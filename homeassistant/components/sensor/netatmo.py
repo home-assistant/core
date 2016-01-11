@@ -48,9 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                   'client_id': client_id,
                                   'client_secret': client_secret,
                                   'username': username,
-                                  'password': password})
+                                  'password': password}, timeout=10)
     access_token = request.json()["access_token"]
-    request = requests.get(sensor_url + access_token).json()
+    request = requests.get(SENSOR_URL + access_token, timeout=10).json()
     for device in request["body"]["devices"]:
         for data_type in device["data_type"]:
             dev.append(NetatmoSensor(hass, client_id, client_secret,
@@ -105,8 +105,9 @@ class NetatmoSensor(Entity):
                                       'client_secret': self._client_secret,
                                       'username': self._username,
                                       'password': self._password})
+                                timeout=10)
         access_token = request.json()["access_token"]
-        request = requests.get(sensor_url + access_token).json()
+        request = requests.get(SENSOR_URL + access_token, timeout=10).json()
         for device in request["body"]["devices"]:
             if self._name == device["module_name"]:
                 self._state = device["dashboard_data"][self._data_type]
