@@ -138,7 +138,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         # [todo] Update when children update
 
-    def _entity_lkp(self, entity_id=None, state_attr=None):
+    def _entity_lkp(self, entity_id=None, state_attr=None, state_as_obj=True):
         """ Looks up an entity state from hass """
         if entity_id is None:
             return
@@ -148,13 +148,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if state_obj is None:
             return
 
-        return state_obj.attributes.get(state_attr) \
-            if state_attr else state_obj
+        if state_attr:
+            return state_obj.attributes.get(state_attr)
+        if state_as_obj:
+            return state_obj
+        return state_obj.state
 
     def _override_or_child_attr(self, attr_name):
         """ returns either the override or the active child for attr_name """
         if attr_name in self._attrs:
-            return self._entity_lkp(*self._attrs[attr_name])
+            return self._entity_lkp(*self._attrs[attr_name],
+                                    state_as_obj=False)
 
         return self._child_attr(attr_name)
 
@@ -187,8 +191,9 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """ gets the master state from entity or none """
         if CONF_STATE in self._attrs:
-            master_state = self._entity_lkp(*self._attrs[CONF_STATE])
-            return master_state.state if master_state else STATE_OFF
+            master_state = self._entity_lkp(*self._attrs[CONF_STATE],
+                                            state_as_obj=False)
+            return master_state if master_state else STATE_OFF
         else:
             return None
 
