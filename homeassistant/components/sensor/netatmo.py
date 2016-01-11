@@ -27,9 +27,6 @@ SENSOR_TYPES = {
 SENSOR_URL = "https://api.netatmo.com//api/getstationsdata?access_token="
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NETAMTO Sensor'
-DEFAULT_METHOD = 'GET'
-
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
