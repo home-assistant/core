@@ -89,6 +89,9 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # homeassistant.components.mqtt
 paho-mqtt==1.1
 
+# homeassistant.components.notify.freesms
+freesms==0.1.0
+
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.9.0
 
