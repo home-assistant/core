@@ -26,8 +26,8 @@ CONF_POLLING_INTERVAL = "polling_interval"
 DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
                                          'python-openzwave', 'config')
 
-EVENT_ZWAVE_ADD_NODE = "zwave_add_node"
-EVENT_ZWAVE_REMOVE_NODE = "zwave_remove_node"
+SERVICE_ADD_NODE = "add_node"
+SERVICE_REMOVE_NODE = "remove_node"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -201,10 +201,10 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # listen for add/remove events, for zwave sticks without
+        # register add / remove node services for zwave sticks without
         # hardware inclusion button
-        hass.bus.listen(EVENT_ZWAVE_ADD_NODE, add_node)
-        hass.bus.listen(EVENT_ZWAVE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
