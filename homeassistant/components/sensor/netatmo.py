@@ -11,6 +11,7 @@ from datetime import timedelta
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.temperature import celcius_to_fahrenheit
 
 REQUIREMENTS = [
     'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
@@ -118,8 +119,8 @@ class NetAtmoSensor(Entity):
                 self._state = round(data['Temperature'],
                                     1)
             elif self.temp_unit == TEMP_FAHRENHEIT:
-                self._state = round(data['Temperature'],
-                                    1)
+                converted_temperature = celcius_to_fahrenheit(data['Temperature'])
+                self._state = round(converted_temperature, 1)
             else:
                 self._state = round(data['Temperature'], 1)
         elif self.type == 'humidity':
