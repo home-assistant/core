@@ -8,7 +8,6 @@ https://home-assistant.io/components/...
 """
 import logging
 from datetime import timedelta
-
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,6 +20,9 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'temperature': ['Temperature', ''],
+    'co2': ['CO2', 'ppm'],
+    'pressure': ['Pressure', 'mb'],
+    'noise': ['Noise', 'dB'],
     'humidity': ['Humidity', '%']
 }
 
@@ -44,7 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
-    authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None), config.get('secret_key', None), config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None))
+    authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None), config.get('secret_key', None),
+                                        config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None))
 
     if not authorization:
         _LOGGER.error(
@@ -56,7 +59,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     try:
+        """ Iterate each module """
         for module_name, monitored_conditions in config['modules'].items():
+            """ Test if module exist """
+            if module_name not in    data.get_module_names():
+                _LOGGER.error('Module name: "%s" not found', module_name)
+                continue
+            """ Only create sensor for monitored """
             for variable in monitored_conditions:
                 if variable not in SENSOR_TYPES:
                     _LOGGER.error('Sensor type: "%s" does not exist', variable)
@@ -115,33 +124,26 @@ class NetAtmoSensor(Entity):
                 self._state = round(data['Temperature'], 1)
         elif self.type == 'humidity':
             self._state = data['Humidity']
+        elif self.type == 'noise':
+            self._state = data['Noise']
+        elif self.type == 'co2':
+            self._state = data['CO2']
         elif self.type == 'pressure':
-            self._state = round(data.get_pressure()['press'], 0)
-        elif self.type == 'clouds':
-            self._state = data.get_clouds()
-        elif self.type == 'rain':
-            if data.get_rain():
-                self._state = round(data.get_rain()['3h'], 0)
-                self._unit_of_measurement = 'mm'
-            else:
-                self._state = 'not raining'
-                self._unit_of_measurement = ''
-        elif self.type == 'snow':
-            if data.get_snow():
-                self._state = round(data.get_snow(), 0)
-                self._unit_of_measurement = 'mm'
-            else:
-                self._state = 'not snowing'
-                self._unit_of_measurement = ''
+            self._state = round(data['Pressure'],
+                                1)
 
 
 class NetAtmoData(object):
     """ Gets the latest data from NetAtmo. """
 
     def __init__(self, auth):
-
         self.auth = auth
         self.data = None
+
+    def get_module_names (self) :
+        self.update()
+        return self.data.keys()
+
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
