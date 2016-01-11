@@ -24,7 +24,7 @@ SENSOR_TYPES = {
     'Pressure': ['mBar']
 }
 
-sensor_url = "https://api.netatmo.com//api/getstationsdata?access_token="
+SENSOR_URL = "https://api.netatmo.com//api/getstationsdata?access_token="
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'NETAMTO Sensor'
