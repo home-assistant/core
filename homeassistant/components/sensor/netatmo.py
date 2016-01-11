@@ -42,6 +42,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     client_secret = config.get(CONF_SECRET, None)
     username = config.get(CONF_USERNAME, None)
     password = config.get(CONF_PASSWORD, None)
+    if None in (client_id, client_secret, username, password):
+        _LOGGER.error('Not all required config keys present: %s',
+                      ', '.join((CONF_ID, CONF_SECRET,
+                                 CONF_USERNAME, CONF_PASSWORD)))
+        return False
     cred = {CONF_ID: client_id, CONF_SECRET: client_secret,
             CONF_USERNAME: username, CONF_PASSWORD: password}
     dev = list()
