@@ -9,7 +9,7 @@ https://home-assistant.io/components/notify. ... /
 import logging
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_USERNAME, CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +32,6 @@ def get_service(hass, config):
 # pylint: disable=too-few-public-methods
 class FreeSMSNotificationService(BaseNotificationService):
     """ Implements notification service for the Free SMS service. """
-
-
 
     def __init__(self, username, access_token):
         from freesms import FreeClient
