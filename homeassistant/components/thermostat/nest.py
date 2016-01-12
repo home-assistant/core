@@ -147,6 +147,14 @@ class NestThermostat(ThermostatDevice):
         """ Returns whether the fan is on """
         return self.device.fan
 
+    def turn_fan_on(self):
+        """ Turns fan on """
+        self.device.fan = True
+
+    def turn_fan_off(self):
+        """ Turns fan off """
+        self.device.fan = False
+
     @property
     def min_temp(self):
         """ Identifies min_temp in Nest API or defaults if not available. """
