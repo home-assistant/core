@@ -9,14 +9,10 @@ import unittest
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, ATTR_ENTITY_ID)
+    STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
-from tests.common import mock_service
 
 
 class MockMediaPlayer(media_player.MediaPlayerDevice):
@@ -349,6 +345,6 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_mp_1.update_ha_state()
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
-            | universal.SUPPORT_VOLUME_BUTTONS | universal.SUPPORT_VOLUME_MUTE
+            | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE
 
         self.assertEqual(check_flags, ump.supported_media_commands)
