@@ -429,4 +429,4 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def update_state(self, *_):
         """ event to trigger a state update in HA """
         self._cache_active_child_state()
-        self.update_ha_state()
+        self.update_ha_state(True)
