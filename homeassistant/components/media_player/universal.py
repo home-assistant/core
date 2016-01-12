@@ -221,7 +221,9 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def active_child_state(self):
         """ The state of the active child or None """
-        for child_state in self.children.values():
+        children = self.children
+        for child_name in self._children:
+            child_state = children[child_name]
             if child_state and child_state.state not in OFF_STATES:
                 return child_state
 
