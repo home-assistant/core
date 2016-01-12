@@ -174,16 +174,16 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         active_child = self.active_child_state
         return active_child.attributes.get(attr_name) if active_child else None
 
-    def _override_or_child_service(self, service_name, **service_data):
+    def _override_or_child_service(self, service_name, service_data):
         """ calls either a specified or active child's service """
         if service_name in self._cmds:
             call_from_config(
                 self.hass, self._cmds[service_name], blocking=True)
             return
 
-        self._child_service(service_name, **service_data)
+        self._child_service(service_name, service_data)
 
-    def _child_service(self, service_name, **service_data):
+    def _child_service(self, service_name, service_data):
         """ calls the active child's specified service """
         active_child = self.active_child_state
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
@@ -376,12 +376,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def mute_volume(self, is_volume_muted):
         """ mute the volume. """
         data = {ATTR_MEDIA_VOLUME_MUTED: is_volume_muted}
-        self._override_or_child_service(SERVICE_VOLUME_MUTE, **data)
+        self._override_or_child_service(SERVICE_VOLUME_MUTE, data)
 
     def set_volume_level(self, volume_level):
         """ set volume level, range 0..1. """
         data = {ATTR_MEDIA_VOLUME_LEVEL: volume_level}
-        self._child_service(SERVICE_VOLUME_SET, **data)
+        self._child_service(SERVICE_VOLUME_SET, data)
 
     def media_play(self):
         """ Send play commmand. """
@@ -402,16 +402,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def media_seek(self, position):
         """ Send seek command. """
         data = {ATTR_MEDIA_SEEK_POSITION: position}
-        self._child_service(SERVICE_MEDIA_SEEK, **data)
+        self._child_service(SERVICE_MEDIA_SEEK, data)
 
     def play_youtube(self, media_id):
         """ Plays a YouTube media. """
-        self._child_service(SERVICE_YOUTUBE_VIDEO, media_id=media_id)
+        data = {'media_id': media_id}
+        self._child_service(SERVICE_YOUTUBE_VIDEO, data)
 
     def play_media(self, media_type, media_id):
         """ Plays a piece of media. """
-        self._child_service(
-            SERVICE_PLAY_MEDIA, media_type=media_type, media_id=media_id)
+        data = {'media_type': media_type, 'media_id': media_id}
+        self._child_service(SERVICE_PLAY_MEDIA, data)
 
     def volume_up(self):
         """ volume_up media player. """
