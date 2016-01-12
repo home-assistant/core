@@ -8,10 +8,14 @@ https://home-assistant.io/components/media_player.universal/
 """
 
 # pylint: disable=import-error
+from copy import copy
 import logging
 
+from homeassistant.helpers.event import track_state_change
+
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, CONF_NAME, ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE,
+    STATE_IDLE, STATE_ON, STATE_OFF, CONF_NAME,
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE,
     SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE,
@@ -52,7 +56,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not validate_config(config):
         return
 
-    player = UniversalMediaPlayer(config[CONF_NAME],
+    player = UniversalMediaPlayer(hass,
+                                  config[CONF_NAME],
                                   config[CONF_CHILDREN],
                                   config[CONF_COMMANDS],
                                   config[CONF_ATTRS])
@@ -106,8 +111,8 @@ def validate_commands(config):
         config[CONF_COMMANDS] = {}
     elif not isinstance(config[CONF_COMMANDS], dict):
         _LOGGER.warning(
-            'Universal Media Player (%s) specified commands not dict in config.'
-            ' They will be ignored.',
+            'Universal Media Player (%s) specified commands not dict in '
+            'config. They will be ignored.',
             config[CONF_NAME])
         config[CONF_COMMANDS] = {}
 
@@ -129,14 +134,17 @@ def validate_attributes(config):
 
 class UniversalMediaPlayer(MediaPlayerDevice):
     """ Represents a universal media player in HA """
+    # pylint: disable=too-many-public-methods
 
-    def __init__(self, name, children, commands, attributes):
+    def __init__(self, hass, name, children, commands, attributes):
+        # pylint: disable=too-many-arguments
+        self.hass = hass
         self._name = name
         self._children = children
         self._cmds = commands
         self._attrs = attributes
 
-        # [todo] Update when children update
+        track_state_change(hass, self.dependencies, self.update_state)
 
     def _entity_lkp(self, entity_id=None, state_attr=None, state_as_obj=True):
         """ Looks up an entity state from hass """
@@ -188,6 +196,14 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                                 blocking=True)
 
     @property
+    def dependencies(self):
+        """ List of entity ids of entities that the mp depends on for state """
+        depend = copy(self._children)
+        for entity in self._attrs.values():
+            depend.append(entity[0])
+        return depend
+
+    @property
     def master_state(self):
         """ gets the master state from entity or none """
         if CONF_STATE in self._attrs:
@@ -205,7 +221,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def active_child_state(self):
         """ The state of the active child or None """
-        for child_id, child_state in self.children.items():
+        for child_state in self.children.values():
             if child_state and child_state.state not in OFF_STATES:
                 return child_state
 
@@ -241,7 +257,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """ boolean if volume is muted """
-        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED)
+        return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED) \
+            in [True, STATE_ON]
 
     @property
     def media_content_id(self):
@@ -410,3 +427,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def media_play_pause(self):
         """ media_play_pause media player. """
         self._child_service(SERVICE_MEDIA_PLAY_PAUSE)
+
+    def update_state(self, *_):
+        """ event to trigger a state update in HA """
+        self.update_ha_state()
