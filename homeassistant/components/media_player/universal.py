@@ -192,6 +192,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                                 blocking=True)
 
     @property
+    def should_poll(self):
+        """ Indicates whether HA should poll for updates """
+        return False
+
+    @property
     def dependencies(self):
         """ List of entity ids of entities that the mp depends on for state """
         depend = copy(self._children)
