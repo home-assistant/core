@@ -12,6 +12,7 @@ from copy import copy
 import logging
 
 from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.service import call_from_config
 
 from homeassistant.const import (
     STATE_IDLE, STATE_ON, STATE_OFF, CONF_NAME,
@@ -178,11 +179,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def _override_or_child_service(self, service_name, **service_data):
         """ calls either a specified or active child's service """
         if service_name in self._cmds:
-            cmd_data = self._cmds[service_name]
-            domain, service = cmd_data[CONF_SERVICE].split('.', 1)
-            self.hass.services.call(domain, service,
-                                    cmd_data[CONF_SERVICE_DATA],
-                                    blocking=True)
+            call_from_config(
+                self.hass, self._cmds[service_name], blocking=True)
             return
 
         self._child_service(service_name, **service_data)
