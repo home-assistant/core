@@ -147,7 +147,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         track_state_change(hass, self.dependencies, self.update_state)
 
-    def _entity_lkp(self, entity_id=None, state_attr=None, state_as_obj=True):
+    def _entity_lkp(self, entity_id=None, state_attr=None):
         """ Looks up an entity state from hass """
         if entity_id is None:
             return
@@ -159,15 +159,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         if state_attr:
             return state_obj.attributes.get(state_attr)
-        if state_as_obj:
-            return state_obj
         return state_obj.state
 
     def _override_or_child_attr(self, attr_name):
         """ returns either the override or the active child for attr_name """
         if attr_name in self._attrs:
-            return self._entity_lkp(*self._attrs[attr_name],
-                                    state_as_obj=False)
+            return self._entity_lkp(*self._attrs[attr_name])
 
         return self._child_attr(attr_name)
 
@@ -205,23 +202,16 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """ gets the master state from entity or none """
         if CONF_STATE in self._attrs:
-            master_state = self._entity_lkp(*self._attrs[CONF_STATE],
-                                            state_as_obj=False)
+            master_state = self._entity_lkp(*self._attrs[CONF_STATE])
             return master_state if master_state else STATE_OFF
         else:
             return None
 
     @property
-    def children(self):
-        """ Gets children and their current states """
-        return {child: self._entity_lkp(child) for child in self._children}
-
-    @property
     def active_child_state(self):
         """ The state of the active child or None """
-        children = self.children
         for child_name in self._children:
-            child_state = children[child_name]
+            child_state = self.hass.states.get(child_name)
             if child_state and child_state.state not in OFF_STATES:
                 return child_state
 
