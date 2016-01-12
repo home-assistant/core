@@ -1,10 +1,10 @@
 """
-homeassistant.components.notify.freesms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-FreeSMS platform for notify component.
+homeassistant.components.notify.free_mobile
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Free Mobile SMS platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify. ... /
+https://home-assistant.io/components/notify.free_mobile/
 """
 import logging
 from homeassistant.helpers import validate_config
@@ -17,7 +17,7 @@ REQUIREMENTS = ['freesms==0.1.0']
 
 
 def get_service(hass, config):
-    """ Get the FreeSMS notification service. """
+    """ Get the Free Mobile SMS notification service. """
 
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_USERNAME,
@@ -31,7 +31,7 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class FreeSMSNotificationService(BaseNotificationService):
-    """ Implements notification service for the Free SMS service. """
+    """ Implements notification service for the Free Mobile SMS service. """
 
     def __init__(self, username, access_token):
         from freesms import FreeClient
@@ -44,7 +44,7 @@ class FreeSMSNotificationService(BaseNotificationService):
         if resp.status_code == 400:
             _LOGGER.error("At least one parameter is missing")
         elif resp.status_code == 402:
-            _LOGGER.error("Too much sms send in a few time")
+            _LOGGER.error("Too much SMS send in a few time")
         elif resp.status_code == 403:
             _LOGGER.error("Wrong Username/Password")
         elif resp.status_code == 500:
