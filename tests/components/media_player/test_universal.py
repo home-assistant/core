@@ -184,24 +184,6 @@ class TestMediaPlayer(unittest.TestCase):
 
         self.assertEqual(STATE_OFF, ump.master_state)
 
-    def test_children(self):
-        """ test children property """
-        config = self.config_children_only
-        universal.validate_config(config)
-
-        ump = universal.UniversalMediaPlayer(self.hass, **config)
-        children = ump.children
-
-        check_children_ids = config['children']
-        check_children_ids.sort()
-        children_ids = list(children.keys())
-        children_ids.sort()
-        self.assertEqual(check_children_ids, children_ids)
-
-        check_children_states = [STATE_OFF, STATE_OFF]
-        children_states = [val.state for val in children.values()]
-        self.assertEqual(check_children_states, children_states)
-
     def test_active_child_state(self):
         """ test active child state property """
         config = self.config_children_only
