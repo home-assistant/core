@@ -190,21 +190,26 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertEqual(None, ump.active_child_state)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump.active_child_state.entity_id)
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.update_ha_state()
+        ump.update_state()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump.active_child_state.entity_id)
 
         self.mock_mp_1._state = STATE_OFF
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(self.mock_mp_2.entity_id,
                          ump.active_child_state.entity_id)
 
@@ -223,11 +228,14 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertTrue(ump.state, STATE_OFF)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(STATE_PLAYING, ump.state)
 
     def test_state_with_children_and_attrs(self):
@@ -236,17 +244,22 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertEqual(ump.state, STATE_OFF)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
+        ump.update_state()
         self.assertEqual(ump.state, STATE_ON)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(ump.state, STATE_PLAYING)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
+        ump.update_state()
         self.assertEqual(ump.state, STATE_OFF)
 
     def test_volume_level(self):
@@ -255,15 +268,19 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertEqual(None, ump.volume_level)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(0, ump.volume_level)
 
         self.mock_mp_1._volume_level = 1
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(1, ump.volume_level)
 
     def test_is_volume_muted_children_only(self):
@@ -272,15 +289,19 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._is_volume_muted = True
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertTrue(ump.is_volume_muted)
 
     def test_is_volume_muted_children_and_attr(self):
@@ -301,12 +322,15 @@ class TestMediaPlayer(unittest.TestCase):
         universal.validate_config(config)
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.assertEqual(0, ump.supported_media_commands)
 
         self.mock_mp_1._supported_media_commands = 512
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
         self.assertEqual(512, ump.supported_media_commands)
 
     def test_supported_media_commands_children_and_cmds(self):
@@ -320,11 +344,14 @@ class TestMediaPlayer(unittest.TestCase):
         config['commands']['volume_mute'] = 'test'
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update_state()
 
         self.mock_mp_1._supported_media_commands = \
             universal.SUPPORT_VOLUME_SET
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
+        ump.update_state()
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE
