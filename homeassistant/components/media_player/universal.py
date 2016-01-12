@@ -144,6 +144,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._children = children
         self._cmds = commands
         self._attrs = attributes
+        self._child_state = None
 
         track_state_change(hass, self.dependencies, self.update_state)
 
@@ -207,13 +208,19 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         else:
             return None
 
-    @property
-    def active_child_state(self):
+    def _cache_active_child_state(self):
         """ The state of the active child or None """
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
             if child_state and child_state.state not in OFF_STATES:
-                return child_state
+                self._child_state = child_state
+                return
+        self._child_state = None
+
+    @property
+    def active_child_state(self):
+        """ the state of the active child or none """
+        return self._child_state
 
     @property
     def name(self):
@@ -420,4 +427,5 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     def update_state(self, *_):
         """ event to trigger a state update in HA """
+        self._cache_active_child_state()
         self.update_ha_state()
