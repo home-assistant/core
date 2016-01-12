@@ -25,7 +25,7 @@ from homeassistant.const import (
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, DOMAIN,
-    SUPPORT_VOLUME_BUTTONS, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
     SERVICE_PLAY_MEDIA, SERVICE_YOUTUBE_VIDEO,
     ATTR_SUPPORTED_MEDIA_COMMANDS, ATTR_MEDIA_VOLUME_MUTED,
@@ -352,7 +352,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP,
                                               SERVICE_VOLUME_DOWN]]):
-            flags |= SUPPORT_VOLUME_BUTTONS
+            flags |= SUPPORT_VOLUME_STEP
             flags &= ~SUPPORT_VOLUME_SET
 
         if SERVICE_VOLUME_MUTE in self._cmds and \
