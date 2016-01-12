@@ -73,6 +73,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif (value.command_class == zwave.COMMAND_CLASS_METER and
           value.type == zwave.TYPE_DECIMAL):
         add_devices([ZWaveMultilevelSensor(value)])
+        
+    elif value.command_class == zwave.COMMAND_CLASS_ALARM:
+        add_devices([ZWaveAlarmSensor(value)])
 
 
 class ZWaveSensor(Entity):
@@ -216,3 +219,17 @@ class ZWaveMultilevelSensor(ZWaveSensor):
             return TEMP_FAHRENHEIT
         else:
             return unit
+
+class ZWaveAlarmSensor(ZWaveSensor):
+    """ A Z-wave sensor that sends Alarm alerts 
+    
+    Examples include certain Multisensors that have motion and vibration capabilities.
+    Z-Wave defines various alarm types such as Smoke, Flood, Burglar, CarbonMonoxide, etc. 
+    This wraps these events. 
+    
+    COMMAND_CLASS_ALARM is what we get here. 
+    """
+    @property
+    def state(self):
+        """ Returns the state of the sensor. """
+        return str(self._value.data)
