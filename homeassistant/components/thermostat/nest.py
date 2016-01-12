@@ -66,7 +66,6 @@ class NestThermostat(ThermostatDevice):
         return {
             "humidity": self.device.humidity,
             "target_humidity": self.device.target_humidity,
-            "fan": self.device.fan,
             "mode": self.device.mode
         }
 
@@ -142,6 +141,11 @@ class NestThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """ Turns away off. """
         self.structure.away = False
+
+    @property
+    def is_fan_on(self):
+        """ Returns whether the fan is on """
+        return self.device.fan
 
     @property
     def min_temp(self):
