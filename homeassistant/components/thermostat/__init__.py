@@ -34,6 +34,7 @@ STATE_IDLE = "idle"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
+ATTR_FAN = "fan"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
 ATTR_TEMPERATURE_LOW = "target_temp_low"
@@ -167,6 +168,10 @@ class ThermostatDevice(Entity):
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
+        is_fan_on = self.is_fan_on
+        if is_fan_on is not None:
+            data[ATTR_FAN] = STATE_ON if is_fan_on else STATE_OFF
+
         device_attr = self.device_state_attributes
 
         if device_attr is not None:
@@ -209,6 +214,14 @@ class ThermostatDevice(Entity):
         """
         Returns if away mode is on.
         Return None if no away mode available.
+        """
+        return None
+
+    @property
+    def is_fan_on(self):
+        """
+        Returns if the fan is on
+        Return None if not available.
         """
         return None
 
