@@ -42,6 +42,9 @@ PyISY==1.0.5
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
 
+# homeassistant.components.librato
+librato-metrics==0.8.5
+
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
 
