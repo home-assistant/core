@@ -892,618 +892,618 @@
     </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.manual.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/alarm_control_panel.mqtt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/arduino.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/automation.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/browser.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/camera.foscam.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/camera.generic.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/configurator.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/conversation.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_sun_light_trigger.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.actiontec.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.aruba.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.asuswrt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.ddwrt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.geofancy.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.luci.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.mqtt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.netgear.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.nmap_scanner.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.owntracks.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.snmp.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.thomson.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.tomato.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.tplink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/device_tracker.ubus.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/discovery.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/downloader.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/ecobee.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/group.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/history.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/ifttt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/ifttt.manything.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/introduction.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/isy994.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/keyboard.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.blinksticklight.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.hue.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.hyperion.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.limitlessled.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.rfxtrx.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.tellstick.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.vera.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/light.wink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/lock.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/lock.wink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/logbook.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.cast.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.denon.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.firetv.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.itunes.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.kodi.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.mpd.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.plex.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.sonos.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/media_player.squeezebox.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/modbus.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/mqtt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.file.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.instapush.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.nma.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.pushbullet.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.pushover.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.slack.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.smtp.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.syslog.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.telegram.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/notify.xmpp.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/rfxtrx.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/scene.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/script.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.arduino.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.arest.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.bitcoin.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.command_sensor.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.cpuspeed.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.dht.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.ecobee.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.efergy.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.forecast.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.glances.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.modbus.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.mqtt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.mysensors.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.openweathermap.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rest.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rfxtrx.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.rpi_gpio.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.sabnzbd.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.swiss_public_transport.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.systemmonitor.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.tellstick.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.temper.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.time_date.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.transmission.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.vera.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.wink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sensor.worldclock.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/shell_command.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/simple_alarm.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/sun.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.arduino.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.arest.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.command_switch.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.edimax.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.hikvision.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.modbus.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.mqtt.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rest.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rfxtrx.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.rpi_gpio.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.tellstick.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.transmission.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.vera.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.wemo.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/switch.wink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/tellstick.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.ecobee.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.heat_control.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.nest.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/thermostat.radiotherm.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/vera.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/verisure.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/wink.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/zone.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/components/zwave.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/frontend.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/demo/index.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/add_new_platform.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/api.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/architecture.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/creating_components.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/credits.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/frontend.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/python_api.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/rest_api.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/developers/website.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/android.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/automation.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/autostart.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/configuration.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/devices.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/presence-detection.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/troubleshooting-configuration.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/getting-started/troubleshooting.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/googlef4f3693c209fe788.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
   <url>
     <loc>https://home-assistant.io/static/mdi-demo.html</loc>
-    <lastmod>2016-01-05T19:20:30+00:00</lastmod>
+    <lastmod>2016-01-12T03:09:13+00:00</lastmod>
   </url>
 </urlset>
