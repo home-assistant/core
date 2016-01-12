@@ -36,6 +36,9 @@ omit =
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
+    homeassistant/components/mysensors.py
+    homeassistant/components/*/mysensors.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -92,7 +95,6 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
-    homeassistant/components/sensor/mysensors.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/rpi_gpio.py
