@@ -27,6 +27,7 @@ SCAN_INTERVAL = 60
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
+SERVICE_SET_FAN_MODE = "set_fan_mode"
 
 STATE_HEAT = "heat"
 STATE_COOL = "cool"
@@ -70,6 +71,19 @@ def set_temperature(hass, temperature, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, data)
 
 
+def set_fan_mode(hass, fan_mode, entity_id=None):
+    """ Turn all or specified thermostat fan mode on. """
+    data = {
+        ATTR_FAN: fan_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
+
+
+# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Setup thermostats. """
     component = EntityComponent(_LOGGER, DOMAIN, hass,
@@ -125,6 +139,31 @@ def setup(hass, config):
     hass.services.register(
         DOMAIN, SERVICE_SET_TEMPERATURE, temperature_set_service,
         descriptions.get(SERVICE_SET_TEMPERATURE))
+
+    def fan_mode_set_service(service):
+        """ Set fan mode on target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        fan_mode = service.data.get(ATTR_FAN)
+
+        if fan_mode is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_FAN_MODE, ATTR_FAN)
+            return
+
+        for thermostat in target_thermostats:
+            if fan_mode:
+                thermostat.turn_fan_on()
+            else:
+                thermostat.turn_fan_off()
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_FAN_MODE, fan_mode_set_service,
+        descriptions.get(SERVICE_SET_FAN_MODE))
 
     return True
 
@@ -235,6 +274,14 @@ class ThermostatDevice(Entity):
 
     def turn_away_mode_off(self):
         """ Turns away mode off. """
+        pass
+
+    def turn_fan_on(self):
+        """ Turns fan on. """
+        pass
+
+    def turn_fan_off(self):
+        """ Turns fan off. """
         pass
 
     @property
