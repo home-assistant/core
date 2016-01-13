@@ -171,7 +171,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     def _child_attr(self, attr_name):
         """ returns the active child's attr """
-        active_child = self.active_child_state
+        active_child = self._child_state
         return active_child.attributes.get(attr_name) if active_child else None
 
     def _call_service(self, service_name, service_data=None,
@@ -185,7 +185,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if service_data is None:
             service_data = {}
 
-        active_child = self.active_child_state
+        active_child = self._child_state
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         self.hass.services.call(DOMAIN, service_name, service_data,
@@ -223,11 +223,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._child_state = None
 
     @property
-    def active_child_state(self):
-        """ the state of the active child or none """
-        return self._child_state
-
-    @property
     def name(self):
         """ name of universal player """
         return self._name
@@ -245,7 +240,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if master_state == STATE_OFF:
             return STATE_OFF
 
-        active_child = self.active_child_state
+        active_child = self._child_state
         if active_child:
             return active_child.state
 
@@ -366,7 +361,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """ Extra attributes a device wants to expose. """
-        active_child = self.active_child_state
+        active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} \
             if active_child else {}
 
