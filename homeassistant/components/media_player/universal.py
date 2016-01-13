@@ -146,7 +146,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._attrs = attributes
         self._child_state = None
 
-        track_state_change(hass, self.dependencies, self.update_state)
+        depend = copy(children)
+        for entity in attributes.values():
+            depend.append(entity[0])
+
+        track_state_change(hass, depend, self.update_state)
 
     def _entity_lkp(self, entity_id=None, state_attr=None):
         """ Looks up an entity state from hass """
@@ -195,14 +199,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def should_poll(self):
         """ Indicates whether HA should poll for updates """
         return False
-
-    @property
-    def dependencies(self):
-        """ List of entity ids of entities that the mp depends on for state """
-        depend = copy(self._children)
-        for entity in self._attrs.values():
-            depend.append(entity[0])
-        return depend
 
     @property
     def master_state(self):
