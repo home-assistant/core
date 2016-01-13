@@ -25,7 +25,7 @@ SENSOR_TYPES = {
     'precipitation': ['Condition', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
-    'pressure': ['Pressure', 'hPa'],
+    'pressure': ['Pressure', 'mbar'],
     'windDirection': ['Wind direction', '°'],
     'humidity': ['Humidity', '%'],
     'fog': ['Fog', '%'],
