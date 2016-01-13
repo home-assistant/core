@@ -24,10 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELCIUS],
-    'co2'        : ['CO2', 'ppm'],
-    'pressure'   : ['Pressure', 'mb'],
-    'noise'      : ['Noise', 'dB'],
-    'humidity'   : ['Humidity', '%']
+    'co2':         ['CO2', 'ppm'],
+    'pressure':    ['Pressure', 'mb'],
+    'noise':       ['Noise', 'dB'],
+    'humidity':    ['Humidity', '%']
 }
 
 CONF_SECRET_KEY = 'secret_key'
