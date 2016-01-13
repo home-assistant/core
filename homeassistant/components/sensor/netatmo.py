@@ -31,6 +31,7 @@ SENSOR_TYPES = {
 }
 
 CONF_SECRET_KEY = 'secret_key'
+ATTR_MODULE = 'modules'
 
 # Return cached results if last scan was less then this time ago
 # NetAtmo Data is uploaded to server every 10mn
@@ -67,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     try:
         # Iterate each module
-        for module_name, monitored_conditions in config['modules'].items():
+        for module_name, monitored_conditions in config[ATTR_MODULE].items():
             # Test if module exist """
             if module_name not in data.get_module_names():
                 _LOGGER.error('Module name: "%s" not found', module_name)
