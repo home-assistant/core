@@ -91,8 +91,8 @@ class NetAtmoSensor(Entity):
     """ Implements a NetAtmo sensor. """
 
     def __init__(self, netatmo_data, module_name, sensor_type):
-        self.client_name = 'NetAtmo'
-        self._name = module_name + '_' + SENSOR_TYPES[sensor_type][0]
+        self._name = "NetAtmo {} {}".format(module_name,
+                                            SENSOR_TYPES[sensor_type][0])
         self.netatmo_data = netatmo_data
         self.module_name = module_name
         self.type = sensor_type
@@ -102,7 +102,7 @@ class NetAtmoSensor(Entity):
 
     @property
     def name(self):
-        return '{} {}'.format(self.client_name, self._name)
+        return self._name
 
     @property
     def state(self):
