@@ -11,6 +11,7 @@ import logging
 
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.util import template
+from homeassistant.helpers.service import call_from_config
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
@@ -23,6 +24,7 @@ API_ENDPOINT = '/api/alexa'
 CONF_INTENTS = 'intents'
 CONF_CARD = 'card'
 CONF_SPEECH = 'speech'
+CONF_ACTION = 'action'
 
 
 def setup(hass, config):
@@ -80,6 +82,7 @@ def _handle_alexa(handler, path_match, data):
 
     speech = config.get(CONF_SPEECH)
     card = config.get(CONF_CARD)
+    action = config.get(CONF_ACTION)
 
     # pylint: disable=unsubscriptable-object
     if speech is not None:
@@ -88,6 +91,9 @@ def _handle_alexa(handler, path_match, data):
     if card is not None:
         response.add_card(CardType[card['type']], card['title'],
                           card['content'])
+
+    if action is not None:
+        call_from_config(handler.server.hass, action, True)
 
     handler.write_json(response.as_dict())
 

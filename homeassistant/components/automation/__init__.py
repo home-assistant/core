@@ -9,9 +9,9 @@ https://home-assistant.io/components/automation/
 import logging
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.util import split_entity_id
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.components import logbook
+from homeassistant.helpers.service import call_from_config
 
 DOMAIN = 'automation'
 
@@ -19,8 +19,6 @@ DEPENDENCIES = ['group']
 
 CONF_ALIAS = 'alias'
 CONF_SERVICE = 'service'
-CONF_SERVICE_ENTITY_ID = 'entity_id'
-CONF_SERVICE_DATA = 'data'
 
 CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
@@ -96,22 +94,7 @@ def _get_action(hass, config, name):
         _LOGGER.info('Executing %s', name)
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
 
-        domain, service = split_entity_id(config[CONF_SERVICE])
-        service_data = config.get(CONF_SERVICE_DATA, {})
-
-        if not isinstance(service_data, dict):
-            _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
-            service_data = {}
-
-        if CONF_SERVICE_ENTITY_ID in config:
-            try:
-                service_data[ATTR_ENTITY_ID] = \
-                    config[CONF_SERVICE_ENTITY_ID].split(",")
-            except AttributeError:
-                service_data[ATTR_ENTITY_ID] = \
-                    config[CONF_SERVICE_ENTITY_ID]
-
-        hass.services.call(domain, service, service_data)
+        call_from_config(hass, config)
 
     return action
 
