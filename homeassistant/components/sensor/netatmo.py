@@ -11,6 +11,7 @@ from datetime import timedelta
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD,
                                  TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celcius_to_fahrenheit
 
@@ -36,6 +37,16 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the NetAtmo sensor. """
+
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: [CONF_API_KEY,
+                                     CONF_USERNAME,
+                                     CONF_PASSWORD,
+                                     'secret_key']},
+                           _LOGGER):
+        return None
+    
+    import lnetatmo
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
