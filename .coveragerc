@@ -121,6 +121,7 @@ omit =
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
     homeassistant/components/thermostat/nest.py
+    homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
 
 
