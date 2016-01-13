@@ -149,11 +149,15 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         self._attrs = attributes
         self._child_state = None
 
+        def on_dependency_update(*_):
+            """ update ha state when dependencies update """
+            self.update_ha_state(True)
+
         depend = copy(children)
         for entity in attributes.values():
             depend.append(entity[0])
 
-        track_state_change(hass, depend, self.update_state)
+        track_state_change(hass, depend, on_dependency_update)
 
     def _entity_lkp(self, entity_id, state_attr=None):
         """ Looks up an entity state from hass """
@@ -424,7 +428,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """ media_play_pause media player. """
         self._call_service(SERVICE_MEDIA_PLAY_PAUSE)
 
-    def update_state(self, *_):
+    def update(self):
         """ event to trigger a state update in HA """
-        self._cache_active_child_state()
-        self.update_ha_state(True)
+        for child_name in self._children:
+            child_state = self.hass.states.get(child_name)
+            if child_state and child_state.state not in OFF_STATES:
+                self._child_state = child_state
+                return
+        self._child_state = None
