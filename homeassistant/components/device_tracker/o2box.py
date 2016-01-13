@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns FritzBoxScanner. """
+    """ Validates config and returns O2BoxScanner. """
     if not validate_config(config,
                            {DOMAIN: []},
                            _LOGGER):
