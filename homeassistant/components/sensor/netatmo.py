@@ -37,16 +37,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the NetAtmo sensor. """
 
-    try:
-        import lnetatmo
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import lnetatmo. "
-            "Did you maybe not install the package ?")
-
-        return False
-
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
     authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None),
