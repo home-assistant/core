@@ -198,12 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self.authenticated = (self.server.api_password is None
-                              or self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password
-                              or data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password
-                              or self.verify_session())
+        self.authenticated = (self.server.api_password is None or
+                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password or
+                              data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password or
+                              self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
