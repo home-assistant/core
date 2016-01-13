@@ -1,10 +1,7 @@
 """
-homeassistant.components.sensor.command_sensor
+homeassistant.components.binary_sensor.command_sensor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure custom shell commands to turn a value for a sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.command_sensor/
+Allows to configure custom shell commands to turn a value into a logical value for a binary sensor.
 """
 import logging
 import subprocess
@@ -16,7 +13,7 @@ from homeassistant.util import template, Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Command Sensor"
+DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
