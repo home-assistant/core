@@ -135,23 +135,6 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertTrue(response)
         self.assertEqual(config_start, self.config_children_and_attr)
 
-    def test_dependencies(self):
-        """ test dependencies property """
-        config = self.config_children_and_attr
-        universal.validate_config(config)
-
-        ump = universal.UniversalMediaPlayer(self.hass, **config)
-
-        depend = ump.dependencies
-        depend.sort()
-
-        check_depend = [media_player.ENTITY_ID_FORMAT.format('mock1'),
-                        media_player.ENTITY_ID_FORMAT.format('mock2'),
-                        self.mock_mute_switch_id, self.mock_state_switch_id]
-        check_depend.sort()
-
-        self.assertEqual(depend, check_depend)
-
     def test_master_state(self):
         """ test master state property """
         config = self.config_children_only
