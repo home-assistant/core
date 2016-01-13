@@ -22,9 +22,9 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
+    SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
 # pylint: disable=unused-argument
@@ -202,11 +202,10 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ Image url of current playing media. """
         if 'artwork_url' in self._status:
             return self._status['artwork_url']
-        return 'http://{server}:{port}/music/current/cover.jpg?player={player}'\
-            .format(
-                server=self._lms.host,
-                port=self._lms.http_port,
-                player=self._id)
+        return ('http://{server}:{port}/music/current/cover.jpg?'
+                'player={player}').format(server=self._lms.host,
+                                          port=self._lms.http_port,
+                                          player=self._id)
 
     @property
     def media_title(self):
