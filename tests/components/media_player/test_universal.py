@@ -193,25 +193,25 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         ump.update_state()
 
-        self.assertEqual(None, ump.active_child_state)
+        self.assertEqual(None, ump._child_state)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
         ump.update_state()
         self.assertEqual(self.mock_mp_1.entity_id,
-                         ump.active_child_state.entity_id)
+                         ump._child_state.entity_id)
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.update_ha_state()
         ump.update_state()
         self.assertEqual(self.mock_mp_1.entity_id,
-                         ump.active_child_state.entity_id)
+                         ump._child_state.entity_id)
 
         self.mock_mp_1._state = STATE_OFF
         self.mock_mp_1.update_ha_state()
         ump.update_state()
         self.assertEqual(self.mock_mp_2.entity_id,
-                         ump.active_child_state.entity_id)
+                         ump._child_state.entity_id)
 
     def test_name(self):
         """ test name property """
