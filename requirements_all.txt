@@ -190,6 +190,9 @@ evohomeclient==0.2.4
 # homeassistant.components.thermostat.nest
 python-nest==2.6.0
 
+# homeassistant.components.thermostat.proliphix
+proliphix==0.1.0
+
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
 
