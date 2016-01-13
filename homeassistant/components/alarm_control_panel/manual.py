@@ -68,7 +68,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """ Returns the state of the device. """
-        if self._state in (STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY) and \
+        if self._state in (STATE_ALARM_ARMED_HOME,
+                           STATE_ALARM_ARMED_AWAY) and \
            self._pending_time and self._state_ts + self._pending_time > \
            dt_util.utcnow():
             return STATE_ALARM_PENDING
