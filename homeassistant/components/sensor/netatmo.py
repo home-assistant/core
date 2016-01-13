@@ -21,6 +21,7 @@ REQUIREMENTS = [
     '#lnetatmo==0.3.0.dev1']
 
 _LOGGER = logging.getLogger(__name__)
+
 SENSOR_TYPES = {
     'temperature': ['Temperature', ''],
     'co2': ['CO2', 'ppm'],
@@ -28,6 +29,8 @@ SENSOR_TYPES = {
     'noise': ['Noise', 'dB'],
     'humidity': ['Humidity', '%']
 }
+
+CONF_SECRET_KEY = 'secret_key'
 
 # Return cached results if last scan was less then this time ago
 # NetAtmo Data is uploaded to server every 10mn
@@ -42,16 +45,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            {DOMAIN: [CONF_API_KEY,
                                      CONF_USERNAME,
                                      CONF_PASSWORD,
-                                     'secret_key']},
+                                     CONF_SECRET_KEY]},
                            _LOGGER):
         return None
-    
+
     import lnetatmo
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
     authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None),
-                                        config.get('secret_key', None),
+                                        config.get(CONF_SECRET_KEY, None),
                                         config.get(CONF_USERNAME, None),
                                         config.get(CONF_PASSWORD, None))
 
