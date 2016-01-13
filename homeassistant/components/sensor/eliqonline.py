@@ -70,5 +70,8 @@ class EliqSensor(Entity):
 
     def update(self):
         """ Gets the latest data. """
-        response = self.api.get_data_now(channelid=self.channel_id)
-        self._state = int(response.power)
+        try:
+            response = self.api.get_data_now(channelid=self.channel_id)
+            self._state = int(response.power)
+        except TypeError:  # raised by eliqonline library on any HTTP error
+            pass

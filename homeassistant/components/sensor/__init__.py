@@ -9,8 +9,8 @@ https://home-assistant.io/components/sensor/
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import (wink, zwave, isy994,
-                                      verisure, ecobee, tellduslive)
+from homeassistant.components import (
+    wink, zwave, isy994, verisure, ecobee, tellduslive, mysensors)
 
 DOMAIN = 'sensor'
 SCAN_INTERVAL = 30
@@ -25,6 +25,7 @@ DISCOVERY_PLATFORMS = {
     verisure.DISCOVER_SENSORS: 'verisure',
     ecobee.DISCOVER_SENSORS: 'ecobee',
     tellduslive.DISCOVER_SENSORS: 'tellduslive',
+    mysensors.DISCOVER_SENSORS: 'mysensors',
 }
 
 
