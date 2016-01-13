@@ -80,18 +80,30 @@ def if_action(hass, config):
         return None
 
     if before is None:
-        before_func = lambda: None
+        def before_func():
+            """Return no point in time."""
+            return None
     elif before == EVENT_SUNRISE:
-        before_func = lambda: sun.next_rising(hass) + before_offset
+        def before_func():
+            """Return time before sunrise."""
+            return sun.next_rising(hass) + before_offset
     else:
-        before_func = lambda: sun.next_setting(hass) + before_offset
+        def before_func():
+            """Return time before sunset."""
+            return sun.next_setting(hass) + before_offset
 
     if after is None:
-        after_func = lambda: None
+        def after_func():
+            """Return no point in time."""
+            return None
     elif after == EVENT_SUNRISE:
-        after_func = lambda: sun.next_rising(hass) + after_offset
+        def after_func():
+            """Return time after sunrise."""
+            return sun.next_rising(hass) + after_offset
     else:
-        after_func = lambda: sun.next_setting(hass) + after_offset
+        def after_func():
+            """Return time after sunset."""
+            return sun.next_setting(hass) + after_offset
 
     def time_if():
         """ Validate time based if-condition """
