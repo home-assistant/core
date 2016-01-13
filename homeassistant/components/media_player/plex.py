@@ -23,7 +23,7 @@ from homeassistant.const import (
 
 REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PLEX_CONFIG_FILE = 'plex.conf'
 
@@ -119,13 +119,14 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
+        # _LOGGER.error("update")
         """ Updates the devices objects. """
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex devices")
             return
-
+        # _LOGGER.error("update clients")    
         new_plex_clients = []
         for device in devices:
             # For now, let's allow all deviceClass types
@@ -133,19 +134,35 @@ def setup_plexserver(host, token, hass, add_devices_callback):
                 continue
 
             if device.machineIdentifier not in plex_clients:
-                new_client = PlexClient(device, plex_sessions, update_devices,
-                                        update_sessions)
+                new_client = PlexClient(device, plex_sessions,
+                                        do_update)
                 plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
                 plex_clients[device.machineIdentifier].set_device(device)
 
+        try:            
+            sessions = plexserver.sessions()
+        except plexapi.exceptions.BadRequest:
+            _LOGGER.exception("Error listing plex sessions")
+            return
+        # _LOGGER.error("update sessions")    
+        for session in sessions:
+            if session.player.machineIdentifier not in plex_clients:
+                new_client = PlexClient(session.player, plex_sessions, 
+                                        do_update)
+                plex_clients[session.player.machineIdentifier] = new_client
+                new_plex_clients.append(new_client)    
+            
+        # _LOGGER.error("update add")
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
+        # _LOGGER.error("after update add")
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS) 
     def update_sessions():
         """ Updates the sessions objects. """
+        # _LOGGER.error("update_sessions")
         try:
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
@@ -156,10 +173,14 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         for session in sessions:
             plex_sessions[session.player.machineIdentifier] = session
 
-    update_devices()
-    update_sessions()
+       
+    def do_update():
+        # _LOGGER.error("do_update")
+        update_devices()
+        update_sessions()
 
-
+    do_update()
+            
 def request_configuration(host, hass, add_devices_callback):
     """ Request configuration steps from the user. """
     configurator = get_component('configurator')
@@ -188,10 +209,9 @@ class PlexClient(MediaPlayerDevice):
     """ Represents a Plex device. """
 
     # pylint: disable=too-many-public-methods, attribute-defined-outside-init
-    def __init__(self, device, plex_sessions, update_devices, update_sessions):
+    def __init__(self, device, plex_sessions, do_update):
         self.plex_sessions = plex_sessions
-        self.update_devices = update_devices
-        self.update_sessions = update_sessions
+        self.do_update = do_update
         self.set_device(device)
 
     def set_device(self, device):
@@ -207,7 +227,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def name(self):
         """ Returns the name of the device. """
-        return self.device.name or DEVICE_DEFAULT_NAME
+        return self.device.name or self.device.title or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
@@ -233,10 +253,9 @@ class PlexClient(MediaPlayerDevice):
             return STATE_OFF
 
         return STATE_UNKNOWN
-
+    
     def update(self):
-        self.update_devices(no_throttle=True)
-        self.update_sessions(no_throttle=True)
+        self.do_update()
 
     @property
     def media_content_id(self):
@@ -316,3 +335,4 @@ class PlexClient(MediaPlayerDevice):
     def media_previous_track(self):
         """ Send previous track command. """
         self.device.skipPrevious()
+        
