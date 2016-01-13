@@ -8,12 +8,12 @@ https://home-assistant.io/components/...
 """
 import logging
 from datetime import timedelta
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (CONF_API_KEY, CONF_USERNAME, CONF_PASSWORD,
-                                 TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                                 TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import celcius_to_fahrenheit
 
 REQUIREMENTS = [
     'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
@@ -23,11 +23,11 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', ''],
-    'co2': ['CO2', 'ppm'],
-    'pressure': ['Pressure', 'mb'],
-    'noise': ['Noise', 'dB'],
-    'humidity': ['Humidity', '%']
+    'temperature': ['Temperature', TEMP_CELCIUS],
+    'co2'        : ['CO2', 'ppm'],
+    'pressure'   : ['Pressure', 'mb'],
+    'noise'      : ['Noise', 'dB'],
+    'humidity'   : ['Humidity', '%']
 }
 
 CONF_SECRET_KEY = 'secret_key'
@@ -51,8 +51,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     import lnetatmo
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
-    unit = hass.config.temperature_unit
     authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None),
                                         config.get(CONF_SECRET_KEY, None),
                                         config.get(CONF_USERNAME, None),
@@ -80,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     _LOGGER.error('Sensor type: "%s" does not exist', variable)
                 else:
                     dev.append(
-                        NetAtmoSensor(data, module_name, variable, unit))
+                        NetAtmoSensor(data, module_name, variable))
     except KeyError:
         pass
 
@@ -88,16 +86,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-few-public-methods
-# pylint: disable=too-many-instance-attributes
 class NetAtmoSensor(Entity):
     """ Implements a NetAtmo sensor. """
 
-    def __init__(self, netatmo_data, module_name, sensor_type, temp_unit):
+    def __init__(self, netatmo_data, module_name, sensor_type):
         self.client_name = 'NetAtmo'
         self._name = module_name + '_' + SENSOR_TYPES[sensor_type][0]
         self.netatmo_data = netatmo_data
         self.module_name = module_name
-        self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -125,15 +121,7 @@ class NetAtmoSensor(Entity):
         data = self.netatmo_data.data[self.module_name]
 
         if self.type == 'temperature':
-            if self.temp_unit == TEMP_CELCIUS:
-                self._state = round(data['Temperature'],
-                                    1)
-            elif self.temp_unit == TEMP_FAHRENHEIT:
-                converted_temperature = celcius_to_fahrenheit(
-                    data['Temperature'])
-                self._state = round(converted_temperature, 1)
-            else:
-                self._state = round(data['Temperature'], 1)
+            self._state = round(data['Temperature'], 1)
         elif self.type == 'humidity':
             self._state = data['Humidity']
         elif self.type == 'noise':
@@ -141,8 +129,7 @@ class NetAtmoSensor(Entity):
         elif self.type == 'co2':
             self._state = data['CO2']
         elif self.type == 'pressure':
-            self._state = round(data['Pressure'],
-                                1)
+            self._state = round(data['Pressure'], 1)
 
 
 class NetAtmoData(object):
