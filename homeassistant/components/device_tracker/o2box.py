@@ -34,19 +34,18 @@ class O2BoxScanner(object):
     """This class queries the O2Box"""
     def __init__(self, config):
         self.last_results = []
-        self.password = ''
         self.success_init = True
 
         # Check for user specific configuration
-        self.host = config.get(CONF_HOST)
-        self.password = config.get(CONF_PASSWORD)
+        host = config.get(CONF_HOST)
+        password = config.get(CONF_PASSWORD)
 
-        if self.host is None and self.password is None:
+        if host is None and password is None:
             self.success_init = False
             _LOGGER.error("Please set host and password of the O2-Box")
         else:
             # Establish a connection to the FRITZ!Box
-            self.o2_box = O2Box(host=self.host, routerpassword=self.password)
+            self.o2_box = O2Box(host=host, routerpassword=password)
 
             if self.o2_box.try_login():
                 self.success_init = True
@@ -55,7 +54,7 @@ class O2BoxScanner(object):
             else:
                 self.success_init = False
                 _LOGGER.error("Failed to establish connection to O2Box "
-                              "with IP: %s", self.host)
+                              "with IP: %s", host)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
