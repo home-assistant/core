@@ -6,6 +6,9 @@ pip>=7.0.0
 vincenty==0.1.3
 jinja2>=2.8
 
+# homeassistant.components.alarm_control_panel.alarmdotcom
+https://github.com/Xorso/pyalarmdotcom/archive/0.0.7.zip#pyalarmdotcom==0.0.7
+
 # homeassistant.components.arduino
 PyMata==2.07a
 
@@ -47,6 +50,9 @@ blinkstick==1.1.7
 
 # homeassistant.components.light.hue
 phue==0.8
+
+# homeassistant.components.light.lifx
+https://github.com/avaidyam/lazylights/archive/master.zip#lazylights==3.0.0
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
