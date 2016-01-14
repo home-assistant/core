@@ -1,5 +1,6 @@
 """
-Module to communicate with a O2 Box 1421, similar to https://hilfe.o2online.de/docs/DOC-1332
+Module to communicate with a O2 Box 1421
+similar to https://hilfe.o2online.de/docs/DOC-1332
 """
 
 import logging
@@ -14,7 +15,8 @@ from homeassistant.components.device_tracker import DOMAIN
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-wlandevice = namedtuple('WlanDevice', ['mac', 'name', 'ip', 'signal', 'link_rate'])
+wlandevice = namedtuple('WlanDevice',
+                        ['mac', 'name', 'ip', 'signal', 'link_rate'])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,21 +95,30 @@ class O2Box(object):
 
     @staticmethod
     def _pretty_mac(macugly):
-        macs = macugly.replace('[', '').replace(']', '').replace('\'', '').split(',')
+        macs = macugly\
+            .replace('[', '')\
+            .replace(']', '')\
+            .replace('\'', '')\
+            .split(',')
         return ':'.join(macs)
+
+    @staticmethod
+    def _is_client_line(line):
+        return 'STA_infos[' in line and 'lan_client_t' not in line
 
     def _extract_wireless_info(self, lines):
         """
-        Extracts the info of all the wireless devices from the Javascript section of the HTML
+        Extracts the info of all the wireless devices from
+        the Javascript section of the HTML
         """
-        clientlines = list(filter(lambda l: 'STA_infos[' in l and 'lan_client_t' not in l, lines))
-        client_cnt = int(len(clientlines) / 4)
+        client_line = list(filter(self._is_client_line, lines))
+        client_cnt = int(len(client_line) / 4)
 
         client_infos = dict()
         for i in range(0, client_cnt):
-            cclines = map(lambda cc: cc.split('.')[1],
-                          (filter(lambda l: '[{0:d}]'.format(i) in l, clientlines)))
-            cleaned = list(map(lambda cc: cc.replace(';', '').split('='), cclines))
+            formated = filter(lambda l: '[{0:d}]'.format(i) in l, client_line)
+            ccl = map(lambda cc: cc.split('.')[1], formated)
+            cleaned = map(lambda cc: cc.replace(';', '').split('='), ccl)
             mac = signal = link_rate = None
             for key, val in cleaned:
                 if key == 'mac':
@@ -122,11 +133,31 @@ class O2Box(object):
 
         return client_infos
 
+    @staticmethod
+    def _is_dhcp_client_line(line):
+        return 'dhcpclients[' in line and '].' in line
+
+    @staticmethod
+    def _extract_entry(cc):
+        return cc.replace(';', '')\
+            .replace(' ', '')\
+            .replace('\'', '')\
+            .split('=')
+
+    @staticmethod
+    def _extract_ip_address(ip):
+        ipparts = ip\
+            .replace('[', '')\
+            .replace(']', '')\
+            .replace(' ', '')\
+            .split(',')
+        return '.'.join(ipparts)
+
     def _extract_dhcp_clients(self, lines):
         """
         Extracts all DHCP clients from the Javascript section of the HTML
         """
-        clientlines = list(filter(lambda l: 'dhcpclients[' in l and '].' in l, lines))
+        clientlines = list(filter(self._is_dhcp_client_line, lines))
         dhcp_cnt = int(len(clientlines) / 4)
 
         extracted_dhcp_clients = dict()
@@ -134,7 +165,7 @@ class O2Box(object):
         for i in range(0, dhcp_cnt):
             cclines = map(lambda cc: cc.split('.')[1],
                           (filter(lambda l: '[%i]' % i in l, clientlines)))
-            cleaned = map(lambda cc: cc.replace(';', '').replace(' ', '').replace('\'', '').split('='), cclines)
+            cleaned = map(self._extract_entry, cclines)
             macaddress = hostname = ipaddress = None
             for key, val in cleaned:
                 if key == 'name':
@@ -143,9 +174,7 @@ class O2Box(object):
                 if key == 'mac':
                     macaddress = self._pretty_mac(val)
                 if key == 'ip':
-                    ipparts = val.replace('[', '').replace(']', '').replace(' ', '').split(',')
-                    ipaddress = '.'.join(ipparts)
-
+                    ipaddress = self._extract_ip_address(val)
             extracted_dhcp_clients[macaddress] = (hostname, ipaddress)
 
         return extracted_dhcp_clients
@@ -161,8 +190,8 @@ class O2Box(object):
             'id': '0',
             'idTextPassword': self.password
         }
-        res = session.post(self.baseurl + '/cgi-bin/Hn_login.cgi', data=payload)
-        lines = res.text.split('\n')
+        r = session.post(self.baseurl + '/cgi-bin/Hn_login.cgi', data=payload)
+        lines = r.text.split('\n')
         for line in lines:
             if 'msgLoginPwd_err' in line:
                 return False
@@ -171,7 +200,8 @@ class O2Box(object):
 
     def _logout(self, session):
         """
-        Always immediatly log out again, otherwise access to router would be blocked
+        Always immediatly log out again,
+        otherwise access to router would be blocked
         """
         session.get(self.baseurl + '/cgi-bin/Hn_logout.cgi')
 
@@ -209,16 +239,16 @@ class O2Box(object):
             self._logout(session)
             _LOGGER.debug("logged out")
 
-            connected_devices = list()
+            conn_dev = list()
             lines = lanoverview.text.split('\n')
             dhcpclients = self._extract_dhcp_clients(lines)
 
             for k, infos in self._extract_wireless_info(lines).items():
                 if k in dhcpclients:
-                    name, ipaddress = dhcpclients[k]
+                    name, ip = dhcpclients[k]
                 else:
-                    name = ipaddress = None
+                    name = ip = None
 
-                connected_devices.append(wlandevice(k, name, ipaddress, infos[0], infos[1]))
+                conn_dev.append(wlandevice(k, name, ip, infos[0], infos[1]))
 
-            return connected_devices
+            return conn_dev
