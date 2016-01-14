@@ -25,6 +25,7 @@ BINARY_TYPES = ['fan',
                 'online']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    "Setup nest binary sensors from config file"
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:

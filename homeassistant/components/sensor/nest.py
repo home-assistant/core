@@ -6,13 +6,13 @@ Support for Nest Thermostat Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
+import logging
+import socket
+import homeassistant.components.nest as nest
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.temperature import convert
-
-import homeassistant.components.nest as nest
-import logging
-import socket
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
@@ -30,6 +30,7 @@ SENSOR_TEMP_TYPES = ['temperature',
                      'away_temperature[1]']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    "Setup Nest Sensor from config file"
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:
