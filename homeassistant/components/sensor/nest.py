@@ -12,7 +12,6 @@ import homeassistant.components.nest as nest
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS
-from homeassistant.helpers.temperature import convert
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
@@ -28,6 +27,7 @@ SENSOR_TEMP_TYPES = ['temperature',
                      'target',
                      'away_temperature[0]',
                      'away_temperature[1]']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     "Setup Nest Sensor from config file"
@@ -75,6 +75,7 @@ class NestSensor(Entity):
                 return "{}({}){}".format(location.capitalize(),
                                          name,
                                          self.variable)
+
     @property
     def state(self):
         """ Returns the state of the sensor. """
@@ -85,12 +86,13 @@ class NestSensor(Entity):
     def unit_of_measurement(self):
         return SENSOR_UNITS.get(self.variable, None)
 
+
 class NestTempSensor(NestSensor):
     """ Represents a Nest Temperature sensor. """
 
     @property
     def unit_of_measurement(self):
-        return self.hass.config.temperature_unit
+        return TEMP_CELCIUS
 
     @property
     def state(self):
@@ -98,7 +100,4 @@ class NestTempSensor(NestSensor):
         if temp is None:
             return None
 
-        value = convert(temp, TEMP_CELCIUS,
-                        self.hass.config.temperature_unit)
-
-        return round(value, 1)
+        return round(temp, 1)

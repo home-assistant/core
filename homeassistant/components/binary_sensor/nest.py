@@ -23,6 +23,7 @@ BINARY_TYPES = ['fan',
                 'hvac_emer_heat_state',
                 'online']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     "Setup nest binary sensors from config file"
 
@@ -32,8 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for device in structure.devices:
                 for variable in config['monitored_conditions']:
                     if variable in BINARY_TYPES:
-                        add_devices([NestBinarySensor(
-                                                      structure,
+                        add_devices([NestBinarySensor(structure,
                                                       device,
                                                       variable)])
                     else:
@@ -44,9 +44,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Connection error logging into the nest web service."
         )
 
+
 class NestBinarySensor(NestSensor):
     """ Represents a Nst Binary sensor. """
 
     @property
     def is_on(self):
+        "Returns is the binary sensor is on or off"
+
         return bool(getattr(self.device, self.variable))
