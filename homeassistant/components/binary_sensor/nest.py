@@ -1,0 +1,50 @@
+"""
+homeassistant.components.binary.nest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Nest Thermostat Binary Sensors.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.nest/
+"""
+import logging
+import socket
+import homeassistant.components.nest as nest
+
+from homeassistant.components.sensor.nest  import NestSensor
+from homeassistant.const import (STATE_ON, STATE_OFF)
+
+
+BINARY_TYPES = ['fan',
+                'hvac_ac_state',
+                'hvac_aux_heater_state',
+                'hvac_heat_x2_state',
+                'hvac_heat_x3_state',
+                'hvac_alt_heat_state',
+                'hvac_alt_heat_x2_state',
+                'hvac_emer_heat_state',
+                'online']
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    logger = logging.getLogger(__name__)
+    try:
+        for structure in nest.NEST.structures:
+            for device in structure.devices:
+                for variable in config['monitored_conditions']:
+                    if variable in BINARY_TYPES:
+                        add_devices([NestBinarySensor(structure, device, variable)])
+                    else:
+                        logger.error('Nest sensor type: "%s" does not exist', variable)
+    except socket.error:
+        logger.error(
+            "Connection error logging into the nest web service."
+        )
+
+class NestBinarySensor(NestSensor):
+    """ Represents a Nst Binary sensor. """
+
+    @property
+    def state(self):
+        if getattr(self.device, self.variable):
+            return STATE_ON
+        else:
+            return STATE_OFF
