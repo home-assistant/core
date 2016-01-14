@@ -13,8 +13,9 @@ from homeassistant.components.light import Light
 from homeassistant.util import slugify
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.components.rfxtrx import ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID, \
-    ATTR_NAME, EVENT_BUTTON_PRESSED
+from homeassistant.components.rfxtrx import (
+    ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID,
+    ATTR_NAME, EVENT_BUTTON_PRESSED)
 
 
 DEPENDENCIES = ['rfxtrx']
