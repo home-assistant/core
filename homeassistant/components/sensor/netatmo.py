@@ -1,10 +1,10 @@
 """
 homeassistant.components.sensor.netatmo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NetAtmo Weather Service service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/...
+https://home-assistant.io/components/sensor.netatmo/
 """
 import logging
 from datetime import timedelta
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELCIUS],
     'co2':         ['CO2', 'ppm'],
-    'pressure':    ['Pressure', 'mb'],
+    'pressure':    ['Pressure', 'mbar'],
     'noise':       ['Noise', 'dB'],
     'humidity':    ['Humidity', '%']
 }
