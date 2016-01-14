@@ -11,45 +11,24 @@ import logging
 
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
+from homeassistant.const import (TEMP_CELCIUS)
+import homeassistant.components.nest as nest
 
-REQUIREMENTS = ['python-nest==2.6.0']
+DEPENDENCIES = ['nest']
 
-
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the nest thermostat. """
     logger = logging.getLogger(__name__)
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    if username is None or password is None:
-        logger.error("Missing required configuration items %s or %s",
-                     CONF_USERNAME, CONF_PASSWORD)
-        return
-
-    try:
-        import nest
-    except ImportError:
-        logger.exception(
-            "Error while importing dependency nest. "
-            "Did you maybe not install the python-nest dependency?")
-
-        return
-
-    napi = nest.Nest(username, password)
     try:
         add_devices([
             NestThermostat(structure, device)
-            for structure in napi.structures
+            for structure in nest.NEST.structures
             for device in structure.devices
         ])
     except socket.error:
         logger.error(
             "Connection error logging into the nest web service."
         )
-
 
 class NestThermostat(ThermostatDevice):
     """ Represents a Nest thermostat. """
