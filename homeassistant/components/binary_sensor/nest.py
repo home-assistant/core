@@ -10,8 +10,7 @@ import logging
 import socket
 import homeassistant.components.nest as nest
 
-from homeassistant.components.sensor.nest  import NestSensor
-from homeassistant.const import (STATE_ON, STATE_OFF)
+from homeassistant.components.sensor.nest import NestSensor
 
 
 BINARY_TYPES = ['fan',
@@ -26,15 +25,20 @@ BINARY_TYPES = ['fan',
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     "Setup nest binary sensors from config file"
+
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:
             for device in structure.devices:
                 for variable in config['monitored_conditions']:
                     if variable in BINARY_TYPES:
-                        add_devices([NestBinarySensor(structure, device, variable)])
+                        add_devices([NestBinarySensor(
+                                                      structure,
+                                                      device,
+                                                      variable)])
                     else:
-                        logger.error('Nest sensor type: "%s" does not exist', variable)
+                        logger.error('Nest sensor type: "%s" does not exist',
+                                     variable)
     except socket.error:
         logger.error(
             "Connection error logging into the nest web service."
@@ -44,8 +48,5 @@ class NestBinarySensor(NestSensor):
     """ Represents a Nst Binary sensor. """
 
     @property
-    def state(self):
-        if getattr(self.device, self.variable):
-            return STATE_ON
-        else:
-            return STATE_OFF
+    def is_on(self):
+        return bool(getattr(self.device, self.variable))
