@@ -38,22 +38,24 @@ class O2BoxScanner(object):
         self.success_init = True
 
         # Check for user specific configuration
-        if CONF_HOST in config.keys():
-            self.host = config[CONF_HOST]
-        if CONF_PASSWORD in config.keys():
-            self.password = config[CONF_PASSWORD]
+        self.host = config.get(CONF_HOST)
+        self.password = config.get(CONF_PASSWORD)
 
-        # Establish a connection to the FRITZ!Box
-        self.o2_box = O2Box(host=self.host, routerpassword=self.password)
-
-        if self.o2_box.try_login():
-            self.success_init = True
-            _LOGGER.info("Successfully connected to O2-Box")
-            self._update_info()
-        else:
+        if self.host is None and self.password is None:
             self.success_init = False
-            _LOGGER.error("Failed to establish connection to O2Box "
-                          "with IP: %s", self.host)
+            _LOGGER.error("Please set host and password of the O2-Box")
+        else:
+            # Establish a connection to the FRITZ!Box
+            self.o2_box = O2Box(host=self.host, routerpassword=self.password)
+
+            if self.o2_box.try_login():
+                self.success_init = True
+                _LOGGER.info("Successfully connected to O2-Box")
+                self._update_info()
+            else:
+                self.success_init = False
+                _LOGGER.error("Failed to establish connection to O2Box "
+                              "with IP: %s", self.host)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
@@ -102,25 +104,24 @@ class O2Box(object):
         clientlines = list(filter(lambda l: 'STA_infos[' in l and 'lan_client_t' not in l, lines))
         client_cnt = int(len(clientlines) / 4)
 
-        def extract_client_infos():
-            """Extract each client from the extracted STA infos from HTML"""
-            for i in range(0, client_cnt):
-                cclines = map(lambda cc: cc.split('.')[1],
-                              (filter(lambda l: '[{0:d}]'.format(i) in l, clientlines)))
-                cleaned = list(map(lambda cc: cc.replace(';', '').split('='), cclines))
-                mac = signal = link_rate = None
-                for key, val in cleaned:
-                    if key == 'mac':
-                        mac = self._pretty_mac(val)
-                    if key == 'RSSI':
-                        signal = int(val)
-                    if key == 'rate':
-                        link_rate = int(val)
+        client_infos = dict()
+        for i in range(0, client_cnt):
+            cclines = map(lambda cc: cc.split('.')[1],
+                          (filter(lambda l: '[{0:d}]'.format(i) in l, clientlines)))
+            cleaned = list(map(lambda cc: cc.replace(';', '').split('='), cclines))
+            mac = signal = link_rate = None
+            for key, val in cleaned:
+                if key == 'mac':
+                    mac = self._pretty_mac(val)
+                if key == 'RSSI':
+                    signal = int(val)
+                if key == 'rate':
+                    link_rate = int(val)
 
-                if mac is not None:
-                    yield (mac, (signal, link_rate))
+            if mac is not None:
+                client_infos[mac] = (signal, link_rate)
 
-        return dict((m, rest) for m, rest in extract_client_infos())
+        return client_infos
 
     def _extract_dhcp_clients(self, lines):
         """
@@ -129,26 +130,26 @@ class O2Box(object):
         clientlines = list(filter(lambda l: 'dhcpclients[' in l and '].' in l, lines))
         dhcp_cnt = int(len(clientlines) / 4)
 
-        def extract_dhcp_clients():
-            """extracts the name, mac and ip address"""
-            for i in range(0, dhcp_cnt):
-                cclines = map(lambda cc: cc.split('.')[1],
-                              (filter(lambda l: '[%i]' % i in l, clientlines)))
-                cleaned = map(lambda cc: cc.replace(';', '').replace(' ', '').replace('\'', '').split('='), cclines)
-                macaddress = hostname = ipaddress = None
-                for key, val in cleaned:
-                    if key == 'name':
-                        if val != '':
-                            hostname = val
-                    if key == 'mac':
-                        macaddress = self._pretty_mac(val)
-                    if key == 'ip':
-                        ipparts = val.replace('[', '').replace(']', '').replace(' ', '').split(',')
-                        ipaddress = '.'.join(ipparts)
+        extracted_dhcp_clients = dict()
 
-                yield (macaddress, (hostname, ipaddress))
+        for i in range(0, dhcp_cnt):
+            cclines = map(lambda cc: cc.split('.')[1],
+                          (filter(lambda l: '[%i]' % i in l, clientlines)))
+            cleaned = map(lambda cc: cc.replace(';', '').replace(' ', '').replace('\'', '').split('='), cclines)
+            macaddress = hostname = ipaddress = None
+            for key, val in cleaned:
+                if key == 'name':
+                    if val != '':
+                        hostname = val
+                if key == 'mac':
+                    macaddress = self._pretty_mac(val)
+                if key == 'ip':
+                    ipparts = val.replace('[', '').replace(']', '').replace(' ', '').split(',')
+                    ipaddress = '.'.join(ipparts)
 
-        return dict((m, rest) for m, rest in extract_dhcp_clients())
+            extracted_dhcp_clients[macaddress] = (hostname, ipaddress)
+
+        return extracted_dhcp_clients
 
     def _login(self, session):
         """
@@ -209,18 +210,16 @@ class O2Box(object):
             self._logout(session)
             _LOGGER.debug("logged out")
 
-            def extract_wireless_information():
-                """extracts the information from dhcp which returns the name and the ip address"""
-                lines = lanoverview.text.split('\n')
+            connected_devices = list()
+            lines = lanoverview.text.split('\n')
+            dhcpclients = self._extract_dhcp_clients(lines)
 
-                dhcpclients = self._extract_dhcp_clients(lines)
+            for k, infos in self._extract_wireless_info(lines).items():
+                if k in dhcpclients:
+                    name, ipaddress = dhcpclients[k]
+                else:
+                    name = ipaddress = None
 
-                for k, infos in self._extract_wireless_info(lines).items():
-                    if k in dhcpclients:
-                        name, ipaddress = dhcpclients[k]
-                    else:
-                        name = ipaddress = None
+                connected_devices.append(wlandevice(k, name, ipaddress, infos[0], infos[1]))
 
-                    yield wlandevice(k, name, ipaddress, infos[0], infos[1])
-
-            return list(extract_wireless_information())
+            return connected_devices
