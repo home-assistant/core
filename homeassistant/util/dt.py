@@ -108,14 +108,14 @@ def datetime_to_date_str(dattim):
     return dattim.strftime(DATE_STR_FORMAT)
 
 
-def str_to_datetime(dt_str):
+def str_to_datetime(dt_str, dt_format=DATETIME_STR_FORMAT):
     """ Converts a string to a UTC datetime object.
 
     @rtype: datetime
     """
     try:
         return dt.datetime.strptime(
-            dt_str, DATETIME_STR_FORMAT).replace(tzinfo=pytz.utc)
+            dt_str, dt_format).replace(tzinfo=pytz.utc)
     except ValueError:  # If dt_str did not match our format
         return None
 

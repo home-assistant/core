@@ -42,6 +42,7 @@ turn_on:
       description: Light effect
       values:
         - colorloop
+        - random
 
 turn_off:
   description: Turn a light off

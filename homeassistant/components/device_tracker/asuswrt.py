@@ -58,8 +58,8 @@ class AsusWrtDeviceScanner(object):
 
     def __init__(self, config):
         self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.username = str(config[CONF_USERNAME])
+        self.password = str(config[CONF_PASSWORD])
 
         self.lock = threading.Lock()
 
