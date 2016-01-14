@@ -30,7 +30,7 @@ DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 
 SERVICE_PUBLISH = 'publish'
-EVENT_MQTT_MESSAGE_RECEIVED = 'MQTT_MESSAGE_RECEIVED'
+EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
 REQUIREMENTS = ['paho-mqtt==1.1']
 
@@ -149,9 +149,9 @@ class MQTT(object):
         }
 
         if client_id is None:
-            self._mqttc = mqtt.Client()
+            self._mqttc = mqtt.Client(protocol=mqtt.MQTTv311)
         else:
-            self._mqttc = mqtt.Client(client_id)
+            self._mqttc = mqtt.Client(client_id, protocol=mqtt.MQTTv311)
 
         self._mqttc.user_data_set(self.userdata)
 

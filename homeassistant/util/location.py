@@ -4,6 +4,8 @@ import collections
 import requests
 from vincenty import vincenty
 
+ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
+
 
 LocationInfo = collections.namedtuple(
     "LocationInfo",
@@ -34,3 +36,20 @@ def detect_location_info():
 def distance(lat1, lon1, lat2, lon2):
     """ Calculate the distance in meters between two points. """
     return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+
+
+def elevation(latitude, longitude):
+    """ Return elevation for given latitude and longitude. """
+
+    req = requests.get(ELEVATION_URL, params={
+        'locations': '{},{}'.format(latitude, longitude),
+        'sensor': 'false',
+    })
+
+    if req.status_code != 200:
+        return 0
+
+    try:
+        return int(float(req.json()['results'][0]['elevation']))
+    except (ValueError, KeyError):
+        return 0

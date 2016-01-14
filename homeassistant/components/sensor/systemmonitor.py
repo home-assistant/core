@@ -14,25 +14,25 @@ from homeassistant.const import STATE_ON, STATE_OFF
 
 REQUIREMENTS = ['psutil==3.2.2']
 SENSOR_TYPES = {
-    'disk_use_percent': ['Disk Use', '%'],
-    'disk_use': ['Disk Use', 'GiB'],
-    'disk_free': ['Disk Free', 'GiB'],
-    'memory_use_percent': ['RAM Use', '%'],
-    'memory_use': ['RAM Use', 'MiB'],
-    'memory_free': ['RAM Free', 'MiB'],
-    'processor_use': ['CPU Use', '%'],
-    'process': ['Process', ''],
-    'swap_use_percent': ['Swap Use', '%'],
-    'swap_use': ['Swap Use', 'GiB'],
-    'swap_free': ['Swap Free', 'GiB'],
-    'network_out': ['Sent', 'MiB'],
-    'network_in': ['Recieved', 'MiB'],
-    'packets_out': ['Packets sent', ''],
-    'packets_in': ['Packets recieved', ''],
-    'ipv4_address': ['IPv4 address', ''],
-    'ipv6_address': ['IPv6 address', ''],
-    'last_boot': ['Last Boot', ''],
-    'since_last_boot': ['Since Last Boot', '']
+    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
+    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
+    'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
+    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
+    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
+    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
+    'processor_use': ['CPU Use', '%', 'mdi:memory'],
+    'process': ['Process', '', 'mdi:memory'],
+    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
+    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
+    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
+    'network_out': ['Sent', 'MiB', 'mdi:server-network'],
+    'network_in': ['Recieved', 'MiB', 'mdi:server-network'],
+    'packets_out': ['Packets sent', '', 'mdi:server-network'],
+    'packets_in': ['Packets recieved', '', 'mdi:server-network'],
+    'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
+    'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
+    'last_boot': ['Last Boot', '', 'mdi:clock'],
+    'since_last_boot': ['Since Last Boot', '', 'mdi:clock']
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,6 +68,10 @@ class SystemMonitorSensor(Entity):
     @property
     def name(self):
         return self._name.rstrip()
+
+    @property
+    def icon(self):
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
