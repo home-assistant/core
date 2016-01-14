@@ -51,9 +51,6 @@ blinkstick==1.1.7
 # homeassistant.components.light.hue
 phue==0.8
 
-# homeassistant.components.light.lifx
-https://github.com/avaidyam/lazylights/archive/master.zip#lazylights==3.0.0
-
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
