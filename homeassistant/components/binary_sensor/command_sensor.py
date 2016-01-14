@@ -1,7 +1,8 @@
 """
 homeassistant.components.binary_sensor.command_sensor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure custom shell commands to turn a value into a logical value for a binary sensor.
+Allows to configure custom shell commands to turn a value 
+into a logical value for a binary sensor.
 """
 import logging
 import subprocess
@@ -43,8 +44,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class CommandBinarySensor(BinarySensorDevice):
-    """ Represents a binary sensor that is returning a value of a shell commands. """
-    def __init__(self, hass, data, name, payload_on, payload_off, value_template):
+    """ Represents a binary sensor that is returning 
+    a value of a shell commands. """
+    def __init__(self, hass, data, name, payload_on, 
+                 payload_off, value_template):
         self._hass = hass
         self.data = data
         self._name = name
