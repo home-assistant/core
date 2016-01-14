@@ -40,6 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                              password)])
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=abstract-method
 class AlarmDotCom(alarm.AlarmControlPanel):
     """ Represents a Alarm.com status within HA """
 
@@ -78,16 +80,19 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         if not self._validate_code(code, 'arming home'):
             return
         self._alarm.disarm()
+        self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
         if not self._validate_code(code, 'arming home'):
             return
         self._alarm.arm_stay()
+        self.update_ha_state()
 
     def alarm_arm_away(self, code=None):
         if not self._validate_code(code, 'arming home'):
             return
         self._alarm.arm_away()
+        self.update_ha_state()
 
     def _validate_code(self, code, state):
         """ Validate given code. """
