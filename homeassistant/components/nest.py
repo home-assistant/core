@@ -22,7 +22,6 @@ def setup(hass, config):
     global NEST
 
     logger = logging.getLogger(__name__)
-    print("nest config", config[DOMAIN])
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
 
@@ -31,14 +30,7 @@ def setup(hass, config):
                      CONF_USERNAME, CONF_PASSWORD)
         return
 
-    try:
-        import nest
-    except ImportError:
-        logger.exception(
-            "Error while importing dependency nest. "
-            "Did you maybe not install the python-nest dependency?")
-
-        return
+    import nest
 
     NEST = nest.Nest(username, password)
 
