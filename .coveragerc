@@ -39,8 +39,10 @@ omit =
     homeassistant/components/mysensors.py
     homeassistant/components/*/mysensors.py
 
+    homeassistant/components/nest.py
+    homeassistant/components/*/nest.py
+
     homeassistant/components/binary_sensor/arest.py
-    homeassistant/components/binary_sensor/nest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
@@ -97,7 +99,6 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
-    homeassistant/components/sensor/nest.py
     homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
@@ -123,7 +124,6 @@ omit =
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
-    homeassistant/components/thermostat/nest.py
     homeassistant/components/thermostat/radiotherm.py
 
 
