@@ -11,10 +11,10 @@ from unittest.mock import patch
 import requests
 
 from homeassistant import bootstrap, const
-import homeassistant.core as ha
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
-import homeassistant.components.zone as zone
+
+from tests.common import get_test_home_assistant
 
 SERVER_PORT = 8126
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
@@ -34,7 +34,7 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     # Set up server
     bootstrap.setup_component(hass, http.DOMAIN, {
