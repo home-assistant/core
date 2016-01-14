@@ -31,6 +31,7 @@ SENSOR_TEMP_TYPES = ['temperature',
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     "Setup Nest Sensor from config file"
+
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:
@@ -39,13 +40,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if variable in SENSOR_TYPES:
                         add_devices([NestSensor(structure, device, variable)])
                     elif variable in SENSOR_TEMP_TYPES:
-                        add_devices([NestTempSensor(structure, device, variable)])
+                        add_devices([NestTempSensor(structure,
+                                                    device,
+                                                    variable)])
                     else:
-                        logger.error('Nest sensor type: "%s" does not exist', variable)
+                        logger.error('Nest sensor type: "%s" does not exist',
+                                     variable)
     except socket.error:
         logger.error(
             "Connection error logging into the nest web service."
         )
+
 
 class NestSensor(Entity):
     """ Represents a Nest sensor. """
@@ -58,18 +63,22 @@ class NestSensor(Entity):
     @property
     def name(self):
         """ Returns the name of the nest, if any. """
+
         location = self.device.where
         name = self.device.name
         if location is None:
-            return name + ' ' + self.variable
+            return "{} {}".format(name, self.variable)
         else:
             if name == '':
-                return location.capitalize() + ' ' + self.variable
+                return "{} {}".format(location.capitalize(), self.variable)
             else:
-                return location.capitalize() + '(' + name + ')' + self.variable
+                return "{}({}){}".format(location.capitalize(),
+                                         name,
+                                         self.variable)
     @property
     def state(self):
         """ Returns the state of the sensor. """
+
         return getattr(self.device, self.variable)
 
     @property
