@@ -89,11 +89,11 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # homeassistant.components.mqtt
 paho-mqtt==1.1
 
-# homeassistant.components.nest
-python-nest==2.6.0
-
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4
+
+# homeassistant.components.nest
+python-nest==2.6.0
 
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
