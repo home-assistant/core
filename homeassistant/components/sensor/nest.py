@@ -7,7 +7,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_ON, STATE_OFF, TEMP_CELCIUS)
+from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.temperature import convert
 
 import homeassistant.components.nest as nest
@@ -21,16 +21,6 @@ SENSOR_TYPES = ['humidity',
                 'local_ip',
                 'last_connection',
                 'battery_level']
-
-BINARY_TYPES = ['fan',
-                'hvac_ac_state',
-                'hvac_aux_heater_state',
-                'hvac_heat_x2_state',
-                'hvac_heat_x3_state',
-                'hvac_alt_heat_state',
-                'hvac_alt_heat_x2_state',
-                'hvac_emer_heat_state',
-                'online']
 
 SENSOR_UNITS = {'humidity': '%', 'battery_level': '%'}
 
@@ -47,8 +37,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 for variable in config['monitored_conditions']:
                     if variable in SENSOR_TYPES:
                         add_devices([NestSensor(structure, device, variable)])
-                    elif variable in BINARY_TYPES:
-                        add_devices([NestBinarySensor(structure, device, variable)])
                     elif variable in SENSOR_TEMP_TYPES:
                         add_devices([NestTempSensor(structure, device, variable)])
                     else:
@@ -104,13 +92,3 @@ class NestTempSensor(NestSensor):
                         self.hass.config.temperature_unit)
 
         return round(value, 1)
-
-class NestBinarySensor(NestSensor):
-    """ Represents a Nst Binary sensor. """
-
-    @property
-    def state(self):
-        if getattr(self.device, self.variable):
-            return STATE_ON
-        else:
-            return STATE_OFF
