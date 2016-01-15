@@ -41,6 +41,9 @@ omit =
     homeassistant/components/mysensors.py
     homeassistant/components/*/mysensors.py
 
+    homeassistant/components/rpi_gpio.py
+    homeassistant/components/*/rpi_gpio.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -101,7 +104,6 @@ omit =
     homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
-    homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
@@ -117,7 +119,6 @@ omit =
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/rest.py
-    homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/heatmiser.py
