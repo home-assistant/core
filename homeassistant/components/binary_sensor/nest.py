@@ -11,6 +11,7 @@ import socket
 import homeassistant.components.nest as nest
 
 from homeassistant.components.sensor.nest import NestSensor
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 
 BINARY_TYPES = ['fan',
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
 
 
-class NestBinarySensor(NestSensor):
+class NestBinarySensor(NestSensor, BinarySensorDevice):
     """ Represents a Nst Binary sensor. """
 
     @property
