@@ -10,7 +10,7 @@ https://home-assistant.io/components/binary_sensor.rpi_gpio/
 import logging
 import homeassistant.components.rpi_gpio as rpi_gpio
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME)
+from homeassistant.const import (DEVICE_DEFAULT_NAME)
 
 DEFAULT_PULL_MODE = "UP"
 DEFAULT_BOUNCETIME = 50
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
-class RPiGPIOBinarySensor(Entity):
+class RPiGPIOBinarySensor(BinarySensorDevice):
     """ Represents a binary sensor that uses Raspberry Pi GPIO. """
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         # pylint: disable=no-member
@@ -68,6 +68,6 @@ class RPiGPIOBinarySensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def is_on(self):
         """ Returns the state of the entity. """
-        return STATE_ON if self._state != self._invert_logic else STATE_OFF
+        return self._state != self._invert_logic
