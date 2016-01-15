@@ -7,59 +7,38 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rpi_gpio/
 """
 import logging
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    GPIO = None
+import homeassistant.components.rpi_gpio as rpi_gpio
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (DEVICE_DEFAULT_NAME,
-                                 EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (DEVICE_DEFAULT_NAME)
 
 DEFAULT_INVERT_LOGIC = False
 
-REQUIREMENTS = ['RPi.GPIO==0.5.11']
+DEPENDENCIES = ['rpi_gpio']
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Raspberry PI GPIO ports. """
-    if GPIO is None:
-        _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
-        return
-    # pylint: disable=no-member
-    GPIO.setmode(GPIO.BCM)
+
+    invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
 
     switches = []
-    invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
     ports = config.get('ports')
-    for port_num, port_name in ports.items():
-        switches.append(RPiGPIOSwitch(port_name, port_num, invert_logic))
+    for port, name in ports.items():
+        switches.append(RPiGPIOSwitch(name, port, invert_logic))
     add_devices(switches)
-
-    def cleanup_gpio(event):
-        """ Stuff to do before stop home assistant. """
-        # pylint: disable=no-member
-        GPIO.cleanup()
-
-    def prepare_gpio(event):
-        """ Stuff to do when home assistant starts. """
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
 
 
 class RPiGPIOSwitch(ToggleEntity):
     """ Represents a port that can be toggled using Raspberry Pi GPIO. """
 
-    def __init__(self, name, gpio, invert_logic):
+    def __init__(self, name, port, invert_logic):
         self._name = name or DEVICE_DEFAULT_NAME
-        self._gpio = gpio
-        self._active_state = not invert_logic
-        self._state = not self._active_state
-        # pylint: disable=no-member
-        GPIO.setup(gpio, GPIO.OUT)
+        self._port = port
+        self._invert_logic = invert_logic
+        self._state = False
+        rpi_gpio.setup_output(self._port)
 
     @property
     def name(self):
@@ -76,41 +55,14 @@ class RPiGPIOSwitch(ToggleEntity):
         """ True if device is on. """
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self):
         """ Turn the device on. """
-        if self._switch(self._active_state):
-            self._state = True
+        rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
+        self._state = True
         self.update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self):
         """ Turn the device off. """
-        if self._switch(not self._active_state):
-            self._state = False
+        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
+        self._state = False
         self.update_ha_state()
-
-    def _switch(self, new_state):
-        """ Change the output value to Raspberry Pi GPIO port. """
-        _LOGGER.info('Setting GPIO %s to %s', self._gpio, new_state)
-        # pylint: disable=bare-except
-        try:
-            # pylint: disable=no-member
-            GPIO.output(self._gpio, 1 if new_state else 0)
-        except:
-            _LOGGER.error('GPIO "%s" output failed', self._gpio)
-            return False
-        return True
-
-    # pylint: disable=no-self-use
-    @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        data = {}
-        device_attr = self.device_state_attributes
-        if device_attr is not None:
-            data.update(device_attr)
-        return data
