@@ -10,6 +10,7 @@ from datetime import timedelta
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.component.sensor.command_sensor import CommandSensorData
 from homeassistant.util import template, Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,23 +80,3 @@ class CommandBinarySensor(BinarySensorDevice):
             self._state = True
         elif value == self._payload_off:
             self._state = False
-
-
-# pylint: disable=too-few-public-methods
-class CommandSensorData(object):
-    """ Class for handling the data retrieval. """
-
-    def __init__(self, command):
-        self.command = command
-        self.value = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """ Gets the latest data with a shell command. """
-        _LOGGER.info('Running command: %s', self.command)
-
-        try:
-            return_value = subprocess.check_output(self.command, shell=True)
-            self.value = return_value.strip().decode('utf-8')
-        except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', self.command)
