@@ -6,6 +6,9 @@ pip>=7.0.0
 vincenty==0.1.3
 jinja2>=2.8
 
+# homeassistant.components.alarm_control_panel.alarmdotcom
+https://github.com/Xorso/pyalarmdotcom/archive/0.0.7.zip#pyalarmdotcom==0.0.7
+
 # homeassistant.components.arduino
 PyMata==2.07a
 
@@ -66,7 +69,7 @@ pyvera==0.2.3
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.3.1
+python-wink==0.4.1
 
 # homeassistant.components.media_player.cast
 pychromecast==0.6.14
@@ -192,6 +195,9 @@ heatmiserV3==0.9.1
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.4
+
+# homeassistant.components.thermostat.proliphix
+proliphix==0.1.0
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
