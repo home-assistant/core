@@ -146,9 +146,10 @@ https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a
 # homeassistant.components.sensor.openweathermap
 pyowm==2.3.0
 
+# homeassistant.components.binary_sensor.rpi_gpio
 # homeassistant.components.sensor.rpi_gpio
 # homeassistant.components.switch.rpi_gpio
-# RPi.GPIO==0.5.11
+# RPi.GPIO==0.6.1
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
