@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
 
-REQUIREMENTS = ['pyvera==0.2.3']
+REQUIREMENTS = ['pyvera==0.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
