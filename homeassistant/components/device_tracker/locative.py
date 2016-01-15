@@ -49,10 +49,9 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
         handler.write_text("Setting location to {}".format(location_name))
 
     elif direction == 'exit':
-        current_state = hass.states.get(
-            "{}.{}".format(DOMAIN, device)).state
+        current_state = hass.states.get("{}.{}".format(DOMAIN, device))
 
-        if current_state == location_name:
+        if current_state is None or current_state.state == location_name:
             see(dev_id=device, location_name=STATE_NOT_HOME)
             handler.write_text("Setting location to not home")
         else:
