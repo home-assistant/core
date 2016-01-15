@@ -5,6 +5,8 @@ omit =
     homeassistant/__main__.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/alarm_control_panel/alarmdotcom.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
@@ -124,6 +126,7 @@ omit =
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
+    homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
 
 
