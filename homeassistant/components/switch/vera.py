@@ -110,7 +110,7 @@ class VeraSwitch(SwitchDevice):
 
         if self.vera_device.is_armable:
             armed = self.vera_device.is_armed
-            attr[ATTR_ARMED] = 'True' if armed == '1' else 'False'
+            attr[ATTR_ARMED] = 'True' if armed else 'False'
 
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.last_trip
@@ -121,7 +121,7 @@ class VeraSwitch(SwitchDevice):
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.is_tripped
-            attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
+            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
