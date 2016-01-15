@@ -1,13 +1,11 @@
-"""homeassistant.components.thermostat.proliphix
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Proliphix NT10e Thermostat is an ethernet connected thermostat. It
-has a local HTTP interface that is based on get/set of OID values. A
-complete collection of the API is available in this API doc:
-
-https://github.com/sdague/thermostat.rb/blob/master/docs/PDP_API_R1_11.pdf
 """
+homeassistant.components.thermostat.proliphix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The Proliphix NT10e Thermostat is an ethernet connected thermostat.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.proliphix/
+"""
 from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
                                                  STATE_IDLE, STATE_HEAT)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
@@ -17,7 +15,7 @@ REQUIREMENTS = ['proliphix==0.1.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the proliphix thermostats. """
+    """ Sets up the Proliphix thermostats. """
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
@@ -42,18 +40,21 @@ class ProliphixThermostat(ThermostatDevice):
 
     @property
     def should_poll(self):
+        """ Polling needed for thermostat.. """
         return True
 
     def update(self):
+        """ Update the data from the thermostat. """
         self._pdp.update()
 
     @property
     def name(self):
-        """ Returns the name. """
+        """ Returns the name of the thermostat. """
         return self._name
 
     @property
     def device_state_attributes(self):
+        """ Returns device specific state attributes. """
         return {
             "fan": self._pdp.fan_state
         }
@@ -75,6 +76,7 @@ class ProliphixThermostat(ThermostatDevice):
 
     @property
     def operation(self):
+        """ Returns the current state of the thermostat. """
         state = self._pdp.hvac_state
         if state in (1, 2):
             return STATE_IDLE
