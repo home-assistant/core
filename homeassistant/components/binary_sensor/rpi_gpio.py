@@ -1,7 +1,7 @@
 """
 homeassistant.components.binary_sensor.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a binary_sensor state sensor using RPi GPIO.
+Allows to configure a binary_sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Raspberry PI GPIO ports. """
+    """ Sets up the Raspberry PI GPIO devices. """
 
     pull_mode = config.get('pull_mode', DEFAULT_PULL_MODE)
     bouncetime = config.get('bouncetime', DEFAULT_BOUNCETIME)
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOBinarySensor(Entity):
-    """ Sets up the Raspberry PI GPIO ports. """
+    """ Represents a binary sensor that uses Raspberry Pi GPIO. """
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         # pylint: disable=no-member
 
