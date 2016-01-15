@@ -148,7 +148,8 @@ class VeraSensor(Entity):
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
             current_temp = self.vera_device.get_value('CurrentTemperature')
-            vera_temp_units = self.vera_device.vera_controller.temperature_units
+            vera_temp_units = (
+                self.vera_device.vera_controller.temperature_units)
 
             if vera_temp_units == 'F':
                 self._temperature_units = TEMP_FAHRENHEIT
