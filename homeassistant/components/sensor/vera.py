@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pyvera==0.2.5']
+REQUIREMENTS = ['pyvera==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +89,7 @@ class VeraSensor(Entity):
         self._temperature_units = None
 
         self.controller.register(vera_device, self._update_callback)
+        self.update()
 
     def _update_callback(self, _device):
         """ Called by the vera device callback to update state. """
@@ -123,19 +124,19 @@ class VeraSensor(Entity):
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 
         if self.vera_device.is_armable:
-            armed = self.vera_device.get_value('Armed')
-            attr[ATTR_ARMED] = 'True' if armed == '1' else 'False'
+            armed = self.vera_device.is_armed
+            attr[ATTR_ARMED] = 'True' if armed else 'False'
 
         if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.get_value('LastTrip')
+            last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
                     utc_time)
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.get_value('Tripped')
-            attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
+            tripped = self.vera_device.is_tripped
+            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
         return attr
@@ -147,7 +148,7 @@ class VeraSensor(Entity):
 
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
-            current_temp = self.vera_device.get_value('CurrentTemperature')
+            current_temp = self.vera_device.temperature
             vera_temp_units = (
                 self.vera_device.vera_controller.temperature_units)
 
@@ -165,11 +166,11 @@ class VeraSensor(Entity):
 
             self.current_value = current_temp
         elif self.vera_device.category == "Light Sensor":
-            self.current_value = self.vera_device.get_value('CurrentLevel')
+            self.current_value = self.vera_device.light
         elif self.vera_device.category == "Humidity Sensor":
-            self.current_value = self.vera_device.get_value('CurrentLevel')
+            self.current_value = self.vera_device.humidity
         elif self.vera_device.category == "Sensor":
-            tripped = self.vera_device.get_value('Tripped')
-            self.current_value = 'Tripped' if tripped == '1' else 'Not Tripped'
+            tripped = self.vera_device.is_tripped
+            self.current_value = 'Tripped' if tripped else 'Not Tripped'
         else:
             self.current_value = 'Unknown'
