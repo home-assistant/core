@@ -4,8 +4,9 @@ homeassistant.components.switch.rpi_gpio
 Allows to control the GPIO pins of a Raspberry Pi.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rpi_gpio/
+https://home-assistant.io/components/rpi_gpio/
 """
+
 import logging
 try:
     import RPi.GPIO as GPIO
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-member
 def setup(hass, config):
-    """ Sets up the Raspberry PI GPIO ports. """
+    """ Sets up the Raspberry PI GPIO component. """
     if GPIO is None:
         _LOGGER.error('RPi.GPIO not available. rpi_gpio ports ignored.')
         return False
@@ -39,28 +40,28 @@ def setup(hass, config):
 
 
 def setup_output(port):
-    """ Setup a GPIO as output """
+    """ Setup a GPIO as output. """
     GPIO.setup(port, GPIO.OUT)
 
 
 def setup_input(port, pull_mode):
-    """ Setup a GPIO as input """
+    """ Setup a GPIO as input. """
     GPIO.setup(port, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
 def write_output(port, value):
-    """ Write a value to a GPIO"""
+    """ Write a value to a GPIO. """
     GPIO.output(port, value)
 
 
 def read_input(port):
-    """ Read a value from a GPIO"""
+    """ Read a value from a GPIO. """
     return GPIO.input(port)
 
 
 def edge_detect(port, event_callback, bounce):
-    """ Adds detection for RISING and FALLING events """
+    """ Adds detection for RISING and FALLING events. """
     GPIO.add_event_detect(
         port,
         GPIO.BOTH,

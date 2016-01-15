@@ -1,11 +1,12 @@
 """
 homeassistant.components.switch.rpi_gpio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to control the GPIO pins of a Raspberry Pi.
+Allows to configure a switch using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rpi_gpio/
 """
+
 import logging
 import homeassistant.components.rpi_gpio as rpi_gpio
 from homeassistant.helpers.entity import ToggleEntity
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Raspberry PI GPIO ports. """
+    """ Sets up the Raspberry PI GPIO devices. """
 
     invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
 
@@ -31,8 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RPiGPIOSwitch(ToggleEntity):
-    """ Represents a port that can be toggled using Raspberry Pi GPIO. """
-
+    """ Represents a switch that can be toggled using Raspberry Pi GPIO. """
     def __init__(self, name, port, invert_logic):
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
@@ -42,7 +42,7 @@ class RPiGPIOSwitch(ToggleEntity):
 
     @property
     def name(self):
-        """ The name of the port. """
+        """ The name of the switch. """
         return self._name
 
     @property
