@@ -45,7 +45,10 @@ def get_devices(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
-    categories = ['Temperature Sensor', 'Light Sensor', 'Sensor']
+    categories = ['Temperature Sensor',
+                  'Light Sensor',
+                  'Humidity Sensor',
+                  'Sensor']
     devices = []
     try:
         devices = vera_controller.get_devices(categories)
@@ -106,7 +109,12 @@ class VeraSensor(Entity):
     @property
     def unit_of_measurement(self):
         """ Unit of measurement of this entity, if any. """
-        return self._temperature_units
+        if self.vera_device.category == "Temperature Sensor":
+            return self._temperature_units
+        elif self.vera_device.category == "Light Sensor":
+            return 'lux'
+        elif self.vera_device.category == "Humidity Sensor":
+            return '%'
 
     @property
     def state_attributes(self):
@@ -140,7 +148,7 @@ class VeraSensor(Entity):
     def update(self):
         if self.vera_device.category == "Temperature Sensor":
             current_temp = self.vera_device.get_value('CurrentTemperature')
-            vera_temp_units = self.vera_device.veraController.temperature_units
+            vera_temp_units = self.vera_device.vera_controller.temperature_units
 
             if vera_temp_units == 'F':
                 self._temperature_units = TEMP_FAHRENHEIT
@@ -156,6 +164,8 @@ class VeraSensor(Entity):
 
             self.current_value = current_temp
         elif self.vera_device.category == "Light Sensor":
+            self.current_value = self.vera_device.get_value('CurrentLevel')
+        elif self.vera_device.category == "Humidity Sensor":
             self.current_value = self.vera_device.get_value('CurrentLevel')
         elif self.vera_device.category == "Sensor":
             tripped = self.vera_device.get_value('Tripped')
