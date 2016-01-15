@@ -65,8 +65,6 @@ def setup(hass, config):
     if not entities:
         return False
 
-    component.add_entities(entities)
-
     def toggle_service(service):
         """Handle a calls to the input boolean services."""
         target_inputs = component.extract_from_service(service)
@@ -79,6 +77,8 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service)
+
+    component.add_entities(entities)
 
     return True
 

@@ -27,13 +27,17 @@ class TestInputBoolean(unittest.TestCase):
     def test_config(self):
         """Test config."""
         self.assertFalse(input_boolean.setup(self.hass, {
+            'input_boolean': None
+        }))
+
+        self.assertFalse(input_boolean.setup(self.hass, {
             'input_boolean': {
-                'test 1': None,
             }
         }))
 
         self.assertFalse(input_boolean.setup(self.hass, {
             'input_boolean': {
+                'name with space': None
             }
         }))
 
