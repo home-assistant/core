@@ -62,14 +62,14 @@ tellcore-py==1.1.2
 # homeassistant.components.light.vera
 # homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
-pyvera==0.2.3
+pyvera==0.2.6
 
 # homeassistant.components.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.3.1
+python-wink==0.4.1
 
 # homeassistant.components.media_player.cast
 pychromecast==0.6.14
@@ -122,6 +122,9 @@ dnspython3==1.12.0
 # homeassistant.components.rfxtrx
 https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2
 
+# homeassistant.components.rpi_gpio
+# RPi.GPIO==0.6.1
+
 # homeassistant.components.sensor.bitcoin
 blockchain==1.1.2
 
@@ -145,10 +148,6 @@ https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a
 
 # homeassistant.components.sensor.openweathermap
 pyowm==2.3.0
-
-# homeassistant.components.sensor.rpi_gpio
-# homeassistant.components.switch.rpi_gpio
-# RPi.GPIO==0.5.11
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -195,6 +194,9 @@ evohomeclient==0.2.4
 
 # homeassistant.components.thermostat.nest
 python-nest==2.6.0
+
+# homeassistant.components.thermostat.proliphix
+proliphix==0.1.0
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2

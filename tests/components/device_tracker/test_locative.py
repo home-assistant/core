@@ -203,3 +203,21 @@ class TestLocative(unittest.TestCase):
 
         state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
         self.assertEqual(state.state, 'work')
+
+    def test_exit_first(self, update_config):
+        """ Test when an exit message is sent first on a new device """
+
+        data = {
+            'latitude': 40.7855,
+            'longitude': -111.7367,
+            'device': 'new_device',
+            'id': 'Home',
+            'trigger': 'exit'
+        }
+
+        # Exit Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+
+        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        self.assertEqual(state.state, 'not_home')

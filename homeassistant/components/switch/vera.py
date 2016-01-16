@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
 
-REQUIREMENTS = ['pyvera==0.2.3']
+REQUIREMENTS = ['pyvera==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,14 +91,10 @@ class VeraSwitch(SwitchDevice):
         self._state = STATE_OFF
 
         self.controller.register(vera_device, self._update_callback)
+        self.update()
 
     def _update_callback(self, _device):
-        """ Called by the vera device callback to update state. """
-        if self.vera_device.is_switched_on():
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
-        self.update_ha_state()
+        self.update_ha_state(True)
 
     @property
     def name(self):
@@ -113,19 +109,19 @@ class VeraSwitch(SwitchDevice):
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 
         if self.vera_device.is_armable:
-            armed = self.vera_device.get_value('Armed')
-            attr[ATTR_ARMED] = 'True' if armed == '1' else 'False'
+            armed = self.vera_device.is_armed
+            attr[ATTR_ARMED] = 'True' if armed else 'False'
 
         if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.get_value('LastTrip')
+            last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
                     utc_time)
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.get_value('Tripped')
-            attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
+            tripped = self.vera_device.is_tripped
+            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
@@ -150,3 +146,10 @@ class VeraSwitch(SwitchDevice):
     def is_on(self):
         """ True if device is on. """
         return self._state == STATE_ON
+
+    def update(self):
+        """ Called by the vera device callback to update state. """
+        if self.vera_device.is_switched_on():
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
