@@ -7,16 +7,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.vera/
 """
 import logging
-import time
 
 from requests.exceptions import RequestException
 from homeassistant.components.switch.vera import VeraSwitch
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON
 
-REQUIREMENTS = ['pyvera==0.2.2']
+REQUIREMENTS = ['pyvera==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     lights = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(device.device_id, {})
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
@@ -86,5 +85,5 @@ class VeraLight(VeraSwitch):
         else:
             self.vera_device.switch_on()
 
-        self.last_command_send = time.time()
-        self.is_on_status = True
+        self._state = STATE_ON
+        self.update_ha_state(True)

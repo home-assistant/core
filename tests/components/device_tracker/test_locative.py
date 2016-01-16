@@ -11,10 +11,10 @@ from unittest.mock import patch
 import requests
 
 from homeassistant import bootstrap, const
-import homeassistant.core as ha
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
-import homeassistant.components.zone as zone
+
+from tests.common import get_test_home_assistant
 
 SERVER_PORT = 8126
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
@@ -34,7 +34,7 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     # Set up server
     bootstrap.setup_component(hass, http.DOMAIN, {
@@ -203,3 +203,21 @@ class TestLocative(unittest.TestCase):
 
         state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
         self.assertEqual(state.state, 'work')
+
+    def test_exit_first(self, update_config):
+        """ Test when an exit message is sent first on a new device """
+
+        data = {
+            'latitude': 40.7855,
+            'longitude': -111.7367,
+            'device': 'new_device',
+            'id': 'Home',
+            'trigger': 'exit'
+        }
+
+        # Exit Home
+        req = requests.get(_url(data))
+        self.assertEqual(200, req.status_code)
+
+        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        self.assertEqual(state.state, 'not_home')

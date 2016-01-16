@@ -7,19 +7,21 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.vera/
 """
 import logging
-import time
 from requests.exceptions import RequestException
 import homeassistant.util.dt as dt_util
 
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchDevice
+
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TRIPPED,
     ATTR_ARMED,
     ATTR_LAST_TRIP_TIME,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_OFF)
 
-REQUIREMENTS = ['pyvera==0.2.2']
+REQUIREMENTS = ['pyvera==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ def get_devices(hass, config):
 
     vera_switches = []
     for device in devices:
-        extra_data = device_data.get(device.deviceId, {})
+        extra_data = device_data.get(device.device_id, {})
         exclude = extra_data.get('exclude', False)
 
         if exclude is not True:
@@ -75,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(get_devices(hass, config))
 
 
-class VeraSwitch(ToggleEntity):
+class VeraSwitch(SwitchDevice):
     """ Represents a Vera Switch. """
 
     def __init__(self, vera_device, controller, extra_data=None):
@@ -86,18 +88,12 @@ class VeraSwitch(ToggleEntity):
             self._name = self.extra_data.get('name')
         else:
             self._name = self.vera_device.name
-        self.is_on_status = False
-        # for debouncing status check after command is sent
-        self.last_command_send = 0
+        self._state = STATE_OFF
 
-        self.controller.register(vera_device)
-        self.controller.on(
-            vera_device, self._update_callback)
+        self.controller.register(vera_device, self._update_callback)
+        self.update()
 
     def _update_callback(self, _device):
-        """ Called by the vera device callback to update state. """
-        _LOGGER.info(
-            'Subscription update for  %s', self.name)
         self.update_ha_state(True)
 
     @property
@@ -113,33 +109,33 @@ class VeraSwitch(ToggleEntity):
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
 
         if self.vera_device.is_armable:
-            armed = self.vera_device.refresh_value('Armed')
-            attr[ATTR_ARMED] = 'True' if armed == '1' else 'False'
+            armed = self.vera_device.is_armed
+            attr[ATTR_ARMED] = 'True' if armed else 'False'
 
         if self.vera_device.is_trippable:
-            last_tripped = self.vera_device.refresh_value('LastTrip')
+            last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
                     utc_time)
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
-            tripped = self.vera_device.refresh_value('Tripped')
-            attr[ATTR_TRIPPED] = 'True' if tripped == '1' else 'False'
+            tripped = self.vera_device.is_tripped
+            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
         return attr
 
     def turn_on(self, **kwargs):
-        self.last_command_send = time.time()
         self.vera_device.switch_on()
-        self.is_on_status = True
+        self._state = STATE_ON
+        self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        self.last_command_send = time.time()
         self.vera_device.switch_off()
-        self.is_on_status = False
+        self._state = STATE_OFF
+        self.update_ha_state()
 
     @property
     def should_poll(self):
@@ -149,13 +145,11 @@ class VeraSwitch(ToggleEntity):
     @property
     def is_on(self):
         """ True if device is on. """
-        return self.is_on_status
+        return self._state == STATE_ON
 
     def update(self):
-        # We need to debounce the status call after turning switch on or off
-        # because the vera has some lag in updating the device status
-        try:
-            if (self.last_command_send + 5) < time.time():
-                self.is_on_status = self.vera_device.is_switched_on()
-        except RequestException:
-            _LOGGER.warning('Could not update status for %s', self.name)
+        """ Called by the vera device callback to update state. """
+        if self.vera_device.is_switched_on():
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
