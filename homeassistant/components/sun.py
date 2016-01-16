@@ -8,10 +8,9 @@ https://home-assistant.io/components/sun/
 """
 import logging
 from datetime import timedelta
-import urllib
 
 import homeassistant.util as util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.helpers.entity import Entity
@@ -19,7 +18,6 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
-ENTITY_ID_ELEVATION = "sun.elevation"
 
 CONF_ELEVATION = 'elevation'
 
@@ -34,21 +32,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """ Returns if the sun is currently up based on the statemachine. """
+    """Test if the sun is currently up based on the statemachine."""
     entity_id = entity_id or ENTITY_ID
 
     return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
 def next_setting(hass, entity_id=None):
-    """ Returns the local datetime object of the next sun setting. """
+    """Local datetime object of the next sun setting."""
     utc_next = next_setting_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_setting_utc(hass, entity_id=None):
-    """ Returns the UTC datetime object of the next sun setting. """
+    """UTC datetime object of the next sun setting."""
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -63,14 +61,14 @@ def next_setting_utc(hass, entity_id=None):
 
 
 def next_rising(hass, entity_id=None):
-    """ Returns the local datetime object of the next sun rising. """
+    """Local datetime object of the next sun rising."""
     utc_next = next_rising_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_rising_utc(hass, entity_id=None):
-    """ Returns the UTC datetime object of the next sun rising. """
+    """UTC datetime object of the next sun rising."""
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -85,7 +83,7 @@ def next_rising_utc(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """ Tracks the state of the sun. """
+    """Track the state of the sun in HA."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -111,21 +109,13 @@ def setup(hass, config):
     platform_config = config.get(DOMAIN, {})
 
     elevation = platform_config.get(CONF_ELEVATION)
+    if elevation is None:
+        elevation = location_util.elevation(latitude, longitude)
 
-    from astral import Location, GoogleGeocoder
+    from astral import Location
 
     location = Location(('', '', latitude, longitude, hass.config.time_zone,
-                         elevation or 0))
-
-    if elevation is None:
-        google = GoogleGeocoder()
-        try:
-            google._get_elevation(location)  # pylint: disable=protected-access
-            _LOGGER.info(
-                'Retrieved elevation from Google: %s', location.elevation)
-        except urllib.error.URLError:
-            # If no internet connection available etc.
-            pass
+                         elevation))
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
@@ -134,7 +124,7 @@ def setup(hass, config):
 
 
 class Sun(Entity):
-    """ Represents the Sun. """
+    """Represents the Sun."""
 
     entity_id = ENTITY_ID
 
@@ -167,12 +157,12 @@ class Sun(Entity):
 
     @property
     def next_change(self):
-        """ Returns the datetime when the next change to the state is. """
+        """Datetime when the next change to the state is."""
         return min(self.next_rising, self.next_setting)
 
     @property
     def solar_elevation(self):
-        """ Returns the angle the sun is above the horizon"""
+        """Angle the sun is above the horizon."""
         from astral import Astral
         return Astral().solar_elevation(
             dt_util.utcnow(),

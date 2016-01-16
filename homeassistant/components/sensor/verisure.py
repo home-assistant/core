@@ -27,14 +27,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors.extend([
         VerisureThermometer(value)
-        for value in verisure.get_climate_status().values()
+        for value in verisure.CLIMATE_STATUS.values()
         if verisure.SHOW_THERMOMETERS and
         hasattr(value, 'temperature') and value.temperature
         ])
 
     sensors.extend([
         VerisureHygrometer(value)
-        for value in verisure.get_climate_status().values()
+        for value in verisure.CLIMATE_STATUS.values()
         if verisure.SHOW_HYGROMETERS and
         hasattr(value, 'humidity') and value.humidity
         ])
@@ -47,20 +47,19 @@ class VerisureThermometer(Entity):
 
     def __init__(self, climate_status):
         self._id = climate_status.id
-        self._device = verisure.MY_PAGES.DEVICE_CLIMATE
 
     @property
     def name(self):
         """ Returns the name of the device. """
         return '{} {}'.format(
-            verisure.STATUS[self._device][self._id].location,
+            verisure.CLIMATE_STATUS[self._id].location,
             "Temperature")
 
     @property
     def state(self):
         """ Returns the state of the device. """
         # remove ° character
-        return verisure.STATUS[self._device][self._id].temperature[:-1]
+        return verisure.CLIMATE_STATUS[self._id].temperature[:-1]
 
     @property
     def unit_of_measurement(self):
@@ -69,7 +68,7 @@ class VerisureThermometer(Entity):
 
     def update(self):
         ''' update sensor '''
-        verisure.update()
+        verisure.update_climate()
 
 
 class VerisureHygrometer(Entity):
@@ -77,20 +76,19 @@ class VerisureHygrometer(Entity):
 
     def __init__(self, climate_status):
         self._id = climate_status.id
-        self._device = verisure.MY_PAGES.DEVICE_CLIMATE
 
     @property
     def name(self):
         """ Returns the name of the device. """
         return '{} {}'.format(
-            verisure.STATUS[self._device][self._id].location,
+            verisure.CLIMATE_STATUS[self._id].location,
             "Humidity")
 
     @property
     def state(self):
         """ Returns the state of the device. """
         # remove % character
-        return verisure.STATUS[self._device][self._id].humidity[:-1]
+        return verisure.CLIMATE_STATUS[self._id].humidity[:-1]
 
     @property
     def unit_of_measurement(self):
@@ -99,4 +97,4 @@ class VerisureHygrometer(Entity):
 
     def update(self):
         ''' update sensor '''
-        verisure.update()
+        verisure.update_climate()
