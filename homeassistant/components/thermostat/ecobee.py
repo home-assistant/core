@@ -46,8 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     data = ecobee.NETWORK
     hold_temp = discovery_info['hold_temp']
-    _LOGGER.info("Loading ecobee thermostat component with hold_temp set to "
-                 + str(hold_temp))
+    _LOGGER.info(
+        "Loading ecobee thermostat component with hold_temp set to %s",
+        hold_temp)
     add_devices(Thermostat(data, index, hold_temp)
                 for index in range(len(data.ecobee.thermostats)))
 

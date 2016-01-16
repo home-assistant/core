@@ -87,13 +87,21 @@ def setup(hass, config):
                                lambda item: util.split_entity_id(item)[0])
 
         for domain, ent_ids in by_domain:
+            # We want to block for all calls and only return when all calls
+            # have been processed. If a service does not exist it causes a 10
+            # second delay while we're blocking waiting for a response.
+            # But services can be registered on other HA instances that are
+            # listening to the bus too. So as a in between solution, we'll
+            # block only if the service is defined in the current HA instance.
+            blocking = hass.services.has_service(domain, service.service)
+
             # Create a new dict for this call
             data = dict(service.data)
 
             # ent_ids is a generator, convert it to a list.
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
-            hass.services.call(domain, service.service, data, True)
+            hass.services.call(domain, service.service, data, blocking)
 
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)

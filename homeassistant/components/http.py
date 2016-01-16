@@ -21,7 +21,7 @@ from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON,
+    SERVER_PORT, CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CONTENT_ENCODING, HTTP_HEADER_VARY, HTTP_HEADER_CONTENT_LENGTH,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_EXPIRES, HTTP_OK, HTTP_UNAUTHORIZED,
@@ -112,10 +112,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             _LOGGER.info("running http in development mode")
 
         if ssl_certificate is not None:
-            wrap_kwargs = {'certfile': ssl_certificate}
-            if ssl_key is not None:
-                wrap_kwargs['keyfile'] = ssl_key
-            self.socket = ssl.wrap_socket(self.socket, **wrap_kwargs)
+            context = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH)
+            context.load_cert_chain(ssl_certificate, keyfile=ssl_key)
+            self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
         """ Starts the HTTP server. """
@@ -198,12 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self.authenticated = (self.server.api_password is None
-                              or self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password
-                              or data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password
-                              or self.verify_session())
+        self.authenticated = (self.server.api_password is None or
+                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password or
+                              data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password or
+                              self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -292,6 +292,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
+
+    def write_text(self, message, status_code=HTTP_OK):
+        """ Helper method to return a text message to the caller. """
+        self.send_response(status_code)
+        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+
+        self.set_session_cookie_header()
+
+        self.end_headers()
+
+        self.wfile.write(message.encode("UTF-8"))
 
     def write_file(self, path, cache_headers=True):
         """ Returns a file to the user. """
