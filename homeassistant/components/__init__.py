@@ -68,6 +68,14 @@ def turn_off(hass, entity_id=None, **service_data):
     hass.services.call(ha.DOMAIN, SERVICE_TURN_OFF, service_data)
 
 
+def toggle(hass, entity_id=None, **service_data):
+    """ Toggles specified entity. """
+    if entity_id is not None:
+        service_data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
+
+
 def setup(hass, config):
     """ Setup general services related to homeassistant. """
 
