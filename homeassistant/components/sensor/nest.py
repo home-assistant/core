@@ -89,7 +89,7 @@ class NestBasicSensor(NestSensor):
         return SENSOR_UNITS.get(self.variable, None)
 
 
-class NestTempSensor(NestBasicSensor):
+class NestTempSensor(NestSensor):
     """ Represents a Nest Temperature sensor. """
 
     @property
