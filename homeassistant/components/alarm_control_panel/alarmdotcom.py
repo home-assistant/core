@@ -1,9 +1,10 @@
 """
 homeassistant.components.alarm_control_panel.alarmdotcom
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure alarm control panel.
+
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarmdotcom/
+https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import logging
 
@@ -24,7 +25,7 @@ DEFAULT_NAME = 'Alarm.com'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup Alarm.com control panel """
+    """ Setup an Alarm.com control panel. """
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -43,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 # pylint: disable=abstract-method
 class AlarmDotCom(alarm.AlarmControlPanel):
-    """ Represents a Alarm.com status within HA """
+    """ Represents a Alarm.com status. """
 
     def __init__(self, hass, name, code, username, password):
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
@@ -64,11 +65,12 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ One or more characters if code is defined """
+        """ One or more characters if code is defined. """
         return None if self._code is None else '.+'
 
     @property
     def state(self):
+        """ Returns the state of the device. """
         if self._alarm.state == 'Disarmed':
             return STATE_ALARM_DISARMED
         elif self._alarm.state == 'Armed Stay':
@@ -79,6 +81,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return STATE_UNKNOWN
 
     def alarm_disarm(self, code=None):
+        """ Send disarm command. """
         if not self._validate_code(code, 'arming home'):
             return
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
@@ -88,6 +91,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
+        """ Send arm home command. """
         if not self._validate_code(code, 'arming home'):
             return
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
@@ -97,6 +101,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self.update_ha_state()
 
     def alarm_arm_away(self, code=None):
+        """ Send arm away command. """
         if not self._validate_code(code, 'arming home'):
             return
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
