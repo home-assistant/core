@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for device in structure.devices:
                 for variable in config['monitored_conditions']:
                     if variable in SENSOR_TYPES:
-                        add_devices([NestSensor(structure, device, variable)])
+                        add_devices([NestBasicSensor(structure, device, variable)])
                     elif variable in SENSOR_TEMP_TYPES:
                         add_devices([NestTempSensor(structure,
                                                     device,
@@ -76,6 +76,8 @@ class NestSensor(Entity):
                                          name,
                                          self.variable)
 
+
+class NestBasicSensor(NestSensor):
     @property
     def state(self):
         """ Returns the state of the sensor. """
@@ -87,7 +89,7 @@ class NestSensor(Entity):
         return SENSOR_UNITS.get(self.variable, None)
 
 
-class NestTempSensor(NestSensor):
+class NestTempSensor(NestBasicSensor):
     """ Represents a Nest Temperature sensor. """
 
     @property
