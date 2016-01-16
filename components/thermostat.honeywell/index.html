@@ -107,7 +107,7 @@
   </header>
   <hr class="divider">
 
-  <p>The honeywell thermostat platform let you control <a href="http://getconnected.honeywell.com/en/">Honeywell Round Connected</a> thermostat from Home Assistant.</p>
+  <p>The honeywell thermostat platform let you control <a href="http://getconnected.honeywell.com/en/">Honeywell Connected</a> thermostats from Home Assistant.</p>
 
 <p>To set it up, add the following information to your <code>configuration.yaml</code> file:</p>
 
@@ -125,8 +125,8 @@
 <ul>
   <li><strong>username</strong> (<em>Required</em>: The username of an user with access.</li>
   <li><strong>password</strong> (<em>Required</em>): The password for your given admin account.</li>
+  <li><strong>away_temperature</strong> (<em>optional</em>): Heating setpoint when away mode is on. If omitted it defaults to 16.0 deg C.</li>
 </ul>
-
 
 </article>
 
@@ -166,6 +166,9 @@
         </li>
         <li>
             <a href='/components/thermostat.nest/'>Nest thermostat</a>
+        </li>
+        <li>
+            <a href='/components/thermostat.proliphix/'>Proliphix thermostat</a>
         </li>
         <li>
             <a href='/components/thermostat.radiotherm/'>Radiotherm thermostat</a>

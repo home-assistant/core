@@ -1,0 +1,244 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Locative - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Instructions how to use Locative to track devices in Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/device_tracker.locative/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Locative">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.locative/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to use Locative to track devices in Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@home_assistant">
+    
+    <meta name="twitter:title" content="Locative">
+    <meta name="twitter:description" content="Instructions how to use Locative to track devices in Home Assistant.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Locative
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>This platform allows you to detect presence using <a href="https://my.locative.io/">Locative</a>. Locative is an <a href="https://github.com/LocativeHQ/ios-app">open source</a> app for iOS that allows users to set up a <code>GET</code> or <code>POST</code> request when a geofence is entered or exited. This can be configured with Home Assistant to update your location.</p>
+
+<p>To integrate Locative in Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">device_tracker</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">locative</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>To configure Locative, you must set up the app to send a <code>GET</code> request to your Home Assistant server at <code>http://&lt;ha_server&gt;/api/locative</code>. Make sure to include the API password if you have configured a password in Home Assistant (add <code>?api_password=&lt;password&gt;</code> to the end of the URL). When you enter or exit a geofence, Locative will send a <code>GET</code> request to that URL, updating Home Assistant.</p>
+
+<p class="img">
+  <img src="/images/screenshots/locative.png" />
+</p>
+
+<p>When you enter a geofence, your location name in Home Assistant will be set to the name of the geofence in Locative. When you exit a geofence, your location name in Home Assistant will be set to “not home”.</p>
+
+<p>To use Locative in combination with another device tracker, such as <a href="/components/device_tracker.nmap_scanner/">nmap</a> or <a href="/components/device_tracker.netgear/">Netgear</a>, fill in the <code>mac</code> field to the Locative entry in <code>known_devices.yaml</code> with the MAC address of the device you want to track. The state of the device will be determined by the source that reported last.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/locative.png' />
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/device_tracker/'>the Device Tracker component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Presence Detection</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/device_tracker.asuswrt/'>ASUSWRT</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.actiontec/'>Actiontec</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.aruba/'>Aruba</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.ddwrt/'>DD-WRT</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.fritz/'>FRITZ!Box</a>
+        </li>
+        <li>
+            Locative
+        </li>
+        <li>
+            <a href='/components/device_tracker.mqtt/'>MQTT device tracker</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.netgear/'>Netgear</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.nmap_scanner/'>Nmap</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.luci/'>OpenWRT (luci)</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.ubus/'>OpenWRT (ubus)</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.owntracks/'>Owntracks</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.snmp/'>SNMP</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.tplink/'>TP-Link</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.thomson/'>Thomson</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.tomato/'>Tomato</a>
+        </li>
+        <li>
+            <a href='/components/device_tracker.icloud/'>iCloud</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

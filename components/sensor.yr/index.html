@@ -7,26 +7,26 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Geofancy - Home Assistant</title>
+    <title>YR - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="Instructions how to use Geofancy to track devices in Home Assistant.">
+    <meta name="description" content="Instructions how to integrate Yr.no within Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/device_tracker.geofancy/">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.yr/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Geofancy">
+    <meta property="og:title" content="YR">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/device_tracker.geofancy/">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.yr/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to use Geofancy to track devices in Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate Yr.no within Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     
-    <meta name="twitter:title" content="Geofancy">
-    <meta name="twitter:description" content="Instructions how to use Geofancy to track devices in Home Assistant.">
+    <meta name="twitter:title" content="YR">
+    <meta name="twitter:description" content="Instructions how to integrate Yr.no within Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -102,22 +102,71 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      Geofancy
+      YR
     </h1>
   </header>
   <hr class="divider">
 
-  <p>This platform allows you to detect presence using <a href="https://my.geofancy.com/">Geofancy</a>. Geofancy allows users to track their location on iOS devices.</p>
+  <p>The <code>yr</code> platform uses <a href="http://www.yr.no/">YR.no</a> as an source for current meteorological data for your location. The <br />
+weather forecast is delivered by the Norwegian Meteorological Institute and the NRK.</p>
 
-<p>To integrate Geofancy in Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
+<p>To add YR to your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">device_tracker</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">geofancy</span></span>
+  <div class="code"><pre><span class="comment"># Will show a symbol for the current weather as default:</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">yr</span></span>
+
+<span class="comment"># Will show temperatue and wind direction:</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">yr</span></span>
+  <span class="key">monitored_conditions</span>:
+    - <span class="string"><span class="content">temperature</span></span>
+    - <span class="string"><span class="content">windDirection</span></span>
+
+<span class="comment"># Will show all available sensors:</span>
+<span class="key">sensor</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">yr</span></span>
+  <span class="key">monitored_conditions</span>:
+    - <span class="string"><span class="content">temperature</span></span>
+    - <span class="string"><span class="content">symbol</span></span>
+    - <span class="string"><span class="content">precipitation</span></span>
+    - <span class="string"><span class="content">windSpeed</span></span>
+    - <span class="string"><span class="content">pressure</span></span>
+    - <span class="string"><span class="content">windDirection</span></span>
+    - <span class="string"><span class="content">humidity</span></span>
+    - <span class="string"><span class="content">fog</span></span>
+    - <span class="string"><span class="content">cloudiness</span></span>
+    - <span class="string"><span class="content">lowClouds</span></span>
+    - <span class="string"><span class="content">mediumClouds</span></span>
+    - <span class="string"><span class="content">highClouds</span></span>
+    - <span class="string"><span class="content">dewpointTemperature</span></span>
 </pre></div>
 </div>
 </div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>monitored_conditions</strong> array (<em>Optional</em>): Conditions to display in the frontend.
+    <ul>
+      <li><strong>symbol</strong>: A symbol for the current weather.</li>
+      <li><strong>temperature</strong>: The current temperature.</li>
+      <li><strong>humidity</strong>: The relative humidity.</li>
+      <li><strong>fog</strong>: Fog.</li>
+      <li><strong>pressure</strong>: The sea-level air pressure in millibars.</li>
+      <li><strong>precipitation</strong>: The precipitation.</li>
+      <li><strong>dewpointTemperature</strong>: The dew point temperature.</li>
+      <li><strong>windSpeed</strong>: The wind speed.</li>
+      <li><strong>windDirection</strong>: Where the wind is coming from in degrees, with true north at 0° and progressing clockwise.</li>
+      <li><strong>cloudiness</strong>: The cloudiness.</li>
+      <li><strong>lowClouds</strong>: Low cloud level.</li>
+      <li><strong>mediumClouds</strong>: Medium cloud level.</li>
+      <li><strong>highClouds</strong>: High cloud level.</li>
+    </ul>
+  </li>
+</ul>
+
 
 </article>
 
@@ -131,65 +180,22 @@
   
     <section class="aside-module grid__item one-whole lap-one-half">
   <div class='brand-logo-container section'>
-      <img src='/images/supported_brands/geofancy.png' />
+      <img src='/images/supported_brands/yr.png' />
   </div>
     <div class='section'>
-      This is a platform for
-      <a href='/components/device_tracker/'>the Device Tracker component</a>.
-    </div>
-    <div class='section'>
-    <h1 class="title delta">Category Presence Detection</h1>
+    <h1 class="title delta">Category Weather</h1>
     <ul class='divided'>
         <li>
-            <a href='/components/device_tracker.asuswrt/'>ASUSWRT</a>
+            <a href='/components/sensor.forecast/'>Forecast.io</a>
         </li>
         <li>
-            <a href='/components/device_tracker.actiontec/'>Actiontec</a>
+            <a href='/components/sensor.openweathermap/'>OpenWeatherMap</a>
         </li>
         <li>
-            <a href='/components/device_tracker.aruba/'>Aruba</a>
+            <a href='/components/sun/'>Sun</a>
         </li>
         <li>
-            <a href='/components/device_tracker.ddwrt/'>DD-WRT</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.fritz/'>FRITZ!Box</a>
-        </li>
-        <li>
-            Geofancy
-        </li>
-        <li>
-            <a href='/components/device_tracker.mqtt/'>MQTT device tracker</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.netgear/'>Netgear</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.nmap_scanner/'>Nmap</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.luci/'>OpenWRT (luci)</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.ubus/'>OpenWRT (ubus)</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.owntracks/'>Owntracks</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.snmp/'>SNMP</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.tplink/'>TP-Link</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.thomson/'>Thomson</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.tomato/'>Tomato</a>
-        </li>
-        <li>
-            <a href='/components/device_tracker.icloud/'>iCloud</a>
+            YR
         </li>
     </ul>
     </div>

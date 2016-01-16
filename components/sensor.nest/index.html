@@ -1,0 +1,299 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Nest thermostat - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Instructions how to integrate Nest thermostats sensors within Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/sensor.nest/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Nest thermostat">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/sensor.nest/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to integrate Nest thermostats sensors within Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@home_assistant">
+    
+    <meta name="twitter:title" content="Nest thermostat">
+    <meta name="twitter:description" content="Instructions how to integrate Nest thermostats sensors within Home Assistant.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Nest thermostat
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>The <code>nest</code> thermostat platform let you control a thermostat from <a href="https://nest.com">Nest</a>. It also includes the ability to monitor things like the state of our HVAC system and the current humidity and temperature.</p>
+
+<p>To set it up, add the following information to your <code>configuration.yaml</code> file:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">sensor 3</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">nest</span></span>
+  <span class="key">monitored_conditions</span>:
+    - <span class="string"><span class="content">'fan'</span></span>
+    - <span class="string"><span class="content">'hvac_ac_state',</span></span>
+    - <span class="string"><span class="content">'hvac_aux_heater_state',</span></span>
+    - <span class="string"><span class="content">'hvac_heat_x2_state',</span></span>
+    - <span class="string"><span class="content">'hvac_heat_x3_state',</span></span>
+    - <span class="string"><span class="content">'hvac_alt_heat_state',</span></span>
+    - <span class="string"><span class="content">'hvac_alt_heat_x2_state',</span></span>
+    - <span class="string"><span class="content">'hvac_emer_heat_state',</span></span>
+    - <span class="string"><span class="content">'online'</span></span>
+    - <span class="string"><span class="content">'temperature',</span></span>
+    - <span class="string"><span class="content">'target',</span></span>
+    - <span class="string"><span class="content">'away_temperature[0]',</span></span>
+    - <span class="string"><span class="content">'away_temperature[1]'</span></span>
+    - <span class="string"><span class="content">'humidity',</span></span>
+    - <span class="string"><span class="content">'mode',</span></span>
+    - <span class="string"><span class="content">'last_ip',</span></span>
+    - <span class="string"><span class="content">'local_ip',</span></span>
+    - <span class="string"><span class="content">'last_connection',</span></span>
+    - <span class="string"><span class="content">'battery_level'</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>You must have the <a href="https://home-assistant.io/components/thermostat.nest/">Nest Thermostat</a> entity configured to use this sensor.</p>
+
+<p class="img">
+  <img src="/images/screenshots/nest-thermostat-card.png" />
+</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/nest_thermostat.png' />
+  </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/thermostat.nest/'>
+          Nest thermostat
+        </a></li>
+    </ul>
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Sensor</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/sensor.bitcoin/'>Bitcoin</a>
+        </li>
+        <li>
+            <a href='/components/sensor.cpuspeed/'>CPU speed</a>
+        </li>
+        <li>
+            <a href='/components/sensor.command_sensor/'>Command line sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.dweet/'>Dweet.io</a>
+        </li>
+        <li>
+            <a href='/components/sensor.ecobee/'>Ecobee sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.efergy/'>Efergy</a>
+        </li>
+        <li>
+            <a href='/components/sensor.eliqonline/'>Eliqonline</a>
+        </li>
+        <li>
+            <a href='/components/sensor.glances/'>Glances</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mqtt/'>MQTT sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.modbus/'>Modbus sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.mysensors/'>MySensors sensor</a>
+        </li>
+        <li>
+            Nest thermostat
+        </li>
+        <li>
+            <a href='/components/sensor.netatmo/'>Netatmo</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rest/'>RESTful sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.rfxtrx/'>RFXtrx sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.sabnzbd/'>SABnzbd</a>
+        </li>
+        <li>
+            <a href='/components/sensor.swiss_public_transport/'>Swiss Public Transport</a>
+        </li>
+        <li>
+            <a href='/components/sensor.systemmonitor/'>System Monitor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.temper/'>TEMPer sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.tellstick/'>TellStick sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.time_date/'>Time & Date</a>
+        </li>
+        <li>
+            <a href='/components/sensor.torque/'>Torque (OBD2)</a>
+        </li>
+        <li>
+            <a href='/components/sensor.transmission/'>Transmission sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.twitch/'>Twitch</a>
+        </li>
+        <li>
+            <a href='/components/sensor.vera/'>Vera sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.wink/'>Wink sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.worldclock/'>Worldclock</a>
+        </li>
+        <li>
+            <a href='/components/sensor.zwave/'>Z-Wave sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.arest/'>aREST sensor</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

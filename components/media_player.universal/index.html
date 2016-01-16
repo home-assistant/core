@@ -1,0 +1,293 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Universal - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Instructions how to create a universal media player in Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/media_player.universal/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Universal">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/media_player.universal/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to create a universal media player in Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@home_assistant">
+    
+    <meta name="twitter:title" content="Universal">
+    <meta name="twitter:description" content="Instructions how to create a universal media player in Home Assistant.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Universal
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p>Universal Media Players combine multiple existing entities in Home Assistant into one media player entity. This is used for creating a single entity that controls an entire media center.</p>
+
+<p>Multiple Media Player entities can be controlled from a Universal Media Player. Additionally, the Universal Media Player allows volume and power commands to be re-routed to other entities in Home Assistant. This allows the power and volume to control external devices like a television or audio receiver.</p>
+
+<p>A Universal Media Player is created in <code>configuration.yaml</code> as follows.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">media_player</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">universal</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">MEDIA_PLAYER_NAME</span></span>
+  <span class="key">children</span>:
+    - <span class="string"><span class="content">media_player.CHILD_1_ID</span></span>
+    - <span class="string"><span class="content">media_player.CHILD_2_ID</span></span>
+  <span class="key">commands</span>:
+    <span class="key">turn_on</span>:
+       <span class="key">service</span>: <span class="string"><span class="content">SERVICE</span></span>
+       <span class="key">data</span>: <span class="string"><span class="content">SERVICE_DATA</span></span>
+    <span class="key">turn_off</span>:
+       <span class="key">service</span>: <span class="string"><span class="content">SERVICE</span></span>
+       <span class="key">data</span>: <span class="string"><span class="content">SERVICE_DATA</span></span>
+    <span class="key">volume_up</span>:
+       <span class="key">service</span>: <span class="string"><span class="content">SERVICE</span></span>
+       <span class="key">data</span>: <span class="string"><span class="content">SERVICE_DATA</span></span>
+    <span class="key">volume_down</span>:
+       <span class="key">service</span>: <span class="string"><span class="content">SERVICE</span></span>
+       <span class="key">data</span>: <span class="string"><span class="content">SERVICE_DATA</span></span>
+    <span class="key">volume_mute</span>:
+       <span class="key">service</span>: <span class="string"><span class="content">SERVICE</span></span>
+       <span class="key">data</span>: <span class="string"><span class="content">SERVICE_DATA</span></span>
+  <span class="key">attributes</span>:
+    <span class="key">is_volume_muted</span>: <span class="string"><span class="content">ENTITY_ID|ATTRIBUTE</span></span>
+    <span class="key">state</span>: <span class="string"><span class="content">ENTITY_ID|ATTRIBUTE</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>name</strong>: The name to assign the player</li>
+  <li><strong>children</strong>: Ordered list of child media players this entity will control</li>
+  <li><strong>commands</strong> <em>Optional</em>: Commands to be overwritten. Possible entries are <em>turn_on</em>, <em>turn_off</em>, <em>volume_up</em>, <em>volume_down</em>, and <em>volume_mute</em>.</li>
+  <li><strong>attributes</strong> <em>Optional</em>: Attributes that can be overwritten. Possible entries are <em>is_volume_muted</em> and <em>state</em>. The values should be an entity id and state attribute separated by a bar (|). If the entity id’s state should be used, then only the entity id should be provided.</li>
+</ul>
+
+<p>The universal media player will primarily imitate one of its <em>children</em>. The first child in the list that is active (not idle/off) will be controlled the universal media player. The universal media player will also inherit its state from the first active child. Entities in the <em>children</em> list must be media players.</p>
+
+<p>It is recommended that the command <em>turn_on</em>, the command <em>turn_off</em>, and the attribute <em>state</em> all be provided together. The <em>state</em> attribute indicates if the Media Player is on or off. If <em>state</em> indicates the media player is off, this status will take precedent over the states of the children. If all the children are idle/off and <em>state</em> is on, the universal media player’s state will be on.</p>
+
+<p>It is also recomended that the command <em>volume_up</em>, the command <em>volume_down</em>, the command <em>volume_mute</em>, and the attribute <em>is_volume_muted</em> all be provided together. The attribute <em>is_volume_muted</em> should return either True or the on state when the volume is muted. The <em>volume_mute</em> service should toggle the mute setting.</p>
+
+<p>Below is an example configuration.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">media_player</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">universal</span></span>
+  <span class="key">name</span>: <span class="string"><span class="content">Test Universal</span></span>
+  <span class="key">children</span>:
+    - <span class="string"><span class="content">media_player.living_room_cast</span></span>
+    - <span class="string"><span class="content">media_player.living_room_kodi</span></span>
+  <span class="key">commands</span>:
+    <span class="key">turn_on</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">switch.turn_on</span></span>
+      <span class="key">data</span>:
+        <span class="key">entity_id</span>: <span class="string"><span class="content">switch.living_room_tv</span></span>
+    <span class="key">turn_off</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">switch.turn_off</span></span>
+      <span class="key">data</span>:
+        <span class="key">entity_id</span>: <span class="string"><span class="content">switch.living_room_tv</span></span>
+    <span class="key">volume_up</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">switch.turn_on</span></span>
+      <span class="key">data</span>:
+        <span class="key">entity_id</span>: <span class="string"><span class="content">switch.living_room_volume_up</span></span>
+    <span class="key">volume_down</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">switch.turn_on</span></span>
+      <span class="key">data</span>:
+        <span class="key">entity_id</span>: <span class="string"><span class="content">switch.living_room_volume_down</span></span>
+    <span class="key">volume_mute</span>:
+      <span class="key">service</span>: <span class="string"><span class="content">switch.turn_on</span></span>
+      <span class="key">data</span>:
+        <span class="key">entity_id</span>: <span class="string"><span class="content">switch.living_room_mute</span></span>
+  <span class="key">attributes</span>:
+    <span class="key">state</span>: <span class="string"><span class="content">switch.living_room_tv</span></span>
+    <span class="key">is_volume_muted</span>: <span class="string"><span class="content">switch.living_room_mute</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>In this example, a switch is available to control the power of the television. Switches are also available to turn the volume up, turn the volume down, and mute the audio. These could be command line switches or any other entity in Home Assistant. The <em>turn_on</em> and <em>turn_off</em> commands will be redirected to the television and the volume commands will be redirected to an audio receiver.</p>
+
+<p>The children are a Chromecast and a Kodi player. If the Chromecast is playing, the Universal Media Player will reflect its status. If the Chromecast is idle and Kodi is playing, the Universal Media player will change to reflect its status.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='brand-logo-container section'>
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/media_player/'>the Media Player component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Media Player</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/media_player.denon/'>Denon Network Receivers</a>
+        </li>
+        <li>
+            <a href='/components/media_player.firetv/'>FireTV</a>
+        </li>
+        <li>
+            <a href='/components/media_player.cast/'>Google Cast</a>
+        </li>
+        <li>
+            <a href='/components/media_player.kodi/'>Kodi</a>
+        </li>
+        <li>
+            <a href='/components/media_player.squeezebox/'>Logitech Squeezebox</a>
+        </li>
+        <li>
+            <a href='/components/media_player.mpd/'>Music Player Daemon (MPD)</a>
+        </li>
+        <li>
+            <a href='/components/media_player.plex/'>Plex</a>
+        </li>
+        <li>
+            <a href='/components/media_player.sonos/'>Sonos</a>
+        </li>
+        <li>
+            Universal
+        </li>
+        <li>
+            <a href='/components/media_player.itunes/'>iTunes</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

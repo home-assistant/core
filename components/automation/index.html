@@ -367,6 +367,21 @@
 </div>
 </div>
 
+<h4><a class="title-link" name="sun-condition" href="#sun-condition"></a> Sun condition</h4>
+
+<p>The sun condition can test if the sun has already set or risen when a trigger occurs. The <code>before</code> and <code>after</code> keys can only be set to <code>sunset</code> or <code>sunrise</code>. They have a corresponding optional offset value (<code>before_offset</code>, <code>after_offset</code>) that can be added, similar to the <a href="#sun-trigger">sun trigger</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">condition</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">sun</span></span>
+    <span class="key">after</span>: <span class="string"><span class="content">sunset</span></span>
+    <span class="comment"># Optional offset value</span>
+    <span class="key">after_offset</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">-1:00:00</span><span class="delimiter">&quot;</span></span>
+</pre></div>
+</div>
+</div>
+
 <h4><a class="title-link" name="template-condition" href="#template-condition"></a> Template condition</h4>
 
 <p>The template condition will test if <a href="/getting-started/templating/">given template</a> renders a value equal to true. This is achieved by having the template result in a true boolean expression or by having the template render ‘true’.</p>

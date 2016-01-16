@@ -177,6 +177,21 @@ This switch will shutdown your host immediately, there will be no confirmation.
 </div>
 </div>
 
+<h3><a class="title-link" name="control-your-vlc-player" href="#control-your-vlc-player"></a> Control your VLC player</h3>
+
+<p>This switch will control a local VLC media player (<a href="https://automic.us/forum/viewtopic.php?f=4&amp;t=144">Source</a>).</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">switch</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">command_switch</span></span>
+  <span class="key">switches</span>:
+    <span class="key">VLC</span>:
+      <span class="key">oncmd</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">cvlc 1.mp3 vlc://quit &amp;</span><span class="delimiter">&quot;</span></span>
+      <span class="key">offcmd</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">pkill vlc</span><span class="delimiter">&quot;</span></span>
+</pre></div>
+</div>
+</div>
 
 </article>
 
