@@ -15,7 +15,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON
 
-REQUIREMENTS = ['pyvera==0.2.3']
+REQUIREMENTS = ['pyvera==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,4 +86,4 @@ class VeraLight(VeraSwitch):
             self.vera_device.switch_on()
 
         self._state = STATE_ON
-        self.update_ha_state()
+        self.update_ha_state(True)
