@@ -16,7 +16,7 @@ import json
 import atexit
 
 from homeassistant.core import Event, EventOrigin, State
-import homeassistant.util.dt as date_util
+import homeassistant.util.dt as dt_util
 from homeassistant.remote import JSONEncoder
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
@@ -62,8 +62,8 @@ def row_to_state(row):
     try:
         return State(
             row[1], row[2], json.loads(row[3]),
-            date_util.utc_from_timestamp(row[4]),
-            date_util.utc_from_timestamp(row[5]))
+            dt_util.utc_from_timestamp(row[4]),
+            dt_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to state: %s", row)
@@ -74,7 +74,7 @@ def row_to_event(row):
     """ Convert a databse row to an event. """
     try:
         return Event(row[1], json.loads(row[2]), EventOrigin(row[3]),
-                     date_util.utc_from_timestamp(row[5]))
+                     dt_util.utc_from_timestamp(row[5]))
     except ValueError:
         # When json.loads fails
         _LOGGER.exception("Error converting row to event: %s", row)
@@ -116,10 +116,10 @@ class RecorderRun(object):
             self.start = _INSTANCE.recording_start
             self.closed_incorrect = False
         else:
-            self.start = date_util.utc_from_timestamp(row[1])
+            self.start = dt_util.utc_from_timestamp(row[1])
 
             if row[2] is not None:
-                self.end = date_util.utc_from_timestamp(row[2])
+                self.end = dt_util.utc_from_timestamp(row[2])
 
             self.closed_incorrect = bool(row[3])
 
@@ -169,8 +169,8 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()
         self.quit_object = object()
         self.lock = threading.Lock()
-        self.recording_start = date_util.utcnow()
-        self.utc_offset = date_util.now().utcoffset().total_seconds()
+        self.recording_start = dt_util.utcnow()
+        self.utc_offset = dt_util.now().utcoffset().total_seconds()
 
         def start_recording(event):
             """ Start recording. """
@@ -217,10 +217,11 @@ class Recorder(threading.Thread):
     def shutdown(self, event):
         """ Tells the recorder to shut down. """
         self.queue.put(self.quit_object)
+        self.block_till_done()
 
     def record_state(self, entity_id, state, event_id):
         """ Save a state to the database. """
-        now = date_util.utcnow()
+        now = dt_util.utcnow()
 
         # State got deleted
         if state is None:
@@ -247,7 +248,7 @@ class Recorder(threading.Thread):
         """ Save an event to the database. """
         info = (
             event.event_type, json.dumps(event.data, cls=JSONEncoder),
-            str(event.origin), date_util.utcnow(), event.time_fired,
+            str(event.origin), dt_util.utcnow(), event.time_fired,
             self.utc_offset
         )
 
@@ -307,7 +308,7 @@ class Recorder(threading.Thread):
         def save_migration(migration_id):
             """ Save and commit a migration to the database. """
             cur.execute('INSERT INTO schema_version VALUES (?, ?)',
-                        (migration_id, date_util.utcnow()))
+                        (migration_id, dt_util.utcnow()))
             self.conn.commit()
             _LOGGER.info("Database migrated to version %d", migration_id)
 
@@ -420,18 +421,18 @@ class Recorder(threading.Thread):
         self.query(
             """INSERT INTO recorder_runs (start, created, utc_offset)
                VALUES (?, ?, ?)""",
-            (self.recording_start, date_util.utcnow(), self.utc_offset))
+            (self.recording_start, dt_util.utcnow(), self.utc_offset))
 
     def _close_run(self):
         """ Save end time for current run. """
         self.query(
             "UPDATE recorder_runs SET end=? WHERE start=?",
-            (date_util.utcnow(), self.recording_start))
+            (dt_util.utcnow(), self.recording_start))
 
 
 def _adapt_datetime(datetimestamp):
     """ Turn a datetime into an integer for in the DB. """
-    return date_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
+    return dt_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
 
 
 def _verify_instance():
