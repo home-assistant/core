@@ -20,7 +20,7 @@ import homeassistant.util as util
 from homeassistant.helpers import extract_entity_ids
 from homeassistant.loader import get_component
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,5 +105,6 @@ def setup(hass, config):
 
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
+    hass.services.register(ha.DOMAIN, SERVICE_TOGGLE, handle_turn_service)
 
     return True
