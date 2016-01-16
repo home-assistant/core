@@ -44,7 +44,9 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.hass.stop()
 
     def test_setup_defaults_to_unknown(self):
-        self.assertEqual('unknown', self.hass.states.get(entity).state)
+        self.assertEqual(
+            'Current: unknown, Target: unknown',
+            self.hass.states.get(entity).state)
 
     def test_default_setup_params(self):
         state = self.hass.states.get(entity)
@@ -66,12 +68,16 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(min_temp, state.attributes.get('min_temp'))
         self.assertEqual(max_temp, state.attributes.get('max_temp'))
         self.assertEqual(target_temp, state.attributes.get('temperature'))
-        self.assertEqual(str(target_temp), self.hass.states.get(entity).state)
+        self.assertEqual(
+            'Current: unknown, Target: %s' % target_temp,
+            self.hass.states.get(entity).state)
 
     def test_set_target_temp(self):
         thermostat.set_temperature(self.hass, 30)
         self.hass.pool.block_till_done()
-        self.assertEqual('30.0', self.hass.states.get(entity).state)
+        self.assertEqual(
+            "Current: unknown, Target: 30.0",
+            self.hass.states.get(entity).state)
 
     def test_set_target_temp_turns_on_heater(self):
         self._setup_switch(False)
@@ -138,4 +144,3 @@ class TestThermostatHeatControl(unittest.TestCase):
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
-

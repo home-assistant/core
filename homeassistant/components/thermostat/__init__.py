@@ -133,7 +133,9 @@ class ThermostatDevice(Entity):
     @property
     def state(self):
         """ Returns the current state. """
-        return self.target_temperature or STATE_UNKNOWN
+        return "Current: %s, Target: %s" % (
+            self.current_temperature or STATE_UNKNOWN,
+            self.target_temperature or STATE_UNKNOWN)
 
     @property
     def device_state_attributes(self):
