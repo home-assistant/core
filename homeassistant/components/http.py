@@ -112,10 +112,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             _LOGGER.info("running http in development mode")
 
         if ssl_certificate is not None:
-            wrap_kwargs = {'certfile': ssl_certificate}
-            if ssl_key is not None:
-                wrap_kwargs['keyfile'] = ssl_key
-            self.socket = ssl.wrap_socket(self.socket, **wrap_kwargs)
+            context = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH)
+            context.load_cert_chain(ssl_certificate, keyfile=ssl_key)
+            self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
         """ Starts the HTTP server. """
