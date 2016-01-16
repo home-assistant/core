@@ -51,6 +51,8 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
+        self._username = username
+        self._password = password
 
     @property
     def should_poll(self):
@@ -79,19 +81,28 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         if not self._validate_code(code, 'arming home'):
             return
-        self._alarm.disarm()
+        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
+        # Open another session to alarm.com to fire off the command
+        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
+        _alarm.disarm()
         self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
         if not self._validate_code(code, 'arming home'):
             return
-        self._alarm.arm_stay()
+        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
+        # Open another session to alarm.com to fire off the command
+        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
+        _alarm.arm_stay()
         self.update_ha_state()
 
     def alarm_arm_away(self, code=None):
         if not self._validate_code(code, 'arming home'):
             return
-        self._alarm.arm_away()
+        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
+        # Open another session to alarm.com to fire off the command
+        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
+        _alarm.arm_away()
         self.update_ha_state()
 
     def _validate_code(self, code, state):
