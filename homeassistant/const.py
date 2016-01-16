@@ -126,6 +126,7 @@ SERVICE_HOMEASSISTANT_STOP = "stop"
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
+SERVICE_TOGGLE = 'toggle'
 
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
