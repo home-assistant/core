@@ -44,6 +44,7 @@ SHOW_THERMOMETERS = True
 SHOW_HYGROMETERS = True
 SHOW_ALARM = True
 SHOW_SMARTPLUGS = True
+CODE_DIGITS = 4
 
 # if wrong password was given don't try again
 WRONG_PASSWORD_GIVEN = False
@@ -61,11 +62,13 @@ def setup(hass, config):
 
     from verisure import MyPages, LoginError, Error
 
-    global SHOW_THERMOMETERS, SHOW_HYGROMETERS, SHOW_ALARM, SHOW_SMARTPLUGS
+    global SHOW_THERMOMETERS, SHOW_HYGROMETERS,\
+        SHOW_ALARM, SHOW_SMARTPLUGS, CODE_DIGITS
     SHOW_THERMOMETERS = int(config[DOMAIN].get('thermometers', '1'))
     SHOW_HYGROMETERS = int(config[DOMAIN].get('hygrometers', '1'))
     SHOW_ALARM = int(config[DOMAIN].get('alarm', '1'))
     SHOW_SMARTPLUGS = int(config[DOMAIN].get('smartplugs', '1'))
+    CODE_DIGITS = int(config[DOMAIN].get('code_digits', '4'))
 
     global MY_PAGES
     MY_PAGES = MyPages(
