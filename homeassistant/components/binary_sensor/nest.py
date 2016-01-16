@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
 
 
-class NestBinarySensor(BinarySensorDevice, NestSensor):
+class NestBinarySensor(NestSensor, BinarySensorDevice):
     """ Represents a Nst Binary sensor. """
 
     @property
