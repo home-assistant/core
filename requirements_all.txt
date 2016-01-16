@@ -62,7 +62,7 @@ tellcore-py==1.1.2
 # homeassistant.components.light.vera
 # homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
-pyvera==0.2.6
+pyvera==0.2.7
 
 # homeassistant.components.wink
 # homeassistant.components.light.wink
