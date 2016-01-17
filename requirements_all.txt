@@ -95,6 +95,9 @@ paho-mqtt==1.1
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4
 
+# homeassistant.components.nest
+python-nest==2.6.0
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
@@ -191,9 +194,6 @@ heatmiserV3==0.9.1
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.4
-
-# homeassistant.components.thermostat.nest
-python-nest==2.6.0
 
 # homeassistant.components.thermostat.proliphix
 proliphix==0.1.0
