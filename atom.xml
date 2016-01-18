@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2016-01-18T01:20:42+00:00</updated>
+  <updated>2016-01-18T01:40:32+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -77,7 +77,7 @@
   <li>Thermostat: <a href="https://home-assistant.io/components/thermostat.heatmiser/">Heatmiser</a> platform added (<a href="https://github.com/andylockran">@andylockran</a>)</li>
   <li>Sensor: <a href="https://home-assistant.io/components/sensor.dweet/">Dweet.io</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
   <li><a href="https://home-assistant.io/components/alexa/">Alexa/Amazon echo</a> component added (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Device Tracker: <a href="https://home-assistant.io/components/device_tracker.fritzbox/">FritzBox</a> platform added (<a href="https://github.com/deisi">@deisi</a>, <a href="https://github.com/caiuspb">@caiuspb</a>)</li>
+  <li>Device Tracker: <a href="https://home-assistant.io/components/device_tracker.fritz/">FritzBox</a> platform added (<a href="https://github.com/deisi">@deisi</a>, <a href="https://github.com/caiuspb">@caiuspb</a>)</li>
   <li>Sensor: <a href="https://home-assistant.io/components/sensor.wink/">Wink</a> now supports the Egg minders (<a href="https://github.com/w1ll1am23">@w1ll1am23</a>)</li>
   <li>Sensor: <a href="https://home-assistant.io/components/sensor.eliqonline/">ELIQ Online</a> platform added (<a href="https://github.com/molobrakos">@molobrakos</a>)</li>
   <li>Binary sensor: <a href="https://home-assistant.io/components/binary_sensor.rest/">REST</a> platform added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
