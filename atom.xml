@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2016-01-18T01:16:14+00:00</updated>
+  <updated>2016-01-18T01:20:42+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -24,7 +24,7 @@
 
 <ul>
   <li><a href="https://home-assistant.io/components/mysensors/">MySensors</a> revamped and switch support added (<a href="https://github.com/MartinHjelmare">@MartinHjelmare</a>)</li>
-  <li>Full refactor of [RPi GPIO]. Now includes <a href="https://home-assistant.io/components/binary_sensor.rpi_gpio/">binary sensor</a> and <a href="https://home-assistant.io/components/switch.rpi_gpio/">switch</a></li>
+  <li>Full refactor of RPi GPIO. Now includes <a href="https://home-assistant.io/components/binary_sensor.rpi_gpio/">binary sensor</a> and <a href="https://home-assistant.io/components/switch.rpi_gpio/">switch</a> (<a href="https://github.com/sfam">@sfam</a>)</li>
   <li>Sensor: <a href="https://home-assistant.io/components/sensor.yr/">YR</a> platform added (<a href="https://github.com/danielhiversen">@danielhiversen</a>)</li>
   <li>Device Tracker: Geofancy platform has been renamed to <a href="https://home-assistant.io/components/device_tracker.locative/">Locative</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
   <li>Automation: Add <a href="https://home-assistant.io/components/automation/#sun-condition/">sun condition</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
