@@ -175,3 +175,10 @@ class ToggleEntity(Entity):
     def turn_off(self, **kwargs):
         """ Turn the entity off. """
         pass
+
+    def toggle(self, **kwargs):
+        """ Toggle the entity off. """
+        if self.is_on:
+            self.turn_off(**kwargs)
+        else:
+            self.turn_on(**kwargs)
