@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
 
 from tests.common import get_test_home_assistant
@@ -56,6 +56,18 @@ class TestComponentsCore(unittest.TestCase):
             'light', SERVICE_TURN_OFF, lambda x: runs.append(1))
 
         comps.turn_off(self.hass, 'light.Bowl')
+
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(runs))
+
+    def test_toggle(self):
+        """ Test toggle method. """
+        runs = []
+        self.hass.services.register(
+            'light', SERVICE_TOGGLE, lambda x: runs.append(1))
+
+        comps.toggle(self.hass, 'light.Bowl')
 
         self.hass.pool.block_till_done()
 
