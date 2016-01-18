@@ -5,13 +5,12 @@ Allows to configure custom shell commands to turn a value
 into a logical value for a binary sensor.
 """
 import logging
-import subprocess
 from datetime import timedelta
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.command_sensor import CommandSensorData
-from homeassistant.util import template, Throttle
+from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
 
