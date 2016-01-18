@@ -523,7 +523,7 @@ class LIFXLight(Light):
                         break
 
                 if not ack:
-                    _LOGGER.warn("Packet %d not ACK'd", seq)
+                    _LOGGER.warning("Packet %d not ACK'd", seq)
 
             # pylint: disable=broad-except
             except Exception as exc:
