@@ -25,10 +25,9 @@ import time
 import queue
 import socket
 import io
-import struct
 import ipaddress
 import colorsys
-
+import struct
 from struct import pack
 from enum import IntEnum
 from homeassistant.helpers.event import track_time_change
