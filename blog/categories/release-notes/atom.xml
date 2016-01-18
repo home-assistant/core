@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Release-Notes | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/release-notes/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2016-01-16T19:31:16+00:00</updated>
+  <updated>2016-01-18T01:03:55+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,49 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[0.11: Extended support for DIY solutions]]></title>
+    <link href="https://home-assistant.io/blog/2016/01/17/extended-support-for-diy-solutions/"/>
+    <updated>2016-01-17T23:20:00+00:00</updated>
+    <id>https://home-assistant.io/blog/2016/01/17/extended-support-for-diy-solutions</id>
+    <content type="html"><![CDATA[<p>First release of 2016 and we are on 🔥! The <a href="https://github.com/balloob/home-assistant/">main repository</a> has passed 2500 ⭐ on GitHub (2596 ⭐ as of now). This release also has a <a href="https://github.com/balloob/home-assistant/pull/883#partial-users-participants">record number</a> of 20 contributors all working on improving and extending Home Assistant. With the continued growth, I am very excited to see what 2016 will bring us 🤘.</p>
+
+<p><img src="https://home-assistant.io/images/supported_brands/mysensors.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/raspberry-pi.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="50" /><img src="https://home-assistant.io/images/supported_brands/yr.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/telldus.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/free_mobile.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/netatmo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/alarmdotcom.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="https://home-assistant.io/images/supported_brands/proliphix.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
+
+<ul>
+  <li><a href="/components/mysensors/">MySensors</a> revamped and switch support added (<a href="https://github.com/MartinHjelmare">@MartinHjelmare</a>)</li>
+  <li>Full refactor of [RPi GPIO]. Now includes <a href="/components/binary_sensor.rpi_gpio/">binary sensor</a> and <a href="/components/switch.rpi_gpio/">switch</a></li>
+  <li>Sensor: <a href="/components/sensor.yr/">YR</a> platform added (<a href="https://github.com/danielhiversen">@danielhiversen</a>)</li>
+  <li>Device Tracker: Geofancy platform has been renamed to <a href="/components/device_tracker.locative/">Locative</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
+  <li>Automation: Add <a href="/components/automation/#sun-condition">sun condition</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
+  <li>Switch: <a href="/components/switch.command_switch/">command_switch</a> can now poll for state (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Switch: <a href="/components/switch.wemo/">wemo</a> now uses subscription to states instead of polling (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li><a href="/components/tellduslive/">Telldus Live</a> support added (<a href="https://github.com/molobrakos">@molobrakos</a>)</li>
+  <li><a href="/components/vera/">Vera</a> now uses subscription to states instead of polling (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>New <a href="/getting-started/templating/#home-assistant-template-extensions">template helper method</a> <code>is_state_attr(entity_id, name, value)</code> added (<a href="https://github.com/andythigpen">@andythigpen</a>)</li>
+  <li>Device tracker: <a href="/components/device_tracker.owntracks/">OwnTracks</a> transition events now supported (<a href="https://github.com/xifle">@xifle</a>)</li>
+  <li>Light: <a href="/components/light.hue/">Philips Hue</a> platform now supports multiple hubs (<a href="https://github.com/rhooper">@rhooper</a>)</li>
+  <li>Notify: <a href="/components/notify.free_mobile/">Free Mobile</a> platform added (<a href="https://github.com/HydrelioxGitHub">@HydrelioxGitHub</a>)</li>
+  <li>New <a href="/components/mqtt_eventstream/">MQTT Eventstream</a> component to connect two Home Assistant instances over MQTT (<a href="https://github.com/moonshot">@moonshot</a>)</li>
+  <li>Media player: <a href="/components/media_player.cast/">Cast</a> huge stability improvements (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Media Player: <a href="/components/media_player.universal/">Universal media player</a> added to combine multiple media players (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Sensor: <a href="/components/sensor.netatmo/">Netatmo</a> platform added (<a href="https://github.com/HydrelioxGitHub">@HydrelioxGitHub</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.alarmdotcom/">Alarm.com</a> platform added (<a href="https://github.com/Xorso">@Xorso</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.proliphix/">Proliphix</a> platform added (<a href="https://github.com/sdague">@sdague</a>)</li>
+  <li>New component <a href="/components/input_boolean/">input_boolean</a> will allow for customizing automation (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Support calling services via <a href="/components/alexa/">Amazon Echo</a> (<a href="https://github.com/balloob">@balloob</a>)</li>
+</ul>
+
+<h3>Deprecations</h3>
+<ul>
+  <li>The <a href="/components/binary_sensor.rpi_gpio/">RPi.GPIO sensor platform</a> has been moved to the <code>binary_sensor</code> component.</li>
+  <li><a href="/components/sensor.mysensors/">MySensors sensor platform</a> now requires the <a href="/components/mysensors/">MySensors</a> component to be configured.</li>
+  <li>Geofancy platform has been renamed to <a href="/components/device_tracker.locative/">Locative</a>.</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.10: Amazon Echo, iCloud, Dweet.io, Twitch and templating support!]]></title>
@@ -199,34 +242,6 @@ It is no longer possible to turn a scene off after it has been activated. The wa
 
 <p><strong>Downloader treats relative paths now relative to the config dir instead of the current working dir.</strong><br />
 This makes more sense as most people run Home Assistant as a daemon</p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[0.7.5: Blinkstick, SNMP, Telegram]]></title>
-    <link href="https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support/"/>
-    <updated>2015-10-11T17:10:00+00:00</updated>
-    <id>https://home-assistant.io/blog/2015/10/11/rfxtrx-blinkstick-and-snmp-support</id>
-    <content type="html"><![CDATA[<p>We discovered two issues annoying enough to warrent the release of 0.7.5:</p>
-
-<ul>
-  <li>Home Assistant package did not include the CloudMQTT certificate.</li>
-  <li>A bug in the core caused issues when some platforms are loaded twice.</li>
-</ul>
-
-<p>This release also includes some new platforms (because they keep coming!):</p>
-
-<p><img src="https://home-assistant.io/images/supported_brands/blinkstick.png" style="border:none; box-shadow: none; float: right;" height="50" /><img src="https://home-assistant.io/images/supported_brands/rfxtrx.png" style="border:none; box-shadow: none; float: right; clear: right;" height="50" /><img src="https://home-assistant.io/images/supported_brands/telegram.png" style="border:none; box-shadow: none; float: right; clear: right;" height="50" /></p>
-
-<ul>
-  <li>Light: <a href="/components/light.blinksticklight/">blinkstick platform</a> added (<a href="https://github.com/alanbowman">@alanbowman</a>)</li>
-  <li>Device Tracker: <a href="/components/device_tracker.snmp/">SNMP platform</a> added (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-  <li>Light: <a href="/components/light.rfxtrx/">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
-  <li>Switch: <a href="/components/switch.rfxtrx/">rfxtrx platform</a> added (<a href="https://github.com/badele">@badele</a>)</li>
-  <li>Notify: <a href="/components/notify.telegram/">telegram platform</a> added (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-</ul>
-
-<p>Also, the media player was extended by <a href="https://github.com/maddox">@maddox</a> to support the play media command. This has been implemented for the <a href="/components/media_player.itunes/">iTunes platform</a>.</p>
 ]]></content>
   </entry>
   

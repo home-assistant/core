@@ -105,6 +105,72 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">Verisure devices and modern TP-Link routers now supported</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-08-17T20:00:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 17, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/08/17/verisure-and-modern-tp-link-router-support/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
+
+<p>This release is a major milestone in our test coverage as we’ve crossed into the 80s! It has to be noted that this covers mainly the core and automation components. Platforms that communicate with IoT devices have been excluded.</p>
+
+<p>As we didn’t want to just push out bug fixes, this release includes a few additions:</p>
+
+<ul>
+  <li>Support for modern TP-Link routers like the ArcherC9 line has been contributed by <a href="https://github.com/chrisvis">@chrisvis</a>.</li>
+  <li>Improved support for MQTT topic subscriptions has been contributed by <a href="https://github.com/qrtn">@qrtn</a></li>
+</ul>
+
+<p><strong>Verisure Support</strong><br />
+<img src="/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> Home Assistant support to integrate your <a href="https://www.verisure.com/">Verisure</a> alarms, hygrometers, sensors and thermometers has been contributed by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">verisure</span>:
+  <span class="key">username</span>: <span class="string"><span class="content">user@example.com</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">password</span></span>
+  <span class="key">alarm</span>: <span class="string"><span class="content">1</span></span>
+  <span class="key">hygrometers</span>: <span class="string"><span class="content">0</span></span>
+  <span class="key">smartplugs</span>: <span class="string"><span class="content">1</span></span>
+  <span class="key">thermometers</span>: <span class="string"><span class="content">0</span></span>
+</pre></div>
+</div>
+</div>
+
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/08/09/mqtt-raspberry-pi-squeezebox-asuswrt-support/">MQTT, Rasperry PI, Logitech Squeezebox and ASUSWRT routers now supported</a>
   </h1>
   
@@ -679,53 +745,6 @@ An initial version of voice control for Home Assistant has landed. The current i
 <img src="/images/blog/ha-logo-history.png" />
 The old logo, the new detailed logo and the new simple logo.
 </p>
-
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/03/01/home-assistant-migrating-to-yaml/">Home Assistant moving to YAML</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-03-01T19:38:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/03/01/home-assistant-migrating-to-yaml/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it’s configuration file. YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
-
-<p>The new file is named configuration.yaml and if it can’t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
-
-<p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
-
-<p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
 
     
   </div>

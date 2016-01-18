@@ -107,7 +107,7 @@
   </header>
   <hr class="divider">
 
-  <p>The Alexa component allows you to integrate Home Assistant into Alexa/Amazon Echo. This component will allow you to query information within Home Assistant by using your voice. There are no supported sentences out of the box as of now, you will have to define them all yourself. This component does not yet allow the control of devices connected to Home Assistant.</p>
+  <p>The Alexa component allows you to integrate Home Assistant into Alexa/Amazon Echo. This component will allow you to query information and call services within Home Assistant by using your voice. There are no supported sentences out of the box as of now, you will have to define them all yourself.</p>
 
 <div class="videoWrapper">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/1Ke3mtWd_cQ" frameborder="0" allowfullscreen=""></iframe>
@@ -207,6 +207,10 @@ WhereAreWeIntent where we are
           {% endif %}</span></span>
 
     <span class="key">LocateIntent</span>:
+      <span class="key">action</span>:
+        <span class="key">service</span>: <span class="string"><span class="content">notify.notify</span></span>
+        <span class="key">data</span>:
+          <span class="key">message</span>: <span class="string"><span class="content">Your location has been queried via Alexa.</span></span>
       <span class="key">speech</span>:
         <span class="key">type</span>: <span class="string"><span class="content">plaintext</span></span>
         <span class="key">text</span>: <span class="string"><span class="delimiter">&gt;</span><span class="content">

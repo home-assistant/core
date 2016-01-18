@@ -157,6 +157,7 @@ The frontend has a template editor developer tool to help develop and debug temp
   <li><code>states.sensor.temperature</code> returns state object for <code>sensor.temperature</code></li>
   <li><code>states('device_tracker.paulus')</code> will return the state string (not the object) of given entity or <code>unknown</code> if it doesn’t exist.</li>
   <li><code>is_state('device_tracker.paulus', 'home')</code> will test if given entity is specified state.</li>
+  <li><code>is_state_attr('device_tracker.paulus', 'battery', 40)</code> will test if given entity is specified state.</li>
   <li>Filter <code>multiply(x)</code> will convert input to number and multiply it with <code>x</code></li>
   <li>Filter <code>round(x)</code> will convert input to number and round it to <code>x</code> decimals.</li>
 </ul>

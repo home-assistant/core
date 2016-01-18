@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>MySensors sensor - Home Assistant</title>
+    <title>MySensors sensors - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     <meta name="description" content="Instructions how to integrate MySensors sensors into Home Assistant.">
     
@@ -15,7 +15,7 @@
     <link rel="canonical" href="https://home-assistant.io/components/sensor.mysensors/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="MySensors sensor">
+    <meta property="og:title" content="MySensors sensors">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/sensor.mysensors/">
     <meta property="og:type" content="article">
@@ -25,7 +25,7 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     
-    <meta name="twitter:title" content="MySensors sensor">
+    <meta name="twitter:title" content="MySensors sensors">
     <meta name="twitter:description" content="Instructions how to integrate MySensors sensors into Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
@@ -102,41 +102,12 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      MySensors sensor
+      MySensors sensors
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The <a href="https://www.mysensors.org">MySensors</a> project combines Arduino boards with NRF24L01 radio boards to build sensor networks. The mysensors platform support sensors connected to the MYSensors Gateway.</p>
-
-<p>Integrate your Serial MYSensors Gateway by adding the following to your <code>configuration.yaml</code> file:</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">mysensors</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">/dev/ttyACM0</span></span>
-</pre></div>
-</div>
-</div>
-
-<p>Configuration variables:</p>
-
-<ul>
-  <li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host.</li>
-  <li><strong>debug</strong> (<em>Optional</em>): Enable or disable verbose debug logging.</li>
-  <li><strong>persistence</strong> (<em>Optional</em>): Enable or disable local persistence of sensor information. If this is disabled, then each sensor will need to send presentation messages after Home Assistant starts.</li>
-  <li><strong>persistence_file</strong> (<em>Optional</em>): Path to a file to save sensor information. The file extension determines the file type. Currently supported file types are ‘pickle’ and ‘json’.</li>
-  <li><strong>version</strong> (<em>Optional</em>): Specifies the MySensors protocol version to use (ex. 1.4, 1.5).</li>
-</ul>
-
-<p>If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact number can be determined with the command shown below.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ ls /dev/ttyACM*
-</pre></div>
-</div>
-</div>
+  <p>Integrates MySensors sensors into Home Assistant. See the <a href="/components/mysensors/">main component</a> for configuration instructions.</p>
 
 
 </article>
@@ -153,6 +124,17 @@
   <div class='brand-logo-container section'>
       <img src='/images/supported_brands/mysensors.png' />
   </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/mysensors/'>
+          MySensors
+        </a></li>
+        <li><a href='/components/switch.mysensors/'>
+          MySensors switches
+        </a></li>
+    </ul>
+    </div>
     <div class='section'>
     <h1 class="title delta">Category Sensor</h1>
     <ul class='divided'>
@@ -187,10 +169,7 @@
             <a href='/components/sensor.modbus/'>Modbus sensor</a>
         </li>
         <li>
-            MySensors sensor
-        </li>
-        <li>
-            <a href='/components/sensor.nest/'>Nest thermostat</a>
+            MySensors sensors
         </li>
         <li>
             <a href='/components/sensor.netatmo/'>Netatmo</a>
@@ -200,6 +179,9 @@
         </li>
         <li>
             <a href='/components/sensor.rfxtrx/'>RFXtrx sensor</a>
+        </li>
+        <li>
+            <a href='/components/binary_sensor.rpi_gpio/'>Raspberry PI GPIO sensor</a>
         </li>
         <li>
             <a href='/components/sensor.sabnzbd/'>SABnzbd</a>
@@ -215,6 +197,9 @@
         </li>
         <li>
             <a href='/components/sensor.tellstick/'>TellStick sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.tellduslive/'>Telldus Live sensors</a>
         </li>
         <li>
             <a href='/components/sensor.time_date/'>Time & Date</a>

@@ -105,6 +105,53 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/03/01/home-assistant-migrating-to-yaml/">Home Assistant moving to YAML</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-03-01T19:38:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 1, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Theodor Lindquist</span>
+    <span><i class='icon-time'></i> less than one minute reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/03/01/home-assistant-migrating-to-yaml/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>Home Assistant is now using <a href="http://yaml.org/">YAML</a> for it’s configuration file. YAML allows the use of lists, which should make the configuration file a bit more flexible and useful. The new configuration file format is backwards compatible with existing components. Because of this, there is no need for component developers to update their components.</p>
+
+<p>The new file is named configuration.yaml and if it can’t be found in your config directory, Home Assistant will instead try to find the old configuration file, home-assistant.conf.</p>
+
+<p>The home-assistant.conf.example has been replaced with an updated <a href="https://github.com/balloob/home-assistant/blob/dev/config/configuration.yaml.example">configuration.yaml.example</a>.</p>
+
+<p>Users of Home Assistant should migrate as the old configuration format is deprecated.</p>
+
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/02/24/streaming-updates/">Streaming updates</a>
   </h1>
   

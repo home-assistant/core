@@ -105,6 +105,81 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2016/01/17/extended-support-for-diy-solutions/">0.11: Extended support for DIY solutions</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2016-01-17T23:20:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 17, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2016/01/17/extended-support-for-diy-solutions/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>First release of 2016 and we are on 🔥! The <a href="https://github.com/balloob/home-assistant/">main repository</a> has passed 2500 ⭐ on GitHub (2596 ⭐ as of now). This release also has a <a href="https://github.com/balloob/home-assistant/pull/883#partial-users-participants">record number</a> of 20 contributors all working on improving and extending Home Assistant. With the continued growth, I am very excited to see what 2016 will bring us 🤘.</p>
+
+<p><img src="/images/supported_brands/mysensors.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/raspberry-pi.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="50" /><img src="/images/supported_brands/yr.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/telldus.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/free_mobile.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/netatmo.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/alarmdotcom.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/proliphix.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
+
+<ul>
+  <li><a href="/components/mysensors/">MySensors</a> revamped and switch support added (<a href="https://github.com/MartinHjelmare">@MartinHjelmare</a>)</li>
+  <li>Full refactor of [RPi GPIO]. Now includes <a href="/components/binary_sensor.rpi_gpio/">binary sensor</a> and <a href="/components/switch.rpi_gpio/">switch</a></li>
+  <li>Sensor: <a href="/components/sensor.yr/">YR</a> platform added (<a href="https://github.com/danielhiversen">@danielhiversen</a>)</li>
+  <li>Device Tracker: Geofancy platform has been renamed to <a href="/components/device_tracker.locative/">Locative</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
+  <li>Automation: Add <a href="/components/automation/#sun-condition">sun condition</a> (<a href="https://github.com/philipbl">@philipbl</a>)</li>
+  <li>Switch: <a href="/components/switch.command_switch/">command_switch</a> can now poll for state (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
+  <li>Switch: <a href="/components/switch.wemo/">wemo</a> now uses subscription to states instead of polling (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li><a href="/components/tellduslive/">Telldus Live</a> support added (<a href="https://github.com/molobrakos">@molobrakos</a>)</li>
+  <li><a href="/components/vera/">Vera</a> now uses subscription to states instead of polling (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>New <a href="/getting-started/templating/#home-assistant-template-extensions">template helper method</a> <code>is_state_attr(entity_id, name, value)</code> added (<a href="https://github.com/andythigpen">@andythigpen</a>)</li>
+  <li>Device tracker: <a href="/components/device_tracker.owntracks/">OwnTracks</a> transition events now supported (<a href="https://github.com/xifle">@xifle</a>)</li>
+  <li>Light: <a href="/components/light.hue/">Philips Hue</a> platform now supports multiple hubs (<a href="https://github.com/rhooper">@rhooper</a>)</li>
+  <li>Notify: <a href="/components/notify.free_mobile/">Free Mobile</a> platform added (<a href="https://github.com/HydrelioxGitHub">@HydrelioxGitHub</a>)</li>
+  <li>New <a href="/components/mqtt_eventstream/">MQTT Eventstream</a> component to connect two Home Assistant instances over MQTT (<a href="https://github.com/moonshot">@moonshot</a>)</li>
+  <li>Media player: <a href="/components/media_player.cast/">Cast</a> huge stability improvements (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Media Player: <a href="/components/media_player.universal/">Universal media player</a> added to combine multiple media players (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Sensor: <a href="/components/sensor.netatmo/">Netatmo</a> platform added (<a href="https://github.com/HydrelioxGitHub">@HydrelioxGitHub</a>)</li>
+  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.alarmdotcom/">Alarm.com</a> platform added (<a href="https://github.com/Xorso">@Xorso</a>)</li>
+  <li>Thermostat: <a href="/components/thermostat.proliphix/">Proliphix</a> platform added (<a href="https://github.com/sdague">@sdague</a>)</li>
+  <li>New component <a href="/components/input_boolean/">input_boolean</a> will allow for customizing automation (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Support calling services via <a href="/components/alexa/">Amazon Echo</a> (<a href="https://github.com/balloob">@balloob</a>)</li>
+</ul>
+
+<h3>Deprecations</h3>
+<ul>
+  <li>The <a href="/components/binary_sensor.rpi_gpio/">RPi.GPIO sensor platform</a> has been moved to the <code>binary_sensor</code> component.</li>
+  <li><a href="/components/sensor.mysensors/">MySensors sensor platform</a> now requires the <a href="/components/mysensors/">MySensors</a> component to be configured.</li>
+  <li>Geofancy platform has been renamed to <a href="/components/device_tracker.locative/">Locative</a>.</li>
+</ul>
+
+
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/12/22/amazon-echo-icloud-and-templates/">0.10: Amazon Echo, iCloud, Dweet.io, Twitch and templating support!</a>
   </h1>
   
@@ -593,73 +668,6 @@ The <a href="https://influxdb.com/">InfluxDB</a> database is a so-called time se
 </ul>
 
 
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/10/26/firetv-and-radiotherm-now-supported/">0.7.6: Amazon FireTV, Radiotherm thermostats</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-10-26T18:10:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> October 26, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> two minutes reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/10/26/firetv-and-radiotherm-now-supported/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>After two weeks of hard work I’m proud to announce the release of Home Assistant v0.7.6. For this release the main focus was bugs, test coverage and documentation. And we exceeded expectations on all three fronts. Bugs have been squashed, <a href="https://coveralls.io/builds/3946399">test coverage increased to 85%</a> and thanks to the hard work by <a href="https://github.com/fabaff">@fabaff</a> and myself the <a href="/components/">component section</a> on the website has gotten a complete revamp.</p>
-
-<h4>Changes</h4>
-
-<p><img src="/images/supported_brands/radiotherm.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/firetv.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /><img src="/images/supported_brands/locative.png" style="border:none; box-shadow: none; float: right; margin-bottom: 16px; clear: right;" height="50" /></p>
-
-<ul>
-  <li>Device tracker: Newer <a href="/components/device_tracker.tplink/">TP-Link routers</a> now supported (<a href="https://github.com/mKeRix">@mKeRix</a>)</li>
-  <li>Alarm Control Panel: <a href="/components/alarm_control_panel.manual/">Manual alarm</a> added (<a href="https://github.com/sfam">@sfam</a>)</li>
-  <li>Thermostat: <a href="/components/thermostat.radiotherm/">Radiotherm</a> now supported (<a href="https://github.com/toddeye">@toddeye</a>)</li>
-  <li>Media Player: <a href="/components/media_player.firetv/">Amazon FireTV</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
-  <li>Device Tracker: <a href="/components/device_tracker.locative/">Geofancy</a> now supported (<a href="https://github.com/wind-rider">@wind-rider</a>)</li>
-  <li>New component <a href="/components/shell_command/">Shell Command</a> can expose shell commands as services (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li><a href="/components/script/">Scripts</a> can now be customized using <code>customize</code> key in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Light: <a href="/components/light.hyperion/">Hyperion</a> now supported (<a href="https://github.com/MakeMeASandwich">@MakeMeASandwich</a>)</li>
-  <li>Sensor: <a href="/components/sensor.arest/">aRest</a> can now also read out pins (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Sensor: <a href="/components/sensor.forecast/">Forecast.io</a> now supports specifying units in <code>configuration.yaml</code> (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Thermostat: <a href="/components/thermostat.heat_control/">Heat Control</a> has been completely rewritten (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Switch: <a href="/components/switch.rest/">Rest</a> now supported (<a href="https://github.com/bachp">@bachp</a>)</li>
-  <li>Media Player: <a href="/components/media_player.plex/">Plex</a> can now be auto discovered and configure itself (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-  <li><a href="/components/downloader/">Downloader</a> will now treat relative paths based on config dir (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-  <li>Line Charts will use interpolation for sensor data and show current and target temperature for thermostats (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Device Tracker: <a href="/components/device_tracker.ubus/">OpenWRT via ubus</a> now supported (<a href="https://github.com/krzynio">@krzynio</a>)</li>
-</ul>
-
-
-    
-      <a class="btn pull-right" href="/blog/2015/10/26/firetv-and-radiotherm-now-supported/#read-more">Read on &rarr;</a>
     
   </div>
   </article>

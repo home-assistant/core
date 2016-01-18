@@ -150,6 +150,39 @@
   </li>
 </ul>
 
+<h3><a class="title-link" name="get-api-and-secret-key" href="#get-api-and-secret-key"></a> Get API and Secret Key</h3>
+
+<p>To get your API credentials, you have to declare a new application in the <a href="https://dev.netatmo.com/">NetAtmo Developer Page</a> Sign in using your username and password from your regular NetAtmo account.<br />
+Click on ‘Create an App’ at the top of the page.</p>
+
+<p class="img">
+<img src="/images/screenshots/netatmo_create.png" />
+</p>
+<p>You have to fill the form, but only two fields are required : Name and Description. It doesn’t really matter what you put into those. Just write something that make sense to you. To submit your new app, click on create at the bottom of the form.</p>
+
+<p class="img">
+<img src="/images/screenshots/netatmo_app.png" />
+</p>
+
+<p>That’s it. You can copy and paste your new API and secret keys in your Home Assistant configuration file just as said above.</p>
+
+<p class="img">
+<img src="/images/screenshots/netatmo_api.png" />
+</p>
+
+<h3><a class="title-link" name="find-your-modules-name" href="#find-your-modules-name"></a> Find your modules name</h3>
+
+<p>You can find your modules name in your [online NetAtmo account] (https://my.netatmo.com/app/station) . These names can be found and changed in parameters (See screenshot)<br />
+You have to provide these name in your Home Assistant configuration file.</p>
+
+<p class="img">
+<img src="/images/screenshots/netatmo_module.png" />
+</p>
+
+<p class="note">
+The Home Assistant NetAtmo platform has only be tested with the classic indoor and outdoor module. There is no support for the rainmeter and windmeter module at this time because developers does not own these modules.
+</p>
+
 </article>
 
 
@@ -198,10 +231,7 @@
             <a href='/components/sensor.modbus/'>Modbus sensor</a>
         </li>
         <li>
-            <a href='/components/sensor.mysensors/'>MySensors sensor</a>
-        </li>
-        <li>
-            <a href='/components/sensor.nest/'>Nest thermostat</a>
+            <a href='/components/sensor.mysensors/'>MySensors sensors</a>
         </li>
         <li>
             Netatmo
@@ -211,6 +241,9 @@
         </li>
         <li>
             <a href='/components/sensor.rfxtrx/'>RFXtrx sensor</a>
+        </li>
+        <li>
+            <a href='/components/binary_sensor.rpi_gpio/'>Raspberry PI GPIO sensor</a>
         </li>
         <li>
             <a href='/components/sensor.sabnzbd/'>SABnzbd</a>
@@ -226,6 +259,9 @@
         </li>
         <li>
             <a href='/components/sensor.tellstick/'>TellStick sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.tellduslive/'>Telldus Live sensors</a>
         </li>
         <li>
             <a href='/components/sensor.time_date/'>Time & Date</a>
