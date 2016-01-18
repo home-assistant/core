@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://engage.efergy.com/mobile_proxy/'
 SENSOR_TYPES = {
     'instant_readings': ['Energy Usage', 'kW'],
-    'budget': ['Energy Budget', ''],
-    'cost': ['Energy Cost', ''],
+    'budget': ['Energy Budget', None],
+    'cost': ['Energy Cost', None],
 }
 
 
