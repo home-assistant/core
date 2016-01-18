@@ -119,6 +119,8 @@
     <span class="key">kitchen_light</span>:
       <span class="key">oncmd</span>: <span class="string"><span class="content">switch_command on kitchen</span></span>
       <span class="key">offcmd</span>: <span class="string"><span class="content">switch_command off kitchen</span></span>
+      <span class="key">statecmd</span>: <span class="string"><span class="content">query_command kitchen</span></span>
+      <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value == &quot;online&quot; }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -132,6 +134,8 @@
         <ul>
           <li><strong>oncmd</strong> (<em>Required</em>): The action to take for on.</li>
           <li><strong>offcmd</strong> (<em>Required</em>): The action to take for off.</li>
+          <li><strong>statecmd</strong> (<em>Optional</em>): If given, this command will be run. Returning a result code <code>0</code> will indicate that the switch is on.</li>
+          <li><strong>value_template</strong> (<em>Optional</em>): If specified, statecmd will ignore the result code of the command but the template evaluating to <code>true</code> will indicate the switch is on.</li>
         </ul>
       </li>
     </ul>
