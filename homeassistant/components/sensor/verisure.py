@@ -67,7 +67,7 @@ class VerisureThermometer(Entity):
         return TEMP_CELCIUS  # can verisure report in fahrenheit?
 
     def update(self):
-        ''' update sensor '''
+        """ update sensor """
         verisure.update_climate()
 
 
@@ -96,5 +96,5 @@ class VerisureHygrometer(Entity):
         return "%"
 
     def update(self):
-        ''' update sensor '''
+        """ update sensor """
         verisure.update_climate()
