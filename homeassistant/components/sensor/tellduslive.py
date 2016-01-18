@@ -18,7 +18,6 @@ from homeassistant.components import tellduslive
 ATTR_LAST_UPDATED = "time_last_updated"
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['tellduslive']
 
 SENSOR_TYPE_TEMP = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"
@@ -43,6 +42,8 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
+    if discovery_info is None:
+        return
     sensors = tellduslive.NETWORK.get_sensors()
     devices = []
 
