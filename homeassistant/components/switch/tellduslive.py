@@ -15,11 +15,12 @@ from homeassistant.components import tellduslive
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['tellduslive']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return Tellstick switches. """
+    if discovery_info is None:
+        return
     switches = tellduslive.NETWORK.get_switches()
     add_devices([TelldusLiveSwitch(switch["name"],
                                    switch["id"])
