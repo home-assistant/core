@@ -19,13 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', '', '', '', '', ''],
-    'icon': ['Icon', '', '', '', '', ''],
+    'summary': ['Summary', None, None, None, None, None],
+    'icon': ['Icon', None, None, None, None, None],
     'nearest_storm_distance': ['Nearest Storm Distance',
                                'km', 'm', 'km', 'km', 'm'],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
                               '°', '°', '°', '°', '°'],
-    'precip_type': ['Precip', '', '', '', '', ''],
+    'precip_type': ['Precip', None, None, None, None, None],
     'precip_intensity': ['Precip Intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
     'precip_probability': ['Precip Probability', '%', '%', '%', '%', '%'],
     'temperature': ['Temperature', '°C', '°F', '°C', '°C', '°C'],
