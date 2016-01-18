@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.component.sensor.command_sensor import CommandSensorData
+from homeassistant.components.sensor.command_sensor import CommandSensorData
 from homeassistant.util import template, Throttle
 
 _LOGGER = logging.getLogger(__name__)
