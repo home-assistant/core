@@ -16,8 +16,8 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['pyowm==2.3.0']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
-    'weather': ['Condition', ''],
-    'temperature': ['Temperature', ''],
+    'weather': ['Condition', None],
+    'temperature': ['Temperature', None],
     'wind_speed': ['Wind speed', 'm/s'],
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mbar'],
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pass
 
     if forecast == 1:
-        SENSOR_TYPES['forecast'] = ['Forecast', '']
+        SENSOR_TYPES['forecast'] = ['Forecast', None]
         dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
 
     add_devices(dev)
