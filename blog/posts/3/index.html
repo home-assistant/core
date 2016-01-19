@@ -105,6 +105,63 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation: insight and notifications</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-08-26T15:12:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 26, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Nolan Gilley</span>
+    <span><i class='icon-time'></i> four minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/user-stories/'>User-Stories</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
+
+<p>In our house, laundry has been a struggle for quite some time.  Our washer and dryer both lack a buzzer which leads to forgotten laundry, and stinky mess that needs to be rewashed.  I decided to create a solution by monitoring the washer and dryer myself with some cheap electronics.</p>
+
+<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don’t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="/components/mqtt/">MQTT component</a> to my Raspberry Pi.</p>
+
+<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn’t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It’s easy to see when the washing machine is in operation here.  I used the same technique for the dryer’s accelerometer.</p>
+
+<p class="img">
+  <a href="/images/blog/2015-08-laundry-automation/data-graph.png">
+    <img src="/images/blog/2015-08-laundry-automation/data-graph.png" />
+  </a>
+  Graph showing the accelerometer data
+</p>
+
+
+    
+      <a class="btn pull-right" href="/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/#read-more">Read on &rarr;</a>
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">Verisure devices and modern TP-Link routers now supported</a>
   </h1>
   
@@ -697,54 +754,6 @@ An initial version of voice control for Home Assistant has landed. The current i
 </pre></div>
 </div>
 </div>
-
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/03/08/new-logo/">New logo for Home Assistant</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-03-08T22:16:10+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 8, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/branding/'>Branding</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/03/08/new-logo/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>It is well known that you are either a good programmer or a good designer. It’s rare you’ll meet someone that is both. That’s why it wasn’t surprising to anyone that the logo that I made was mediocre — at best. Luckily, <a href="http://jeremygeltman.com/">Jeremy Geltman</a> has come to the rescue and contributed a brand new logo for Home Assistant.</p>
-
-<p>The new logo follows Googles material design spec. It uses the blue color that Home Assistant uses in the interface and it comes in two versions: a high detailed version (for homescreen icon etc) and a simple version (for favicon etc).</p>
-
-<p class="img">
-<img src="/images/blog/ha-logo-history.png" />
-The old logo, the new detailed logo and the new simple logo.
-</p>
 
     
   </div>

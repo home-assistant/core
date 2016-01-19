@@ -7,26 +7,26 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Verisure devices and modern TP-Link routers now supported - Home Assistant</title>
+    <title>Perfect Home Automation - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="New support for Verisure switches, sensors and hygrometers and modern TP-Link routers">
+    <meta name="description" content="A breakdown of what the perfect home automation should consist of.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">
+    <link rel="canonical" href="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Verisure devices and modern TP-Link routers now supported">
+    <meta property="og:title" content="Perfect Home Automation">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/">
+    <meta property="og:url" content="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="New support for Verisure switches, sensors and hygrometers and modern TP-Link routers">
+    <meta property="og:description" content="A breakdown of what the perfect home automation should consist of.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     <meta name="twitter:creator" content="@balloob">
-    <meta name="twitter:title" content="Verisure devices and modern TP-Link routers now supported">
-    <meta name="twitter:description" content="New support for Verisure switches, sensors and hygrometers and modern TP-Link routers">
+    <meta name="twitter:title" content="Perfect Home Automation">
+    <meta name="twitter:description" content="A breakdown of what the perfect home automation should consist of.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -103,20 +103,20 @@
   
   <header>
   
-  <h1 class="title indent">Verisure devices and modern TP-Link routers now supported</h1>
+  <h1 class="title indent">Perfect Home Automation</h1>
   
 
   
   <div class="meta clearfix">
-    <time datetime="2015-08-17T20:00:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 17, 2015</time>
+    <time datetime="2016-01-19T08:20:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 19, 2015</time>
     <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> 1 minute reading time</span>
+    <span><i class='icon-time'></i> five minutes reading time</span>
     <span>
     <i class="icon-tags"></i>
     <ul class="tags unstyled">
     
       
-        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+        <li><a class='category' href='/blog/categories/architecture/'>Architecture</a></li>
       
     
     </ul>
@@ -131,32 +131,44 @@
 </header>
 
 
-  <p>A minor bug fix release to fix some issues that have come up since the last release. Please upgrade as soon as possible by running <code>git pull</code> from the Home Assistant directory.</p>
+  <p>People often ask me about my vision for Home Assistant. Before I can describe where I want to go with Home Assistant, I should first talk about how home automation would look in my ideal world. This will be the aim of this post. I’m not going to focus on protocols, networks or specific hubs. That’s all implementation details. Instead, this post will focus on what is most important: the interaction between the users and their home.</p>
 
-<p>This release is a major milestone in our test coverage as we’ve crossed into the 80s! It has to be noted that this covers mainly the core and automation components. Platforms that communicate with IoT devices have been excluded.</p>
+<h3>You should not have to adapt to technology.</h3>
 
-<p>As we didn’t want to just push out bug fixes, this release includes a few additions:</p>
+<p>When people start using home automation, they always experience home control first: being able to control devices in new ways using a phone or computer. They believe the future is now and their app will be their remote for their lives. They only focus on what they are getting, not on what they are losing. You install some light bulbs and all of a sudden you are no longer able to use the light switches. You’ll arrive at home at night and have to pull out your phone, open the app, let it connect and finally you’ll be able to turn on the light. All while turning the light on could have been a switch away.</p>
 
-<ul>
-  <li>Support for modern TP-Link routers like the ArcherC9 line has been contributed by <a href="https://github.com/chrisvis">@chrisvis</a>.</li>
-  <li>Improved support for MQTT topic subscriptions has been contributed by <a href="https://github.com/qrtn">@qrtn</a></li>
-</ul>
+<p>Yes, you can solve this with presence detection. What if  your phone runs out of battery? You’ll have to resort to the switch again.</p>
 
-<p><strong>Verisure Support</strong><br />
-<img src="/images/supported_brands/verisure.png" style="border:none; box-shadow: none; float: right;" height="50" /> Home Assistant support to integrate your <a href="https://www.verisure.com/">Verisure</a> alarms, hygrometers, sensors and thermometers has been contributed by <a href="https://github.com/persandstrom">@persandstrom</a>.</p>
+<p>If you find that using your new home devices is cumbersome, the promise of home automation technology has failed you. Your lights should work with both a switch (or button) at the entrance of your room and via presence detection. Honestly, there are hardly any valid use cases for being able to control lights from your phone except for showing off.<br />
+<a name="read-more"></a></p>
 
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">verisure</span>:
-  <span class="key">username</span>: <span class="string"><span class="content">user@example.com</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">password</span></span>
-  <span class="key">alarm</span>: <span class="string"><span class="content">1</span></span>
-  <span class="key">hygrometers</span>: <span class="string"><span class="content">0</span></span>
-  <span class="key">smartplugs</span>: <span class="string"><span class="content">1</span></span>
-  <span class="key">thermometers</span>: <span class="string"><span class="content">0</span></span>
-</pre></div>
-</div>
-</div>
+<h3>You are not the only user of your home automation.</h3>
+
+<p>People tend to forget that they are not the only ones in their home. As the developer of your house you’re enthusiastic about the possibilities and are willing to overlook flaws. Chances are very high that the other people in your household have different hobbies and just want to mind their own business.</p>
+
+<p>This means that everything you automate has to work flawlessly. If you successfully manage to cause a response to some stimulus 90% of the time, you’re going to have a disproportionately poor experience 10% of the time.  A common automation that fits this pattern is to fade the lights when you start watching a movie or series in the living room. It only works if everyone is watching.</p>
+
+<h3>Limit the impact of false positives and negatives.</h3>
+
+<p>With every automation, you always have to think: what will be the impact if it doesn’t work? Home automation is composed of many different systems by many different vendors that speak many different protocols: things will go wrong. It’s up to you to make sure that they have a limited impact when they fail. Ideally, devices should fall back to a pre-smart home experience. A Philips Hue bulb will act like a standard white light if turned on/off using a normal switch or when not connected to a hub. If things get worse when your system is out of order, your users will revolt. Take for example the Nest thermostat that <a href="http://www.nytimes.com/2016/01/14/fashion/nest-thermostat-glitch-battery-dies-software-freeze.html">had a bug in the beginning of January</a> which caused it to stop heating the house, yikes!</p>
+
+<h3>The perfect app is no app.</h3>
+
+<p>Home automation should blend with your current workflow, not replace it. For most devices, there is no faster way to control most devices then how you are already doing it today. Most of the time, the best app is no app. The only interface that can be more convenient, and is accessible for visitors of your home of all ages is a voice interface. The industry has realized this too and there are some major players focussing on voice interaction. Take Apple for example: the only way to control your HomeKit devices is with Siri.  Amazon has taken it one step further with the Amazon Echo, providing an always-listening connected speaker/microphone for the living room. I expect a lot more companies to join this segment in 2016.</p>
+
+<p>Voice interfaces are not perfect either. The speed at which you can issue commands is low because you have to wait for a response. There are also issues with the discoverability of commands, recognition of accents and dependency on the cloud for processing your voice. I believe that all but the first one are problems that are going to be solved eventually.</p>
+
+<p>This however doesn’t mean there isn’t a place for apps, there definitely is. They are perfectly well-suited for checking in while you’re away, browsing  the state changes of your house or making  the lights go all funky when there are kids visiting.</p>
+
+<h3>Your system should run at home, not in the cloud.</h3>
+
+<p>The cloud is a magical thing. Somewhere in the world there are computers collecting the data that your house generates, testing them against your automation rules and sending commands back when needed.  The cloud will receive updates and improve itself over time so it is able to serve you better. Until it’s not. There are many reasons why your home might lose its connection to the cloud. The internet can stop working, an update might have gone wrong or the servers running the cloud crash.</p>
+
+<p>When this happens, your house should be able to keep functioning. The cloud should be treated as an extension to your smart home instead of running it. That way you’ll avoid awkward situations like when Amazon AWS was down and the <a href="http://www.zdnet.com/article/the-night-alexa-lost-her-mind/">Amazon Echo stopped working</a>.</p>
+
+<p><strong>Good home automation never annoys but is missed when it is not working.</strong></p>
+
+<p><em>Thanks to Chris LaRose for this feedback and comments.</em></p>
 </article>
 
 
@@ -194,12 +206,12 @@
      class="twitter-share-button"
      data-via="home_assistant"
      data-related="home_assistant"
-     data-url="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"
-     data-counturl="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/" >Tweet</a>
+     data-url="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/"
+     data-counturl="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/" >Tweet</a>
   
   
     <div class="fb-share-button" style='top: -6px;'
-         data-href="https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/"
+         data-href="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/"
          data-layout="button_count">
     </div>
   
@@ -226,10 +238,6 @@
   <h1 class="title delta">Recent Posts</h1>
   <ul class="divided">
     
-      
-        <li class="post">
-          <a href="/blog/2016/01/19/perfect-home-automation/">Perfect Home Automation</a>
-        </li>
       
     
       
@@ -299,8 +307,8 @@
   
     
     // var disqus_developer = 1;
-    var disqus_identifier = 'https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/';
-    var disqus_url = 'https://home-assistant.io/blog/2015/08/17/verisure-and-modern-tp-link-router-support/';
+    var disqus_identifier = 'https://home-assistant.io/blog/2016/01/19/perfect-home-automation/';
+    var disqus_url = 'https://home-assistant.io/blog/2016/01/19/perfect-home-automation/';
     var disqus_script = 'embed.js';
   
   (function () {

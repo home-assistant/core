@@ -4,7 +4,7 @@
   <title><![CDATA[Home Assistant]]></title>
   <link href="https://home-assistant.io/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2016-01-18T10:26:05+00:00</updated>
+  <updated>2016-01-19T08:35:39+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -12,6 +12,52 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Perfect Home Automation]]></title>
+    <link href="https://home-assistant.io/blog/2016/01/19/perfect-home-automation/"/>
+    <updated>2016-01-19T08:20:00+00:00</updated>
+    <id>https://home-assistant.io/blog/2016/01/19/perfect-home-automation</id>
+    <content type="html"><![CDATA[<p>People often ask me about my vision for Home Assistant. Before I can describe where I want to go with Home Assistant, I should first talk about how home automation would look in my ideal world. This will be the aim of this post. I’m not going to focus on protocols, networks or specific hubs. That’s all implementation details. Instead, this post will focus on what is most important: the interaction between the users and their home.</p>
+
+<h3>You should not have to adapt to technology.</h3>
+
+<p>When people start using home automation, they always experience home control first: being able to control devices in new ways using a phone or computer. They believe the future is now and their app will be their remote for their lives. They only focus on what they are getting, not on what they are losing. You install some light bulbs and all of a sudden you are no longer able to use the light switches. You’ll arrive at home at night and have to pull out your phone, open the app, let it connect and finally you’ll be able to turn on the light. All while turning the light on could have been a switch away.</p>
+
+<p>Yes, you can solve this with presence detection. What if  your phone runs out of battery? You’ll have to resort to the switch again.</p>
+
+<p>If you find that using your new home devices is cumbersome, the promise of home automation technology has failed you. Your lights should work with both a switch (or button) at the entrance of your room and via presence detection. Honestly, there are hardly any valid use cases for being able to control lights from your phone except for showing off.<br />
+<!--more--></p>
+
+<h3>You are not the only user of your home automation.</h3>
+
+<p>People tend to forget that they are not the only ones in their home. As the developer of your house you’re enthusiastic about the possibilities and are willing to overlook flaws. Chances are very high that the other people in your household have different hobbies and just want to mind their own business.</p>
+
+<p>This means that everything you automate has to work flawlessly. If you successfully manage to cause a response to some stimulus 90% of the time, you’re going to have a disproportionately poor experience 10% of the time.  A common automation that fits this pattern is to fade the lights when you start watching a movie or series in the living room. It only works if everyone is watching.</p>
+
+<h3>Limit the impact of false positives and negatives.</h3>
+
+<p>With every automation, you always have to think: what will be the impact if it doesn’t work? Home automation is composed of many different systems by many different vendors that speak many different protocols: things will go wrong. It’s up to you to make sure that they have a limited impact when they fail. Ideally, devices should fall back to a pre-smart home experience. A Philips Hue bulb will act like a standard white light if turned on/off using a normal switch or when not connected to a hub. If things get worse when your system is out of order, your users will revolt. Take for example the Nest thermostat that <a href="http://www.nytimes.com/2016/01/14/fashion/nest-thermostat-glitch-battery-dies-software-freeze.html">had a bug in the beginning of January</a> which caused it to stop heating the house, yikes!</p>
+
+<h3>The perfect app is no app.</h3>
+
+<p>Home automation should blend with your current workflow, not replace it. For most devices, there is no faster way to control most devices then how you are already doing it today. Most of the time, the best app is no app. The only interface that can be more convenient, and is accessible for visitors of your home of all ages is a voice interface. The industry has realized this too and there are some major players focussing on voice interaction. Take Apple for example: the only way to control your HomeKit devices is with Siri.  Amazon has taken it one step further with the Amazon Echo, providing an always-listening connected speaker/microphone for the living room. I expect a lot more companies to join this segment in 2016.</p>
+
+<p>Voice interfaces are not perfect either. The speed at which you can issue commands is low because you have to wait for a response. There are also issues with the discoverability of commands, recognition of accents and dependency on the cloud for processing your voice. I believe that all but the first one are problems that are going to be solved eventually.</p>
+
+<p>This however doesn’t mean there isn’t a place for apps, there definitely is. They are perfectly well-suited for checking in while you’re away, browsing  the state changes of your house or making  the lights go all funky when there are kids visiting.</p>
+
+<h3>Your system should run at home, not in the cloud.</h3>
+
+<p>The cloud is a magical thing. Somewhere in the world there are computers collecting the data that your house generates, testing them against your automation rules and sending commands back when needed.  The cloud will receive updates and improve itself over time so it is able to serve you better. Until it’s not. There are many reasons why your home might lose its connection to the cloud. The internet can stop working, an update might have gone wrong or the servers running the cloud crash.</p>
+
+<p>When this happens, your house should be able to keep functioning. The cloud should be treated as an extension to your smart home instead of running it. That way you’ll avoid awkward situations like when Amazon AWS was down and the <a href="http://www.zdnet.com/article/the-night-alexa-lost-her-mind/">Amazon Echo stopped working</a>.</p>
+
+<p><strong>Good home automation never annoys but is missed when it is not working.</strong></p>
+
+<p><em>Thanks to Chris LaRose for this feedback and comments.</em></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[0.11: Extended support for DIY solutions]]></title>
@@ -1889,150 +1935,6 @@ PubSubClient client(ethClient);
 </pre></div>
 </div>
 </div>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Laundry Automation: insight and notifications]]></title>
-    <link href="https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/"/>
-    <updated>2015-08-26T15:12:00+00:00</updated>
-    <id>https://home-assistant.io/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant</id>
-    <content type="html"><![CDATA[<p><em>This is a guest post by Home Assistant user and contributor <a href="https://github.com/nkgilley">Nolan Gilley</a>.</em></p>
-
-<p>In our house, laundry has been a struggle for quite some time.  Our washer and dryer both lack a buzzer which leads to forgotten laundry, and stinky mess that needs to be rewashed.  I decided to create a solution by monitoring the washer and dryer myself with some cheap electronics.</p>
-
-<p>As an avid user of Home Assistant, I decided it would be the perfect application to manage the UI and notification system.  Now all I needed was a way to monitor the washer and dryer.  I tried using sound sensors but found them unreliable.  I ended up opting for an accelerometer attached to the back of each appliance.  I also added magnetic reed switches on the doors of the washer and dryer to detect if the doors are open or closed.  I connected the accelerometers and reed switches to a <a href="https://lowpowerlab.com/moteino/">Moteino</a>, an arduino clone with an RF transceiver.  The Moteino can perform the logic to figure out which state the appliances are in and wirelessly communicate that data with another Moteino that is connected via serial to my Raspberry Pi.  The Raspberry Pi reads the serial data and repeats it over MQTT for Home Assistant to use.  This is great because I don’t have to run Home Assistant on the Raspberry Pi.  I can run it on a faster machine and point the <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> to my Raspberry Pi.</p>
-
-<p>After taking some sample data from the accelerometers while each appliance was in operation, I decided to plot the data to help determine the proper thresholds of when the devices were running or off.  I had to do this in order to get precise ranges so the dryer sensor wouldn’t get tripped by the washer or vice versa.  In the plot below you can see the acceleration in the x direction for the accelerometer connected to the washing machine.   It’s easy to see when the washing machine is in operation here.  I used the same technique for the dryer’s accelerometer.</p>
-
-<p class="img">
-  <a href="https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png">
-    <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/data-graph.png" />
-  </a>
-  Graph showing the accelerometer data
-</p>
-
-<!--more-->
-
-<p>Next it was just a matter of integrating everything with Home Assistant.  I was able to use the <a href="https://home-assistant.io/components/mqtt/">MQTT component</a> to read the washer and dryer states from the Moteino and display it in Home Assistant.</p>
-
-<p class="img">
-  <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/screenshot-ha.png" />
-  Status of the dryer and washer in Home Assistant
-</p>
-
-<p>Next I wrote <a href="https://home-assistant.io/components/script/">scripts</a> that are run whenever the washer or dryer completes a load.  This is triggered by the <a href="https://home-assistant.io/components/automation/">automation component</a>.  When the laundry is complete I have the lights in the house turn red and <a href="https://home-assistant.io/components/notify.pushbullet/">notify me via PushBullet</a>.  Once the laundry is taken care of another script runs that sets the lights back to normal.  So far it has been very helpful and very reliable.</p>
-
-<p class="img">
-  <a href="https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg">
-    <img src="https://home-assistant.io/images/blog/2015-08-laundry-automation/moteino-and-sensors.jpg" />
-  </a>
-  Top left: reed switch. Bottom left: moteino. Right: Accelerometer.
-</p>
-
-<p>Materials used:</p>
-
-<ul>
-  <li><a href="https://lowpowerlab.com/moteino/">Moteino</a></li>
-  <li><a href="http://www.amazon.com/gp/product/B008BOPN40">2 x Accelerometers</a></li>
-  <li><a href="http://www.amazon.com/gp/product/B004PARDRO">2 x Reed switch</a></li>
-  <li><a href="https://home-assistant.io/">Home Assistant</a></li>
-</ul>
-
-<p><a href="https://codebender.cc/sketch:144743">Sketch for the Moteino is available here.</a></p>
-
-<p>Home Assistant Configuration:</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="key">mqtt</span>:
-  <span class="key">broker</span>: <span class="string"><span class="content">192.168.1.100</span></span>
-  <span class="key">port</span>: <span class="string"><span class="content">1883</span></span>
-  <span class="key">keepalive</span>: <span class="string"><span class="content">60</span></span>
-  <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
-
-<span class="key">sensor</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
-  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Dryer Status</span><span class="delimiter">&quot;</span></span>
-  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/dryer</span><span class="delimiter">&quot;</span></span>
-  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
-
-<span class="key">sensor 2</span>:
-  <span class="key">platform</span>: <span class="string"><span class="content">mqtt</span></span>
-  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Washer Status</span><span class="delimiter">&quot;</span></span>
-  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">sensor/washer</span><span class="delimiter">&quot;</span></span>
-  <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="delimiter">&quot;</span></span>
-
-<span class="key">automation</span>:
-  <span class="key">alias</span>: <span class="string"><span class="content">Dryer complete</span></span>
-
-  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
-  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
-  <span class="key">state_from</span>: <span class="string"><span class="content">'Running'</span></span>
-  <span class="key">state_to</span>: <span class="string"><span class="content">'Complete'</span></span>
-
-  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
-  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_complete</span></span>
-
-<span class="key">automation 2</span>:
-  <span class="key">alias</span>: <span class="string"><span class="content">Dryer emptied</span></span>
-
-  <span class="key">platform</span>: <span class="string"><span class="content">state</span></span>
-  <span class="key">state_entity_id</span>: <span class="string"><span class="content">sensor.dryer_status</span></span>
-  <span class="key">state_from</span>: <span class="string"><span class="content">'Complete'</span></span>
-  <span class="key">state_to</span>: <span class="string"><span class="content">'Empty'</span></span>
-
-  <span class="key">execute_service</span>: <span class="string"><span class="content">script.turn_on</span></span>
-  <span class="key">service_entity_id</span>: <span class="string"><span class="content">script.dryer_cleared</span></span>
-
-<span class="key">script</span>:
-  <span class="key">dryer_complete</span>:
-    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Complete Script</span></span>
-    <span class="key">sequence</span>:
-      - <span class="string"><span class="content">alias: Pushbullet Notification</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">notify.notify</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">message</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">The dryer has finished its cycle, please empty it!</span><span class="delimiter">&quot;</span></span>
-      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
-      - <span class="string"><span class="content">delay:</span><span class="content">
-          seconds: 1</span></span>
-      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
-      - <span class="string"><span class="content">delay:</span><span class="content">
-          seconds: 1</span></span>
-      - <span class="string"><span class="content">alias: Living Room Lights Red</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.red</span></span>
-
-  <span class="key">dryer_cleared</span>:
-    <span class="key">alias</span>: <span class="string"><span class="content">Dryer Cleared Script</span></span>
-    <span class="key">sequence</span>:
-      - <span class="string"><span class="content">alias: Living Room Lights Off</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">light.turn_off</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
-      - <span class="string"><span class="content">delay:</span><span class="content">
-          seconds: 1</span></span>
-      - <span class="string"><span class="content">alias: Living Room Lights Normal</span></span>
-        <span class="key">execute_service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
-        <span class="key">service_data</span>:
-          <span class="key">entity_id</span>: <span class="string"><span class="content">scene.normal</span></span>
-</pre></div>
-</div>
-</div>
-
-<p>Resources used:</p>
-
-<ul>
-  <li><a href="http://www.instructables.com/id/Uber-Home-Automation-w-Arduino-Pi/step13/Washer-Dryer-Smartifier-Water-Leak-Sensor/">Inspiration and Help with Arduino code</a></li>
-  <li><a href="https://github.com/LowPowerLab/RFM69/">Moteino Code</a></li>
-</ul>
-
 ]]></content>
   </entry>
   

@@ -105,6 +105,58 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2016/01/19/perfect-home-automation/">Perfect Home Automation</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2016-01-19T08:20:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 19, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> five minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/architecture/'>Architecture</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2016/01/19/perfect-home-automation/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>People often ask me about my vision for Home Assistant. Before I can describe where I want to go with Home Assistant, I should first talk about how home automation would look in my ideal world. This will be the aim of this post. I’m not going to focus on protocols, networks or specific hubs. That’s all implementation details. Instead, this post will focus on what is most important: the interaction between the users and their home.</p>
+
+<h3>You should not have to adapt to technology.</h3>
+
+<p>When people start using home automation, they always experience home control first: being able to control devices in new ways using a phone or computer. They believe the future is now and their app will be their remote for their lives. They only focus on what they are getting, not on what they are losing. You install some light bulbs and all of a sudden you are no longer able to use the light switches. You’ll arrive at home at night and have to pull out your phone, open the app, let it connect and finally you’ll be able to turn on the light. All while turning the light on could have been a switch away.</p>
+
+<p>Yes, you can solve this with presence detection. What if  your phone runs out of battery? You’ll have to resort to the switch again.</p>
+
+<p>If you find that using your new home devices is cumbersome, the promise of home automation technology has failed you. Your lights should work with both a switch (or button) at the entrance of your room and via presence detection. Honestly, there are hardly any valid use cases for being able to control lights from your phone except for showing off.</p>
+
+
+    
+      <a class="btn pull-right" href="/blog/2016/01/19/perfect-home-automation/#read-more">Read on &rarr;</a>
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2016/01/17/extended-support-for-diy-solutions/">0.11: Extended support for DIY solutions</a>
   </h1>
   
@@ -589,85 +641,6 @@ The <a href="https://influxdb.com/">InfluxDB</a> database is a so-called time se
 
     
       <a class="btn pull-right" href="/blog/2015/11/22/survey-november-2015/#read-more">Read on &rarr;</a>
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/">0.8: Honeywell Thermostats, Orvibo switches and Z-Wave switches and lights </a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-11-16T21:27:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> November 16, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> 1 minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/11/16/zwave-switches-lights-and-honeywell-thermostats-now-supported/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p><img src="/images/screenshots/custom-icons.png" style="float: right;" />We have all been hard at work to get this latest release ready. One of the big highlights in this release is the introduction of an extended iconset to be used in the frontend (credits to <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a> for idea and prototype). To get started with customizing, pick any icon from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>, prefix the name with <code>mdi:</code> and stick it into your <code>customize</code> section in <code>configuration.yaml</code>:</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="key">homeassistant</span>:
-  <span class="key">customize</span>:
-    <span class="key">switch.ac</span>:
-      <span class="key">icon</span>: <span class="string"><span class="content">'mdi:air-conditioner'</span></span>
-</pre></div>
-</div>
-</div>
-
-<h4>Breaking changes</h4>
-
-<ul>
-  <li>Any existing zone icon will have to be replaced with one from <a href="https://MaterialDesignIcons.com">MaterialDesignIcons.com</a>.</li>
-  <li>LimitlessLED light services require colors to be specified in RGB instead of XY.</li>
-</ul>
-
-<h4>Changes</h4>
-
-<p><img src="/images/supported_brands/honeywell.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/orvibo.png" style="clear: right;  border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /><img src="/images/supported_brands/pushetta.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" height="50" /></p>
-
-<ul>
-  <li>Thermostat: <a href="/components/thermostat.honeywell/">Honeywell</a> now supported (<a href="https://github.com/sander76">@sander76</a>)</li>
-  <li>Switch: <a href="/components/switch.orvibo/">Orvibo</a> now supported (<a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>)</li>
-  <li>Camera: <a href="/components/camera.mjpeg/">mjpeg camera’s</a> now supported (<a href="https://github.com/ryanturner">@ryanturner</a>)</li>
-  <li>Notify: <a href="/components/notify.pushetta/">Pushetta</a> now supported (<a href="https://github.com/fabaff">@fabaff</a>)</li>
-  <li>Light: <a href="/components/light.mqtt/">MQTT</a> now supported (<a href="https://github.com/hexxter">@hexxter</a>)</li>
-  <li>Light: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
-  <li>Switch: <a href="/components/zwave/">Z-Wave</a> now supported (<a href="https://github.com/leoc">@leoc</a>)</li>
-  <li>New component <a href="/components/logger/">logger</a> allows filtering logged data (<a href="https://github.com/badele">@badele</a>)</li>
-  <li>New component <a href="/components/updater/">updater</a> will notify users if an update for Home Assistant is available (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
-  <li>Notify: <a href="/components/notify.pushbullet/">PushBullet</a> now allows targeting contacts/channels/specific devices (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-  <li>Light: Allow controlling color temperature (<a href="https://github.com/tomduijf">@tomduijf</a>)</li>
-  <li>Frontend: about page added (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Switch RGB as the color unit used in light component (<a href="https://github.com/balloob">@balloob</a>)</li>
-  <li>Re-install platform and component dependencies after a Home Assistant version upgrade (<a href="https://github.com/balloob">@balloob</a>)</li>
-</ul>
-
-
     
   </div>
   </article>
