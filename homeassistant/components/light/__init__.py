@@ -10,7 +10,8 @@ import logging
 import os
 import csv
 
-from homeassistant.components import group, discovery, wink, isy994, zwave
+from homeassistant.components import (
+    group, discovery, wink, isy994, zwave, insteon)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -59,6 +60,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
+    insteon.DISCOVER_LIGHTS: 'insteon',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
