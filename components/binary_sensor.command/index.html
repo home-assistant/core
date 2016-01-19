@@ -146,10 +146,10 @@
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">binary_sensor</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">command_sensor</span></span>
-  <span class="key">command</span>: <span class="string"><span class="content">netstat -na | find &quot;33322&quot; | find /c &quot;LISTENING&quot; &gt; nul &amp;&amp; (Echo 1 ) || (Echo 0)</span></span>
+  <span class="key">command</span>: <span class="string"><span class="content">netstat -na | find &quot;33322&quot; | find /c &quot;LISTENING&quot; &gt; nul &amp;&amp; (echo &quot;Running&quot;) || (echo &quot;Not running&quot;)</span></span>
   <span class="key">name</span>: <span class="string"><span class="content">'sickragerunning'</span></span>
-  <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">1</span><span class="delimiter">&quot;</span></span>
-  <span class="key">payload_of</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">0</span><span class="delimiter">&quot;</span></span>
+  <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Running</span><span class="delimiter">&quot;</span></span>
+  <span class="key">payload_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Not running</span><span class="delimiter">&quot;</span></span>
 </pre></div>
 </div>
 </div>
