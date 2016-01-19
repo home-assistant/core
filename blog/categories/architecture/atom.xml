@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Architecture | Home Assistant]]></title>
   <link href="https://home-assistant.io/blog/categories/architecture/atom.xml" rel="self"/>
   <link href="https://home-assistant.io/"/>
-  <updated>2016-01-19T09:12:58+00:00</updated>
+  <updated>2016-01-19T16:18:54+00:00</updated>
   <id>https://home-assistant.io/</id>
   <author>
     <name><![CDATA[Paulus Schoutsen]]></name>
@@ -41,7 +41,7 @@
 
 <h3>The perfect app is no app.</h3>
 
-<p>Home automation should blend with your current workflow, not replace it. For most devices, there is no faster way to control most devices then how you are already doing it today. Most of the time, the best app is no app. The only interface that can be more convenient, and is accessible for visitors of your home of all ages is a voice interface. The industry has realized this too and there are some major players focussing on voice interaction. Take Apple for example: the only way to control your HomeKit devices is with Siri.  Amazon has taken it one step further with the Amazon Echo, providing an always-listening connected speaker/microphone for the living room. I expect a lot more companies to join this segment in 2016.</p>
+<p>Home automation should blend with your current workflow, not replace it. For most devices, there is no faster way to control most devices than how you are already doing it today. Most of the time, the best app is no app. The only interface that can be more convenient, and is accessible for visitors of your home of all ages is a voice interface. The industry has realized this too and there are some major players focussing on voice interaction. Take Apple for example: the only way to control your HomeKit devices is with Siri.  Amazon has taken it one step further with the Amazon Echo, providing an always-listening connected speaker/microphone for the living room. I expect a lot more companies to join this segment in 2016.</p>
 
 <p>Voice interfaces are not perfect either. The speed at which you can issue commands is low because you have to wait for a response. There are also issues with the discoverability of commands, recognition of accents and dependency on the cloud for processing your voice. I believe that all but the first one are problems that are going to be solved eventually.</p>
 
