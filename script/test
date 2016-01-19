@@ -5,10 +5,6 @@
 
 cd "$(dirname "$0")/.."
 
-script/lint
-
-LINT_STATUS=$?
-
 echo "Running tests..."
 
 if [ "$1" = "coverage" ]; then
@@ -17,6 +13,13 @@ if [ "$1" = "coverage" ]; then
 else
   py.test
   TEST_STATUS=$?
+fi
+
+if [ "$NO_LINT" = "1" ]; then
+  LINT_STATUS=0
+else
+  script/lint
+  LINT_STATUS=$?
 fi
 
 if [ $LINT_STATUS -eq 0 ]

@@ -2,7 +2,7 @@
 """
 Downloads the latest Polymer v1 iconset version for materialdesignicons.com
 """
-
+import hashlib
 import os
 import re
 import requests
@@ -75,17 +75,18 @@ def main():
     print("materialdesignicons.com icon updater")
 
     local_version = get_local_version()
-    remote_version, remote_url = get_remote_version()
 
-    print('Local version:', local_version)
-    print('Remote version:', remote_version)
+    # The remote version is not reliable.
+    _, remote_url = get_remote_version()
 
-    if local_version == remote_version:
+    source = clean_component(requests.get(remote_url).text)
+    new_version = hashlib.md5(source.encode('utf-8')).hexdigest()
+
+    if local_version == new_version:
         print('Already on the latest version.')
         sys.exit()
 
-    write_component(remote_version,
-                    clean_component(requests.get(remote_url).text))
+    write_component(new_version, source)
     print('Updated to latest version')
 
 if __name__ == '__main__':

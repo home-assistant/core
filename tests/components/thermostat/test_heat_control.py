@@ -21,6 +21,9 @@ from homeassistant.components import switch, thermostat
 entity = 'thermostat.test'
 ent_sensor = 'sensor.test'
 ent_switch = 'switch.test'
+min_temp = 3.0
+max_temp = 65.0
+target_temp = 42.0
 
 
 class TestThermostatHeatControl(unittest.TestCase):
@@ -42,6 +45,28 @@ class TestThermostatHeatControl(unittest.TestCase):
 
     def test_setup_defaults_to_unknown(self):
         self.assertEqual('unknown', self.hass.states.get(entity).state)
+
+    def test_default_setup_params(self):
+        state = self.hass.states.get(entity)
+        self.assertEqual(7, state.attributes.get('min_temp'))
+        self.assertEqual(35, state.attributes.get('max_temp'))
+        self.assertEqual(None, state.attributes.get('temperature'))
+
+    def test_custom_setup_params(self):
+        thermostat.setup(self.hass, {'thermostat': {
+            'platform': 'heat_control',
+            'name': 'test',
+            'heater': ent_switch,
+            'target_sensor': ent_sensor,
+            'min_temp': min_temp,
+            'max_temp': max_temp,
+            'target_temp': target_temp
+        }})
+        state = self.hass.states.get(entity)
+        self.assertEqual(min_temp, state.attributes.get('min_temp'))
+        self.assertEqual(max_temp, state.attributes.get('max_temp'))
+        self.assertEqual(target_temp, state.attributes.get('temperature'))
+        self.assertEqual(str(target_temp), self.hass.states.get(entity).state)
 
     def test_set_target_temp(self):
         thermostat.set_temperature(self.hass, 30)
@@ -113,3 +138,4 @@ class TestThermostatHeatControl(unittest.TestCase):
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+

@@ -6,21 +6,22 @@ This module provides an API and a HTTP interface for debug purposes.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-import json
-import threading
-import logging
-import time
-import gzip
-import os
 from datetime import timedelta
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+import gzip
 from http import cookies
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+import json
+import logging
+import os
 from socketserver import ThreadingMixIn
+import ssl
+import threading
+import time
 from urllib.parse import urlparse, parse_qs
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON,
+    SERVER_PORT, CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CONTENT_ENCODING, HTTP_HEADER_VARY, HTTP_HEADER_CONTENT_LENGTH,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_EXPIRES, HTTP_OK, HTTP_UNAUTHORIZED,
@@ -36,7 +37,8 @@ CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
-CONF_SESSIONS_ENABLED = "sessions_enabled"
+CONF_SSL_CERTIFICATE = 'ssl_certificate'
+CONF_SSL_KEY = 'ssl_key'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -50,7 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Sets up the HTTP API and debug interface. """
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
 
@@ -58,11 +60,13 @@ def setup(hass, config):
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development)
+            development, ssl_certificate, ssl_key)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -74,7 +78,8 @@ def setup(hass, config):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port)
+    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+                              ssl_certificate is not None)
 
     return True
 
@@ -89,7 +94,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development):
+                 hass, api_password, development, ssl_certificate, ssl_key):
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
@@ -98,12 +103,19 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.development = development
         self.paths = []
         self.sessions = SessionStore()
+        self.use_ssl = ssl_certificate is not None
 
         # We will lazy init this one if needed
         self.event_forwarder = None
 
         if development:
             _LOGGER.info("running http in development mode")
+
+        if ssl_certificate is not None:
+            context = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH)
+            context.load_cert_chain(ssl_certificate, keyfile=ssl_key)
+            self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
         """ Starts the HTTP server. """
@@ -113,8 +125,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
+        protocol = 'https' if self.use_ssl else 'http'
+
         _LOGGER.info(
-            "Starting web interface at http://%s:%d", *self.server_address)
+            "Starting web interface at %s://%s:%d",
+            protocol, self.server_address[0], self.server_address[1])
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
@@ -163,12 +178,8 @@ class RequestHandler(SimpleHTTPRequestHandler):
         """ Does some common checks and calls appropriate method. """
         url = urlparse(self.path)
 
-        # Read query input
-        data = parse_qs(url.query)
-
-        # parse_qs gives a list for each value, take the latest element
-        for key in data:
-            data[key] = data[key][-1]
+        # Read query input. parse_qs gives a list for each value, we want last
+        data = {key: data[-1] for key, data in parse_qs(url.query).items()}
 
         # Did we get post input ?
         content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
@@ -187,17 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        if self.server.api_password is None:
-            self.authenticated = True
-        elif HTTP_HEADER_HA_AUTH in self.headers:
-            api_password = self.headers.get(HTTP_HEADER_HA_AUTH)
-
-            if not api_password and DATA_API_PASSWORD in data:
-                api_password = data[DATA_API_PASSWORD]
-
-            self.authenticated = api_password == self.server.api_password
-        else:
-            self.authenticated = self.verify_session()
+        self.authenticated = (self.server.api_password is None or
+                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password or
+                              data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password or
+                              self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -287,6 +293,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 json.dumps(data, indent=4, sort_keys=True,
                            cls=rem.JSONEncoder).encode("UTF-8"))
 
+    def write_text(self, message, status_code=HTTP_OK):
+        """ Helper method to return a text message to the caller. """
+        self.send_response(status_code)
+        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+
+        self.set_session_cookie_header()
+
+        self.end_headers()
+
+        self.wfile.write(message.encode("UTF-8"))
+
     def write_file(self, path, cache_headers=True):
         """ Returns a file to the user. """
         try:
@@ -353,13 +370,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def set_session_cookie_header(self):
         """ Add the header for the session cookie and return session id. """
         if not self.authenticated:
-            return
+            return None
 
         session_id = self.get_cookie_session_id()
 
         if session_id is not None:
             self.server.sessions.extend_validation(session_id)
-            return
+            return session_id
 
         self.send_header(
             'Set-Cookie',
@@ -416,10 +433,10 @@ def session_valid_time():
 
 class SessionStore(object):
     """ Responsible for storing and retrieving http sessions """
-    def __init__(self, enabled=True):
+    def __init__(self):
         """ Set up the session store """
         self._sessions = {}
-        self.lock = threading.RLock()
+        self._lock = threading.RLock()
 
     @util.Throttle(SESSION_CLEAR_INTERVAL)
     def _remove_expired(self):
@@ -431,7 +448,7 @@ class SessionStore(object):
 
     def is_valid(self, key):
         """ Return True if a valid session is given. """
-        with self.lock:
+        with self._lock:
             self._remove_expired()
 
             return (key in self._sessions and
@@ -439,17 +456,19 @@ class SessionStore(object):
 
     def extend_validation(self, key):
         """ Extend a session validation time. """
-        with self.lock:
+        with self._lock:
+            if key not in self._sessions:
+                return
             self._sessions[key] = session_valid_time()
 
     def destroy(self, key):
         """ Destroy a session by key. """
-        with self.lock:
+        with self._lock:
             self._sessions.pop(key, None)
 
     def create(self):
         """ Creates a new session. """
-        with self.lock:
+        with self._lock:
             session_id = util.get_random_string(20)
 
             while session_id in self._sessions:

@@ -11,9 +11,7 @@ import logging
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
-                '#python-wink==0.2']
+REQUIREMENTS = ['python-wink==0.4.1']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -32,3 +30,5 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pywink.set_bearer_token(token)
 
     add_devices(WinkToggleDevice(switch) for switch in pywink.get_switches())
+    add_devices(WinkToggleDevice(switch) for switch in
+                pywink.get_powerstrip_outlets())

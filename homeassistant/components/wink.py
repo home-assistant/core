@@ -1,8 +1,7 @@
 """
 homeassistant.components.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Connects to a Wink hub and loads relevant components to control its devices.
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
@@ -17,9 +16,7 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
-REQUIREMENTS = ['https://github.com/balloob/python-wink/archive/'
-                '42fdcfa721b1bc583688e3592d8427f4c13ba6d9.zip'
-                '#python-wink==0.2']
+REQUIREMENTS = ['python-wink==0.4.1']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -40,8 +37,10 @@ def setup(hass, config):
     # Load components for the devices in the Wink that we support
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
-            ('switch', pywink.get_switches, DISCOVER_SWITCHES),
-            ('sensor', pywink.get_sensors, DISCOVER_SENSORS),
+            ('switch', lambda: pywink.get_switches or
+             pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
+            ('sensor', lambda: pywink.get_sensors or
+             pywink.get_eggtrays, DISCOVER_SENSORS),
             ('lock', pywink.get_locks, DISCOVER_LOCKS)):
 
         if func_exists():
@@ -68,7 +67,7 @@ class WinkToggleDevice(ToggleEntity):
     @property
     def unique_id(self):
         """ Returns the id of this Wink switch. """
-        return "{}.{}".format(self.__class__, self.wink.deviceId())
+        return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
@@ -89,12 +88,12 @@ class WinkToggleDevice(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        self.wink.setState(True)
+        self.wink.set_state(True)
 
     def turn_off(self):
         """ Turns the switch off. """
-        self.wink.setState(False)
+        self.wink.set_state(False)
 
     def update(self):
         """ Update state of the light. """
-        self.wink.updateState()
+        self.wink.update_state()

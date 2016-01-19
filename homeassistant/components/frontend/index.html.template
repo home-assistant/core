@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <title>Home Assistant</title>
@@ -13,7 +13,7 @@
     <meta name='viewport' content='width=device-width, user-scalable=no'>
     <meta name='theme-color' content='#03a9f4'>
     <style>
-      #init {
+      #ha-init-skeleton {
         display: -webkit-flex;
         display: flex;
         -webkit-flex-direction: column;
@@ -31,11 +31,21 @@
         margin-bottom: 123px;
       }
     </style>
+    <link rel='import' href='/static/{{ app_url }}' async>
   </head>
   <body fullbleed>
-    <div id='init'><img src='/static/favicon-192x192.png' height='192'></div>
-    <script src='/static/webcomponents-lite.min.js'></script>
-    <link rel='import' href='/static/{{ app_url }}' />
+    <div id='ha-init-skeleton'><img src='/static/favicon-192x192.png' height='192'></div>
+    <script>
+      var webComponentsSupported = ('registerElement' in document &&
+                                    'import' in document.createElement('link') &&
+                                    'content' in document.createElement('template'))
+      if (!webComponentsSupported) {
+        var script = document.createElement('script')
+        script.async = true
+        script.src = '/static/webcomponents-lite.min.js'
+        document.head.appendChild(script)
+      }
+    </script>
     <home-assistant auth='{{ auth }}' icons='{{ icons }}'></home-assistant>
   </body>
 </html>

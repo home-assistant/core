@@ -81,7 +81,7 @@ def setup(hass, config):
                             object_id)
             continue
         alias = cfg.get(CONF_ALIAS, object_id)
-        script = Script(hass, object_id, alias, cfg[CONF_SEQUENCE])
+        script = Script(object_id, alias, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
         hass.services.register(DOMAIN, object_id, service_handler)
 
@@ -106,8 +106,7 @@ def setup(hass, config):
 class Script(ToggleEntity):
     """ Represents a script. """
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, object_id, name, sequence):
-        self.hass = hass
+    def __init__(self, object_id, name, sequence):
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self.sequence = sequence
@@ -201,7 +200,7 @@ class Script(ToggleEntity):
                      self._last_action)
         domain, service = split_entity_id(conf_service)
         data = action.get(CONF_SERVICE_DATA, {})
-        self.hass.services.call(domain, service, data)
+        self.hass.services.call(domain, service, data, True)
 
     def _fire_event(self, action):
         """ Fires an event. """

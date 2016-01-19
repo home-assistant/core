@@ -46,8 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     data = ecobee.NETWORK
     hold_temp = discovery_info['hold_temp']
-    _LOGGER.info("Loading ecobee thermostat component with hold_temp set to "
-                 + str(hold_temp))
+    _LOGGER.info(
+        "Loading ecobee thermostat component with hold_temp set to %s",
+        hold_temp)
     add_devices(Thermostat(data, index, hold_temp)
                 for index in range(len(data.ecobee.thermostats)))
 
@@ -87,7 +88,13 @@ class Thermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """ Returns the temperature we try to reach. """
-        return (self.target_temperature_low + self.target_temperature_high) / 2
+        if self.hvac_mode == 'heat' or self.hvac_mode == 'auxHeatOnly':
+            return self.target_temperature_low
+        elif self.hvac_mode == 'cool':
+            return self.target_temperature_high
+        else:
+            return (self.target_temperature_low +
+                    self.target_temperature_high) / 2
 
     @property
     def target_temperature_low(self):
@@ -164,14 +171,15 @@ class Thermostat(ThermostatDevice):
         """ Turns away on. """
         self._away = True
         if self.hold_temp:
-            self.data.ecobee.set_climate_hold("away", "indefinite")
+            self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                              "away", "indefinite")
         else:
-            self.data.ecobee.set_climate_hold("away")
+            self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
 
     def turn_away_mode_off(self):
         """ Turns away off. """
         self._away = False
-        self.data.ecobee.resume_program()
+        self.data.ecobee.resume_program(self.thermostat_index)
 
     def set_temperature(self, temperature):
         """ Set new target temperature """
@@ -179,32 +187,34 @@ class Thermostat(ThermostatDevice):
         low_temp = temperature - 1
         high_temp = temperature + 1
         if self.hold_temp:
-            self.data.ecobee.set_hold_temp(low_temp, high_temp, "indefinite")
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp, "indefinite")
         else:
-            self.data.ecobee.set_hold_temp(low_temp, high_temp)
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp)
 
     def set_hvac_mode(self, mode):
         """ Set HVAC mode (auto, auxHeatOnly, cool, heat, off) """
-        self.data.ecobee.set_hvac_mode(mode)
+        self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
 
     # Home and Sleep mode aren't used in UI yet:
 
     # def turn_home_mode_on(self):
     #     """ Turns home mode on. """
     #     self._away = False
-    #     self.data.ecobee.set_climate_hold("home")
+    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
 
     # def turn_home_mode_off(self):
     #     """ Turns home mode off. """
     #     self._away = False
-    #     self.data.ecobee.resume_program()
+    #     self.data.ecobee.resume_program(self.thermostat_index)
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """
     #     self._away = False
-    #     self.data.ecobee.set_climate_hold("sleep")
+    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "sleep")
 
     # def turn_sleep_mode_off(self):
     #     """ Turns sleep mode off. """
     #     self._away = False
-    #     self.data.ecobee.resume_program()
+    #     self.data.ecobee.resume_program(self.thermostat_index)

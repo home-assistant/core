@@ -17,8 +17,19 @@ DOMAIN = "demo"
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
-    'device_tracker', 'light', 'media_player', 'notify', 'switch', 'sensor',
-    'thermostat', 'camera', 'binary_sensor', 'alarm_control_panel', 'lock']
+    'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'device_tracker',
+    'light',
+    'lock',
+    'media_player',
+    'notify',
+    'rollershutter',
+    'sensor',
+    'switch',
+    'thermostat',
+]
 
 
 def setup(hass, config):
@@ -42,9 +53,10 @@ def setup(hass, config):
     bootstrap.setup_component(hass, 'sun')
 
     # Setup demo platforms
+    demo_config = config.copy()
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
-        bootstrap.setup_component(
-            hass, component, {component: {CONF_PLATFORM: 'demo'}})
+        demo_config[component] = {CONF_PLATFORM: 'demo'}
+        bootstrap.setup_component(hass, component, demo_config)
 
     # Setup room groups
     lights = sorted(hass.states.entity_ids('light'))

@@ -1,68 +1,72 @@
 """
-homeassistant.components.motor.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a MQTT motor.
+homeassistant.components.rollershutter.mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Allows to configure a MQTT rollershutter.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/motor.mqtt/
+https://home-assistant.io/components/rollershutter.mqtt/
 """
 import logging
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.motor import MotorDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.components.rollershutter import RollershutterDevice
+from homeassistant.util import template
+
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = "MQTT Motor"
+DEFAULT_NAME = "MQTT Rollershutter"
 DEFAULT_QOS = 0
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_CLOSE = "CLOSE"
+DEFAULT_PAYLOAD_UP = "UP"
+DEFAULT_PAYLOAD_DOWN = "DOWN"
 DEFAULT_PAYLOAD_STOP = "STOP"
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add MQTT Motor """
+    """ Add MQTT Rollershutter """
 
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
 
-    add_devices_callback([MqttMotor(
+    add_devices_callback([MqttRollershutter(
         hass,
         config.get('name', DEFAULT_NAME),
         config.get('state_topic'),
         config.get('command_topic'),
         config.get('qos', DEFAULT_QOS),
-        config.get('payload_open', DEFAULT_PAYLOAD_OPEN),
-        config.get('payload_close', DEFAULT_PAYLOAD_CLOSE),
+        config.get('payload_up', DEFAULT_PAYLOAD_UP),
+        config.get('payload_down', DEFAULT_PAYLOAD_DOWN),
         config.get('payload_stop', DEFAULT_PAYLOAD_STOP),
-        config.get('state_format'))])
+        config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
-class MqttMotor(MotorDevice):
-    """ Represents a motor that can be controlled using MQTT. """
+class MqttRollershutter(RollershutterDevice):
+    """ Represents a rollershutter that can be controlled using MQTT. """
     def __init__(self, hass, name, state_topic, command_topic, qos,
-                 payload_open, payload_close, payload_stop, state_format):
+                 payload_up, payload_down, payload_stop, value_template):
         self._state = None
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
-        self._payload_open = payload_open
-        self._payload_close = payload_close
+        self._payload_up = payload_up
+        self._payload_down = payload_down
         self._payload_stop = payload_stop
-        self._parse = mqtt.FmtParser(state_format)
 
         if self._state_topic is None:
             return
 
         def message_received(topic, payload, qos):
             """ A new MQTT message has been received. """
-            value = self._parse(payload)
-            if value.isnumeric() and 0 <= int(value) <= 100:
-                self._state = int(value)
+            if value_template is not None:
+                payload = template.render_with_possible_json_value(
+                    hass, value_template, payload)
+            if payload.isnumeric() and 0 <= int(payload) <= 100:
+                self._state = int(payload)
                 self.update_ha_state()
             else:
                 _LOGGER.warning(
@@ -77,25 +81,25 @@ class MqttMotor(MotorDevice):
 
     @property
     def name(self):
-        """ The name of the motor. """
+        """ The name of the rollershutter. """
         return self._name
 
     @property
     def current_position(self):
         """
-        Return current position of motor.
+        Return current position of rollershutter.
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._state
 
-    def open(self, **kwargs):
-        """ Open the device. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_open,
+    def move_up(self, **kwargs):
+        """ Move the rollershutter up. """
+        mqtt.publish(self.hass, self._command_topic, self._payload_up,
                      self._qos)
 
-    def close(self, **kwargs):
-        """ Close the device. """
-        mqtt.publish(self.hass, self._command_topic, self._payload_close,
+    def move_down(self, **kwargs):
+        """ Move the rollershutter down. """
+        mqtt.publish(self.hass, self._command_topic, self._payload_down,
                      self._qos)
 
     def stop(self, **kwargs):

@@ -2,11 +2,14 @@ sudo: false
 language: python
 cache:
   directories:
-    - $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/
+    - $HOME/.cache/pip
+    # - "$HOME/virtualenv/python$TRAVIS_PYTHON_VERSION"
 python:
-  - 3.4.2
-  - 3.5.0
+  - 3.4
+  - 3.5
 install:
-  - script/bootstrap_server
+  - "true"
 script:
   - script/cibuild
+matrix:
+  fast_finish: true

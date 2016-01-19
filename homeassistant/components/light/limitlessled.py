@@ -90,8 +90,8 @@ def state(new_state):
             if self.repeating:
                 self.repeating = False
                 self.group.stop()
-            # Not on? Turn on.
-            if not self.is_on:
+            # Not on and should be? Turn on.
+            if not self.is_on and new_state is True:
                 pipeline.on()
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
@@ -151,7 +151,8 @@ class LimitlessLEDGroup(Light):
     @state(False)
     def turn_off(self, transition_time, pipeline, **kwargs):
         """ Turn off a group. """
-        pipeline.transition(transition_time, brightness=0.0).off()
+        if self.is_on:
+            pipeline.transition(transition_time, brightness=0.0).off()
 
 
 class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
