@@ -33,6 +33,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states.
         s_types = [
+            gateway.const.Presentation.S_DOOR,
+            gateway.const.Presentation.S_MOTION,
+            gateway.const.Presentation.S_SMOKE,
             gateway.const.Presentation.S_TEMP,
             gateway.const.Presentation.S_HUM,
             gateway.const.Presentation.S_BARO,
@@ -59,6 +62,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             s_types.extend([
                 gateway.const.Presentation.S_COLOR_SENSOR,
                 gateway.const.Presentation.S_MULTIMETER,
+                gateway.const.Presentation.S_SPRINKLER,
+                gateway.const.Presentation.S_WATER_LEAK,
+                gateway.const.Presentation.S_SOUND,
+                gateway.const.Presentation.S_VIBRATION,
+                gateway.const.Presentation.S_MOISTURE,
             ])
             not_v_types.extend([gateway.const.SetReq.V_STATUS, ])
         v_types = [member for member in gateway.const.SetReq

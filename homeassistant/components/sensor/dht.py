@@ -20,7 +20,7 @@ REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
-    'temperature': ['Temperature', ''],
+    'temperature': ['Temperature', None],
     'humidity': ['Humidity', '%']
 }
 # Return cached results if last scan was less then this time ago

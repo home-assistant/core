@@ -101,17 +101,18 @@ class Entity(object):
         state = str(self.state)
         attr = self.state_attributes or {}
 
-        if ATTR_FRIENDLY_NAME not in attr and self.name:
-            attr[ATTR_FRIENDLY_NAME] = self.name
+        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
+            attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
-        if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
-            attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+        if ATTR_UNIT_OF_MEASUREMENT not in attr and \
+           self.unit_of_measurement is not None:
+            attr[ATTR_UNIT_OF_MEASUREMENT] = str(self.unit_of_measurement)
 
-        if ATTR_ICON not in attr and self.icon:
-            attr[ATTR_ICON] = self.icon
+        if ATTR_ICON not in attr and self.icon is not None:
+            attr[ATTR_ICON] = str(self.icon)
 
         if self.hidden:
-            attr[ATTR_HIDDEN] = self.hidden
+            attr[ATTR_HIDDEN] = bool(self.hidden)
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))
