@@ -121,6 +121,7 @@
   <span class="key">username</span>: <span class="string"><span class="content">USERNAME</span></span>
   <span class="key">password</span>: <span class="string"><span class="content">PASSWORD</span></span>
   <span class="key">certificate</span>: <span class="string"><span class="content">/home/paulus/dev/addtrustexternalcaroot.crt</span></span>
+  <span class="key">protocol</span>: <span class="string"><span class="content">3.1</span></span>
 </pre></div>
 </div>
 </div>
@@ -135,6 +136,7 @@
   <li><strong>username</strong> (<em>Optional</em>): The username to use with your MQTT broker.</li>
   <li><strong>password</strong> (<em>Optional</em>): The corresponding password for the username to use with your MQTT broker.</li>
   <li><strong>certificate</strong> (<em>Optional</em>): Certificate to use to encrypt communication with the broker.</li>
+  <li><strong>protocol</strong> (<em>Optional</em>): Protocol to use: 3.1 or 3.1.1. By default it connects with 3.1.1 and falls back to 3.1 if server does not support 3.1.</li>
 </ul>
 
 <h2><a class="title-link" name="picking-a-broker" href="#picking-a-broker"></a> Picking a broker</h2>
@@ -158,6 +160,10 @@
 </div>
 </div>
 
+<p class="note warning">
+There is an issue with the Mosquitto package included in Ubuntu 14.04 LTS. Specify <code>protocol: 3.1</code> in your MQTT configuration to work around this issue.
+</p>
+
 <h4><a class="title-link" name="public-mqtt" href="#public-mqtt"></a> Public MQTT</h4>
 
 <p>The Mosquitto project runs a <a href="http://test.mosquitto.org">public broker</a>. Easiest to setup but there is 0 privacy as all messages are public. Use this only for testing purposes and not for real tracking of your devices.</p>
@@ -167,7 +173,7 @@
   <span class="key">broker</span>: <span class="string"><span class="content">test.mosquitto.org</span></span>
   <span class="key">port</span>: <span class="string"><span class="content">1883</span></span>
 
-  <span class="comment"># Optional, if you want encryption</span>
+  <span class="comment"># Optional, replace port 1883 with following if you want encryption</span>
   <span class="comment"># (doesn't really matter because broker is public)</span>
   <span class="key">port</span>: <span class="string"><span class="content">8883</span></span>
   <span class="comment"># Download certificate from http://test.mosquitto.org/ssl/mosquitto.org.crt</span>
