@@ -36,7 +36,7 @@ DEPENDENCIES = ['ecobee']
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
     'humidity': ['Humidity', '%'],
-    'occupancy': ['Occupancy', '']
+    'occupancy': ['Occupancy', None]
 }
 
 _LOGGER = logging.getLogger(__name__)

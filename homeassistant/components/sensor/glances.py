@@ -31,11 +31,11 @@ SENSOR_TYPES = {
     'swap_use_percent': ['Swap Use', '%'],
     'swap_use': ['Swap Use', 'GiB'],
     'swap_free': ['Swap Free', 'GiB'],
-    'processor_load': ['CPU Load', ''],
-    'process_running': ['Running', ''],
-    'process_total': ['Total', ''],
-    'process_thread': ['Thread', ''],
-    'process_sleeping': ['Sleeping', '']
+    'processor_load': ['CPU Load', None],
+    'process_running': ['Running', None],
+    'process_total': ['Total', None],
+    'process_thread': ['Thread', None],
+    'process_sleeping': ['Sleeping', None]
 }
 
 _LOGGER = logging.getLogger(__name__)
