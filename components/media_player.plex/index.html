@@ -121,7 +121,7 @@
 </div>
 </div>
 
-<p>You may also need to create the file <code>plex.conf</code>.</p>
+<p>In case discovery does not work (GDM disabled or non-local plex server), you can create <code>~/.homeassistant/plex.conf</code> manually.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">IP_ADDRESS:PORT</span><span class="delimiter">&quot;</span></span>: {<span class="key"><span class="delimiter">&quot;</span><span class="content">token</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">TOKEN</span><span class="delimiter">&quot;</span></span>}}
@@ -132,7 +132,7 @@
 <ul>
   <li><strong>IP_ADDRESS</strong> (<em>Required</em>): IP address of the Plex Media Server</li>
   <li><strong>PORT</strong> (<em>Required</em>): Port where Plex is listening. Default is 32400</li>
-  <li><strong>TOKEN</strong> (<em>Optional</em>): Only if authentication is required. Set to <code>None</code> (without quotes) otherwise.</li>
+  <li><strong>TOKEN</strong> (<em>Optional</em>): Only if authentication is required. Set to <code>null</code> (without quotes) otherwise.</li>
 </ul>
 
 <p>At this moment, the Plex platform only supports one Plex Media Server.</p>
