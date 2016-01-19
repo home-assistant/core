@@ -72,8 +72,6 @@ DISCOVERY_COMPONENTS = [
 
 def setup(hass, config):
     """Setup the MySensors component."""
-    # pylint: disable=too-many-locals
-
     if not validate_config(config,
                            {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
