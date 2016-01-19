@@ -107,21 +107,30 @@
   </header>
   <hr class="divider">
 
-  <p>The HTTP component serves all files and data required for the Home Assistant frontend. You only need to add this to your configuration file if you want to change any of the default settings.</p>
+  <p>The <code>http</code> component serves all files and data required for the Home Assistant frontend. You only need to add this to your configuration file if you want to change any of the default settings.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">http</span>:
-  <span class="comment"># Optional, protect Home Assistant with a password</span>
-  <span class="key">api_password</span>: <span class="string"><span class="content">XXX</span></span>
-  <span class="comment"># Optional, disable caching and load unvulcanized assets</span>
+  <span class="key">api_password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
+  <span class="key">server_port</span>: <span class="string"><span class="content">12345</span></span>
   <span class="key">development</span>: <span class="string"><span class="content">1</span></span>
-  <span class="comment"># Optional, serve Home Assistant over a secure connection</span>
   <span class="key">ssl_certificate</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/fullchain.pem</span></span>
   <span class="key">ssl_key</span>: <span class="string"><span class="content">/etc/letsencrypt/live/hass.example.com/privkey.pem</span></span>
 </pre></div>
 </div>
 </div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>api_password</strong> (<em>Optional</em>): Protect Home Assistant with a password</li>
+  <li><strong>server_port</strong> (<em>Optional</em>): Let you set a port to use. Defaults to 8123.</li>
+  <li><strong>development</strong> (<em>Optional</em>): Disable caching and load unvulcanized assets. Useful for Frontend development.</li>
+  <li><strong>ssl_certificate</strong> (<em>Optional</em>): Path to your TLS/SSL certificate to serve Home Assistant over a secure connection.</li>
+  <li><strong>ssl_key</strong> (<em>Optional</em>): Path to your TLS/SSL key to serve Home Assistant over a secure connection.</li>
+</ul>
+
 
 </article>
 
