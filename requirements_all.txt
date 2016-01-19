@@ -39,6 +39,9 @@ pyfttt==0.3
 # homeassistant.components.influxdb
 influxdb==2.10.0
 
+# homeassistant.components.insteon
+insteon_hub==0.4.5
+
 # homeassistant.components.isy994
 PyISY==1.0.5
 
