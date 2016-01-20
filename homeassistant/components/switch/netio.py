@@ -7,35 +7,81 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.netio/
 """
 import logging
+import socket
+from pynetio import Netio
+from collections import namedtuple
 from homeassistant.const import *
 from homeassistant.helpers import validate_config
-from homeassistant.components.netio import DOMAIN, DEVICES
 from homeassistant.components.switch import SwitchDevice, \
     ATTR_CURRENT_POWER_MWH
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = [DOMAIN]
+DEPENDENCIES = ['http']
+REQUIREMENTS = ['pynetio>=0.1.3']
+DEFAULT_USERNAME = 'admin'
+DEFAULT_PORT = 1234
+REQ_CONF = [CONF_HOST, CONF_PORTS]
+URL_API_NETIO_EP = "/api/netio"
+
+device = namedtuple('device', ['netio', 'entities'])
+DEVICES = {}
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Configure the netio linl """
 
-    if validate_config({DOMAIN: config}, {DOMAIN: [CONF_PORTS,
+    if validate_config({"conf": config}, {"conf": [CONF_PORTS,
                        CONF_HOST]}, _LOGGER):
-        for key in config[CONF_PORTS]:
-            switch = NetioSwitch(config[CONF_HOST], key,
-                                 config[CONF_PORTS][key])
-            add_devices_callback([switch])
-            DEVICES[config[CONF_HOST]].entities.append(switch)
+        if not config[CONF_HOST] in DEVICES:
+            try:
+                dev = Netio(config[CONF_HOST],
+                            config.get(CONF_PORT, DEFAULT_PORT),
+                            config.get(CONF_USERNAME, DEFAULT_USERNAME),
+                            config.get(CONF_PASSWORD, DEFAULT_USERNAME))
+                DEVICES[config[CONF_HOST]] = device(dev, [])
+            except:
+                _LOGGER.error('Cannot connect to %s' % config[CONF_HOST])
+
+        if DEVICES.get(config[CONF_HOST]):
+            for key in config[CONF_PORTS]:
+                switch = NetioSwitch(DEVICES[config[CONF_HOST]].netio, key,
+                                     config[CONF_PORTS][key])
+                add_devices_callback([switch])
+                DEVICES[config[CONF_HOST]].entities.append(switch)
+
+    hass.http.register_path('GET', URL_API_NETIO_EP, _got_push)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, dispose)
+    return True
+
+
+def _got_push(handler, path_match, data):
+    """ To handle updates from http GET """
+
+    host = socket.gethostbyaddr(handler.client_address[0])[0].split('.')[0]
+    states, consumptions = [], []
+    for i in range(1, 5):
+        states.append(
+            True if data.get('output%d_state' % i) == STATE_ON else False)
+        consumptions.append(float(data.get('output%d_consumption' % i)))
+    _LOGGER.debug('%s: %s, %s' %
+                  (host, states, consumptions))
+    DEVICES[host].netio._consumptions = consumptions
+    DEVICES[host].netio._states = states
+    [x.update_ha_state() for x in DEVICES[host].entities]
+
+
+def dispose(event):
+    "Close connections to Netio Devices"
+    [value.netio.stop() for key, value in DEVICES.items()]
 
 
 class NetioSwitch(SwitchDevice):
     """ Provide a netio linked switch"""
-    def __init__(self, host, port, name):
+    def __init__(self, netio, port, name):
         self._name = name
         self.port = port
-        self.netio = DEVICES[host].netio
+        self.netio = netio
 
     @property
     def name(self):
