@@ -24,11 +24,6 @@ DOMAIN = "mqtt"
 
 MQTT_CLIENT = None
 
-DEFAULT_PORT = 1883
-DEFAULT_KEEPALIVE = 60
-DEFAULT_QOS = 0
-DEFAULT_RETAIN = False
-
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
@@ -41,6 +36,16 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
+CONF_PROTOCOL = 'protocol'
+
+PROTOCOL_31 = '3.1'
+PROTOCOL_311 = '3.1.1'
+
+DEFAULT_PORT = 1883
+DEFAULT_KEEPALIVE = 60
+DEFAULT_QOS = 0
+DEFAULT_RETAIN = False
+DEFAULT_PROTOCOL = PROTOCOL_311
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -91,6 +96,12 @@ def setup(hass, config):
     username = util.convert(conf.get(CONF_USERNAME), str)
     password = util.convert(conf.get(CONF_PASSWORD), str)
     certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
+    protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
+
+    if protocol not in (PROTOCOL_31, PROTOCOL_311):
+        _LOGGER.error('Invalid protocol specified: %s. Allowed values: %s, %s',
+                      protocol, PROTOCOL_31, PROTOCOL_311)
+        return False
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
@@ -101,7 +112,7 @@ def setup(hass, config):
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate)
+                           password, certificate, protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -139,7 +150,7 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate):
+                 password, certificate, protocol):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -147,10 +158,15 @@ class MQTT(object):
         self.topics = {}
         self.progress = {}
 
-        if client_id is None:
-            self._mqttc = mqtt.Client(protocol=mqtt.MQTTv311)
+        if protocol == PROTOCOL_31:
+            proto = mqtt.MQTTv31
         else:
-            self._mqttc = mqtt.Client(client_id, protocol=mqtt.MQTTv311)
+            proto = mqtt.MQTTv311
+
+        if client_id is None:
+            self._mqttc = mqtt.Client(protocol=proto)
+        else:
+            self._mqttc = mqtt.Client(client_id, protocol=proto)
 
         if username is not None:
             self._mqttc.username_pw_set(username, password)
