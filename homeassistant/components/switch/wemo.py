@@ -97,22 +97,21 @@ class WemoSwitch(SwitchDevice):
     @property
     def state_attributes(self):
         attr = super().state_attributes or {}
-
         if self.maker_params:
             # Is the maker sensor on or off.
+            if self.entity_id == 'switch.hi_fi_systemline_sensor':
             if self.maker_params['hassensor']:
                 # Note a state of 1 matches the WeMo app 'not triggered'!
-                if self.maker_params['sensorstate'] == '1':
+                if self.maker_params['sensorstate']:
                     attr[ATTR_SENSOR_STATE] = STATE_OFF
                 else:
                     attr[ATTR_SENSOR_STATE] = STATE_ON
 
             # Is the maker switch configured as toggle(0) or momentary (1).
             if self.maker_params['switchmode']:
-                if self.maker_params['switchmode'] == '1':
-                    attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
-                else:
-                    attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
+                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
+            else:
+                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
         return attr
 
