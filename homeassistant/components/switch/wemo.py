@@ -109,9 +109,9 @@ class WemoSwitch(SwitchDevice):
             # Is the maker switch configured as toggle(0) or momentary (1).
             if self.maker_params['switchmode']:
                 if self.maker_params['switchmode'] == '1':
-                    attr[ATTR_SWITCH_MODE] =  MAKER_SWITCH_MOMENTARY
+                    attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
                 else:
-                    attr[ATTR_SWITCH_MODE] =  MAKER_SWITCH_TOGGLE
+                    attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
         return attr
 
