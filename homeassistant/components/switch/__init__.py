@@ -29,7 +29,9 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_TODAY_MWH = "today_mwh"
+ATTR_TOTAL_CONSUMPTION_KWH = "Total energy (kWh)"
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
+ATTR_CURRENT_POWER_W = "Current power (W)"
 ATTR_SENSOR_STATE = "sensor_state"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -46,6 +48,8 @@ DISCOVERY_PLATFORMS = {
 }
 
 PROP_TO_ATTR = {
+    ATTR_CURRENT_POWER_W: ATTR_CURRENT_POWER_W,
+    ATTR_TOTAL_CONSUMPTION_KWH: ATTR_TOTAL_CONSUMPTION_KWH,
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
     'today_power_mw': ATTR_TODAY_MWH,
     'sensor_state': ATTR_SENSOR_STATE
