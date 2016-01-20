@@ -203,14 +203,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         if 'artwork_url' in self._status:
             media_url = self._status['artwork_url']
         else:
-            media_url = ('/music/current/cover.jpg?'
-                         'player={player}&'
-                         'nocache={nocache}').format(
-                             player=self._id,
-                             nocache=hash(self.media_title))
+            media_url = ('/music/{track_id}/cover.jpg').format(
+                track_id=self._status["id"])
 
-        base_url = 'http://{server}:{port}/'.format(server=self._lms.host,
-                                                    port=self._lms.http_port)
+        base_url = 'http://{server}:{port}/'.format(
+            server=self._lms.host,
+            port=self._lms.http_port)
 
         return urllib.parse.urljoin(base_url, media_url)
 
