@@ -176,6 +176,45 @@
 </div>
 </div>
 
+<h4><a class="title-link" name="automations-for-lights-and-blinds-based-on-solar-elevation" href="#automations-for-lights-and-blinds-based-on-solar-elevation"></a> Automations for lights and blinds based on solar elevation</h4>
+
+<p>Solar elevation automations can cope with offsets from sunset / sunrise as the seasons change better than using a time based offsets.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>- <span class="string"><span class="content">alias: 'Turn a few lights on when the sun gets dim'</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">numeric_state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ state.attributes.elevation }}'</span></span>
+    <span class="key">below</span>: <span class="string"><span class="content">3.5</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">scene.background_lights</span></span>
+
+- <span class="string"><span class="content">alias: 'Turn more lights on as the sun gets dimmer'</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">numeric_state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ state.attributes.elevation }}'</span></span>
+    <span class="key">below</span>: <span class="string"><span class="content">1.5</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">scene.turn_on</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">scene.more_lights</span></span>
+
+- <span class="string"><span class="content">alias: 'Close blind at dusk'</span></span>
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">numeric_state</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">sun.sun</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ state.attributes.elevation }}'</span></span>
+    <span class="key">below</span>: <span class="string"><span class="content">-2.5</span></span>
+  <span class="key">action</span>:
+    <span class="key">service</span>: <span class="string"><span class="content">switch.turn_off</span></span>
+    <span class="key">entity_id</span>: <span class="string"><span class="content">switch.blind</span></span>
+
+</pre></div>
+</div>
+</div>
+
 
 </article>
 
