@@ -99,7 +99,6 @@ class WemoSwitch(SwitchDevice):
         attr = super().state_attributes or {}
         if self.maker_params:
             # Is the maker sensor on or off.
-            if self.entity_id == 'switch.hi_fi_systemline_sensor':
             if self.maker_params['hassensor']:
                 # Note a state of 1 matches the WeMo app 'not triggered'!
                 if self.maker_params['sensorstate']:
