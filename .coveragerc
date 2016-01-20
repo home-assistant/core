@@ -47,6 +47,9 @@ omit =
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
+    homeassistant/components/kodi.py
+    homeassistant/components/*/kodi.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -79,7 +82,6 @@ omit =
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/itunes.py
-    homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/sonos.py

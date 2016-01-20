@@ -198,3 +198,14 @@ scene:
         state: on
         xy_color: [0.33, 0.66]
         brightness: 200
+
+kodi:
+  url: http://192.168.0.123/jsonrpc
+  name: Kodi
+
+media_player: 
+  platform: kodi
+
+notify 2:
+  platform: kodi
+
