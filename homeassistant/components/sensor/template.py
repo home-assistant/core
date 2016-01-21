@@ -12,9 +12,13 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, ATTR_UNIT_OF_MEASUREMENT)
+    STATE_UNKNOWN,
+    ATTR_FRIENDLY_NAME,
+    CONF_VALUE_TEMPLATE,
+    ATTR_UNIT_OF_MEASUREMENT)
 
 from homeassistant.util import template
+from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Missing configuration data for sensor platfoprm")
         return False
 
-    for device in config[CONF_SENSORS]:
-        device_config = config[CONF_SENSORS].get(device)
-        if device_config is None:
+    for device, device_config in config[CONF_SENSORS].items():
+        if not isinstance(device_config, dict):
             _LOGGER.error("Missing configuration data for sensor %s", device)
             continue
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
@@ -45,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(
             SensorTemplate(
                 hass,
-                device,
                 friendly_name,
                 unit_of_measurement,
                 state_template)
@@ -63,17 +65,15 @@ class SensorTemplate(Entity):
     # pylint: disable=too-many-arguments
     def __init__(self,
                  hass,
-                 entity_name,
                  friendly_name,
                  unit_of_measurement,
                  state_template):
 
         self.hass = hass
-        self._name = entity_name
-        self._friendly_name = friendly_name
+        self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
-        self._state = ''
+        self.update()
 
         def _update_callback(_event):
             """ Called when the target device changes state. """
@@ -101,18 +101,8 @@ class SensorTemplate(Entity):
         """ Tells Home Assistant not to poll this entity. """
         return False
 
-    @property
-    def state_attributes(self):
-        attr = {}
-
-        if self._friendly_name:
-            attr[ATTR_FRIENDLY_NAME] = self._friendly_name
-
-        return attr
-
     def update(self):
-        self._state = self._renderer()
-
-    def _renderer(self):
-        """Render sensor value."""
-        return template.render(self.hass, self._template)
+        try:
+            self._state = template.render(self.hass, self._template)
+        except TemplateError:
+            self._state = STATE_UNKNOWN
