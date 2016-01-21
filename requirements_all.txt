@@ -177,6 +177,9 @@ python-twitch==1.2.0
 # homeassistant.components.sensor.yr
 xmltodict
 
+# homeassistant.components.statsd
+python-statsd==1.7.2
+
 # homeassistant.components.sun
 astral==0.8.1
 
