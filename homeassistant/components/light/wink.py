@@ -12,7 +12,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.4.1']
+REQUIREMENTS = ['python-wink==0.4.2']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
