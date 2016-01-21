@@ -1,5 +1,5 @@
 """
-homeassistant.components.notify.free_mobile
+homeassistant.components.notify.twitter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Twitter platform for notify component.
 
