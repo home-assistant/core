@@ -25,6 +25,7 @@ SENSOR_TYPES = {
     'precipitation': ['Condition', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
+    'windGust': ['Wind gust', 'm/s'],
     'pressure': ['Pressure', 'mbar'],
     'windDirection': ['Wind direction', '°'],
     'humidity': ['Humidity', '%'],
@@ -143,11 +144,11 @@ class YrSensor(Entity):
             elif self.type == 'symbol' and valid_from < now:
                 self._state = loc_data[self.type]['@number']
                 break
-            elif self.type == ('temperature', 'pressure', 'humidity',
+            elif self.type in ('temperature', 'pressure', 'humidity',
                                'dewpointTemperature'):
                 self._state = loc_data[self.type]['@value']
                 break
-            elif self.type == 'windSpeed':
+            elif self.type in ('windSpeed', 'windGust'):
                 self._state = loc_data[self.type]['@mps']
                 break
             elif self.type == 'windDirection':
