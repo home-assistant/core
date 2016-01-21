@@ -1,10 +1,35 @@
 """
 homeassistant.components.switch.netio
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a NETIO switch.
+The Netio platform allows you to control your [Netio]
+(http://www.netio-products.com/en/overview/) Netio4, Netio4 All and Netio 230B.
+These are smart outlets controllable through ethernet and/or WiFi that reports
+consumptions (Netio4all).
+
+To use these devices in your installation, add the following to your
+configuration.yaml file:
+```
+switch:
+  - platform: netio
+    host: netio-living
+    ports:
+      1: "AppleTV"
+      2: "Htpc"
+      3: "Lampe Gauche"
+      4: "Lampe Droite"
+  - platform: netio
+    host: 192.168.1.43
+    port: 1234
+    username: user
+    password: pwd
+    ports:
+      1: "Nothing..."
+      4: "Lampe du fer"
+```
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.netio/
+
 """
 import logging
 import socket
@@ -69,8 +94,8 @@ def _got_push(handler, path_match, data):
             float(data.get('output%d_cumulatedConsumption' % i, 0)) / 1000)
         startDates.append(data.get('output%d_consumptionStart' % i, ""))
 
-    _LOGGER.debug('%s: %s, %s, %s since %s' %
-            (host, states, consumptions, cumulatedConsumptions, startDates))
+    _LOGGER.debug('%s: %s, %s, %s since %s' % (host, states, consumptions,
+                  cumulatedConsumptions, startDates))
 
     DEVICES[host].netio._consumptions = consumptions
     DEVICES[host].netio._cumulatedConsumptions = cumulatedConsumptions
@@ -137,4 +162,3 @@ class NetioSwitch(SwitchDevice):
     @property
     def start_dates(self):
         return self.netio.startDates[self.port - 1]
-
