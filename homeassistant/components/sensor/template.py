@@ -10,7 +10,7 @@ https://home-assistant.io/components/sensor.template/
 import logging
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_state_change
+from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, ATTR_UNIT_OF_MEASUREMENT)
 
@@ -19,10 +19,6 @@ from homeassistant.util import template
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SENSORS = 'sensors'
-CONF_ENTITIES = 'entities'
-
-DOT = '.'
-QUOTED_DOT = '__________'
 
 
 # pylint: disable=unused-argument
@@ -46,15 +42,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(
                 "Missing %s for sensor %s", CONF_VALUE_TEMPLATE, device)
             continue
-        dependencies = device_config.get(CONF_ENTITIES, [])
         sensors.append(
             SensorTemplate(
                 hass,
                 device,
                 friendly_name,
                 unit_of_measurement,
-                state_template,
-                dependencies)
+                state_template)
             )
     if sensors is None:
         _LOGGER.error("No sensors added.")
@@ -72,30 +66,20 @@ class SensorTemplate(Entity):
                  entity_name,
                  friendly_name,
                  unit_of_measurement,
-                 state_template,
-                 dependencies):
+                 state_template):
+
         self.hass = hass
-        # self.entity_id = entity_name
         self._name = entity_name
         self._friendly_name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
-        self._entities = dependencies
         self._state = ''
 
-        # Quote entity names in template. So replace sun.sun with sunQUOTEsun
-        # the template engine uses dots!
-        for entity in self._entities:
-            self._template = self._template.replace(
-                entity, entity.replace(DOT, QUOTED_DOT))
-
-        def _update_callback(_entity_id, _old_state, _new_state):
+        def _update_callback(_event):
             """ Called when the target device changes state. """
             self.update_ha_state(True)
 
-        for target in dependencies:
-            track_state_change(hass, target, _update_callback)
-        self.update()
+        self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
 
     @property
     def name(self):
@@ -131,12 +115,4 @@ class SensorTemplate(Entity):
 
     def _renderer(self):
         """Render sensor value."""
-        render_dictionary = {}
-        for entity in self._entities:
-            hass_entity = self.hass.states.get(entity)
-            if hass_entity is None:
-                continue
-            key = entity.replace(DOT, QUOTED_DOT)
-            render_dictionary[key] = hass_entity
-
-        return template.render(self.hass, self._template, render_dictionary)
+        return template.render(self.hass, self._template)
