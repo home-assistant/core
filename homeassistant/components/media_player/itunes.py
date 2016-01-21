@@ -40,7 +40,10 @@ class Itunes(object):
     @property
     def _base_url(self):
         """ Returns the base url for endpoints. """
-        return self.host + ":" + str(self.port)
+        if self.port:
+            return self.host + ":" + str(self.port)
+        else:
+            return self.host
 
     def _request(self, method, path, params=None):
         """ Makes the actual request and returns the parsed response. """
