@@ -384,6 +384,14 @@ class AirPlayDevice(MediaPlayerDevice):
         return self.device_name
 
     @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        if self.selected is True:
+            return "mdi:volume-high"
+        else:
+            return "mdi:volume-off"
+
+    @property
     def state(self):
         """ Returns the state of the device. """
 
@@ -407,23 +415,6 @@ class AirPlayDevice(MediaPlayerDevice):
     def supported_media_commands(self):
         """ Flags of media commands that are supported. """
         return SUPPORT_AIRPLAY
-
-    @property
-    def device_state_attributes(self):
-        """ Return the state attributes. """
-        state_attr = {}
-        state_attr[ATTR_SUPPORTED_MEDIA_COMMANDS] = SUPPORT_AIRPLAY
-
-        if self.state == STATE_OFF:
-            state_attr[ATTR_ENTITY_PICTURE] = \
-                ('https://cloud.githubusercontent.com/assets/260/9833073'
-                 '/6eb5c906-5958-11e5-9b4a-472cdf36be16.png')
-        else:
-            state_attr[ATTR_ENTITY_PICTURE] = \
-                ('https://cloud.githubusercontent.com/assets/260/9833072'
-                 '/6eb13cce-5958-11e5-996f-e2aaefbc9a24.png')
-
-        return state_attr
 
     def set_volume_level(self, volume):
         """ set volume level, range 0..1. """
