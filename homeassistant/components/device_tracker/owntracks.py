@@ -69,6 +69,10 @@ def setup_scanner(hass, config, see):
 
         # check if in "home" fence or other zone
         location = ''
+        latitude = data['lat']
+        longitude = data['lon']
+        acc = data.get('acc')
+
         if data['event'] == 'enter':
 
             if data['desc'].lower() == 'home':
@@ -76,8 +80,22 @@ def setup_scanner(hass, config, see):
             else:
                 location = data['desc']
 
+            # Transition events can be c=circular  b=beacon w=wifi
+            # For beacon events - assume the zone location is more
+            # accurate that lat / long - so pull location from the zone
+            if data['t'] == 'b':
+                zone = hass.states.get("zone.{}".format(data['desc'].lower()))
+                zone = hass.states.get("zone.{}".format(data['desc'].lower()))
+                if zone is not None:
+                    latitude = zone.attributes['latitude']
+                    longitude = zone.attributes['longitude']
+                    acc = 1
+
         elif data['event'] == 'leave':
-            location = STATE_NOT_HOME
+            if data['t'] == 'b':
+                location = None
+            else:
+                location = STATE_NOT_HOME
         else:
             logging.getLogger(__name__).error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
@@ -88,11 +106,12 @@ def setup_scanner(hass, config, see):
         kwargs = {
             'dev_id': '{}_{}'.format(parts[1], parts[2]),
             'host_name': parts[1],
-            'gps': (data['lat'], data['lon']),
-            'location_name': location,
+            'gps': (latitude, longitude),
         }
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
+        if location is not None:
+            kwargs['location_name'] = location
+        if acc is not None:
+            kwargs['gps_accuracy'] = acc
 
         see(**kwargs)
 
