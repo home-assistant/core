@@ -86,7 +86,7 @@ def setup_scanner(hass, config, see):
             if data['t'] == 'b':
                 zone = hass.states.get("zone.{}".format(data['desc'].lower()))
                 zone = hass.states.get("zone.{}".format(data['desc'].lower()))
-                if not zone is None:
+                if zone is not None:
                     latitude = zone.attributes['latitude']
                     longitude = zone.attributes['longitude']
                     acc = 1
@@ -106,7 +106,7 @@ def setup_scanner(hass, config, see):
             'gps': (latitude, longitude),
             'location_name': location,
         }
-        if not acc is None:
+        if acc is not None:
             kwargs['gps_accuracy'] = acc
 
         see(**kwargs)
