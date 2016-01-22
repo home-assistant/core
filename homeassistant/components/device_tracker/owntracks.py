@@ -69,12 +69,27 @@ def setup_scanner(hass, config, see):
 
         # check if in "home" fence or other zone
         location = ''
+        latitude = data['lat']
+        longitude = data['lon']
+        acc = data.get('acc')
+
         if data['event'] == 'enter':
 
             if data['desc'].lower() == 'home':
                 location = STATE_HOME
             else:
                 location = data['desc']
+
+            # Transition events can be c=circular  b=beacon w=wifi
+            # For beacon events - assume the zone location is more
+            # accurate that lat / long - so pull location from the zone
+            if data['t'] == 'b':
+                zone = hass.states.get("zone.{}".format(data['desc'].lower()))
+                zone = hass.states.get("zone.{}".format(data['desc'].lower()))
+                if not zone is None:
+                    latitude = zone.attributes['latitude']
+                    longitude = zone.attributes['longitude']
+                    acc = 1
 
         elif data['event'] == 'leave':
             location = STATE_NOT_HOME
@@ -88,11 +103,11 @@ def setup_scanner(hass, config, see):
         kwargs = {
             'dev_id': '{}_{}'.format(parts[1], parts[2]),
             'host_name': parts[1],
-            'gps': (data['lat'], data['lon']),
+            'gps': (latitude, longitude),
             'location_name': location,
         }
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
+        if not acc is None:
+            kwargs['gps_accuracy'] = acc
 
         see(**kwargs)
 
