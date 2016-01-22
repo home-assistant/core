@@ -60,4 +60,4 @@ class TestTemplateSensor:
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.pool.block_till_done()
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'unknown'
+        assert state.state == 'error'
