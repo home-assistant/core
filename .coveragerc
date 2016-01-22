@@ -10,6 +10,9 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/insteon.py
+    homeassistant/components/*/insteon.py
+
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
@@ -94,6 +97,7 @@ omit =
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
+    homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
