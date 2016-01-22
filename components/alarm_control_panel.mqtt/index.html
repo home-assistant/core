@@ -107,9 +107,9 @@
   </header>
   <hr class="divider">
 
-  <p>This platform enables the possibility to control an MQTT alarm panel. The Alarm Icon will change state after receiving a new state from <code>state_topic</code>. If these messages are published with RETAIN flag, the MQTT alarm will receive an instant state update after subscription and will start with correct state. Otherwise, the initial state will be <code>unknown</code>.</p>
+  <p>The <code>mqtt</code> alarm panel platform enables the possibility to control MQTT capable alarm panels. The Alarm icon will change state after receiving a new state from <code>state_topic</code>. If these messages are published with <em>RETAIN</em> flag, the MQTT alarm panel will receive an instant state update after subscription and will start with the correct state. Otherwise, the initial state will be <code>unknown</code>.</p>
 
-<p>The component will accept the following states from your Alarm Panel (in lower case) :-</p>
+<p>The component will accept the following states from your Alarm Panel (in lower case):</p>
 
 <ul>
   <li>‘armed’</li>
@@ -119,7 +119,9 @@
   <li>‘triggered’</li>
 </ul>
 
-<p>The component is able to control your Alarm Panel by publishing to the command_topic: when a user interacts with the screen icon on the frontend.</p>
+<p>The component is able to control your Alarm Panel by publishing to the <code>command_topic</code> when a user interacts with the Home Assistant frontend.</p>
+
+<p>To enable this platform, add the following lines to your <code>configuration.yaml</code>:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -141,9 +143,7 @@
 
 <ul>
   <li><strong>state_topic</strong> (<em>Required</em>): The MQTT topic subscribed to receive state updates.</li>
-  <li>
-    <p><strong>command_topic</strong> (<em>Required</em>): The MQTT topic to publish commands to change the alarm state.</p>
-  </li>
+  <li><strong>command_topic</strong> (<em>Required</em>): The MQTT topic to publish commands to change the alarm state.</li>
   <li><strong>name</strong> (<em>Optional</em>): The name of the alarm. Default is ‘MQTT Alarm’.</li>
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0. This QoS will also be used to publishing messages.</li>
   <li><strong>payload_disarm</strong> (<em>Optional</em>): The payload do disarm your Alarm Panel. Default is “DISARM”.</li>
