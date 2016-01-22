@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>MQTT Alarm Control Panel - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="Instructions how to integrate MQTT alarms into Home Assistant.">
+    <meta name="description" content="Instructions how to integrate MQTT capable Alarm Panels into Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
     <link rel="canonical" href="https://home-assistant.io/components/alarm_control_panel.mqtt/">
@@ -19,14 +19,14 @@
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/alarm_control_panel.mqtt/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to integrate MQTT alarms into Home Assistant.">
+    <meta property="og:description" content="Instructions how to integrate MQTT capable Alarm Panels into Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     
     <meta name="twitter:title" content="MQTT Alarm Control Panel">
-    <meta name="twitter:description" content="Instructions how to integrate MQTT alarms into Home Assistant.">
+    <meta name="twitter:description" content="Instructions how to integrate MQTT capable Alarm Panels into Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -107,7 +107,19 @@
   </header>
   <hr class="divider">
 
-  <p>This platform enables the possibility to control an MQTT alarm. The alarm will only change state after receiving the a new state from <code>state_topic</code>. If these messages are published with RETAIN flag, the MQTT alarm will receive an instant state update after subscription and will start with correct state. Otherwise, the initial state will be <code>unknown</code>.</p>
+  <p>This platform enables the possibility to control an MQTT alarm panel. The Alarm Icon will change state after receiving a new state from <code>state_topic</code>. If these messages are published with RETAIN flag, the MQTT alarm will receive an instant state update after subscription and will start with correct state. Otherwise, the initial state will be <code>unknown</code>.</p>
+
+<p>The component will accept the following states from your Alarm Panel (in lower case) :-</p>
+
+<ul>
+  <li>‘armed’</li>
+  <li>‘armed_home’</li>
+  <li>‘armed_away’</li>
+  <li>‘pending’</li>
+  <li>‘triggered’</li>
+</ul>
+
+<p>The component is able to control your Alarm Panel by publishing to the command_topic: when a user interacts with the screen icon on the frontend.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
@@ -134,9 +146,9 @@
   </li>
   <li><strong>name</strong> (<em>Optional</em>): The name of the alarm. Default is ‘MQTT Alarm’.</li>
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0. This QoS will also be used to publishing messages.</li>
-  <li><strong>payload_disarm</strong> (<em>Optional</em>): The payload do disarm alarm. Default is “DISARM”.</li>
-  <li><strong>payload_arm_home</strong> (<em>Optional</em>): The payload to set armed-home mode. Default is “ARM_HOME”.</li>
-  <li><strong>payload_arm_away</strong> (<em>Optional</em>): The payload to set armed-away mode. Default is “ARM_AWAY”.</li>
+  <li><strong>payload_disarm</strong> (<em>Optional</em>): The payload do disarm your Alarm Panel. Default is “DISARM”.</li>
+  <li><strong>payload_arm_home</strong> (<em>Optional</em>): The payload to set armed-home mode on your Alarm Panel. Default is “ARM_HOME”.</li>
+  <li><strong>payload_arm_away</strong> (<em>Optional</em>): The payload to set armed-away mode on your Alarm Panel. Default is “ARM_AWAY”.</li>
   <li><strong>code</strong> (<em>Optional</em>): If defined, specifies a code to enable or disable the alarm in the frontend.</li>
 </ul>
 
