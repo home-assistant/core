@@ -92,7 +92,10 @@ def setup_scanner(hass, config, see):
                     acc = 1
 
         elif data['event'] == 'leave':
-            location = STATE_NOT_HOME
+            if data['t'] == 'b':
+                location = None
+            else:
+                location = STATE_NOT_HOME
         else:
             logging.getLogger(__name__).error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
@@ -104,8 +107,9 @@ def setup_scanner(hass, config, see):
             'dev_id': '{}_{}'.format(parts[1], parts[2]),
             'host_name': parts[1],
             'gps': (latitude, longitude),
-            'location_name': location,
         }
+        if location is not None:
+            kwargs['location_name'] = location
         if acc is not None:
             kwargs['gps_accuracy'] = acc
 
