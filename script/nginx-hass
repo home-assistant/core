@@ -1,0 +1,113 @@
+##
+#
+# Home Assistant - nginx Configuration File
+#
+# Using nginx as a proxy for Home Assistant allows you to serve Home Assisatnt
+# securely over standard ports. This configuration file and instructions will
+# walk you through setting up Home Assistant over a secure connection.
+#
+# 1) Get a domain name forwarded to your IP.
+#   Chances are, you have a dynamic IP Address (your ISP changes your address
+#   periodically). If this is true, you can use a Dynamic DNS service to obtain
+#   a domain and set it up to update with you IP. If you purchase your own
+#   domain name, you will be able to easily get a trusted SSL certificate
+#   later.
+#
+#
+# 2) Install nginx on your server.
+#   This will vary depending on your OS. Check out Google for this. After
+#   installing, ensure that nginx is not running.
+#
+#
+# 3) Obtain an SSL certificate.
+#
+# 3a) Using Let's Encrypt
+#   If you purchased your own domain, you can use https://letsencrypt.org/ to
+#   obtain a free, publicly trusted SSL certificate. This will allow you to
+#   work with services like IFTTT. Download and install per the instructions
+#   online and get a certificate using the following command.
+#
+#   ./letsencrypt-auto certonly --standalone -d example.com -d www.example.com
+#
+#   Instead of example.com, use your domain. You will need to renew this
+#   certificate every 90 days.
+#
+# 3b) Using openssl
+#   If you do not own your own domain, you may generate a self-signed
+#   certificate. This will not work with IFTTT, but it will encrypt all of your
+#   Home Assistant traffic.
+#
+#   openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 9999
+#   sudo cp key.pem cert.pem /etc/nginx/ssl
+#   sudo chmod 600 /etc/nginx/ssl/key.pem /etc/nginx/ssl/cert.pem
+#   sudo chown root:root /etc/nginx/ssl/key.pem /etc/nginx/ssl/cert.pem
+#
+#
+# 4) Create dhparams file
+#   As a fair warning, this file will take a while to generate.
+#
+#   cd /etc/nginx/ssl
+#   sudo openssl dhparam -out dhparams.pem 2048
+#
+#
+# 5) Install this configuration file in nginx.
+#
+#   cp nginx-hass /etc/nginx/sites-available/hass
+#   cd /etc/nginx/sites-enabled
+#   sudo unlink default
+#   sudo ln ../sites-available/hass default
+#
+#
+# 6) Double check this configuration to ensure all settings are correct and
+#   start nginx.
+#
+#
+# 7) Forward ports 443 and 80 to your server on your router. Do not forward
+#   port 8123.
+#
+##
+
+server {
+    # Update this line to be your domain
+    server_name example.com;
+
+
+    # These shouldn't need to be changed
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+    return 301 https://$host$request_uri;
+}
+
+
+server {
+    # Update this line to be your domain
+    server_name example.com;
+
+    # Ensure these lines point to your SSL certificate and key
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    # Use these lines instead if you created a self-signed certificate
+    # ssl_certificate /etc/nginx/ssl/cert.pem;
+    # ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    # Ensure this line points to your dhparams file
+    ssl_dhparam /etc/nginx/ssl/dhparams.pem;
+
+
+    # These shouldn't need to be changed
+    listen 443 default_server;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubdomains";
+    ssl on;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4";
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+
+    proxy_buffering off;
+
+    location / {
+        proxy_pass http://localhost:8123;
+        proxy_set_header Host $host;
+        proxy_redirect http:// https://;
+    }
+}

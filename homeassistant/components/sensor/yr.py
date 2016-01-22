@@ -21,7 +21,7 @@ REQUIREMENTS = ['xmltodict']
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
-    'symbol': ['Symbol', ''],
+    'symbol': ['Symbol', None],
     'precipitation': ['Condition', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],

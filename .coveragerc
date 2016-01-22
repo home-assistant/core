@@ -5,6 +5,8 @@ omit =
     homeassistant/__main__.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/alarm_control_panel/alarmdotcom.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
@@ -38,6 +40,12 @@ omit =
 
     homeassistant/components/mysensors.py
     homeassistant/components/*/mysensors.py
+
+    homeassistant/components/nest.py
+    homeassistant/components/*/nest.py
+
+    homeassistant/components/rpi_gpio.py
+    homeassistant/components/*/rpi_gpio.py
 
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
@@ -99,7 +107,6 @@ omit =
     homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
-    homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
@@ -115,13 +122,12 @@ omit =
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/rest.py
-    homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
-    homeassistant/components/thermostat/nest.py
+    homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
 
 
