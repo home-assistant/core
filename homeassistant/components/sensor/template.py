@@ -12,7 +12,6 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.const import (
-    STATE_UNKNOWN,
     ATTR_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
     ATTR_UNIT_OF_MEASUREMENT)
@@ -23,6 +22,8 @@ from homeassistant.exceptions import TemplateError
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SENSORS = 'sensors'
+
+STATE_ERROR = 'error'
 
 
 # pylint: disable=unused-argument
@@ -107,5 +108,6 @@ class SensorTemplate(Entity):
     def update(self):
         try:
             self._state = template.render(self.hass, self._template)
-        except TemplateError:
-            self._state = STATE_UNKNOWN
+        except TemplateError as ex:
+            self._state = STATE_ERROR
+            _LOGGER.error(ex)
