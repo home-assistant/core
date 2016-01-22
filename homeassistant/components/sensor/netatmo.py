@@ -23,11 +23,11 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', TEMP_CELCIUS],
-    'co2':         ['CO2', 'ppm'],
-    'pressure':    ['Pressure', 'mbar'],
-    'noise':       ['Noise', 'dB'],
-    'humidity':    ['Humidity', '%']
+    'temperature': ['Temperature', TEMP_CELCIUS, 'mdi:thermometer'],
+    'co2':         ['CO2', 'ppm', 'mdi:cloud'],
+    'pressure':    ['Pressure', 'mbar', 'mdi:gauge'],
+    'noise':       ['Noise', 'dB', 'mdi:volume-high'],
+    'humidity':    ['Humidity', '%', 'mdi:water-percent']
 }
 
 CONF_SECRET_KEY = 'secret_key'
@@ -103,6 +103,10 @@ class NetAtmoSensor(Entity):
     @property
     def name(self):
         return self._name
+
+    @property
+    def icon(self):
+        return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
