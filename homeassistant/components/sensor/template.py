@@ -77,7 +77,10 @@ class SensorTemplate(Entity):
 
         def _update_callback(_event):
             """ Called when the target device changes state. """
-            self.update_ha_state(True)
+            # This can be called before the entity is properly
+            # initialised, so check before updating state,
+            if self.entity_id:
+                self.update_ha_state(True)
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
 
