@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
+
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
 
@@ -65,7 +66,6 @@ def setup_scanner(hass, config, see):
 
         see(**kwargs)
         LOCK.release()
-
 
     def owntracks_event_update(topic, payload, qos):
         """ MQTT event (geofences) received. """
@@ -145,7 +145,8 @@ def setup_scanner(hass, config, see):
             return True
         if entry_location.lower() == location.lower():
             return True
-        _LOGGER.info("Owntracks leave region %s rejected - in region %s", location, entry_location)
+        _LOGGER.info("Owntracks leave region %s rejected - in region %s",
+                     location, entry_location)
         return False
 
     def _block_updates(dev_id, location):
@@ -160,7 +161,7 @@ def setup_scanner(hass, config, see):
         state = hass.states.get(
             STATE_OWNTRACKS_LAST_LOCATION.format(dev_id))
         blocked = (state is not None and
-                  state.state != '')
+                   state.state != '')
         return blocked
 
     def _parse_topic(topic):
