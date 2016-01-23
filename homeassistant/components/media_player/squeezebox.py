@@ -207,7 +207,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 track_id=self._status['id'])
         else:
             media_url = ('/music/current/cover.jpg?player={player}').format(
-                player=self.id)
+                player=self._id)
 
         base_url = 'http://{server}:{port}/'.format(
             server=self._lms.host,
