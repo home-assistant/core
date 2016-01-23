@@ -202,7 +202,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ Image url of current playing media. """
         if 'artwork_url' in self._status:
             media_url = self._status['artwork_url']
-        elif "id" in self._status:
+        elif 'id' in self._status:
             media_url = ('/music/{track_id}/cover.jpg').format(
                 track_id=self._status["id"])
         else:
