@@ -144,16 +144,13 @@ class RfxtrxLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is None:
-            """ Brightness in rfxtrx is defined as level and values supported are 0-100 """
             self._brightness = 100
         else:
-            """ Brightness in rfxtrx is defined as level and values supported are 0-100 so we need to scale the set value (0-255)"""
-            self._brightness = ((brightness + 4) * 100 // 255 -1)
+            self._brightness = ((brightness + 4) * 100 // 255 - 1)
 
         if hasattr(self, '_event') and self._event:
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport, self._brightness)
 
-        """ Reverse earlier calculation to make dimmer slider stay at correct point in HA frontend """
         self._brightness = (self._brightness * 255 // 100)
         self._state = True
         self.update_ha_state()
