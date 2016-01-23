@@ -160,7 +160,7 @@ class RfxtrxLight(Light):
 
         if hasattr(self, '_event') and self._event:
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
-        
+
         self._brightness = 0
         self._state = False
         self.update_ha_state()
