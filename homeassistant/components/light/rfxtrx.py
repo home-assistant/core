@@ -134,7 +134,7 @@ class RfxtrxLight(Light):
         """ True if light is on. """
         return self._state
 
-   @property
+    @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
         return self._brightness
