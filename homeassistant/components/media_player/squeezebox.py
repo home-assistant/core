@@ -202,9 +202,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ Image url of current playing media. """
         if 'artwork_url' in self._status:
             media_url = self._status['artwork_url']
-        else:
+        elif "id" in self._status:
             media_url = ('/music/{track_id}/cover.jpg').format(
                 track_id=self._status["id"])
+        else:
+            media_url = ('/music/current/cover.jpg?player={player}').format(
+                player=self.id)
 
         base_url = 'http://{server}:{port}/'.format(
             server=self._lms.host,
