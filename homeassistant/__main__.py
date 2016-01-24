@@ -86,6 +86,12 @@ def get_arguments():
         action='store_true',
         help="Enable verbose logging to file.")
     parser.add_argument(
+        '--loglevel',
+        action='append',
+        default=[],
+        help="Set loglevel on modules or root logger: "
+        "module1.module2.module3=DEBUG, DEBUG")
+    parser.add_argument(
         '--pid-file',
         metavar='path_to_pid_file',
         default=None,
@@ -241,13 +247,14 @@ def main():
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, daemon=args.daemon,
             verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days)
+            log_rotate_days=args.log_rotate_days, log_level=args.loglevel)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
             config_file, daemon=args.daemon, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
+            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
+            log_level=args.loglevel)
 
     if args.open_ui:
         def open_browser(event):

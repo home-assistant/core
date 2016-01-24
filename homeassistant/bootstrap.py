@@ -155,7 +155,7 @@ def mount_local_lib_path(config_dir):
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
                      verbose=False, daemon=False, skip_pip=False,
-                     log_rotate_days=None):
+                     log_rotate_days=None, log_level=False):
     """
     Tries to configure Home Assistant from a config dict.
 
@@ -172,7 +172,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
-        enable_logging(hass, verbose, daemon, log_rotate_days)
+        enable_logging(hass, verbose, daemon, log_rotate_days, log_level)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -207,7 +207,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
 
 def from_config_file(config_path, hass=None, verbose=False, daemon=False,
-                     skip_pip=True, log_rotate_days=None):
+                     skip_pip=True, log_rotate_days=None, log_level=False):
     """
     Reads the configuration file and tries to start all the required
     functionality. Will add functionality to 'hass' parameter if given,
@@ -221,18 +221,19 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, daemon, log_rotate_days)
+    enable_logging(hass, verbose, daemon, log_rotate_days, log_level=log_level)
 
     config_dict = config_util.load_yaml_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False,
-                            skip_pip=skip_pip)
+                            skip_pip=skip_pip, log_level=log_level)
 
 
-def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
+def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None,
+                   log_level=False):
     """ Setup the logging for home assistant. """
     if not daemon:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
                "[%(name)s] %(message)s%(reset)s")
         try:
@@ -252,6 +253,26 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
         except ImportError:
             _LOGGER.warning(
                 "Colorlog package not found, console coloring disabled")
+
+        logging.getLogger().handlers[0].setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.INFO)
+
+        if log_level:
+            for cmd in log_level:
+                info = cmd.rsplit("=", 1)
+                if len(info) == 1:
+                    level = logging.INFO
+                    if hasattr(logging, info[0]):
+                        level = getattr(logging, info[0])
+                    logging.getLogger().setLevel(level)
+                    _LOGGER.info("Setting loglevel %s on root logger", level)
+                elif len(info) == 2:
+                    level = logging.INFO
+                    if hasattr(logging, info[1]):
+                        level = getattr(logging, info[1])
+                    logging.getLogger(info[0]).setLevel(level)
+                    _LOGGER.info("Setting loglevel %s on module %s", level,
+                                 info[0])
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
