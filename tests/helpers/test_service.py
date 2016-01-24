@@ -7,7 +7,8 @@ Test service helpers.
 import unittest
 from unittest.mock import patch
 
-from homeassistant.const import SERVICE_TURN_ON
+from homeassistant import core as ha, loader
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import service
 
 from tests.common import get_test_home_assistant, mock_service
@@ -66,3 +67,24 @@ class TestServiceHelpers(unittest.TestCase):
             'service': 'invalid'
         })
         self.assertEqual(3, mock_log.call_count)
+
+    def test_extract_entity_ids(self):
+        """ Test extract_entity_ids method. """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        self.hass.states.set('light.Kitchen', STATE_OFF)
+
+        loader.get_component('group').setup_group(
+            self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
+
+        call = ha.ServiceCall('light', 'turn_on',
+                              {ATTR_ENTITY_ID: 'light.Bowl'})
+
+        self.assertEqual(['light.bowl'],
+                         service.extract_entity_ids(self.hass, call))
+
+        call = ha.ServiceCall('light', 'turn_on',
+                              {ATTR_ENTITY_ID: 'group.test'})
+
+        self.assertEqual(['light.ceiling', 'light.kitchen'],
+                         service.extract_entity_ids(self.hass, call))
