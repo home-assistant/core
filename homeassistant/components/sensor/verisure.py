@@ -60,7 +60,6 @@ class VerisureThermometer(Entity):
         """ Returns the state of the device. """
         # remove ° character
         return verisure.CLIMATE_STATUS[self._id].temperature[:-6]
-        return verisure.CLIMATE_STATUS[self._id].temperature[:-1]
 
     @property
     def unit_of_measurement(self):
