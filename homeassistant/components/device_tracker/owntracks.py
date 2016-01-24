@@ -18,9 +18,6 @@ DEPENDENCIES = ['mqtt']
 
 REGIONS_ENTERED = defaultdict(list)
 
-STATE_OWNTRACKS_LAST_LOCATION = 'owntracks.location_{}'
-STATE_OWNTRACKS_LAST_LOCATION_ATTR = {'hidden': True}
-
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
 
@@ -52,10 +49,10 @@ def setup_scanner(hass, config, see):
 
         # Block updates if we're in a region
         with LOCK:
-            region = _in_region(dev_id)
-            if region:
-                _LOGGER.info(
-                    "location update ignored - inside region %s", region)
+            if REGIONS_ENTERED[dev_id]:
+                _LOGGER.debug(
+                    "location update ignored - inside region %s",
+                    REGIONS_ENTERED[-1])
                 return
 
             see(**kwargs)
@@ -88,7 +85,10 @@ def setup_scanner(hass, config, see):
             with LOCK:
                 if zone is not None:
                     kwargs['location_name'] = location
-                    _enter_region(dev_id, location)
+
+                    regions = REGIONS_ENTERED[dev_id]
+                    if location not in regions:
+                        regions.append(location)
                     _LOGGER.info("Enter region %s", location)
                     _get_gps_from_zone(kwargs, zone)
 
@@ -97,7 +97,11 @@ def setup_scanner(hass, config, see):
         elif data['event'] == 'leave':
             current_location = hass.states.get(
                 "device_tracker.{}".format(dev_id)).state
-            new_region = _exit_region(dev_id, location)
+
+            regions = REGIONS_ENTERED[dev_id]
+            if location in regions:
+                regions.remove(location)
+            new_region = regions[-1] if regions else None
 
             if not new_region:
                 _LOGGER.info("Exit from %s to GPS", location)
@@ -121,30 +125,6 @@ def setup_scanner(hass, config, see):
                 'Misformatted mqtt msgs, _type=transition, event=%s',
                 data['event'])
             return
-
-    def _enter_region(dev_id, location):
-        """ Add owntracks region to list """
-        regions = REGIONS_ENTERED[dev_id]
-        if location in regions:
-            return
-        regions.append(location)
-
-    def _exit_region(dev_id, location):
-        """ Remove owntracks region from list
-            return current region """
-        regions = REGIONS_ENTERED[dev_id]
-        if location in regions:
-            regions.remove(location)
-        if not regions:
-            return None
-        return regions[-1]
-
-    def _in_region(dev_id):
-        """Are we in a region? If so return it"""
-        regions = REGIONS_ENTERED[dev_id]
-        if not regions:
-            return None
-        return regions[-1]
 
     def _force_state_change_if_needed(dev_id, location, kwargs):
         # if gps location didn't set new state, force to away
