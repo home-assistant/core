@@ -150,7 +150,7 @@ class RfxtrxLight(Light):
 
         if hasattr(self, '_event') and self._event:
             self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
-                                       self._brightness)
+                                        self._brightness)
 
         self._brightness = (self._brightness * 255 // 100)
         self._state = True
