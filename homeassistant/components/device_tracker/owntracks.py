@@ -9,11 +9,14 @@ https://home-assistant.io/components/device_tracker.owntracks/
 import json
 import logging
 import threading
+from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (STATE_HOME, STATE_NOT_HOME)
 
 DEPENDENCIES = ['mqtt']
+
+REGIONS_ENTERED = defaultdict(list)
 
 STATE_OWNTRACKS_LAST_LOCATION = 'owntracks.location_{}'
 STATE_OWNTRACKS_LAST_LOCATION_ATTR = {'hidden': True}
@@ -49,8 +52,10 @@ def setup_scanner(hass, config, see):
 
         # Block updates if we're in a region
         with LOCK:
-            if _is_blocked(dev_id):
-                _LOGGER.debug("Owntracks update rejected - inside region")
+            region = _in_region(dev_id)
+            if region:
+                _LOGGER.info(
+                    "location update ignored - inside region %s", region)
                 return
 
             see(**kwargs)
@@ -80,68 +85,66 @@ def setup_scanner(hass, config, see):
 
         if data['event'] == 'enter':
             zone = hass.states.get("zone.{}".format(location))
-            LOCK.acquire()
+            with LOCK:
+                if zone is not None:
+                    kwargs['location_name'] = location
+                    _enter_region(dev_id, location)
+                    _LOGGER.info("Enter region %s", location)
+                    _get_gps_from_zone(kwargs, zone)
 
-            if zone is not None:
-                kwargs['location_name'] = location
-                _block_updates(dev_id, location)
-
-                if data['t'] == 'b':
-                    # For beacon events - the zone location is more
-                    # accurate than gps
-                    kwargs['gps'] = (
-                        zone.attributes['latitude'],
-                        zone.attributes['longitude'])
-                    kwargs['gps_accuracy'] = 1
-
-            see(**kwargs)
-            LOCK.release()
-
-            # Block location update while we're in a region
+                see(**kwargs)
 
         elif data['event'] == 'leave':
-            if not _valid_leave(dev_id, location):
+            current_location = hass.states.get(
+                "device_tracker.{}".format(dev_id)).state
+            new_region = _exit_region(dev_id, location)
+
+            if not new_region:
+                _LOGGER.info("Exit from %s to GPS", location)
+                see(**kwargs)
+                _force_state_change_if_needed(dev_id, location, kwargs)
                 return
 
+            if current_location.lower() == new_region.lower():
+                _LOGGER.info("Exit from %s, still in %s",
+                             location, current_location)
+                return
+
+            zone = hass.states.get("zone.{}".format(new_region))
+            kwargs['location_name'] = new_region
+            _get_gps_from_zone(kwargs, zone)
+            _LOGGER.info("Exit from %s to %s", location, new_region)
             see(**kwargs)
 
-            _block_updates(dev_id, '')
-            _force_state_change_if_needed(dev_id, location, kwargs)
         else:
             _LOGGER.error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
                 data['event'])
             return
 
-    def _valid_leave(dev_id, location):
-        """Check owntracks region is the right one to leave"""
-        state_id = STATE_OWNTRACKS_LAST_LOCATION.format(dev_id)
-        state = hass.states.get(state_id)
-        if state is None:
-            return True
-        entry_location = state.state
-        if entry_location == '':
-            return True
-        if entry_location.lower() == location.lower():
-            return True
-        _LOGGER.info("Owntracks leave region %s rejected - in region %s",
-                     location, entry_location)
-        return False
+    def _enter_region(dev_id, location):
+        """ Add owntracks region to list """
+        regions = REGIONS_ENTERED[dev_id]
+        if location in regions:
+            return
+        regions.append(location)
 
-    def _block_updates(dev_id, location):
-        """ Add owntracks region to block location updates """
-        hass.states.set(
-            STATE_OWNTRACKS_LAST_LOCATION.format(dev_id),
-            location,
-            STATE_OWNTRACKS_LAST_LOCATION_ATTR)
+    def _exit_region(dev_id, location):
+        """ Remove owntracks region from list
+            return current region """
+        regions = REGIONS_ENTERED[dev_id]
+        if location in regions:
+            regions.remove(location)
+        if not regions:
+            return None
+        return regions[-1]
 
-    def _is_blocked(dev_id):
-        """Block updates if we're in a region"""
-        state = hass.states.get(
-            STATE_OWNTRACKS_LAST_LOCATION.format(dev_id))
-        blocked = (state is not None and
-                   state.state != '')
-        return blocked
+    def _in_region(dev_id):
+        """Are we in a region? If so return it"""
+        regions = REGIONS_ENTERED[dev_id]
+        if not regions:
+            return None
+        return regions[-1]
 
     def _force_state_change_if_needed(dev_id, location, kwargs):
         # if gps location didn't set new state, force to away
@@ -173,3 +176,12 @@ def _parse_see_args(topic, data):
     if 'batt' in data:
         kwargs['battery'] = data['batt']
     return dev_id, kwargs
+
+
+def _get_gps_from_zone(kwargs, zone):
+    if zone is not None:
+        kwargs['gps'] = (
+            zone.attributes['latitude'],
+            zone.attributes['longitude'])
+        kwargs['gps_accuracy'] = 1
+    return kwargs
