@@ -6,11 +6,7 @@ Allows to setup simple automation rules via the config file.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/automation/
 """
-from datetime import datetime
-import functools
-import inspect
 import logging
-import yaml
 
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.const import CONF_PLATFORM
@@ -34,8 +30,6 @@ CONDITION_TYPE_AND = 'and'
 CONDITION_TYPE_OR = 'or'
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
-
-CUSTOM_AUTOMATIONS = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,115 +61,6 @@ def setup(hass, config):
         config_key = "{} {}".format(DOMAIN, found)
 
     return True
-
-
-def activate(hass, config, domain):
-    """ Activate the automations for specified domain """
-    for auto_rule in CUSTOM_AUTOMATIONS:
-        if auto_rule.domain == domain:
-            try:
-                success = auto_rule.activate(hass, config)
-            except Exception:
-                _LOGGER.exception('Error activating automation %s',
-                                  auto_rule.alias)
-                success = True
-
-            if not success:
-                _LOGGER.error('Error activating automation %s',
-                              auto_rule.alias)
-
-
-class Automation(object):
-    """ Decorator for automation functions """
-
-    hass = None
-
-    def __init__(self, action):
-        # store action and config
-        self.action = action
-        self.config = yaml.load(inspect.getdoc(action))
-        self._activated = False
-        self._last_run = None
-        self._running = 0
-
-        # register the automation
-        module = inspect.getmodule(action)
-        self._domain = module.DOMAIN
-        CUSTOM_AUTOMATIONS.append(self)
-
-        functools.update_wrapper(self, action)
-
-    def __call__(self):
-        """ Call the action """
-        if not self.activated:
-            return
-
-        self._running += 1
-
-        _LOGGER.info('Executing %s', self.alias)
-        logbook.log_entry(self.hass, self.alias, 'has been triggered', DOMAIN)
-
-        try:
-            self.action(self)
-        except Exception:
-            _LOGGER.exception('Error running Python automation: %s',
-                              self.alias)
-        else:
-            self._last_run = datetime.now()
-
-        self._running -= 1
-
-    @property
-    def alias(self):
-        """ The alias for the function """
-        if CONF_ALIAS in self.config:
-            return self.config[CONF_ALIAS]
-        return None
-
-    @property
-    def domain(self):
-        """ The domain to which this automation belongs """
-        return self._domain
-
-    @property
-    def is_running(self):
-        """ Boolean if the automation is running """
-        return self._running > 0
-
-    @property
-    def num_running(self):
-        """ Integer of how many instances of the automation are running """
-        return self._running
-
-    @property
-    def activated(self):
-        """ Boolean indicating if the automation has been activated """
-        return self._activated
-
-    @property
-    def last_run(self):
-        """ Datetime object of the last automation completion """
-        return self._last_run
-
-    def activate(self, hass, config):
-        """ Activates the automation with HASS """
-        self.hass = hass
-
-        if self.activated:
-            return True
-
-        if CONF_CONDITION in self.config or CONF_CONDITION_TYPE in self.config:
-            action = _process_if(hass, config, self.config, self.action)
-
-            if action is None:
-                return False
-            self.action = action
-
-        _process_trigger(hass, config, self.config.get(CONF_TRIGGER, []),
-                         self.alias, self)
-
-        self._activated = True
-        return True
 
 
 def _setup_automation(hass, config_block, name, config):
