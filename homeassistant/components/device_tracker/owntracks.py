@@ -45,27 +45,15 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'location':
             return
 
-        dev_id, host_name = _parse_topic(topic)
+        dev_id, kwargs = _parse_see_args(topic, data)
 
         # Block updates if we're in a region
-        LOCK.acquire()
-        if _is_blocked(dev_id):
-            _LOGGER.info("Owntracks update rejected - inside region")
-            LOCK.release()
-            return
+        with LOCK:
+            if _is_blocked(dev_id):
+                _LOGGER.debug("Owntracks update rejected - inside region")
+                return
 
-        kwargs = {
-            'dev_id': dev_id,
-            'host_name': host_name,
-            'gps': (data['lat'], data['lon']),
-        }
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
-        if 'batt' in data:
-            kwargs['battery'] = data['batt']
-
-        see(**kwargs)
-        LOCK.release()
+            see(**kwargs)
 
     def owntracks_event_update(topic, payload, qos):
         """ MQTT event (geofences) received. """
@@ -83,21 +71,12 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
-        dev_id, host_name = _parse_topic(topic)
-
         if data['desc'].lower() == 'home':
             location = STATE_HOME
         else:
             location = data['desc']
 
-        kwargs = {
-            'dev_id': dev_id,
-            'host_name': host_name,
-            'gps': (data['lat'], data['lon'])
-        }
-
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
+        dev_id, kwargs = _parse_see_args(topic, data)
 
         if data['event'] == 'enter':
             zone = hass.states.get("zone.{}".format(location))
@@ -164,12 +143,6 @@ def setup_scanner(hass, config, see):
                    state.state != '')
         return blocked
 
-    def _parse_topic(topic):
-        parts = topic.split('/')
-        dev_id = '{}_{}'.format(parts[1], parts[2])
-        host_name = parts[1]
-        return(dev_id, host_name)
-
     def _force_state_change_if_needed(dev_id, location, kwargs):
         # if gps location didn't set new state, force to away
         current_location = hass.states.get(
@@ -184,3 +157,19 @@ def setup_scanner(hass, config, see):
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
 
     return True
+
+
+def _parse_see_args(topic, data):
+    parts = topic.split('/')
+    dev_id = '{}_{}'.format(parts[1], parts[2])
+    host_name = parts[1]
+    kwargs = {
+        'dev_id': dev_id,
+        'host_name': host_name,
+        'gps': (data['lat'], data['lon'])
+    }
+    if 'acc' in data:
+        kwargs['gps_accuracy'] = data['acc']
+    if 'batt' in data:
+        kwargs['battery'] = data['batt']
+    return dev_id, kwargs
