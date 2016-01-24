@@ -17,6 +17,7 @@ REQUIRES = [
     'pip>=7.0.0',
     'vincenty==0.1.3',
     'jinja2>=2.8',
+    'croniter==0.3.11',
 ]
 
 setup(
