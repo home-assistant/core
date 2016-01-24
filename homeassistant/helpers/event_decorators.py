@@ -70,10 +70,10 @@ class Automation(object):
 
     hass = None
 
-    def __init__(self, action, event, event_args):
+    def __init__(self, action, event_fun, event_args):
         # store action and config
         self.action = action
-        self._event = (event, event_args)
+        self._event = (event_fun, event_args)
         self._activated = False
         self._last_run = None
         self._running = 0
@@ -86,6 +86,7 @@ class Automation(object):
 
     def __call__(self, *args, **kwargs):
         """ Call the action """
+        # pylint: disable=broad-except
         if not self.activated:
             return
 
