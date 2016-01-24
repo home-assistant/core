@@ -1,11 +1,13 @@
 """
 Helpers for listening to events
 """
+from datetime import timedelta
 import functools as ft
 
 from ..util import dt as dt_util
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.components import sun
 
 
 def track_state_change(hass, entity_ids, action, from_state=None,
@@ -93,6 +95,52 @@ def track_point_in_utc_time(hass, action, point_in_time):
 
     hass.bus.listen(EVENT_TIME_CHANGED, point_in_time_listener)
     return point_in_time_listener
+
+
+def track_sunrise(hass, action, offset=None):
+    """
+    Adds a listener that will fire a specified offset from sunrise daily.
+    """
+    offset = offset or timedelta()
+
+    def next_rise():
+        """ Returns next sunrise. """
+        next_time = sun.next_rising_utc(hass) + offset
+
+        while next_time < dt_util.utcnow():
+            next_time = next_time + timedelta(days=1)
+
+        return next_time
+
+    def sunrise_automation_listener(now):
+        """ Called when it's time for action. """
+        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+        action()
+
+    track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+
+
+def track_sunset(hass, action, offset=None):
+    """
+    Adds a listener that will fire a specified offset from sunset daily.
+    """
+    offset = offset or timedelta()
+
+    def next_set():
+        """ Returns next sunrise. """
+        next_time = sun.next_setting_utc(hass) + offset
+
+        while next_time < dt_util.utcnow():
+            next_time = next_time + timedelta(days=1)
+
+        return next_time
+
+    def sunset_automation_listener(now):
+        """ Called when it's time for action. """
+        track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+        action()
+
+    track_point_in_utc_time(hass, sunset_automation_listener, next_set())
 
 
 # pylint: disable=too-many-arguments
