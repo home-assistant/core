@@ -75,51 +75,54 @@ def setup(hass, config):
                                 SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
 
-    def thermostat_service(service):
-        """ Handles calls to the services. """
-
-        # Convert the entity ids to valid light ids
-        target_thermostats = component.extract_from_service(service)
-
-        if service.service == SERVICE_SET_AWAY_MODE:
-            away_mode = service.data.get(ATTR_AWAY_MODE)
-
-            if away_mode is None:
-                _LOGGER.error(
-                    "Received call to %s without attribute %s",
-                    SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
-
-            elif away_mode:
-                for thermostat in target_thermostats:
-                    thermostat.turn_away_mode_on()
-            else:
-                for thermostat in target_thermostats:
-                    thermostat.turn_away_mode_off()
-
-        elif service.service == SERVICE_SET_TEMPERATURE:
-            temperature = util.convert(
-                service.data.get(ATTR_TEMPERATURE), float)
-
-            if temperature is None:
-                return
-
-            for thermostat in target_thermostats:
-                thermostat.set_temperature(convert(
-                    temperature, hass.config.temperature_unit,
-                    thermostat.unit_of_measurement))
-
-        for thermostat in target_thermostats:
-            thermostat.update_ha_state(True)
-
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service,
-        descriptions.get(SERVICE_SET_AWAY_MODE))
+    def away_mode_set_service(service):
+        """ Set away mode on target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        away_mode = service.data.get(ATTR_AWAY_MODE)
+
+        if away_mode is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
+            return
+
+        for thermostat in target_thermostats:
+            if away_mode:
+                thermostat.turn_away_mode_on()
+            else:
+                thermostat.turn_away_mode_off()
+
+            thermostat.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service,
+        DOMAIN, SERVICE_SET_AWAY_MODE, away_mode_set_service,
+        descriptions.get(SERVICE_SET_AWAY_MODE))
+
+    def temperature_set_service(service):
+        """ Set temperature on the target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        temperature = util.convert(
+            service.data.get(ATTR_TEMPERATURE), float)
+
+        if temperature is None:
+            return
+
+        for thermostat in target_thermostats:
+            thermostat.set_temperature(convert(
+                temperature, hass.config.temperature_unit,
+                thermostat.unit_of_measurement))
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TEMPERATURE, temperature_set_service,
         descriptions.get(SERVICE_SET_TEMPERATURE))
 
     return True
