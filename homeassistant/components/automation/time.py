@@ -18,6 +18,7 @@ CONF_SECONDS = "seconds"
 CONF_BEFORE = "before"
 CONF_AFTER = "after"
 CONF_WEEKDAY = "weekday"
+CONF_CRONTAB = "cron"
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -26,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
+    day_of_month = None
+    month = None
+    day = None
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
@@ -37,9 +41,21 @@ def trigger(hass, config, action):
         hours = convert(config.get(CONF_HOURS), int)
         minutes = convert(config.get(CONF_MINUTES), int)
         seconds = convert(config.get(CONF_SECONDS), int)
+    elif CONF_CRONTAB in config:
+        parsed = config.get(CONF_CRONTAB).split(" ")
+        minutes = parsed[0]
+        hours = parsed[1]
+        day_of_month = parsed[2]
+        month = parsed[3]
+        day = parsed[4]
+        seconds = 0
     else:
         _LOGGER.error('One of %s, %s, %s OR %s needs to be specified',
-                      CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AFTER)
+                      CONF_HOURS,
+                      CONF_MINUTES,
+                      CONF_SECONDS,
+                      CONF_AFTER,
+                      CONF_CRONTAB)
         return False
 
     def time_automation_listener(now):
@@ -47,7 +63,12 @@ def trigger(hass, config, action):
         action()
 
     track_time_change(hass, time_automation_listener,
-                      hour=hours, minute=minutes, second=seconds)
+                      hour=hours,
+                      minute=minutes,
+                      second=seconds,
+                      day=day,
+                      month=month,
+                      day_of_month=day_of_month)
 
     return True
 

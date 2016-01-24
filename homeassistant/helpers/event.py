@@ -2,10 +2,15 @@
 Helpers for listening to events
 """
 import functools as ft
+import logging
+
+from croniter import croniter
+from datetime import datetime
 
 from ..util import dt as dt_util
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+
 
 
 def track_state_change(hass, entity_ids, action, from_state=None,
@@ -97,11 +102,13 @@ def track_point_in_utc_time(hass, action, point_in_time):
 
 # pylint: disable=too-many-arguments
 def track_utc_time_change(hass, action, year=None, month=None, day=None,
-                          hour=None, minute=None, second=None, local=False):
+                          hour=None, minute=None, second=None,
+                          day_of_month=None,local=False):
     """ Adds a listener that will fire if time matches a pattern. """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None for val in (year, month, day, hour, minute, second)):
+
         @ft.wraps(action)
         def time_change_listener(event):
             """ Fires every time event that comes in. """
@@ -110,28 +117,56 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
         hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
         return time_change_listener
 
+    it = None
+    if not any(isinstance(val, (list, tuple))
+               for val in (month, hour, minute)):
+        string = "%s %s %s %s %s" % (
+            minute or '*',
+            hour or '*',
+            day_of_month or '*',
+            month or '*',
+            day or '*'
+        )
+        now = datetime.now()
+        if local:
+            now = dt_util.as_local(now)
+        it = croniter(string, now)
+        it.get_next()
+
     pmp = _process_match_param
-    year, month, day = pmp(year), pmp(month), pmp(day)
-    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
+    set_year, set_month, set_day = pmp(year), pmp(month), pmp(day)
+    set_hour, set_minute, set_second = pmp(hour), pmp(minute), pmp(second)
 
     @ft.wraps(action)
     def pattern_time_change_listener(event):
         """ Listens for matching time_changed events. """
-        now = event.data[ATTR_NOW]
 
+        if it:
+            nxt = it.get_current(datetime)
+            if local:
+                nxt = dt_util.as_local(nxt)
+            year, month, day = pmp(nxt.year), pmp(nxt.month), pmp(nxt.day)
+            hour, minute, second = pmp(nxt.hour), \
+                                   pmp(nxt.minute), pmp(nxt.second)
+        else:
+            year, month, day = pmp(set_year), pmp(set_month), pmp(set_day)
+            hour, minute, second = pmp(set_hour), \
+                                   pmp(set_minute), pmp(set_second)
+
+        mat = _matcher
+        now = datetime.now()
         if local:
             now = dt_util.as_local(now)
 
-        mat = _matcher
-
         # pylint: disable=too-many-boolean-expressions
-        if mat(now.year, year) and \
+        if it and mat(now.year, year) and \
            mat(now.month, month) and \
            mat(now.day, day) and \
            mat(now.hour, hour) and \
            mat(now.minute, minute) and \
            mat(now.second, second):
-
+            if it:
+                it.get_next()
             action(now)
 
     hass.bus.listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
@@ -140,10 +175,10 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
 # pylint: disable=too-many-arguments
 def track_time_change(hass, action, year=None, month=None, day=None,
-                      hour=None, minute=None, second=None):
+                      hour=None, minute=None, second=None, day_of_month=None):
     """ Adds a listener that will fire if UTC time matches a pattern. """
     track_utc_time_change(hass, action, year, month, day, hour, minute, second,
-                          local=True)
+                          day_of_month, local=True)
 
 
 def _process_match_param(parameter):
