@@ -106,7 +106,15 @@ def setup_scanner(hass, config, see):
             if not new_region:
                 _LOGGER.info("Exit from %s to GPS", location)
                 see(**kwargs)
-                _force_state_change_if_needed(dev_id, location, kwargs)
+
+                # if gps location didn't set new state, force to away
+                current_location = hass.states.get(
+                    "device_tracker.{}".format(dev_id)).state
+
+                if current_location.lower() == location.lower():
+                    kwargs['location_name'] = STATE_NOT_HOME
+                    see(**kwargs)
+
                 return
 
             if current_location.lower() == new_region.lower():
@@ -125,15 +133,6 @@ def setup_scanner(hass, config, see):
                 'Misformatted mqtt msgs, _type=transition, event=%s',
                 data['event'])
             return
-
-    def _force_state_change_if_needed(dev_id, location, kwargs):
-        # if gps location didn't set new state, force to away
-        current_location = hass.states.get(
-            "device_tracker.{}".format(dev_id)).state
-
-        if current_location.lower() == location.lower():
-            kwargs['location_name'] = STATE_NOT_HOME
-            see(**kwargs)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 
