@@ -13,10 +13,10 @@ from itertools import islice
 import threading
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, split_entity_id
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.service import call_from_config
-from homeassistant.util import slugify, split_entity_id
+from homeassistant.util import slugify
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, STATE_ON, SERVICE_TURN_ON,
