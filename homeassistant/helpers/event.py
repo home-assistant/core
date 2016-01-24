@@ -7,7 +7,6 @@ import functools as ft
 from ..util import dt as dt_util
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
-from homeassistant.components import sun
 
 
 def track_state_change(hass, entity_ids, action, from_state=None,
@@ -101,6 +100,7 @@ def track_sunrise(hass, action, offset=None):
     """
     Adds a listener that will fire a specified offset from sunrise daily.
     """
+    from homeassistant.components import sun
     offset = offset or timedelta()
 
     def next_rise():
@@ -124,6 +124,7 @@ def track_sunset(hass, action, offset=None):
     """
     Adds a listener that will fire a specified offset from sunset daily.
     """
+    from homeassistant.components import sun
     offset = offset or timedelta()
 
     def next_set():
