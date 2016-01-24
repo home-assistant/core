@@ -25,7 +25,7 @@ from homeassistant.exceptions import (
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
-from homeassistant.helpers.entity import valid_entity_id
+from homeassistant.helpers.entity import valid_entity_id, split_entity_id
 import homeassistant.helpers.temperature as temp_helper
 from homeassistant.config import get_default_config_dir
 
@@ -357,12 +357,12 @@ class State(object):
     @property
     def domain(self):
         """Domain of this state."""
-        return util.split_entity_id(self.entity_id)[0]
+        return split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self):
         """Object id of this state."""
-        return util.split_entity_id(self.entity_id)[1]
+        return split_entity_id(self.entity_id)[1]
 
     @property
     def name(self):
