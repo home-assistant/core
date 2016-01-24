@@ -1,8 +1,8 @@
 """Service calling related helpers."""
 import logging
 
-from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.entity import split_entity_id
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_ENTITY_ID = 'entity_id'

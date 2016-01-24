@@ -9,8 +9,7 @@ https://home-assistant.io/components/group/
 import homeassistant.core as ha
 from homeassistant.helpers import generate_entity_id
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
+from homeassistant.helpers.entity import Entity, split_entity_id
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
     STATE_HOME, STATE_NOT_HOME, STATE_OPEN, STATE_CLOSED,
@@ -62,7 +61,7 @@ def expand_entity_ids(hass, entity_ids):
 
         try:
             # If entity_id points at a group, expand it
-            domain, _ = util.split_entity_id(entity_id)
+            domain, _ = split_entity_id(entity_id)
 
             if domain == DOMAIN:
                 found_ids.extend(
@@ -75,7 +74,7 @@ def expand_entity_ids(hass, entity_ids):
                     found_ids.append(entity_id)
 
         except AttributeError:
-            # Raised by util.split_entity_id if entity_id is not a string
+            # Raised by split_entity_id if entity_id is not a string
             pass
 
     return found_ids

@@ -22,6 +22,11 @@ _OVERWRITE = defaultdict(dict)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 
+def split_entity_id(entity_id):
+    """ Splits a state entity_id into domain, object_id. """
+    return entity_id.split(".", 1)
+
+
 def valid_entity_id(entity_id):
     """Test if an entity ID is a valid format."""
     return ENTITY_ID_PATTERN.match(entity_id) is not None
