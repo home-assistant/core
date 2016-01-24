@@ -42,7 +42,7 @@ TEMP_MIN_HASS = 154           # home assistant minimum temperature
 TEMP_MAX_HASS = 500           # home assistant maximum temperature
 
 
-class lifx_api():
+class LIFX():
     def __init__(self, add_devices_callback,
                  server_addr=None, broadcast_addr=None):
         self._devices = []
@@ -63,6 +63,7 @@ class lifx_api():
                 break
         return bulb
 
+    # pylint: disable=too-many-arguments
     def on_device(self, ipaddr, name, power, hue, sat, bri, kel):
         bulb = self.find_bulb(ipaddr)
 
@@ -72,6 +73,7 @@ class lifx_api():
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
 
+    # pylint: disable=too-many-arguments
     def on_color(self, ipaddr, hue, sat, bri, kel):
         bulb = self.find_bulb(ipaddr)
 
@@ -86,14 +88,12 @@ class lifx_api():
             bulb.set_power(power)
             bulb.update_ha_state()
 
+    # pylint: disable=unused-argument
     def poll(self, now):
         self.probe()
 
     def probe(self, address=None):
         self._liffylights.probe(address)
-
-    def state(self, power):
-        return "on" if power else "off"
 
 
 # pylint: disable=unused-argument
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     server_addr = config.get(CONF_SERVER, None)
     broadcast_addr = config.get(CONF_BROADCAST, None)
 
-    lifx_library = lifx_api(add_devices_callback, server_addr, broadcast_addr)
+    lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
 
     # register our poll service
     track_time_change(hass, lifx_library.poll, second=10)
@@ -125,9 +125,9 @@ def convert_rgb_to_hsv(rgb):
 class LIFXLight(Light):
     """ Provides LIFX light. """
     # pylint: disable=too-many-arguments
-    def __init__(self, liffylights, ipaddr, name, power, hue,
+    def __init__(self, liffy, ipaddr, name, power, hue,
                  saturation, brightness, kelvin):
-        self._liffylights = liffylights
+        self._liffylights = liffy
         self._ip = ipaddr
         self.set_name(name)
         self.set_power(power)
