@@ -1,8 +1,9 @@
 """Service calling related helpers."""
 import logging
 
-from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.entity import split_entity_id
+from homeassistant.loader import get_component
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
@@ -41,3 +42,22 @@ def call_from_config(hass, config, blocking=False):
         service_data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(domain, service, service_data, blocking)
+
+
+def extract_entity_ids(hass, service):
+    """
+    Helper method to extract a list of entity ids from a service call.
+    Will convert group entity ids to the entity ids it represents.
+    """
+    if not (service.data and ATTR_ENTITY_ID in service.data):
+        return []
+
+    group = get_component('group')
+
+    # Entity ID attr can be a list or a string
+    service_ent_id = service.data[ATTR_ENTITY_ID]
+
+    if isinstance(service_ent_id, str):
+        return group.expand_entity_ids(hass, [service_ent_id])
+
+    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]

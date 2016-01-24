@@ -13,9 +13,10 @@ from itertools import islice
 import threading
 
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, split_entity_id
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import slugify, split_entity_id
+from homeassistant.helpers.service import call_from_config
+from homeassistant.util import slugify
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, STATE_ON, SERVICE_TURN_ON,
@@ -30,7 +31,8 @@ STATE_NOT_RUNNING = 'Not Running'
 CONF_ALIAS = "alias"
 CONF_SERVICE = "service"
 CONF_SERVICE_OLD = "execute_service"
-CONF_SERVICE_DATA = "service_data"
+CONF_SERVICE_DATA = "data"
+CONF_SERVICE_DATA_OLD = "service_data"
 CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
@@ -194,13 +196,17 @@ class Script(ToggleEntity):
 
     def _call_service(self, action):
         """ Calls the service specified in the action. """
-        conf_service = action.get(CONF_SERVICE, action.get(CONF_SERVICE_OLD))
-        self._last_action = action.get(CONF_ALIAS, conf_service)
+        # Backwards compatibility
+        if CONF_SERVICE not in action and CONF_SERVICE_OLD in action:
+            action[CONF_SERVICE] = action[CONF_SERVICE_OLD]
+
+        if CONF_SERVICE_DATA not in action and CONF_SERVICE_DATA_OLD in action:
+            action[CONF_SERVICE_DATA] = action[CONF_SERVICE_DATA_OLD]
+
+        self._last_action = action.get(CONF_ALIAS, action[CONF_SERVICE])
         _LOGGER.info("Executing script %s step %s", self._name,
                      self._last_action)
-        domain, service = split_entity_id(conf_service)
-        data = action.get(CONF_SERVICE_DATA, {})
-        self.hass.services.call(domain, service, data, True)
+        call_from_config(self.hass, action, True)
 
     def _fire_event(self, action):
         """ Fires an event. """

@@ -3,42 +3,7 @@ Helper methods for components within Home Assistant.
 """
 import re
 
-from homeassistant.loader import get_component
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
-from homeassistant.util import ensure_unique_string, slugify
-
-
-def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
-    """ Generate a unique entity ID based on given entity IDs or used ids. """
-    name = name.lower() or DEVICE_DEFAULT_NAME.lower()
-    if current_ids is None:
-        if hass is None:
-            raise RuntimeError("Missing required parameter currentids or hass")
-
-        current_ids = hass.states.entity_ids()
-
-    return ensure_unique_string(
-        entity_id_format.format(slugify(name.lower())), current_ids)
-
-
-def extract_entity_ids(hass, service):
-    """
-    Helper method to extract a list of entity ids from a service call.
-    Will convert group entity ids to the entity ids it represents.
-    """
-    if not (service.data and ATTR_ENTITY_ID in service.data):
-        return []
-
-    group = get_component('group')
-
-    # Entity ID attr can be a list or a string
-    service_ent_id = service.data[ATTR_ENTITY_ID]
-
-    if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id])
-
-    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
+from homeassistant.const import CONF_PLATFORM
 
 
 def validate_config(config, items, logger):

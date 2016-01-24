@@ -19,7 +19,7 @@ fuzzywuzzy==0.8.0
 pyicloud==0.7.2
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.3.1
+pynetgear==0.3.2
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.4.3
@@ -38,6 +38,9 @@ pyfttt==0.3
 
 # homeassistant.components.influxdb
 influxdb==2.10.0
+
+# homeassistant.components.insteon
+insteon_hub==0.4.5
 
 # homeassistant.components.isy994
 PyISY==1.0.5
@@ -69,10 +72,10 @@ pyvera==0.2.7
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.4.1
+python-wink==0.4.2
 
 # homeassistant.components.media_player.cast
-pychromecast==0.6.14
+pychromecast==0.7.1
 
 # homeassistant.components.media_player.kodi
 jsonrpc-requests==0.1
@@ -95,6 +98,9 @@ paho-mqtt==1.1
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4
 
+# homeassistant.components.nest
+python-nest==2.6.0
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
@@ -112,6 +118,9 @@ slacker==0.6.8
 
 # homeassistant.components.notify.telegram
 python-telegram-bot==2.8.7
+
+# homeassistant.components.notify.twitter
+TwitterAPI==2.3.6
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
@@ -168,6 +177,9 @@ python-twitch==1.2.0
 # homeassistant.components.sensor.yr
 xmltodict
 
+# homeassistant.components.statsd
+python-statsd==1.7.2
+
 # homeassistant.components.sun
 astral==0.8.1
 
@@ -191,9 +203,6 @@ heatmiserV3==0.9.1
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.4
-
-# homeassistant.components.thermostat.nest
-python-nest==2.6.0
 
 # homeassistant.components.thermostat.proliphix
 proliphix==0.1.0

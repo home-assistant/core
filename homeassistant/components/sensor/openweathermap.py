@@ -165,6 +165,10 @@ class WeatherData(object):
     def update(self):
         """ Gets the latest data from OpenWeatherMap. """
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        if obs is None:
+            _LOGGER.warning('Failed to fetch data from OWM')
+            return
+
         self.data = obs.get_weather()
 
         if self.forecast == 1:
