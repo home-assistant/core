@@ -20,7 +20,6 @@ light:
 """
 # pylint: disable=missing-docstring
 
-from liffylights import liffylights
 import logging
 import colorsys
 from homeassistant.helpers.event import track_time_change
@@ -45,6 +44,8 @@ TEMP_MAX_HASS = 500           # home assistant maximum temperature
 class LIFX():
     def __init__(self, add_devices_callback,
                  server_addr=None, broadcast_addr=None):
+        from liffylights import liffylights
+
         self._devices = []
 
         self._add_devices_callback = add_devices_callback
