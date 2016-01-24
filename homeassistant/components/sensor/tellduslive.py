@@ -18,19 +18,32 @@ from homeassistant.components import tellduslive
 ATTR_LAST_UPDATED = "time_last_updated"
 
 _LOGGER = logging.getLogger(__name__)
-DEPENDENCIES = ['tellduslive']
 
 SENSOR_TYPE_TEMP = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"
+SENSOR_TYPE_RAINRATE = "rrate"
+SENSOR_TYPE_RAINTOTAL = "rtot"
+SENSOR_TYPE_WINDDIRECTION = "wdir"
+SENSOR_TYPE_WINDAVERAGE = "wavg"
+SENSOR_TYPE_WINDGUST = "wgust"
+SENSOR_TYPE_WATT = "watt"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
     SENSOR_TYPE_HUMIDITY: ['Humidity', '%', "mdi:water"],
+    SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm', "mdi:water"],
+    SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', "mdi:water"],
+    SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', ""],
+    SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', ""],
+    SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', ""],
+    SENSOR_TYPE_WATT: ['Watt', 'W', ""],
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up Tellstick sensors. """
+    if discovery_info is None:
+        return
     sensors = tellduslive.NETWORK.get_sensors()
     devices = []
 

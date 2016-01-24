@@ -57,7 +57,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """ Four digit code required. """
-        return '^\\d{4}$'
+        return '^\\d{%s}$' % verisure.CODE_DIGITS
 
     def update(self):
         """ Update alarm status """
@@ -67,7 +67,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_DISARMED
         elif verisure.ALARM_STATUS[self._id].status == 'armedhome':
             self._state = STATE_ALARM_ARMED_HOME
-        elif verisure.ALARM_STATUS[self._id].status == 'armedaway':
+        elif verisure.ALARM_STATUS[self._id].status == 'armed':
             self._state = STATE_ALARM_ARMED_AWAY
         elif verisure.ALARM_STATUS[self._id].status != 'pending':
             _LOGGER.error(

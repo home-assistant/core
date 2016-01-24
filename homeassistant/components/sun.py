@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['astral==0.8.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
-ENTITY_ID_ELEVATION = "sun.elevation"
 
 CONF_ELEVATION = 'elevation'
 
@@ -33,21 +32,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """ Returns if the sun is currently up based on the statemachine. """
+    """Test if the sun is currently up based on the statemachine."""
     entity_id = entity_id or ENTITY_ID
 
     return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
 def next_setting(hass, entity_id=None):
-    """ Returns the local datetime object of the next sun setting. """
+    """Local datetime object of the next sun setting."""
     utc_next = next_setting_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_setting_utc(hass, entity_id=None):
-    """ Returns the UTC datetime object of the next sun setting. """
+    """UTC datetime object of the next sun setting."""
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -62,14 +61,14 @@ def next_setting_utc(hass, entity_id=None):
 
 
 def next_rising(hass, entity_id=None):
-    """ Returns the local datetime object of the next sun rising. """
+    """Local datetime object of the next sun rising."""
     utc_next = next_rising_utc(hass, entity_id)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
 def next_rising_utc(hass, entity_id=None):
-    """ Returns the UTC datetime object of the next sun rising. """
+    """UTC datetime object of the next sun rising."""
     entity_id = entity_id or ENTITY_ID
 
     state = hass.states.get(ENTITY_ID)
@@ -84,7 +83,7 @@ def next_rising_utc(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """ Tracks the state of the sun. """
+    """Track the state of the sun in HA."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -125,7 +124,7 @@ def setup(hass, config):
 
 
 class Sun(Entity):
-    """ Represents the Sun. """
+    """Represents the Sun."""
 
     entity_id = ENTITY_ID
 
@@ -158,12 +157,12 @@ class Sun(Entity):
 
     @property
     def next_change(self):
-        """ Returns the datetime when the next change to the state is. """
+        """Datetime when the next change to the state is."""
         return min(self.next_rising, self.next_setting)
 
     @property
     def solar_elevation(self):
-        """ Returns the angle the sun is above the horizon"""
+        """Angle the sun is above the horizon."""
         from astral import Astral
         return Astral().solar_elevation(
             dt_util.utcnow(),
