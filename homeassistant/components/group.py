@@ -7,9 +7,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import homeassistant.core as ha
-from homeassistant.helpers import generate_entity_id
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.entity import Entity, split_entity_id
+from homeassistant.helpers.entity import (
+    Entity, split_entity_id, generate_entity_id)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
     STATE_HOME, STATE_NOT_HOME, STATE_OPEN, STATE_CLOSED,

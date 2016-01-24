@@ -10,8 +10,8 @@ import logging
 
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
-from homeassistant.helpers import extract_domain_configs, generate_entity_id
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import extract_domain_configs
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util.location import distance
 
 DOMAIN = "zone"
