@@ -41,11 +41,6 @@ def slugify(text):
     return RE_SLUGIFY.sub("", text)
 
 
-def split_entity_id(entity_id):
-    """ Splits a state entity_id into domain, object_id. """
-    return entity_id.split(".", 1)
-
-
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
     if isinstance(inp, dict):
