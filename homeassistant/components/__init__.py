@@ -16,8 +16,8 @@ import itertools as it
 import logging
 
 import homeassistant.core as ha
-from homeassistant.helpers import extract_entity_ids
 from homeassistant.helpers.entity import split_entity_id
+from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
