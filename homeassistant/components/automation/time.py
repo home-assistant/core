@@ -50,7 +50,7 @@ def trigger(hass, config, action):
         day = parsed[4]
         seconds = 0
     else:
-        _LOGGER.error('One of %s, %s, %s OR %s needs to be specified',
+        _LOGGER.error('One of %s, %s, %s %s OR %s needs to be specified',
                       CONF_HOURS,
                       CONF_MINUTES,
                       CONF_SECONDS,
