@@ -94,9 +94,10 @@ class ZwaveDimmer(Light):
     @property
     def name(self):
         """ Returns the name of the device if any. """
-        name = self._node.name or "{}".format(self._node.product_name)
+        name = self._node.name or "{} {}".format(
+            self._node.manufacturer_name, self._node.product_name)
 
-        return "{}".format(name or self._value.label)
+        return "{} {} {}".format(name, self._node.node_id, self._value.label)
 
     @property
     def brightness(self):

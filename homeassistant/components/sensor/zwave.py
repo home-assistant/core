@@ -107,7 +107,7 @@ class ZWaveSensor(Entity):
         name = self._node.name or "{} {}".format(
             self._node.manufacturer_name, self._node.product_name)
 
-        return "{} {}".format(name, self._value.label)
+        return "{} {} {}".format(name, self._node.node_id, self._value.label)
 
     @property
     def state(self):
