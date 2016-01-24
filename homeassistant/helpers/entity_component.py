@@ -7,9 +7,10 @@ Provides helpers for components that manage entities.
 from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.helpers import (
-    generate_entity_id, config_per_platform, extract_entity_ids)
+from homeassistant.helpers import config_per_platform
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.components import group, discovery
 from homeassistant.const import ATTR_ENTITY_ID
 
