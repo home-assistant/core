@@ -24,6 +24,7 @@ import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+from homeassistant.helpers import event_decorators
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
@@ -199,13 +200,12 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     _LOGGER.info('Home Assistant core initialized')
 
+    # give event decorators access to HASS
+    event_decorators.HASS = hass
+
     # Setup the components
     for domain in loader.load_order_components(components):
         _setup_component(hass, domain, config)
-
-    # activate event decorators
-    from homeassistant.helpers import event_decorators
-    event_decorators.activate(hass)
 
     return hass
 
