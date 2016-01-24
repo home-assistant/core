@@ -14,10 +14,9 @@ from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
-from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
-
+from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -209,7 +208,7 @@ def humanify(events):
                 entity_id = event.data.get(ATTR_ENTITY_ID)
                 if domain is None and entity_id is not None:
                     try:
-                        domain = util.split_entity_id(str(entity_id))[0]
+                        domain = split_entity_id(str(entity_id))[0]
                     except IndexError:
                         pass
 
