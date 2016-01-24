@@ -20,7 +20,7 @@ light:
 """
 # pylint: disable=missing-docstring
 
-import liffylights
+from liffylights import liffylights
 import logging
 import colorsys
 from homeassistant.helpers.event import track_time_change
@@ -29,7 +29,7 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.3']
+REQUIREMENTS = ['liffylights==0.4']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
