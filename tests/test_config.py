@@ -94,13 +94,14 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
-    def test_load_config_loads_yaml_config(self):
-        """ Test correct YAML config loading. """
+    def test_load_yaml_config_preserves_key_order(self):
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: world')
+            f.write('hello: 0\n')
+            f.write('world: 1\n')
 
-        self.assertEqual({'hello': 'world'},
-                         config_util.load_config_file(YAML_PATH))
+        self.assertEqual(
+            [('hello', 0), ('world', 1)],
+            list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
     @mock.patch('homeassistant.util.location.detect_location_info',
                 mock_detect_location_info)
@@ -109,7 +110,7 @@ class TestConfig(unittest.TestCase):
         """ Test that detect location sets the correct config keys. """
         config_util.ensure_config_exists(CONFIG_DIR)
 
-        config = config_util.load_config_file(YAML_PATH)
+        config = config_util.load_yaml_config_file(YAML_PATH)
 
         self.assertIn(DOMAIN, config)
 
