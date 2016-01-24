@@ -116,7 +116,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
         return time_change_listener
 
     iterator = None
-    if not any(isinstance(val, (list, tuple))
+    if not isinstance(second, int) and any(isinstance(val, (list, tuple))
                for val in (month, hour, minute)):
         string = "%s %s %s %s %s" % (
             minute or '*',
@@ -158,7 +158,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
             )
 
         mat = _matcher
-        now = datetime.now()
+        now = event.data[ATTR_NOW]
         if local:
             now = dt_util.as_local(now)
 
@@ -169,6 +169,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
            mat(now.hour, hour) and \
            mat(now.minute, minute) and \
            mat(now.second, second):
+            print("Fire")
             if iterator:
                 iterator.get_next()
             action(now)
