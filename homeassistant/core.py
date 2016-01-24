@@ -11,7 +11,6 @@ import logging
 import signal
 import threading
 import enum
-import re
 import functools as ft
 from collections import namedtuple
 
@@ -26,6 +25,7 @@ from homeassistant.exceptions import (
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
+from homeassistant.helpers.entity import valid_entity_id, split_entity_id
 import homeassistant.helpers.temperature as temp_helper
 from homeassistant.config import get_default_config_dir
 
@@ -41,9 +41,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 # During bootstrap of HA (see bootstrap._setup_component()) worker threads
 # will be added for each component that polls devices.
 MIN_WORKER_THREAD = 2
-
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(?P<domain>\w+)\.(?P<entity>\w+)$")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -339,7 +336,7 @@ class State(object):
     def __init__(self, entity_id, state, attributes=None, last_changed=None,
                  last_updated=None):
         """Initialize a new state."""
-        if not ENTITY_ID_PATTERN.match(entity_id):
+        if not valid_entity_id(entity_id):
             raise InvalidEntityFormatError((
                 "Invalid entity id encountered: {}. "
                 "Format should be <domain>.<object_id>").format(entity_id))
@@ -360,12 +357,12 @@ class State(object):
     @property
     def domain(self):
         """Domain of this state."""
-        return util.split_entity_id(self.entity_id)[0]
+        return split_entity_id(self.entity_id)[0]
 
     @property
     def object_id(self):
         """Object id of this state."""
-        return util.split_entity_id(self.entity_id)[1]
+        return split_entity_id(self.entity_id)[1]
 
     @property
     def name(self):
