@@ -6,6 +6,7 @@ Provides ABC for entities in HA.
 """
 
 from collections import defaultdict
+import re
 
 from homeassistant.exceptions import NoEntitySpecifiedError
 
@@ -16,6 +17,14 @@ from homeassistant.const import (
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)
+
+# Pattern for validating entity IDs (format: <domain>.<entity>)
+ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+
+
+def valid_entity_id(entity_id):
+    """Test if an entity ID is a valid format."""
+    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class Entity(object):
