@@ -189,15 +189,19 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
         """ Listens for matching time_changed events. """
 
         current_fire = iterator.get_current(datetime)
-        current_fire = current_fire.replace(second=set_second)
+        if not isinstance(set_second, (list, tuple)):
+            current_fire = current_fire.replace(second=set_second)
 
         now = event.data[ATTR_NOW]
 
         now = dt_util.as_local(now) if local else dt_util.as_utc(now)
 
         fire = current_fire - now
-        _LOGGER.warning("%s <= %s", fire, timedelta(seconds=1))
-        if fire <= timedelta(seconds=1):
+        _LOGGER.debug("%s <= %s", fire, timedelta(seconds=1))
+
+        mat = _matcher
+
+        if fire <= timedelta(seconds=1) and mat(now.second, set_second):
             next_fire = iterator.get_next(datetime)
             _LOGGER.info("Next event fires %s", next_fire)
 
