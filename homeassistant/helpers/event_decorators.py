@@ -7,18 +7,13 @@ from homeassistant.helpers import event
 HASS = None
 
 
-def _callback(action, *args, **kwargs):
-    """ adds HASS to callback arguments """
-    action(HASS, *args, **kwargs)
-
-
 def track_state_change(entity_ids, from_state=None, to_state=None):
     """ Decorator factory to track state changes for entity id """
 
     def track_state_change_decorator(action):
         """ Decorator to track state changes """
         event.track_state_change(HASS, entity_ids,
-                                 functools.partial(_callback, action),
+                                 functools.partial(action, HASS),
                                  from_state, to_state)
         return action
 
@@ -31,7 +26,7 @@ def track_sunrise(offset=None):
     def track_sunrise_decorator(action):
         """ Decorator to track sunrise events """
         event.track_sunrise(HASS,
-                            functools.partial(_callback, action),
+                            functools.partial(action, HASS),
                             offset)
         return action
 
@@ -44,7 +39,7 @@ def track_sunset(offset=None):
     def track_sunset_decorator(action):
         """ Decorator to track sunset events """
         event.track_sunset(HASS,
-                           functools.partial(_callback, action),
+                           functools.partial(action, HASS),
                            offset)
         return action
 
@@ -59,7 +54,7 @@ def track_time_change(year=None, month=None, day=None, hour=None, minute=None,
     def track_time_change_decorator(action):
         """ Decorator to track time changes """
         event.track_time_change(HASS,
-                                functools.partial(_callback, action),
+                                functools.partial(action, HASS),
                                 year, month, day, hour, minute, second)
         return action
 
@@ -74,7 +69,7 @@ def track_utc_time_change(year=None, month=None, day=None, hour=None,
     def track_utc_time_change_decorator(action):
         """ Decorator to track time changes """
         event.track_utc_time_change(HASS,
-                                    functools.partial(_callback, action),
+                                    functools.partial(action, HASS),
                                     year, month, day, hour, minute, second)
         return action
 
