@@ -1,8 +1,8 @@
 """
-tests.components.automation.test_location
-±±±~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_zone
+±±±~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests location automation.
+Tests zone component.
 """
 import unittest
 
@@ -11,8 +11,8 @@ from homeassistant.components import zone
 from tests.common import get_test_home_assistant
 
 
-class TestAutomationZone(unittest.TestCase):
-    """ Test the event automation. """
+class TestComponentZone(unittest.TestCase):
+    """ Test the zone component. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()
