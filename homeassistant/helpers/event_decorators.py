@@ -12,18 +12,6 @@ def _callback(action, *args, **kwargs):
     action(HASS, *args, **kwargs)
 
 
-def service(domain, service_name):
-    """ Decorator factory to register a service """
-
-    def register_service_decorator(action):
-        """ Decorator to register a service """
-        HASS.services.register(domain, service_name,
-                               functools.partial(_callback, action))
-        return action
-
-    return register_service_decorator
-
-
 def track_state_change(entity_ids, from_state=None, to_state=None):
     """ Decorator factory to track state changes for entity id """
 
