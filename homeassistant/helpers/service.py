@@ -64,18 +64,18 @@ def call_from_config(hass, config, blocking=False):
     hass.services.call(domain, service_name, service_data, blocking)
 
 
-def extract_entity_ids(hass, service):
+def extract_entity_ids(hass, service_call):
     """
     Helper method to extract a list of entity ids from a service call.
     Will convert group entity ids to the entity ids it represents.
     """
-    if not (service.data and ATTR_ENTITY_ID in service.data):
+    if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
     group = get_component('group')
 
     # Entity ID attr can be a list or a string
-    service_ent_id = service.data[ATTR_ENTITY_ID]
+    service_ent_id = service_call.data[ATTR_ENTITY_ID]
 
     if isinstance(service_ent_id, str):
         return group.expand_entity_ids(hass, [service_ent_id])
