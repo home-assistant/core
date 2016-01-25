@@ -211,7 +211,7 @@ proliphix==0.1.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-vsure==0.4.5
+vsure==0.4.8
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
