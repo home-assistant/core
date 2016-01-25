@@ -189,8 +189,6 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
         """ Listens for matching time_changed events. """
 
         current_fire = iterator.get_current(datetime)
-        if not isinstance(set_second, (list, tuple)):
-            current_fire = current_fire.replace(second=set_second)
 
         now = event.data[ATTR_NOW]
 
