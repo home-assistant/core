@@ -28,7 +28,7 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.6']
+REQUIREMENTS = ['liffylights==0.8.3']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
@@ -44,13 +44,13 @@ TEMP_MAX_HASS = 500           # home assistant maximum temperature
 class LIFX():
     def __init__(self, add_devices_callback,
                  server_addr=None, broadcast_addr=None):
-        from liffylights import liffylights
+        from liffylights import LiffyLights
 
         self._devices = []
 
         self._add_devices_callback = add_devices_callback
 
-        self._liffylights = liffylights(self.on_device,
+        self._liffylights = LiffyLights(self.on_device,
                                         self.on_power,
                                         self.on_color,
                                         server_addr,
