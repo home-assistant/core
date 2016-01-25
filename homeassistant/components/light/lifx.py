@@ -24,7 +24,7 @@ import logging
 import colorsys
 from homeassistant.helpers.event import track_time_change
 from homeassistant.components.light import \
-    (Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP)
+    (Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +172,11 @@ class LIFXLight(Light):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
+        if ATTR_TRANSITION in kwargs:
+            fade = kwargs[ATTR_TRANSITION] * 1000
+        else:
+            fade = 0
+
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
         else:
@@ -192,15 +197,21 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
+        _LOGGER.info("%s %d %d %d %d %d", self._ip, hue, saturation, brightness, kelvin, fade)
         if self._power == 0:
-            self._liffylights.set_power(self._ip, 65535)
+            self._liffylights.set_power(self._ip, 65535, 0)
 
         self._liffylights.set_color(self._ip, hue, saturation,
-                                    brightness, kelvin)
+                                    brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        self._liffylights.set_power(self._ip, 0)
+        if ATTR_TRANSITION in kwargs:
+            fade = kwargs[ATTR_TRANSITION] * 1000
+        else:
+            fade = 0
+
+        self._liffylights.set_power(self._ip, 0, fade)
 
     def set_name(self, name):
         """ Set name. """
