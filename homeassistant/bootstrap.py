@@ -228,7 +228,7 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
     enable_logging(hass, verbose, daemon, log_rotate_days)
 
-    config_dict = config_util.load_config_file(config_path)
+    config_dict = config_util.load_yaml_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
