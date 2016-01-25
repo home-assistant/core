@@ -58,6 +58,7 @@ def setup_scanner(hass, config, see):
             see(**kwargs)
 
     def owntracks_event_update(topic, payload, qos):
+        # pylint: disable=too-many-branches
         """ MQTT event (geofences) received. """
 
         # Docs on available data:
