@@ -101,6 +101,54 @@ def track_point_in_utc_time(hass, action, point_in_time):
     return point_in_time_listener
 
 
+def track_sunrise(hass, action, offset=None):
+    """
+    Adds a listener that will fire a specified offset from sunrise daily.
+    """
+    from homeassistant.components import sun
+    offset = offset or timedelta()
+
+    def next_rise():
+        """ Returns next sunrise. """
+        next_time = sun.next_rising_utc(hass) + offset
+
+        while next_time < dt_util.utcnow():
+            next_time = next_time + timedelta(days=1)
+
+        return next_time
+
+    def sunrise_automation_listener(now):
+        """ Called when it's time for action. """
+        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+        action()
+
+    track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+
+
+def track_sunset(hass, action, offset=None):
+    """
+    Adds a listener that will fire a specified offset from sunset daily.
+    """
+    from homeassistant.components import sun
+    offset = offset or timedelta()
+
+    def next_set():
+        """ Returns next sunrise. """
+        next_time = sun.next_setting_utc(hass) + offset
+
+        while next_time < dt_util.utcnow():
+            next_time = next_time + timedelta(days=1)
+
+        return next_time
+
+    def sunset_automation_listener(now):
+        """ Called when it's time for action. """
+        track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+        action()
+
+    track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+
+
 def track_utc_time_change(hass, action, cron=None, second=None, local=None):
     """
     Adds a listener that will fire if time matches a pattern.
