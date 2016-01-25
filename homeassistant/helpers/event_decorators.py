@@ -12,12 +12,12 @@ def _callback(action, *args, **kwargs):
     action(HASS, *args, **kwargs)
 
 
-def service(domain, service):
+def service(domain, service_name):
     """ Decorator factory to register a service """
 
     def register_service_decorator(action):
         """ Decorator to register a service """
-        HASS.services.register(domain, service,
+        HASS.services.register(domain, service_name,
                                functools.partial(_callback, action))
         return action
 
@@ -44,7 +44,7 @@ def track_sunrise(offset=None):
         """ Decorator to track sunrise events """
         event.track_sunrise(HASS,
                             functools.partial(_callback, action),
-                            action, offset)
+                            offset)
         return action
 
     return track_sunrise_decorator
@@ -76,3 +76,18 @@ def track_time_change(year=None, month=None, day=None, hour=None, minute=None,
         return action
 
     return track_time_change_decorator
+
+
+# pylint: disable=too-many-arguments
+def track_utc_time_change(year=None, month=None, day=None, hour=None,
+                          minute=None, second=None):
+    """ Decorator factory to track time changes """
+
+    def track_utc_time_change_decorator(action):
+        """ Decorator to track time changes """
+        event.track_utc_time_change(HASS,
+                                    functools.partial(_callback, action),
+                                    year, month, day, hour, minute, second)
+        return action
+
+    return track_utc_time_change_decorator
