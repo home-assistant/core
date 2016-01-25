@@ -168,6 +168,10 @@ class Group(Entity):
         return self._icon
 
     @property
+    def hidden(self):
+        return not self._user_defined or self._view
+
+    @property
     def state_attributes(self):
         data = {
             ATTR_ENTITY_ID: self.tracking,
