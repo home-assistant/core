@@ -27,9 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
-    day_of_month = None
-    month = None
-    day = None
+
+    cron = config.get(CONF_CRONTAB, None)
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
@@ -42,12 +41,7 @@ def trigger(hass, config, action):
         minutes = convert(config.get(CONF_MINUTES), int)
         seconds = convert(config.get(CONF_SECONDS), int)
     elif CONF_CRONTAB in config:
-        parsed = config.get(CONF_CRONTAB).split(" ")
-        minutes = parsed[0]
-        hours = parsed[1]
-        day_of_month = parsed[2]
-        month = parsed[3]
-        day = parsed[4]
+        hours, minutes, seconds = None, None, None
         seconds = 0
     else:
         _LOGGER.error('One of %s, %s, %s %s OR %s needs to be specified',
@@ -66,9 +60,7 @@ def trigger(hass, config, action):
                       hour=hours,
                       minute=minutes,
                       second=seconds,
-                      day=day,
-                      month=month,
-                      day_of_month=day_of_month)
+                      cron=cron)
 
     return True
 
