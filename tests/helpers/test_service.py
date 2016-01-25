@@ -87,7 +87,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
         self.hass.states.set('light.Kitchen', STATE_OFF)
 
-        loader.get_component('group').setup_group(
+        loader.get_component('group').Group(
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
         call = ha.ServiceCall('light', 'turn_on',
