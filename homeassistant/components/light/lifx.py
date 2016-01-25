@@ -166,7 +166,7 @@ class LIFXLight(Light):
         """ Returns brightness of this light between 0..255. """
         brightness = int(self._bri / (BYTE_MAX + 1))
 
-        _LOGGER.debug("color_temp: %d",
+        _LOGGER.debug("brightness: %d",
                       brightness)
 
         return brightness
