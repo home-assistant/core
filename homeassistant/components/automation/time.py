@@ -21,6 +21,7 @@ CONF_CRONTAB = "cron"
 CONF_DAY_OFF_WEEK = 'weekday'
 CONF_DAY = 'monthday'
 CONF_YEAR = 'year'
+CONF_MONTH = 'month'
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -31,8 +32,8 @@ def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
 
     cron = config.get(CONF_CRONTAB, None)
-    hours, minutes, seconds, day, day_of_week, year = (
-        None, None, None, None, None, None
+    hours, minutes, seconds, day, day_of_week, month, year = (
+        None, None, None, None, None, None, None
     )
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
@@ -47,6 +48,7 @@ def trigger(hass, config, action):
         index = config.get(CONF_DAY_OFF_WEEK, None)
         if index:
             day_of_week = WEEKDAYS.index(index)
+        month = config.get(CONF_MONTH, None)
         hours = config.get(CONF_HOURS, None)
         minutes = config.get(CONF_MINUTES, None)
         seconds = config.get(CONF_SECONDS, None)
@@ -70,6 +72,7 @@ def trigger(hass, config, action):
                       minute=minutes,
                       second=seconds,
                       day=day,
+                      month=month,
                       day_of_week=day_of_week,
                       year=year,
                       cron=cron)

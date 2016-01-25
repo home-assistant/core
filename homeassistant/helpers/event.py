@@ -149,7 +149,8 @@ def track_sunset(hass, action, offset=None):
     track_point_in_utc_time(hass, sunset_automation_listener, next_set())
 
 
-def track_utc_time_change(hass, action, cron=None, second=None, local=None):
+def track_utc_time_change(hass, action, cron=None, second=None, year=None,
+                          local=None):
     """ Adds a listener that will fire if time matches a pattern. """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
@@ -183,6 +184,9 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
         """ Listens for matching time_changed events. """
 
         current_fire = iterator.get_current(datetime)
+        if year:
+            print(year)
+            current_fire.replace(year=int(year))
 
         now = event.data[ATTR_NOW]
 
@@ -191,7 +195,7 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
         fire = current_fire - now
 
         mat = _matcher
-
+        print(cron, fire)
         if fire <= timedelta(seconds=1) or cron == "* * * * *" and (
                 mat(now.second, set_second) or set_second == (0,)):
             next_fire = iterator.get_next(datetime)
@@ -209,12 +213,12 @@ def track_time_change(hass, action, year=None, month=None, day=None,
                       day_of_week=None, cron=None, local=True):
     """ Adds a listener that will fire if UTC time matches a pattern. """
     if not cron:
-        cron = time_params_to_cron(year, month, day, hour, minute, day_of_week)
+        cron = time_params_to_cron(month, day, hour, minute, day_of_week)
 
-    track_utc_time_change(hass, action, cron, second, local)
+    track_utc_time_change(hass, action, cron, second, year, local)
 
 
-def time_params_to_cron(year=None, month=None, day=None, hour=None,
+def time_params_to_cron(month=None, day=None, hour=None,
                         minute=None, day_of_week=None):
     """ Converts params to cron string """
     return "%s %s %s %s %s" % (
