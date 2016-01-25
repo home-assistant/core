@@ -175,7 +175,7 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
 
     start_now = dt_util.now() if local else dt_util.utcnow()
 
-    _LOGGER.info("%s %s", cron, second)
+    _LOGGER.debug("%s %s", cron, second)
     iterator = croniter(cron, start_now)
 
     log_nxt = iterator.get_next(datetime)
@@ -197,11 +197,11 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
         now = dt_util.as_local(now) if local else dt_util.as_utc(now)
 
         fire = current_fire - now
-        _LOGGER.debug("%s <= %s", fire, timedelta(seconds=1))
 
         mat = _matcher
 
-        print(cron, set_second, fire, timedelta(seconds=1))
+        _LOGGER.debug("%s <= %s", fire, timedelta(seconds=1))
+
         if fire <= timedelta(seconds=1) or cron == "* * * * *" and (
                 mat(now.second, set_second) or set_second == (0,)):
             next_fire = iterator.get_next(datetime)

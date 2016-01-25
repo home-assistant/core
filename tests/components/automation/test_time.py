@@ -298,7 +298,6 @@ class TestAutomationTime(unittest.TestCase):
         now = dt_util.utcnow()
 
         if now > now.replace(hour=1, minute=2, second=3):
-            print("bigger")
             now = now.replace(day=now.day+1, hour=1, minute=2, second=3)
         else:
             now.replace(hour=1, minute=2, second=3)
