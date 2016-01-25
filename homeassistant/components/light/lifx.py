@@ -197,17 +197,17 @@ class LIFXLight(Light):
         else:
             fade = 0
 
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
-        else:
-            brightness = self._bri
-
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
                 convert_rgb_to_hsv(kwargs[ATTR_RGB_COLOR])
         else:
             hue = self._hue
             saturation = self._sat
+            brightness = self._bri
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
+        else:
             brightness = self._bri
 
         if ATTR_COLOR_TEMP in kwargs:
