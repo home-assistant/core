@@ -128,6 +128,9 @@ class LIFXLight(Light):
     # pylint: disable=too-many-arguments
     def __init__(self, liffy, ipaddr, name, power, hue,
                  saturation, brightness, kelvin):
+        _LOGGER.debug("LIFXLight: %s %s",
+                      ipaddr, name)
+
         self._liffylights = liffy
         self._ip = ipaddr
         self.set_name(name)
@@ -152,22 +155,38 @@ class LIFXLight(Light):
     @property
     def rgb_color(self):
         """ Returns RGB value. """
+        _LOGGER.debug("rgb_color: [%d %d %d]",
+                      self._rgb[0], self._rgb[1], self._rgb[2])
+
         return self._rgb
 
     @property
     def brightness(self):
         """ Returns brightness of this light between 0..255. """
-        return int(self._bri / (BYTE_MAX + 1))
+        brightness = int(self._bri / (BYTE_MAX + 1))
+
+        _LOGGER.debug("color_temp: %d",
+                      brightness)
+
+        return brightness
 
     @property
     def color_temp(self):
         """ Returns color temperature. """
-        return int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS) *
-                   (self._kel - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
+        temperature = int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS) *
+                          (self._kel - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
+
+        _LOGGER.debug("color_temp: %d",
+                      temperature)
+
+        return temperature
 
     @property
     def is_on(self):
         """ True if device is on. """
+        _LOGGER.debug("is_on: %d",
+                      self._power)
+
         return self._power != 0
 
     def turn_on(self, **kwargs):
@@ -197,10 +216,12 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
-        _LOGGER.debug("%s %d %d %d %d %d",
-                      self._ip, hue, saturation, brightness, kelvin, fade)
+        _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
+                      self._ip, self._power,
+                      hue, saturation, brightness, kelvin, fade)
+
         if self._power == 0:
-            self._liffylights.set_power(self._ip, 65535, 0)
+            self._liffylights.set_power(self._ip, 65535, fade)
 
         self._liffylights.set_color(self._ip, hue, saturation,
                                     brightness, kelvin, fade)
@@ -212,6 +233,9 @@ class LIFXLight(Light):
         else:
             fade = 0
 
+        _LOGGER.debug("turn_off: %s %d",
+                      self._ip, fade)
+
         self._liffylights.set_power(self._ip, 0, fade)
 
     def set_name(self, name):
@@ -220,6 +244,9 @@ class LIFXLight(Light):
 
     def set_power(self, power):
         """ Set power state value. """
+        _LOGGER.debug("set_power: %d",
+                      power)
+
         self._power = (power != 0)
 
     def set_color(self, hue, sat, bri, kel):
@@ -233,6 +260,11 @@ class LIFXLight(Light):
                                                sat / SHORT_MAX,
                                                bri / SHORT_MAX)
 
-        self._rgb = [int(red * BYTE_MAX),
-                     int(green * BYTE_MAX),
-                     int(blue * BYTE_MAX)]
+        red = int(red * BYTE_MAX)
+        green = int(green * BYTE_MAX)
+        blue = int(blue * BYTE_MAX)
+
+        _LOGGER.debug("set_color: %d %d %d %d [%d %d %d]",
+                      hue, sat, bri, kel, red, green, blue)
+
+        self._rgb = [red, green, blue]
