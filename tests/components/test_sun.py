@@ -86,6 +86,9 @@ class TestSun(unittest.TestCase):
             test_state = sun.STATE_ABOVE_HORIZON
             test_time = sun.next_rising(self.hass)
 
+        if test_time > dt_util.utcnow():
+            test_time.replace(day=test_time.day+1)
+
         self.assertIsNotNone(test_time)
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
