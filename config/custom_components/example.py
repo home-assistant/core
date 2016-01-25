@@ -48,7 +48,7 @@ DEPENDENCIES = ['group', 'device_tracker', 'light']
 CONF_TARGET = 'target'
 
 # Variable for storing configuration parameters
-CONFIG = {}
+TARGET_ID = None
 
 # Name of the service that we expose
 SERVICE_FLASH = 'flash'
@@ -59,19 +59,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """ Setup example component. """
+    global TARGET_ID
 
     # Validate that all required config options are given
     if not validate_config(config, {DOMAIN: [CONF_TARGET]}, _LOGGER):
         return False
 
-    CONFIG['target_id'] = config[DOMAIN][CONF_TARGET]
+    TARGET_ID = config[DOMAIN][CONF_TARGET]
 
     # Validate that the target entity id exists
-    if hass.states.get(config['target_id']) is None:
+    if hass.states.get(TARGET_ID) is None:
         _LOGGER.error("Target entity id %s does not exist",
-                      CONFIG['target_id'])
+                      TARGET_ID)
 
-        # Tell the bootstrapper that we failed to initialize
+        # Tell the bootstrapper that we failed to initialize and clear the
+        # stored target id so our functions don't run.
+        TARGET_ID = None
         return False
 
     # Tell the bootstrapper that we initialized successfully
@@ -81,17 +84,19 @@ def setup(hass, config):
 @track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES)
 def track_devices(hass, entity_id, old_state, new_state):
     """ Called when the group.all devices change state. """
-    target_id = CONFIG['target_id']
+    # If the target id is not set, return
+    if not TARGET_ID:
+        return
 
     # If anyone comes home and the entity is not on, turn it on.
-    if new_state.state == STATE_HOME and not core.is_on(hass, target_id):
+    if new_state.state == STATE_HOME and not core.is_on(hass, TARGET_ID):
 
-        core.turn_on(hass, target_id)
+        core.turn_on(hass, TARGET_ID)
 
     # If all people leave the house and the entity is on, turn it off
-    elif new_state.state == STATE_NOT_HOME and core.is_on(hass, target_id):
+    elif new_state.state == STATE_NOT_HOME and core.is_on(hass, TARGET_ID):
 
-        core.turn_off(hass, target_id)
+        core.turn_off(hass, TARGET_ID)
 
 
 @track_time_change(hour=7, minute=0, second=0)
@@ -100,21 +105,23 @@ def wake_up(hass, now):
     Turn it on in the morning (7 AM) if there are people home and
     it is not already on.
     """
-    target_id = CONFIG['target_id']
+    if not TARGET_ID:
+        return
 
-    if device_tracker.is_on(hass) and not core.is_on(hass, target_id):
+    if device_tracker.is_on(hass) and not core.is_on(hass, TARGET_ID):
         _LOGGER.info('People home at 7AM, turning it on')
-        core.turn_on(hass, target_id)
+        core.turn_on(hass, TARGET_ID)
 
 
 @track_state_change(light.ENTITY_ID_ALL_LIGHTS, STATE_ON, STATE_OFF)
 def all_lights_off(hass, entity_id, old_state, new_state):
     """ If all lights turn off, turn off. """
-    target_id = CONFIG['target_id']
+    if not TARGET_ID:
+        return
 
-    if core.is_on(hass, target_id):
+    if core.is_on(hass, TARGET_ID):
         _LOGGER.info('All lights have been turned off, turning it off')
-        core.turn_off(hass, target_id)
+        core.turn_off(hass, TARGET_ID)
 
 
 @service(DOMAIN, SERVICE_FLASH)
@@ -122,18 +129,19 @@ def flash_service(hass, call):
     """
     Service that will turn the target off for 10 seconds if on and vice versa.
     """
-    target_id = CONFIG['target_id']
+    if not TARGET_ID:
+        return
 
-    if core.is_on(hass, target_id):
-        core.turn_off(hass, target_id)
+    if core.is_on(hass, TARGET_ID):
+        core.turn_off(hass, TARGET_ID)
 
         time.sleep(10)
 
-        core.turn_on(hass, target_id)
+        core.turn_on(hass, TARGET_ID)
 
     else:
-        core.turn_on(hass, target_id)
+        core.turn_on(hass, TARGET_ID)
 
         time.sleep(10)
 
-        core.turn_off(hass, target_id)
+        core.turn_off(hass, TARGET_ID)
