@@ -197,7 +197,8 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
-        _LOGGER.info("%s %d %d %d %d %d", self._ip, hue, saturation, brightness, kelvin, fade)
+        _LOGGER.debug("%s %d %d %d %d %d",
+                      self._ip, hue, saturation, brightness, kelvin, fade)
         if self._power == 0:
             self._liffylights.set_power(self._ip, 65535, 0)
 
