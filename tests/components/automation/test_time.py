@@ -322,9 +322,9 @@ class TestAutomationTime(unittest.TestCase):
         now = dt_util.utcnow()
 
         if now > now.replace(hour=5):
-            now = now.replace(hour=5, day=now.day-1)
+            now = now.replace(hour=4, minute=59, second=59, day=now.day+1)
         else:
-            now.replace(hour=5)
+            now.replace(hour=4, minute=59, second=59)
 
         fire_time_changed(self.hass, now)
 

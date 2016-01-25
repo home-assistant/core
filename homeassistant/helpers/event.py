@@ -200,8 +200,6 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
 
         mat = _matcher
 
-        _LOGGER.debug("%s <= %s", fire, timedelta(seconds=1))
-
         if fire <= timedelta(seconds=1) or cron == "* * * * *" and (
                 mat(now.second, set_second) or set_second == (0,)):
             next_fire = iterator.get_next(datetime)
