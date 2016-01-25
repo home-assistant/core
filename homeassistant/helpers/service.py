@@ -1,14 +1,34 @@
 """Service calling related helpers."""
+import functools
 import logging
 
 from homeassistant.util import split_entity_id
 from homeassistant.const import ATTR_ENTITY_ID
+
+HASS = None
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_ENTITY_ID = 'entity_id'
 CONF_SERVICE_DATA = 'data'
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _callback(action, *args, **kwargs):
+    """ adds HASS to callback arguments """
+    action(HASS, *args, **kwargs)
+
+
+def service(domain, service_name):
+    """ Decorator factory to register a service """
+
+    def register_service_decorator(action):
+        """ Decorator to register a service """
+        HASS.services.register(domain, service_name,
+                               functools.partial(_callback, action))
+        return action
+
+    return register_service_decorator
 
 
 def call_from_config(hass, config, blocking=False):
@@ -18,7 +38,7 @@ def call_from_config(hass, config, blocking=False):
         return
 
     try:
-        domain, service = split_entity_id(config[CONF_SERVICE])
+        domain, service_name = split_entity_id(config[CONF_SERVICE])
     except ValueError:
         _LOGGER.error('Invalid service specified: %s', config[CONF_SERVICE])
         return
@@ -40,4 +60,4 @@ def call_from_config(hass, config, blocking=False):
     elif entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(domain, service, service_data, blocking)
+    hass.services.call(domain, service_name, service_data, blocking)
