@@ -19,6 +19,9 @@ CONF_BEFORE = "before"
 CONF_AFTER = "after"
 CONF_WEEKDAY = "weekday"
 CONF_CRONTAB = "cron"
+CONF_DAY_OFF_WEEK = 'weekday'
+CONF_DAY = 'monthday'
+CONF_YEAR = 'year'
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -29,6 +32,9 @@ def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
 
     cron = config.get(CONF_CRONTAB, None)
+    hours, minutes, seconds, day, day_of_week, year = (
+        None, None, None, None, None, None
+    )
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
@@ -37,11 +43,15 @@ def trigger(hass, config, action):
         hours, minutes, seconds = after.hour, after.minute, after.second
     elif (CONF_HOURS in config or CONF_MINUTES in config or
           CONF_SECONDS in config):
-        hours = convert(config.get(CONF_HOURS), int)
-        minutes = convert(config.get(CONF_MINUTES), int)
-        seconds = convert(config.get(CONF_SECONDS), int)
+        year = config.get(CONF_YEAR, None)
+        day = config.get(CONF_DAY, None)
+        index = config.get(CONF_DAY_OFF_WEEK, None)
+        if index:
+            day_of_week = to_day_int(index)
+        hours = config.get(CONF_HOURS, None)
+        minutes = config.get(CONF_MINUTES, None)
+        seconds = config.get(CONF_SECONDS, None)
     elif CONF_CRONTAB in config:
-        hours, minutes, seconds = None, None, None
         seconds = 0
     else:
         _LOGGER.error('One of %s, %s, %s %s OR %s needs to be specified',
@@ -60,9 +70,16 @@ def trigger(hass, config, action):
                       hour=hours,
                       minute=minutes,
                       second=seconds,
+                      day=day,
+                      day_of_week=day_of_week,
+                      year=year,
                       cron=cron)
 
     return True
+
+
+def to_day_int(day):
+    return WEEKDAYS.index(day)
 
 
 def if_action(hass, config):
