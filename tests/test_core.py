@@ -132,17 +132,17 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.track_utc_time_change(
             lambda x: specific_runs.append(1), second=[0, 30])
 
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
+        self._send_time_changed(dt_util.now().replace(second=0))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
 
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 15))
+        self._send_time_changed(dt_util.now().replace(second=15))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
 
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 30))
+        self._send_time_changed(dt_util.now().replace(second=30))
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))

@@ -295,8 +295,15 @@ class TestAutomationTime(unittest.TestCase):
             }
         }))
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(
-            hour=1, minute=2, second=3))
+        now = dt_util.utcnow()
+
+        if now > now.replace(hour=1, minute=2, second=3):
+            print("bigger")
+            now = now.replace(day=now.day+1, hour=1, minute=2, second=3)
+        else:
+            now.replace(hour=1, minute=2, second=3)
+
+        fire_time_changed(self.hass, now)
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
@@ -313,9 +320,14 @@ class TestAutomationTime(unittest.TestCase):
                 }
             }
         }))
+        now = dt_util.utcnow()
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(
-            hour=5, minute=0, second=0))
+        if now > now.replace(hour=5):
+            now = now.replace(hour=5, day=now.day-1)
+        else:
+            now.replace(hour=5)
+
+        fire_time_changed(self.hass, now)
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
