@@ -10,7 +10,7 @@ import logging
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON)
+    STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN)
 import homeassistant.components.group as group
 
 
@@ -217,8 +217,8 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
         self.assertEqual('mdi:work',
                          group_state.attributes.get(ATTR_ICON))
-        self.assertEqual(True,
-                         group_state.attributes.get(group.ATTR_VIEW))
+        self.assertTrue(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('test_group'))
@@ -228,6 +228,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
         self.assertIsNone(group_state.attributes.get(ATTR_ICON))
         self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
 
     def test_groups_get_unique_names(self):
         """ Two groups with same name should both have a unique entity id. """
