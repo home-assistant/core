@@ -58,7 +58,6 @@ ATTR_CHILD_ID = 'child_id'
 ATTR_PORT = 'port'
 
 GATEWAYS = None
-SCAN_INTERVAL = 30
 
 DISCOVER_SENSORS = "mysensors.sensors"
 DISCOVER_SWITCHES = "mysensors.switches"
