@@ -15,18 +15,13 @@ CONF_SERVICE_DATA = 'data'
 _LOGGER = logging.getLogger(__name__)
 
 
-def _callback(action, *args, **kwargs):
-    """ adds HASS to callback arguments """
-    action(HASS, *args, **kwargs)
-
-
 def service(domain, service_name):
     """ Decorator factory to register a service """
 
     def register_service_decorator(action):
         """ Decorator to register a service """
         HASS.services.register(domain, service_name,
-                               functools.partial(_callback, action))
+                               functools.partial(action, HASS))
         return action
 
     return register_service_decorator
