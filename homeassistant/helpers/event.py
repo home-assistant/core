@@ -150,15 +150,7 @@ def track_sunset(hass, action, offset=None):
 
 
 def track_utc_time_change(hass, action, cron=None, second=None, local=None):
-    """
-    Adds a listener that will fire if time matches a pattern.
-    @param hass:
-    @param action:
-    @param cron: given in '* * * * *' format
-    @param second:
-    @param local:
-    @return:
-    """
+    """ Adds a listener that will fire if time matches a pattern. """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if not cron and not second:
@@ -224,16 +216,7 @@ def track_time_change(hass, action, year=None, month=None, day=None,
 
 def time_params_to_cron(year=None, month=None, day=None, hour=None,
                         minute=None, day_of_week=None):
-    """
-    Converts params to cron string
-    @param year:
-    @param month:
-    @param day:
-    @param hour:
-    @param minute:
-    @param day_of_week:
-    @return:
-    """
+    """ Converts params to cron string """
     return "%s %s %s %s %s" % (
         minute or '*',
         hour or '*',
