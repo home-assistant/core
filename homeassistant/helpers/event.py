@@ -182,7 +182,9 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
 
     _LOGGER.info("Next event fires %s", log_nxt)
 
-    set_second = second
+    pmp = _process_match_param
+
+    set_second = pmp(second) if second else pmp(0)
 
     @ft.wraps(action)
     def pattern_time_change_listener(event):
@@ -199,7 +201,8 @@ def track_utc_time_change(hass, action, cron=None, second=None, local=None):
 
         mat = _matcher
 
-        if fire <= timedelta(seconds=1) and mat(now.second, set_second):
+        print(cron, set_second, fire, timedelta(seconds=1))
+        if fire <= timedelta(seconds=1) or cron == "* * * * *" and mat(now.second, set_second):
             next_fire = iterator.get_next(datetime)
             _LOGGER.info("Next event fires %s", next_fire)
 
@@ -215,14 +218,13 @@ def track_time_change(hass, action, year=None, month=None, day=None,
                       day_of_week=None, cron=None, local=True):
     """ Adds a listener that will fire if UTC time matches a pattern. """
     if not cron:
-        cron = time_params_to_cron(year, month, day, hour, minute, second,
-                                   day_of_week)
+        cron = time_params_to_cron(year, month, day, hour, minute, day_of_week)
 
     track_utc_time_change(hass, action, cron, second, local)
 
 
 def time_params_to_cron(year=None, month=None, day=None, hour=None,
-                        minute=None, second=None, day_of_week=None):
+                        minute=None, day_of_week=None):
     return "%s %s %s %s %s" % (
         minute or '*',
         hour or '*',

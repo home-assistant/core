@@ -131,7 +131,7 @@ class HomeAssistant(object):
         import homeassistant.helpers.event as helper
 
         cron = helper.time_params_to_cron(year, month, day,
-                      hour, minute, second)
+                      hour, minute)
         helper.track_utc_time_change(self, action, cron, second)
 
     def track_time_change(self, action,
@@ -145,7 +145,7 @@ class HomeAssistant(object):
         import homeassistant.helpers.event as helper
 
         cron = helper.time_params_to_cron(year, month, day,
-                      hour, minute, second)
+                      hour, minute)
         helper.track_time_change(self, action, cron, second)
 
 
