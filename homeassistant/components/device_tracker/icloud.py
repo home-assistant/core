@@ -78,7 +78,8 @@ def setup_scanner(hass, config, see):
                     continue
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
-    cron = time_params_to_cron(minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)))
+    cron = time_params_to_cron(
+            minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)))
     track_utc_time_change(
         hass, update_icloud,
         cron=cron,
