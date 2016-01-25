@@ -28,7 +28,7 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.8.7']
+REQUIREMENTS = ['liffylights==0.8.8']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
