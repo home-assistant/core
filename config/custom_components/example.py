@@ -31,7 +31,8 @@ import logging
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_ON, STATE_OFF
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.event_decorators import \
-    track_state_change, track_time_change, service
+    track_state_change, track_time_change
+from homeassistant.helpers.service import service
 import homeassistant.components as core
 from homeassistant.components import device_tracker
 from homeassistant.components import light

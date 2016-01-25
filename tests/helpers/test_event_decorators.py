@@ -15,7 +15,7 @@ import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import event_decorators
 from homeassistant.helpers.event_decorators import (
-    track_time_change, track_utc_time_change, track_state_change, service,
+    track_time_change, track_utc_time_change, track_state_change,
     track_sunrise, track_sunset)
 from homeassistant.components import sun
 
@@ -36,17 +36,6 @@ class TestEventDecoratorHelpers(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
-
-    def test_service(self):
-        """ Test service registration decorator. """
-        runs = []
-
-        decor = service('test', 'test')
-        decor(lambda x, y: runs.append(1))
-
-        self.hass.services.call('test', 'test')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(runs))
 
     def test_track_sunrise(self):
         """ Test track sunrise decorator """
