@@ -8,7 +8,6 @@ at https://home-assistant.io/components/automation/#time-trigger
 """
 import logging
 
-from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_change
 
@@ -47,7 +46,7 @@ def trigger(hass, config, action):
         day = config.get(CONF_DAY, None)
         index = config.get(CONF_DAY_OFF_WEEK, None)
         if index:
-            day_of_week = to_day_int(index)
+            day_of_week = WEEKDAYS.index(index)
         hours = config.get(CONF_HOURS, None)
         minutes = config.get(CONF_MINUTES, None)
         seconds = config.get(CONF_SECONDS, None)
@@ -76,10 +75,6 @@ def trigger(hass, config, action):
                       cron=cron)
 
     return True
-
-
-def to_day_int(day):
-    return WEEKDAYS.index(day)
 
 
 def if_action(hass, config):

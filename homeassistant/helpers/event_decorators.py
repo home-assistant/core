@@ -69,8 +69,7 @@ def track_utc_time_change(year=None, month=None, day=None, hour=None,
     def track_utc_time_change_decorator(action):
         """ Decorator to track time changes """
 
-        cron = event.time_params_to_cron(year, month, day,
-              hour, minute)
+        cron = event.time_params_to_cron(year, month, day, hour, minute)
 
         event.track_utc_time_change(HASS,
                                     functools.partial(action, HASS), cron,

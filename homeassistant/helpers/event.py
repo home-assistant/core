@@ -224,6 +224,16 @@ def track_time_change(hass, action, year=None, month=None, day=None,
 
 def time_params_to_cron(year=None, month=None, day=None, hour=None,
                         minute=None, day_of_week=None):
+    """
+    Converts params to cron string
+    @param year:
+    @param month:
+    @param day:
+    @param hour:
+    @param minute:
+    @param day_of_week:
+    @return:
+    """
     return "%s %s %s %s %s" % (
         minute or '*',
         hour or '*',
