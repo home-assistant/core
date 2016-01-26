@@ -72,6 +72,7 @@ nosetests.xml
 # venv stuff
 pyvenv.cfg
 pip-selfcheck.json
+venv
 
 # vimmy stuff
 *.swp
