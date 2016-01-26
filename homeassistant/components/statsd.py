@@ -1,10 +1,7 @@
 """
 homeassistant.components.statsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 StatsD component which allows you to send data to many backends.
-
-For list supported backends visit this link:
-https://github.com/etsy/statsd/blob/master/docs/backend.md
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/statsd/
