@@ -117,9 +117,7 @@
   <span class="key">name</span>: <span class="string"><span class="content">School</span></span>
   <span class="key">latitude</span>: <span class="string"><span class="content">32.8773367</span></span>
   <span class="key">longitude</span>: <span class="string"><span class="content">-117.2494053</span></span>
-  <span class="comment"># Optional radius in meters (default: 100)</span>
   <span class="key">radius</span>: <span class="string"><span class="content">250</span></span>
-  <span class="comment"># Optional icon to show instead of name</span>
   <span class="key">icon</span>: <span class="string"><span class="content">mdi:school</span></span>
 
 <span class="key">zone 2</span>:
@@ -138,13 +136,23 @@
 </div>
 </div>
 
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>name</strong> (<em>Optional</em>): Friendly name of entry.</li>
+  <li><strong>latitude</strong> (<em>Required</em>): Latitude of the center point of the zone.</li>
+  <li><strong>longitude</strong> (<em>Required</em>): Longitude of the center point of the zone.</li>
+  <li><strong>radius</strong> (<em>Optional</em>): Optional radius in meters. Defaults to 100 meters.</li>
+  <li><strong>icon</strong> (<em>Optional</em>): Optional icon to show instead of name.</li>
+</ul>
+
 <h4><a class="title-link" name="home-zone" href="#home-zone"></a> Home zone</h4>
 
-<p>If no configuration is given, the zone component will create a zone for home. This zone will use location given in the <code>configuration.yaml</code> file and have a radius of 100 meters. To override this, create a zone configuration and name it ‘Home’.</p>
+<p>If no configuration is given, the <code>zone</code> component will create a zone for home. This zone will use location given in the <code>configuration.yaml</code> file and have a radius of 100 meters. To override this, create a zone configuration and name it <strong>‘Home’</strong>.</p>
 
 <h4><a class="title-link" name="icons" href="#icons"></a> Icons</h4>
 
-<p>It is preferred to pick an icon to use for your zone. Pick any zone that you can find on <a href="https://materialdesignicons.com/">materialdesignicons.com</a> and prefix the name with <code>mdi:</code>. For example <code>mdi:school</code>, <code>mdi:worker</code>, <code>mdi:home</code>, <code>mdi:cart</code>, <code>mdi:castle</code>.</p>
+<p>It is preferred to pick an icon to use for your zone. Pick any zone that you can find on <a href="https://materialdesignicons.com/">materialdesignicons.com</a> and prefix the name with <code>mdi:</code>. For example <code>mdi:school</code>, <code>mdi:worker</code>, <code>mdi:home</code>, <code>mdi:cart</code>, or <code>mdi:castle</code>.</p>
 
 </article>
 

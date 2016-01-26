@@ -107,21 +107,30 @@
   </header>
   <hr class="divider">
 
-  <p>The input boolean component allows the user to define boolean values that can be controlled via the frontend and can be used within conditions of automation. This can for example be used to disable or enable certain automations.</p>
+  <p>The <code>input_boolean</code> component allows the user to define boolean values that can be controlled via the frontend and can be used within conditions of automation. This can for example be used to disable or enable certain automations.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">input_boolean</span>:
   <span class="key">notify_home</span>:
-    <span class="comment"># Optional, friendly name of entry</span>
     <span class="key">name</span>: <span class="string"><span class="content">Notify when someome arrives home</span></span>
-    <span class="comment"># Optional, value when Home Assistant starts</span>
     <span class="key">initial</span>: <span class="string"><span class="content">off</span></span>
-    <span class="comment"># Optional, icon for entry</span>
     <span class="key">icon</span>: <span class="string"><span class="content">mdi:car</span></span>
 </pre></div>
 </div>
 </div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>[alias]</strong> (<em>Required</em>): Alias for the input.</li>
+  <li><strong>name</strong> (<em>Optional</em>): Friendly name of the input.</li>
+  <li><strong>initial</strong> (<em>Optional</em>): Initial value when Home Assistant starts.</li>
+  <li><strong>icon</strong> (<em>Optional</em>): Icon for entry.</li>
+</ul>
+
+<p>Pick an icon that you can find on <a href="https://materialdesignicons.com/">materialdesignicons.com</a> to use for your input and prefix the name with <code>mdi:</code>. For example <code>mdi:car</code>, <code>mdi:ambulance</code>, or  <code>mdi:motorbike</code>.</p>
+
 
 </article>
 

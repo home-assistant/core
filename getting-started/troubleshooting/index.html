@@ -112,11 +112,10 @@
   <hr class="divider">
   
 
-  <p>It can happen that you run into trouble while installing Home Assistant. This page is here to help<br />
-you figure out the most common problems.</p>
+  <p>It can happen that you run into trouble while installing Home Assistant. This page is here to help you figure out the most common problems.</p>
 
-<p><strong>pip3: command not found</strong><br />
-This utility should have been installed as part of the Python 3.4 installation. Check if Python 3.4 is installed by running <code>python3 --version</code>. If it is not installed, <a href="https://www.python.org/getit/">download it here</a>.</p>
+<h4><a class="title-link" name="pip3-command-not-found" href="#pip3-command-not-found"></a> pip3: command not found</h4>
+<p>This utility should have been installed as part of the Python 3.4 installation. Check if Python 3.4 is installed by running <code>python3 --version</code>. If it is not installed, <a href="https://www.python.org/getit/">download it here</a>.</p>
 
 <p>If you are able to successfully run <code>python3 --version</code> but not <code>pip3</code>, run the following command instead to install Home Assistant:</p>
 
@@ -126,8 +125,8 @@ This utility should have been installed as part of the Python 3.4 installation. 
 </div>
 </div>
 
-<p><strong>No module named pip</strong><br />
-<a href="https://pip.pypa.io/en/stable/">Pip</a> should come bundled with the latest Python 3 but is ommitted by some distributions. If you are unable to run <code>python3 -m pip --version</code> you can install <code>pip</code> by <a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3:</p>
+<h4><a class="title-link" name="no-module-named-pip" href="#no-module-named-pip"></a> No module named pip</h4>
+<p><a href="https://pip.pypa.io/en/stable/">Pip</a> should come bundled with the latest Python 3 but is ommitted by some distributions. If you are unable to run <code>python3 -m pip --version</code> you can install <code>pip</code> by <a href="https://bootstrap.pypa.io/get-pip.py">downloading the installer</a> and run it with Python 3:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ python3 get-pip.py
@@ -135,21 +134,21 @@ This utility should have been installed as part of the Python 3.4 installation. 
 </div>
 </div>
 
-<p><strong>distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix – not both</strong><br />
-This is a known issue if you’re on a Mac using Homebrew to install Python. Please follow <a href="https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Homebrew-and-Python.md#note-on-pip-install---user">these instructions</a> to resolve it.</p>
+<h4><a class="title-link" name="distutilserrorsdistutilsoptionerror-must-supply-either-home-or-prefixexec-prefix----not-both" href="#distutilserrorsdistutilsoptionerror-must-supply-either-home-or-prefixexec-prefix----not-both"></a> distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix – not both</h4>
+<p>This is a known issue if you’re on a Mac using Homebrew to install Python. Please follow <a href="https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Homebrew-and-Python.md#note-on-pip-install---user">these instructions</a> to resolve it.</p>
 
-<p><strong>CentOS and Python 3</strong><br />
-To run Python 3.x on <a href="https://www.centos.org/">CentOS</a> or RHEL, <a href="https://www.softwarecollections.org/en/scls/rhscl/rh-python34/">Software Collections</a> needs to be activated.</p>
+<h4><a class="title-link" name="centos-and-python-3" href="#centos-and-python-3"></a> CentOS and Python 3</h4>
+<p>To run Python 3.x on <a href="https://www.centos.org/">CentOS</a> or RHEL, <a href="https://www.softwarecollections.org/en/scls/rhscl/rh-python34/">Software Collections</a> needs to be activated.</p>
 
-<p><strong>No access to the frontend</strong><br />
-In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host is very limited. This means that you can’t access the Home Assistant Frontend that is running on a host outside of the host machine. Windows and OSX machines may also have issues with this.</p>
+<h4><a class="title-link" name="no-access-to-the-frontend" href="#no-access-to-the-frontend"></a> No access to the frontend</h4>
+<p>In newer Linux distributions (at least Fedora 22/CentOS 7) the access to a host is very limited. This means that you can’t access the Home Assistant frontend that is running on a host outside of the host machine. Windows and OSX machines may also have issues with this.</p>
 
 <p>To fix this you will need to open your machine’s firewall for TCP traffic over port 8123. The method for doing this will vary depending on your operating system and the firewall you have installed. Below are some suggestions to try. Google is your friend here.</p>
 
 <p><a href="http://windows.microsoft.com/en-us/windows/open-port-windows-firewall#1TC=windows-7">Windows instructions</a><br />
 <a href="https://support.apple.com/en-us/HT201642">Mac OSX instructions</a></p>
 
-<p>For firewalld systems (Fedora, RHEL, etc.):</p>
+<p>For systems with <strong>firewalld</strong> (Fedora, CentOS/RHEL, etc.):</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ sudo firewall-cmd --permanent --add-port=8123/tcp
@@ -166,7 +165,7 @@ $ sudo firewall-cmd --reload
 </div>
 </div>
 
-<p>For iptables systems (usually the default):</p>
+<p>For <code>iptables</code> systems (was the default for older distributions):</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ iptables -I INPUT -p tcp --dport 8123 -j ACCEPT
@@ -175,8 +174,8 @@ $ iptables-save &gt; /etc/network/iptables.rules  # your rules may be saved else
 </div>
 </div>
 
-<p><strong>Run the development version</strong><br />
-If you want to stay on top of the development of Home Assistant then you can upgrade to the dev branch. This can result in an unstable system, loss of data etc etc.</p>
+<h4><a class="title-link" name="run-the-development-version" href="#run-the-development-version"></a> Run the development version</h4>
+<p>If you want to stay on top of the development of Home Assistant then you can upgrade to the <code>dev</code> branch. This can result in an unstable system, loss of data, etc, etc.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ pip3 install --upgrade git+git://github.com/balloob/home-assistant.git@dev
