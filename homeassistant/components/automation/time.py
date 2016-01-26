@@ -37,13 +37,16 @@ def trigger(hass, config, action):
         hours = config.get(CONF_HOURS)
         minutes = config.get(CONF_MINUTES)
         seconds = config.get(CONF_SECONDS)
-        if minutes.startswith('/') and not minutes.lstrip('/') % 60 == 0:
+        if isinstance(minutes, str) and minutes.startswith('/') \
+                and not convert(minutes.lstrip('/'), int) % 60 == 0:
             _LOGGER.warning('Periodic minutes should be divisible with 60'
                             'there will be an offset every hour')
-        if seconds.startswith('/') and not seconds.lstrip('/') % 60 == 0:
+        if isinstance(seconds, str) and seconds.startswith('/') \
+                and not convert(seconds.lstrip('/'), int) % 60 == 0:
             _LOGGER.warning('Periodic seconds should be divisible with 60'
                             'there will be an offset every minute')
-        if hours.startswith('/') and not hours.lstrip('/') % 24 == 0:
+        if isinstance(hours, str) and hours.startswith('/') \
+                and not convert(hours.lstrip('/'), int) % 24 == 0:
             _LOGGER.warning('Periodic hours should be divisible with 24'
                             'there will be an offset every midnight')
     else:
