@@ -71,7 +71,7 @@ def if_action(hass, config):
     weekday = config.get(CONF_WEEKDAY)
 
     if before is None and after is None and weekday is None:
-        logging.getLogger(__name__).error(
+        _LOGGER.error(
             "Missing if-condition configuration key %s, %s or %s",
             CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
         return None
