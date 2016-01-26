@@ -12,6 +12,7 @@ from threading import Timer
 
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
+from homeassistant.util import slugify
 import homeassistant.components.zwave as zwave
 
 
@@ -92,11 +93,32 @@ class ZwaveDimmer(Light):
         return False
 
     @property
-    def name(self):
-        """ Returns the name of the device if any. """
-        name = self._node.name or "{}".format(self._node.product_name)
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "ZWAVE-{}-{}".format(self._node.node_id, self._value.object_id)
 
-        return "{}".format(name or self._value.label)
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        name = self._node.name or "{} {}".format(
+            self._node.manufacturer_name, self._node.product_name)
+
+        return "{} {}".format(name, self._value.label)
+
+    @property
+    def entity_id(self):
+        """ Returns the entity_id of the device if any.
+        The entity_id contains node_id and value instance id
+        to not collide with other entity_ids"""
+
+        entity_id = "light.{}_{}".format(slugify(self.name),
+                                         self._node.node_id)
+
+        # Add the instance id if there is more than one instance for the value
+        if self._value.instance > 1:
+            return "{}_{}".format(entity_id, self._value.instance)
+
+        return entity_id
 
     @property
     def brightness(self):
