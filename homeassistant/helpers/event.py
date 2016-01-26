@@ -215,4 +215,5 @@ def _matcher(subject, pattern):
             return subject % float(pattern[0].lstrip('/')) == 0
         except ValueError:
             return False
+
     return MATCH_ALL == pattern or subject in pattern
