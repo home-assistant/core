@@ -162,7 +162,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
     pmp = _process_match_param
     year, month, day = pmp(year), pmp(month), pmp(day)
-    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
+    hour, minute, second = pmp(hour, rang=24), pmp(minute), pmp(second)
 
     @ft.wraps(action)
     def pattern_time_change_listener(event):
@@ -196,12 +196,13 @@ def track_time_change(hass, action, year=None, month=None, day=None,
                           local=True)
 
 
-def _process_match_param(parameter):
+def _process_match_param(parameter, rang=None):
     """ Wraps parameter in a tuple if it is not one and returns it. """
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
     elif isinstance(parameter, str) and parameter.startswith('/'):
-        return tuple(range(0, 60, convert(parameter.lstrip('/'), int)))
+        rang = rang or 60
+        return tuple(range(0, rang, convert(parameter.lstrip('/'), int)))
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
     else:

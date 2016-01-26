@@ -34,7 +34,7 @@ def trigger(hass, config, action):
         hours, minutes, seconds = after.hour, after.minute, after.second
     elif (CONF_HOURS in config or CONF_MINUTES in config or
           CONF_SECONDS in config):
-        hours = convert(config.get(CONF_HOURS), int)
+        hours = config.get(CONF_HOURS)
         minutes = config.get(CONF_MINUTES)
         seconds = config.get(CONF_SECONDS)
     else:
