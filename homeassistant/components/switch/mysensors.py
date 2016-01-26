@@ -1,5 +1,6 @@
 """
-homeassistant.components.switch.mysensors
+homeassistant.components.switch.mysensors.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors switches.
 
@@ -29,14 +30,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a defaultdict(list).
+        # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
             pres.S_DOOR: [set_req.V_ARMED],
             pres.S_MOTION: [set_req.V_ARMED],
             pres.S_SMOKE: [set_req.V_ARMED],
-            pres.S_LIGHT: [set_req.V_LIGHT],
             pres.S_LOCK: [set_req.V_LOCK_STATUS],
         }
         if float(gateway.version) >= 1.5:
@@ -48,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_VIBRATION: [set_req.V_ARMED],
                 pres.S_MOISTURE: [set_req.V_ARMED],
             })
-            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
@@ -130,15 +129,19 @@ class MySensorsSwitch(SwitchDevice):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
-        self._values[self.value_type] = STATE_ON
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_ON
+            self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
-        self._values[self.value_type] = STATE_OFF
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_OFF
+            self.update_ha_state()
 
     @property
     def available(self):
@@ -150,7 +153,7 @@ class MySensorsSwitch(SwitchDevice):
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_ARMED or \
                value_type == self.gateway.const.SetReq.V_STATUS or \
