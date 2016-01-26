@@ -9,7 +9,8 @@ import unittest
 import logging
 
 import homeassistant.core as ha
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN)
 import homeassistant.components.group as group
 
 
@@ -39,7 +40,7 @@ class TestComponentsGroup(unittest.TestCase):
     def test_setup_group_with_mixed_groupable_states(self):
         """ Try to setup a group with mixed groupable states """
         self.hass.states.set('device_tracker.Paulus', STATE_HOME)
-        group.setup_group(
+        group.Group(
             self.hass, 'person_and_light',
             ['light.Bowl', 'device_tracker.Paulus'])
 
@@ -50,7 +51,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_setup_group_with_a_non_existing_state(self):
         """ Try to setup a group with a non existing state """
-        grp = group.setup_group(
+        grp = group.Group(
             self.hass, 'light_and_nothing',
             ['light.Bowl', 'non.existing'])
 
@@ -60,7 +61,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.states.set('cast.living_room', "Plex")
         self.hass.states.set('cast.bedroom', "Netflix")
 
-        grp = group.setup_group(
+        grp = group.Group(
             self.hass, 'chromecasts',
             ['cast.living_room', 'cast.bedroom'])
 
@@ -68,7 +69,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_setup_empty_group(self):
         """ Try to setup an empty group. """
-        grp = group.setup_group(self.hass, 'nothing', [])
+        grp = group.Group(self.hass, 'nothing', [])
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
@@ -80,7 +81,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         group_state = self.hass.states.get(self.group_entity_id)
         self.assertEqual(STATE_ON, group_state.state)
-        self.assertTrue(group_state.attributes[group.ATTR_AUTO])
+        self.assertTrue(group_state.attributes.get(group.ATTR_AUTO))
 
     def test_group_turns_off_if_all_off(self):
         """
@@ -199,17 +200,35 @@ class TestComponentsGroup(unittest.TestCase):
                 self.hass,
                 {
                     group.DOMAIN: {
-                        'second_group': 'light.Bowl, ' + self.group_entity_id
+                        'second_group': {
+                            'entities': 'light.Bowl, ' + self.group_entity_id,
+                            'icon': 'mdi:work',
+                            'view': True,
+                        },
+                        'test_group': 'hello.world,sensor.happy',
                     }
                 }))
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
-
         self.assertEqual(STATE_ON, group_state.state)
         self.assertEqual(set((self.group_entity_id, 'light.bowl')),
                          set(group_state.attributes['entity_id']))
-        self.assertFalse(group_state.attributes[group.ATTR_AUTO])
+        self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
+        self.assertEqual('mdi:work',
+                         group_state.attributes.get(ATTR_ICON))
+        self.assertTrue(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
+
+        group_state = self.hass.states.get(
+            group.ENTITY_ID_FORMAT.format('test_group'))
+        self.assertEqual(STATE_UNKNOWN, group_state.state)
+        self.assertEqual(set(('sensor.happy', 'hello.world')),
+                         set(group_state.attributes['entity_id']))
+        self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
+        self.assertIsNone(group_state.attributes.get(ATTR_ICON))
+        self.assertIsNone(group_state.attributes.get(group.ATTR_VIEW))
+        self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
 
     def test_groups_get_unique_names(self):
         """ Two groups with same name should both have a unique entity id. """
