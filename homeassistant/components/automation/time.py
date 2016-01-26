@@ -8,7 +8,6 @@ at https://home-assistant.io/components/automation/#time-trigger
 """
 import logging
 
-from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_change
 
