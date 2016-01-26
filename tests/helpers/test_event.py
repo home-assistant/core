@@ -308,4 +308,4 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(0, len(specific_runs))
