@@ -1,12 +1,17 @@
 """
 Helpers for listening to events
 """
-from datetime import timedelta
 import functools as ft
+import logging
+
+from datetime import timedelta, datetime
+from croniter import croniter
 
 from ..util import dt as dt_util
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def track_state_change(hass, entity_ids, action, from_state=None,
@@ -144,13 +149,12 @@ def track_sunset(hass, action, offset=None):
     track_point_in_utc_time(hass, sunset_automation_listener, next_set())
 
 
-# pylint: disable=too-many-arguments
-def track_utc_time_change(hass, action, year=None, month=None, day=None,
-                          hour=None, minute=None, second=None, local=False):
+def track_utc_time_change(hass, action, cron=None, second=None, year=None,
+                          local=None):
     """ Adds a listener that will fire if time matches a pattern. """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
-    if all(val is None for val in (year, month, day, hour, minute, second)):
+    if not cron and not second:
         @ft.wraps(action)
         def time_change_listener(event):
             """ Fires every time event that comes in. """
@@ -159,27 +163,43 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
         hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
         return time_change_listener
 
+    if not cron:
+        cron = "* * * * *"
+
+    start_now = dt_util.now() if local else dt_util.utcnow()
+
+    _LOGGER.debug("%s %s", cron, second)
+    iterator = croniter(cron, start_now)
+
+    log_nxt = iterator.get_next(datetime)
+
+    _LOGGER.info("Next event fires %s", log_nxt)
+
     pmp = _process_match_param
-    year, month, day = pmp(year), pmp(month), pmp(day)
-    hour, minute, second = pmp(hour), pmp(minute), pmp(second)
+
+    set_second = pmp(second) if second else pmp(0)
 
     @ft.wraps(action)
     def pattern_time_change_listener(event):
         """ Listens for matching time_changed events. """
+
+        current_fire = iterator.get_current(datetime)
+        if year:
+            print(year)
+            current_fire.replace(year=int(year))
+
         now = event.data[ATTR_NOW]
 
-        if local:
-            now = dt_util.as_local(now)
+        now = dt_util.as_local(now) if local else dt_util.as_utc(now)
+
+        fire = current_fire - now
 
         mat = _matcher
-
-        # pylint: disable=too-many-boolean-expressions
-        if mat(now.year, year) and \
-           mat(now.month, month) and \
-           mat(now.day, day) and \
-           mat(now.hour, hour) and \
-           mat(now.minute, minute) and \
-           mat(now.second, second):
+        print(cron, fire)
+        if fire <= timedelta(seconds=1) or cron == "* * * * *" and (
+                mat(now.second, set_second) or set_second == (0,)):
+            next_fire = iterator.get_next(datetime)
+            _LOGGER.info("Next event fires %s", next_fire)
 
             action(now)
 
@@ -189,10 +209,25 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
 # pylint: disable=too-many-arguments
 def track_time_change(hass, action, year=None, month=None, day=None,
-                      hour=None, minute=None, second=None):
+                      hour=None, minute=None, second=None,
+                      day_of_week=None, cron=None, local=True):
     """ Adds a listener that will fire if UTC time matches a pattern. """
-    track_utc_time_change(hass, action, year, month, day, hour, minute, second,
-                          local=True)
+    if not cron:
+        cron = time_params_to_cron(month, day, hour, minute, day_of_week)
+
+    track_utc_time_change(hass, action, cron, second, year, local)
+
+
+def time_params_to_cron(month=None, day=None, hour=None,
+                        minute=None, day_of_week=None):
+    """ Converts params to cron string """
+    return "%s %s %s %s %s" % (
+        minute or '*',
+        hour or '*',
+        day or '*',
+        month or '*',
+        day_of_week or '*'
+    )
 
 
 def _process_match_param(parameter):
@@ -207,7 +242,6 @@ def _process_match_param(parameter):
 
 def _matcher(subject, pattern):
     """ Returns True if subject matches the pattern.
-
     Pattern is either a tuple of allowed subjects or a `MATCH_ALL`.
     """
     return MATCH_ALL == pattern or subject in pattern

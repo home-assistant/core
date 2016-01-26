@@ -10,7 +10,8 @@ import logging
 
 import re
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_utc_time_change, \
+    time_params_to_cron
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,10 +78,11 @@ def setup_scanner(hass, config, see):
                     continue
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
-
+    cron = time_params_to_cron(
+            minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)))
     track_utc_time_change(
         hass, update_icloud,
-        minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)),
+        cron=cron,
         second=0
     )
 

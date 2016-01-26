@@ -129,8 +129,9 @@ class HomeAssistant(object):
             'hass.track_utc_time_change is deprecated. '
             'Please use homeassistant.helpers.event.track_utc_time_change')
         import homeassistant.helpers.event as helper
-        helper.track_utc_time_change(self, action, year, month, day, hour,
-                                     minute, second)
+
+        cron = helper.time_params_to_cron(month, day, hour, minute)
+        helper.track_utc_time_change(self, action, cron, second, year)
 
     def track_time_change(self, action,
                           year=None, month=None, day=None,
@@ -141,8 +142,10 @@ class HomeAssistant(object):
             'hass.track_time_change is deprecated. '
             'Please use homeassistant.helpers.event.track_time_change')
         import homeassistant.helpers.event as helper
-        helper.track_time_change(self, action, year, month, day, hour,
-                                 minute, second)
+
+        cron = helper.time_params_to_cron(month, day, hour, minute)
+        print(year)
+        helper.track_time_change(self, action, year, second=second, cron=cron)
 
 
 class JobPriority(util.OrderedEnum):

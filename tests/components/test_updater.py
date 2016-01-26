@@ -51,8 +51,9 @@ class TestUpdater(unittest.TestCase):
 
         mock_get_newest_version.return_value = NEW_VERSION
 
-        fire_time_changed(self.hass,
-                          dt_util.utcnow().replace(hour=0, minute=0, second=0))
+        now = dt_util.utcnow().replace(hour=23, minute=59, second=59)
+
+        fire_time_changed(self.hass, now)
 
         self.hass.pool.block_till_done()
 

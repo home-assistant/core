@@ -89,7 +89,7 @@ class TestSun(unittest.TestCase):
         self.assertIsNotNone(test_time)
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: test_time + timedelta(seconds=5)})
+                           {ha.ATTR_NOW: test_time + timedelta(minutes=1)})
 
         self.hass.pool.block_till_done()
 

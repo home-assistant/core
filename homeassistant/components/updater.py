@@ -32,7 +32,7 @@ def setup(hass, config):
                 ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available'})
 
     event.track_time_change(hass, check_newest_version,
-                            hour=[0, 12], minute=0, second=0)
+                            hour='*/12', minute=0, second=0)
 
     check_newest_version()
 
