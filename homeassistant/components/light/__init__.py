@@ -11,7 +11,7 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wink, isy994, zwave, insteon_hub)
+    group, discovery, wink, isy994, zwave, insteon_hub, mysensors)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -64,6 +64,7 @@ DISCOVERY_PLATFORMS = {
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
+    mysensors.DISCOVER_LIGHTS: 'mysensors',
 }
 
 PROP_TO_ATTR = {
