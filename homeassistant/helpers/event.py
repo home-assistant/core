@@ -1,10 +1,8 @@
 """
 Helpers for listening to events
 """
-from calendar import monthrange
-from datetime import timedelta, date
+from datetime import timedelta
 import functools as ft
-from ..util import convert
 
 from ..util import dt as dt_util
 from ..const import (
