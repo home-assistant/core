@@ -220,7 +220,7 @@ class TestEventHelpers(unittest.TestCase):
         """ Send a time changed event. """
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
-    def test_periodic_task(self):
+    def test_periodic_task_minute(self):
         specific_runs = []
 
         track_utc_time_change(
@@ -263,3 +263,21 @@ class TestEventHelpers(unittest.TestCase):
         self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(3, len(specific_runs))
+
+    def test_periodic_task_day(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), day='/2')
+
+        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 3, 12, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
