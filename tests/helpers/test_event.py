@@ -281,3 +281,21 @@ class TestEventHelpers(unittest.TestCase):
         self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_year(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), year='/2')
+
+        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
