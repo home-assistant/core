@@ -143,28 +143,24 @@ def pf_callback_factory(
         if gateway.sensors[node_id].sketch_name is None:
             _LOGGER.info('No sketch_name: node %s', node_id)
             return
-        # previously discovered, just update state with latest info
-        if node_id in devices:
-            for entity in devices[node_id]:
-                entity.update_ha_state(True)
-            return
 
-        # First time we see this node, detect sensors
         for child in gateway.sensors[node_id].children.values():
-            name = '{} {}.{}'.format(
-                gateway.sensors[node_id].sketch_name, node_id, child.id)
-
             for value_type in child.values.keys():
+                key = node_id, child.id, value_type
                 if child.type not in s_types or value_type not in v_types:
                     continue
+                if key in devices:
+                    devices[key].update_ha_state(True)
+                    continue
+                name = '{} {}.{}'.format(
+                    gateway.sensors[node_id].sketch_name, node_id, child.id)
+                devices[key] = entity_class(
+                    gateway, node_id, child.id, name, value_type)
 
-                devices[node_id].append(
-                    entity_class(gateway, node_id, child.id, name, value_type))
-        if devices[node_id]:
-            _LOGGER.info('adding new devices: %s', devices[node_id])
-            add_devices(devices[node_id])
-        for entity in devices[node_id]:
-            entity.update_ha_state(True)
+                _LOGGER.info('Adding new devices: %s', devices[key])
+                add_devices([devices[key]])
+                if key in devices:
+                    devices[key].update_ha_state(True)
     return mysensors_callback
 
 
