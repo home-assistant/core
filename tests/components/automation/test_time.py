@@ -301,6 +301,63 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_periodic_seconds(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'seconds': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=0, minute=0, second=2))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_periodic_minutes(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'minutes': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=0, minute=2, second=0))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_periodic_hours(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'hours': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=2, minute=0, second=0))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_using_after(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
