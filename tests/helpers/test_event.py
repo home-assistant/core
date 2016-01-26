@@ -244,14 +244,22 @@ class TestEventHelpers(unittest.TestCase):
         track_utc_time_change(
             self.hass, lambda x: specific_runs.append(1), hour='/2')
 
-        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
-        self._send_time_changed(datetime(2014, 5, 24, 13, 0, 0))
+        self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
 
-        self._send_time_changed(datetime(2014, 5, 24, 14, 0, 0))
+        self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 1, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(3, len(specific_runs))
