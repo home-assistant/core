@@ -73,7 +73,6 @@ def setup(hass, config):
         'rollershutter.living_room_window',
     ], view=True)
 
-
     # Setup scripts
     bootstrap.setup_component(
         hass, 'script',
