@@ -13,11 +13,13 @@ import datetime
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
 import homeassistant.components.zwave as zwave
+from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
+    STATE_ON, STATE_OFF, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+
+DOMAIN = "sensor"
 
 PHILIO = '013c'
 PHILIO_SLIM_SENSOR = '0002'
@@ -79,75 +81,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([ZWaveAlarmSensor(value)])
 
 
-class ZWaveSensor(Entity):
+class ZWaveSensor(ZWaveDeviceEntity, Entity):
     """ Represents a Z-Wave sensor. """
 
     def __init__(self, sensor_value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        self._value = sensor_value
-        self._node = sensor_value.node
+        ZWaveDeviceEntity.__init__(self, sensor_value, DOMAIN)
 
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     @property
-    def should_poll(self):
-        """ False because we will push our own state to HA when changed. """
-        return False
-
-    @property
-    def unique_id(self):
-        """ Returns a unique id. """
-        return "ZWAVE-{}-{}".format(self._node.node_id, self._value.object_id)
-
-    @property
-    def name(self):
-        """ Returns the name of the device. """
-        name = self._node.name or "{} {}".format(
-            self._node.manufacturer_name, self._node.product_name)
-
-        return "{} {} {}".format(name, self._node.node_id, self._value.label)
-
-    @property
-    def entity_id(self):
-        """ Returns the entity_id of the device if any.
-        The entity_id contains node_id and value instance id
-        to not collide with other entity_ids"""
-
-        entity_id = "sensor.{}_{}".format(slugify(self.name),
-                                          self._node.node_id)
-
-        # Add the instance id if there is more than one instance for the value
-        if self._value.instance > 1:
-            return "{}_{}".format(entity_id, self._value.instance)
-
-        return entity_id
-
-    @property
     def state(self):
         """ Returns the state of the sensor. """
         return self._value.data
-
-    @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        attrs = {
-            zwave.ATTR_NODE_ID: self._node.node_id,
-        }
-
-        battery_level = self._node.get_battery_level()
-
-        if battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = battery_level
-
-        location = self._node.location
-
-        if location:
-            attrs[ATTR_LOCATION] = location
-
-        return attrs
 
     @property
     def unit_of_measurement(self):
