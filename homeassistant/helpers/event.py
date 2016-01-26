@@ -3,6 +3,7 @@ Helpers for listening to events
 """
 from datetime import timedelta
 import functools as ft
+from ..util import convert
 
 from ..util import dt as dt_util
 from ..const import (
@@ -199,6 +200,8 @@ def _process_match_param(parameter):
     """ Wraps parameter in a tuple if it is not one and returns it. """
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
+    elif isinstance(parameter, str) and parameter.startswith('/'):
+        return tuple(range(0, 60, convert(parameter.lstrip('/'), int)))
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
     else:
