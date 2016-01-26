@@ -54,6 +54,9 @@ blinkstick==1.1.7
 # homeassistant.components.light.hue
 phue==0.8
 
+# homeassistant.components.light.lifx
+liffylights==0.9.0
+
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
