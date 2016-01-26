@@ -7,7 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors.html
 """
 import logging
-from collections import defaultdict
 
 from homeassistant.components.switch import SwitchDevice
 
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ])
             v_types.extend([gateway.const.SetReq.V_STATUS, ])
 
-        devices = defaultdict(list)
+        devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             s_types, v_types, devices, add_devices, MySensorsSwitch))
 
