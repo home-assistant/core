@@ -10,11 +10,13 @@ import sys
 import os.path
 
 from pprint import pprint
-
+from homeassistant.util import slugify
 from homeassistant import bootstrap
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
+    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION)
+
 
 DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
@@ -211,3 +213,62 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
     return True
+
+
+class ZWaveDeviceEntity:
+    """ Represents a ZWave node entity within Home Assistant. """
+    def __init__(self, value, domain):
+        self._value = value
+        self.entity_id = "{}.{}".format(domain, self._object_id())
+
+    @property
+    def should_poll(self):
+        """ False because we will push our own state to HA when changed. """
+        return False
+
+    @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "ZWAVE-{}-{}".format(self._value.node.node_id,
+                                    self._value.object_id)
+
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        name = self._value.node.name or "{} {}".format(
+            self._value.node.manufacturer_name, self._value.node.product_name)
+
+        return "{} {}".format(name, self._value.label)
+
+    def _object_id(self):
+        """ Returns the object_id of the device value.
+        The object_id contains node_id and value instance id
+        to not collide with other entity_ids"""
+
+        object_id = "{}_{}".format(slugify(self.name),
+                                   self._value.node.node_id)
+
+        # Add the instance id if there is more than one instance for the value
+        if self._value.instance > 1:
+            return "{}_{}".format(object_id, self._value.instance)
+
+        return object_id
+
+    @property
+    def state_attributes(self):
+        """ Returns the state attributes. """
+        attrs = {
+            ATTR_NODE_ID: self._value.node.node_id,
+        }
+
+        battery_level = self._value.node.get_battery_level()
+
+        if battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = battery_level
+
+        location = self._value.node.location
+
+        if location:
+            attrs[ATTR_LOCATION] = location
+
+        return attrs

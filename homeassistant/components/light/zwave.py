@@ -12,8 +12,10 @@ from threading import Timer
 
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-from homeassistant.util import slugify
+from homeassistant.components.zwave import ZWaveDeviceEntity
 import homeassistant.components.zwave as zwave
+
+DOMAIN = "light"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -46,15 +48,14 @@ def brightness_state(value):
         return 255, STATE_OFF
 
 
-class ZwaveDimmer(Light):
+class ZwaveDimmer(ZWaveDeviceEntity, Light):
     """ Provides a Z-Wave dimmer. """
     # pylint: disable=too-many-arguments
     def __init__(self, value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        self._value = value
-        self._node = value.node
+        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._brightness, self._state = brightness_state(value)
 
@@ -88,39 +89,6 @@ class ZwaveDimmer(Light):
         self.update_ha_state()
 
     @property
-    def should_poll(self):
-        """ No polling needed for a light. """
-        return False
-
-    @property
-    def unique_id(self):
-        """ Returns a unique id. """
-        return "ZWAVE-{}-{}".format(self._node.node_id, self._value.object_id)
-
-    @property
-    def name(self):
-        """ Returns the name of the device. """
-        name = self._node.name or "{} {}".format(
-            self._node.manufacturer_name, self._node.product_name)
-
-        return "{} {}".format(name, self._value.label)
-
-    @property
-    def entity_id(self):
-        """ Returns the entity_id of the device if any.
-        The entity_id contains node_id and value instance id
-        to not collide with other entity_ids"""
-
-        entity_id = "light.{}_{}".format(slugify(self.name),
-                                         self._node.node_id)
-
-        # Add the instance id if there is more than one instance for the value
-        if self._value.instance > 1:
-            return "{}_{}".format(entity_id, self._value.instance)
-
-        return entity_id
-
-    @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
         return self._brightness
@@ -140,10 +108,10 @@ class ZwaveDimmer(Light):
         # brightness.
         brightness = (self._brightness / 255) * 99
 
-        if self._node.set_dimmer(self._value.value_id, brightness):
+        if self._value.node.set_dimmer(self._value.value_id, brightness):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._node.set_dimmer(self._value.value_id, 0):
+        if self._value.node.set_dimmer(self._value.value_id, 0):
             self._state = STATE_OFF
