@@ -27,6 +27,7 @@ SCAN_INTERVAL = 60
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
+SERVICE_SET_FAN_MODE = "set_fan_mode"
 
 STATE_HEAT = "heat"
 STATE_COOL = "cool"
@@ -34,6 +35,7 @@ STATE_IDLE = "idle"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_AWAY_MODE = "away_mode"
+ATTR_FAN = "fan"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
 ATTR_TEMPERATURE_LOW = "target_temp_low"
@@ -69,58 +71,99 @@ def set_temperature(hass, temperature, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, data)
 
 
+def set_fan_mode(hass, fan_mode, entity_id=None):
+    """ Turn all or specified thermostat fan mode on. """
+    data = {
+        ATTR_FAN: fan_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
+
+
+# pylint: disable=too-many-branches
 def setup(hass, config):
     """ Setup thermostats. """
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
 
-    def thermostat_service(service):
-        """ Handles calls to the services. """
-
-        # Convert the entity ids to valid light ids
-        target_thermostats = component.extract_from_service(service)
-
-        if service.service == SERVICE_SET_AWAY_MODE:
-            away_mode = service.data.get(ATTR_AWAY_MODE)
-
-            if away_mode is None:
-                _LOGGER.error(
-                    "Received call to %s without attribute %s",
-                    SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
-
-            elif away_mode:
-                for thermostat in target_thermostats:
-                    thermostat.turn_away_mode_on()
-            else:
-                for thermostat in target_thermostats:
-                    thermostat.turn_away_mode_off()
-
-        elif service.service == SERVICE_SET_TEMPERATURE:
-            temperature = util.convert(
-                service.data.get(ATTR_TEMPERATURE), float)
-
-            if temperature is None:
-                return
-
-            for thermostat in target_thermostats:
-                thermostat.set_temperature(convert(
-                    temperature, hass.config.temperature_unit,
-                    thermostat.unit_of_measurement))
-
-        for thermostat in target_thermostats:
-            thermostat.update_ha_state(True)
-
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(
-        DOMAIN, SERVICE_SET_AWAY_MODE, thermostat_service,
-        descriptions.get(SERVICE_SET_AWAY_MODE))
+    def away_mode_set_service(service):
+        """ Set away mode on target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        away_mode = service.data.get(ATTR_AWAY_MODE)
+
+        if away_mode is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
+            return
+
+        for thermostat in target_thermostats:
+            if away_mode:
+                thermostat.turn_away_mode_on()
+            else:
+                thermostat.turn_away_mode_off()
+
+            thermostat.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_TEMPERATURE, thermostat_service,
+        DOMAIN, SERVICE_SET_AWAY_MODE, away_mode_set_service,
+        descriptions.get(SERVICE_SET_AWAY_MODE))
+
+    def temperature_set_service(service):
+        """ Set temperature on the target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        temperature = util.convert(
+            service.data.get(ATTR_TEMPERATURE), float)
+
+        if temperature is None:
+            return
+
+        for thermostat in target_thermostats:
+            thermostat.set_temperature(convert(
+                temperature, hass.config.temperature_unit,
+                thermostat.unit_of_measurement))
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TEMPERATURE, temperature_set_service,
         descriptions.get(SERVICE_SET_TEMPERATURE))
+
+    def fan_mode_set_service(service):
+        """ Set fan mode on target thermostats """
+
+        target_thermostats = component.extract_from_service(service)
+
+        fan_mode = service.data.get(ATTR_FAN)
+
+        if fan_mode is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_FAN_MODE, ATTR_FAN)
+            return
+
+        for thermostat in target_thermostats:
+            if fan_mode:
+                thermostat.turn_fan_on()
+            else:
+                thermostat.turn_fan_off()
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_FAN_MODE, fan_mode_set_service,
+        descriptions.get(SERVICE_SET_FAN_MODE))
 
     return True
 
@@ -163,6 +206,10 @@ class ThermostatDevice(Entity):
         is_away = self.is_away_mode_on
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
+
+        is_fan_on = self.is_fan_on
+        if is_fan_on is not None:
+            data[ATTR_FAN] = STATE_ON if is_fan_on else STATE_OFF
 
         device_attr = self.device_state_attributes
 
@@ -209,6 +256,14 @@ class ThermostatDevice(Entity):
         """
         return None
 
+    @property
+    def is_fan_on(self):
+        """
+        Returns if the fan is on
+        Return None if not available.
+        """
+        return None
+
     def set_temperate(self, temperature):
         """ Set new target temperature. """
         pass
@@ -219,6 +274,14 @@ class ThermostatDevice(Entity):
 
     def turn_away_mode_off(self):
         """ Turns away mode off. """
+        pass
+
+    def turn_fan_on(self):
+        """ Turns fan on. """
+        pass
+
+    def turn_fan_off(self):
+        """ Turns fan off. """
         pass
 
     @property

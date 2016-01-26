@@ -19,7 +19,7 @@ fuzzywuzzy==0.8.0
 pyicloud==0.7.2
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.3.1
+pynetgear==0.3.2
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.4.3
@@ -53,6 +53,9 @@ blinkstick==1.1.7
 
 # homeassistant.components.light.hue
 phue==0.8
+
+# homeassistant.components.light.lifx
+liffylights==0.9.0
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
@@ -190,7 +193,7 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 hikvision==0.4
 
 # homeassistant.components.switch.orvibo
-orvibo==1.1.0
+orvibo==1.1.1
 
 # homeassistant.components.switch.wemo
 pywemo==0.3.8
@@ -211,7 +214,7 @@ proliphix==0.1.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-vsure==0.4.5
+vsure==0.4.8
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
