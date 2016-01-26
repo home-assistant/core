@@ -45,7 +45,7 @@ def trigger(hass, config, action):
                 and not convert(seconds.lstrip('/'), int) % 60 == 0:
             _LOGGER.warning('Periodic seconds should be divisible with 60'
                             'there will be an offset every minute')
-        if isinstance(minutes, str) and hours.startswith('/') \
+        if isinstance(hours, str) and hours.startswith('/') \
                 and not convert(hours.lstrip('/'), int) % 24 == 0:
             _LOGGER.warning('Periodic hours should be divisible with 24'
                             'there will be an offset every midnight')
