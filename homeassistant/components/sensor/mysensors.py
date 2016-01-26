@@ -7,7 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
-from collections import defaultdict
 
 from homeassistant.helpers.entity import Entity
 
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         v_types = [member for member in gateway.const.SetReq
                    if member.value not in not_v_types]
 
-        devices = defaultdict(list)
+        devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
             s_types, v_types, devices, add_devices, MySensorsSensor))
 
