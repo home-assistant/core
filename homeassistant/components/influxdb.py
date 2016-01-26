@@ -23,7 +23,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'
 
-REQUIREMENTS = ['influxdb==2.10.0']
+REQUIREMENTS = ['influxdb==2.11.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
