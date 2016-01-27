@@ -1,32 +1,11 @@
 """
 homeassistant.components.mysensors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MySensors component that connects to a MySensors gateway via pymysensors
 API.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors.html
-
-
-New features:
-
-New MySensors component.
-Updated MySensors Sensor platform.
-New MySensors Switch platform. Currently only in optimistic mode (compare
-with MQTT).
-Multiple gateways are now supported.
-
-Configuration.yaml:
-
-mysensors:
-  gateways:
-    - port: '/dev/ttyUSB0'
-      persistence_file: 'path/mysensors.json'
-    - port: '/dev/ttyACM1'
-      persistence_file: 'path/mysensors2.json'
-  debug: true
-  persistence: true
-  version: '1.5'
+https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
