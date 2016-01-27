@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT,
+    TEMP_CELCIUS,
     STATE_ON, STATE_OFF)
 
 import homeassistant.components.mysensors as mysensors
@@ -56,6 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             gateway.const.SetReq.V_ARMED,
             gateway.const.SetReq.V_LIGHT,
             gateway.const.SetReq.V_LOCK_STATUS,
+            gateway.const.SetReq.V_UNIT_PREFIX,
         ]
         if float(gateway.version) >= 1.5:
             s_types.extend([
@@ -129,25 +130,36 @@ class MySensorsSensor(Entity):
     def unit_of_measurement(self):
         """Unit of measurement of this entity."""
         # pylint:disable=too-many-return-statements
+        prefix = ''
+        if float(self.gateway.version) >= 1.5 and \
+                self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+            prefix = self._values[self.gateway.const.SetReq.V_UNIT_PREFIX]
         if self.value_type == self.gateway.const.SetReq.V_TEMP:
-            return TEMP_CELCIUS if self.gateway.metric else TEMP_FAHRENHEIT
+            return TEMP_CELCIUS  # HA will convert to degrees F if needed
         elif self.value_type == self.gateway.const.SetReq.V_HUM or \
                 self.value_type == self.gateway.const.SetReq.V_DIMMER or \
+                float(self.gateway.version) >= 1.5 and \
                 self.value_type == self.gateway.const.SetReq.V_PERCENTAGE or \
                 self.value_type == self.gateway.const.SetReq.V_LIGHT_LEVEL:
             return '%'
-        elif self.value_type == self.gateway.const.SetReq.V_WATT:
-            return 'W'
-        elif self.value_type == self.gateway.const.SetReq.V_KWH:
-            return 'kWh'
-        elif self.value_type == self.gateway.const.SetReq.V_VOLTAGE:
-            return 'V'
-        elif self.value_type == self.gateway.const.SetReq.V_CURRENT:
-            return 'A'
+        elif self.value_type == self.gateway.const.SetReq.V_WEIGHT:
+            return '{}g'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_DISTANCE:
+            return '{}m'.format(prefix)
         elif self.value_type == self.gateway.const.SetReq.V_IMPEDANCE:
-            return 'ohm'
-        elif self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
-            return self._values[self.gateway.const.SetReq.V_UNIT_PREFIX]
+            return '{}ohm'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_WATT:
+            return '{}W'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_KWH:
+            return '{}kWh'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_FLOW:
+            return '{}m'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_VOLUME:
+            return '{}m3'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_VOLTAGE:
+            return '{}V'.format(prefix)
+        elif self.value_type == self.gateway.const.SetReq.V_CURRENT:
+            return '{}A'.format(prefix)
         return None
 
     @property
