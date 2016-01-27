@@ -10,7 +10,6 @@ MATCH_ALL = '*'
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # #### CONFIG ####
-CONF_ICON = "icon"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
@@ -124,6 +123,7 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
+SERVICE_HOMEASSISTANT_RESTART = "restart"
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'

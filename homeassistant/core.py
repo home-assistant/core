@@ -16,7 +16,8 @@ from collections import namedtuple
 
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
+    EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME)
@@ -70,13 +71,21 @@ class HomeAssistant(object):
     def block_till_stopped(self):
         """Register service homeassistant/stop and will block until called."""
         request_shutdown = threading.Event()
+        request_restart = threading.Event()
 
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             request_shutdown.set()
 
+        def restart_homeassistant(*args):
+            """Reset Home Assistant."""
+            request_restart.set()
+            request_shutdown.set()
+
         self.services.register(
             DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
+        self.services.register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant)
 
         if os.name != "nt":
             try:
@@ -92,6 +101,7 @@ class HomeAssistant(object):
                 break
 
         self.stop()
+        return request_restart.isSet()
 
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
