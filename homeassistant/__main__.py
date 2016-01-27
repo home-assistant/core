@@ -258,7 +258,10 @@ def run_hass_process(hass_proc):
         hass_proc.join()
     except KeyboardInterrupt:
         request_stop()
-        hass_proc.join()
+        try:
+            hass_proc.join()
+        except KeyboardInterrupt:
+            return False
     return not requested_stop.isSet() and hass_proc.exitcode > 0
 
 
