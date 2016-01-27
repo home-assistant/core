@@ -120,7 +120,7 @@ python-pushover==0.2
 slacker==0.6.8
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==2.8.7
+python-telegram-bot==3.2.0
 
 # homeassistant.components.notify.twitter
 TwitterAPI==2.3.6
