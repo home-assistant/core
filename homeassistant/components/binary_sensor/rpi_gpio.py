@@ -1,7 +1,7 @@
 """
 homeassistant.components.binary_sensor.rpi_gpio
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a binary_sensor using RPi GPIO.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Allows to configure a binary sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
