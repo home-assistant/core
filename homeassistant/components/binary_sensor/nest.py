@@ -17,6 +17,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 BINARY_TYPES = ['fan',
                 'hvac_ac_state',
                 'hvac_aux_heater_state',
+                'hvac_heater_state',
                 'hvac_heat_x2_state',
                 'hvac_heat_x3_state',
                 'hvac_alt_heat_state',
