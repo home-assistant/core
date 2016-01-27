@@ -129,38 +129,31 @@ class MySensorsSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit of measurement of this entity."""
-        # pylint:disable=too-many-return-statements
-        prefix = ''
-        if float(self.gateway.version) >= 1.5 and \
-                self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
-            prefix = self._values[self.gateway.const.SetReq.V_UNIT_PREFIX]
-        if self.value_type == self.gateway.const.SetReq.V_TEMP:
-            return TEMP_CELCIUS  # HA will convert to degrees F if needed
-        elif self.value_type == self.gateway.const.SetReq.V_HUM or \
-                self.value_type == self.gateway.const.SetReq.V_DIMMER or \
-                float(self.gateway.version) >= 1.5 and \
-                self.value_type == self.gateway.const.SetReq.V_PERCENTAGE or \
-                self.value_type == self.gateway.const.SetReq.V_LIGHT_LEVEL:
-            return '%'
-        elif self.value_type == self.gateway.const.SetReq.V_WEIGHT:
-            return '{}g'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_DISTANCE:
-            return '{}m'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_IMPEDANCE:
-            return '{}ohm'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_WATT:
-            return '{}W'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_KWH:
-            return '{}kWh'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_FLOW:
-            return '{}m'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_VOLUME:
-            return '{}m3'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_VOLTAGE:
-            return '{}V'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_CURRENT:
-            return '{}A'.format(prefix)
-        return None
+        # HA will convert to degrees F if needed
+        unit_map = {
+            self.gateway.const.SetReq.V_TEMP: TEMP_CELCIUS,
+            self.gateway.const.SetReq.V_HUM: '%',
+            self.gateway.const.SetReq.V_DIMMER: '%',
+            self.gateway.const.SetReq.V_LIGHT_LEVEL: '%',
+            self.gateway.const.SetReq.V_WEIGHT: 'kg',
+            self.gateway.const.SetReq.V_DISTANCE: 'm',
+            self.gateway.const.SetReq.V_IMPEDANCE: 'ohm',
+            self.gateway.const.SetReq.V_WATT: 'W',
+            self.gateway.const.SetReq.V_KWH: 'kWh',
+            self.gateway.const.SetReq.V_FLOW: 'm',
+            self.gateway.const.SetReq.V_VOLUME: 'm3',
+            self.gateway.const.SetReq.V_VOLTAGE: 'V',
+            self.gateway.const.SetReq.V_CURRENT: 'A',
+        }
+        unit_map_v15 = {
+            self.gateway.const.SetReq.V_PERCENTAGE: '%',
+        }
+        if float(self.gateway.version) >= 1.5:
+            if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+                return self._values[
+                    self.gateway.const.SetReq.V_UNIT_PREFIX]
+            unit_map.update(unit_map_v15)
+        return unit_map.get(self.value_type)
 
     @property
     def device_state_attributes(self):
