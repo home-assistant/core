@@ -141,7 +141,7 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2
 blockchain==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
-py-cpuinfo==0.1.6
+py-cpuinfo==0.1.8
 
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0

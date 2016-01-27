@@ -10,7 +10,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.1.6']
+REQUIREMENTS = ['py-cpuinfo==0.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 
