@@ -3,7 +3,7 @@ homeassistant.components.insteon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Insteon Hub.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon/
 """
 import logging

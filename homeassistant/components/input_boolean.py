@@ -1,4 +1,6 @@
 """
+homeassistant.components.input_boolean
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to keep track of user controlled booleans for within automation.
 
 For more details about this component, please refer to the documentation
