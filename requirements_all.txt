@@ -165,7 +165,7 @@ pyowm==2.3.0
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==3.2.2
+psutil==3.4.2
 
 # homeassistant.components.sensor.temper
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
