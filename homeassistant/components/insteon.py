@@ -1,9 +1,11 @@
 """
-homeassistant.components.light
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.insteon
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Insteon Hub.
-"""
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/insteon/
+"""
 import logging
 import homeassistant.bootstrap as bootstrap
 from homeassistant.helpers import validate_config
@@ -13,19 +15,11 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, ATTR_DISCOVERED,
     ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
 
-# The domain of your component. Should be equal to the name of your component
 DOMAIN = "insteon"
-
-# List of component names (string) your component depends upon
-REQUIREMENTS = [
-    'insteon_hub==0.4.5'
-]
-
+REQUIREMENTS = ['insteon_hub==0.4.5']
 API_KEY = "3eb14d15-a486-4d9e-99af-179d0e9417c11444718937.80636061"
 INSTEON = None
-
 DISCOVER_LIGHTS = "insteon.lights"
-
 _LOGGER = logging.getLogger(__name__)
 
 
