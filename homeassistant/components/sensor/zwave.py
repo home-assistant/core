@@ -12,14 +12,15 @@ import datetime
 
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
-import homeassistant.components.zwave as zwave
-from homeassistant.components.zwave import ZWaveDeviceEntity
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.zwave import (
+    NETWORK, ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SENSOR_BINARY,
+    COMMAND_CLASS_SENSOR_MULTILEVEL, COMMAND_CLASS_METER, TYPE_DECIMAL,
+    COMMAND_CLASS_ALARM, ZWaveDeviceEntity, get_config_value)
 
 from homeassistant.const import (
     STATE_ON, STATE_OFF, TEMP_CELCIUS, TEMP_FAHRENHEIT)
-
-DOMAIN = "sensor"
 
 PHILIO = '013c'
 PHILIO_SLIM_SENSOR = '0002'
@@ -44,14 +45,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
     value.set_change_verified(False)
 
-    # if 1 in groups and (zwave.NETWORK.controller.node_id not in
+    # if 1 in groups and (NETWORK.controller.node_id not in
     #                     groups[1].associations):
-    #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
+    #     node.groups[1].add_association(NETWORK.controller.node_id)
 
     specific_sensor_key = (value.node.manufacturer_id,
                            value.node.product_id,
@@ -61,23 +62,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if specific_sensor_key in DEVICE_MAPPINGS:
         if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
             # Default the multiplier to 4
-            re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+            re_arm_multiplier = (get_config_value(value.node, 9) or 4)
             add_devices([
                 ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
             ])
 
     # generic Device mappings
-    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+    elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
-    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+    elif value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_METER and
-          value.type == zwave.TYPE_DECIMAL):
+    elif (value.command_class == COMMAND_CLASS_METER and
+          value.type == TYPE_DECIMAL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif value.command_class == zwave.COMMAND_CLASS_ALARM:
+    elif value.command_class == COMMAND_CLASS_ALARM:
         add_devices([ZWaveAlarmSensor(value)])
 
 
