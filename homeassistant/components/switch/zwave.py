@@ -6,12 +6,10 @@ Zwave platform that handles simple binary switches.
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import homeassistant.components.zwave as zwave
-
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.zwave import ZWaveDeviceEntity
-
-DOMAIN = "switch"
+from homeassistant.components.switch import SwitchDevice, DOMAIN
+from homeassistant.components.zwave import (
+    COMMAND_CLASS_SWITCH_BINARY, TYPE_BOOL, GENRE_USER, NETWORK,
+    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 
 
 # pylint: disable=unused-argument
@@ -20,14 +18,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY:
+    if value.command_class != COMMAND_CLASS_SWITCH_BINARY:
         return
-    if value.type != zwave.TYPE_BOOL:
+    if value.type != TYPE_BOOL:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != GENRE_USER:
         return
 
     value.set_change_verified(False)

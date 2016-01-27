@@ -11,11 +11,10 @@ https://home-assistant.io/components/light.zwave/
 from threading import Timer
 
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-from homeassistant.components.zwave import ZWaveDeviceEntity
-import homeassistant.components.zwave as zwave
-
-DOMAIN = "light"
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS, DOMAIN
+from homeassistant.components.zwave import (
+    COMMAND_CLASS_SWITCH_MULTILEVEL, TYPE_BYTE, GENRE_USER, NETWORK,
+    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -23,14 +22,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
+    if value.command_class != COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
-    if value.type != zwave.TYPE_BYTE:
+    if value.type != TYPE_BYTE:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != GENRE_USER:
         return
 
     value.set_change_verified(False)
