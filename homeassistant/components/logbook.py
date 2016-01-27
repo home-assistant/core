@@ -6,10 +6,10 @@ Parses events and generates a human log.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
+import logging
 from datetime import timedelta
 from itertools import groupby
 import re
-from functools import partial
 
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
@@ -29,6 +29,8 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
 """
 
+_LOGGER = logging.getLogger(__name__)
+
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 GROUP_BY_MINUTES = 15
@@ -37,19 +39,6 @@ ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
-
-
-# pylint: disable=too-few-public-methods
-class LogbookService(object):
-    """ Implements logging service for Logbook. """
-
-    def __init__(self, hass, name):
-        self.hass = hass
-        self.name = name
-
-    def send_message(self, message="", **kwargs):
-        """ Adds an entry to the logbook. """
-        log_entry(self.hass, self.name, message, DOMAIN)
 
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
@@ -69,18 +58,18 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 def setup(hass, config):
     """ Listens for download events to download files. """
     # create service handler
-    def notify_message(notify_service, call):
+    def log_message(service):
         """ Handle sending notification message service calls. """
-        message = call.data.get(ATTR_MESSAGE)
+        message = service.data.get(ATTR_MESSAGE)
+        name = service.data.get(ATTR_NAME, None)
 
         if message is None:
             return
         message = template.render(hass, message)
-        notify_service.send_message(message)
+        log_entry(hass, name, message)
 
-    service = LogbookService(hass, config.get(ATTR_NAME, None))
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, DOMAIN, partial(notify_message, service))
+    hass.services.register(DOMAIN, DOMAIN, log_message)
     return True
 
 
