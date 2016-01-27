@@ -1,6 +1,6 @@
 """
 homeassistant.components.sensor.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows the creation of a sensor that breaks out state_attributes
 from other entities.
 
@@ -20,9 +20,7 @@ from homeassistant.util import template
 from homeassistant.exceptions import TemplateError
 
 _LOGGER = logging.getLogger(__name__)
-
 CONF_SENSORS = 'sensors'
-
 STATE_ERROR = 'error'
 
 
@@ -32,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     if config.get(CONF_SENSORS) is None:
-        _LOGGER.error("Missing configuration data for sensor platfoprm")
+        _LOGGER.error("Missing configuration data for sensor platform")
         return False
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -54,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 state_template)
             )
     if sensors is None:
-        _LOGGER.error("No sensors added.")
+        _LOGGER.error("No sensors added")
         return False
     add_devices(sensors)
     return True
