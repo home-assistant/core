@@ -16,7 +16,7 @@ REQUIRES = [
     'pytz>=2015.4',
     'pip>=7.0.0',
     'vincenty==0.1.3',
-    'jinja2>=2.8'
+    'jinja2>=2.8',
 ]
 
 setup(
@@ -33,6 +33,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
+    test_suite='tests',
     keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
@@ -46,5 +47,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.4',
         'Topic :: Home Automation'
-    ]
+    ],
 )

@@ -1,4 +1,8 @@
-"""Color util methods."""
+"""
+homeassistant.util.color
+~~~~~~~~~~~~~~~~~~~~~~~~
+Color util methods.
+"""
 
 
 # Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
@@ -53,8 +57,12 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
         return (0, 0, 0)
 
     Y = brightness
-    X = (Y / vY) * vX
-    Z = (Y / vY) * (1 - vX - vY)
+    if vY != 0:
+        X = (Y / vY) * vX
+        Z = (Y / vY) * (1 - vX - vY)
+    else:
+        X = 0
+        Z = 0
 
     # Convert to RGB using Wide RGB D65 conversion.
     r = X * 1.612 - Y * 0.203 - Z * 0.302

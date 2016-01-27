@@ -26,47 +26,21 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the REST sensor. """
-
-    use_get = False
-    use_post = False
-
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
     verify_ssl = config.get('verify_ssl', True)
 
-    if method == 'GET':
-        use_get = True
-    elif method == 'POST':
-        use_post = True
+    rest = RestData(method, resource, payload, verify_ssl)
+    rest.update()
 
-    try:
-        if use_get:
-            response = requests.get(resource, timeout=10, verify=verify_ssl)
-        elif use_post:
-            response = requests.post(resource, data=payload, timeout=10,
-                                     verify=verify_ssl)
-        if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
-            return False
-    except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// or https:// to your URL")
-        return False
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
+    if rest.data is None:
+        _LOGGER.error('Unable to fetch Rest data')
         return False
 
-    if use_get:
-        rest = RestDataGet(resource, verify_ssl)
-    elif use_post:
-        rest = RestDataPost(resource, payload, verify_ssl)
-
-    add_devices([RestSensor(hass,
-                            rest,
-                            config.get('name', DEFAULT_NAME),
-                            config.get('unit_of_measurement'),
-                            config.get(CONF_VALUE_TEMPLATE))])
+    add_devices([RestSensor(
+        hass, rest, config.get('name', DEFAULT_NAME),
+        config.get('unit_of_measurement'), config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments
@@ -102,57 +76,33 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if 'error' in value:
-            self._state = value['error']
-        else:
-            if self._value_template is not None:
-                value = template.render_with_possible_json_value(
-                    self._hass, self._value_template, value, STATE_UNKNOWN)
-            self._state = value
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            value = template.render_with_possible_json_value(
+                self._hass, self._value_template, value, STATE_UNKNOWN)
+
+        self._state = value
 
 
 # pylint: disable=too-few-public-methods
-class RestDataGet(object):
-    """ Class for handling the data retrieval with GET method. """
+class RestData(object):
+    """Class for handling the data retrieval."""
 
-    def __init__(self, resource, verify_ssl):
-        self._resource = resource
+    def __init__(self, method, resource, data, verify_ssl):
+        self._request = requests.Request(method, resource, data=data).prepare()
         self._verify_ssl = verify_ssl
-        self.data = dict()
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from REST service with GET method. """
         try:
-            response = requests.get(self._resource, timeout=10,
-                                    verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
+            with requests.Session() as sess:
+                response = sess.send(self._request, timeout=10,
+                                     verify=self._verify_ssl)
+
             self.data = response.text
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
-            self.data['error'] = STATE_UNKNOWN
-
-
-# pylint: disable=too-few-public-methods
-class RestDataPost(object):
-    """ Class for handling the data retrieval with POST method. """
-
-    def __init__(self, resource, payload, verify_ssl):
-        self._resource = resource
-        self._payload = payload
-        self._verify_ssl = verify_ssl
-        self.data = dict()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """ Gets the latest data from REST service with POST method. """
-        try:
-            response = requests.post(self._resource, data=self._payload,
-                                     timeout=10, verify=self._verify_ssl)
-            if 'error' in self.data:
-                del self.data['error']
-            self.data = response.text
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to resource/endpoint: %s", self._resource)
-            self.data['error'] = STATE_UNKNOWN
+        except requests.exceptions.RequestException:
+            _LOGGER.error("Error fetching data: %s", self._request)
+            self.data = None

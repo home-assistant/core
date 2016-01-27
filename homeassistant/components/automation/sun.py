@@ -10,13 +10,17 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components import sun
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import track_sunrise, track_sunset
 import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ['sun']
 
 CONF_OFFSET = 'offset'
 CONF_EVENT = 'event'
+CONF_BEFORE = "before"
+CONF_BEFORE_OFFSET = "before_offset"
+CONF_AFTER = "after"
+CONF_AFTER_OFFSET = "after_offset"
 
 EVENT_SUNSET = 'sunset'
 EVENT_SUNRISE = 'sunrise'
@@ -37,69 +41,108 @@ def trigger(hass, config, action):
         _LOGGER.error("Invalid value for %s: %s", CONF_EVENT, event)
         return False
 
-    if CONF_OFFSET in config:
-        raw_offset = config.get(CONF_OFFSET)
-
-        negative_offset = False
-        if raw_offset.startswith('-'):
-            negative_offset = True
-            raw_offset = raw_offset[1:]
-
-        try:
-            (hour, minute, second) = [int(x) for x in raw_offset.split(':')]
-        except ValueError:
-            _LOGGER.error('Could not parse offset %s', raw_offset)
-            return False
-
-        offset = timedelta(hours=hour, minutes=minute, seconds=second)
-
-        if negative_offset:
-            offset *= -1
-    else:
-        offset = timedelta(0)
+    offset = _parse_offset(config.get(CONF_OFFSET))
+    if offset is False:
+        return False
 
     # Do something to call action
     if event == EVENT_SUNRISE:
-        trigger_sunrise(hass, action, offset)
+        track_sunrise(hass, action, offset)
     else:
-        trigger_sunset(hass, action, offset)
+        track_sunset(hass, action, offset)
 
     return True
 
 
-def trigger_sunrise(hass, action, offset):
-    """ Trigger action at next sun rise. """
-    def next_rise():
-        """ Returns next sunrise. """
-        next_time = sun.next_rising_utc(hass) + offset
+def if_action(hass, config):
+    """ Wraps action method with sun based condition. """
+    before = config.get(CONF_BEFORE)
+    after = config.get(CONF_AFTER)
 
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
+    # Make sure required configuration keys are present
+    if before is None and after is None:
+        logging.getLogger(__name__).error(
+            "Missing if-condition configuration key %s or %s",
+            CONF_BEFORE, CONF_AFTER)
+        return None
 
-        return next_time
+    # Make sure configuration keys have the right value
+    if before not in (None, EVENT_SUNRISE, EVENT_SUNSET) or \
+       after not in (None, EVENT_SUNRISE, EVENT_SUNSET):
+        logging.getLogger(__name__).error(
+            "%s and %s can only be set to %s or %s",
+            CONF_BEFORE, CONF_AFTER, EVENT_SUNRISE, EVENT_SUNSET)
+        return None
 
-    def sunrise_automation_listener(now):
-        """ Called when it's time for action. """
-        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
-        action()
+    before_offset = _parse_offset(config.get(CONF_BEFORE_OFFSET))
+    after_offset = _parse_offset(config.get(CONF_AFTER_OFFSET))
+    if before_offset is False or after_offset is False:
+        return None
 
-    track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
+    if before is None:
+        def before_func():
+            """Return no point in time."""
+            return None
+    elif before == EVENT_SUNRISE:
+        def before_func():
+            """Return time before sunrise."""
+            return sun.next_rising(hass) + before_offset
+    else:
+        def before_func():
+            """Return time before sunset."""
+            return sun.next_setting(hass) + before_offset
+
+    if after is None:
+        def after_func():
+            """Return no point in time."""
+            return None
+    elif after == EVENT_SUNRISE:
+        def after_func():
+            """Return time after sunrise."""
+            return sun.next_rising(hass) + after_offset
+    else:
+        def after_func():
+            """Return time after sunset."""
+            return sun.next_setting(hass) + after_offset
+
+    def time_if():
+        """ Validate time based if-condition """
+
+        now = dt_util.now()
+        before = before_func()
+        after = after_func()
+
+        if before is not None and now > now.replace(hour=before.hour,
+                                                    minute=before.minute):
+            return False
+
+        if after is not None and now < now.replace(hour=after.hour,
+                                                   minute=after.minute):
+            return False
+
+        return True
+
+    return time_if
 
 
-def trigger_sunset(hass, action, offset):
-    """ Trigger action at next sun set. """
-    def next_set():
-        """ Returns next sunrise. """
-        next_time = sun.next_setting_utc(hass) + offset
+def _parse_offset(raw_offset):
+    if raw_offset is None:
+        return timedelta(0)
 
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
+    negative_offset = False
+    if raw_offset.startswith('-'):
+        negative_offset = True
+        raw_offset = raw_offset[1:]
 
-        return next_time
+    try:
+        (hour, minute, second) = [int(x) for x in raw_offset.split(':')]
+    except ValueError:
+        _LOGGER.error('Could not parse offset %s', raw_offset)
+        return False
 
-    def sunset_automation_listener(now):
-        """ Called when it's time for action. """
-        track_point_in_utc_time(hass, sunset_automation_listener, next_set())
-        action()
+    offset = timedelta(hours=hour, minutes=minute, seconds=second)
 
-    track_point_in_utc_time(hass, sunset_automation_listener, next_set())
+    if negative_offset:
+        offset *= -1
+
+    return offset

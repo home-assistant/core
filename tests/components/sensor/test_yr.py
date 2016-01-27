@@ -4,66 +4,76 @@ tests.components.sensor.test_yr
 
 Tests Yr sensor.
 """
-import unittest
+from datetime import datetime
+from unittest.mock import patch
+
+import pytest
 
 import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
+import homeassistant.util.dt as dt_util
 
 
-class TestSensorYr(unittest.TestCase):
+@pytest.mark.usefixtures('betamax_session')
+class TestSensorYr:
     """ Test the Yr sensor. """
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setup_method(self, method):
         self.hass = ha.HomeAssistant()
-        latitude = 32.87336
-        longitude = 117.22743
+        self.hass.config.latitude = 32.87336
+        self.hass.config.longitude = 117.22743
 
-        # Compare it with the real data
-        self.hass.config.latitude = latitude
-        self.hass.config.longitude = longitude
-
-    def tearDown(self):  # pylint: disable=invalid-name
+    def teardown_method(self, method):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_default_setup(self):
-        self.assertTrue(sensor.setup(self.hass, {
-            'sensor': {
-                'platform': 'yr',
-            }
-        }))
+    def test_default_setup(self, betamax_session):
+        now = datetime(2016, 1, 5, 1, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.components.sensor.yr.requests.Session',
+                   return_value=betamax_session):
+            with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+                       return_value=now):
+                assert sensor.setup(self.hass, {
+                    'sensor': {
+                        'platform': 'yr',
+                        'elevation': 0,
+                    }
+                })
+
         state = self.hass.states.get('sensor.yr_symbol')
 
-        self.assertTrue(state.state.isnumeric())
-        self.assertEqual(None,
-                         state.attributes.get('unit_of_measurement'))
+        assert state.state.isnumeric()
+        assert state.attributes.get('unit_of_measurement') is None
 
-    def test_custom_setup(self):
-        self.assertTrue(sensor.setup(self.hass, {
-            'sensor': {
-                'platform': 'yr',
-                'monitored_conditions': {'pressure', 'windDirection', 'humidity', 'fog', 'windSpeed'}
-            }
-        }))
-        state = self.hass.states.get('sensor.yr_symbol')
-        self.assertEqual(None, state)
+    def test_custom_setup(self, betamax_session):
+        with patch('homeassistant.components.sensor.yr.requests.Session',
+                   return_value=betamax_session):
+            assert sensor.setup(self.hass, {
+                'sensor': {
+                    'platform': 'yr',
+                    'elevation': 0,
+                    'monitored_conditions': {
+                        'pressure',
+                        'windDirection',
+                        'humidity',
+                        'fog',
+                        'windSpeed'
+                    }
+                }
+            })
 
         state = self.hass.states.get('sensor.yr_pressure')
-        self.assertEqual('hPa',
-                         state.attributes.get('unit_of_measurement'))
+        assert 'hPa', state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_wind_direction')
-        self.assertEqual('°',
-                         state.attributes.get('unit_of_measurement'))
+        assert '°', state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_humidity')
-        self.assertEqual('%',
-                         state.attributes.get('unit_of_measurement'))
+        assert '%', state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_fog')
-        self.assertEqual('%',
-                         state.attributes.get('unit_of_measurement'))
+        assert '%', state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_wind_speed')
-        self.assertEqual('m/s',
-                         state.attributes.get('unit_of_measurement'))
+        assert 'm/s', state.attributes.get('unit_of_measurement')

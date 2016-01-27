@@ -6,12 +6,14 @@ Tests core compoments.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
+from unittest.mock import patch
 
 import homeassistant.core as ha
-import homeassistant.loader as loader
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
+
+from tests.common import get_test_home_assistant
 
 
 class TestComponentsCore(unittest.TestCase):
@@ -19,7 +21,7 @@ class TestComponentsCore(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """ Init needed objects. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.assertTrue(comps.setup(self.hass, {}))
 
         self.hass.states.set('light.Bowl', STATE_ON)
@@ -58,3 +60,36 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(runs))
+
+    def test_toggle(self):
+        """ Test toggle method. """
+        runs = []
+        self.hass.services.register(
+            'light', SERVICE_TOGGLE, lambda x: runs.append(1))
+
+        comps.toggle(self.hass, 'light.Bowl')
+
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(runs))
+
+    @patch('homeassistant.core.ServiceRegistry.call')
+    def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
+        self.hass.services.register('light', SERVICE_TURN_ON, lambda x: x)
+
+        # We can't test if our service call results in services being called
+        # because by mocking out the call service method, we mock out all
+        # So we mimick how the service registry calls services
+        service_call = ha.ServiceCall('homeassistant', 'turn_on', {
+            'entity_id': ['light.test', 'sensor.bla', 'light.bla']
+        })
+        self.hass.services._services['homeassistant']['turn_on'](service_call)
+
+        self.assertEqual(2, mock_call.call_count)
+        self.assertEqual(
+            ('light', 'turn_on', {'entity_id': ['light.bla', 'light.test']},
+             True),
+            mock_call.call_args_list[0][0])
+        self.assertEqual(
+            ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
+            mock_call.call_args_list[1][0])

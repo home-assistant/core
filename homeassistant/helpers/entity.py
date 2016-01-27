@@ -6,8 +6,10 @@ Provides ABC for entities in HA.
 """
 
 from collections import defaultdict
+import re
 
 from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.util import ensure_unique_string, slugify
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON,
@@ -16,6 +18,32 @@ from homeassistant.const import (
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)
+
+# Pattern for validating entity IDs (format: <domain>.<entity>)
+ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+
+
+def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
+    """ Generate a unique entity ID based on given entity IDs or used ids. """
+    name = name.lower() or DEVICE_DEFAULT_NAME.lower()
+    if current_ids is None:
+        if hass is None:
+            raise RuntimeError("Missing required parameter currentids or hass")
+
+        current_ids = hass.states.entity_ids()
+
+    return ensure_unique_string(
+        entity_id_format.format(slugify(name.lower())), current_ids)
+
+
+def split_entity_id(entity_id):
+    """ Splits a state entity_id into domain, object_id. """
+    return entity_id.split(".", 1)
+
+
+def valid_entity_id(entity_id):
+    """Test if an entity ID is a valid format."""
+    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class Entity(object):
@@ -101,17 +129,18 @@ class Entity(object):
         state = str(self.state)
         attr = self.state_attributes or {}
 
-        if ATTR_FRIENDLY_NAME not in attr and self.name:
-            attr[ATTR_FRIENDLY_NAME] = self.name
+        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
+            attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
-        if ATTR_UNIT_OF_MEASUREMENT not in attr and self.unit_of_measurement:
-            attr[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+        if ATTR_UNIT_OF_MEASUREMENT not in attr and \
+           self.unit_of_measurement is not None:
+            attr[ATTR_UNIT_OF_MEASUREMENT] = str(self.unit_of_measurement)
 
-        if ATTR_ICON not in attr and self.icon:
-            attr[ATTR_ICON] = self.icon
+        if ATTR_ICON not in attr and self.icon is not None:
+            attr[ATTR_ICON] = str(self.icon)
 
         if self.hidden:
-            attr[ATTR_HIDDEN] = self.hidden
+            attr[ATTR_HIDDEN] = bool(self.hidden)
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))
@@ -174,3 +203,10 @@ class ToggleEntity(Entity):
     def turn_off(self, **kwargs):
         """ Turn the entity off. """
         pass
+
+    def toggle(self, **kwargs):
+        """ Toggle the entity off. """
+        if self.is_on:
+            self.turn_off(**kwargs)
+        else:
+            self.turn_on(**kwargs)

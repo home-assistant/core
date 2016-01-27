@@ -8,7 +8,6 @@ at https://home-assistant.io/components/automation/#time-trigger
 """
 import logging
 
-from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_change
 
@@ -32,11 +31,11 @@ def trigger(hass, config, action):
             _error_time(config[CONF_AFTER], CONF_AFTER)
             return False
         hours, minutes, seconds = after.hour, after.minute, after.second
-    elif (CONF_HOURS in config or CONF_MINUTES in config
-          or CONF_SECONDS in config):
-        hours = convert(config.get(CONF_HOURS), int)
-        minutes = convert(config.get(CONF_MINUTES), int)
-        seconds = convert(config.get(CONF_SECONDS), int)
+    elif (CONF_HOURS in config or CONF_MINUTES in config or
+          CONF_SECONDS in config):
+        hours = config.get(CONF_HOURS)
+        minutes = config.get(CONF_MINUTES)
+        seconds = config.get(CONF_SECONDS)
     else:
         _LOGGER.error('One of %s, %s, %s OR %s needs to be specified',
                       CONF_HOURS, CONF_MINUTES, CONF_SECONDS, CONF_AFTER)
@@ -59,7 +58,7 @@ def if_action(hass, config):
     weekday = config.get(CONF_WEEKDAY)
 
     if before is None and after is None and weekday is None:
-        logging.getLogger(__name__).error(
+        _LOGGER.error(
             "Missing if-condition configuration key %s, %s or %s",
             CONF_BEFORE, CONF_AFTER, CONF_WEEKDAY)
         return None
