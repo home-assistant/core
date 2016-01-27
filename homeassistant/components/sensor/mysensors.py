@@ -153,8 +153,10 @@ class MySensorsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        device_attr = dict(self._values)
-        device_attr.pop(self.value_type, None)
+        device_attr = {}
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                device_attr[self.gateway.const.SetReq(value_type).name] = value
         return device_attr
 
     @property
