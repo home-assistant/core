@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK,
     ATTR_ENTITY_ID)
-from homeassistant.components import (group, wink)
+from homeassistant.components import (group, verisure, wink)
 
 DOMAIN = 'lock'
 SCAN_INTERVAL = 30
@@ -28,12 +28,15 @@ ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_LOCKED = "locked"
+ATTR_CODE = 'code'
+ATTR_CODE_FORMAT = 'code_format'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    wink.DISCOVER_LOCKS: 'wink'
+    wink.DISCOVER_LOCKS: 'wink',
+    verisure.DISCOVER_LOCKS: 'verisure'
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,15 +48,25 @@ def is_locked(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
-def lock(hass, entity_id=None):
+def lock(hass, entity_id=None, code=None):
     """ Locks all or specified locks. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_LOCK, data)
 
 
-def unlock(hass, entity_id=None):
+def unlock(hass, entity_id=None, code=None):
     """ Unlocks all or specified locks. """
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
 
 
@@ -68,11 +81,16 @@ def setup(hass, config):
         """ Handles calls to the lock services. """
         target_locks = component.extract_from_service(service)
 
+        if ATTR_CODE not in service.data:
+            code = None
+        else:
+            code = service.data[ATTR_CODE]
+
         for item in target_locks:
             if service.service == SERVICE_LOCK:
-                item.lock()
+                item.lock(code=code)
             else:
-                item.unlock()
+                item.unlock(code=code)
 
             if item.should_poll:
                 item.update_ha_state(True)
@@ -92,17 +110,32 @@ class LockDevice(Entity):
     # pylint: disable=no-self-use
 
     @property
+    def code_format(self):
+        """ regex for code format or None if no code is required. """
+        return None
+
+    @property
     def is_locked(self):
         """ Is the lock locked or unlocked. """
         return None
 
-    def lock(self):
+    def lock(self, **kwargs):
         """ Locks the lock. """
         raise NotImplementedError()
 
-    def unlock(self):
+    def unlock(self, **kwargs):
         """ Unlocks the lock. """
         raise NotImplementedError()
+
+    @property
+    def state_attributes(self):
+        """ Return the state attributes. """
+        if self.code_format is None:
+            return None
+        state_attr = {
+            ATTR_CODE_FORMAT: self.code_format,
+        }
+        return state_attr
 
     @property
     def state(self):
