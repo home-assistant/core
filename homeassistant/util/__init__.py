@@ -18,7 +18,6 @@ from functools import wraps
 
 from .dt import datetime_to_local_str, utcnow
 
-
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
@@ -181,8 +180,10 @@ class OrderedSet(collections.MutableSet):
             curr = curr[1]
 
     def pop(self, last=True):  # pylint: disable=arguments-differ
-        """ Pops element of the end of the set.
-            Set last=False to pop from the beginning. """
+        """
+        Pops element of the end of the set.
+        Set last=False to pop from the beginning.
+        """
         if not self:
             raise KeyError('set is empty')
         key = self.end[1][0] if last else self.end[2][0]
