@@ -6,7 +6,6 @@ Parses events and generates a human log.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
-import logging
 from datetime import timedelta
 from itertools import groupby
 import re
@@ -38,8 +37,6 @@ ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
-_LOGGER = logging.getLogger(__name__)
-
 
 # pylint: disable=too-few-public-methods
 class LogbookService(object):
@@ -51,7 +48,6 @@ class LogbookService(object):
 
     def send_message(self, message="", **kwargs):
         """ Adds an entry to the logbook. """
-        _LOGGER.error("IM HERE")
         log_entry(self.hass, self.name, message, DOMAIN)
 
 
