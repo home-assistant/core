@@ -1,4 +1,8 @@
-"""Color util methods."""
+"""
+homeassistant.util.color
+~~~~~~~~~~~~~~~~~~~~~~~~
+Color util methods.
+"""
 
 
 # Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
