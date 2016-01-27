@@ -170,7 +170,6 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
         if local:
             now = dt_util.as_local(now)
-
         mat = _matcher
 
         # pylint: disable=too-many-boolean-expressions
@@ -199,6 +198,8 @@ def _process_match_param(parameter):
     """ Wraps parameter in a tuple if it is not one and returns it. """
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
+    elif isinstance(parameter, str) and parameter.startswith('/'):
+        return parameter
     elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return (parameter,)
     else:
@@ -210,4 +211,10 @@ def _matcher(subject, pattern):
 
     Pattern is either a tuple of allowed subjects or a `MATCH_ALL`.
     """
+    if isinstance(pattern, str) and pattern.startswith('/'):
+        try:
+            return subject % float(pattern.lstrip('/')) == 0
+        except ValueError:
+            return False
+
     return MATCH_ALL == pattern or subject in pattern
