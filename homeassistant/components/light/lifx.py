@@ -1,22 +1,10 @@
-
 """
 homeassistant.components.light.lifx
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 LIFX platform that implements lights
 
-Configuration:
-
-light:
-  # platform name
-  platform: lifx
-  # optional server address
-  # only needed if using more than one network interface
-  # (omit if you are unsure)
-  server: 192.168.1.3
-  # optional broadcast address, set to reach all LIFX bulbs
-  # (omit if you are unsure)
-  broadcast: 192.168.1.255
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.lifx/
 """
 # pylint: disable=missing-docstring
 
