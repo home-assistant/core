@@ -138,7 +138,7 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2
 # RPi.GPIO==0.6.1
 
 # homeassistant.components.sensor.bitcoin
-blockchain==1.1.2
+blockchain==1.2.1
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.1.6
