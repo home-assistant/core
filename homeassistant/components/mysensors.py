@@ -113,8 +113,7 @@ def setup(hass, config):
     return True
 
 
-def pf_callback_factory(
-        s_types, v_types, devices, add_devices, entity_class):
+def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
     """Return a new callback for the platform."""
     def mysensors_callback(gateway, node_id):
         """Callback for mysensors platform."""
@@ -125,7 +124,8 @@ def pf_callback_factory(
         for child in gateway.sensors[node_id].children.values():
             for value_type in child.values.keys():
                 key = node_id, child.id, value_type
-                if child.type not in s_types or value_type not in v_types:
+                if child.type not in map_sv_types or \
+                        value_type not in map_sv_types[child.type]:
                     continue
                 if key in devices:
                     devices[key].update_ha_state(True)
