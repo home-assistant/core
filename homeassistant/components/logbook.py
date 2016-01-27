@@ -18,6 +18,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.helpers.entity import split_entity_id
+from homeassistant.util import template
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -74,7 +75,7 @@ def setup(hass, config):
 
         if message is None:
             return
-
+        message = template.render(hass, message)
         notify_service.send_message(message)
 
     service = LogbookService(hass, config.get(ATTR_NAME, None))
