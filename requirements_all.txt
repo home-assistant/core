@@ -184,7 +184,7 @@ xmltodict
 python-statsd==1.7.2
 
 # homeassistant.components.sun
-astral==0.8.1
+astral==0.9
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
