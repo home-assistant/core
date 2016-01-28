@@ -29,28 +29,26 @@ def setup(hass, config):
     """
     if not validate_config(
             config,
-            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
+            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY]},
             _LOGGER):
         return False
 
-    import insteon
-    if config[DOMAIN].get(CONF_USERNAME) is None:
-        _LOGGER.error("No Insteon username found in config.")
-        return
+    try:
+        import insteon
+    except ImportError:
+        _LOGGER.error("Error while importing dependency Insteon.")
+        return False
+
     username = config[DOMAIN][CONF_USERNAME]
-
-    if config[DOMAIN].get(CONF_PASSWORD) is None:
-        _LOGGER.error("No Insteon password found in config.")
-        return
     password = config[DOMAIN][CONF_PASSWORD]
-
-    if config[DOMAIN].get(CONF_API_KEY) is None:
-        _LOGGER.error("No Insteon api_key found in config.")
-        return
     api_key = config[DOMAIN][CONF_API_KEY]
 
     global INSTEON
     INSTEON = insteon.Insteon(username, password, api_key)
+
+    if INSTEON is None:
+        _LOGGER.error("Could not connect to Insteon service.")
+        return
 
     comp_name = 'light'
     discovery = DISCOVER_LIGHTS
