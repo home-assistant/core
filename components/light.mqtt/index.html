@@ -128,9 +128,9 @@
   <span class="key">brightness_command_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">office/rgb1/brightness/set</span><span class="delimiter">&quot;</span></span>
   <span class="key">rgb_state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">office/rgb1/rgb/status</span><span class="delimiter">&quot;</span></span>
   <span class="key">rgb_command_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">office/rgb1/rgb/set</span><span class="delimiter">&quot;</span></span>
-  <span class="key">state_value_format</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.state }}</span><span class="delimiter">&quot;</span></span>
-  <span class="key">brightness_value_format</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.brightness }}</span><span class="delimiter">&quot;</span></span>
-  <span class="key">rgb_value_format</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.rgb | join(',') }}</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_value_template</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.state }}</span><span class="delimiter">&quot;</span></span>
+  <span class="key">brightness_value_template</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.brightness }}</span><span class="delimiter">&quot;</span></span>
+  <span class="key">rgb_value_template</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">{{ value_json.rgb | join(',') }}</span><span class="delimiter">&quot;</span></span>
   <span class="key">qos</span>: <span class="string"><span class="content">0</span></span>
   <span class="key">payload_on</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">ON</span><span class="delimiter">&quot;</span></span>
   <span class="key">payload_off</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">OFF</span><span class="delimiter">&quot;</span></span>
@@ -166,9 +166,9 @@
   <li><strong>brightness_command_topic</strong> (<em>Optional</em>): The MQTT topic to publish commands to change the light’s brightness.</li>
   <li><strong>rgb_state_topic</strong> (<em>Optional</em>): The MQTT topic subscribed to receive RGB state updates.</li>
   <li><strong>rgb_command_topic</strong> (<em>Optional</em>): The MQTT topic to publish commands to change the light’s RGB state.</li>
-  <li><strong>state_value_format</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the state value.</li>
-  <li><strong>brightness_value_format</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the brightness value.</li>
-  <li><strong>rgb_value_format</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the RGB value.</li>
+  <li><strong>state_value_template</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the state value.</li>
+  <li><strong>brightness_value_template</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the brightness value.</li>
+  <li><strong>rgb_value_template</strong> (<em>Optional</em>): Defines a <a href="/getting-started/templating/">template</a> to extract the RGB value.</li>
   <li><strong>qos</strong> (<em>Optional</em>): The maximum QoS level of the state topic. Default is 0 and will also be used to publishing messages.</li>
   <li><strong>payload_on</strong> (<em>Optional</em>): The payload that represents enabled state. Default is “ON”.</li>
   <li><strong>payload_off</strong> (<em>Optional</em>): The payload that represents disabled state. Default is “OFF”.</li>
