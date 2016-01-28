@@ -34,7 +34,7 @@ LOCATION_MESSAGE = {
     'lon': 1.0,
     't': 'u',
     'alt': 27,
-    'acc': 10,
+    'acc': 60,
     'p': 101.3977584838867,
     'vac': 4,
     'lat': 2.0,
@@ -49,7 +49,7 @@ REGION_ENTER_MESSAGE = {
     'desc': 'inner',
     'wtst': 1,
     't': 'b',
-    'acc': 10,
+    'acc': 60,
     'tst': 2,
     'lat': 2.0,
     '_type': 'transition'}
@@ -62,7 +62,7 @@ REGION_LEAVE_MESSAGE = {
     'desc': 'inner',
     'wtst': 1,
     't': 'b',
-    'acc': 10,
+    'acc': 60,
     'tst': 2,
     'lat': 2.0,
     '_type': 'transition'}
@@ -132,10 +132,15 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('latitude'), latitude)
 
+    def assert_location_accuracy(self, accuracy):
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+
     def test_location_update(self):
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
 
         self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
         self.assert_location_state('outer')
 
     def test_event_entry_exit(self):
@@ -143,34 +148,37 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
         # Enter uses the zone's gps co-ords
         self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
         self.assert_location_state('inner')
 
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
 
         #  Updates ignored when in a zone
         self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
         self.assert_location_state('inner')
 
         self.send_message(EVENT_TOPIC, REGION_LEAVE_MESSAGE)
 
         # Exit switches back to GPS
         self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
         self.assert_location_state('outer')
 
         # Left clean zone state
         self.assertFalse(owntracks.REGIONS_ENTERED[USER])
 
-    def test_event_exit_forces_zone_change(self):
+    def test_event_exit_outside_zone_sets_away(self):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
         self.assert_location_state('inner')
 
-        # Exit message with same GPS location as zone
+        # Exit message far away GPS location
         message = REGION_LEAVE_MESSAGE.copy()
-        message['lon'] = 1.1
-        message['lat'] = 2.1
+        message['lon'] = 90.1
+        message['lat'] = 90.1
         self.send_message(EVENT_TOPIC, message)
 
-        # Exit forces zone change even though GPS doesn't
+        # Exit forces zone change to away
         self.assert_location_state(STATE_NOT_HOME)
 
     def test_event_entry_exit_right_order(self):
@@ -178,22 +186,33 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
 
         self.assert_location_state('inner')
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
+
 
         # Enter inner2 zone
         message = REGION_ENTER_MESSAGE.copy()
         message['desc'] = "inner_2"
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner_2')
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
+
 
         # Exit inner_2 - should be in 'inner'
         message = REGION_LEAVE_MESSAGE.copy()
         message['desc'] = "inner_2"
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
 
         # Exit inner - should be in 'outer'
         self.send_message(EVENT_TOPIC, REGION_LEAVE_MESSAGE)
         self.assert_location_state('outer')
+        self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
+
 
     def test_event_entry_exit_wrong_order(self):
         # Enter inner zone
