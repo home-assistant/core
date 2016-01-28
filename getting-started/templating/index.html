@@ -113,7 +113,7 @@
   
 
   <p class="note">
-This is an advanced feature of Home Assistant. You need a basic understanding of the <a href="/developers/architecture/">Home Assistant architecture</a>, especially states.
+This is an advanced feature of Home Assistant. You’ll need a basic understanding of the <a href="/developers/architecture/">Home Assistant architecture</a>, especially states.
 </p>
 
 <p>Templating is a powerful feature in Home Assistant that allows the user control over information that is going into and out of the system. It is used for:</p>
@@ -131,7 +131,7 @@ This is an advanced feature of Home Assistant. You need a basic understanding of
 The frontend has a template editor developer tool to help develop and debug templates.
 </p>
 
-<p>Templates can get pretty big pretty fast. To keep a clear overview, consider using YAML multiline strings to define your templates:</p>
+<p>Templates can get big pretty fast. To keep a clear overview, consider using YAML multiline strings to define your templates:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">script</span>:
@@ -154,14 +154,14 @@ The frontend has a template editor developer tool to help develop and debug temp
 <p>Home Assistant adds extensions to allow templates to access all of the current states:</p>
 
 <ul>
-  <li>Iterating <code>states</code> will yield each state sorted alphabetically by entity id</li>
-  <li>Iterating <code>states.domain</code> will yield each state of that domain sorted alphabetically by entity id</li>
-  <li><code>states.sensor.temperature</code> returns state object for <code>sensor.temperature</code></li>
-  <li><code>states('device_tracker.paulus')</code> will return the state string (not the object) of given entity or <code>unknown</code> if it doesn’t exist.</li>
-  <li><code>is_state('device_tracker.paulus', 'home')</code> will test if given entity is specified state.</li>
-  <li><code>is_state_attr('device_tracker.paulus', 'battery', 40)</code> will test if given entity is specified state.</li>
-  <li>Filter <code>multiply(x)</code> will convert input to number and multiply it with <code>x</code></li>
-  <li>Filter <code>round(x)</code> will convert input to number and round it to <code>x</code> decimals.</li>
+  <li>Iterating <code>states</code> will yield each state sorted alphabetically by entity ID</li>
+  <li>Iterating <code>states.domain</code> will yield each state of that domain sorted alphabetically by entity ID</li>
+  <li><code>states.sensor.temperature</code> returns the state object for <code>sensor.temperature</code></li>
+  <li><code>states('device_tracker.paulus')</code> will return the state string (not the object) of the given entity or <code>unknown</code> if it doesn’t exist.</li>
+  <li><code>is_state('device_tracker.paulus', 'home')</code> will test if the given entity is specified state.</li>
+  <li><code>is_state_attr('device_tracker.paulus', 'battery', 40)</code> will test if the given entity is specified state.</li>
+  <li>Filter <code>multiply(x)</code> will convert the input to a number and multiply it with <code>x</code></li>
+  <li>Filter <code>round(x)</code> will convert the input to a number and round it to <code>x</code> decimals.</li>
 </ul>
 
 <h4><a class="title-link" name="examples" href="#examples"></a> Examples</h4>
@@ -202,7 +202,7 @@ The frontend has a template editor developer tool to help develop and debug temp
 
 <h2><a class="title-link" name="processing-incoming-data" href="#processing-incoming-data"></a> Processing incoming data</h2>
 
-<p>The other part of templating is processing incoming data. It will allow you to modify incoming data and extract only the data that you care about. This will work only for platforms and components that mentioned support for this in their documentation.</p>
+<p>The other part of templating is processing incoming data. It will allow you to modify incoming data and extract only the data you care about. This will work only for platforms and components that mentioned support for this in their documentation.</p>
 
 <p>It depends per component or platform but it is common to be able to define a template using the <code>value_template</code> configuration key. When a new value arrives, your template will be rendered while having access to the following values on top of the usual Home Assistant extensions:</p>
 

@@ -120,7 +120,7 @@ We care about privacy. Collected data is <b>only</b> stored in your instance of 
 
 <ul>
   <li>Send me a notification when my child arrives at school</li>
-  <li>Turn on AC when I leave work</li>
+  <li>Turn on the AC when I leave work</li>
 </ul>
 
 <p class="img">
@@ -132,7 +132,7 @@ Screenshot of Home Assistant showing a school, work and home zone and two people
 
 <p>The device tracker component offers presence detection for Home Assistant. It supports two different methods for presence detection: scan for connected devices on the local network and connect to third party service.</p>
 
-<p>Scanning for connected devices is easy to setup. See the instructions for our <a href="/components/#presence-detection">supported routers</a> or <a href="/components/device_tracker.nmap_scanner/">scan the network using nmap</a>. This approach does have its limitations. It will only be able to detect if a device is home. It also struggles with iPhones because they disconnect from the WiFi if idle, marking them as not home while they are not.</p>
+<p>Scanning for connected devices is easy to setup. See the instructions for our <a href="/components/#presence-detection">supported routers</a> or <a href="/components/device_tracker.nmap_scanner/">scan the network using nmap</a>. This approach does have its limitations however, it will only be able to detect if a device is home. It also struggles with iPhones because they disconnect from WiFi if idle, marking them as not home when they actually are.</p>
 
 <p>Home Assistant currently supports two third party services for presence detection: <a href="/components/device_tracker.owntracks/">OwnTracks</a> and <a href="/components/device_tracker.locative/">Locative</a>. OwnTracks is an app that you install on your iPhone or Android phone that allows you to push the location of your device to Home Assistant using an MQTT broker. An MQTT broker is an Internet of Things communication platform that you can <a href="/components/mqtt/#run-your-own">freely host yourself</a> or get <a href="/components/mqtt/#run-your-own">a private instance for free in the cloud</a>.</p>
 
@@ -144,7 +144,7 @@ OwnTracks communicates directly with your MQTT broker, no data will pass through
 
 <p><img src="/images/screenshots/badges-zone.png" style="float: right; margin-left: 8px; height: 100px;" /></p>
 
-<p>Home Assistant will know about the location for your device if you are using OwnTracks. By <a href="/components/zone/">setting up zones</a> you will be able to add names to locations of your devices. This way you can easily spot on the state page where the people in your house are and use it as <a href="/components/automation/#zone-trigger">triggers</a> and <a href="/components/automation/#zone-condition">conditions</a> for automation.</p>
+<p>Home Assistant will know the location of your device if you are using OwnTracks. By <a href="/components/zone/">setting up zones</a> you will be able to add names to the locations of your devices. This way you can easily spot on the state page where the people in your house are and use it as <a href="/components/automation/#zone-trigger">triggers</a> and <a href="/components/automation/#zone-condition">conditions</a> for automation.</p>
 
 <h3><a href="/getting-started/automation/">Next step: Setting up automation »</a></h3>
 
