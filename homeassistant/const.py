@@ -21,6 +21,8 @@ CONF_CUSTOMIZE = "customize"
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
 CONF_HOSTS = "hosts"
+CONF_PORT = "port"
+CONF_PORTS = "ports"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
@@ -194,3 +196,5 @@ HTTP_HEADER_EXPIRES = "Expires"
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
 CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
+
+ATTR_START_DATE = 'Start date'

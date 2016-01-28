@@ -198,6 +198,9 @@ orvibo==1.1.1
 # homeassistant.components.switch.wemo
 pywemo==0.3.8
 
+# homeassistant.components.switch.netio
+pynetio==0.1.5.1
+
 # homeassistant.components.tellduslive
 tellive-py==0.5.2
 
