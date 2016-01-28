@@ -30,6 +30,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_TODAY_MWH = "today_mwh"
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
+ATTR_CURRENT_POWER_W = "Current power (W)"
+ATTR_TOTAL_CONSUMPTION_KWH = "Total energy (kWh)"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
