@@ -12,7 +12,7 @@ import threading
 from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import (STATE_HOME, STATE_NOT_HOME)
+from homeassistant.const import STATE_HOME
 
 DEPENDENCIES = ['mqtt']
 
@@ -91,42 +91,26 @@ def setup_scanner(hass, config, see):
                     if location not in regions:
                         regions.append(location)
                     _LOGGER.info("Enter region %s", location)
-                    _get_gps_from_zone(kwargs, zone)
+                    _set_gps_from_zone(kwargs, zone)
 
                 see(**kwargs)
 
         elif data['event'] == 'leave':
-            current_location = hass.states.get(
-                "device_tracker.{}".format(dev_id)).state
-
             regions = REGIONS_ENTERED[dev_id]
             if location in regions:
                 regions.remove(location)
             new_region = regions[-1] if regions else None
 
-            if not new_region:
+            if new_region:
+                # Exit to previous region
+                zone = hass.states.get("zone.{}".format(new_region))
+                kwargs['location_name'] = new_region
+                _set_gps_from_zone(kwargs, zone)
+                _LOGGER.info("Exit from %s to %s", location, new_region)
+
+            else:
                 _LOGGER.info("Exit from %s to GPS", location)
-                see(**kwargs)
 
-                # if gps location didn't set new state, force to away
-                current_location = hass.states.get(
-                    "device_tracker.{}".format(dev_id)).state
-
-                if current_location.lower() == location.lower():
-                    kwargs['location_name'] = STATE_NOT_HOME
-                    see(**kwargs)
-
-                return
-
-            if current_location.lower() == new_region.lower():
-                _LOGGER.info("Exit from %s, still in %s",
-                             location, current_location)
-                return
-
-            zone = hass.states.get("zone.{}".format(new_region))
-            kwargs['location_name'] = new_region
-            _get_gps_from_zone(kwargs, zone)
-            _LOGGER.info("Exit from %s to %s", location, new_region)
             see(**kwargs)
 
         else:
@@ -143,6 +127,9 @@ def setup_scanner(hass, config, see):
 
 
 def _parse_see_args(topic, data):
+    """ Parse the OwnTracks location parameters,
+        into the format see expects. """
+
     parts = topic.split('/')
     dev_id = '{}_{}'.format(parts[1], parts[2])
     host_name = parts[1]
@@ -158,10 +145,12 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-def _get_gps_from_zone(kwargs, zone):
+def _set_gps_from_zone(kwargs, zone):
+    """ Set the see parameters from the zone parameters """
+
     if zone is not None:
         kwargs['gps'] = (
             zone.attributes['latitude'],
             zone.attributes['longitude'])
-        kwargs['gps_accuracy'] = 1
+        kwargs['gps_accuracy'] = zone.attributes['radius']
     return kwargs
