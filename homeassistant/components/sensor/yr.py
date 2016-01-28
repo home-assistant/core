@@ -126,7 +126,6 @@ class YrSensor(Entity):
         """ Gets the latest data from yr.no and updates the states. """
 
         now = dt_util.utcnow()
-
         # check if data should be updated
         if self._update is not None and now <= self._update:
             return
