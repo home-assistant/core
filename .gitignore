@@ -82,3 +82,5 @@ venv
 # vimmy stuff
 *.swp
 *.swo
+
+configuration.yaml
