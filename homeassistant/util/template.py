@@ -52,10 +52,10 @@ def render(hass, template, variables=None, **kwargs):
 def render_config(root, data):
     """ Render templates in configuration. """
     if isinstance(data, dict):
-        it = data.items()
+        iterator = data.items()
     elif isinstance(data, list):
-        it = enumerate(data)
-    for key, value in it:
+        iterator = enumerate(data)
+    for key, value in iterator:
         if isinstance(value, str):
             try:
                 data[key] = ENV.from_string(value).render(conf=root)
