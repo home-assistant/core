@@ -49,6 +49,23 @@ def render(hass, template, variables=None, **kwargs):
         raise TemplateError(err)
 
 
+def render_config(root, data):
+    """ Render templates in configuration. """
+    if isinstance(data, dict):
+        it = data.items()
+    elif isinstance(data, list):
+        it = enumerate(data)
+    for key, value in it:
+        if isinstance(value, str):
+            try:
+                data[key] = ENV.from_string(value).render(conf=root)
+            except jinja2.exceptions.UndefinedError:
+                # Not in the conf namespace.
+                pass
+        elif isinstance(value, (dict, list)):
+            render_config(root, value)
+
+
 class AllStates(object):
     """ Class to expose all HA states as attributes. """
     def __init__(self, hass):
