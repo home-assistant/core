@@ -69,7 +69,7 @@ def setup(hass, config):
         log_entry(hass, name, message)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, DOMAIN, log_message)
+    hass.services.register(DOMAIN, 'log', log_message)
     return True
 
 
