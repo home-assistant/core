@@ -8,9 +8,6 @@ classes.
 
 from binascii import unhexlify
 
-import xbee_helper.const as xb_const
-from xbee_helper import ZigBee
-
 from homeassistant.core import JobPriority
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity, ToggleEntity
@@ -26,6 +23,11 @@ DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
 
+# Copied from xbee_helper.const during setup()
+GPIO_DIGITAL_OUTPUT_LOW = None
+GPIO_DIGITAL_OUTPUT_HIGH = None
+ADC_PERCENTAGE = None
+
 DEVICE = None
 
 
@@ -35,8 +37,17 @@ def setup(hass, config):
     class for it.
     """
     global DEVICE
+    global GPIO_DIGITAL_OUTPUT_LOW
+    global GPIO_DIGITAL_OUTPUT_HIGH
+    global ADC_PERCENTAGE
 
+    import xbee_helper.const as xb_const
+    from xbee_helper import ZigBee
     from serial import Serial
+
+    GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
+    GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH
+    ADC_PERCENTAGE = xb_const.ADC_PERCENTAGE
 
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
@@ -119,13 +130,13 @@ class ZigBeeDigitalPinConfig(ZigBeePinConfig):
         """
         if self._config.get("on_state", "").lower() == "low":
             bool2state = {
-                True: xb_const.GPIO_DIGITAL_OUTPUT_LOW,
-                False: xb_const.GPIO_DIGITAL_OUTPUT_HIGH
+                True: GPIO_DIGITAL_OUTPUT_LOW,
+                False: GPIO_DIGITAL_OUTPUT_HIGH
             }
         else:
             bool2state = {
-                True: xb_const.GPIO_DIGITAL_OUTPUT_HIGH,
-                False: xb_const.GPIO_DIGITAL_OUTPUT_LOW
+                True: GPIO_DIGITAL_OUTPUT_HIGH,
+                False: GPIO_DIGITAL_OUTPUT_LOW
             }
         state2bool = {v: k for k, v in bool2state.items()}
         return bool2state, state2bool
@@ -268,5 +279,5 @@ class ZigBeeAnalogIn(Entity):
             self._config.pin,
             self._config.max_voltage,
             self._config.address,
-            xb_const.ADC_PERCENTAGE)
+            ADC_PERCENTAGE)
         self.update_ha_state()
