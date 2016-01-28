@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.yr/
 """
 import logging
 
+from datetime import timedelta
 import requests
 
 from homeassistant.const import (ATTR_ENTITY_PICTURE,
@@ -46,6 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get('elevation')
+    forecast = config.get('forecast', {})
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -67,11 +69,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(YrSensor(variable, weather))
+                dev.append(YrSensor(variable, weather, forecast))
 
     # add symbol as default sensor
     if len(dev) == 0:
-        dev.append(YrSensor("symbol", weather))
+        dev.append(YrSensor("symbol", weather, forecast))
     add_devices(dev)
 
 
@@ -79,12 +81,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YrSensor(Entity):
     """ Implements an Yr.no sensor. """
 
-    def __init__(self, sensor_type, weather):
+    def __init__(self, sensor_type, weather, forecast):
         self.client_name = 'yr'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
         self._weather = weather
+        self._forecast = forecast
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._update = None
 
@@ -123,9 +126,21 @@ class YrSensor(Entity):
         """ Gets the latest data from yr.no and updates the states. """
 
         now = dt_util.utcnow()
+
         # check if data should be updated
         if self._update is not None and now <= self._update:
             return
+
+        if 'in' in self._forecast:
+            now += timedelta(hours=self._forecast['in'])
+
+        if 'at' in self._forecast:
+            now = dt_util.as_local(now)
+            now = now.replace(hour=self._forecast['at'],
+                              minute=0,
+                              second=0,
+                              microsecond=0)
+            now = dt_util.as_utc(now)
 
         self._weather.update()
 
