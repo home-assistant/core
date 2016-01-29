@@ -6,6 +6,7 @@ Sets up and provides access to a ZigBee device and contains generic entity
 classes.
 """
 
+import logging
 from binascii import unhexlify
 
 from homeassistant.core import JobPriority
@@ -30,6 +31,8 @@ ADC_PERCENTAGE = None
 
 DEVICE = None
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup(hass, config):
     """
@@ -43,7 +46,7 @@ def setup(hass, config):
 
     import xbee_helper.const as xb_const
     from xbee_helper import ZigBee
-    from serial import Serial
+    from serial import Serial, SerialException
 
     GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
     GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH
@@ -51,7 +54,11 @@ def setup(hass, config):
 
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
-    ser = Serial(usb_device, baud)
+    try:
+        ser = Serial(usb_device, baud)
+    except SerialException as exc:
+        _LOGGER.exception("Unable to open serial port for ZigBee: %s", exc)
+        return False
     DEVICE = ZigBee(ser)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
     return True
