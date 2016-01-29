@@ -28,7 +28,7 @@ EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
 DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
 
 IBEACON_DEVICE = 'keys'
-REGION_TRACKER_STATE = "device_tracker.{}".format(IBEACON_DEVICE)
+REGION_TRACKER_STATE = "device_tracker.beacon_{}".format(IBEACON_DEVICE)
 
 LOCATION_MESSAGE = {
     'batt': 92,
