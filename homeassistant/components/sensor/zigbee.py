@@ -60,7 +60,8 @@ class ZigBeeTemperatureSensor(Entity):
     def update(self, *args):
         self._temp = zigbee.DEVICE.get_temperature(self._config.address)
 
-# This must be below the ZigBeeTemperatureSensor which it references.
+
+# This must be below the classes to which it refers.
 TYPE_CLASSES = {
     "temperature": (ZigBeeTemperatureSensor, zigbee.ZigBeeConfig),
     "analog": (zigbee.ZigBeeAnalogIn, zigbee.ZigBeeAnalogInConfig)
