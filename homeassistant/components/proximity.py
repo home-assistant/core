@@ -84,15 +84,17 @@ def setup(hass, config):
     # get the direction of travel tolerance from configuration.yaml
     if 'tolerance' in config[DOMAIN]:
         tolerance = config[DOMAIN]['tolerance']
-    else
-	tolerance = default_tolerance
+    else:
+        tolerance = default_tolerance
+    
     _LOGGER.debug('tolerance set to: %s', tolerance)
 
     # get the zone to monitor proximity to from configuration.yaml
     if 'zone' in config[DOMAIN]:
         proximity_zone = config[DOMAIN]['zone']
-	else
-	    proximity_zone = default_proximity_zone
+    else:
+        proximity_zone = default_proximity_zone
+    
     _LOGGER.info('Zone set to %s', proximity_zone)
 
     ENTITY_ID = DOMAIN + '.' + proximity_zone
@@ -106,7 +108,7 @@ def setup(hass, config):
 
     """========================================================"""
     # create an entity so that the proximity values can be used for other
-	# components
+    # components
     entities = set()
 
     # set the default values
@@ -146,7 +148,7 @@ def setup(hass, config):
             device_state = hass.states.get(device)
             if device_state.state == config[DOMAIN]['zone']:
                 device_is_in_zone = True
-				_LOGGER.info('%s Device: %s is in the monitored zone: %s',
+                _LOGGER.info('%s Device: %s is in the monitored zone: %s',
 					entity_name, device, device_state.state)
 
         if device_is_in_zone:
@@ -166,13 +168,13 @@ def setup(hass, config):
         """========================================================"""
         # check that the device is not in an ignored zone
         if new_state.state in ignored_zones:
-            _LOGGER.info('%s Device is in an ignored zone: %s', ENTITY_ID, 
+            _LOGGER.info('%s Device is in an ignored zone: %s', entity_name, 
 				device)
             return
 
         """========================================================"""
         # check for latitude and longitude (on startup these values may not
-		# exist)
+        # exist)
         if not 'latitude' in new_state.attributes:
             _LOGGER.info('%s: not LAT or LONG current position cannot be '
 				'calculated', entity_name)
@@ -198,22 +200,22 @@ def setup(hass, config):
             # ignore the device if it's in an ingore zone
             device_state = hass.states.get(device)
             if device_state in ignored_zones:
-                _LOGGER.debug('%s: no need to compare with %s - device is in '
+                _LOGGER.debug('%s: no need to compare %s - device is in '
 					'ignored zone', entity_name, device)
                 continue
 
             # ignore the device if proximity cannot be calculated
             if not 'latitude' in device_state.attributes:
-                _LOGGER.debug('%s: cannot compare with %s - no location '
+                _LOGGER.debug('%s: cannot compare %s - no location '
 					'attributes', entity_name, device)
                 continue
 
             # calculate the distance from the proximity zone for the compare
-			# device
+            # device
             compare_distance_from_zone = round(distance(proximity_latitude,
 				proximity_longitude, device_state.attributes['latitude'],
 				device_state.attributes['longitude'])/1000, 1)
-            _LOGGER.debug('%s: compare device %s: co-ordintes: LAT %s: LONG: '
+            _LOGGER.debug('%s: compare %s: co-ordintes: LAT %s: LONG: '
 				'%s', entity_name, device, device_state.attributes['latitude'],
 				device_state.attributes['longitude'])
 
@@ -234,7 +236,7 @@ def setup(hass, config):
         """========================================================"""
         # calculate direction of travel
         # stop if we cannot calculate the direction of travel (i.e. we don't
-	# have a previous state and a current LAT and LONG)
+        # have a previous state and a current LAT and LONG)
         if old_state is None or not 'latitude' in old_state.attributes:
             entity_attributes = {ATTR_DIST_FROM: distance_from_zone,
 				ATTR_DIR_OF_TRAVEL: 'Unknown',
