@@ -5,6 +5,7 @@ Contains functionality to use a ZigBee device as a sensor.
 """
 
 import logging
+from binascii import hexlify
 
 from homeassistant.core import JobPriority
 from homeassistant.const import TEMP_CELCIUS
@@ -58,7 +59,15 @@ class ZigBeeTemperatureSensor(Entity):
         return TEMP_CELCIUS
 
     def update(self, *args):
-        self._temp = zigbee.DEVICE.get_temperature(self._config.address)
+        try:
+            self._temp = zigbee.DEVICE.get_temperature(self._config.address)
+        except zigbee.ZIGBEE_TX_FAILURE:
+            _LOGGER.warning(
+                "Transmission failure when attempting to get sample from "
+                "ZigBee device at address: %s", hexlify(self._config.address))
+        except zigbee.ZIGBEE_EXCEPTION as exc:
+            _LOGGER.exception(
+                "Unable to get sample from ZigBee device: %s", exc)
 
 
 # This must be below the classes to which it refers.
