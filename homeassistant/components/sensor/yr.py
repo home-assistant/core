@@ -8,7 +8,8 @@ https://home-assistant.io/components/sensor.yr/
 """
 import logging
 
-from datetime import timedelta
+import datetime
+import time
 import requests
 
 from homeassistant.const import (ATTR_ENTITY_PICTURE,
@@ -20,7 +21,7 @@ from homeassistant.util import location, dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUIREMENTS = ['xmltodict']
+REQUIREMENTS = ['xmltodict', 'parsedatetime']
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -39,6 +40,20 @@ SENSOR_TYPES = {
     'highClouds': ['High clouds', '%'],
     'dewpointTemperature': ['Dewpoint temperature', '°C'],
 }
+
+
+def parse_relative_time(utc_ref, str_rel):
+    """ Return a new datetime relative to utc_ref """
+    import parsedatetime
+    cal = parsedatetime.Calendar()
+
+    loc_ref = dt_util.as_local(utc_ref)
+    loc_res = cal.parse(str_rel, loc_ref)[0]
+    loc_res = time.mktime(loc_res)
+    loc_res = datetime.datetime.fromtimestamp(loc_res)
+    utc_res = dt_util.as_utc(loc_res)
+
+    return utc_res
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -83,14 +98,16 @@ class YrSensor(Entity):
 
     def __init__(self, sensor_type, weather, forecast):
         self.client_name = 'yr'
-        self._name = "{}{}".format(SENSOR_TYPES[sensor_type][0],
-                                   " forecast" if forecast else "")
+        self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
         self._weather = weather
-        self._forecast = forecast or {}
+        self._forecast = forecast
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._update = None
+
+        if forecast:
+            self._name += " " + forecast
 
         self.update()
 
@@ -131,16 +148,8 @@ class YrSensor(Entity):
         if self._update is not None and now <= self._update:
             return
 
-        if 'in' in self._forecast:
-            now += timedelta(hours=self._forecast['in'])
-
-        if 'at' in self._forecast:
-            now = dt_util.as_local(now)
-            now = now.replace(hour=self._forecast['at'],
-                              minute=0,
-                              second=0,
-                              microsecond=0)
-            now = dt_util.as_utc(now)
+        if self._forecast:
+            now = parse_relative_time(now, self._forecast)
 
         self._weather.update()
 
