@@ -9,15 +9,17 @@ https://home-assistant.io/components/binary_sensor.http/
 Configuration sample:
   - platform: http
     endpoint: radio
-    method: GET
+    method: GET or POST
     name: Radio
     value_template: '{{ value_json.payload }}'
 
 To test it:
 curl -X GET -H "x-ha-access: mypass" \
-      -d '{"payload": "1"}' \
-      http://localhost:8123/api/binary_sensor/radio
-curl -X POST -d '{"payload": "1"}' http://localhost:8123/api/binary_sensor/radio
+    -d '{"payload": "1"}' \
+    http://localhost:8123/api/binary_sensor/radio
+curl -X POST -d '{"payload": "1"}' \
+    http://localhost:8123/api/binary_sensor/radio
+curl -X POST http://127.0.0.1:8123/api/binary_sensor/radio?payload=1
 """
 import logging
 import json
