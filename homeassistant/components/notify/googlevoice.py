@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/w1ll1am23/pygooglevoice-sms/archive/'
                 '7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1']
 
+
 def get_service(hass, config):
     """ Get the Google Voice SMS notification service. """
 
@@ -26,7 +27,7 @@ def get_service(hass, config):
         return None
 
     return GoogleVoiceSMSNotificationService(config[CONF_USERNAME],
-                                      config[CONF_PASSWORD])
+                                             config[CONF_PASSWORD])
 
 
 # pylint: disable=too-few-public-methods
@@ -44,9 +45,8 @@ class GoogleVoiceSMSNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
         self.voice.login(self.username, self.password)
-        
-        for target in targets:
-            resp = self.voice.send_sms(target, message)
-        
-        self.voice.logout()
 
+        for target in targets:
+            self.voice.send_sms(target, message)
+
+        self.voice.logout()
