@@ -14,8 +14,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PHONE_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/w1ll1am23/pygooglevoice-sms/archive/'
-                'caddd98a4e1cdc4e0a3d1f382aa1dc52bbd9b690.zip#pygooglevoice-sms==0.0.1']
-
+                '7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1']
 
 def get_service(hass, config):
     """ Get the Google Voice SMS notification service. """
@@ -36,7 +35,7 @@ class GoogleVoiceSMSNotificationService(BaseNotificationService):
     """ Implements notification service for the Google Voice SMS service. """
 
     def __init__(self, username, password, phone_number):
-        from googlevoice import Voice
+        from googlevoicesms import Voice
         self.voice = Voice()
         self.number = phone_number
         self.username = username
