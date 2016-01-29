@@ -180,6 +180,9 @@ python-twitch==1.2.0
 # homeassistant.components.sensor.yr
 xmltodict
 
+# homeassistant.components.sensor.yr
+parsedatetime
+
 # homeassistant.components.statsd
 python-statsd==1.7.2
 
