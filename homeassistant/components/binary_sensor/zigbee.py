@@ -3,6 +3,8 @@ homeassistant.components.binary_sensor.zigbee
 
 Contains functionality to use a ZigBee device as a binary sensor.
 """
+
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.zigbee import (
     ZigBeeDigitalIn, ZigBeeDigitalInConfig)
 
@@ -15,5 +17,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     Create and add an entity based on the configuration.
     """
     add_entities([
-        ZigBeeDigitalIn(hass, ZigBeeDigitalInConfig(config))
+        ZigBeeBinarySensor(hass, ZigBeeDigitalInConfig(config))
     ])
+
+
+class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorDevice):
+    """
+    Use multiple inheritance to turn a ZigBeeDigitalIn into a
+    BinarySensorDevice.
+    """
+    pass

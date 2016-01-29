@@ -3,6 +3,8 @@ homeassistant.components.switch.zigbee
 
 Contains functionality to use a ZigBee device as a switch.
 """
+
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.zigbee import (
     ZigBeeDigitalOut, ZigBeeDigitalOutConfig)
 
@@ -15,5 +17,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     Create and add an entity based on the configuration.
     """
     add_entities([
-        ZigBeeDigitalOut(hass, ZigBeeDigitalOutConfig(config))
+        ZigBeeSwitch(hass, ZigBeeDigitalOutConfig(config))
     ])
+
+
+class ZigBeeSwitch(ZigBeeDigitalOut, SwitchDevice):
+    """
+    Use multiple inheritance to turn a ZigBeeDigitalOut into a SwitchDevice.
+    """
+    pass
