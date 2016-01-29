@@ -137,8 +137,8 @@ def setup_scanner(hass, config, see):
             return
 
     def see_beacons(dev_id, kwargs):
-        # Live beacons should be set to the same location
-        _LOGGER.info(MOBILE_BEACONS_ACTIVE)
+        """ Set active beacons to the current location """
+
         for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
             kwargs['dev_id'] = beacon
             kwargs['host_name'] = BEACON_DEV_ID
