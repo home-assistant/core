@@ -120,7 +120,7 @@ def setup_scanner(hass, config, see):
                 _LOGGER.info("Exit from to %s", new_region)
 
             else:
-                _LOGGER.info("Exit from to GPS")
+                _LOGGER.info("Exit to GPS")
 
             see(**kwargs)
             see_beacons(dev_id, kwargs)
