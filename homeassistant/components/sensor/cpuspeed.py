@@ -25,14 +25,6 @@ ATTR_HZ = 'GHz Advertised'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the CPU speed sensor. """
 
-    try:
-        import cpuinfo  # noqa
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import cpuinfo. "
-            "Did you maybe not install the 'py-cpuinfo' package?")
-        return False
-
     add_devices([CpuSpeedSensor(config.get('name', DEFAULT_NAME))])
 
 
