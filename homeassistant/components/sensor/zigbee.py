@@ -41,8 +41,9 @@ class ZigBeeTemperatureSensor(Entity):
     def __init__(self, hass, config):
         self._config = config
         self._temp = None
-        if config.should_poll:
-            hass.pool.add_job(JobPriority.EVENT_STATE, (self.update, None))
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
 
     @property
     def name(self):
@@ -58,8 +59,6 @@ class ZigBeeTemperatureSensor(Entity):
 
     def update(self, *args):
         self._temp = zigbee.DEVICE.get_temperature(self._config.address)
-        self.update_ha_state()
-
 
 # This must be below the ZigBeeTemperatureSensor which it references.
 TYPE_CLASSES = {
