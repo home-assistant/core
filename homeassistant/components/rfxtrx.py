@@ -48,11 +48,7 @@ def setup(hass, config):
             subscriber(event)
 
     # Try to load the RFXtrx module
-    try:
-        import RFXtrx as rfxtrxmod
-    except ImportError:
-        _LOGGER.exception("Failed to import rfxtrx")
-        return False
+    import RFXtrx as rfxtrxmod
 
     # Init the rfxtrx module
     global RFXOBJECT
@@ -74,11 +70,7 @@ def setup(hass, config):
 
 def get_rfx_object(packetid):
     """ Return the RFXObject with the packetid. """
-    try:
-        import RFXtrx as rfxtrxmod
-    except ImportError:
-        _LOGGER.exception("Failed to import rfxtrx")
-        return False
+    import RFXtrx as rfxtrxmod
 
     binarypacket = bytearray.fromhex(packetid)
 

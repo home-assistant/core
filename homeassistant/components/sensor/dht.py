@@ -31,15 +31,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the DHT sensor. """
 
-    try:
-        import Adafruit_DHT
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import Adafruit_DHT. "
-            "Did you maybe not install the 'Adafruit_DHT' package?")
-
-        return False
+    # pylint: disable=import-error
+    import Adafruit_DHT
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
