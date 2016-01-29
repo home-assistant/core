@@ -10,8 +10,8 @@ import logging
 from binascii import unhexlify
 
 from homeassistant.core import JobPriority
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_OFF
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers.entity import Entity
 
 
 DOMAIN = "zigbee"
@@ -194,7 +194,7 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
 
 class ZigBeeDigitalIn(Entity):
     """
-    ToggleEntity to represent a GPIO pin configured as a digital input.
+    Represents a GPIO pin configured as a digital input.
     """
     def __init__(self, hass, config):
         self._config = config
@@ -212,11 +212,10 @@ class ZigBeeDigitalIn(Entity):
         return self._config.should_poll
 
     @property
-    def state(self):
-        return STATE_ON if self.is_on else STATE_OFF
-
-    @property
     def is_on(self):
+        """
+        Returns True if the Entity is on, else False.
+        """
         return self._state
 
     def update(self):
@@ -229,7 +228,7 @@ class ZigBeeDigitalIn(Entity):
         self._state = self._config.state2bool[pin_state]
 
 
-class ZigBeeDigitalOut(ZigBeeDigitalIn, ToggleEntity):
+class ZigBeeDigitalOut(ZigBeeDigitalIn):
     """
     Adds functionality to ZigBeeDigitalIn to control an output.
     """
@@ -243,15 +242,21 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn, ToggleEntity):
             self.update_ha_state()
 
     def turn_on(self, **kwargs):
+        """
+        Set the digital output to its 'on' state.
+        """
         self._set_state(True)
 
     def turn_off(self, **kwargs):
+        """
+        Set the digital output to its 'off' state.
+        """
         self._set_state(False)
 
 
 class ZigBeeAnalogIn(Entity):
     """
-    Entity to represent a GPIO pin configured as an analog input.
+    Represents a GPIO pin configured as an analog input.
     """
     def __init__(self, hass, config):
         self._config = config
