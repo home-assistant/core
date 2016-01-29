@@ -27,6 +27,9 @@ EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
 
 DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
 
+IBEACON_DEVICE = 'keys'
+REGION_TRACKER_STATE = "device_tracker.{}".format(IBEACON_DEVICE)
+
 LOCATION_MESSAGE = {
     'batt': 92,
     'cog': 248,
@@ -109,6 +112,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         # Clear state between teste
         self.hass.states.set(DEVICE_TRACKER_STATE, None)
         owntracks.REGIONS_ENTERED = defaultdict(list)
+        owntracks.MOBILE_BEACONS_ACTIVE = defaultdict(list)
 
     def teardown_method(self, method):
         """ Stop down stuff we started. """
@@ -134,6 +138,18 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
     def assert_location_accuracy(self, accuracy):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
+
+    def assert_tracker_state(self, location):
+        state = self.hass.states.get(REGION_TRACKER_STATE)
+        self.assertEqual(state.state, location)
+
+    def assert_tracker_latitude(self, latitude):
+        state = self.hass.states.get(REGION_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('latitude'), latitude)
+
+    def assert_tracker_accuracy(self, accuracy):
+        state = self.hass.states.get(REGION_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
     def test_location_update(self):
@@ -189,7 +205,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_latitude(2.1)
         self.assert_location_accuracy(10.0)
 
-
         # Enter inner2 zone
         message = REGION_ENTER_MESSAGE.copy()
         message['desc'] = "inner_2"
@@ -197,7 +212,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_state('inner_2')
         self.assert_location_latitude(2.1)
         self.assert_location_accuracy(10.0)
-
 
         # Exit inner_2 - should be in 'inner'
         message = REGION_LEAVE_MESSAGE.copy()
@@ -212,7 +226,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_state('outer')
         self.assert_location_latitude(2.0)
         self.assert_location_accuracy(60.0)
-
 
     def test_event_entry_exit_wrong_order(self):
         # Enter inner zone
@@ -259,3 +272,64 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
 
         self.assert_location_state('inner')
+
+    def test_mobile_enter_move_beacon(self):
+        # Enter mobile beacon, should set location
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = IBEACON_DEVICE
+        self.send_message(EVENT_TOPIC, message)
+
+        self.assert_tracker_latitude(2.0)
+        self.assert_tracker_state('outer')
+
+        # Move should move beacon
+        message = LOCATION_MESSAGE.copy()
+        message['lat'] = "3.0"
+        self.send_message(LOCATION_TOPIC, message)
+
+        self.assert_tracker_latitude(3.0)
+        self.assert_tracker_state(STATE_NOT_HOME)
+
+    def test_mobile_enter_exit_region_beacon(self):
+        # Start tracking beacon
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = IBEACON_DEVICE
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_tracker_latitude(2.0)
+        self.assert_tracker_state('outer')
+
+        # Enter location should move beacon
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "inner_2"
+        self.send_message(EVENT_TOPIC, message)
+
+        self.assert_tracker_latitude(2.1)
+        self.assert_tracker_state('inner_2')
+
+        # Exit location should switch to gps
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = "inner_2"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_tracker_latitude(2.0)
+
+    def test_mobile_exit_move_beacon(self):
+        # Start tracking beacon
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = IBEACON_DEVICE
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_tracker_latitude(2.0)
+        self.assert_tracker_state('outer')
+
+        # Exit mobile beacon, should set location
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = IBEACON_DEVICE
+        message['lat'] = "3.0"
+        self.send_message(EVENT_TOPIC, message)
+
+        self.assert_tracker_latitude(3.0)
+
+        # Move after exit should do nothing
+        message = LOCATION_MESSAGE.copy()
+        message['lat'] = "4.0"
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+        self.assert_tracker_latitude(3.0)
