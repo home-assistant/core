@@ -33,11 +33,7 @@ def setup(hass, config):
             _LOGGER):
         return False
 
-    try:
-        import insteon
-    except ImportError:
-        _LOGGER.error("Error while importing dependency Insteon.")
-        return False
+    import insteon
 
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
