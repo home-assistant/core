@@ -17,6 +17,9 @@ from homeassistant.const import STATE_HOME
 DEPENDENCIES = ['mqtt']
 
 REGIONS_ENTERED = defaultdict(list)
+MOBILE_BEACONS_ACTIVE = defaultdict(list)
+
+BEACON_DEV_ID = 'beacon'
 
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
@@ -56,6 +59,7 @@ def setup_scanner(hass, config, see):
                 return
 
             see(**kwargs)
+            see_beacons(dev_id, kwargs)
 
     def owntracks_event_update(topic, payload, qos):
         # pylint: disable=too-many-branches
@@ -85,7 +89,13 @@ def setup_scanner(hass, config, see):
         if data['event'] == 'enter':
             zone = hass.states.get("zone.{}".format(location))
             with LOCK:
-                if zone is not None:
+                if zone is None:
+                    if data['t'] == 'b':
+                        # Not a HA zone, and a beacon so assume mobile
+                        MOBILE_BEACONS_ACTIVE[dev_id].append(location)
+
+                else:
+                    # Normal region
                     kwargs['location_name'] = location
 
                     regions = REGIONS_ENTERED[dev_id]
@@ -95,6 +105,7 @@ def setup_scanner(hass, config, see):
                     _set_gps_from_zone(kwargs, zone)
 
                 see(**kwargs)
+                see_beacons(dev_id, kwargs)
 
         elif data['event'] == 'leave':
             regions = REGIONS_ENTERED[dev_id]
@@ -113,12 +124,25 @@ def setup_scanner(hass, config, see):
                 _LOGGER.info("Exit from %s to GPS", location)
 
             see(**kwargs)
+            see_beacons(dev_id, kwargs)
+
+            beacons = MOBILE_BEACONS_ACTIVE[dev_id]
+            if location in beacons:
+                beacons.remove(location)
 
         else:
             _LOGGER.error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
                 data['event'])
             return
+
+    def see_beacons(dev_id, kwargs):
+        # Live beacons should be set to the same location
+        _LOGGER.info(MOBILE_BEACONS_ACTIVE)
+        for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
+            kwargs['dev_id'] = beacon
+            kwargs['host_name'] = BEACON_DEV_ID
+            see(**kwargs)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 
