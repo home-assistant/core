@@ -7,7 +7,7 @@ classes.
 """
 
 import logging
-from binascii import unhexlify
+from binascii import hexlify, unhexlify
 
 from homeassistant.core import JobPriority
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -24,10 +24,12 @@ DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
 
-# Copied from xbee_helper.const during setup()
+# Copied from xbee_helper during setup()
 GPIO_DIGITAL_OUTPUT_LOW = None
 GPIO_DIGITAL_OUTPUT_HIGH = None
 ADC_PERCENTAGE = None
+ZIGBEE_EXCEPTION = None
+ZIGBEE_TX_FAILURE = None
 
 DEVICE = None
 
@@ -43,14 +45,19 @@ def setup(hass, config):
     global GPIO_DIGITAL_OUTPUT_LOW
     global GPIO_DIGITAL_OUTPUT_HIGH
     global ADC_PERCENTAGE
+    global ZIGBEE_EXCEPTION
+    global ZIGBEE_TX_FAILURE
 
     import xbee_helper.const as xb_const
     from xbee_helper import ZigBee
+    from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
     from serial import Serial, SerialException
 
     GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
     GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH
     ADC_PERCENTAGE = xb_const.ADC_PERCENTAGE
+    ZIGBEE_EXCEPTION = ZigBeeException
+    ZIGBEE_TX_FAILURE = ZigBeeTxFailure
 
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
@@ -222,9 +229,19 @@ class ZigBeeDigitalIn(Entity):
         """
         Ask the ZigBee device what its output is set to.
         """
-        pin_state = DEVICE.get_gpio_pin(
-            self._config.pin,
-            self._config.address)
+        try:
+            pin_state = DEVICE.get_gpio_pin(
+                self._config.pin,
+                self._config.address)
+        except ZIGBEE_TX_FAILURE:
+            _LOGGER.warning(
+                "Transmission failure when attempting to get sample from "
+                "ZigBee device at address: %s", hexlify(self._config.address))
+            return
+        except ZIGBEE_EXCEPTION as exc:
+            _LOGGER.exception(
+                "Unable to get sample from ZigBee device: %s", exc)
+            return
         self._state = self._config.state2bool[pin_state]
 
 
@@ -233,10 +250,20 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     Adds functionality to ZigBeeDigitalIn to control an output.
     """
     def _set_state(self, state):
-        DEVICE.set_gpio_pin(
-            self._config.pin,
-            self._config.bool2state[state],
-            self._config.address)
+        try:
+            DEVICE.set_gpio_pin(
+                self._config.pin,
+                self._config.bool2state[state],
+                self._config.address)
+        except ZIGBEE_TX_FAILURE:
+            _LOGGER.warning(
+                "Transmission failure when attempting to set output pin on "
+                "ZigBee device at address: %s", hexlify(self._config.address))
+            return
+        except ZIGBEE_EXCEPTION as exc:
+            _LOGGER.exception(
+                "Unable to set digital pin on ZigBee device: %s", exc)
+            return
         self._state = state
         if not self.should_poll:
             self.update_ha_state()
@@ -281,12 +308,20 @@ class ZigBeeAnalogIn(Entity):
     def unit_of_measurement(self):
         return "%"
 
-    def update(self, *args):
+    def update(self):
         """
         Get the latest reading from the ADC.
         """
-        self._value = DEVICE.read_analog_pin(
-            self._config.pin,
-            self._config.max_voltage,
-            self._config.address,
-            ADC_PERCENTAGE)
+        try:
+            self._value = DEVICE.read_analog_pin(
+                self._config.pin,
+                self._config.max_voltage,
+                self._config.address,
+                ADC_PERCENTAGE)
+        except ZIGBEE_TX_FAILURE:
+            _LOGGER.warning(
+                "Transmission failure when attempting to get sample from "
+                "ZigBee device at address: %s", hexlify(self._config.address))
+        except ZIGBEE_EXCEPTION as exc:
+            _LOGGER.exception(
+                "Unable to get sample from ZigBee device: %s", exc)
