@@ -49,10 +49,10 @@ DEPENDENCIES = ['zone', 'device_tracker']
 DOMAIN = 'proximity'
 
 # default tolerance
-default_tolerance = 1
+DEFAULT_TOLERANCE = 1
 
 # default zone
-default_proximity_zone = 'home'
+DEFAULT_PROXIMITY_ZONE = 'home'
 
 # entity attributes
 ATTR_DIST_FROM = 'dist_from_zone'
@@ -64,7 +64,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-
     # get the zones and offsets from configuration.yaml
     ignored_zones = []
     if 'ignored_zones' in config[DOMAIN]:
@@ -86,26 +85,24 @@ def setup(hass, config):
     if 'tolerance' in config[DOMAIN]:
         tolerance = config[DOMAIN]['tolerance']
     else:
-        tolerance = default_tolerance
-    
+        tolerance = DEFAULT_TOLERANCE
     _LOGGER.debug('tolerance set to: %s', tolerance)
 
     # get the zone to monitor proximity to from configuration.yaml
     if 'zone' in config[DOMAIN]:
         proximity_zone = config[DOMAIN]['zone']
     else:
-        proximity_zone = default_proximity_zone
-    
+        proximity_zone = DEFAULT_PROXIMITY_ZONE
     _LOGGER.info('Zone set to %s', proximity_zone)
 
-    ENTITY_ID = DOMAIN + '.' + proximity_zone
+    entity_id = DOMAIN + '.' + proximity_zone
     proximity_zone = 'zone.' + proximity_zone
 
     state = hass.states.get(proximity_zone)
     proximity_latitude = state.attributes.get('latitude')
     proximity_longitude = state.attributes.get('longitude')
     _LOGGER.debug('Zone settings: LAT:%s LONG:%s', proximity_latitude,
-                    proximity_longitude)
+                  proximity_longitude)
 
     """========================================================"""
     # create an entity so that the proximity values can be used for other
@@ -118,7 +115,7 @@ def setup(hass, config):
     nearest_device = 'not set'
 
     proximity = Proximity(hass, dist_from_zone, dir_of_travel, nearest_device)
-    proximity.entity_id = ENTITY_ID
+    proximity.entity_id = entity_id
 
     proximity.update_ha_state()
     entities.add(proximity.entity_id)
@@ -128,20 +125,6 @@ def setup(hass, config):
     def check_proximity_dev_state_change(entity, old_state, new_state):
 
         entity_name = new_state.attributes['friendly_name']
-
-        """========================================================"""
-        # Debug lines to aid testing
-        if old_state is not None:
-            _LOGGER.debug('%s: old_state: %s', entity_name, old_state)
-        else:
-            _LOGGER.debug('%s: no old_state', entity_name)
-
-        if new_state is not None:
-            _LOGGER.debug('%s: new_state: %s', entity_name, new_state)
-        else:
-            _LOGGER.debug('%s: no new_state', entity_name)
-
-        """========================================================"""
         device_is_in_zone = False
 
         # check for devices in the monitored zone
@@ -150,28 +133,28 @@ def setup(hass, config):
             if device_state.state == config[DOMAIN]['zone']:
                 device_is_in_zone = True
                 _LOGGER.info('%s Device: %s is in the monitored zone: %s',
-                            entity_name, device, device_state.state)
+                             entity_name, device, device_state.state)
 
         if device_is_in_zone:
-            entity_state = hass.states.get(ENTITY_ID)
+            entity_state = hass.states.get(entity_id)
             if not entity_state.attributes[ATTR_DIR_OF_TRAVEL] == 'arrived':
                 proximity._dist_from = 0
                 proximity._dir_of_travel = 'arrived'
                 proximity._nearest_device = entity_name
                 proximity.update_ha_state()
                 _LOGGER.debug('%s Update entity: distance = 0: direction = '
-                            'arrived: device = %s', ENTITY_ID, entity_name)
+                              'arrived: device = %s', entity_id, entity_name)
             else:
                 _LOGGER.debug('%s Entity not updted: %s is in proximity '
-                            'zone:%s', ENTITY_ID, entity_name, 
-                            config[DOMAIN]['zone'])
+                              'zone:%s', entity_id, entity_name,
+                              config[DOMAIN]['zone'])
             return
 
         """========================================================"""
         # check that the device is not in an ignored zone
         if new_state.state in ignored_zones:
-            _LOGGER.info('%s Device is in an ignored zone: %s', ENTITY_ID,
-                        device)
+            _LOGGER.info('%s Device is in an ignored zone: %s', entity_id,
+                         device)
             return
 
         """========================================================"""
@@ -179,17 +162,17 @@ def setup(hass, config):
         # exist)
         if not 'latitude' in new_state.attributes:
             _LOGGER.info('%s: not LAT or LONG current position cannot be '
-                        'calculated', entity_name)
+                         'calculated', entity_name)
             return
 
         # calculate the distance of the device from the monitored zone
         distance_from_zone = round(distance(proximity_latitude,
-                                    proximity_longitude,
-                                    new_state.attributes['latitude'],
-                                    new_state.attributes['longitude'])
-                                    /1000, 1)
+                                   proximity_longitude,
+                                   new_state.attributes['latitude'],
+                                   new_state.attributes['longitude'])
+                                   /1000, 1)
         _LOGGER.info('%s: distance from zone is: %s km', entity_name,
-                    distance_from_zone)
+                     distance_from_zone)
 
         """========================================================"""
         # compare distance with other devices
@@ -205,33 +188,33 @@ def setup(hass, config):
             device_state = hass.states.get(device)
             if device_state in ignored_zones:
                 _LOGGER.debug('%s: no need to compare with %s - device is in '
-                                'ignored zone', entity_name, device)
+                              'ignored zone', entity_name, device)
                 continue
 
             # ignore the device if proximity cannot be calculated
             if 'latitude' not in device_state.attributes:
                 _LOGGER.debug('%s: cannot compare with %s - no location '
-                                'attributes', entity_name, device)
+                              'attributes', entity_name, device)
                 continue
 
             # calculate the distance from the proximity zone for the compare
             # device
-            compare_distance_from_zone = round(distance(proximity_latitude,
-                                            proximity_longitude,
-                                            device_state.attributes['latitude'],
-                                            device_state.attributes['longitude'])
-                                            /1000, 1)
+            compare_dist_from_zone = round(distance(proximity_latitude,
+                                           proximity_longitude,
+                                           device_state.attributes['latitude'],
+                                           device_state.attributes['longitude'])
+                                           /1000, 1)
             _LOGGER.debug('%s: compare device %s: co-ordintes: LAT %s: LONG: '
-                            '%s', entity_name, device,
-                            device_state.attributes['latitude'],
-                            device_state.attributes['longitude'])
+                          '%s', entity_name, device,
+                          device_state.attributes['latitude'],
+                          device_state.attributes['longitude'])
 
             # stop if a device is found that is closer to home
-            if distance_from_zone >= compare_distance_from_zone:
+            if distance_from_zone >= compare_dist_from_zone:
                 device_is_closest_to_zone = False
                 _LOGGER.debug('%s: further away than %s: %s compared with %s',
-                                entity_name, device, distance_from_zone,
-                                compare_distance_from_zone)
+                              entity_name, device, distance_from_zone,
+                              compare_dist_from_zone)
                 break
 
         """========================================================"""
@@ -250,10 +233,10 @@ def setup(hass, config):
             proximity._nearest_device = entity_name
             proximity.update_ha_state()
             _LOGGER.debug('%s Update entity: distance = %s: direction = '
-                        'unknown: device = %s', ENTITY_ID, distance_from_zone,
-                        entity_name)
+                          'unknown: device = %s', entity_id,
+                          distance_from_zone, entity_name)
             _LOGGER.info('%s: Cannot determine direction of travel as old '
-                        'and/or new LAT or LONG are missing', entity_name)
+                         'and/or new LAT or LONG are missing', entity_name)
             return
 
         # reset the variables
@@ -275,15 +258,15 @@ def setup(hass, config):
         if distance_travelled <= tolerance * -1:
             direction_of_travel = 'towards'
             _LOGGER.info('%s: device travelled %s metres: moving %s',
-                        entity_name, distance_travelled, direction_of_travel)
+                         entity_name, distance_travelled, direction_of_travel)
         elif distance_travelled > tolerance:
             direction_of_travel = 'away_from'
             _LOGGER.info('%s: device travelled %s metres: moving %s',
-                        entity_name, distance_travelled, direction_of_travel)
+                         entity_name, distance_travelled, direction_of_travel)
         else:
             direction_of_travel = 'unknown'
             _LOGGER.info('%s: Cannot determine direction: %s is too small',
-                        entity_name, distance_travelled)
+                         entity_name, distance_travelled)
 
         """========================================================"""
         # update the proximity entity
@@ -292,20 +275,20 @@ def setup(hass, config):
         proximity._nearest_device = entity_name
         proximity.update_ha_state()
         _LOGGER.debug('%s Update entity: distance = %s: direction = %s: '
-                    'device = %s', ENTITY_ID, round(distance_from_zone),
-                    direction_of_travel, entity_name)
+                      'device = %s', entity_id, round(distance_from_zone),
+                      direction_of_travel, entity_name)
 
         _LOGGER.info('%s: Proximity calculation complete', entity_name)
 
     """========================================================"""
     # main command to monitor proximity of devices
     track_state_change(hass, proximity_devices,
-                        check_proximity_dev_state_change)
+                       check_proximity_dev_state_change)
 
     # Tells the bootstrapper that the component was successfully initialized
     return True
 
-    
+
 class Proximity(Entity):
     """ Represents a Proximity in Home Assistant. """
     # pylint: disable=too-many-arguments
