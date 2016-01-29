@@ -63,8 +63,8 @@ def setup(hass, config):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
         name = service.data.get(ATTR_NAME)
-        domain = service.data.get(ATTR_DOMAIN, None)
-        entity_id = service.data.get(ATTR_ENTITY_ID, None)
+        domain = service.data.get(ATTR_DOMAIN)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
         if not message or not name:
             return
