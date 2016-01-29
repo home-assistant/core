@@ -38,11 +38,9 @@ proximity:
 """
 
 import logging
-# import re
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
-
 from homeassistant.const import (ATTR_HIDDEN)
 
 DEPENDENCIES = ['zone', 'device_tracker']
