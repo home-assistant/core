@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get('elevation')
-    forecast = config.get('forecast', {})
+    forecast = config.get('forecast')
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -83,11 +83,12 @@ class YrSensor(Entity):
 
     def __init__(self, sensor_type, weather, forecast):
         self.client_name = 'yr'
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self._name = "{}{}".format(SENSOR_TYPES[sensor_type][0],
+                                   " forecast" if forecast else "")
         self.type = sensor_type
         self._state = None
         self._weather = weather
-        self._forecast = forecast
+        self._forecast = forecast or {}
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._update = None
 
