@@ -86,8 +86,8 @@ def setup(hass, config):
     # get the direction of travel tolerance from configuration.yaml
     if 'tolerance' in config[DOMAIN]:
         tolerance = config[DOMAIN]['tolerance']
-	else
-		tolerance = default_tolerance
+    else
+	tolerance = default_tolerance
     _LOGGER.debug('tolerance set to: %s', tolerance)
 
     # get the zone to monitor proximity to from configuration.yaml
@@ -197,14 +197,14 @@ def setup(hass, config):
             if device == entity:
                 continue
 
-            # get the device state
+            # ignore the device if it's in an ingore zone
             device_state = hass.states.get(device)
             if device_state in ignored_zones:
                 _LOGGER.debug('%s: no need to compare with %s - device is in '
 					'ignored zone', entity_name, device)
                 continue
 
-            # check that the distance from the proximity zone can be calculated
+            # ignore the device if proximity cannot be calculated
             if not 'latitude' in device_state.attributes:
                 _LOGGER.debug('%s: cannot compare with %s - no location '
 					'attributes', entity_name, device)
@@ -219,7 +219,7 @@ def setup(hass, config):
 				'%s', entity_name, device, device_state.attributes['latitude'],
 				device_state.attributes['longitude'])
 
-            # compare the distances from the proximity zone
+            # stop if a device is found that is closer to home 
             if distance_from_zone >= compare_distance_from_zone:
                 device_is_closest_to_zone = False
                 _LOGGER.debug('%s: further away than %s: %s compared with %s',
@@ -236,7 +236,7 @@ def setup(hass, config):
         """========================================================"""
         # calculate direction of travel
         # stop if we cannot calculate the direction of travel (i.e. we don't
-		# have a previous state and a current LAT and LONG)
+	# have a previous state and a current LAT and LONG)
         if old_state is None or not 'latitude' in old_state.attributes:
             entity_attributes = {ATTR_DIST_FROM: distance_from_zone,
 				ATTR_DIR_OF_TRAVEL: 'Unknown',
@@ -264,7 +264,7 @@ def setup(hass, config):
 
         distance_travelled = round(new_distance - old_distance, 1)
 
-        # check for a margin of error
+        # check for tolerance
         if distance_travelled <= tolerance * -1:
             direction_of_travel = 'towards'
             _LOGGER.info('%s: device travelled %s metres: moving %s',
