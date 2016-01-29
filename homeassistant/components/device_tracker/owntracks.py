@@ -52,6 +52,8 @@ def setup_scanner(hass, config, see):
 
         # Block updates if we're in a region
         with LOCK:
+            _LOGGER.error("REGIONS_ENTERED %s",REGIONS_ENTERED)
+            _LOGGER.error("MOBILE_BEACONS_ACTIVE %s",MOBILE_BEACONS_ACTIVE)
             if REGIONS_ENTERED[dev_id]:
                 _LOGGER.debug(
                     "location update ignored - inside region %s",
@@ -75,6 +77,10 @@ def setup_scanner(hass, config, see):
                 'Unable to parse payload as JSON: %s', payload)
             return
 
+        _LOGGER.error("REGIONS_ENTERED %s",REGIONS_ENTERED)
+        _LOGGER.error("MOBILE_BEACONS_ACTIVE %s",MOBILE_BEACONS_ACTIVE)
+
+
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
@@ -93,7 +99,6 @@ def setup_scanner(hass, config, see):
                     if data['t'] == 'b':
                         # Not a HA zone, and a beacon so assume mobile
                         MOBILE_BEACONS_ACTIVE[dev_id].append(location)
-
                 else:
                     # Normal region
                     kwargs['location_name'] = location
@@ -118,10 +123,10 @@ def setup_scanner(hass, config, see):
                 zone = hass.states.get("zone.{}".format(new_region))
                 kwargs['location_name'] = new_region
                 _set_gps_from_zone(kwargs, zone)
-                _LOGGER.info("Exit from %s to %s", location, new_region)
+                _LOGGER.info("Exit from to %s", new_region)
 
             else:
-                _LOGGER.info("Exit from %s to GPS", location)
+                _LOGGER.info("Exit from to GPS")
 
             see(**kwargs)
             see_beacons(dev_id, kwargs)
@@ -140,8 +145,8 @@ def setup_scanner(hass, config, see):
         """ Set active beacons to the current location """
 
         for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
-            kwargs['dev_id'] = beacon
-            kwargs['host_name'] = BEACON_DEV_ID
+            kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
+            kwargs['host_name'] = beacon
             see(**kwargs)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
