@@ -154,10 +154,10 @@ def setup(hass, config):
         if device_is_in_zone:
             entity_state = hass.states.get(ENTITY_ID)
             if not entity_state.attributes[ATTR_DIR_OF_TRAVEL] == 'arrived':
-                entity_attributes = {ATTR_DIST_FROM:0, 
-					ATTR_DIR_OF_TRAVEL: 'arrived', 
-					ATTR_NEAREST_DEVICE: entity_name, ATTR_HIDDEN: False}
-                hass.states.set(ENTITY_ID, 0, entity_attributes)
+                proximity._dist_from = 0
+                proximity._dir_of_travel = 'arrived'
+                proximity._nearest_device = entity_name
+                proximity.update_ha_state()
                 _LOGGER.debug('%s Update entity: distance = 0: direction = '
 					'arrived: device = %s', ENTITY_ID, entity_name)
             else:
@@ -168,7 +168,7 @@ def setup(hass, config):
         """========================================================"""
         # check that the device is not in an ignored zone
         if new_state.state in ignored_zones:
-            _LOGGER.info('%s Device is in an ignored zone: %s', entity_name, 
+            _LOGGER.info('%s Device is in an ignored zone: %s', ENTITY_ID, 
 				device)
             return
 
@@ -200,13 +200,13 @@ def setup(hass, config):
             # ignore the device if it's in an ingore zone
             device_state = hass.states.get(device)
             if device_state in ignored_zones:
-                _LOGGER.debug('%s: no need to compare %s - device is in '
+                _LOGGER.debug('%s: no need to compare with %s - device is in '
 					'ignored zone', entity_name, device)
                 continue
 
             # ignore the device if proximity cannot be calculated
             if not 'latitude' in device_state.attributes:
-                _LOGGER.debug('%s: cannot compare %s - no location '
+                _LOGGER.debug('%s: cannot compare with %s - no location '
 					'attributes', entity_name, device)
                 continue
 
@@ -215,7 +215,7 @@ def setup(hass, config):
             compare_distance_from_zone = round(distance(proximity_latitude,
 				proximity_longitude, device_state.attributes['latitude'],
 				device_state.attributes['longitude'])/1000, 1)
-            _LOGGER.debug('%s: compare %s: co-ordintes: LAT %s: LONG: '
+            _LOGGER.debug('%s: compare device %s: co-ordintes: LAT %s: LONG: '
 				'%s', entity_name, device, device_state.attributes['latitude'],
 				device_state.attributes['longitude'])
 
@@ -238,10 +238,10 @@ def setup(hass, config):
         # stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG)
         if old_state is None or not 'latitude' in old_state.attributes:
-            entity_attributes = {ATTR_DIST_FROM: distance_from_zone,
-				ATTR_DIR_OF_TRAVEL: 'Unknown',
-				ATTR_NEAREST_DEVICE: entity_name, ATTR_HIDDEN: False}
-            hass.states.set(ENTITY_ID, distance_from_zone, entity_attributes)
+            proximity._dist_from = round(distance_from_zone)
+            proximity._dir_of_travel = 'unknown'
+            proximity._nearest_device = entity_name
+            proximity.update_ha_state()
             _LOGGER.debug('%s Update entity: distance = %s: direction = '
 				'unknown: device = %s', ENTITY_ID, distance_from_zone,
 				entity_name)
@@ -280,11 +280,10 @@ def setup(hass, config):
 
         """========================================================"""
         # update the proximity entity
-        entity_attributes = {ATTR_DIST_FROM: round(distance_from_zone),
-			ATTR_DIR_OF_TRAVEL: direction_of_travel,
-			ATTR_NEAREST_DEVICE: entity_name, ATTR_HIDDEN: False}
-        hass.states.set(ENTITY_ID, round(distance_from_zone),
-			entity_attributes)
+        proximity._dist_from = round(distance_from_zone)
+        proximity._dir_of_travel = direction_of_travel
+        proximity._nearest_device = entity_name
+        proximity.update_ha_state()
         _LOGGER.debug('%s Update entity: distance = %s: direction = %s: '
 			'device = %s', ENTITY_ID, round(distance_from_zone),
 			direction_of_travel, entity_name)
