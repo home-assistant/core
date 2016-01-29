@@ -11,6 +11,8 @@ Configuration sample:
     endpoint: radio
     method: GET or POST
     name: Radio
+    payload_on: "1"
+    payload_off: "0"
     value_template: '{{ value_json.payload }}'
 
 To test it:
@@ -35,6 +37,8 @@ DEPENDENCIES = ['http']
 URL_API_BINARY_SENSOR_ENDPOINT = '/api/binary_sensor'
 DEFAULT_NAME = 'HTTP Binary Sensor'
 DEFAULT_METHOD = 'GET'
+DEFAULT_PAYLOAD_ON = 'ON'
+DEFAULT_PAYLOAD_OFF = 'OFF'
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -50,22 +54,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     endpoint = '{}/{}'.format(URL_API_BINARY_SENSOR_ENDPOINT,
                               config.get('endpoint'))
 
-    add_devices([HttpBinarySensor(hass,
-                                  endpoint,
-                                  method,
-                                  config.get('name', DEFAULT_NAME),
-                                  config.get(CONF_VALUE_TEMPLATE))])
+    add_devices(
+        [HttpBinarySensor(hass,
+                          endpoint,
+                          method,
+                          config.get('name', DEFAULT_NAME),
+                          config.get('payload_on', DEFAULT_PAYLOAD_ON),
+                          config.get('payload_off', DEFAULT_PAYLOAD_OFF),
+                          config.get(CONF_VALUE_TEMPLATE))])
 
 
 # pylint: disable=too-many-arguments
 class HttpBinarySensor(BinarySensorDevice):
     """ Implements a HTTP binary sensor. """
 
-    def __init__(self, hass, endpoint, method, name, value_template):
+    def __init__(self, hass, endpoint, method, name, payload_on,
+                 payload_off, value_template):
         self._endpoint = endpoint
         self._method = method
         self._name = name
         self._state = False
+        self._payload_on = payload_on
+        self._payload_off = payload_off
 
         def _handle_get_api_binary_sensor(hass, handler, path_match, data):
             """ Message for binary sensor received. """
@@ -86,7 +96,12 @@ class HttpBinarySensor(BinarySensorDevice):
                 _LOGGER.error("Key unknown")
                 return
 
-            self._state = bool(int(data))
+            if data == self._payload_on:
+                self._state = True
+            elif data == self._payload_off:
+                self._state = False
+            else:
+                self._state = bool(int(data))
 
             handler.write_json_message("Binary sensor value processed.")
             self.update_ha_state()
