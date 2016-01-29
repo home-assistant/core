@@ -74,10 +74,11 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
-        if data['desc'].lower() == 'home':
+        # OwnTracks uses - at the start of a beacon zone
+        # to switch on 'hold mode' - ignore this
+        location = data['desc'].lstrip("-")
+        if location.lower() == 'home':
             location = STATE_HOME
-        else:
-            location = data['desc']
 
         dev_id, kwargs = _parse_see_args(topic, data)
 

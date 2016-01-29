@@ -250,3 +250,12 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_latitude(2.0)
         self.assert_location_state('outer')
+
+    def test_event_entry_zone_loading_dash(self):
+        # Make sure the leading - is ignored
+        # Ownracks uses this to switch on hold
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "-inner"
+        self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
+
+        self.assert_location_state('inner')
