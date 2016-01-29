@@ -1,8 +1,17 @@
 """
 custom_components.proximity
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to monitor the proximity of devices to a particular zone. The result
-is an entity created in HA which maintains the proximity data
+Component to monitor the proximity of devices to a particular zone and the
+direction of travel. The result is an entity created in HA which maintains
+the proximity data
+
+This component is useful to reduce the number of automation rules required
+when wanting to perform automations based on locations outside a particular
+zone. The standard HA zone and state based triggers allow similar control
+but the number of rules grows exponentially when factors such as direction
+of travel need to be taken into account. Some examples of its use include:
+- Increase thermostat temperature as you near home
+- Decrease temperature the further away from home you travel
 
 Use configuration.yaml to enable the user to easily tune a number of settings:
 - Zone: the zone to which this component is measuring the distance to. Default
@@ -32,7 +41,6 @@ import logging
 # import re
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity
-# import homeassistant.util as util
 from homeassistant.util.location import distance
 
 from homeassistant.const import (ATTR_HIDDEN)
@@ -212,20 +220,12 @@ def setup(hass, config):
 				device_state.attributes['longitude'])
 
             # compare the distances from the proximity zone
-            if distance_from_zone < compare_distance_from_zone:
-                _LOGGER.debug('%s: closer than %s: %s compared with %s',
-					entity_name, device, distance_from_zone,
-					compare_distance_from_zone)
-            elif distance_from_zone > compare_distance_from_zone:
+            if distance_from_zone >= compare_distance_from_zone:
                 device_is_closest_to_zone = False
                 _LOGGER.debug('%s: further away than %s: %s compared with %s',
 					entity_name, device, distance_from_zone,
 					compare_distance_from_zone)
-            else:
-                device_is_closest_to_zone = False
-                _LOGGER.debug('%s: same distance as %s: %s compared with %s',
-					entity_name, device, distance_from_zone,
-					compare_distance_from_zone)
+                break
 
         """========================================================"""
         # if the device is not the closest to the proximity zone
