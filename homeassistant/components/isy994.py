@@ -37,11 +37,7 @@ def setup(hass, config):
     Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
-    try:
-        import PyISY
-    except ImportError:
-        _LOGGER.error("Error while importing dependency PyISY.")
-        return False
+    import PyISY
 
     # pylint: disable=global-statement
     # check for required values in configuration file

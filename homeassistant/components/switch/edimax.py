@@ -27,12 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Edimax Smart Plugs. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        from pyedimax.smartplug import SmartPlug
-    except ImportError:
-        _LOGGER.error('Failed to import pyedimax')
-        return False
+    from pyedimax.smartplug import SmartPlug
 
     # pylint: disable=global-statement
     # check for required values in configuration file
