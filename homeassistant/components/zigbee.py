@@ -10,7 +10,7 @@ import logging
 from binascii import unhexlify
 
 from homeassistant.core import JobPriority
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON, STATE_OFF
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
 
@@ -192,15 +192,16 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
         return float(self._config.get("max_volts", DEFAULT_ADC_MAX_VOLTS))
 
 
-class ZigBeeDigitalIn(ToggleEntity):
+class ZigBeeDigitalIn(Entity):
     """
     ToggleEntity to represent a GPIO pin configured as a digital input.
     """
     def __init__(self, hass, config):
         self._config = config
         self._state = False
-        if config.should_poll:
-            hass.pool.add_job(JobPriority.EVENT_STATE, (self.update, None))
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
 
     @property
     def name(self):
@@ -211,10 +212,14 @@ class ZigBeeDigitalIn(ToggleEntity):
         return self._config.should_poll
 
     @property
+    def state(self):
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
     def is_on(self):
         return self._state
 
-    def update(self, *args):
+    def update(self):
         """
         Ask the ZigBee device what its output is set to.
         """
@@ -222,28 +227,20 @@ class ZigBeeDigitalIn(ToggleEntity):
             self._config.pin,
             self._config.address)
         self._state = self._config.state2bool[pin_state]
-        self.update_ha_state()
 
 
-class ZigBeeDigitalOut(ZigBeeDigitalIn):
+class ZigBeeDigitalOut(ZigBeeDigitalIn, ToggleEntity):
     """
     Adds functionality to ZigBeeDigitalIn to control an output.
     """
-    def __init__(self, hass, config):
-        super(ZigBeeDigitalOut, self).__init__(hass, config)
-        # Get initial value regardless of whether we should_poll.
-        # If config.should_poll is True, then it's already been handled in
-        # our parent class __init__().
-        if not config.should_poll:
-            hass.pool.add_job(JobPriority.EVENT_STATE, (self.update, None))
-
     def _set_state(self, state):
         DEVICE.set_gpio_pin(
             self._config.pin,
             self._config.bool2state[state],
             self._config.address)
         self._state = state
-        self.update_ha_state()
+        if not self.should_poll:
+            self.update_ha_state()
 
     def turn_on(self, **kwargs):
         self._set_state(True)
@@ -259,8 +256,9 @@ class ZigBeeAnalogIn(Entity):
     def __init__(self, hass, config):
         self._config = config
         self._value = None
-        if config.should_poll:
-            hass.pool.add_job(JobPriority.EVENT_STATE, (self.update, None))
+        # Get initial state
+        hass.pool.add_job(
+            JobPriority.EVENT_STATE, (self.update_ha_state, True))
 
     @property
     def name(self):
@@ -287,4 +285,3 @@ class ZigBeeAnalogIn(Entity):
             self._config.max_voltage,
             self._config.address,
             ADC_PERCENTAGE)
-        self.update_ha_state()
