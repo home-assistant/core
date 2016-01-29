@@ -15,6 +15,9 @@ PyMata==2.07a
 # homeassistant.components.conversation
 fuzzywuzzy==0.8.0
 
+# homeassistant.components.device_tracker.fritz
+# fritzconnection==0.4.6
+
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.7.2
 
@@ -39,7 +42,7 @@ pyfttt==0.3
 # homeassistant.components.influxdb
 influxdb==2.11.0
 
-# homeassistant.components.insteon
+# homeassistant.components.insteon_hub
 insteon_hub==0.4.5
 
 # homeassistant.components.isy994
