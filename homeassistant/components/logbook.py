@@ -21,6 +21,7 @@ from homeassistant.helpers.entity import split_entity_id
 from homeassistant.util import template
 
 DOMAIN = "logbook"
+SERVICE_PUBLISH = 'log'
 DEPENDENCIES = ['recorder', 'http']
 
 URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
@@ -72,7 +73,7 @@ def setup(hass, config):
         log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, 'log', log_message)
+    hass.services.register(DOMAIN, SERVICE_PUBLISH, log_message)
     return True
 
 

@@ -7,48 +7,63 @@ Tests the logbook component.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from datetime import timedelta
-
 import homeassistant.core as ha
+
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from tests.common import get_test_home_assistant, mock_http_component
+from tests.common import mock_http_component
 
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
 
-    def test_setup(self):
+    def setUp(self):
         """ Test setup method. """
-        try:
-            hass = get_test_home_assistant()
-            mock_http_component(hass)
-            self.assertTrue(logbook.setup(hass, {}))
-        finally:
-            hass.stop()
+        self.hass = ha.HomeAssistant()
+        mock_http_component(self.hass)
+        logbook.setup(self.hass, {})
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def test_service_call_create_logbook_entry(self):
+        self.assertTrue(self.hass.services.call('logbook', 'log', {
+            logbook.ATTR_NAME: 'test',
+            logbook.ATTR_MESSAGE: 'test',
+            logbook.ATTR_DOMAIN: 'test',
+            logbook.ATTR_ENTITY_ID: 'test',
+        }, blocking=True))
+
+    def test_service_call_create_logbook_entry_missing_parameter(self):
+        self.assertTrue(self.hass.services.call('logbook', 'log', {
+            logbook.ATTR_MESSAGE: 'test',
+        }, blocking=True))
 
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
         entity_id = 'sensor.bla'
 
-        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
-        pointB = pointA.replace(minute=5)
-        pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        point_a = dt_util.strip_microseconds(
+                dt_util.utcnow().replace(minute=2)
+        )
+        point_b = point_a.replace(minute=5)
+        point_c = point_a + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
-        eventB = self.create_state_changed_event(pointB, entity_id, 20)
-        eventC = self.create_state_changed_event(pointC, entity_id, 30)
+        event_a = self.create_state_changed_event(point_a, entity_id, 10)
+        event_b = self.create_state_changed_event(point_b, entity_id, 20)
+        event_c = self.create_state_changed_event(point_c, entity_id, 30)
 
-        entries = list(logbook.humanify((eventA, eventB, eventC)))
+        entries = list(logbook.humanify((event_a, event_b, event_c)))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
-            entries[0], pointB, 'bla', domain='sensor', entity_id=entity_id)
+            entries[0], point_b, 'bla', domain='sensor', entity_id=entity_id)
 
         self.assert_entry(
-            entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
+            entries[1], point_c, 'bla', domain='sensor', entity_id=entity_id)
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if
