@@ -61,12 +61,15 @@ def setup(hass, config):
     def log_message(service):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
-        name = service.data.get(ATTR_NAME, None)
+        name = service.data.get(ATTR_NAME)
+        domain = service.data.get(ATTR_DOMAIN, None)
+        entity_id = service.data.get(ATTR_ENTITY_ID, None)
 
-        if message is None:
+        if not message or not name:
             return
+
         message = template.render(hass, message)
-        log_entry(hass, name, message)
+        log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
     hass.services.register(DOMAIN, 'log', log_message)
