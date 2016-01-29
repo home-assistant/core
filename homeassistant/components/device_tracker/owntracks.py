@@ -52,8 +52,6 @@ def setup_scanner(hass, config, see):
 
         # Block updates if we're in a region
         with LOCK:
-            _LOGGER.error("REGIONS_ENTERED %s",REGIONS_ENTERED)
-            _LOGGER.error("MOBILE_BEACONS_ACTIVE %s",MOBILE_BEACONS_ACTIVE)
             if REGIONS_ENTERED[dev_id]:
                 _LOGGER.debug(
                     "location update ignored - inside region %s",
@@ -76,10 +74,6 @@ def setup_scanner(hass, config, see):
             _LOGGER.error(
                 'Unable to parse payload as JSON: %s', payload)
             return
-
-        _LOGGER.error("REGIONS_ENTERED %s",REGIONS_ENTERED)
-        _LOGGER.error("MOBILE_BEACONS_ACTIVE %s",MOBILE_BEACONS_ACTIVE)
-
 
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
@@ -141,9 +135,10 @@ def setup_scanner(hass, config, see):
                 data['event'])
             return
 
-    def see_beacons(dev_id, kwargs):
+    def see_beacons(dev_id, kwargs_param):
         """ Set active beacons to the current location """
 
+        kwargs = kwargs_param.copy()
         for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
