@@ -48,6 +48,9 @@ _LOGGER = logging.getLogger(__name__)
 # Temporary to support deprecated methods
 _MockHA = namedtuple("MockHomeAssistant", ['bus'])
 
+# The exit code to send to request a restart
+RESTART_EXIT_CODE = 100
+
 
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
@@ -87,21 +90,17 @@ class HomeAssistant(object):
         self.services.register(
             DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant)
 
-        if os.name != "nt":
-            try:
-                signal.signal(signal.SIGTERM, stop_homeassistant)
-            except ValueError:
-                _LOGGER.warning(
-                    'Could not bind to SIGQUIT. Are you running in a thread?')
+        try:
+            signal.signal(signal.SIGTERM, stop_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGTERM. Are you running in a thread?')
 
         while not request_shutdown.isSet():
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                break
+            time.sleep(1)
 
         self.stop()
-        return request_restart.isSet()
+        return RESTART_EXIT_CODE if request_restart.isSet() else 0
 
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
