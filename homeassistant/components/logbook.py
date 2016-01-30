@@ -126,42 +126,9 @@ class Entry(object):
         }
 
 
-def _filter_events(events):
-
-    last_sensor_event = {}
-    start_stop_events = {}
-
-    for event in events:
-
-        if event.event_type == EVENT_STATE_CHANGED:
-            entity_id = event.data.get('entity_id')
-
-            if entity_id is None:
-                continue
-
-            if entity_id.startswith('sensor.'):
-                last_sensor_event[entity_id] = event
-
-        elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-            if event.time_fired.minute in start_stop_events:
-                continue
-
-            start_stop_events[event.time_fired.minute] = 1
-
-        elif event.event_type == EVENT_HOMEASSISTANT_START:
-            print(event)
-            if event.time_fired.minute not in start_stop_events:
-                continue
-
-            start_stop_events[event.time_fired.minute] = 2
-
-    return start_stop_events, last_sensor_event
-
-
 def humanify(events):
     """
     Generator that converts a list of events into Entry objects.
-
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted
@@ -176,11 +143,34 @@ def humanify(events):
         events_batch = list(g_events)
 
         # Keep track of last sensor states
+        last_sensor_event = {}
+
         # group HA start/stop events
         # Maps minute of event to 1: stop, 2: stop + start
-        start_stop_events, last_sensor_event = _filter_events(events_batch)
+        start_stop_events = {}
 
         # Process events
+        for event in events_batch:
+            if event.event_type == EVENT_STATE_CHANGED:
+                entity_id = event.data.get('entity_id')
+
+                if entity_id is None:
+                    continue
+
+                if entity_id.startswith('sensor.'):
+                    last_sensor_event[entity_id] = event
+
+            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
+                if event.time_fired.minute in start_stop_events:
+                    continue
+
+                start_stop_events[event.time_fired.minute] = 1
+
+            elif event.event_type == EVENT_HOMEASSISTANT_START:
+                if event.time_fired.minute not in start_stop_events:
+                    continue
+
+                start_stop_events[event.time_fired.minute] = 2
 
         # Yield entries
         for event in events_batch:
