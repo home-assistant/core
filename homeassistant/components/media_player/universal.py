@@ -215,15 +215,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         else:
             return None
 
-    def _cache_active_child_state(self):
-        """ The state of the active child or None """
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
-        self._child_state = None
-
     @property
     def name(self):
         """ name of universal player """
