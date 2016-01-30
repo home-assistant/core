@@ -13,6 +13,7 @@ import sys
 COMMENT_REQUIREMENTS = [
     'RPi.GPIO',
     'Adafruit_Python_DHT',
+    'fritzconnection',
 ]
 
 

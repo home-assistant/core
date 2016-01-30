@@ -1,4 +1,8 @@
-""" Environement helpers. """
+"""
+homeassistant.util.environement
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Environement helpers.
+"""
 import sys
 
 

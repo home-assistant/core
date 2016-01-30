@@ -9,8 +9,11 @@ Tests event helpers.
 import unittest
 from datetime import datetime
 
+from astral import Astral
+
 import homeassistant.core as ha
 from homeassistant.helpers.event import *
+from homeassistant.components import sun
 
 
 class TestEventHelpers(unittest.TestCase):
@@ -121,6 +124,188 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
 
+    def test_track_sunrise(self):
+        """ Test track sunrise """
+        latitude = 32.87336
+        longitude = 117.22743
+
+        # setup sun component
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
+        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        # get next sunrise/sunset
+        astral = Astral()
+        utc_now = dt_util.utcnow()
+
+        mod = -1
+        while True:
+            next_rising = (astral.sunrise_utc(utc_now +
+                           timedelta(days=mod), latitude, longitude))
+            if next_rising > utc_now:
+                break
+            mod += 1
+
+        # track sunrise
+        runs = []
+        track_sunrise(self.hass, lambda: runs.append(1))
+
+        offset_runs = []
+        offset = timedelta(minutes=30)
+        track_sunrise(self.hass, lambda: offset_runs.append(1), offset)
+
+        # run tests
+        self._send_time_changed(next_rising - offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(runs))
+        self.assertEqual(0, len(offset_runs))
+
+        self._send_time_changed(next_rising)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(runs))
+        self.assertEqual(0, len(offset_runs))
+
+        self._send_time_changed(next_rising + offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(offset_runs))
+
+    def test_track_sunset(self):
+        """ Test track sunset """
+        latitude = 32.87336
+        longitude = 117.22743
+
+        # setup sun component
+        self.hass.config.latitude = latitude
+        self.hass.config.longitude = longitude
+        sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        # get next sunrise/sunset
+        astral = Astral()
+        utc_now = dt_util.utcnow()
+
+        mod = -1
+        while True:
+            next_setting = (astral.sunset_utc(utc_now +
+                            timedelta(days=mod), latitude, longitude))
+            if next_setting > utc_now:
+                break
+            mod += 1
+
+        # track sunset
+        runs = []
+        track_sunset(self.hass, lambda: runs.append(1))
+
+        offset_runs = []
+        offset = timedelta(minutes=30)
+        track_sunset(self.hass, lambda: offset_runs.append(1), offset)
+
+        # run tests
+        self._send_time_changed(next_setting - offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(runs))
+        self.assertEqual(0, len(offset_runs))
+
+        self._send_time_changed(next_setting)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(runs))
+        self.assertEqual(0, len(offset_runs))
+
+        self._send_time_changed(next_setting + offset)
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(runs))
+        self.assertEqual(1, len(offset_runs))
+
     def _send_time_changed(self, now):
         """ Send a time changed event. """
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+
+    def test_periodic_task_minute(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), minute='/5')
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 3, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 12, 5, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_hour(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), hour='/2')
+
+        self._send_time_changed(datetime(2014, 5, 24, 22, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 23, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 24, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 1, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 25, 2, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(3, len(specific_runs))
+
+    def test_periodic_task_day(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), day='/2')
+
+        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 3, 12, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2014, 5, 4, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_year(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), year='/2')
+
+        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2015, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+
+        self._send_time_changed(datetime(2016, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(2, len(specific_runs))
+
+    def test_periodic_task_wrong_input(self):
+        specific_runs = []
+
+        track_utc_time_change(
+            self.hass, lambda x: specific_runs.append(1), year='/two')
+
+        self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(specific_runs))

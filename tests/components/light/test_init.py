@@ -9,10 +9,9 @@ import unittest
 import os
 
 import homeassistant.loader as loader
-import homeassistant.util.color as color_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components.light as light
 
 from tests.common import mock_service, get_test_home_assistant
@@ -94,6 +93,23 @@ class TestLight(unittest.TestCase):
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
         self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
 
+        # Test toggle
+        toggle_calls = mock_service(
+            self.hass, light.DOMAIN, SERVICE_TOGGLE)
+
+        light.toggle(
+            self.hass, entity_id='entity_id_val', transition='transition_val')
+
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(toggle_calls))
+        call = toggle_calls[-1]
+
+        self.assertEqual(light.DOMAIN, call.domain)
+        self.assertEqual(SERVICE_TOGGLE, call.service)
+        self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
+        self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
+
     def test_services(self):
         """ Test the provided services. """
         platform = loader.get_component('light.test')
@@ -109,7 +125,7 @@ class TestLight(unittest.TestCase):
         self.assertFalse(light.is_on(self.hass, dev2.entity_id))
         self.assertFalse(light.is_on(self.hass, dev3.entity_id))
 
-        # Test basic turn_on, turn_off services
+        # Test basic turn_on, turn_off, toggle services
         light.turn_off(self.hass, entity_id=dev1.entity_id)
         light.turn_on(self.hass, entity_id=dev2.entity_id)
 
@@ -129,6 +145,24 @@ class TestLight(unittest.TestCase):
 
         # turn off all lights
         light.turn_off(self.hass)
+
+        self.hass.pool.block_till_done()
+
+        self.assertFalse(light.is_on(self.hass, dev1.entity_id))
+        self.assertFalse(light.is_on(self.hass, dev2.entity_id))
+        self.assertFalse(light.is_on(self.hass, dev3.entity_id))
+
+        # toggle all lights
+        light.toggle(self.hass)
+
+        self.hass.pool.block_till_done()
+
+        self.assertTrue(light.is_on(self.hass, dev1.entity_id))
+        self.assertTrue(light.is_on(self.hass, dev2.entity_id))
+        self.assertTrue(light.is_on(self.hass, dev3.entity_id))
+
+        # toggle all lights
+        light.toggle(self.hass)
 
         self.hass.pool.block_till_done()
 

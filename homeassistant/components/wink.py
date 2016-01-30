@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.4.1']
+REQUIREMENTS = ['python-wink==0.4.2']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -38,6 +38,7 @@ def setup(hass, config):
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
             ('switch', lambda: pywink.get_switches or
+             pywink.get_sirens or
              pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
             ('sensor', lambda: pywink.get_sensors or
              pywink.get_eggtrays, DISCOVER_SENSORS),
