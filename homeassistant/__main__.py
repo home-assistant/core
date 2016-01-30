@@ -251,7 +251,7 @@ def run_hass_process(hass_proc):
     try:
         signal.signal(signal.SIGTERM, request_stop)
     except ValueError:
-        print('Could not bind to SIGQUIT. Are you running in a thread?')
+        print('Could not bind to SIGTERM. Are you running in a thread?')
 
     hass_proc.start()
     try:
@@ -262,7 +262,7 @@ def run_hass_process(hass_proc):
             hass_proc.join()
         except KeyboardInterrupt:
             return False
-    return not requested_stop.isSet() and hass_proc.exitcode > 0
+    return not requested_stop.isSet() and hass_proc.exitcode == 100
 
 
 def main():
@@ -294,7 +294,7 @@ def main():
     if args.pid_file:
         write_pid(args.pid_file)
 
-    # Run hass is child process. Restart if necessary.
+    # Run hass as child process. Restart if necessary.
     keep_running = True
     while keep_running:
         hass_proc = Process(target=setup_and_run_hass, args=(config_dir, args))
