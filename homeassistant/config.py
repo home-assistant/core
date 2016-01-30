@@ -12,12 +12,14 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 import homeassistant.util.location as loc_util
+from homeassistant.util.template import render_config
 from homeassistant.util.yaml import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = 'configuration.yaml'
 CONFIG_DIR_NAME = '.homeassistant'
+CONST_DOMAIN = 'const'
 
 DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -124,4 +126,5 @@ def load_yaml_config_file(config_path):
             os.path.basename(config_path))
         raise HomeAssistantError()
 
+    render_config(conf_dict, conf_dict)
     return conf_dict
