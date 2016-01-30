@@ -39,19 +39,18 @@ GROUP_BY_MINUTES = 15
 
 ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
-ATTR_DOMAIN_INPUT = 'component'
 ATTR_ENTITY_ID = 'entity_id'
 
 
-def log_entry(hass, name, message, dom=None, entity_id=None):
+def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
     }
 
-    if dom is not None:
-        data[ATTR_DOMAIN] = dom
+    if domain is not None:
+        data[ATTR_DOMAIN] = domain
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
     hass.bus.fire(EVENT_LOGBOOK_ENTRY, data)
@@ -64,14 +63,14 @@ def setup(hass, config):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
         name = service.data.get(ATTR_NAME)
-        dom = service.data.get(ATTR_DOMAIN_INPUT)
+        domain = service.data.get(ATTR_DOMAIN)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         if not message or not name:
             return
 
         message = template.render(hass, message)
-        log_entry(hass, name, message, dom, entity_id)
+        log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
     hass.services.register(DOMAIN, SERVICE_PUBLISH, log_message)
@@ -129,6 +128,7 @@ class Entry(object):
 def humanify(events):
     """
     Generator that converts a list of events into Entry objects.
+
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
      - if home assistant stop and start happen in same minute call it restarted

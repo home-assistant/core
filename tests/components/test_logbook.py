@@ -25,9 +25,7 @@ class TestComponentHistory(unittest.TestCase):
         """ Test setup method. """
         self.hass = ha.HomeAssistant()
         mock_http_component(self.hass)
-        logbook.setup(self.hass, {})
-
-        self.calls = []
+        self.assertTrue(logbook.setup(self.hass, {}))
 
     def tearDown(self):
         self.hass.stop()
@@ -40,20 +38,20 @@ class TestComponentHistory(unittest.TestCase):
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
         self.hass.services.call('logbook', 'log', {
-            logbook.ATTR_NAME: 'name',
-            logbook.ATTR_MESSAGE: 'message',
-            logbook.ATTR_DOMAIN_INPUT: 'domain',
-            logbook.ATTR_ENTITY_ID: 'entity_id',
+            logbook.ATTR_NAME: 'Alarm',
+            logbook.ATTR_MESSAGE: 'is triggerd',
+            logbook.ATTR_DOMAIN_INPUT: 'switch',
+            logbook.ATTR_ENTITY_ID: 'test_switch',
         }, True)
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(calls))
         last_call = calls[-1]
 
-        self.assertEqual(last_call.data.get('name'), 'name')
-        self.assertEqual(last_call.data.get('message'), 'message')
-        self.assertEqual(last_call.data.get('domain'), 'domain')
-        self.assertEqual(last_call.data.get('entity_id'), 'entity_id')
+        self.assertEqual('Alarm', last_call.data.get('name'))
+        self.assertEqual('is triggerd', last_call.data.get('message'))
+        self.assertEqual('switch', last_call.data.get('domain'))
+        self.assertEqual('test_switch', last_call.data.get('entity_id'))
 
     def test_service_call_create_logbook_entry_no_message(self):
         calls = []
@@ -90,8 +88,12 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_entry_to_dict(self):
         entry = Entry(
-            dt_util.utcnow(), 'name', 'message', 'domain', 'entity_id')
-        self.assertTrue(entry.as_dict())
+            dt_util.utcnow(), 'Alarm', 'is triggered', 'switch', 'test_switch')
+        data = entry.as_dict()
+        self.assertEqual('test_switch', data.get('entity_id'))
+        self.assertEqual('is triggered', data.get('message'))
+        self.assertEqual('switch', data.get('domain'))
+        self.assertEqual('Alarm', data.get('name'))
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if
@@ -154,12 +156,4 @@ class TestComponentHistory(unittest.TestCase):
             'entity_id': entity_id,
             'old_state': state,
             'new_state': state,
-        }, time_fired=event_time_fired)
-
-    def create_start_stop_event(self, event_time_fired, entity_id,
-                                event_state):
-        """ Create state changed event. """
-
-        return ha.Event(event_state, {
-            'entity_id': entity_id,
         }, time_fired=event_time_fired)
