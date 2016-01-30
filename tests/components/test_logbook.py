@@ -57,6 +57,18 @@ class TestComponentHistory(unittest.TestCase):
         self.assertEqual(last_call.data.get('domain'), 'domain')
         self.assertEqual(last_call.data.get('entity_id'), 'entity_id')
 
+    def test_service_call_create_logbook_entry_no_message(self):
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+        self.hass.services.call('logbook', 'log', {}, True)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(0, len(calls))
+
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
         entity_id = 'sensor.bla'
