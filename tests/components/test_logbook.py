@@ -17,20 +17,45 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from tests.common import get_test_home_assistant, mock_http_component
+from tests.common import mock_http_component
 
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
 
-    def test_setup(self):
+    def setUp(self):
         """ Test setup method. """
-        try:
-            hass = get_test_home_assistant()
-            mock_http_component(hass)
-            self.assertTrue(logbook.setup(hass, {}))
-        finally:
-            hass.stop()
+        self.hass = ha.HomeAssistant()
+        mock_http_component(self.hass)
+        logbook.setup(self.hass, {})
+
+        self.calls = []
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def test_service_call_create_logbook_entry(self):
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+        self.hass.services.call('logbook', 'log', {
+            logbook.ATTR_NAME: 'name',
+            logbook.ATTR_MESSAGE: 'message',
+            logbook.ATTR_DOMAIN_INPUT: 'domain',
+            logbook.ATTR_ENTITY_ID: 'entity_id',
+        }, True)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(calls))
+        last_call = calls[-1]
+
+        self.assertEqual(last_call.data.get('name'), 'name')
+        self.assertEqual(last_call.data.get('message'), 'message')
+        self.assertEqual(last_call.data.get('domain'), 'domain')
+        self.assertEqual(last_call.data.get('entity_id'), 'entity_id')
 
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
@@ -53,7 +78,7 @@ class TestComponentHistory(unittest.TestCase):
         self.assert_entry(
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
 
-    def test__filter_start_stop_and_sensor_events(self):
+    def test_filter_events(self):
         sensor_entity_id = 'sensor.bla'
         switch_entity_id = 'switch.bla'
 
