@@ -14,7 +14,8 @@ import re
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
+    ATTR_DOMAIN)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.helpers.entity import split_entity_id
@@ -38,7 +39,7 @@ GROUP_BY_MINUTES = 15
 
 ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
-ATTR_DOMAIN = 'domain'
+ATTR_DOMAIN_INPUT = 'component'
 ATTR_ENTITY_ID = 'entity_id'
 
 
@@ -63,7 +64,7 @@ def setup(hass, config):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
         name = service.data.get(ATTR_NAME)
-        dom = service.data.get(ATTR_DOMAIN)
+        dom = service.data.get(ATTR_DOMAIN_INPUT)
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         if not message or not name:

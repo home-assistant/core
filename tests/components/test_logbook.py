@@ -40,8 +40,8 @@ class TestComponentHistory(unittest.TestCase):
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
         self.hass.services.call('logbook', 'log', {
             logbook.ATTR_NAME: 'name',
-            logbook.ATTR_MESSAGE: 'messsage',
-            logbook.ATTR_DOMAIN: 'domain',
+            logbook.ATTR_MESSAGE: 'message',
+            logbook.ATTR_DOMAIN_INPUT: 'domain',
             logbook.ATTR_ENTITY_ID: 'entity_id',
         }, True)
         self.hass.pool.block_till_done()
