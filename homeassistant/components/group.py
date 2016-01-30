@@ -7,20 +7,24 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import homeassistant.core as ha
-from homeassistant.helpers import generate_entity_id
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
+from homeassistant.helpers.entity import (
+    Entity, split_entity_id, generate_entity_id)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
     STATE_HOME, STATE_NOT_HOME, STATE_OPEN, STATE_CLOSED,
-    STATE_UNKNOWN)
+    STATE_UNKNOWN, CONF_NAME, CONF_ICON)
 
-DOMAIN = "group"
+DOMAIN = 'group'
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_AUTO = "auto"
+CONF_ENTITIES = 'entities'
+CONF_VIEW = 'view'
+
+ATTR_AUTO = 'auto'
+ATTR_ORDER = 'order'
+ATTR_VIEW = 'view'
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
@@ -62,7 +66,7 @@ def expand_entity_ids(hass, entity_ids):
 
         try:
             # If entity_id points at a group, expand it
-            domain, _ = util.split_entity_id(entity_id)
+            domain, _ = split_entity_id(entity_id)
 
             if domain == DOMAIN:
                 found_ids.extend(
@@ -75,7 +79,7 @@ def expand_entity_ids(hass, entity_ids):
                     found_ids.append(entity_id)
 
         except AttributeError:
-            # Raised by util.split_entity_id if entity_id is not a string
+            # Raised by split_entity_id if entity_id is not a string
             pass
 
     return found_ids
@@ -104,10 +108,20 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 def setup(hass, config):
     """ Sets up all groups found definded in the configuration. """
-    for name, entity_ids in config.get(DOMAIN, {}).items():
+    for object_id, conf in config.get(DOMAIN, {}).items():
+        if not isinstance(conf, dict):
+            conf = {CONF_ENTITIES: conf}
+
+        name = conf.get(CONF_NAME, object_id)
+        entity_ids = conf.get(CONF_ENTITIES)
+        icon = conf.get(CONF_ICON)
+        view = conf.get(CONF_VIEW)
+
         if isinstance(entity_ids, str):
             entity_ids = [ent.strip() for ent in entity_ids.split(",")]
-        setup_group(hass, name, entity_ids)
+
+        Group(hass, name, entity_ids, icon=icon, view=view,
+              object_id=object_id)
 
     return True
 
@@ -115,14 +129,19 @@ def setup(hass, config):
 class Group(Entity):
     """ Tracks a group of entity ids. """
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
 
-    def __init__(self, hass, name, entity_ids=None, user_defined=True):
+    def __init__(self, hass, name, entity_ids=None, user_defined=True,
+                 icon=None, view=False, object_id=None):
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
-        self.user_defined = user_defined
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
+        self._order = len(hass.states.entity_ids(DOMAIN))
+        self._user_defined = user_defined
+        self._icon = icon
+        self._view = view
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, object_id or name, hass=hass)
         self.tracking = []
         self.group_on = None
         self.group_off = None
@@ -145,11 +164,24 @@ class Group(Entity):
         return self._state
 
     @property
+    def icon(self):
+        return self._icon
+
+    @property
+    def hidden(self):
+        return not self._user_defined or self._view
+
+    @property
     def state_attributes(self):
-        return {
+        data = {
             ATTR_ENTITY_ID: self.tracking,
-            ATTR_AUTO: not self.user_defined,
+            ATTR_ORDER: self._order,
         }
+        if not self._user_defined:
+            data[ATTR_AUTO] = True
+        if self._view:
+            data[ATTR_VIEW] = True
+        return data
 
     def update_tracked_entity_ids(self, entity_ids):
         """ Update the tracked entity IDs. """
@@ -220,10 +252,3 @@ class Group(Entity):
                        for ent_id in self.tracking
                        if tr_state.entity_id != ent_id):
                 self._state = group_off
-
-
-def setup_group(hass, name, entity_ids, user_defined=True):
-    """ Sets up a group state that is the combined state of
-        several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
-
-    return Group(hass, name, entity_ids, user_defined)

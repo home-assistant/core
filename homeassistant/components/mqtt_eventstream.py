@@ -1,20 +1,10 @@
 """
 homeassistant.components.mqtt_eventstream
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connect two Home Assistant instances via mqtt.
+Connect two Home Assistant instances via MQTT..
 
-Configuration:
-
-To use the mqtt_eventstream component you will need to add the following to
-your configuration.yaml file.
-
-If you do not specify a publish_topic you will not forward events to the queue.
-If you do not specify a subscribe_topic then you will not receive events from
-the remote server.
-
-mqtt_eventstream:
-  publish_topic: MyServerName
-  subscribe_topic: OtherHaServerName
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mqtt_eventstream.html
 """
 import json
 from homeassistant.core import EventOrigin, State
@@ -38,13 +28,13 @@ DEPENDENCIES = ['mqtt']
 
 
 def setup(hass, config):
-    """ Setup our mqtt_eventstream component. """
+    """ Setup th MQTT eventstream component. """
     mqtt = loader.get_component('mqtt')
     pub_topic = config[DOMAIN].get('publish_topic', None)
     sub_topic = config[DOMAIN].get('subscribe_topic', None)
 
     def _event_publisher(event):
-        """ Handle events by publishing them on the mqtt queue. """
+        """ Handle events by publishing them on the MQTT queue. """
         if event.origin != EventOrigin.local:
             return
         if event.event_type == EVENT_TIME_CHANGED:

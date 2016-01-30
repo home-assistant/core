@@ -8,15 +8,25 @@ https://home-assistant.io/components/device_tracker.owntracks/
 """
 import json
 import logging
+import threading
+from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import (STATE_HOME, STATE_NOT_HOME)
+from homeassistant.const import STATE_HOME
 
 DEPENDENCIES = ['mqtt']
 
-CONF_TRANSITION_EVENTS = 'use_events'
+REGIONS_ENTERED = defaultdict(list)
+MOBILE_BEACONS_ACTIVE = defaultdict(list)
+
+BEACON_DEV_ID = 'beacon'
+
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
+
+_LOGGER = logging.getLogger(__name__)
+
+LOCK = threading.Lock()
 
 
 def setup_scanner(hass, config, see):
@@ -31,27 +41,28 @@ def setup_scanner(hass, config, see):
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
-            logging.getLogger(__name__).error(
+            _LOGGER.error(
                 'Unable to parse payload as JSON: %s', payload)
             return
 
         if not isinstance(data, dict) or data.get('_type') != 'location':
             return
 
-        parts = topic.split('/')
-        kwargs = {
-            'dev_id': '{}_{}'.format(parts[1], parts[2]),
-            'host_name': parts[1],
-            'gps': (data['lat'], data['lon']),
-        }
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
-        if 'batt' in data:
-            kwargs['battery'] = data['batt']
+        dev_id, kwargs = _parse_see_args(topic, data)
 
-        see(**kwargs)
+        # Block updates if we're in a region
+        with LOCK:
+            if REGIONS_ENTERED[dev_id]:
+                _LOGGER.debug(
+                    "location update ignored - inside region %s",
+                    REGIONS_ENTERED[-1])
+                return
+
+            see(**kwargs)
+            see_beacons(dev_id, kwargs)
 
     def owntracks_event_update(topic, payload, qos):
+        # pylint: disable=too-many-branches
         """ MQTT event (geofences) received. """
 
         # Docs on available data:
@@ -60,47 +71,111 @@ def setup_scanner(hass, config, see):
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
-            logging.getLogger(__name__).error(
+            _LOGGER.error(
                 'Unable to parse payload as JSON: %s', payload)
             return
 
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
-        # check if in "home" fence or other zone
-        location = ''
-        if data['event'] == 'enter':
+        # OwnTracks uses - at the start of a beacon zone
+        # to switch on 'hold mode' - ignore this
+        location = data['desc'].lstrip("-")
+        if location.lower() == 'home':
+            location = STATE_HOME
 
-            if data['desc'].lower() == 'home':
-                location = STATE_HOME
-            else:
-                location = data['desc']
+        dev_id, kwargs = _parse_see_args(topic, data)
+
+        if data['event'] == 'enter':
+            zone = hass.states.get("zone.{}".format(location))
+            with LOCK:
+                if zone is None:
+                    if data['t'] == 'b':
+                        # Not a HA zone, and a beacon so assume mobile
+                        MOBILE_BEACONS_ACTIVE[dev_id].append(location)
+                else:
+                    # Normal region
+                    kwargs['location_name'] = location
+
+                    regions = REGIONS_ENTERED[dev_id]
+                    if location not in regions:
+                        regions.append(location)
+                    _LOGGER.info("Enter region %s", location)
+                    _set_gps_from_zone(kwargs, zone)
+
+                see(**kwargs)
+                see_beacons(dev_id, kwargs)
 
         elif data['event'] == 'leave':
-            location = STATE_NOT_HOME
+            regions = REGIONS_ENTERED[dev_id]
+            if location in regions:
+                regions.remove(location)
+            new_region = regions[-1] if regions else None
+
+            if new_region:
+                # Exit to previous region
+                zone = hass.states.get("zone.{}".format(new_region))
+                kwargs['location_name'] = new_region
+                _set_gps_from_zone(kwargs, zone)
+                _LOGGER.info("Exit from to %s", new_region)
+
+            else:
+                _LOGGER.info("Exit to GPS")
+
+            see(**kwargs)
+            see_beacons(dev_id, kwargs)
+
+            beacons = MOBILE_BEACONS_ACTIVE[dev_id]
+            if location in beacons:
+                beacons.remove(location)
+
         else:
-            logging.getLogger(__name__).error(
+            _LOGGER.error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
                 data['event'])
             return
 
-        parts = topic.split('/')
-        kwargs = {
-            'dev_id': '{}_{}'.format(parts[1], parts[2]),
-            'host_name': parts[1],
-            'gps': (data['lat'], data['lon']),
-            'location_name': location,
-        }
-        if 'acc' in data:
-            kwargs['gps_accuracy'] = data['acc']
+    def see_beacons(dev_id, kwargs_param):
+        """ Set active beacons to the current location """
 
-        see(**kwargs)
+        kwargs = kwargs_param.copy()
+        for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
+            kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
+            kwargs['host_name'] = beacon
+            see(**kwargs)
 
-    use_events = config.get(CONF_TRANSITION_EVENTS)
+    mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 
-    if use_events:
-        mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
-    else:
-        mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
+    mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
 
     return True
+
+
+def _parse_see_args(topic, data):
+    """ Parse the OwnTracks location parameters,
+        into the format see expects. """
+
+    parts = topic.split('/')
+    dev_id = '{}_{}'.format(parts[1], parts[2])
+    host_name = parts[1]
+    kwargs = {
+        'dev_id': dev_id,
+        'host_name': host_name,
+        'gps': (data['lat'], data['lon'])
+    }
+    if 'acc' in data:
+        kwargs['gps_accuracy'] = data['acc']
+    if 'batt' in data:
+        kwargs['battery'] = data['batt']
+    return dev_id, kwargs
+
+
+def _set_gps_from_zone(kwargs, zone):
+    """ Set the see parameters from the zone parameters """
+
+    if zone is not None:
+        kwargs['gps'] = (
+            zone.attributes['latitude'],
+            zone.attributes['longitude'])
+        kwargs['gps_accuracy'] = zone.attributes['radius']
+    return kwargs

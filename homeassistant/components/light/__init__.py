@@ -10,10 +10,12 @@ import logging
 import os
 import csv
 
-from homeassistant.components import group, discovery, wink, isy994, zwave
+from homeassistant.components import (
+    group, discovery, wink, isy994, zwave, insteon_hub)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
+    ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.util as util
@@ -58,6 +60,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
+    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
@@ -114,6 +117,18 @@ def turn_off(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+def toggle(hass, entity_id=None, transition=None):
+    """ Toggles all or specified light. """
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+
+
 # pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config):
     """ Exposes light control via statemachine and services. """
@@ -165,9 +180,15 @@ def setup(hass, config):
         if transition is not None:
             params[ATTR_TRANSITION] = transition
 
+        service_fun = None
         if service.service == SERVICE_TURN_OFF:
+            service_fun = 'turn_off'
+        elif service.service == SERVICE_TOGGLE:
+            service_fun = 'toggle'
+
+        if service_fun:
             for light in target_lights:
-                light.turn_off(**params)
+                getattr(light, service_fun)(**params)
 
             for light in target_lights:
                 if light.should_poll:
@@ -248,6 +269,9 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
                            descriptions.get(SERVICE_TURN_OFF))
+
+    hass.services.register(DOMAIN, SERVICE_TOGGLE, handle_light_service,
+                           descriptions.get(SERVICE_TOGGLE))
 
     return True
 

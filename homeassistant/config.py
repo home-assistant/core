@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 import homeassistant.util.location as loc_util
+from homeassistant.util.yaml import load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,40 +114,9 @@ def find_config_file(config_dir):
     return config_path if os.path.isfile(config_path) else None
 
 
-def load_config_file(config_path):
-    """ Loads given config file. """
-    return load_yaml_config_file(config_path)
-
-
 def load_yaml_config_file(config_path):
     """ Parse a YAML configuration file. """
-    import yaml
-
-    def parse(fname):
-        """ Parse a YAML file.  """
-        try:
-            with open(fname, encoding='utf-8') as conf_file:
-                # If configuration file is empty YAML returns None
-                # We convert that to an empty dict
-                return yaml.load(conf_file) or {}
-        except yaml.YAMLError:
-            error = 'Error reading YAML configuration file {}'.format(fname)
-            _LOGGER.exception(error)
-            raise HomeAssistantError(error)
-
-    def yaml_include(loader, node):
-        """
-        Loads another YAML file and embeds it using the !include tag.
-
-        Example:
-            device_tracker: !include device_tracker.yaml
-        """
-        fname = os.path.join(os.path.dirname(loader.name), node.value)
-        return parse(fname)
-
-    yaml.add_constructor('!include', yaml_include)
-
-    conf_dict = parse(config_path)
+    conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
         _LOGGER.error(

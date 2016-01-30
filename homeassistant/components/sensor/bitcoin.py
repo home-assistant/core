@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['blockchain==1.1.2']
+REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
     'wallet': ['Wallet balance', 'BTC'],
@@ -47,16 +47,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Bitcoin sensor. """
 
-    try:
-        from blockchain.wallet import Wallet
-        from blockchain import exchangerates, exceptions
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import blockchain. "
-            "Did you maybe not install the 'blockchain' package?")
-
-        return False
+    from blockchain.wallet import Wallet
+    from blockchain import exchangerates, exceptions
 
     wallet_id = config.get('wallet', None)
     password = config.get('password', None)
