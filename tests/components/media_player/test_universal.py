@@ -135,6 +135,65 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertTrue(response)
         self.assertEqual(config_start, self.config_children_and_attr)
 
+    def test_check_config_no_name(self):
+        """ Check config with no Name entry """
+        response = universal.validate_config({'platform': 'universal'})
+
+        self.assertFalse(response)
+
+    def test_check_config_bad_children(self):
+        """ Check config with bad children entry """
+        config_no_children = {'name': 'test', 'platform': 'universal'}
+        config_bad_children = {'name': 'test', 'children': {},
+                               'platform': 'universal'}
+
+        response = universal.validate_config(config_no_children)
+        self.assertTrue(response)
+        self.assertEqual(config_no_children['children'], [])
+
+        response = universal.validate_config(config_bad_children)
+        self.assertTrue(response)
+        self.assertEqual(config_bad_children['children'], [])
+
+    def test_check_config_bad_commands(self):
+        """ Check config with bad commands entry """
+        config = {'name': 'test', 'commands': [], 'platform': 'universal'}
+
+        response = universal.validate_config(config)
+        self.assertTrue(response)
+        self.assertEqual(config['commands'], {})
+
+    def test_check_config_bad_attributes(self):
+        """ Check config with bad attributes """
+        config = {'name': 'test', 'atttributes': [], 'platform': 'universal'}
+
+        response = universal.validate_config(config)
+        self.assertTrue(response)
+        self.assertEqual(config['attributes'], {})
+
+    def test_check_config_bad_key(self):
+        """ check config with bad key """
+        config = {'name': 'test', 'asdf': 5, 'platform': 'universal'}
+
+        response = universal.validate_config(config)
+        self.assertTrue(response)
+        self.assertFalse('asdf' in config)
+
+    def test_platform_setup(self):
+        """ test platform setup """
+        config = {'name': 'test', 'platform': 'universal'}
+        entities = []
+
+        def add_devices(new_entities):
+            """ add devices to list """
+            for dev in new_entities:
+                entities.append(dev)
+
+        universal.setup_platform(self.hass, config, add_devices)
+
+        self.assertEqual(len(entities), 1)
+        self.assertEqual(entities[0].name, 'test')
+
     def test_master_state(self):
         """ test master state property """
         config = self.config_children_only
