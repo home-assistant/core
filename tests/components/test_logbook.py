@@ -10,8 +10,8 @@ from datetime import timedelta
 
 import homeassistant.core as ha
 from homeassistant.components.logbook import (
-    _filter_events
-)
+    _filter_events,
+    Entry)
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
@@ -115,6 +115,11 @@ class TestComponentHistory(unittest.TestCase):
 
         self.assertEqual(last_sensor_event.get('sensor.bla'), eventC)
         self.assertDictEqual(start_stop_events, {17: 1, 2: 1})
+
+    def test_entry_to_dict(self):
+        entry = Entry(
+            dt_util.utcnow(), 'name', 'message', 'domain', 'entity_id')
+        self.assertTrue(entry.as_dict())
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if
