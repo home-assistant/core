@@ -63,8 +63,7 @@ ATTR_NEAREST_DEVICE = 'nearest_device'
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-locals, too-many-statements
-def setup(hass, config):
+def setup(hass, config): # pylint: disable=too-many-locals,too-many-statements
     """ get the zones and offsets from configuration.yaml"""
     ignored_zones = []
     if 'ignored_zones' in config[DOMAIN]:
@@ -120,8 +119,8 @@ def setup(hass, config):
     proximity.update_ha_state()
     entities.add(proximity.entity_id)
 
-    # pylint: disable=too-many-branches, too-many-statements
     def check_proximity_state_change(entity, old_state, new_state):
+        # pylint: disable=too-many-branches,too-many-statements
         """ Function to perform the proximity checking """
         entity_name = new_state.attributes['friendly_name']
         device_is_in_zone = False
@@ -282,8 +281,8 @@ def setup(hass, config):
 
 class Proximity(Entity):
     """ Represents a Proximity in Home Assistant. """
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, dist_from_zone, dir_of_travel, nearest_device):
+        # pylint: disable=too-many-arguments
         self.hass = hass
         self.dist_from = dist_from_zone
         self.dir_of_travel = dir_of_travel
