@@ -21,13 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Radio Thermostat. """
-    try:
-        import radiotherm
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import radiotherm. "
-            "Did you maybe not install the 'radiotherm' package?")
-        return False
+    import radiotherm
 
     hosts = []
     if CONF_HOST in config:

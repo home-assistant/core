@@ -23,7 +23,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'
 
-REQUIREMENTS = ['influxdb==2.10.0']
+REQUIREMENTS = ['influxdb==2.11.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
@@ -51,14 +51,11 @@ def setup(hass, config):
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
                                 password=password, database=database)
-        databases = [i['name'] for i in influx.get_list_database()]
-    except exceptions.InfluxDBClientError:
-        _LOGGER.error("Database host is not accessible. "
-                      "Please check your entries in the configuration file.")
-        return False
-
-    if database not in databases:
-        _LOGGER.error("Database %s doesn't exist", database)
+        influx.query("select * from /.*/ LIMIT 1;")
+    except exceptions.InfluxDBClientError as exc:
+        _LOGGER.error("Database host is not accessible due to '%s', please "
+                      "check your entries in the configuration file and that"
+                      " the database exists and is READ/WRITE.", exc)
         return False
 
     def influx_event_listener(event):
@@ -76,6 +73,8 @@ def setup(hass, config):
             _state = 0
         else:
             _state = state.state
+            if _state == '':
+                return
             try:
                 _state = float(_state)
             except ValueError:
@@ -100,7 +99,7 @@ def setup(hass, config):
         try:
             influx.write_points(json_body)
         except exceptions.InfluxDBClientError:
-            _LOGGER.exception('Error saving event to InfluxDB')
+            _LOGGER.exception('Error saving event "%s" to InfluxDB', json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 

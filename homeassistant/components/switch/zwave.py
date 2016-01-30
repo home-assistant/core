@@ -6,9 +6,10 @@ Zwave platform that handles simple binary switches.
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import homeassistant.components.zwave as zwave
-
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchDevice, DOMAIN
+from homeassistant.components.zwave import (
+    COMMAND_CLASS_SWITCH_BINARY, TYPE_BOOL, GENRE_USER, NETWORK,
+    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 
 
 # pylint: disable=unused-argument
@@ -17,28 +18,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY:
+    if value.command_class != COMMAND_CLASS_SWITCH_BINARY:
         return
-    if value.type != zwave.TYPE_BOOL:
+    if value.type != TYPE_BOOL:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != GENRE_USER:
         return
 
     value.set_change_verified(False)
     add_devices([ZwaveSwitch(value)])
 
 
-class ZwaveSwitch(SwitchDevice):
+class ZwaveSwitch(ZWaveDeviceEntity, SwitchDevice):
     """ Provides a zwave switch. """
     def __init__(self, value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        self._value = value
-        self._node = value.node
+        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._state = value.data
         dispatcher.connect(
@@ -51,26 +51,14 @@ class ZwaveSwitch(SwitchDevice):
             self.update_ha_state()
 
     @property
-    def should_poll(self):
-        """ No polling needed for a demo switch. """
-        return False
-
-    @property
-    def name(self):
-        """ Returns the name of the device if any. """
-        name = self._node.name or "{}".format(self._node.product_name)
-
-        return "{}".format(name or self._value.label)
-
-    @property
     def is_on(self):
         """ True if device is on. """
         return self._state
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        self._node.set_switch(self._value.value_id, True)
+        self._value.node.set_switch(self._value.value_id, True)
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        self._node.set_switch(self._value.value_id, False)
+        self._value.node.set_switch(self._value.value_id, False)

@@ -14,10 +14,10 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING,
+    STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
@@ -79,6 +79,7 @@ YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
     SERVICE_TURN_OFF: 'turn_off',
+    SERVICE_TOGGLE: 'toggle',
     SERVICE_VOLUME_UP: 'volume_up',
     SERVICE_VOLUME_DOWN: 'volume_down',
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
@@ -129,6 +130,12 @@ def turn_off(hass, entity_id=None):
     """ Will turn off specified media player or all. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+def toggle(hass, entity_id=None):
+    """ Will toggle specified media player or all. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 def volume_up(hass, entity_id=None):
@@ -531,6 +538,13 @@ class MediaPlayerDevice(Entity):
     def support_play_media(self):
         """ Boolean if play media command supported. """
         return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+
+    def toggle(self):
+        """ Toggles the power on the media player. """
+        if self.state in [STATE_OFF, STATE_IDLE]:
+            self.turn_on()
+        else:
+            self.turn_off()
 
     def volume_up(self):
         """ volume_up media player. """

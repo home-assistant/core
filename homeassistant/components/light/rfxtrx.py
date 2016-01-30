@@ -9,7 +9,7 @@ https://home-assistant.io/components/light.rfxtrx/
 import logging
 import homeassistant.components.rfxtrx as rfxtrx
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 from homeassistant.util import slugify
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -112,6 +112,7 @@ class RfxtrxLight(Light):
         self._event = event
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
+        self._brightness = 0
 
     @property
     def should_poll(self):
@@ -133,12 +134,25 @@ class RfxtrxLight(Light):
         """ True if light is on. """
         return self._state
 
+    @property
+    def brightness(self):
+        """ Brightness of this light between 0..255. """
+        return self._brightness
+
     def turn_on(self, **kwargs):
         """ Turn the light on. """
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+
+        if brightness is None:
+            self._brightness = 100
+        else:
+            self._brightness = ((brightness + 4) * 100 // 255 - 1)
 
         if hasattr(self, '_event') and self._event:
-            self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
+            self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
+                                        self._brightness)
 
+        self._brightness = (self._brightness * 255 // 100)
         self._state = True
         self.update_ha_state()
 
@@ -148,5 +162,6 @@ class RfxtrxLight(Light):
         if hasattr(self, '_event') and self._event:
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
+        self._brightness = 0
         self._state = False
         self.update_ha_state()

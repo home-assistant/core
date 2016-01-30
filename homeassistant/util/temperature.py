@@ -1,7 +1,6 @@
 """
 homeassistant.util.temperature
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Temperature util functions.
 """
 

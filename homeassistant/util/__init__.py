@@ -18,7 +18,6 @@ from functools import wraps
 
 from .dt import datetime_to_local_str, utcnow
 
-
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
@@ -39,11 +38,6 @@ def slugify(text):
     text = text.lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
-
-
-def split_entity_id(entity_id):
-    """ Splits a state entity_id into domain, object_id. """
-    return entity_id.split(".", 1)
 
 
 def repr_helper(inp):
@@ -186,8 +180,10 @@ class OrderedSet(collections.MutableSet):
             curr = curr[1]
 
     def pop(self, last=True):  # pylint: disable=arguments-differ
-        """ Pops element of the end of the set.
-            Set last=False to pop from the beginning. """
+        """
+        Pops element of the end of the set.
+        Set last=False to pop from the beginning.
+        """
         if not self:
             raise KeyError('set is empty')
         key = self.end[1][0] if last else self.end[2][0]

@@ -11,7 +11,7 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
-REQUIREMENTS = ['python-wink==0.4.1']
+REQUIREMENTS = ['python-wink==0.4.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

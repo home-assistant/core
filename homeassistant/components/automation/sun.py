@@ -10,7 +10,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components import sun
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import track_sunrise, track_sunset
 import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ['sun']
@@ -47,9 +47,9 @@ def trigger(hass, config, action):
 
     # Do something to call action
     if event == EVENT_SUNRISE:
-        trigger_sunrise(hass, action, offset)
+        track_sunrise(hass, action, offset)
     else:
-        trigger_sunset(hass, action, offset)
+        track_sunset(hass, action, offset)
 
     return True
 
@@ -123,44 +123,6 @@ def if_action(hass, config):
         return True
 
     return time_if
-
-
-def trigger_sunrise(hass, action, offset):
-    """ Trigger action at next sun rise. """
-    def next_rise():
-        """ Returns next sunrise. """
-        next_time = sun.next_rising_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
-
-    def sunrise_automation_listener(now):
-        """ Called when it's time for action. """
-        track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
-        action()
-
-    track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
-
-
-def trigger_sunset(hass, action, offset):
-    """ Trigger action at next sun set. """
-    def next_set():
-        """ Returns next sunrise. """
-        next_time = sun.next_setting_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
-
-    def sunset_automation_listener(now):
-        """ Called when it's time for action. """
-        track_point_in_utc_time(hass, sunset_automation_listener, next_set())
-        action()
-
-    track_point_in_utc_time(hass, sunset_automation_listener, next_set())
 
 
 def _parse_offset(raw_offset):
