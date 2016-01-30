@@ -63,8 +63,7 @@ ATTR_NEAREST_DEVICE = 'nearest_device'
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-locals, too-many-statements
 def setup(hass, config):
     """ get the zones and offsets from configuration.yaml"""
     ignored_zones = []
@@ -121,8 +120,7 @@ def setup(hass, config):
     proximity.update_ha_state()
     entities.add(proximity.entity_id)
 
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-branches, too-many-statements
     def check_proximity_state_change(entity, old_state, new_state):
         """ Function to perform the proximity checking """
         entity_name = new_state.attributes['friendly_name']
