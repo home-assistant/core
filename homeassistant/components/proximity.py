@@ -63,7 +63,7 @@ ATTR_NEAREST_DEVICE = 'nearest_device'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config): # pylint: disable=too-many-locals,too-many-statements
+def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     """ get the zones and offsets from configuration.yaml"""
     ignored_zones = []
     if 'ignored_zones' in config[DOMAIN]:
