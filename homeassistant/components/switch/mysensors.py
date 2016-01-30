@@ -29,33 +29,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states.
-        s_types = [
-            gateway.const.Presentation.S_DOOR,
-            gateway.const.Presentation.S_MOTION,
-            gateway.const.Presentation.S_SMOKE,
-            gateway.const.Presentation.S_LIGHT,
-            gateway.const.Presentation.S_LOCK,
-        ]
-        v_types = [
-            gateway.const.SetReq.V_ARMED,
-            gateway.const.SetReq.V_LIGHT,
-            gateway.const.SetReq.V_LOCK_STATUS,
-        ]
+        # states. Map them in a defaultdict(list).
+        pres = gateway.const.Presentation
+        set_req = gateway.const.SetReq
+        map_sv_types = {
+            pres.S_DOOR: [set_req.V_ARMED],
+            pres.S_MOTION: [set_req.V_ARMED],
+            pres.S_SMOKE: [set_req.V_ARMED],
+            pres.S_LIGHT: [set_req.V_LIGHT],
+            pres.S_LOCK: [set_req.V_LOCK_STATUS],
+        }
         if float(gateway.version) >= 1.5:
-            s_types.extend([
-                gateway.const.Presentation.S_BINARY,
-                gateway.const.Presentation.S_SPRINKLER,
-                gateway.const.Presentation.S_WATER_LEAK,
-                gateway.const.Presentation.S_SOUND,
-                gateway.const.Presentation.S_VIBRATION,
-                gateway.const.Presentation.S_MOISTURE,
-            ])
-            v_types.extend([gateway.const.SetReq.V_STATUS, ])
+            map_sv_types.update({
+                pres.S_BINARY: [set_req.V_STATUS, set_req.V_LIGHT],
+                pres.S_SPRINKLER: [set_req.V_STATUS],
+                pres.S_WATER_LEAK: [set_req.V_ARMED],
+                pres.S_SOUND: [set_req.V_ARMED],
+                pres.S_VIBRATION: [set_req.V_ARMED],
+                pres.S_MOISTURE: [set_req.V_ARMED],
+            })
+            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            s_types, v_types, devices, add_devices, MySensorsSwitch))
+            map_sv_types, devices, add_devices, MySensorsSwitch))
 
 
 class MySensorsSwitch(SwitchDevice):
