@@ -67,6 +67,7 @@ ATTR_NOW = "now"
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = "domain"
 ATTR_SERVICE = "service"
+ATTR_SERVICE_DATA = "service_data"
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = "service_call_id"
