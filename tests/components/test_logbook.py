@@ -26,21 +26,48 @@ class TestComponentHistory(unittest.TestCase):
         mock_http_component(self.hass)
         logbook.setup(self.hass, {})
 
+        self.calls = []
+
     def tearDown(self):
         self.hass.stop()
 
     def test_service_call_create_logbook_entry(self):
-        self.assertTrue(self.hass.services.call('logbook', 'log', {
-            logbook.ATTR_NAME: 'test',
-            logbook.ATTR_MESSAGE: 'test',
-            logbook.ATTR_DOMAIN: 'test',
-            logbook.ATTR_ENTITY_ID: 'test',
-        }, blocking=True))
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+        self.hass.services.call('logbook', 'log', {
+            logbook.ATTR_NAME: 'name',
+            logbook.ATTR_MESSAGE: 'messsage',
+            logbook.ATTR_DOMAIN: 'domain',
+            logbook.ATTR_ENTITY_ID: 'entity_id',
+        }, True)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(calls))
+        last_call = calls[-1]
+
+        self.assertEqual(last_call.data.get('name'), 'name')
+        self.assertEqual(last_call.data.get('message'), 'message')
+        self.assertEqual(last_call.data.get('domain'), 'domain')
+        self.assertEqual(last_call.data.get('entity_id'), 'entity_id')
 
     def test_service_call_create_logbook_entry_missing_parameter(self):
-        self.assertTrue(self.hass.services.call('logbook', 'log', {
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+
+        self.hass.services.call('logbook', 'log', {
             logbook.ATTR_MESSAGE: 'test',
-        }, blocking=True))
+        })
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(0, len(calls))
 
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
