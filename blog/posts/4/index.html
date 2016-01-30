@@ -105,6 +105,93 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/03/11/release-notes/">Release notes for March 11, 2015</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-03-11T18:36:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 11, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/03/11/release-notes/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>It has only been a little over a week since Theodor introduced YAML support for Home Assistant but so much has already happened that it is time for a summary of recent changes. Before mentioning the highlights I want to thank <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/jamespcole">jamespcole</a> and <a href="https://github.com/theolind">theolind</a> for numerous bug fixes, enhancements and new contributions. Thanks!</p>
+
+<p><strong>Monitor local resources.</strong><br /><br />
+Theodor has contributed a new sensor platform to allow you to monitor disk usage, memory usage, CPU usage and running processes. This platform has superseded the process component which is now considered deprecated.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">sensor</span>:
+  - <span class="string"><span class="content">platform: systemmonitor</span></span>
+    <span class="key">resources</span>:
+      - <span class="string"><span class="content">type: disk_use_percent</span></span>
+        <span class="key">arg</span>: <span class="string"><span class="content">/home</span></span>
+      - <span class="string"><span class="content">type: memory_free</span></span>
+      - <span class="string"><span class="content">type: process</span></span>
+        <span class="key">arg</span>: <span class="string"><span class="content">kodi</span></span>
+</pre></div>
+</div>
+</div>
+
+<p><strong>Experimental Z-Wave support</strong><br /><br />
+There is now experimental support for connecting Z-Wave networks using a Z-Wave USB stick. Right now it only integrates Z-Wave sensors into Home Assistant. Our goal is to get this tested by more people before adding support for other Z-Wave devices.</p>
+
+<p>The new component is built on top of <a href="https://code.google.com/p/python-openzwave/">python-openzwave</a>. This package is currently not distributed on PyPi so we’ve added a script <code>scripts/build_python_openzwave</code> to install it on your machine. Alternatively you can use the Docker image which is ready to go.</p>
+
+<p>The development was done using an AEON Z-Wave USB stick and an AEON Z-Wave MultiSensor.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">zwave</span>:
+  <span class="key">usb_path</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
+</pre></div>
+</div>
+</div>
+
+<p><strong>Voice control</strong><br /><br />
+An initial version of voice control for Home Assistant has landed. The current implementation consists of two parts.</p>
+
+<p>The first part is a component called <code>conversation</code> that exposes the service <code>conversation/process</code>. This service is capable of processing text and translating them into commands for devices. For now it will only support commands in the format of <code>Turn &lt;Friendly Name&gt; &lt;on/off&gt;</code>.</p>
+
+<p>The second part is an upgrade to the frontend to use the speech-to-text in Chrome to allow users to speak commands. If you’re using Chrome, you can test this out in <a href="/demo/">the demo</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">conversation</span>:
+</pre></div>
+</div>
+</div>
+
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/03/08/new-logo/">New logo for Home Assistant</a>
   </h1>
   
@@ -597,49 +684,10 @@ This article will try to explain how they all relate.</p>
   </article>
   <hr>
   
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2014/12/18/website-launched/">Website launched!</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2014-12-18T23:24:45+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> December 18, 2014</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> less than one minute reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/branding/'>Branding</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2014/12/18/website-launched/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>I finally took the time to setup a simple website to help people getting started with Home Assistant. The process was super smooth thanks to the great tools <a href="http://jekyllrb.com">Jekyll</a> and <a href="http://octopress.org">Octopress</a> and the great services <a href="https://pages.github.com">GitHub Pages</a> and <a href="https://cloudflare.com">CloudFlare</a>.</p>
-
-    
-  </div>
-  </article>
-  <hr>
-  
 
   <div class="pagination">
+    
+      <a class="btn pull-left" href="/blog/posts/5">&larr; Older</a>
     
 
     

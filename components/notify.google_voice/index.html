@@ -1,0 +1,242 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Google Voice SMS - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Instructions how to add user notifications to Home Assistant.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/components/notify.google_voice/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Google Voice SMS">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/components/notify.google_voice/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Instructions how to add user notifications to Home Assistant.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@home_assistant">
+    
+    <meta name="twitter:title" content="Google Voice SMS">
+    <meta name="twitter:description" content="Instructions how to add user notifications to Home Assistant.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+  <header>
+    <h1 class="title indent">
+      Google Voice SMS
+    </h1>
+  </header>
+  <hr class="divider">
+
+  <p><a href="https://www.google.com/voice">Google Voice</a> is a free service, that allows sending of SMS messages to mobile phones.</p>
+
+<h3>Configuration</h3>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
+<span class="key">notify</span>:
+  <span class="key">platform</span>: <span class="string"><span class="content">googlevoice</span></span>
+  <span class="key">username</span>: <span class="string"><span class="content">YOUR_GOOGLE_EMAIL</span></span>
+  <span class="key">password</span>: <span class="string"><span class="content">YOUR_GOOGLE_PASSWORD</span></span>
+  <span class="comment"># Optional</span>
+  <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>username</strong> (<em>Required</em>): Enter your the Google email address you have signed up for Google Voice with. Go to https://www.google.com/voice to setup your Google Voice account.</li>
+  <li><strong>password</strong> (<em>Required</em>): Enter the password associated with the above email. Go to https://www.pushbullet.com/ to retrieve your API key.</li>
+  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
+</ul>
+
+<h3>Usage</h3>
+
+<p>Google Voice is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. It will send a notification to all devices listed in the notification <strong>target</strong>.</p>
+
+</article>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <div class='edit-github'><a href='https://github.com/balloob/home-assistant.io/tree/master/source/_components/notify.google_voice.markdown'>Edit this page on GitHub</a></div>
+  <div class='brand-logo-container section'>
+      <img src='/images/supported_brands/google_voice.png' />
+  </div>
+    <div class='section'>
+      This is a platform for
+      <a href='/components/notify/'>the Notifications component</a>.
+    </div>
+    <div class='section'>
+    <h1 class="title delta">Category Notifications</h1>
+    <ul class='divided'>
+        <li>
+            <a href='/components/notify.file/'>File</a>
+        </li>
+        <li>
+            <a href='/components/notify.free_mobile/'>Free Mobile</a>
+        </li>
+        <li>
+            Google Voice SMS
+        </li>
+        <li>
+            <a href='/components/notify.instapush/'>Instapush</a>
+        </li>
+        <li>
+            <a href='/components/notify.xmpp/'>Jabber (XMPP)</a>
+        </li>
+        <li>
+            <a href='/components/notify.nma/'>Notify My Android</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushbullet/'>PushBullet</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushover/'>PushOver</a>
+        </li>
+        <li>
+            <a href='/components/notify.pushetta/'>Pushetta</a>
+        </li>
+        <li>
+            <a href='/components/notify.smtp/'>SMTP</a>
+        </li>
+        <li>
+            <a href='/components/notify.slack/'>Slack</a>
+        </li>
+        <li>
+            <a href='/components/notify.syslog/'>Syslog</a>
+        </li>
+        <li>
+            <a href='/components/notify.telegram/'>Telegram</a>
+        </li>
+        <li>
+            <a href='/components/notify.twitter/'>Twitter</a>
+        </li>
+    </ul>
+    </div>
+</section>
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

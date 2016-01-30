@@ -105,6 +105,69 @@
     <header>
   
   <h1 class="beta">
+    <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/">0.7: Better UI and improved distribution</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2015-08-31T21:12:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> August 31, 2015</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> three minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <div class="entry-content clearfix">
+    <p>As Home Assistant is gaining more and more users we started to feel the pain from not having a proper release mechanism. We had no version numbering and required users to checkout the source using Git to get started. On top of that, as the number of devices that we support keeps raising, so did the number of dependencies that are used. That’s why we decided to change the way we roll. From now on:</p>
+
+<ul>
+  <li>Each release will have a version number, starting with version 0.7. This was chosen because it shows that we have been around for some time but are not considering ourselves to be fully stable.</li>
+  <li>Each release will be pushed to PyPi. This will be the only supported method of distribution.</li>
+  <li>Home Assistant is available after installation as a command-line utility <code>hass</code>.</li>
+  <li>The default configuration location has been moved from <code>config</code> in the current working directory to <code>~/.homeassistant</code> (<code>%APPDATA%/.homeassistant</code> on Windows).</li>
+  <li>Requirements for components and platforms are no longer installed into the current Python environment (being virtual or not) but will be installed in <code>&lt;config-dir&gt;/lib</code>.</li>
+</ul>
+
+<p>A huge shout out to <a href="https://github.com/rmkraus">Ryan Kraus</a> for making this all possible. Please make sure you read <a href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">the full blog post</a> for details on how to migrate your existing setup.</p>
+
+<p>And while Ryan was fixing distribution, I have been hard at work in giving Home Assistant a face lift. We already looked pretty good but lacked proper form of organization for users with many devices. The new UI moves away from a card per entity and has cards per group and domain instead. <a href="/demo/">The demo</a> has been updated so give it a spin.</p>
+
+<p class="img">
+  <a href="/demo/">
+    <img src="/images/screenshots/ui2015.png" />
+  </a>
+  Screenshots of the new UI
+</p>
+
+
+    
+      <a class="btn pull-right" href="/blog/2015/08/31/version-7-revamped-ui-and-improved-distribution/#read-more">Read on &rarr;</a>
+    
+  </div>
+  </article>
+  <hr>
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
     <a href="/blog/2015/08/26/laundry-automation-with-moteino-mqtt-and-home-assistant/">Laundry Automation: insight and notifications</a>
   </h1>
   
@@ -668,93 +731,6 @@ Andythigpen has contributed a script component. This allows users to create a se
 
     
       <a class="btn pull-right" href="/blog/2015/03/22/release-notes/#read-more">Read on &rarr;</a>
-    
-  </div>
-  </article>
-  <hr>
-  
-  <article class="listing">
-    <header>
-  
-  <h1 class="beta">
-    <a href="/blog/2015/03/11/release-notes/">Release notes for March 11, 2015</a>
-  </h1>
-  
-
-  
-  <div class="meta clearfix">
-    <time datetime="2015-03-11T18:36:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> March 11, 2015</time>
-    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
-    <span><i class='icon-time'></i> two minutes reading time</span>
-    <span>
-    <i class="icon-tags"></i>
-    <ul class="tags unstyled">
-    
-      
-        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
-      
-    
-    </ul>
-  </span>
-    
-      <a class='comments'
-         href="/blog/2015/03/11/release-notes/#disqus_thread"
-         >Comments</a>
-    
-  </div>
-  
-</header>
-
-
-  <div class="entry-content clearfix">
-    <p>It has only been a little over a week since Theodor introduced YAML support for Home Assistant but so much has already happened that it is time for a summary of recent changes. Before mentioning the highlights I want to thank <a href="https://github.com/andythigpen">andythigpen</a>, <a href="https://github.com/jamespcole">jamespcole</a> and <a href="https://github.com/theolind">theolind</a> for numerous bug fixes, enhancements and new contributions. Thanks!</p>
-
-<p><strong>Monitor local resources.</strong><br /><br />
-Theodor has contributed a new sensor platform to allow you to monitor disk usage, memory usage, CPU usage and running processes. This platform has superseded the process component which is now considered deprecated.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">sensor</span>:
-  - <span class="string"><span class="content">platform: systemmonitor</span></span>
-    <span class="key">resources</span>:
-      - <span class="string"><span class="content">type: disk_use_percent</span></span>
-        <span class="key">arg</span>: <span class="string"><span class="content">/home</span></span>
-      - <span class="string"><span class="content">type: memory_free</span></span>
-      - <span class="string"><span class="content">type: process</span></span>
-        <span class="key">arg</span>: <span class="string"><span class="content">kodi</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Experimental Z-Wave support</strong><br /><br />
-There is now experimental support for connecting Z-Wave networks using a Z-Wave USB stick. Right now it only integrates Z-Wave sensors into Home Assistant. Our goal is to get this tested by more people before adding support for other Z-Wave devices.</p>
-
-<p>The new component is built on top of <a href="https://code.google.com/p/python-openzwave/">python-openzwave</a>. This package is currently not distributed on PyPi so we’ve added a script <code>scripts/build_python_openzwave</code> to install it on your machine. Alternatively you can use the Docker image which is ready to go.</p>
-
-<p>The development was done using an AEON Z-Wave USB stick and an AEON Z-Wave MultiSensor.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">zwave</span>:
-  <span class="key">usb_path</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
-</pre></div>
-</div>
-</div>
-
-<p><strong>Voice control</strong><br /><br />
-An initial version of voice control for Home Assistant has landed. The current implementation consists of two parts.</p>
-
-<p>The first part is a component called <code>conversation</code> that exposes the service <code>conversation/process</code>. This service is capable of processing text and translating them into commands for devices. For now it will only support commands in the format of <code>Turn &lt;Friendly Name&gt; &lt;on/off&gt;</code>.</p>
-
-<p>The second part is an upgrade to the frontend to use the speech-to-text in Chrome to allow users to speak commands. If you’re using Chrome, you can test this out in <a href="/demo/">the demo</a>.</p>
-
-<div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">conversation</span>:
-</pre></div>
-</div>
-</div>
-
     
   </div>
   </article>

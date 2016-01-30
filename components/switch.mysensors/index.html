@@ -109,6 +109,84 @@
 
   <p>Integrates MySensors switches into Home Assistant. See the <a href="/components/mysensors/">main component</a> for configuration instructions.</p>
 
+<p>The following actuator types are supported:</p>
+
+<h5>MySensors version 1.4 and higher</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th>S_TYPE</th>
+      <th>V_TYPE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>S_DOOR</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_MOTION</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_SMOKE</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_LIGHT</td>
+      <td>V_LIGHT</td>
+    </tr>
+    <tr>
+      <td>S_LOCK</td>
+      <td>V_LOCK_STATUS</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5>MySensors version 1.5 and higher</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th>S_TYPE</th>
+      <th>V_TYPE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>S_LIGHT</td>
+      <td>V_STATUS</td>
+    </tr>
+    <tr>
+      <td>S_BINARY</td>
+      <td>V_STATUS, V_LIGHT</td>
+    </tr>
+    <tr>
+      <td>S_SPRINKLER</td>
+      <td>V_STATUS</td>
+    </tr>
+    <tr>
+      <td>S_WATER_LEAK</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_SOUND</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_VIBRATION</td>
+      <td>V_ARMED</td>
+    </tr>
+    <tr>
+      <td>S_MOISTURE</td>
+      <td>V_ARMED</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For more information, visit the <a href="https://www.mysensors.org/download/serial_api_15">serial api</a> of MySensors.</p>
+
 
 </article>
 
@@ -190,6 +268,9 @@
         </li>
         <li>
             <a href='/components/switch.zwave/'>Z-Wave switch</a>
+        </li>
+        <li>
+            <a href='/components/switch.zigbee/'>ZigBee Switch</a>
         </li>
         <li>
             <a href='/components/switch.arest/'>aREST switch</a>

@@ -151,7 +151,7 @@
 </div>
 </div>
 
-<p>Indentation is used to specify which objects are nested under one another. Getting the right indentation can be tricky if you’re not using an editor with a fixed width font. Tabs are not allowed to be used for indentation.</p>
+<p>Indentation is used to specify which objects are nested under one anohter. Getting the right indentation can be tricky if you’re not using an editor with a fixed width font. Tabs are not allowed to be used for indentation. You can test your configuration using <a href="http://yaml-online-parser.appspot.com/">online YAML parser</a> or <a href="http://www.yamllint.com/">YAML Lint</a>.</p>
 
 <ul>
   <li>To learn more about the quirks of YAML, read <a href="https://docs.saltstack.com/en/latest/topics/troubleshooting/yaml_idiosyncrasies.html">YAML IDIOSYNCRASIES</a> by SaltStack.</li>
@@ -162,17 +162,18 @@
 
 <p>When a component does not show up, many different things can be the case. Before you try any of these steps, make sure to look at the <code>home-assistant.log</code> file and see if there are any errors related to your component you are trying to set up.</p>
 
-<p><strong>Problems with the configuration</strong><br />
-<code>configuration.yaml</code> does not allow multiple sections to have the same name. If you want a specific component to be loaded twice, append a number to the name.</p>
+<h4><a class="title-link" name="problems-with-the-configuration" href="#problems-with-the-configuration"></a> Problems with the configuration</h4>
+
+<p><code>configuration.yaml</code> does not allow multiple sections to have the same name. If you want a specific platform to be loaded twice, append a <a href="/getting-started/devices/#style-2">number/string</a> to the name or use <a href="/getting-started/devices/#style-1">this style</a>.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">sensor</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">forecast</span></span>
-  [<span class="error">…]</span>
+  [<span class="error">...]</span>
 
 <span class="key">sensor 2</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">bitcoin</span></span>
-  [<span class="error">…]</span>
+  [<span class="error">...]</span>
 </pre></div>
 </div>
 </div>
@@ -181,13 +182,49 @@
 
 <p>If you find any errors or want to expand the documentation, please <a href="https://github.com/balloob/home-assistant.io/issues">let us know</a>.</p>
 
-<p><strong>Problems with dependencies</strong><br />
-Almost all components have external dependencies to communicate with your devices and services. Sometimes Home Assistant is unable to install the necessary dependencies. If this is the case, it should show up in <code>home-assistant.log</code>.</p>
+<h4><a class="title-link" name="problems-with-dependencies" href="#problems-with-dependencies"></a> Problems with dependencies</h4>
+
+<p>Almost all components have external dependencies to communicate with your devices and services. Sometimes Home Assistant is unable to install the necessary dependencies. If this is the case, it should show up in <code>home-assistant.log</code>.</p>
 
 <p>First step is trying to restart Home Assistant and see if the problem persists. If it does, please <a href="https://github.com/balloob/home-assistant/issues">report it</a> so we can investigate what is going on.</p>
 
-<p><strong>Problems with components</strong><br />
-It can happen that some components either do not work right away or stop working after Home Assistant has been running for a while. If this happens to you, please <a href="https://github.com/balloob/home-assistant/issues">report it</a> so that we can have a look.</p>
+<h4><a class="title-link" name="problems-with-components" href="#problems-with-components"></a> Problems with components</h4>
+
+<p>It can happen that some components either do not work right away or stop working after Home Assistant has been running for a while. If this happens to you, please <a href="https://github.com/balloob/home-assistant/issues">report it</a> so that we can have a look.</p>
+
+<h4><a class="title-link" name="multiple-files" href="#multiple-files"></a> Multiple files</h4>
+
+<p>If you are using multiple files for your setup, make sure that the pointers are correct and the format of the files is valid.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">light</span>: <span class="type">!include</span> <span class="string"><span class="content">devices/lights.yaml</span></span>
+<span class="key">sensor</span>: <span class="type">!include</span> <span class="string"><span class="content">devices/sensors.yaml</span></span>
+</pre></div>
+</div>
+</div>
+<p>Contents of <code>lights.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>- <span class="string"><span class="content">platform: hyperion</span></span>
+  <span class="key">host</span>: <span class="string"><span class="content">192.168.1.98</span></span>
+  [<span class="error">...]</span>
+</pre></div>
+</div>
+</div>
+
+<p>Contents of <code>sensors.yaml</code>:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>- <span class="string"><span class="content">platform: mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Room Humidity</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">room/humidity</span><span class="delimiter">&quot;</span></span>
+- <span class="string"><span class="content">platform: mqtt</span></span>
+  <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Door Motion</span><span class="delimiter">&quot;</span></span>
+  <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">door/motion</span><span class="delimiter">&quot;</span></span>
+  [<span class="error">...]</span>
+</pre></div>
+</div>
+</div>
 
 <p class="note">
 Whenever you report an issue, be aware that we are a group of volunteers that do not have access to every single device in the world nor unlimited time to fix every problem out there.

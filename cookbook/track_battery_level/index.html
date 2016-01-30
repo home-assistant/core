@@ -1,0 +1,189 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Track your battery level - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Basic example how to track the battery level of your mobile devices.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/cookbook/track_battery_level/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="Track your battery level">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/cookbook/track_battery_level/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Basic example how to track the battery level of your mobile devices.">
+    <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@home_assistant">
+    
+    <meta name="twitter:title" content="Track your battery level">
+    <meta name="twitter:description" content="Basic example how to track the battery level of your mobile devices.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="page">
+
+  <div class='edit-github'><a href='https://github.com/balloob/home-assistant.io/tree/master/source/_cookbook/track_battery_level.markdown'>Edit this page on GitHub</a></div>
+
+  
+  <header>
+    <h1 class="title indent">
+      Track Your Battery Level
+    </h1>
+  </header>
+  <hr class="divider">
+  
+
+  <h3><a class="title-link" name="battery-level" href="#battery-level"></a> Battery level</h3>
+
+<p>The <a href="/components/device_tracker.icloud/">iCloud</a> is gathering various details about your device including the battery level. To display it in the Frontend use a <a href="/components/sensor.template/">template sensor</a>.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: template</span></span>
+    <span class="key">sensors</span>:
+      <span class="key">battery_iphone</span>:
+        <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">'%'</span></span>
+        <span class="key">value_template</span>: <span class="string"><span class="delimiter">&gt;-</span><span class="content">
+            {%- if states.device_tracker.iphone.attributes.battery %}
+                {{ states.device_tracker.iphone.attributes.battery }}
+            {% else %}
+                {{ states.sensor.battery_iphone.state }}
+            {%- endif %}</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>The <code>else</code> part is used to have the sensor keep it’s last state if the newest <a href="/components/device_tracker.icloud/">iCloud</a> update doesn’t have any battery state in it (which happens sometimes). Otherwise the sensor will be blank.</p>
+
+<p>While running the <a href="/components/device_tracker.owntracks/">Owntracks</a> device tracker you can retrieve the battery level with a MQTT sensor.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: mqtt</span></span>
+    <span class="key">state_topic</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">owntracks/tablet/tablet</span><span class="delimiter">&quot;</span></span>
+    <span class="key">name</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Battery Tablet</span><span class="delimiter">&quot;</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">%</span><span class="delimiter">&quot;</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.batt }}'</span></span>
+</pre></div>
+</div>
+</div>
+
+
+
+</article>
+
+
+        </div>
+
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+
+  </body>
+</html>

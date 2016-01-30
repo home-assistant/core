@@ -107,16 +107,15 @@
   </header>
   <hr class="divider">
 
-  <p><a href="https://www.pushbullet.com/">PushBullet</a> is a free service to send information between your phones, browsers and friends.</p>
+  <p>The <code>pushbullet</code> notification platform sends messages to <a href="https://www.pushbullet.com/">PushBullet</a>, a free service to send information between your phones, browsers, and friends.</p>
 
-<h3>Configuration</h3>
+<p>To enable PushBullet notifications in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">notify</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">pushbullet</span></span>
   <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
-  <span class="comment"># Optional</span>
   <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
 </pre></div>
 </div>
@@ -129,9 +128,9 @@
   <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
 </ul>
 
-<h3>Usage</h3>
+<h3><a class="title-link" name="usage" href="#usage"></a> Usage</h3>
 
-<p>PushBullet is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. It will send a notification to all devices registered in the PushBullet account.  An optional <strong>target</strong> parameter can be given to PushBullet to specify specific account’s devices, contacts or channels.</p>
+<p>PushBullet is a notify platform and thus can be controlled by calling the notify service <a href="/components/notify/">as described here</a>. It will send a notification to all devices registered in the PushBullet account. An optional <strong>target</strong> parameter can be given to PushBullet to specify specific account’s devices, contacts or channels.</p>
 
 <table>
   <thead>
@@ -166,7 +165,7 @@
 
 <p>If using targets, your own account’s email address functions as ‘send to all devices’. All targets are verified (if exists) before sending, except email.</p>
 
-<h4>Example service payload</h4>
+<h4><a class="title-link" name="example-service-payload" href="#example-service-payload"></a> Example service payload</h4>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>{
@@ -210,6 +209,9 @@
             <a href='/components/notify.free_mobile/'>Free Mobile</a>
         </li>
         <li>
+            <a href='/components/notify.google_voice/'>Google Voice SMS</a>
+        </li>
+        <li>
             <a href='/components/notify.instapush/'>Instapush</a>
         </li>
         <li>
@@ -238,6 +240,9 @@
         </li>
         <li>
             <a href='/components/notify.telegram/'>Telegram</a>
+        </li>
+        <li>
+            <a href='/components/notify.twitter/'>Twitter</a>
         </li>
     </ul>
     </div>

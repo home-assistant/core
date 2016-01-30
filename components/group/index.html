@@ -107,24 +107,43 @@
   </header>
   <hr class="divider">
 
-  <p>Groups allow the user to combine multiple entities into one.</p>
+  <p>Groups allow the user to combine multiple entities into one. A group can be promoted to a <strong>view</strong> by setting the <code>view</code> option to <code>yes</code>. This will make the group available as a new tab in the frontend.</p>
 
 <p>Check the <strong>Set State</strong> page from the <strong>Developer Tools</strong> and browse the <strong>Current entities:</strong> listing for all available entities.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">group</span>:
-  <span class="key">information</span>:
-    - <span class="string"><span class="content">sensor.time</span></span>
-  <span class="key">living_room</span>:
-    - <span class="string"><span class="content">binary_sensor.tv</span></span>
-    - <span class="string"><span class="content">sensor.living_room_temperature</span></span>
   <span class="key">kitchen</span>:
-    - <span class="string"><span class="content">switch.kitchen_pin_3</span></span>
-    - <span class="string"><span class="content">sensor.oven_temperature</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">Kitchen</span></span>
+    <span class="key">entities</span>:
+      - <span class="string"><span class="content">switch.kitchen_pin_3</span></span>
+  <span class="key">upstairs</span>:
+    <span class="key">name</span>: <span class="string"><span class="content">Kids</span></span>
+    <span class="key">icon</span>: <span class="string"><span class="content">mdi:account-multiple</span></span>
+    <span class="key">view</span>: <span class="string"><span class="content">yes</span></span>
+    <span class="key">entities</span>:
+      - <span class="string"><span class="content">input_boolean.notify_home</span></span>
+      - <span class="string"><span class="content">camera.demo_camera</span></span>
+      - <span class="string"><span class="content">device_tracker.demo_paulus</span></span>
+      - <span class="string"><span class="content">group.garden</span></span>
 </pre></div>
 </div>
 </div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>name</strong> (<em>Optional</em>): Name of the group.</li>
+  <li><strong>icon</strong> (<em>Optional</em>): An optional icon to show in the Frontend.</li>
+  <li><strong>view</strong> (<em>Optional</em>): If yes then the entry will be shown as a view.</li>
+  <li><strong>entities</strong> array or comma delimited string (<em>Required</em>): List of entites to group.</li>
+</ul>
+
+<p class="img">
+<img src="/images/blog/2016-01-release-12/views.png" />
+Example of groups shown as views in the frontend.
+</p>
 
 <p>If all entities are switches or lights they can be controlled as one with a switch at the top of the card. Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME).</p>
 
@@ -135,13 +154,10 @@
     - <span class="string"><span class="content">light.bowl</span></span>
     - <span class="string"><span class="content">light.ceiling</span></span>
     - <span class="string"><span class="content">light.tv_back_light</span></span>
-  <span class="key">children</span>:
-   - <span class="string"><span class="content">device_tracker.child_1</span></span>
-   - <span class="string"><span class="content">device_tracker.child_2</span></span>
+  <span class="key">children</span>: <span class="string"><span class="content">device_tracker.child_1, device_tracker.child_2</span></span>
 </pre></div>
 </div>
 </div>
-
 
 </article>
 

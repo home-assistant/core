@@ -123,7 +123,39 @@
 
 <p>There is no further configuration needed for tracking Owntracks devices.</p>
 
+<h3><a class="title-link" name="using-owntracks-with-other-device-trackers" href="#using-owntracks-with-other-device-trackers"></a> Using Owntracks with other device trackers</h3>
 <p>Owntracks can also be used with other device trackers, such as <a href="/components/device_tracker.nmap_scanner/">Nmap</a> or <a href="/components/device_tracker.netgear/">Netgear</a>. To do this, fill in the <code>mac</code> field to the Owntracks entry in <code>known_devices.yaml</code> with the MAC address of the device you want to track. This way the state of the device will be determined by the source that reported last.</p>
+
+<h3><a class="title-link" name="using-owntracks-regions" href="#using-owntracks-regions"></a> Using Owntracks regions</h3>
+<p>Owntracks can track regions, and send region entry and exit information to Home Assistant(HA). You set up a region in the Owntracks app which you should name the same as your HA Zone, and then make sure to turn on the <code>share</code> option for the region in the owntracks app. Please see the <a href="http://owntracks.org/booklet/guide/waypoints/">owntracks documentation</a></p>
+
+<p>Home Assistant will use the enter and leave messages to set your zone location. Your location will be set to the center of zone when you enter. Location updates from OwnTracks will be ignored while you are inside a zone.</p>
+
+<p>When you exit a zone, Home Assistant will start using location updates to track you again. To make sure that Home Assistant correctly exits a zone (which it calculates based on your GPS co-ordinates), you may want to set your Zone radius in HA to be slightly smaller that the Owntracks region radius.</p>
+
+<h3><a class="title-link" name="using-owntracks-regions---forcing-owntracks-to-update-using" href="#using-owntracks-regions---forcing-owntracks-to-update-using"></a> Using Owntracks regions - forcing Owntracks to update using  iBeacons</h3>
+<p>When run in the usual <code>significant changes mode</code> (which is kind to your phone battery), Owntracks sometimes doesn’t update your location as quickly as you’d like when you arrive at a zone. This can be annoying if you want to trigger an automation when you get home. You can improve the situation using iBeacons.</p>
+
+<p>iBeacons are simple bluetooth devices that send out an “I’m here” message. They are supported by IOS and some Android devices. Owntracks explain more <a href="http://owntracks.org/booklet/guide/beacons/">here</a></p>
+
+<p>When you enter an iBeacon region, Owntracks will send a <code>region enter</code> message to HA as described above. So if you want to have an event triggered when you arrive home, you can put an iBeacon outside your front door. If you set up an OwnTracks iBeacon region called <code>home</code> then getting close to the beacon will trigger an update to HA that will set your zone to be <code>home</code>.</p>
+
+<p>When you exit an iBeacon region HA will switch back to using GPS to determine your location. Depending on the size of your zone, and the accuracy of your GPS location this may change your HA zone.</p>
+
+<p>Sometimes Owntracks will lose connection with an iBeacon for a few seconds. If you name your beacon starting with <code>-</code> Owntracks will wait longer before deciding it has exited the beacon zone. HA will ignore the <code>-</code> when it matches the Owntracks region with Zones. So if you call your Owntracks region <code>-home</code> then HA will recognise it as <code>home</code>, but you will have a more stable iBeacon connection.</p>
+
+<h3><a class="title-link" name="using-owntracks-ibeacons-to-track-devices" href="#using-owntracks-ibeacons-to-track-devices"></a> Using Owntracks iBeacons to track devices</h3>
+<p>iBeacons don’t need to be stationary. You could put one on your key ring, or in your car.</p>
+
+<p>When your phone sees a mobile iBeacon that it knows about, it will tell HA the location of that iBeacon. If your phone moves while you are connected to the iBeacon, HA will update the location of the iBeacon. But when your phone loses the connection, HA will stop updating the iBeacon location.</p>
+
+<p>To use mobile iBeacons with HA, you just set up a region that doesn’t match your Zone names. If HA sees an entry event for a iBeacon region that doesn’t match a Zone name (say <code>keys</code>) - it will start tracking it, calling the device <code>device_tracker.beacon_keys</code>).</p>
+
+<p>This allows you to write zone automations for devices that can’t track themselves (for example <code>alert me if I leave the house and my keys are still at home</code>). Another example would be <code>open the gates if my car arrives home</code>.</p>
+
+<h3><a class="title-link" name="using-mobile-and-fixed-ibeacons-together" href="#using-mobile-and-fixed-ibeacons-together"></a> Using mobile and fixed iBeacons together</h3>
+<p>You can use iBeacons of both types together, so if you have a Zone <code>drive</code> with an iBeacon region called <code>-drive</code> and you arrive home with a mobile iBeacon called <code>-car</code>, then <code>device_tracker.beacon_car</code> will be set to a state of <code>drive</code>.</p>
+
 
 </article>
 

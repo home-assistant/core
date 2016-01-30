@@ -107,29 +107,22 @@
   </header>
   <hr class="divider">
 
-  <p>The nest thermostat platform let you control a thermostat from <a href="https://nest.com">Nest</a>.</p>
+  <p>The Nest thermostat platform let you control a thermostat from <a href="https://nest.com">Nest</a>.</p>
 
 <p>To set it up, add the following information to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">thermostat</span>:
   <span class="key">platform</span>: <span class="string"><span class="content">nest</span></span>
-  <span class="key">username</span>: <span class="string"><span class="content">USERNAME</span></span>
-  <span class="key">password</span>: <span class="string"><span class="content">PASSWORD</span></span>
 </pre></div>
 </div>
 </div>
 
-<p>Configuration variables:</p>
-
-<ul>
-  <li><strong>username</strong> (<em>Required</em>): Your Nest username.</li>
-  <li><strong>password</strong> (<em>Required</em>): Your Nest password.</li>
-</ul>
-
 <p class="img">
   <img src="/images/screenshots/nest-thermostat-card.png" />
 </p>
+
+<p class="note">You must have the <a href="https://home-assistant.io/components/nest/">Nest component</a> configured to use this sensor.</p>
 
 </article>
 
@@ -149,6 +142,20 @@
     <div class='section'>
       This is a platform for
       <a href='/components/thermostat/'>the Thermostats component</a>.
+    </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/nest/'>
+          Nest
+        </a></li>
+        <li><a href='/components/binary_sensor.nest/'>
+          Nest binary sensor
+        </a></li>
+        <li><a href='/components/sensor.nest/'>
+          Nest sensor
+        </a></li>
+    </ul>
     </div>
     <div class='section'>
     <h1 class="title delta">Category Thermostat</h1>

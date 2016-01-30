@@ -109,6 +109,152 @@
 
   <p>Integrates MySensors sensors into Home Assistant. See the <a href="/components/mysensors/">main component</a> for configuration instructions.</p>
 
+<p>The following sensor types are supported:</p>
+
+<h5>MySensors version 1.4 and higher</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th>S_TYPE</th>
+      <th>V_TYPE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>S_DOOR</td>
+      <td>V_TRIPPED</td>
+    </tr>
+    <tr>
+      <td>S_MOTION</td>
+      <td>V_TRIPPED</td>
+    </tr>
+    <tr>
+      <td>S_SMOKE</td>
+      <td>V_TRIPPED</td>
+    </tr>
+    <tr>
+      <td>S_TEMP</td>
+      <td>V_TEMP</td>
+    </tr>
+    <tr>
+      <td>S_HUM</td>
+      <td>V_HUM</td>
+    </tr>
+    <tr>
+      <td>S_BARO</td>
+      <td>V_PRESSURE, V_FORECAST</td>
+    </tr>
+    <tr>
+      <td>S_WIND</td>
+      <td>V_WIND, V_GUST</td>
+    </tr>
+    <tr>
+      <td>S_RAIN</td>
+      <td>V_RAIN, V_RAINRATE</td>
+    </tr>
+    <tr>
+      <td>S_UV</td>
+      <td>V_UV</td>
+    </tr>
+    <tr>
+      <td>S_WEIGHT</td>
+      <td>V_WEIGHT, V_IMPEDANCE</td>
+    </tr>
+    <tr>
+      <td>S_POWER</td>
+      <td>V_WATT, V_KWH</td>
+    </tr>
+    <tr>
+      <td>S_DISTANCE</td>
+      <td>V_DISTANCE</td>
+    </tr>
+    <tr>
+      <td>S_LIGHT_LEVEL</td>
+      <td>V_LIGHT_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_IR</td>
+      <td>V_IR_SEND, V_IR_RECEIVE</td>
+    </tr>
+    <tr>
+      <td>S_WATER</td>
+      <td>V_FLOW, V_VOLUME</td>
+    </tr>
+    <tr>
+      <td>S_AIR_QUALITY</td>
+      <td>V_DUST_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_CUSTOM</td>
+      <td>V_VAR1, V_VAR2, V_VAR3, V_VAR4, V_VAR5</td>
+    </tr>
+    <tr>
+      <td>S_DUST</td>
+      <td>V_DUST_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_SCENE_CONTROLLER</td>
+      <td>V_SCENE_ON, V_SCENE_OFF</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5>MySensors version 1.5 and higher</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th>S_TYPE</th>
+      <th>V_TYPE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>S_COLOR_SENSOR</td>
+      <td>V_RGB</td>
+    </tr>
+    <tr>
+      <td>S_MULTIMETER</td>
+      <td>V_VOLTAGE, V_CURRENT, V_IMPEDANCE</td>
+    </tr>
+    <tr>
+      <td>S_SPRINKLER</td>
+      <td>V_TRIPPED</td>
+    </tr>
+    <tr>
+      <td>S_WATER_LEAK</td>
+      <td>V_TRIPPED</td>
+    </tr>
+    <tr>
+      <td>S_SOUND</td>
+      <td>V_TRIPPED, V_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_VIBRATION</td>
+      <td>V_TRIPPED, V_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_MOISTURE</td>
+      <td>V_TRIPPED, V_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_LIGHT_LEVEL</td>
+      <td>V_LEVEL</td>
+    </tr>
+    <tr>
+      <td>S_AIR_QUALITY</td>
+      <td>V_LEVEL (replaces V_DUST_LEVEL)</td>
+    </tr>
+    <tr>
+      <td>S_DUST</td>
+      <td>V_LEVEL (replaces V_DUST_LEVEL)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>For more information, visit the <a href="https://www.mysensors.org/download/serial_api_15">serial api</a> of MySensors.</p>
+
 
 </article>
 
@@ -173,7 +319,13 @@
             MySensors sensors
         </li>
         <li>
+            <a href='/components/sensor.nest/'>Nest sensor</a>
+        </li>
+        <li>
             <a href='/components/sensor.netatmo/'>Netatmo</a>
+        </li>
+        <li>
+            <a href='/components/sensor.onewire/'>One wire sensor</a>
         </li>
         <li>
             <a href='/components/sensor.rest/'>RESTful sensor</a>
@@ -203,6 +355,9 @@
             <a href='/components/sensor.tellduslive/'>Telldus Live sensors</a>
         </li>
         <li>
+            <a href='/components/sensor.template/'>Template sensor</a>
+        </li>
+        <li>
             <a href='/components/sensor.time_date/'>Time & Date</a>
         </li>
         <li>
@@ -225,6 +380,9 @@
         </li>
         <li>
             <a href='/components/sensor.zwave/'>Z-Wave sensor</a>
+        </li>
+        <li>
+            <a href='/components/sensor.zigbee/'>ZigBee Sensor</a>
         </li>
         <li>
             <a href='/components/sensor.arest/'>aREST sensor</a>

@@ -107,20 +107,40 @@
   </header>
   <hr class="divider">
 
-  <p><a href="https://live.telldus.com">Telldus Live</a> is a cloud platform that connects to your Tellstick connected gear at home.</p>
+  <p>The <code>tellduslive</code> component let you connect to <a href="https://live.telldus.com">Telldus Live</a>. It’s cloud platform that connects to your Tellstick connected gear at home.</p>
 
-<p>To get started using Telldus Live, you will have to obtain developer keys from <a href="https://api.telldus.com/keys/index">here</a>.</p>
+<p>To get started using Telldus Live, you will have to obtain developer keys from (https://api.telldus.com/keys/index)[developer-keys].</p>
+
+<p>To integrate your Telldus Live with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">tellduslive</span>:
-  <span class="key">public_key</span>: <span class="string"><span class="content">XX</span></span>
-  <span class="key">private_key</span>: <span class="string"><span class="content">XX</span></span>
-  <span class="key">token</span>: <span class="string"><span class="content">XX</span></span>
-  <span class="key">token_secret</span>: <span class="string"><span class="content">XX</span></span>
+  <span class="key">public_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+  <span class="key">private_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+  <span class="key">token</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
+  <span class="key">token_secret</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
 </pre></div>
 </div>
 </div>
+
+<p>Configuration variables:</p>
+
+<ul>
+  <li><strong>public_key</strong> (<em>Required</em>): The public key for the Telldus Live service.</li>
+  <li><strong>private_key</strong> (<em>Required</em>): The private key for the Telldus Live service.</li>
+  <li><strong>token</strong> (<em>Required</em>): The token for the Telldus Live service.</li>
+  <li><strong>token_secret</strong> (<em>Required</em>): The token secret for the Telldus Live service.</li>
+</ul>
+
+<p>Tellstick Net devices can be auto discovered using <a href="https://developer.telldus.com/doxygen/html/TellStickNet.html">this method</a>.</p>
+
+<p>It might be possible to communicate with the Tellstick Net device directly, bypassing the Tellstick Live service. This however is <a href="http://developer.telldus.se/ticket/114">poorly documented</a> and yet not <a href="https://developer.telldus.com/doxygen/html/TellStickNet.html">fully supported</a>.</p>
+
+<p class="note warning">
+API requests to certain methods are limited to one request every 10 minutes.
+</p>
+
 
 </article>
 
@@ -158,6 +178,9 @@
             <a href='/components/isy994/'>ISY994 Controller</a>
         </li>
         <li>
+            <a href='/components/insteon_hub/'>Insteon</a>
+        </li>
+        <li>
             <a href='/components/mqtt/'>MQTT</a>
         </li>
         <li>
@@ -165,6 +188,9 @@
         </li>
         <li>
             <a href='/components/mysensors/'>MySensors</a>
+        </li>
+        <li>
+            <a href='/components/nest/'>Nest</a>
         </li>
         <li>
             <a href='/components/rfxtrx/'>RFXtrx</a>

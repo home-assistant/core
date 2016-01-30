@@ -109,6 +109,8 @@
 
   <p>The <a href="https://www.mysensors.org">MySensors</a> project combines Arduino boards with NRF24L01 radio boards to build sensor networks. The component will automatically add all available switches and sensors to Home Assistant.</p>
 
+<h3>Configuration</h3>
+
 <p>Integrate your Serial MySensors Gateway by adding the following to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
@@ -130,10 +132,10 @@
 
 <ul>
   <li><strong>port</strong> (<em>Required</em>): The port where your board is connected to your Home Assistant host.</li>
-  <li><strong>debug</strong> (<em>Optional</em>): Enable or disable verbose debug logging.</li>
-  <li><strong>persistence</strong> (<em>Optional</em>): Enable or disable local persistence of sensor information. If this is disabled, then each sensor will need to send presentation messages after Home Assistant starts.</li>
+  <li><strong>debug</strong> (<em>Optional</em>): Enable or disable verbose debug logging. Default is false.</li>
+  <li><strong>persistence</strong> (<em>Optional</em>): Enable or disable local persistence of sensor information. If this is disabled, then each sensor will need to send presentation messages after Home Assistant starts. Default is true.</li>
   <li><strong>persistence_file</strong> (<em>Optional</em>): Path to a file to save sensor information. The file extension determines the file type. Currently supported file types are ‘pickle’ and ‘json’.</li>
-  <li><strong>version</strong> (<em>Optional</em>): Specifies the MySensors protocol version to use (ex. 1.4, 1.5).</li>
+  <li><strong>version</strong> (<em>Optional</em>): Specifies the MySensors protocol version to use. Supports 1.4 and 1.5. Default is 1.4.</li>
 </ul>
 
 <p>If you are using an original Arduino the port will be named <code>ttyACM*</code>. The exact number can be determined with the command shown below.</p>
@@ -143,6 +145,29 @@
 </pre></div>
 </div>
 </div>
+
+<h3>Presentation</h3>
+
+<p>Present a MySensors sensor or actuator, by following these steps:</p>
+
+<ol>
+  <li>Connect your gateway to your computer.</li>
+  <li>Configure the MySensors component in configuration.yaml.</li>
+  <li>Start hass.</li>
+  <li>Wait for “gateway started” in the log output.</li>
+  <li>Write and upload your MySensors sketch to the sensor. Make sure you:
+    <ul>
+      <li>Either use a manual node id, or AUTO for requesting a node id from the controller, in gw.begin().</li>
+      <li>Send sketch name.</li>
+      <li>Present the sensor’s S_TYPE.</li>
+      <li>Send at least one initial value per V_TYPE.</li>
+    </ul>
+  </li>
+  <li>Start the sensor.</li>
+</ol>
+
+<p>Visit the <a href="https://www.mysensors.org/download/sensor_api_15">library api</a> of MySensors for more information.</p>
+
 
 </article>
 
@@ -180,6 +205,9 @@
             <a href='/components/isy994/'>ISY994 Controller</a>
         </li>
         <li>
+            <a href='/components/insteon_hub/'>Insteon</a>
+        </li>
+        <li>
             <a href='/components/mqtt/'>MQTT</a>
         </li>
         <li>
@@ -187,6 +215,9 @@
         </li>
         <li>
             MySensors
+        </li>
+        <li>
+            <a href='/components/nest/'>Nest</a>
         </li>
         <li>
             <a href='/components/rfxtrx/'>RFXtrx</a>

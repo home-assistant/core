@@ -1,0 +1,323 @@
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>0.12: Insteon, LIFX, Twitter and ZigBee - Home Assistant</title>
+    <meta name="author" content="Paulus Schoutsen">
+    <meta name="description" content="Home Assistant 0.12 brings improved organizational tools and makes writing automation in Python easier.">
+    
+    <meta name="viewport" content="width=device-width">
+    <link rel="canonical" href="https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/">
+
+    <meta property="fb:app_id" content="338291289691179">
+    <meta property="og:title" content="0.12: Insteon, LIFX, Twitter and ZigBee">
+    <meta property="og:site_name" content="Home Assistant">
+    <meta property="og:url" content="https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/">
+    <meta property="og:type" content="article">
+    <meta property="og:description" content="Home Assistant 0.12 brings improved organizational tools and makes writing automation in Python easier.">
+    <meta property="og:image" content="https://home-assistant.io/images/blog/2016-01-release-12/social.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@home_assistant">
+    <meta name="twitter:creator" content="@balloob">
+    <meta name="twitter:title" content="0.12: Insteon, LIFX, Twitter and ZigBee">
+    <meta name="twitter:description" content="Home Assistant 0.12 brings improved organizational tools and makes writing automation in Python easier.">
+    <meta name="twitter:image" content="https://home-assistant.io/images/blog/2016-01-release-12/social.png">
+
+    <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/atom.xml" rel="alternate" title="Home Assistant" type="application/atom+xml">
+    <link rel='shortcut icon' href='/images/favicon.ico' />
+    <link rel='icon' type='image/png' href='/images/favicon-192x192.png' sizes='192x192' />
+  </head>
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item three-tenths lap-two-sixths palm-one-whole ha-title">
+  <a href="/" class="site-title">
+    <img width='40' src='/images/favicon-192x192.png'>
+    <span>Home Assistant</span>
+  </a>
+</div>
+
+<div class="grid__item seven-tenths lap-four-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li>
+    <a href="/getting-started/">Getting started</a>
+    <ul>
+      <li><a href='/getting-started/'>Installing Home Assistant</a></li>
+      <li><a href='/getting-started/configuration/'>Configuration basics</a></li>
+      <li><a href='/getting-started/devices/'>Adding devices</a></li>
+      <li><a href='/getting-started/presence-detection/'>Presence detection</a></li>
+      <li><a href='/getting-started/automation/'>Automation</a></li>
+      <li><a href='/getting-started/templating/'>Templating</a></li>
+      <li><a href='/cookbook'>Configuration cookbook</a></li>
+    </ul>
+  </li>
+  <li><a href='/components/'>Components</a></li>
+  <li>
+    <a href="/developers/">Developers</a>
+    <ul>
+      <li><a href="/developers/architecture/">Architecture</a></li>
+      <li><a href="/developers/frontend/">Frontend development</a></li>
+      <li><a href="/developers/creating_components/">
+        Creating components
+      </a></li>
+      <li><a href="/developers/add_new_platform/">
+        Adding platform support
+      </a></li>
+      <li><a href="/developers/api/">API</a></li>
+      <li><a href="/developers/credits/">Credits</a></li>
+    </ul>
+  </li>
+  <li><a href="/blog/">Blog</a></li>
+  <li><a href="/help/">Need help?</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="post">
+  
+  <header>
+  
+  <h1 class="title indent">0.12: Insteon, LIFX, Twitter and ZigBee</h1>
+  
+
+  
+  <div class="meta clearfix">
+    <time datetime="2016-01-30T08:22:00+00:00" pubdate data-updated="true"><i class="icon-calendar"></i> January 30, 2016</time>
+    <span class="byline author vcard"><i class='icon-user'></i> Paulus Schoutsen</span>
+    <span><i class='icon-time'></i> two minutes reading time</span>
+    <span>
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      
+        <li><a class='category' href='/blog/categories/release-notes/'>Release-Notes</a></li>
+      
+    
+    </ul>
+  </span>
+    
+      <a class='comments'
+         href="#disqus_thread"
+         >Comments</a>
+    
+  </div>
+  
+</header>
+
+
+  <p>Another sprint has come to an end and it seems that we have not slowed down a single bit 🚀. 0.12 is full of new components, platforms and organizational additions.</p>
+
+<p>I would like to give a shout out to <a href="https://github.com/pavoni">Greg Dowling (@pavoni)</a> as every release includes new work from him. He is constantly adding support for new platforms or improving the reliablity of existing components and platforms. Keep up the good work!</p>
+
+<p>This release includes a very frequent requested feature: the ability to organize entities in different tabs in the frontend. See <a href="/demo/">the demo</a> to see this in action and read more in the <a href="/components/group/">group documentation</a> how to get started.</p>
+
+<p class="img">
+<a href="/demo/"><img src="/images/blog/2016-01-release-12/views.png" /></a>
+Example of the new views in the frontend. <a href="/components/group/">Learn more.</a>
+</p>
+
+<p><img src="/images/supported_brands/insteon.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/lifx.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/twitter.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/zigbee.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /><img src="/images/supported_brands/google_voice.png" style="clear: right; border:none; box-shadow: none; float: right; margin-bottom: 16px;" width="150" /></p>
+
+<ul>
+  <li>Binary sensor: <a href="/components/binary_sensor.command/">command sensor</a> added (<a href="https://github.com/Bart274">@Bart274</a>)</li>
+  <li><a href="/components/nest/">Nest</a> support extended to include sensors and binary sensors (<a href="https://github.com/joshughes">@joshughes</a>)</li>
+  <li>Light: <a href="/components/light.lifx/">LIFX</a> platform added (<a href="https://github.com/TangoAlpha">@TangoAlpha</a>)</li>
+  <li>Notify: <a href="/components/notify.twitter/">Twitter</a> platform added (<a href="https://github.com/HydrelioxGitHub">@HydrelioxGitHub</a>)</li>
+  <li>Sensor: <a href="/components/sensor.template/">Template</a> platform added (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>Switch: <a href="/components/wink/">Wink</a> platform now supports sirens (<a href="https://github.com/w1ll1am23">@w1ll1am23</a>)</li>
+  <li><a href="/components/insteon_hub/">Insteon hub</a> support added (<a href="https://github.com/FreekingDean">@FreekingDean</a>)</li>
+  <li><a href="/components/statsd/">Statsd</a> component added (<a href="https://github.com/michaelkuty">@michaelkuty</a>)</li>
+  <li>Light: <a href="/components/light.rfxtrx/">Rfxtrx</a> platform now supports dimming (<a href="https://github.com/turbokongen">@turbokongen</a>)</li>
+  <li>Time scheduling (including <a href="/components/automation/#time-trigger">time automation</a>) now works with intervals (ie. <code>/5</code>) (<a href="https://github.com/kennedyshead">@kennedyshead</a>)</li>
+  <li>Sensor: <a href="/components/sensor.onewire/">onewire</a> support added (<a href="https://github.com/deisi">@deisi</a>)</li>
+  <li><a href="/components/zigbee/">Zigbee</a> support added (<a href="https://github.com/flyte">@flyte</a>)</li>
+  <li>Device Tracker: <a href="/components/device_tracker.owntracks/">OwnTracks</a> can now track iBeacons (<a href="https://github.com/pavoni">@pavoni</a>)</li>
+  <li>Notify: <a href="/components/notify.google_voice/">Google Voice SMS</a> platform added (<a href="https://github.com/w1ll1am23">@w1ll1am23</a>)</li>
+  <li>Toggle service added to <code>homeassistant</code>, <code>switch</code>, <code>light</code> and <code>media_player</code> (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li><a href="/components/thermostat/">Thermostat</a> services added to control fans (<a href="https://github.com/auchter">@auchter</a>)</li>
+  <li>Improved Python automation: Event helpers are now also available as decorators for custom components (<a href="https://github.com/rmkraus">@rmkraus</a>)</li>
+  <li>Frontend: support added for tabs to show <a href="/components/group/">different views</a> of your house (<a href="https://github.com/balloob">@balloob</a>)</li>
+  <li>Bugfixes by <a href="https://github.com/molobrakos">@molobrakos</a>, <a href="https://github.com/MartinHjelmare">@MartinHjelmare</a>, <a href="https://github.com/pavoni">@pavoni</a>, <a href="https://github.com/trollkarlen">@trollkarlen</a>, <a href="https://github.com/zmrow">@zmrow</a>, <a href="https://github.com/maddox">@maddox</a>, <a href="https://github.com/persandstrom">@persandstrom</a>, <a href="https://github.com/happyleavesaoc">@happyleavesaoc</a>, <a href="https://github.com/balloob">@balloob</a>, <a href="https://github.com/fabaff">@fabaff</a>, <a href="https://github.com/stefan-jonasson">@stefan-jonasson</a>, <a href="https://github.com/haraldnagel">@haraldnagel</a>.</li>
+</ul>
+
+<h3>Backwards incompatible changes</h3>
+<ul>
+  <li>Nest config has moved from thermostat to the <a href="/components/nest/">Nest component</a>.</li>
+</ul>
+</article>
+
+
+<section id="disqus">
+  <h3 class="indent title">Comments</h3>
+  <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript></div>
+</section>
+
+
+        </div>
+
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+  
+  
+    <section class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">About Home Assistant</h1>
+  <ul class="divided">
+    <li>
+      Home Assistant is an open-source home automation platform running on Python 3. Track and control all devices at home and automate control.
+    </li>
+    <li><a href='/getting-started/'>Get started with Home Assistant</a></li>
+    <li><a href='/demo/'>Try the online demo</a></li>
+    <li><a class="twitter-follow-button" href="https://twitter.com/Home_Assistant">Follow Home Assistant on Twitter</a></li>
+  </ul>
+</section>
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.async=true;js.src='//platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+
+    
+      <section class="sharing aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Share this post</h1>
+  
+  <a href="//twitter.com/share"
+     class="twitter-share-button"
+     data-via="home_assistant"
+     data-related="home_assistant"
+     data-url="https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/"
+     data-counturl="https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/" >Tweet</a>
+  
+  
+    <div class="fb-share-button" style='top: -6px;'
+         data-href="https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/"
+         data-layout="button_count">
+    </div>
+  
+  
+  <div class="g-plusone" data-size="standard"></div>
+  
+</section>
+
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({appId: '338291289691179', xfbml: true, version: 'v2.2'});
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+</script>
+      <section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Recent Posts</h1>
+  <ul class="divided">
+    
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2016/01/19/perfect-home-automation/">Perfect Home Automation</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2016/01/17/extended-support-for-diy-solutions/">0.11: Extended support for DIY solutions</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/12/22/amazon-echo-icloud-and-templates/">0.10: Amazon Echo, iCloud, Dweet.io, Twitch and templating support!</a>
+        </li>
+      
+    
+      
+        <li class="post">
+          <a href="/blog/2015/12/13/setup-encryption-using-lets-encrypt/">Set up encryption using Let's Encrypt</a>
+        </li>
+      
+    
+  </ul>
+</section>
+    
+  
+</div>
+        </aside>
+        
+      </div>
+    </div>
+
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <div class="copyright">
+  <a rel="me" href='https://twitter.com/home_assistant'><i class="icon-twitter"></i></a>
+  <a rel="me" href='https://github.com/balloob/home-assistant'><i class="icon-github"></i></a>
+
+  <div class="credit">
+    Website powered by <a href='http://jekyllrb.com/'>Jekyll</a> and the <a href='https://github.com/coogie/oscailte'>Oscalite theme</a>.<br />
+    Hosted by <a href='https://pages.github.com/'>GitHub</a> and served by <a href='https://cloudflare.com'>CloudFlare</a>.
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script>
+  var _gaq=[['_setAccount','UA-57927901-1'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+  g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+  s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+<script>
+  var disqus_shortname = 'home-assistant';
+  
+    
+    // var disqus_developer = 1;
+    var disqus_identifier = 'https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/';
+    var disqus_url = 'https://home-assistant.io/blog/2016/01/30/insteon-lifx-twitter-and-zigbee/';
+    var disqus_script = 'embed.js';
+  
+  (function () {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  }());
+</script>
+
+  </body>
+</html>

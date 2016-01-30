@@ -273,24 +273,32 @@
 
 <h4><a class="title-link" name="time-trigger" href="#time-trigger"></a> Time trigger</h4>
 
-<p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific point in time each day. Alternatively, you can also match if the hour, minute or second of the current time has a specific value. For example, by only setting minutes in the config to 5 it will trigger every hour when it is 5 minutes past whole.  You cannot use <code>after</code> together with hour, minute or second.</p>
+<p>Time can be triggered in many ways. The most common is to specify <code>after</code> and trigger at a specific point in time each day. Alternatively, you can also match if the hour, minute or second of the current time has a specific value. You can prefix the value with a <code>/</code> to match whenever the value is divisible by that number. You cannot use <code>after</code> together with hour, minute or second.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="key">automation</span>:
   <span class="key">trigger</span>:
     <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
-    <span class="comment"># All following are optional.</span>
+    <span class="comment"># Matches every hour at 5 minutes past whole</span>
+    <span class="key">minutes</span>: <span class="string"><span class="content">5</span></span>
+    <span class="key">seconds</span>: <span class="string"><span class="content">0</span></span>
+
+<span class="key">automation 2</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
     <span class="comment"># When 'after' is used, you cannot also match on hour, minute, seconds.</span>
     <span class="comment"># Military time format.</span>
-    <span class="comment"># after: '15:32:00'</span>
-    <span class="key">hours</span>: <span class="string"><span class="content">0</span></span>
-    <span class="key">minutes</span>: <span class="string"><span class="content">5</span></span>
+    <span class="key">after</span>: <span class="string"><span class="content">'15:32:00'</span></span>
+
+<span class="key">automation 3</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">time</span></span>
+    <span class="comment"># You can also match on interval. This will match every 5 minutes</span>
+    <span class="key">minutes</span>: <span class="string"><span class="content">'/5'</span></span>
     <span class="key">seconds</span>: <span class="string"><span class="content">0</span></span>
 </pre></div>
 </div>
 </div>
-
-<p>The above example will trigger every hour on the 5 (2:05, 3:05, 4:05, etc).</p>
 
 <h4><a class="title-link" name="zone-trigger" href="#zone-trigger"></a> Zone trigger</h4>
 

@@ -107,7 +107,7 @@
   </header>
   <hr class="divider">
 
-  <p>The smtp platform allows you to deliver notifications from Home Assistant to an e-mail recipient.</p>
+  <p>The <code>smtp</code> platform allows you to deliver notifications from Home Assistant to an e-mail recipient.</p>
 
 <p>To enable notification by e-mail in your installation, add the following to your <code>configuration.yaml</code> file:</p>
 
@@ -131,13 +131,13 @@
 
 <ul>
   <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
-  <li><strong>server</strong> (<em>Required</em>): SMTP server which is used to end the notifications. For Google Mail, eg. smtp.gmail.com. Keep in mind that Google has some extra layers of protection which need special attention (Hint: ‘Less secure apps’).</li>
-  <li><strong>port</strong> (<em>Required</em>): The port that the SMTP server is using, eg. 587 for Google Mail and STARTTLS or 465/993 depending on your SMTP servers.</li>
-  <li><strong>sender</strong> (<em>Required</em>): E-Mail address of the sender.</li>
-  <li><strong>username</strong> (<em>Required</em>): Username for the SMTP account.</li>
-  <li><strong>password</strong> (<em>Required</em>):Password for the SMTP server that belongs to the given username. If the password contains a colon it need to be wrapped in apostrophes.</li>
+  <li><strong>server</strong> (<em>Optional</em>): SMTP server which is used to end the notifications. For Google Mail, eg. smtp.gmail.com. Keep in mind that Google has some extra layers of protection which need special attention (Hint: ‘Less secure apps’). Defaults to <code>localhost</code>.</li>
+  <li><strong>port</strong> (<em>Optional</em>): The port that the SMTP server is using, eg. 587 for Google Mail and STARTTLS or 465/993 depending on your SMTP servers.  Defaults to 25.</li>
+  <li><strong>sender</strong> (<em>Optional</em>): E-mail address of the sender.</li>
+  <li><strong>username</strong> (<em>Optional</em>): Username for the SMTP account.</li>
+  <li><strong>password</strong> (<em>Optional</em>):Password for the SMTP server that belongs to the given username. If the password contains a colon it need to be wrapped in apostrophes.</li>
   <li><strong>recipient</strong> (<em>Required</em>): Recipient of the notification.</li>
-  <li><strong>starttls</strong> (<em>Optional</em>): Enables STARTTLS, eg. 1 or 0.</li>
+  <li><strong>starttls</strong> (<em>Optional</em>): Enables STARTTLS, eg. 1 or 0. Defaults to 0.</li>
 </ul>
 
 <p>This platform is fragile and not able to catch all exceptions in a smart way because of the large number of possible configuration combinations.</p>
@@ -180,6 +180,9 @@ which need special attention. By default, the usage by external applications, es
             <a href='/components/notify.free_mobile/'>Free Mobile</a>
         </li>
         <li>
+            <a href='/components/notify.google_voice/'>Google Voice SMS</a>
+        </li>
+        <li>
             <a href='/components/notify.instapush/'>Instapush</a>
         </li>
         <li>
@@ -208,6 +211,9 @@ which need special attention. By default, the usage by external applications, es
         </li>
         <li>
             <a href='/components/notify.telegram/'>Telegram</a>
+        </li>
+        <li>
+            <a href='/components/notify.twitter/'>Twitter</a>
         </li>
     </ul>
     </div>

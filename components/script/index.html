@@ -125,14 +125,15 @@
           <span class="key">domain</span>: <span class="string"><span class="content">light</span></span>
       - <span class="string"><span class="content">alias: Bedroom lights on</span></span>
         <span class="key">service</span>: <span class="string"><span class="content">light.turn_on</span></span>
-        <span class="key">service_data</span>:
+        <span class="key">data</span>:
           <span class="key">entity_id</span>: <span class="string"><span class="content">group.bedroom</span></span>
+          <span class="key">brightness</span>: <span class="string"><span class="content">100</span></span>
       - <span class="string"><span class="content">delay:</span><span class="content">
           # supports seconds, milliseconds, minutes, hours, etc.
           minutes: 1</span></span>
       - <span class="string"><span class="content">alias: Living room lights on</span></span>
         <span class="key">service</span>: <span class="string"><span class="content">light.turn_on</span></span>
-        <span class="key">service_data</span>:
+        <span class="key">data</span>:
           <span class="key">entity_id</span>: <span class="string"><span class="content">group.living_room</span></span>
 </pre></div>
 </div>
