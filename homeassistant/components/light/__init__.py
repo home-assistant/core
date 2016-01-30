@@ -60,7 +60,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
-    insteon_hub.DISCOVER_LIGHTS: 'insteon',
+    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
