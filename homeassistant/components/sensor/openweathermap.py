@@ -37,15 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    try:
-        from pyowm import OWM
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import pyowm. "
-            "Did you maybe not install the 'PyOWM' package?")
-
-        return False
+    from pyowm import OWM
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
@@ -165,6 +157,10 @@ class WeatherData(object):
     def update(self):
         """ Gets the latest data from OpenWeatherMap. """
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        if obs is None:
+            _LOGGER.warning('Failed to fetch data from OWM')
+            return
+
         self.data = obs.get_weather()
 
         if self.forecast == 1:

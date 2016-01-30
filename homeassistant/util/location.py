@@ -1,11 +1,14 @@
-"""Module with location helpers."""
+"""
+homeassistant.util.location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Module with location helpers.
+"""
 import collections
 
 import requests
 from vincenty import vincenty
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-
 
 LocationInfo = collections.namedtuple(
     "LocationInfo",

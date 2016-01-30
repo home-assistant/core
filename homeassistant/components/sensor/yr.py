@@ -10,7 +10,9 @@ import logging
 
 import requests
 
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import (ATTR_ENTITY_PICTURE,
+                                 CONF_LATITUDE,
+                                 CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import location, dt as dt_util
 
@@ -25,6 +27,7 @@ SENSOR_TYPES = {
     'precipitation': ['Condition', 'mm'],
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
+    'windGust': ['Wind gust', 'm/s'],
     'pressure': ['Pressure', 'mbar'],
     'windDirection': ['Wind direction', '°'],
     'humidity': ['Humidity', '%'],
@@ -40,18 +43,21 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Yr.no sensor. """
 
-    if None in (hass.config.latitude, hass.config.longitude):
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    elevation = config.get('elevation')
+
+    if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    elevation = config.get('elevation')
-
     if elevation is None:
-        elevation = location.elevation(hass.config.latitude,
-                                       hass.config.longitude)
+        elevation = location.elevation(latitude,
+                                       longitude)
 
-    coordinates = dict(lat=hass.config.latitude,
-                       lon=hass.config.longitude, msl=elevation)
+    coordinates = dict(lat=latitude,
+                       lon=longitude,
+                       msl=elevation)
 
     weather = YrData(coordinates)
 
@@ -143,11 +149,11 @@ class YrSensor(Entity):
             elif self.type == 'symbol' and valid_from < now:
                 self._state = loc_data[self.type]['@number']
                 break
-            elif self.type == ('temperature', 'pressure', 'humidity',
+            elif self.type in ('temperature', 'pressure', 'humidity',
                                'dewpointTemperature'):
                 self._state = loc_data[self.type]['@value']
                 break
-            elif self.type == 'windSpeed':
+            elif self.type in ('windSpeed', 'windGust'):
                 self._state = loc_data[self.type]['@mps']
                 break
             elif self.type == 'windDirection':

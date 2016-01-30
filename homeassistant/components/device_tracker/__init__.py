@@ -229,7 +229,7 @@ class DeviceTracker(object):
         """ Initializes group for all tracked devices. """
         entity_ids = (dev.entity_id for dev in self.devices.values()
                       if dev.track)
-        self.group = group.setup_group(
+        self.group = group.Group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
     def update_stale(self, now):
