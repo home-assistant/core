@@ -7,90 +7,78 @@ Tests the logbook component.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from datetime import timedelta
-import homeassistant.core as ha
 
+import homeassistant.core as ha
+from homeassistant.components.logbook import (
+    _filter_start_stop_and_sensor_events
+)
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from tests.common import mock_http_component
+from tests.common import get_test_home_assistant, mock_http_component
 
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
 
-    def setUp(self):
+    def test_setup(self):
         """ Test setup method. """
-        self.hass = ha.HomeAssistant()
-        mock_http_component(self.hass)
-        logbook.setup(self.hass, {})
-
-        self.calls = []
-
-    def tearDown(self):
-        self.hass.stop()
-
-    def test_service_call_create_logbook_entry(self):
-        calls = []
-
-        def event_listener(event):
-            calls.append(event)
-
-        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
-        self.hass.services.call('logbook', 'log', {
-            logbook.ATTR_NAME: 'name',
-            logbook.ATTR_MESSAGE: 'message',
-            logbook.ATTR_DOMAIN_INPUT: 'domain',
-            logbook.ATTR_ENTITY_ID: 'entity_id',
-        }, True)
-        self.hass.pool.block_till_done()
-
-        self.assertEqual(1, len(calls))
-        last_call = calls[-1]
-
-        self.assertEqual(last_call.data.get('name'), 'name')
-        self.assertEqual(last_call.data.get('message'), 'message')
-        self.assertEqual(last_call.data.get('domain'), 'domain')
-        self.assertEqual(last_call.data.get('entity_id'), 'entity_id')
-
-    def test_service_call_create_logbook_entry_missing_parameter(self):
-        calls = []
-
-        def event_listener(event):
-            calls.append(event)
-
-        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
-
-        self.hass.services.call('logbook', 'log', {
-            logbook.ATTR_MESSAGE: 'test',
-        })
-        self.hass.pool.block_till_done()
-
-        self.assertEqual(0, len(calls))
+        try:
+            hass = get_test_home_assistant()
+            mock_http_component(hass)
+            self.assertTrue(logbook.setup(hass, {}))
+        finally:
+            hass.stop()
 
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
         entity_id = 'sensor.bla'
 
-        point_a = dt_util.strip_microseconds(
-                dt_util.utcnow().replace(minute=2)
-        )
-        point_b = point_a.replace(minute=5)
-        point_c = point_a + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointB = pointA.replace(minute=5)
+        pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 
-        event_a = self.create_state_changed_event(point_a, entity_id, 10)
-        event_b = self.create_state_changed_event(point_b, entity_id, 20)
-        event_c = self.create_state_changed_event(point_c, entity_id, 30)
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id, 20)
+        eventC = self.create_state_changed_event(pointC, entity_id, 30)
 
-        entries = list(logbook.humanify((event_a, event_b, event_c)))
+        entries = list(logbook.humanify((eventA, eventB, eventC)))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
-            entries[0], point_b, 'bla', domain='sensor', entity_id=entity_id)
+            entries[0], pointB, 'bla', domain='sensor', entity_id=entity_id)
 
         self.assert_entry(
-            entries[1], point_c, 'bla', domain='sensor', entity_id=entity_id)
+            entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
+
+    def test__filter_start_stop_and_sensor_events(self):
+        sensor_entity_id = 'sensor.bla'
+        switch_entity_id = 'switch.bla'
+
+        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointB = pointA.replace(minute=5)
+        pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, sensor_entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, sensor_entity_id, 20)
+        eventC = self.create_state_changed_event(pointC, sensor_entity_id, 30)
+
+        eventD = self.create_start_stop_event(
+                pointA, switch_entity_id, EVENT_HOMEASSISTANT_STOP)
+        eventE = self.create_start_stop_event(
+                pointB, switch_entity_id, EVENT_HOMEASSISTANT_START)
+        eventF = self.create_start_stop_event(
+                pointC, switch_entity_id, EVENT_HOMEASSISTANT_STOP)
+
+        start_stop_events, \
+        last_sensor_event = _filter_start_stop_and_sensor_events(
+                (eventA, eventB, eventC, eventD, eventE, eventF)
+        )
+
+        self.assertEqual(last_sensor_event.get('sensor.bla'), eventC)
+        self.assertDictEqual(start_stop_events, {17: 1, 2: 1})
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if
@@ -153,4 +141,12 @@ class TestComponentHistory(unittest.TestCase):
             'entity_id': entity_id,
             'old_state': state,
             'new_state': state,
+        }, time_fired=event_time_fired)
+
+    def create_start_stop_event(self, event_time_fired, entity_id,
+                                event_state):
+        """ Create state changed event. """
+
+        return ha.Event(event_state, {
+            'entity_id': entity_id,
         }, time_fired=event_time_fired)
