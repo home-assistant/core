@@ -27,7 +27,7 @@ class TestPackageUtil(unittest.TestCase):
 
     def tearDown(self):
         """ Remove local library """
-        del self.tmp_dir
+        self.tmp_dir.cleanup()
 
     def test_install_existing_package(self):
         """ Test an install attempt on an existing package """
