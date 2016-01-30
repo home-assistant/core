@@ -14,13 +14,15 @@ import re
 from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
+    ATTR_DOMAIN)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.helpers.entity import split_entity_id
 from homeassistant.util import template
 
 DOMAIN = "logbook"
+SERVICE_PUBLISH = 'log'
 DEPENDENCIES = ['recorder', 'http']
 
 URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
@@ -37,7 +39,6 @@ GROUP_BY_MINUTES = 15
 
 ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
-ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
 
@@ -62,8 +63,8 @@ def setup(hass, config):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
         name = service.data.get(ATTR_NAME)
-        domain = service.data.get(ATTR_DOMAIN, None)
-        entity_id = service.data.get(ATTR_ENTITY_ID, None)
+        domain = service.data.get(ATTR_DOMAIN)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
         if not message or not name:
             return
@@ -72,7 +73,7 @@ def setup(hass, config):
         log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, 'log', log_message)
+    hass.services.register(DOMAIN, SERVICE_PUBLISH, log_message)
     return True
 
 
