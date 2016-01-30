@@ -117,11 +117,11 @@
   <span class="key">platform</span>: <span class="string"><span class="content">template</span></span>
   <span class="key">sensors</span>:
     <span class="key">solar_angle</span>:
-      <span class="key">value_template</span>: <span class="string"><span class="content">''</span></span>
+      <span class="key">value_template</span>: <span class="string"><span class="content">'{{ states.sun.sun.attributes.elevation }}'</span></span>
       <span class="key">friendly_name</span>: <span class="string"><span class="content">'Sun angle'</span></span>
       <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">'degrees'</span></span>
     <span class="key">sunrise</span>:
-      <span class="key">value_template</span>: <span class="string"><span class="content">''</span></span>
+      <span class="key">value_template</span>: <span class="string"><span class="content">'{{ states.sun.sun.attributes.next_rising }}'</span></span>
 </pre></div>
 </div>
 </div>
@@ -151,7 +151,7 @@
   <span class="key">platform</span>: <span class="string"><span class="content">template</span></span>
   <span class="key">sensors</span>:
       <span class="key">solar_angle</span>:
-        <span class="key">value_template</span>: <span class="string"><span class="content">'%+.1f'</span></span>
+        <span class="key">value_template</span>: <span class="string"><span class="content">'{{ &quot;%+.1f&quot;|format(states.sun.sun.attributes.elevation) }}'</span></span>
         <span class="key">friendly_name</span>: <span class="string"><span class="content">'Sun Angle'</span></span>
         <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">'°'</span></span>
 </pre></div>
