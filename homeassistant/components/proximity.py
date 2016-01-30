@@ -118,9 +118,8 @@ def setup(hass, config):
 
     proximity.update_ha_state()
     entities.add(proximity.entity_id)
-    
 
-    def check_proximity_dev_state_change(entity, old_state, new_state):
+    def check_proximity_state_change(entity, old_state, new_state):
         """ Function to perform the proximity checking """
         entity_name = new_state.attributes['friendly_name']
         device_is_in_zone = False
@@ -151,7 +150,7 @@ def setup(hass, config):
         # check that the device is not in an ignored zone
         if new_state.state in ignored_zones:
             _LOGGER.info('%s Device is in an ignored zone: %s', entity_id,
-                         device)
+                         entity_name)
             return
 
         # check for latitude and longitude (on startup these values may not
@@ -273,7 +272,7 @@ def setup(hass, config):
 
     # main command to monitor proximity of devices
     track_state_change(hass, proximity_devices,
-                       check_proximity_dev_state_change)
+                       check_proximity_state_change)
 
     # Tells the bootstrapper that the component was successfully initialized
     return True
