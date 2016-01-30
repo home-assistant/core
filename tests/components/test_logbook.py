@@ -10,7 +10,7 @@ from datetime import timedelta
 
 import homeassistant.core as ha
 from homeassistant.components.logbook import (
-    _filter_start_stop_and_sensor_events
+    _filter_events
 )
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -72,10 +72,9 @@ class TestComponentHistory(unittest.TestCase):
         eventF = self.create_start_stop_event(
                 pointC, switch_entity_id, EVENT_HOMEASSISTANT_STOP)
 
-        start_stop_events, \
-        last_sensor_event = _filter_start_stop_and_sensor_events(
-                (eventA, eventB, eventC, eventD, eventE, eventF)
-        )
+        start_stop_events, last_sensor_event = _filter_events((
+            eventA, eventB, eventC, eventD, eventE, eventF
+        ))
 
         self.assertEqual(last_sensor_event.get('sensor.bla'), eventC)
         self.assertDictEqual(start_stop_events, {17: 1, 2: 1})

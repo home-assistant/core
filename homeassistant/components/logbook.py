@@ -126,7 +126,7 @@ class Entry(object):
         }
 
 
-def _filter_start_stop_and_sensor_events(events):
+def _filter_events(events):
 
     last_sensor_event = {}
     start_stop_events = {}
@@ -178,10 +178,7 @@ def humanify(events):
         # Keep track of last sensor states
         # group HA start/stop events
         # Maps minute of event to 1: stop, 2: stop + start
-        start_stop_events, \
-        last_sensor_event = _filter_start_stop_and_sensor_events(
-                events_batch
-        )
+        start_stop_events, last_sensor_event = _filter_events(events_batch)
 
         # Process events
 
