@@ -165,7 +165,7 @@ class TestMediaPlayer(unittest.TestCase):
 
     def test_check_config_bad_attributes(self):
         """ Check config with bad attributes """
-        config = {'name': 'test', 'atttributes': [], 'platform': 'universal'}
+        config = {'name': 'test', 'attributes': [], 'platform': 'universal'}
 
         response = universal.validate_config(config)
         self.assertTrue(response)
