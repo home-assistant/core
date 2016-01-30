@@ -154,11 +154,11 @@ class TestMediaPlayer(unittest.TestCase):
 
         response = universal.validate_config(config_no_children)
         self.assertTrue(response)
-        self.assertEqual(config_no_children['children'], [])
+        self.assertEqual([], config_no_children['children'])
 
         response = universal.validate_config(config_bad_children)
         self.assertTrue(response)
-        self.assertEqual(config_bad_children['children'], [])
+        self.assertEqual([], config_bad_children['children'])
 
     def test_check_config_bad_commands(self):
         """ Check config with bad commands entry """
@@ -166,7 +166,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         response = universal.validate_config(config)
         self.assertTrue(response)
-        self.assertEqual(config['commands'], {})
+        self.assertEqual({}, config['commands'])
 
     def test_check_config_bad_attributes(self):
         """ Check config with bad attributes """
@@ -174,7 +174,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         response = universal.validate_config(config)
         self.assertTrue(response)
-        self.assertEqual(config['attributes'], {})
+        self.assertEqual({}, config['attributes'])
 
     def test_check_config_bad_key(self):
         """ check config with bad key """
@@ -196,8 +196,8 @@ class TestMediaPlayer(unittest.TestCase):
 
         universal.setup_platform(self.hass, config, add_devices)
 
-        self.assertEqual(len(entities), 1)
-        self.assertEqual(entities[0].name, 'test')
+        self.assertEqual(1, len(entities))
+        self.assertEqual('test', entities[0].name)
 
     def test_master_state(self):
         """ test master state property """
@@ -294,20 +294,20 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         ump.update()
 
-        self.assertEqual(ump.state, STATE_OFF)
+        self.assertEqual(STATE_OFF, ump.state)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
         ump.update()
-        self.assertEqual(ump.state, STATE_ON)
+        self.assertEqual(STATE_ON, ump.state)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
         ump.update()
-        self.assertEqual(ump.state, STATE_PLAYING)
+        self.assertEqual(STATE_PLAYING, ump.state)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
         ump.update()
-        self.assertEqual(ump.state, STATE_OFF)
+        self.assertEqual(STATE_OFF, ump.state)
 
     def test_volume_level(self):
         """ test volume level property """
@@ -419,7 +419,7 @@ class TestMediaPlayer(unittest.TestCase):
         ump.update()
 
         ump.turn_off()
-        self.assertEqual(len(self.mock_mp_2.turn_off_service_calls), 1)
+        self.assertEqual(1, len(self.mock_mp_2.turn_off_service_calls))
 
     def test_service_call_to_command(self):
         config = self.config_children_only
@@ -438,4 +438,4 @@ class TestMediaPlayer(unittest.TestCase):
         ump.update()
 
         ump.turn_off()
-        self.assertEqual(len(service), 1)
+        self.assertEqual(1, len(service))
