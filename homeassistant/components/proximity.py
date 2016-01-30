@@ -305,4 +305,3 @@ class Proximity(Entity):
     def distance_from_zone(self):
         """ returns the distance of the closest device to the zone """
         return self.dist_from
-
