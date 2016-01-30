@@ -14,6 +14,8 @@ import homeassistant.components.switch as switch
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
 
+from tests.common import mock_service
+
 
 class MockMediaPlayer(media_player.MediaPlayerDevice):
     """ Mock media player for testing """
@@ -27,6 +29,9 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._is_volume_muted = False
         self._media_title = None
         self._supported_media_commands = 0
+
+        self.turn_off_service_calls = mock_service(
+            hass, media_player.DOMAIN, media_player.SERVICE_TURN_OFF)
 
     @property
     def name(self):
@@ -399,3 +404,38 @@ class TestMediaPlayer(unittest.TestCase):
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE
 
         self.assertEqual(check_flags, ump.supported_media_commands)
+
+    def test_service_call_to_child(self):
+        """ test a service call that should be routed to a child """
+        config = self.config_children_only
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update()
+
+        self.mock_mp_2._state = STATE_PLAYING
+        self.mock_mp_2.update_ha_state()
+        ump.update()
+
+        ump.turn_off()
+        self.assertEqual(len(self.mock_mp_2.turn_off_service_calls), 1)
+
+    def test_service_call_to_command(self):
+        config = self.config_children_only
+        config['commands'] = \
+            {'turn_off': {'service': 'test.turn_off', 'data': {}}}
+        universal.validate_config(config)
+
+        service = mock_service(self.hass, 'test', 'turn_off')
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update()
+
+        self.mock_mp_2._state = STATE_PLAYING
+        self.mock_mp_2.update_ha_state()
+        ump.update()
+
+        ump.turn_off()
+        self.assertEqual(len(service), 1)
