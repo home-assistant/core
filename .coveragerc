@@ -66,7 +66,6 @@ omit =
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/device_tracker/owntracks.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
@@ -104,6 +103,7 @@ omit =
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
+    homeassistant/components/notify/googlevoice.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/cpuspeed.py
