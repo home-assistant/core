@@ -63,6 +63,8 @@ ATTR_NEAREST_DEVICE = 'nearest_device'
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
 def setup(hass, config):
     """ get the zones and offsets from configuration.yaml"""
     ignored_zones = []
@@ -119,6 +121,8 @@ def setup(hass, config):
     proximity.update_ha_state()
     entities.add(proximity.entity_id)
 
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-statements
     def check_proximity_state_change(entity, old_state, new_state):
         """ Function to perform the proximity checking """
         entity_name = new_state.attributes['friendly_name']
@@ -135,9 +139,9 @@ def setup(hass, config):
         if device_is_in_zone:
             entity_state = hass.states.get(entity_id)
             if not entity_state.attributes[ATTR_DIR_OF_TRAVEL] == 'arrived':
-                proximity._dist_from = 0
-                proximity._dir_of_travel = 'arrived'
-                proximity._nearest_device = entity_name
+                proximity.dist_from = 0
+                proximity.dir_of_travel = 'arrived'
+                proximity.nearest_device = entity_name
                 proximity.update_ha_state()
                 _LOGGER.debug('%s Update entity: distance = 0: direction = '
                               'arrived: device = %s', entity_id, entity_name)
@@ -219,9 +223,9 @@ def setup(hass, config):
         # stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG)
         if old_state is None or 'latitude' not in old_state.attributes:
-            proximity._dist_from = round(distance_from_zone)
-            proximity._dir_of_travel = 'unknown'
-            proximity._nearest_device = entity_name
+            proximity.dist_from = round(distance_from_zone)
+            proximity.dir_of_travel = 'unknown'
+            proximity.nearest_device = entity_name
             proximity.update_ha_state()
             _LOGGER.debug('%s Update entity: distance = %s: direction = '
                           'unknown: device = %s', entity_id,
@@ -260,9 +264,9 @@ def setup(hass, config):
                          entity_name, distance_travelled)
 
         # update the proximity entity
-        proximity._dist_from = round(distance_from_zone)
-        proximity._dir_of_travel = direction_of_travel
-        proximity._nearest_device = entity_name
+        proximity.dist_from = round(distance_from_zone)
+        proximity.dir_of_travel = direction_of_travel
+        proximity.nearest_device = entity_name
         proximity.update_ha_state()
         _LOGGER.debug('%s Update entity: distance = %s: direction = %s: '
                       'device = %s', entity_id, round(distance_from_zone),
@@ -283,34 +287,37 @@ class Proximity(Entity):
     # pylint: disable=too-many-arguments
     def __init__(self, hass, dist_from_zone, dir_of_travel, nearest_device):
         self.hass = hass
-        self._dist_from = dist_from_zone
-        self._dir_of_travel = dir_of_travel
-        self._nearest_device = nearest_device
+        self.dist_from = dist_from_zone
+        self.dir_of_travel = dir_of_travel
+        self.nearest_device = nearest_device
 
     def should_poll(self):
         return False
 
     @property
     def state(self):
-        return self._dist_from
+        return self.dist_from
 
     @property
     def state_attributes(self):
         return {
-            ATTR_DIST_FROM: self._dist_from,
-            ATTR_DIR_OF_TRAVEL: self._dir_of_travel,
-            ATTR_NEAREST_DEVICE: self._nearest_device,
+            ATTR_DIST_FROM: self.dist_from,
+            ATTR_DIR_OF_TRAVEL: self.dir_of_travel,
+            ATTR_NEAREST_DEVICE: self.nearest_device,
             ATTR_HIDDEN: True,
         }
 
     @property
     def direction_of_travel(self):
-        return self._dist_from
+        """ returns the direction of travel """
+        return self.dir_of_travel
 
     @property
     def distance_from_zone(self):
-        return self._dist_from
+        """ returns the distance of the closest device to the zone """
+        return self.dist_from
 
     @property
     def nearest_device(self):
-        return self._dist_from
+        """ returns the name of the device closest to the zone """
+        return self.nearest_device
