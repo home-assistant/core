@@ -45,6 +45,10 @@ class GoogleVoiceSMSNotificationService(BaseNotificationService):
         """ Send SMS to specified target user cell. """
 
         targets = kwargs.get(ATTR_TARGET)
+
+        if not isinstance(targets, list):
+            targets = [targets]
+
         self.voice.login(self.username, self.password)
 
         for target in targets:
