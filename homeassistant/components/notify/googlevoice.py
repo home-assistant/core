@@ -46,6 +46,10 @@ class GoogleVoiceSMSNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
 
+        if not targets:
+            _LOGGER.info('At least 1 target is required')
+            return
+
         if not isinstance(targets, list):
             targets = [targets]
 
