@@ -9,6 +9,9 @@ import unittest
 from datetime import timedelta
 
 import homeassistant.core as ha
+from homeassistant.components.logbook import (
+    _filter_start_stop_and_sensor_events
+)
 from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.util.dt as dt_util
@@ -49,6 +52,33 @@ class TestComponentHistory(unittest.TestCase):
 
         self.assert_entry(
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
+
+    def test__filter_start_stop_and_sensor_events(self):
+        sensor_entity_id = 'sensor.bla'
+        switch_entity_id = 'switch.bla'
+
+        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointB = pointA.replace(minute=5)
+        pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, sensor_entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, sensor_entity_id, 20)
+        eventC = self.create_state_changed_event(pointC, sensor_entity_id, 30)
+
+        eventD = self.create_start_stop_event(
+                pointA, switch_entity_id, EVENT_HOMEASSISTANT_STOP)
+        eventE = self.create_start_stop_event(
+                pointB, switch_entity_id, EVENT_HOMEASSISTANT_START)
+        eventF = self.create_start_stop_event(
+                pointC, switch_entity_id, EVENT_HOMEASSISTANT_STOP)
+
+        start_stop_events, \
+        last_sensor_event = _filter_start_stop_and_sensor_events(
+                (eventA, eventB, eventC, eventD, eventE, eventF)
+        )
+
+        self.assertEqual(last_sensor_event.get('sensor.bla'), eventC)
+        self.assertDictEqual(start_stop_events, {17: 1, 2: 1})
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if
@@ -111,4 +141,12 @@ class TestComponentHistory(unittest.TestCase):
             'entity_id': entity_id,
             'old_state': state,
             'new_state': state,
+        }, time_fired=event_time_fired)
+
+    def create_start_stop_event(self, event_time_fired, entity_id,
+                                event_state):
+        """ Create state changed event. """
+
+        return ha.Event(event_state, {
+            'entity_id': entity_id,
         }, time_fired=event_time_fired)
