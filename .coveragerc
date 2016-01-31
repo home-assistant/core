@@ -53,6 +53,9 @@ omit =
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
+    homeassistant/components/scsgate.py
+    homeassistant/components/*/scsgate.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
