@@ -63,7 +63,8 @@ import socket
 # from homeassistant import util
 from datetime import timedelta
 from collections import namedtuple
-from homeassistant.const import *
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, \
+    CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP, STATE_ON
 from homeassistant.helpers import validate_config
 from homeassistant.components.switch import SwitchDevice, \
     ATTR_CURRENT_POWER_W, ATTR_TOTAL_CONSUMPTION_KWH
