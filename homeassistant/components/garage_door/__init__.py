@@ -40,32 +40,32 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_closed(hass, entity_id=None):
-    """ Returns if the lock is locked based on the statemachine. """
+    """ Returns if the garage door is closed based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_GARAGE_DOORS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
 def close(hass, entity_id=None):
-    """ Locks all or specified locks. """
+    """ Closes all or specified garage door. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE, data)
 
 
 def open(hass, entity_id=None):
-    """ Unlocks all or specified locks. """
+    """ Open all or specified garage door. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN, data)
 
 
 def setup(hass, config):
-    """ Track states and offer events for locks. """
+    """ Track states and offer events for garage door. """
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_GARAGE_DOORS)
     component.setup(config)
 
     def handle_garage_door_service(service):
-        """ Handles calls to the lock services. """
+        """ Handles calls to the garage door services. """
         target_locks = component.extract_from_service(service)
 
         for item in target_locks:
@@ -88,12 +88,12 @@ def setup(hass, config):
 
 
 class GarageDoorDevice(Entity):
-    """ Represents a lock within Home Assistant. """
+    """ Represents a garage door within Home Assistant. """
     # pylint: disable=no-self-use
 
     @property
     def is_closed(self):
-        """ Is the lock locked or unlocked. """
+        """ Is the garage door closed or opened. """
         return None
 
     def close(self):
