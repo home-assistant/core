@@ -223,7 +223,7 @@ proliphix==0.1.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-vsure==0.4.8
+vsure==0.5.0
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.6
