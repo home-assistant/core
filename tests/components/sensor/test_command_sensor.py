@@ -17,17 +17,15 @@ class TestCommandSensorSensor(unittest.TestCase):
     def setUp(self):
         self.hass = ha.HomeAssistant()
 
-        self.config = {'name': 'Test',
-                       'unit_of_measurement': 'in',
-                       'command': 'echo 5',
-                       'value_template': '{{ value }}'}
-
     def tearDown(self):
         """ Stop down stuff we started. """
         self.hass.stop()
 
     def test_setup(self):
         """ Test sensor setup """
+        config = {'name': 'Test',
+                  'unit_of_measurement': 'in',
+                  'command': 'echo 5'}
         devices = []
 
         def add_dev_callback(devs):
@@ -36,10 +34,26 @@ class TestCommandSensorSensor(unittest.TestCase):
                 devices.append(dev)
 
         command_sensor.setup_platform(
-            self.hass, self.config, add_dev_callback)
+            self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
         entity = devices[0]
         self.assertEqual('Test', entity.name)
         self.assertEqual('in', entity.unit_of_measurement)
         self.assertEqual('5', entity.state)
+
+    def test_template(self):
+        """ Test command sensor with template """
+        data = command_sensor.CommandSensorData('echo 50')
+
+        entity = command_sensor.CommandSensor(
+            self.hass, data, 'test', 'in', '{{ value | multiply(0.1) }}')
+
+        self.assertEqual(5, float(entity.state))
+
+    def test_bad_command(self):
+        """ Test bad command """
+        data = command_sensor.CommandSensorData('asdfasdf')
+        data.update()
+
+        self.assertEqual(None, data.value)
