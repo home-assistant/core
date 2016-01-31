@@ -1,9 +1,4 @@
-"""
-homeassistant.helpers.entity_component
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Provides helpers for components that manage entities.
-"""
+"""Provides helpers for components that manage entities."""
 from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
@@ -18,14 +13,14 @@ DEFAULT_SCAN_INTERVAL = 15
 
 
 class EntityComponent(object):
+    """Helper class that will help a component manage its entities."""
+
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
-    """
-    Helper class that will help a component manage its entities.
-    """
     def __init__(self, logger, domain, hass,
                  scan_interval=DEFAULT_SCAN_INTERVAL,
                  discovery_platforms=None, group_name=None):
+        """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
 
@@ -44,9 +39,10 @@ class EntityComponent(object):
 
     def setup(self, config):
         """
-        Sets up a full entity component:
-         - Loads the platforms from the config
-         - Will listen for supported discovered platforms
+        Set up a full entity component.
+
+        Loads the platforms from the config and will listen for supported
+        discovered platforms.
         """
         self.config = config
 
@@ -57,13 +53,18 @@ class EntityComponent(object):
             self._setup_platform(p_type, p_config)
 
         if self.discovery_platforms:
-            discovery.listen(self.hass, self.discovery_platforms.keys(),
-                             self._entity_discovered)
+            discovery.listen(
+                self.hass, self.discovery_platforms.keys(),
+                lambda service, info:
+                self._setup_platform(self.discovery_platforms[service], {},
+                                     info))
 
     def add_entities(self, new_entities):
         """
-        Takes in a list of new entities. For each entity will see if it already
-        exists. If not, will add it, set it up and push the first state.
+        Add new entities to this component.
+
+        For each entity will see if it already exists. If not, will add it,
+        set it up and push the first state.
         """
         with self.lock:
             for entity in new_entities:
@@ -101,8 +102,10 @@ class EntityComponent(object):
 
     def extract_from_service(self, service):
         """
-        Takes a service and extracts all known entities.
-        Will return all if no entity IDs given in service.
+        Extract all known entities from a service call.
+
+        Will return all entities if no entities specified in call.
+        Will return an empty list if entities specified but unknown.
         """
         with self.lock:
             if ATTR_ENTITY_ID not in service.data:
@@ -113,7 +116,7 @@ class EntityComponent(object):
                     if entity_id in self.entities]
 
     def _update_entity_states(self, now):
-        """ Update the states of all the entities. """
+        """Update the states of all the polling entities."""
         with self.lock:
             # We copy the entities because new entities might be detected
             # during state update causing deadlocks.
@@ -125,16 +128,9 @@ class EntityComponent(object):
         for entity in entities:
             entity.update_ha_state(True)
 
-    def _entity_discovered(self, service, info):
-        """ Called when a entity is discovered. """
-        if service not in self.discovery_platforms:
-            return
-
-        self._setup_platform(self.discovery_platforms[service], {}, info)
-
     def _setup_platform(self, platform_type, platform_config,
                         discovery_info=None):
-        """ Tries to setup a platform for this component. """
+        """Setup a platform for this component."""
         platform = prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
 
