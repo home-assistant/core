@@ -26,7 +26,7 @@ CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
-
+CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 
 # #### EVENTS ####

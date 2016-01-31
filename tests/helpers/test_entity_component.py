@@ -15,8 +15,10 @@ import homeassistant.loader as loader
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import discovery
+import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, MockPlatform, MockModule
+from tests.common import (
+    get_test_home_assistant, MockPlatform, MockModule, fire_time_changed)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -84,8 +86,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ['test_domain.hello', 'test_domain.hello2'] == \
             sorted(group.attributes.get('entity_id'))
 
-    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
-    def test_polling_only_updates_entities_it_should_poll(self, mock_track):
+    def test_polling_only_updates_entities_it_should_poll(self):
         component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
 
         no_poll_ent = EntityTest(should_poll=False)
@@ -93,17 +94,13 @@ class TestHelpersEntityComponent(unittest.TestCase):
         poll_ent = EntityTest(should_poll=True)
         poll_ent.update_ha_state = Mock()
 
-        component.add_entities([no_poll_ent])
-        assert not mock_track.called
-
-        component.add_entities([poll_ent])
-        assert mock_track.called
-        assert [0, 20, 40] == list(mock_track.call_args[1].get('second'))
+        component.add_entities([no_poll_ent, poll_ent])
 
         no_poll_ent.update_ha_state.reset_mock()
         poll_ent.update_ha_state.reset_mock()
 
-        component._update_entity_states(None)
+        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        self.hass.pool.block_till_done()
 
         assert not no_poll_ent.update_ha_state.called
         assert poll_ent.update_ha_state.called
@@ -118,7 +115,10 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.add_entities([ent2])
         assert 1 == len(self.hass.states.entity_ids())
         ent2.update_ha_state = lambda *_: component.add_entities([ent1])
-        component._update_entity_states(None)
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        self.hass.pool.block_till_done()
+
         assert 2 == len(self.hass.states.entity_ids())
 
     def test_not_adding_duplicate_entities(self):
@@ -234,3 +234,44 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert mock_setup.called
         assert ('platform_test', {}, 'discovery_info') == \
             mock_setup.call_args[0]
+
+    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    def test_set_scan_interval_via_config(self, mock_track):
+        def platform_setup(hass, config, add_devices, discovery_info=None):
+            add_devices([EntityTest(should_poll=True)])
+
+        loader.set_component('test_domain.platform',
+                             MockPlatform(platform_setup))
+
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        component.setup({
+            DOMAIN: {
+                'platform': 'platform',
+                'scan_interval': 30,
+            }
+        })
+
+        assert mock_track.called
+        assert [0, 30] == list(mock_track.call_args[1]['second'])
+
+    @patch('homeassistant.helpers.entity_component.track_utc_time_change')
+    def test_set_scan_interval_via_platform(self, mock_track):
+        def platform_setup(hass, config, add_devices, discovery_info=None):
+            add_devices([EntityTest(should_poll=True)])
+
+        platform = MockPlatform(platform_setup)
+        platform.SCAN_INTERVAL = 30
+
+        loader.set_component('test_domain.platform', platform)
+
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        component.setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+
+        assert mock_track.called
+        assert [0, 30] == list(mock_track.call_args[1]['second'])
