@@ -8,6 +8,7 @@ Tests command binary sensor.
 import unittest
 
 import homeassistant.core as ha
+from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components.binary_sensor import command_sensor
 
 
@@ -40,7 +41,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         self.assertEqual(1, len(devices))
         entity = devices[0]
         self.assertEqual('Test', entity.name)
-        self.assertTrue(entity.state)
+        self.assertEqual(STATE_ON, entity.state)
 
     def test_setup_bad_config(self):
         """ Test setup with a bad config """
@@ -65,4 +66,13 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         entity = command_sensor.CommandBinarySensor(
             self.hass, data, 'test', '1.0', '0', '{{ value | multiply(0.1) }}')
 
-        self.assertTrue(entity.state)
+        self.assertEqual(STATE_ON, entity.state)
+
+    def test_sensor_off(self):
+        """ Test command sensor with template """
+        data = command_sensor.CommandSensorData('echo 0')
+
+        entity = command_sensor.CommandBinarySensor(
+            self.hass, data, 'test', '1', '0', None)
+
+        self.assertEqual(STATE_OFF, entity.state)
