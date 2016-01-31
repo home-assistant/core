@@ -72,7 +72,7 @@ from homeassistant.components.switch import SwitchDevice, \
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['pynetio>=0.1.5.3']
+REQUIREMENTS = ['pynetio>=0.1.6']
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PORT = 1234
 CONF_OUTLETS = "outlets"
@@ -91,15 +91,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if validate_config({"conf": config}, {"conf": [CONF_OUTLETS,
                                                    CONF_HOST]}, _LOGGER):
-        try:
-            dev = Netio(config[CONF_HOST],
-                        config.get(CONF_PORT, DEFAULT_PORT),
-                        config.get(CONF_USERNAME, DEFAULT_USERNAME),
-                        config.get(CONF_PASSWORD, DEFAULT_USERNAME))
-            DEVICES[config[CONF_HOST]] = Device(dev, [])
-        except Exception:
-            _LOGGER.error('Cannot connect to %s' % config[CONF_HOST])
+        dev = Netio(config[CONF_HOST],
+                    config.get(CONF_PORT, DEFAULT_PORT),
+                    config.get(CONF_USERNAME, DEFAULT_USERNAME),
+                    config.get(CONF_PASSWORD, DEFAULT_USERNAME))
+        if not dev.telnet:
             return False
+
+        DEVICES[config[CONF_HOST]] = Device(dev, [])
 
         for key in config[CONF_OUTLETS]:
             switch = NetioSwitch(DEVICES[config[CONF_HOST]].netio, key,
@@ -117,24 +116,24 @@ def _got_push(handler, path_match, data):
     """ To handle updates from http GET """
 
     host = socket.gethostbyaddr(handler.client_address[0])[0].split('.')[0]
-    states, consumptions, cumulatedConsumptions, startDates = [], [], [], []
+    states, consumptions, cumulated_consumptions, start_dates = [], [], [], []
 
     for i in range(1, 5):
         out = 'output%d' % i
         states.append(data.get('%s_state' % out) == STATE_ON)
         consumptions.append(float(data.get('%s_consumption' % out, 0)))
-        cumulatedConsumptions.append(
+        cumulated_consumptions.append(
             float(data.get('%s_cumulatedConsumption' % out, 0)) / 1000)
-        startDates.append(data.get('%s_consumptionStart' % out, ""))
+        start_dates.append(data.get('%s_consumptionStart' % out, ""))
         # import ipdb; ipdb.set_trace()
 
-    _LOGGER.debug('%s: %s, %s, %s since %s' % (
-        host, states, consumptions, cumulatedConsumptions, startDates))
+    _LOGGER.debug('%s: %s, %s, %s since %s', host, states, consumptions,
+                  cumulated_consumptions, start_dates)
 
     DEVICES[host].netio.consumptions = consumptions
-    DEVICES[host].netio.cumulatedConsumptions = cumulatedConsumptions
+    DEVICES[host].netio.cumulated_consumptions = cumulated_consumptions
     DEVICES[host].netio.states = states
-    DEVICES[host].netio.startDates = startDates
+    DEVICES[host].netio.start_dates = start_dates
 
     for dev in DEVICES[host].entities:
         dev.update_ha_state()
@@ -142,7 +141,7 @@ def _got_push(handler, path_match, data):
 
 def dispose(event):
     "Close connections to Netio Devices"
-    for key, value in DEVICES.items():
+    for _, value in DEVICES.items():
         value.netio.stop()
 
 
@@ -196,9 +195,9 @@ class NetioSwitch(SwitchDevice):
     @property
     def cumulated_consumption_kwh(self):
         """ Total enerygy consumption since start_date """
-        return self.netio.cumulatedConsumptions[self.outlet - 1]
+        return self.netio.cumulated_consumptions[self.outlet - 1]
 
     @property
     def start_date(self):
         """ Point in time when the energy accumulation started """
-        return self.netio.startDates[self.outlet - 1]
+        return self.netio.start_dates[self.outlet - 1]
