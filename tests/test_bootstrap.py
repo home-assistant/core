@@ -11,8 +11,10 @@ import unittest
 from unittest import mock
 
 from homeassistant import core, bootstrap
-from homeassistant.const import __version__
+from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
+                                 CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity import Entity
 
 from tests.common import mock_detect_location_info
 
@@ -83,3 +85,23 @@ class TestBootstrap(unittest.TestCase):
             bootstrap.process_ha_config_upgrade(hass)
 
             self.assertTrue(os.path.isfile(check_file))
+
+    def test_entity_customization(self):
+        """ Test entity customization through config """
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        hass = core.HomeAssistant()
+
+        bootstrap.process_ha_core_config(hass, config)
+
+        entity = Entity()
+        entity.entity_id = 'test.test'
+        entity.hass = hass
+        entity.update_ha_state()
+
+        state = hass.states.get('test.test')
+
+        self.assertTrue(state.attributes['hidden'])
