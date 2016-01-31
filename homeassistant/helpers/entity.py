@@ -50,8 +50,6 @@ class Entity(object):
     """ ABC for Home Assistant entities. """
     # pylint: disable=no-self-use
 
-    _hidden = False
-
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inherting this
     # class. These may be used to customize the behavior of the entity.
@@ -103,13 +101,14 @@ class Entity(object):
         """ Retrieve latest state. """
         pass
 
+    entity_id = None
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
     hass = None
-    entity_id = None
 
     def update_ha_state(self, force_refresh=False):
         """
