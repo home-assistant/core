@@ -18,6 +18,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF,
     STATE_ON, STATE_UNKNOWN)
 
+from homeassistant.helpers import validate_config
+
 CONF_PORT = "port"
 CONF_TIMEOUT = "timeout"
 
@@ -34,13 +36,13 @@ SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Samsung TV platform. """
 
-    if not config.get(CONF_HOST):
-        _LOGGER.error(
-            "Missing required configuration items in %s: %s",
-            DOMAIN,
-            CONF_HOST)
+    # Validate that all required config options are given
+    if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST]}, _LOGGER):
         return False
-    name = config.get("name", 'Samsung TV Remote')
+
+    # Default the entity_name to 'Samsung TV Remote'
+    name = config.get(CONF_NAME, 'Samsung TV Remote')
+
     # Generate a config for the Samsung lib
     remote_config = {
         "name": "HomeAssistant",
@@ -60,7 +62,9 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods
     def __init__(self, name, config):
-
+        from samsungctl import Remote
+        # Save a reference to the imported class
+        self._remote_class = Remote
         self._name = name
         # Assume that the TV is not muted
         self._muted = False
@@ -76,28 +80,26 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def get_remote(self):
         """ Creates or Returns a remote control instance """
-        from samsungctl import Remote
 
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = Remote(self._config)
+            self._remote = self._remote_class(self._config)
 
         return self._remote
 
     def send_key(self, key):
         """ Sends a key to the tv and handles exceptions """
-        from samsungctl import Remote
         try:
             self.get_remote().control(key)
             self._state = STATE_ON
-        except (Remote.UnhandledResponse, Remote.AccessDenied,
-                BrokenPipeError):
+        except (self._remote_class.UnhandledResponse,
+                self._remote_class.AccessDenied, BrokenPipeError):
             # We got a response so it's on.
             # BrokenPipe can occur when the commands is sent to fast
             self._state = STATE_ON
             self._remote = None
             return False
-        except (Remote.ConnectionClosed, socket.timeout,
+        except (self._remote_class.ConnectionClosed, socket.timeout,
                 TimeoutError, OSError):
             self._state = STATE_OFF
             self._remote = None
