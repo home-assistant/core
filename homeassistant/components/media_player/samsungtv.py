@@ -8,7 +8,6 @@ https://home-assistant.io/components/media_player.samsungtv/
 """
 import logging
 import socket
-from samsungctl import Remote
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_VOLUME_STEP,
@@ -16,10 +15,15 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_TURN_OFF,
     DOMAIN)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF,
+    CONF_HOST, CONF_NAME, STATE_OFF,
     STATE_ON, STATE_UNKNOWN)
 
+CONF_PORT = "port"
+CONF_TIMEOUT = "timeout"
+
 _LOGGER = logging.getLogger(__name__)
+
+REQUIREMENTS = ['samsungctl==0.5.1']
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -28,7 +32,8 @@ SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Denon platform. """
+    """ Sets up the Samsung TV platform. """
+
     if not config.get(CONF_HOST):
         _LOGGER.error(
             "Missing required configuration items in %s: %s",
@@ -39,26 +44,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Generate a config for the Samsung lib
     remote_config = {
         "name": "HomeAssistant",
-        "description": config.get("name", ''),
+        "description": config.get(CONF_NAME, ''),
         "id": "ha.component.samsung",
-        "port": config.get("port", 55000),
-        "host": config.get("host"),
-        "timeout": config.get("timeout", 0),
+        "port": config.get(CONF_PORT, 55000),
+        "host": config.get(CONF_HOST),
+        "timeout": config.get(CONF_TIMEOUT, 0),
     }
 
     add_devices([SamsungTVDevice(name, remote_config)])
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=abstract-method
 class SamsungTVDevice(MediaPlayerDevice):
-    """ Represents a Denon device. """
-
-    def set_volume_level(self, volume):
-        pass
+    """ Represents a Samsung TV. """
 
     # pylint: disable=too-many-public-methods
-
     def __init__(self, name, config):
+
         self._name = name
         # Assume that the TV is not muted
         self._muted = False
@@ -74,6 +76,8 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def get_remote(self):
         """ Creates or Returns a remote control instance """
+        from samsungctl import Remote
+
         if self._remote is None:
             # We need to create a new instance to reconnect.
             self._remote = Remote(self._config)
@@ -82,6 +86,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def send_key(self, key):
         """ Sends a key to the tv and handles exceptions """
+        from samsungctl import Remote
         try:
             self.get_remote().control(key)
             self._state = STATE_ON
@@ -92,13 +97,10 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._state = STATE_ON
             self._remote = None
             return False
-        except (Remote.ConnectionClosed, Remote.ConnectionClosed,
-                socket.timeout, TimeoutError, OSError):
+        except (Remote.ConnectionClosed, socket.timeout,
+                TimeoutError, OSError):
             self._state = STATE_OFF
             self._remote = None
-            return False
-        except Remote.AccessDenied:
-            self._state = STATE_ON
             return False
 
         return True
@@ -161,15 +163,6 @@ class SamsungTVDevice(MediaPlayerDevice):
     def media_previous_track(self):
         self.send_key("KEY_REWIND")
 
-    def media_seek(self, position):
-        raise NotImplementedError()
-
     def turn_on(self):
         """ turn the media player on. """
         self.send_key("KEY_POWERON")
-
-    def play_media(self, media_type, media_id):
-        pass
-
-    def play_youtube(self, media_id):
-        pass
