@@ -1,5 +1,5 @@
 # coding: utf-8
-""" Constants used by Home Assistant components. """
+"""Constants used by Home Assistant components."""
 
 __version__ = "0.13.0.dev0"
 
@@ -59,6 +59,7 @@ STATE_ALARM_PENDING = 'pending'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
+STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
