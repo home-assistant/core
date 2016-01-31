@@ -16,7 +16,7 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.0']
+REQUIREMENTS = ['liffylights==0.9.3']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
@@ -58,6 +58,8 @@ class LIFX():
         bulb = self.find_bulb(ipaddr)
 
         if bulb is None:
+            _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
+                          ipaddr, name, power, hue, sat, bri, kel)
             bulb = LIFXLight(self._liffylights, ipaddr, name,
                              power, hue, sat, bri, kel)
             self._devices.append(bulb)

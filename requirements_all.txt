@@ -15,6 +15,9 @@ PyMata==2.07a
 # homeassistant.components.conversation
 fuzzywuzzy==0.8.0
 
+# homeassistant.components.device_tracker.fritz
+# fritzconnection==0.4.6
+
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.7.2
 
@@ -39,7 +42,7 @@ pyfttt==0.3
 # homeassistant.components.influxdb
 influxdb==2.11.0
 
-# homeassistant.components.insteon
+# homeassistant.components.insteon_hub
 insteon_hub==0.4.5
 
 # homeassistant.components.isy994
@@ -55,7 +58,7 @@ blinkstick==1.1.7
 phue==0.8
 
 # homeassistant.components.light.lifx
-liffylights==0.9.0
+liffylights==0.9.3
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
@@ -107,6 +110,9 @@ python-nest==2.6.0
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
+# homeassistant.components.notify.googlevoice
+https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1
+
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.9.0
 
@@ -136,6 +142,9 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip#RFXtrx==0.2
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
+
+# homeassistant.components.scsgate
+scsgate==0.1.0
 
 # homeassistant.components.sensor.bitcoin
 blockchain==1.2.1
@@ -214,7 +223,10 @@ proliphix==0.1.0
 radiotherm==1.2
 
 # homeassistant.components.verisure
-vsure==0.4.8
+vsure==0.5.0
+
+# homeassistant.components.zigbee
+xbee-helper==0.0.6
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5

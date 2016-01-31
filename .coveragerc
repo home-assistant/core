@@ -10,8 +10,8 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
-    homeassistant/components/insteon.py
-    homeassistant/components/*/insteon.py
+    homeassistant/components/insteon_hub.py
+    homeassistant/components/*/insteon_hub.py
 
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
@@ -35,6 +35,9 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
+    homeassistant/components/zigbee.py
+    homeassistant/components/*/zigbee.py
+
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
@@ -50,6 +53,9 @@ omit =
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
+    homeassistant/components/scsgate.py
+    homeassistant/components/*/scsgate.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -63,7 +69,6 @@ omit =
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/device_tracker/owntracks.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
@@ -101,6 +106,7 @@ omit =
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
+    homeassistant/components/notify/googlevoice.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/cpuspeed.py

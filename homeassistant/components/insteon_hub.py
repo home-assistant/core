@@ -12,14 +12,13 @@ from homeassistant.helpers import validate_config
 from homeassistant.loader import get_component
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, ATTR_DISCOVERED,
+    CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY, ATTR_DISCOVERED,
     ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
 
-DOMAIN = "insteon"
+DOMAIN = "insteon_hub"
 REQUIREMENTS = ['insteon_hub==0.4.5']
-API_KEY = "3eb14d15-a486-4d9e-99af-179d0e9417c11444718937.80636061"
 INSTEON = None
-DISCOVER_LIGHTS = "insteon.lights"
+DISCOVER_LIGHTS = "insteon_hub.lights"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,15 +29,22 @@ def setup(hass, config):
     """
     if not validate_config(
             config,
-            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
+            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY]},
             _LOGGER):
         return False
 
     import insteon
+
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
+    api_key = config[DOMAIN][CONF_API_KEY]
+
     global INSTEON
-    INSTEON = insteon.Insteon(username, password, API_KEY)
+    INSTEON = insteon.Insteon(username, password, api_key)
+
+    if INSTEON is None:
+        _LOGGER.error("Could not connect to Insteon service.")
+        return
 
     comp_name = 'light'
     discovery = DISCOVER_LIGHTS

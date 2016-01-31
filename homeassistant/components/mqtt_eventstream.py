@@ -11,6 +11,7 @@ from homeassistant.core import EventOrigin, State
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt import SERVICE_PUBLISH as MQTT_SVC_PUBLISH
 from homeassistant.const import (
+    ATTR_SERVICE_DATA,
     MATCH_ALL,
     EVENT_TIME_CHANGED,
     EVENT_CALL_SERVICE,
@@ -46,7 +47,7 @@ def setup(hass, config):
             if (
                     event.data.get('domain') == MQTT_DOMAIN and
                     event.data.get('service') == MQTT_SVC_PUBLISH and
-                    event.data.get('topic') == pub_topic
+                    event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic
             ):
                 return
 
