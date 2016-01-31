@@ -29,7 +29,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         pywink.set_bearer_token(token)
 
-    add_devices(WinkGarageDoorDevice(door) for door in pywink.get_garage_doors())
+    add_devices(WinkGarageDoorDevice(door) for door in
+                pywink.get_garage_doors())
 
 
 class WinkGarageDoorDevice(GarageDoorDevice):

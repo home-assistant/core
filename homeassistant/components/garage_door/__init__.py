@@ -1,7 +1,7 @@
 """
 homeassistant.components.garage_door
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to interface with various garage doors that can be controlled remotely.
+Component to interface with garage doors that can be controlled remotely.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/garage_door/
