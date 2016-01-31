@@ -12,7 +12,7 @@ configuration.yaml file:
 switch:
   - platform: netio
     host: netio-living
-    ports:
+    outlets:
       1: "AppleTV"
       2: "Htpc"
       3: "Lampe Gauche"
@@ -22,7 +22,7 @@ switch:
     port: 1234
     username: user
     password: pwd
-    ports:
+    outlets:
       1: "Nothing..."
       4: "Lampe du fer"
 ```
@@ -60,9 +60,8 @@ https://home-assistant.io/components/switch.netio/
 """
 import logging
 import socket
-from homeassistant import util
+# from homeassistant import util
 from datetime import timedelta
-from pynetio import Netio
 from collections import namedtuple
 from homeassistant.const import *
 from homeassistant.helpers import validate_config
@@ -72,39 +71,41 @@ from homeassistant.components.switch import SwitchDevice, \
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['pynetio>=0.1.5.1']
+REQUIREMENTS = ['pynetio>=0.1.5.2']
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PORT = 1234
-REQ_CONF = [CONF_HOST, CONF_PORTS]
+CONF_OUTLETS = "outlets"
+REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 URL_API_NETIO_EP = "/api/netio"
 
 device = namedtuple('device', ['netio', 'entities'])
 DEVICES = {}
-ATTR_START_DATE = 'Start date'
+ATTR_START_DATE = 'start_date'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Configure the netio linl """
+    from pynetio import Netio
 
-    if validate_config({"conf": config}, {"conf": [CONF_PORTS,
+    if validate_config({"conf": config}, {"conf": [CONF_OUTLETS,
                                                    CONF_HOST]}, _LOGGER):
-        if not config[CONF_HOST] in DEVICES:
-            try:
-                dev = Netio(config[CONF_HOST],
-                            config.get(CONF_PORT, DEFAULT_PORT),
-                            config.get(CONF_USERNAME, DEFAULT_USERNAME),
-                            config.get(CONF_PASSWORD, DEFAULT_USERNAME))
-                DEVICES[config[CONF_HOST]] = device(dev, [])
-            except:
-                _LOGGER.error('Cannot connect to %s' % config[CONF_HOST])
+        try:
+            dev = Netio(config[CONF_HOST],
+                        config.get(CONF_PORT, DEFAULT_PORT),
+                        config.get(CONF_USERNAME, DEFAULT_USERNAME),
+                        config.get(CONF_PASSWORD, DEFAULT_USERNAME))
+            DEVICES[config[CONF_HOST]] = device(dev, [])
+        except:
+            _LOGGER.error('Cannot connect to %s' % config[CONF_HOST])
+            return False
 
-        if DEVICES.get(config[CONF_HOST]):
-            for key in config[CONF_PORTS]:
-                switch = NetioSwitch(DEVICES[config[CONF_HOST]].netio, key,
-                                     config[CONF_PORTS][key])
-                add_devices_callback([switch])
-                DEVICES[config[CONF_HOST]].entities.append(switch)
+        for key in config[CONF_OUTLETS]:
+            switch = NetioSwitch(DEVICES[config[CONF_HOST]].netio, key,
+                                 config[CONF_OUTLETS][key])
+            DEVICES[config[CONF_HOST]].entities.append(switch)
+
+        add_devices_callback(DEVICES[config[CONF_HOST]].entities)
 
     hass.http.register_path('GET', URL_API_NETIO_EP, _got_push)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, dispose)
@@ -118,21 +119,21 @@ def _got_push(handler, path_match, data):
     states, consumptions, cumulatedConsumptions, startDates = [], [], [], []
 
     for i in range(1, 5):
-        states.append(
-            True if data.get('output%d_state' % i) == STATE_ON else False)
-        consumptions.append(float(data.get('output%d_consumption' % i, 0)))
+        out = 'output_%d' % i
+        states.append(data.get('%s_state' % out) == STATE_ON)
+        consumptions.append(float(data.get('%s_consumption' % out, 0)))
         cumulatedConsumptions.append(
-            float(data.get('output%d_cumulatedConsumption' % i, 0)) / 1000)
-        startDates.append(data.get('output%d_consumptionStart' % i, ""))
+            float(data.get('%s_cumulatedConsumption' % out, 0)) / 1000)
+        startDates.append(data.get('%s_consumptionStart' % out, ""))
 
     _LOGGER.debug('%s: %s, %s, %s since %s' % (
                   host, states, consumptions,
                   cumulatedConsumptions, startDates))
 
-    DEVICES[host].netio._consumptions = consumptions
-    DEVICES[host].netio._cumulatedConsumptions = cumulatedConsumptions
-    DEVICES[host].netio._states = states
-    DEVICES[host].netio._startDates = startDates
+    DEVICES[host].netio.consumptions = consumptions
+    DEVICES[host].netio.cumulatedConsumptions = cumulatedConsumptions
+    DEVICES[host].netio.states = states
+    DEVICES[host].netio.startDates = startDates
 
     [x.update_ha_state() for x in DEVICES[host].entities]
 
