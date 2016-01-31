@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Insteon - Home Assistant</title>
+    <title>Insteon Hub - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
     <meta name="description" content="Instructions how to setup the Insteon Hub within Home Assistant.">
     
@@ -15,7 +15,7 @@
     <link rel="canonical" href="https://home-assistant.io/components/insteon_hub/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Insteon">
+    <meta property="og:title" content="Insteon Hub">
     <meta property="og:site_name" content="Home Assistant">
     <meta property="og:url" content="https://home-assistant.io/components/insteon_hub/">
     <meta property="og:type" content="article">
@@ -25,7 +25,7 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     
-    <meta name="twitter:title" content="Insteon">
+    <meta name="twitter:title" content="Insteon Hub">
     <meta name="twitter:description" content="Instructions how to setup the Insteon Hub within Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
@@ -102,20 +102,23 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      Insteon
+      Insteon Hub
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The <code>insteon</code> component let you use your <a href="http://www.insteon.com/">Insteon</a> Hub with Home Assistant.</p>
+  <p>The <code>insteon</code> component lets you use your <a href="http://www.insteon.com/insteon-hub/">Insteon Hub</a> with Home Assistant.</p>
 
-<p>To integrate your Insteon hub with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
+<p>You will need to obtain an Insteon REST API key from the <a href="http://www.insteon.com/become-an-insteon-developer">Insteon Developer program</a> to use this component.</p>
+
+<p>To integrate your Insteon Hub with Home Assistant, add the following section to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
 <span class="key">insteon</span>:
   <span class="key">username</span>: <span class="string"><span class="content">YOUR_USERNAME</span></span>
   <span class="key">password</span>: <span class="string"><span class="content">YOUR_PASSWORD</span></span>
+  <span class="key">api_key</span>: <span class="string"><span class="content">YOUR_API_KEY</span></span>
 </pre></div>
 </div>
 </div>
@@ -123,8 +126,9 @@
 <p>Configuration variables:</p>
 
 <ul>
-  <li><strong>username</strong> (<em>Required</em>): The username that used to access the Insteon interface.</li>
-  <li><strong>password</strong> (<em>Required</em>): The password that used to access the Insteon interface.</li>
+  <li><strong>username</strong> (<em>Required</em>): The username used to access the Insteon interface (e.g. the <a href="connect.insteon.com">connect.insteon.com</a> site).</li>
+  <li><strong>password</strong> (<em>Required</em>): The password used to access the Insteon interface.</li>
+  <li><strong>api_key</strong> (<em>Required</em>): The Insteon REST API key emailed to you once you are approved in the Insteon Developer program.</li>
 </ul>
 
 </article>
@@ -152,7 +156,7 @@
             <a href='/components/isy994/'>ISY994 Controller</a>
         </li>
         <li>
-            Insteon
+            Insteon Hub
         </li>
         <li>
             <a href='/components/mqtt/'>MQTT</a>
