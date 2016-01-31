@@ -42,6 +42,22 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual('in', entity.unit_of_measurement)
         self.assertEqual('5', entity.state)
 
+    def test_setup_bad_config(self):
+        """ Test setup with a bad config """
+        config = {}
+
+        devices = []
+
+        def add_dev_callback(devs):
+            """ callback to add device """
+            for dev in devs:
+                devices.append(dev)
+
+        self.assertFalse(command_sensor.setup_platform(
+            self.hass, config, add_dev_callback))
+
+        self.assertEqual(0, len(devices))
+
     def test_template(self):
         """ Test command sensor with template """
         data = command_sensor.CommandSensorData('echo 50')
