@@ -145,11 +145,26 @@ class MockHTTP(object):
 class MockModule(object):
     """ Provides a fake module. """
 
-    def __init__(self, domain, dependencies=[], setup=None):
+    def __init__(self, domain=None, dependencies=[], setup=None):
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
         # Setup a mock setup if none given.
-        self.setup = lambda hass, config: False if setup is None else setup
+        if setup is None:
+            self.setup = lambda hass, config: False
+        else:
+            self.setup = setup
+
+
+class MockPlatform(object):
+    """ Provides a fake platform. """
+
+    def __init__(self, setup_platform=None, dependencies=[]):
+        self.DEPENDENCIES = dependencies
+        self._setup_platform = setup_platform
+
+    def setup_platform(self, hass, config, add_devices, discovery_info=None):
+        if self._setup_platform is not None:
+            self._setup_platform(hass, config, add_devices, discovery_info)
 
 
 class MockToggleDevice(ToggleEntity):
