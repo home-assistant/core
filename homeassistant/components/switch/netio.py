@@ -60,9 +60,9 @@ https://home-assistant.io/components/switch.netio/
 """
 import logging
 import socket
-from homeassistant import util
-from datetime import timedelta
 from collections import namedtuple
+from datetime import timedelta
+from homeassistant import util
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, \
     CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP, STATE_ON
 from homeassistant.helpers import validate_config
@@ -79,7 +79,7 @@ CONF_OUTLETS = "outlets"
 REQ_CONF = [CONF_HOST, CONF_OUTLETS]
 URL_API_NETIO_EP = "/api/netio"
 
-device = namedtuple('device', ['netio', 'entities'])
+Device = namedtuple('device', ['netio', 'entities'])
 DEVICES = {}
 ATTR_START_DATE = 'start_date'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -96,8 +96,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                         config.get(CONF_PORT, DEFAULT_PORT),
                         config.get(CONF_USERNAME, DEFAULT_USERNAME),
                         config.get(CONF_PASSWORD, DEFAULT_USERNAME))
-            DEVICES[config[CONF_HOST]] = device(dev, [])
-        except:
+            DEVICES[config[CONF_HOST]] = Device(dev, [])
+        except Exception:
             _LOGGER.error('Cannot connect to %s' % config[CONF_HOST])
             return False
 
@@ -136,12 +136,14 @@ def _got_push(handler, path_match, data):
     DEVICES[host].netio.states = states
     DEVICES[host].netio.startDates = startDates
 
-    [x.update_ha_state() for x in DEVICES[host].entities]
+    for dev in DEVICES[host].entities:
+        dev.update_ha_state()
 
 
 def dispose(event):
     "Close connections to Netio Devices"
-    [value.netio.stop() for key, value in DEVICES.items()]
+    for key, value in DEVICES.items():
+        value.netio.stop()
 
 
 class NetioSwitch(SwitchDevice):
@@ -153,7 +155,7 @@ class NetioSwitch(SwitchDevice):
         self.netio = netio
         if self.netio.update.__name__ != 'wrapper':
             self.netio.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(
-                  self.netio.update)
+                self.netio.update)
 
     @property
     def name(self):
@@ -188,12 +190,15 @@ class NetioSwitch(SwitchDevice):
 
     @property
     def current_power_w(self):
+        """ Actual power """
         return self.netio.consumptions[self.outlet - 1]
 
     @property
     def cumulated_consumption_kwh(self):
+        """ Total enerygy consumption since start_date """
         return self.netio.cumulatedConsumptions[self.outlet - 1]
 
     @property
     def start_date(self):
+        """ Point in time when the energy accumulation started """
         return self.netio.startDates[self.outlet - 1]
