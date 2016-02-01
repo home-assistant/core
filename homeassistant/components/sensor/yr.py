@@ -28,7 +28,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
     'windGust': ['Wind gust', 'm/s'],
-    'pressure': ['Pressure', 'mbar'],
+    'pressure': ['Pressure', 'hPa'],
     'windDirection': ['Wind direction', '°'],
     'humidity': ['Humidity', '%'],
     'fog': ['Fog', '%'],
