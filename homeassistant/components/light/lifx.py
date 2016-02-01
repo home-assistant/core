@@ -28,7 +28,7 @@ from homeassistant.components.light import \
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.3']
+REQUIREMENTS = ['liffylights==0.9.4']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
@@ -76,6 +76,12 @@ class LIFX():
                              power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
+        else:
+            _LOGGER.debug("update bulb %s %s %d %d %d %d %d",
+                          ipaddr, name, power, hue, sat, bri, kel)
+            bulb.set_power(power)
+            bulb.set_color(hue, sat, bri, kel)
+            bulb.update_ha_state()
 
     # pylint: disable=too-many-arguments
     def on_color(self, ipaddr, hue, sat, bri, kel):
@@ -109,7 +115,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
 
     # register our poll service
-    track_time_change(hass, lifx_library.poll, second=10)
+    track_time_change(hass, lifx_library.poll, second=[10,40])
 
     lifx_library.probe()
 
