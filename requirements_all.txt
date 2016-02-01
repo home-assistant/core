@@ -100,7 +100,7 @@ insteon_hub==0.4.5
 jsonrpc-requests==0.1
 
 # homeassistant.components.light.lifx
-liffylights==0.9.3
+liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
