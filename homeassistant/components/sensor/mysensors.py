@@ -30,51 +30,57 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states.
-        s_types = [
-            gateway.const.Presentation.S_DOOR,
-            gateway.const.Presentation.S_MOTION,
-            gateway.const.Presentation.S_SMOKE,
-            gateway.const.Presentation.S_TEMP,
-            gateway.const.Presentation.S_HUM,
-            gateway.const.Presentation.S_BARO,
-            gateway.const.Presentation.S_WIND,
-            gateway.const.Presentation.S_RAIN,
-            gateway.const.Presentation.S_UV,
-            gateway.const.Presentation.S_WEIGHT,
-            gateway.const.Presentation.S_POWER,
-            gateway.const.Presentation.S_DISTANCE,
-            gateway.const.Presentation.S_LIGHT_LEVEL,
-            gateway.const.Presentation.S_IR,
-            gateway.const.Presentation.S_WATER,
-            gateway.const.Presentation.S_AIR_QUALITY,
-            gateway.const.Presentation.S_CUSTOM,
-            gateway.const.Presentation.S_DUST,
-            gateway.const.Presentation.S_SCENE_CONTROLLER,
-        ]
-        not_v_types = [
-            gateway.const.SetReq.V_ARMED,
-            gateway.const.SetReq.V_LIGHT,
-            gateway.const.SetReq.V_LOCK_STATUS,
-            gateway.const.SetReq.V_UNIT_PREFIX,
-        ]
+        # states. Map them in a defaultdict(list).
+        pres = gateway.const.Presentation
+        set_req = gateway.const.SetReq
+        map_sv_types = {
+            pres.S_DOOR: [set_req.V_TRIPPED],
+            pres.S_MOTION: [set_req.V_TRIPPED],
+            pres.S_SMOKE: [set_req.V_TRIPPED],
+            pres.S_TEMP: [set_req.V_TEMP],
+            pres.S_HUM: [set_req.V_HUM],
+            pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
+            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST],
+            pres.S_RAIN: [set_req.V_RAIN, set_req.V_RAINRATE],
+            pres.S_UV: [set_req.V_UV],
+            pres.S_WEIGHT: [set_req.V_WEIGHT, set_req.V_IMPEDANCE],
+            pres.S_POWER: [set_req.V_WATT, set_req.V_KWH],
+            pres.S_DISTANCE: [set_req.V_DISTANCE],
+            pres.S_LIGHT_LEVEL: [set_req.V_LIGHT_LEVEL],
+            pres.S_IR: [set_req.V_IR_SEND, set_req.V_IR_RECEIVE],
+            pres.S_WATER: [set_req.V_FLOW, set_req.V_VOLUME],
+            pres.S_CUSTOM: [set_req.V_VAR1,
+                            set_req.V_VAR2,
+                            set_req.V_VAR3,
+                            set_req.V_VAR4,
+                            set_req.V_VAR5],
+            pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
+                                      set_req.V_SCENE_OFF],
+        }
+        if float(gateway.version) < 1.5:
+            map_sv_types.update({
+                pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
+                pres.S_DUST: [set_req.V_DUST_LEVEL],
+            })
         if float(gateway.version) >= 1.5:
-            s_types.extend([
-                gateway.const.Presentation.S_COLOR_SENSOR,
-                gateway.const.Presentation.S_MULTIMETER,
-                gateway.const.Presentation.S_SPRINKLER,
-                gateway.const.Presentation.S_WATER_LEAK,
-                gateway.const.Presentation.S_SOUND,
-                gateway.const.Presentation.S_VIBRATION,
-                gateway.const.Presentation.S_MOISTURE,
-            ])
-            not_v_types.extend([gateway.const.SetReq.V_STATUS, ])
-        v_types = [member for member in gateway.const.SetReq
-                   if member.value not in not_v_types]
+            map_sv_types.update({
+                pres.S_COLOR_SENSOR: [set_req.V_RGB],
+                pres.S_MULTIMETER: [set_req.V_VOLTAGE,
+                                    set_req.V_CURRENT,
+                                    set_req.V_IMPEDANCE],
+                pres.S_SPRINKLER: [set_req.V_TRIPPED],
+                pres.S_WATER_LEAK: [set_req.V_TRIPPED],
+                pres.S_SOUND: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_VIBRATION: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_MOISTURE: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_AIR_QUALITY: [set_req.V_LEVEL],
+                pres.S_DUST: [set_req.V_LEVEL],
+            })
+            map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            s_types, v_types, devices, add_devices, MySensorsSensor))
+            map_sv_types, devices, add_devices, MySensorsSensor))
 
 
 class MySensorsSensor(Entity):
@@ -129,38 +135,31 @@ class MySensorsSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit of measurement of this entity."""
-        # pylint:disable=too-many-return-statements
-        prefix = ''
-        if float(self.gateway.version) >= 1.5 and \
-                self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
-            prefix = self._values[self.gateway.const.SetReq.V_UNIT_PREFIX]
-        if self.value_type == self.gateway.const.SetReq.V_TEMP:
-            return TEMP_CELCIUS  # HA will convert to degrees F if needed
-        elif self.value_type == self.gateway.const.SetReq.V_HUM or \
-                self.value_type == self.gateway.const.SetReq.V_DIMMER or \
-                float(self.gateway.version) >= 1.5 and \
-                self.value_type == self.gateway.const.SetReq.V_PERCENTAGE or \
-                self.value_type == self.gateway.const.SetReq.V_LIGHT_LEVEL:
-            return '%'
-        elif self.value_type == self.gateway.const.SetReq.V_WEIGHT:
-            return '{}g'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_DISTANCE:
-            return '{}m'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_IMPEDANCE:
-            return '{}ohm'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_WATT:
-            return '{}W'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_KWH:
-            return '{}kWh'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_FLOW:
-            return '{}m'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_VOLUME:
-            return '{}m3'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_VOLTAGE:
-            return '{}V'.format(prefix)
-        elif self.value_type == self.gateway.const.SetReq.V_CURRENT:
-            return '{}A'.format(prefix)
-        return None
+        # HA will convert to degrees F if needed
+        unit_map = {
+            self.gateway.const.SetReq.V_TEMP: TEMP_CELCIUS,
+            self.gateway.const.SetReq.V_HUM: '%',
+            self.gateway.const.SetReq.V_DIMMER: '%',
+            self.gateway.const.SetReq.V_LIGHT_LEVEL: '%',
+            self.gateway.const.SetReq.V_WEIGHT: 'kg',
+            self.gateway.const.SetReq.V_DISTANCE: 'm',
+            self.gateway.const.SetReq.V_IMPEDANCE: 'ohm',
+            self.gateway.const.SetReq.V_WATT: 'W',
+            self.gateway.const.SetReq.V_KWH: 'kWh',
+            self.gateway.const.SetReq.V_FLOW: 'm',
+            self.gateway.const.SetReq.V_VOLUME: 'm3',
+            self.gateway.const.SetReq.V_VOLTAGE: 'V',
+            self.gateway.const.SetReq.V_CURRENT: 'A',
+        }
+        unit_map_v15 = {
+            self.gateway.const.SetReq.V_PERCENTAGE: '%',
+        }
+        if float(self.gateway.version) >= 1.5:
+            if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+                return self._values[
+                    self.gateway.const.SetReq.V_UNIT_PREFIX]
+            unit_map.update(unit_map_v15)
+        return unit_map.get(self.value_type)
 
     @property
     def device_state_attributes(self):
