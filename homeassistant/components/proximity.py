@@ -142,7 +142,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                 device_is_in_zone = True
                 if devices_in_zone != '':
                     devices_in_zone = devices_in_zone + ', '
-                devices_in_zone = devices_in_zone + device_state.attributes['friendly_name']
+                devices_in_zone = devices_in_zone +
+                                  device_state.attributes['friendly_name']
                 _LOGGER.info('%s Device: %s is in the monitored zone: %s',
                              entity_name, device, device_state.state)
 
