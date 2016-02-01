@@ -72,13 +72,21 @@ class TestTemplateSensor:
         })
         assert self.hass.states.all() == []
 
-    def test_invalid_config_does_not_create(self):
+    def test_invalid_sensor_does_not_create(self):
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
-                    'test_template_sensor': {}
+                    'test_template_sensor': 'invalid'
                 }
+            }
+        })
+        assert self.hass.states.all() == []
+
+    def test_no_sensors_does_not_create(self):
+        assert sensor.setup(self.hass, {
+            'sensor': {
+                'platform': 'template'
             }
         })
         assert self.hass.states.all() == []
