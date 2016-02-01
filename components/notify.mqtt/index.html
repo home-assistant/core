@@ -7,26 +7,26 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Slack - Home Assistant</title>
+    <title>MQTT notifications - Home Assistant</title>
     <meta name="author" content="Paulus Schoutsen">
-    <meta name="description" content="Instructions how to add Slack notifications to Home Assistant.">
+    <meta name="description" content="Instructions how to add MQTT notifications to Home Assistant.">
     
     <meta name="viewport" content="width=device-width">
-    <link rel="canonical" href="https://home-assistant.io/components/notify.slack/">
+    <link rel="canonical" href="https://home-assistant.io/components/notify.mqtt/">
 
     <meta property="fb:app_id" content="338291289691179">
-    <meta property="og:title" content="Slack">
+    <meta property="og:title" content="MQTT notifications">
     <meta property="og:site_name" content="Home Assistant">
-    <meta property="og:url" content="https://home-assistant.io/components/notify.slack/">
+    <meta property="og:url" content="https://home-assistant.io/components/notify.mqtt/">
     <meta property="og:type" content="article">
-    <meta property="og:description" content="Instructions how to add Slack notifications to Home Assistant.">
+    <meta property="og:description" content="Instructions how to add MQTT notifications to Home Assistant.">
     <meta property="og:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <meta name="twitter:card" content="summary">
     <meta name="twitter:site" content="@home_assistant">
     
-    <meta name="twitter:title" content="Slack">
-    <meta name="twitter:description" content="Instructions how to add Slack notifications to Home Assistant.">
+    <meta name="twitter:title" content="MQTT notifications">
+    <meta name="twitter:description" content="Instructions how to add MQTT notifications to Home Assistant.">
     <meta name="twitter:image" content="https://home-assistant.io/images/home-assistant-logo-2164x2164.png">
 
     <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
@@ -102,37 +102,30 @@
           <article class="page">
   <header>
     <h1 class="title indent">
-      Slack
+      MQTT notifications
     </h1>
   </header>
   <hr class="divider">
 
-  <p>The slack platform allows you to deliver notifications from Home Assistant to <a href="https://slack.com/">Slack</a>.</p>
+  <p>The MQTT notification support is different than the other <a href="/components/notify/">notification</a> platforms. It is a service. This means that you don’t have to create a configuration entry but you need to provide more details while calling the service.</p>
 
-<p>You need to obtain the <a href="https://api.slack.com/web?sudo=1">Slack API token</a> to be able to send notifications.</p>
-
-<p>To enable the slack notification in your installation, add the following to your <code>configuration.yaml</code> file:</p>
+<p><strong>Call Service</strong> section from the <strong>Developer Tools</strong> allows you to send MQTT messages. Choose <em>mqtt/publish</em>  from the list of <strong>Available services:</strong> and enter something like the sample below into the <strong>Service Data</strong> field and hit <strong>CALL SERVICE</strong>.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-<span class="key">notify</span>:
-  <span class="key">name</span>: <span class="string"><span class="content">NOTIFIER_NAME</span></span>
-  <span class="key">platform</span>: <span class="string"><span class="content">slack</span></span>
-  <span class="key">api_key</span>: <span class="string"><span class="content">ABCDEFGHJKLMNOPQRSTUVXYZ</span></span>
-  <span class="key">default_channel</span>: <span class="string"><span class="content">'#general'</span></span>
+  <div class="code"><pre>{<span class="key"><span class="delimiter">&quot;</span><span class="content">payload</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">Test message from HA</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">topic</span><span class="delimiter">&quot;</span></span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">home/notification</span><span class="delimiter">&quot;</span></span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">qos</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>, <span class="key"><span class="delimiter">&quot;</span><span class="content">retain</span><span class="delimiter">&quot;</span></span>: <span class="integer">0</span>}
 </pre></div>
 </div>
 </div>
 
-<p>Configuration variables:</p>
+<p>Using the <a href="/developers/rest_api/#post-apiservicesltdomainltservice">REST API</a> to send a message to a given topic.</p>
 
-<ul>
-  <li><strong>name</strong> (<em>Optional</em>): Setting the optional parameter <code>name</code> allows multiple notifiers to be created. The default value is <code>notify</code>. The notifier will bind to the service <code>notify.NOTIFIER_NAME</code>.</li>
-  <li><strong>api_key</strong> (<em>Required</em>): The slack API token to use for sending slack messages. You can get your slack API token here https://api.slack.com/web?sudo=1</li>
-  <li><strong>default_channel</strong> (<em>Required</em>): The default channel to post to if no channel is explicitly specified when sending the notification message.</li>
-</ul>
-
-<p>To use notifications, please see the <a href="/components/automation/">getting started with automation page</a>.</p>
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X POST -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
+       -d '{&quot;payload&quot;: &quot;Test message from HA&quot;, &quot;topic&quot;: &quot;home/notification&quot;}' \
+       http://IP_ADDRESS:8123/api/services/mqtt/publish
+</pre></div>
+</div>
+</div>
 
 
 </article>
@@ -146,13 +139,42 @@
   
   
     <section class="aside-module grid__item one-whole lap-one-half">
-  <div class='edit-github'><a href='https://github.com/balloob/home-assistant.io/tree/master/source/_components/notify.slack.markdown'>Edit this page on GitHub</a></div>
+  <div class='edit-github'><a href='https://github.com/balloob/home-assistant.io/tree/master/source/_components/notify.mqtt.markdown'>Edit this page on GitHub</a></div>
   <div class='brand-logo-container section'>
-      <img src='/images/supported_brands/slack.png' />
+      <img src='/images/supported_brands/mqtt.png' />
   </div>
     <div class='section'>
       This is a platform for
       <a href='/components/notify/'>the Notifications component</a>.
+    </div>
+          <div class='section'>
+          <h1 class='title delta'>Related components</h1>
+          <ul class='divided'>
+        <li><a href='/components/mqtt/'>
+          MQTT
+        </a></li>
+        <li><a href='/components/alarm_control_panel.mqtt/'>
+          MQTT Alarm Control Panel
+        </a></li>
+        <li><a href='/components/rollershutter.mqtt/'>
+          MQTT Rollershutter
+        </a></li>
+        <li><a href='/components/binary_sensor.mqtt/'>
+          MQTT binary sensor
+        </a></li>
+        <li><a href='/components/device_tracker.mqtt/'>
+          MQTT device tracker
+        </a></li>
+        <li><a href='/components/light.mqtt/'>
+          MQTT light
+        </a></li>
+        <li><a href='/components/sensor.mqtt/'>
+          MQTT sensor
+        </a></li>
+        <li><a href='/components/switch.mqtt/'>
+          MQTT switch
+        </a></li>
+    </ul>
     </div>
     <div class='section'>
     <h1 class="title delta">Category Notifications</h1>
@@ -173,7 +195,7 @@
             <a href='/components/notify.xmpp/'>Jabber (XMPP)</a>
         </li>
         <li>
-            <a href='/components/notify.mqtt/'>MQTT notifications</a>
+            MQTT notifications
         </li>
         <li>
             <a href='/components/notify.nma/'>Notify My Android</a>
@@ -191,7 +213,7 @@
             <a href='/components/notify.smtp/'>SMTP</a>
         </li>
         <li>
-            Slack
+            <a href='/components/notify.slack/'>Slack</a>
         </li>
         <li>
             <a href='/components/notify.syslog/'>Syslog</a>

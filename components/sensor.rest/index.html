@@ -175,8 +175,7 @@ Make sure that the URL matches exactly your endpoint or resource.
 <p>To display the IP address, the entry for a sensor in the <code>configuration.yaml</code> file will look like this.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-  - <span class="string"><span class="content">platform: rest</span></span>
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: rest</span></span>
     <span class="key">resource</span>: <span class="string"><span class="content">http://ip.jsontest.com</span></span>
     <span class="key">name</span>: <span class="string"><span class="content">External IP</span></span>
     <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.ip }}'</span></span>
@@ -191,12 +190,25 @@ Make sure that the URL matches exactly your endpoint or resource.
 <p>Add something similar to the entry below to your <code>configuration.yaml</code> file:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre><span class="comment"># Example configuration.yaml entry</span>
-  - <span class="string"><span class="content">platform: rest</span></span>
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: rest</span></span>
     <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADRRESS:61208/api/2/mem/used</span></span>
     <span class="key">name</span>: <span class="string"><span class="content">Used mem</span></span>
     <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.used| multiply(0.000000954) | round(0) }}'</span></span>
     <span class="key">unit_of_measurement</span>: <span class="string"><span class="content">MB</span></span>
+</pre></div>
+</div>
+</div>
+
+<h3><a class="title-link" name="value-for-other-home-assistant-instance" href="#value-for-other-home-assistant-instance"></a> Value for other Home Assistant instance</h3>
+
+<p>The Home Assistant <a href="/developers/rest_api/">API</a> is exposing the data from your attached sensors. If you are running multiple Home Assistant instances which are not <a href="/developers/architecture/#multiple-connected-instances">connected</a> you can still get information from them.</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>  - <span class="string"><span class="content">platform: rest</span></span>
+    <span class="key">resource</span>: <span class="string"><span class="content">http://IP_ADDRESS:8123/api/states/sensor.weather_temperature</span></span>
+    <span class="key">name</span>: <span class="string"><span class="content">Temperature</span></span>
+    <span class="key">value_template</span>: <span class="string"><span class="content">'{{ value_json.state }}'</span></span>
+    <span class="key">unit_of_measurement</span>: <span class="string"><span class="delimiter">&quot;</span><span class="content">°C</span><span class="delimiter">&quot;</span></span>
 </pre></div>
 </div>
 </div>

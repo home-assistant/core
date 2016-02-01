@@ -115,8 +115,8 @@
   <p>Home Assistant runs a web server accessible on port 8123.</p>
 
 <ul>
-  <li>http://localhost:8123/ is an interface to control Home Assistant.</li>
-  <li>http://localhost:8123/api/ is a Rest API.</li>
+  <li>http://IP_ADDRESS:8123/ is an interface to control Home Assistant.</li>
+  <li>http://IP_ADDRESS:8123/api/ is a Rest API.</li>
 </ul>
 
 <p>The API accepts and returns only JSON encoded objects. All API calls have to be accompanied by the header <code>X-HA-Access: YOUR_PASSWORD</code> (YOUR_PASSWORD as specified in your <code>configuration.yaml</code> file).</p>
@@ -126,7 +126,7 @@
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>curl -X GET \
     -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
-    http://localhost:8123/ENDPOINT
+    http://IP_ADDRESS:8123/ENDPOINT
 </pre></div>
 </div>
 </div>
@@ -177,7 +177,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/
 </pre></div>
 </div>
 </div>
@@ -213,7 +213,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/config
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/config
 </pre></div>
 </div>
 </div>
@@ -235,7 +235,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/bootstrap
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/bootstrap
 </pre></div>
 </div>
 </div>
@@ -261,7 +261,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/events
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/events
 </pre></div>
 </div>
 </div>
@@ -292,7 +292,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/services
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/services
 </pre></div>
 </div>
 </div>
@@ -325,7 +325,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 <p>Sample <code>curl</code> command:</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://IP_ADDRESS:8123/api/states
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; http://localhost:8123/api/states
 </pre></div>
 </div>
 </div>
@@ -351,7 +351,7 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
 
 <div class="highlighter-coderay"><div class="CodeRay">
   <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
-        http://IP_ADDRESS:8123/api/states/sensor.kitchen_temperature
+        http://localhost:8123/api/states/sensor.kitchen_temperature
 </pre></div>
 </div>
 </div>
@@ -363,6 +363,15 @@ You can append <code>?api_password=YOUR_PASSWORD</code> to any url to log in aut
   <div class="code"><pre>15-12-20 11:02:50 homeassistant.components.recorder: Found unfinished sessions
 15-12-20 11:03:03 netdisco.ssdp: Error fetching description at http://192.168.1.1:8200/rootDesc.xml
 15-12-20 11:04:36 homeassistant.components.alexa: Received unknown intent HelpIntent
+</pre></div>
+</div>
+</div>
+
+<p>Sample <code>curl</code> command:</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre>$ curl -X GET -H &quot;x-ha-access: YOUR_PASSWORD&quot; \
+       http://localhost:8123/api/error_log
 </pre></div>
 </div>
 </div>
