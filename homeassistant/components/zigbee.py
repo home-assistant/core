@@ -1,11 +1,12 @@
 """
 homeassistant.components.zigbee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Sets up and provides access to a ZigBee device and contains generic entity
 classes.
-"""
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/zigbee/
+"""
 import logging
 from binascii import hexlify, unhexlify
 
@@ -72,9 +73,7 @@ def setup(hass, config):
 
 
 def close_serial_port(*args):
-    """
-    Close the serial port we're using to communicate with the ZigBee.
-    """
+    """ Close the serial port we're using to communicate with the ZigBee. """
     DEVICE.zb.serial.close()
 
 
@@ -89,9 +88,7 @@ class ZigBeeConfig(object):
 
     @property
     def name(self):
-        """
-        The name given to the entity.
-        """
+        """ The name given to the entity. """
         return self._config["name"]
 
     @property
@@ -121,9 +118,7 @@ class ZigBeePinConfig(ZigBeeConfig):
     """
     @property
     def pin(self):
-        """
-        The GPIO pin number.
-        """
+        """ The GPIO pin number. """
         return self._config["pin"]
 
 
@@ -193,16 +188,12 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
     """
     @property
     def max_voltage(self):
-        """
-        The voltage at which the ADC will report its highest value.
-        """
+        """ The voltage at which the ADC will report its highest value. """
         return float(self._config.get("max_volts", DEFAULT_ADC_MAX_VOLTS))
 
 
 class ZigBeeDigitalIn(Entity):
-    """
-    Represents a GPIO pin configured as a digital input.
-    """
+    """ Represents a GPIO pin configured as a digital input. """
     def __init__(self, hass, config):
         self._config = config
         self._state = False
@@ -212,23 +203,21 @@ class ZigBeeDigitalIn(Entity):
 
     @property
     def name(self):
+        """ The name of the input. """
         return self._config.name
 
     @property
     def should_poll(self):
+        """ State of the polling, if needed. """
         return self._config.should_poll
 
     @property
     def is_on(self):
-        """
-        Returns True if the Entity is on, else False.
-        """
+        """ Returns True if the Entity is on, else False. """
         return self._state
 
     def update(self):
-        """
-        Ask the ZigBee device what its output is set to.
-        """
+        """ Ask the ZigBee device what its output is set to. """
         try:
             pin_state = DEVICE.get_gpio_pin(
                 self._config.pin,
@@ -246,9 +235,7 @@ class ZigBeeDigitalIn(Entity):
 
 
 class ZigBeeDigitalOut(ZigBeeDigitalIn):
-    """
-    Adds functionality to ZigBeeDigitalIn to control an output.
-    """
+    """ Adds functionality to ZigBeeDigitalIn to control an output. """
     def _set_state(self, state):
         try:
             DEVICE.set_gpio_pin(
@@ -269,22 +256,16 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
             self.update_ha_state()
 
     def turn_on(self, **kwargs):
-        """
-        Set the digital output to its 'on' state.
-        """
+        """ Set the digital output to its 'on' state. """
         self._set_state(True)
 
     def turn_off(self, **kwargs):
-        """
-        Set the digital output to its 'off' state.
-        """
+        """ Set the digital output to its 'off' state. """
         self._set_state(False)
 
 
 class ZigBeeAnalogIn(Entity):
-    """
-    Represents a GPIO pin configured as an analog input.
-    """
+    """ Represents a GPIO pin configured as an analog input. """
     def __init__(self, hass, config):
         self._config = config
         self._value = None
@@ -294,24 +275,26 @@ class ZigBeeAnalogIn(Entity):
 
     @property
     def name(self):
+        """ The name of the input. """
         return self._config.name
 
     @property
     def should_poll(self):
+        """ State of the polling, if needed. """
         return self._config.should_poll
 
     @property
     def state(self):
+        """ Returns the state of the entity. """
         return self._value
 
     @property
     def unit_of_measurement(self):
+        """ Unit this state is expressed in. """
         return "%"
 
     def update(self):
-        """
-        Get the latest reading from the ADC.
-        """
+        """ Get the latest reading from the ADC. """
         try:
             self._value = DEVICE.read_analog_pin(
                 self._config.pin,
