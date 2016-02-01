@@ -13,10 +13,20 @@ of travel need to be taken into account. Some examples of its use include:
 - Increase thermostat temperature as you near home
 - Decrease temperature the further away from home you travel
 
+The Proximity entity whihc is created has the following values:
+State = distance from the monitoed zone (in km)
+Dir_of_travel = the direction of the closest device to the monitoed zone. Values
+                'not set'
+                'arrived' 
+                'towards'
+                'away_from'
+dist_from_zone = distance from the monitoed zone (in km)
+
 Use configuration.yaml to enable the user to easily tune a number of settings:
 - Zone: the zone to which this component is measuring the distance to. Default
   is the home zone
-- Ignored Zones: where proximity is not calculated (e.g. work or school)
+- Ignored Zones: where proximity is not calculated for the device being monitored
+  and devices being compared (e.g. work or school)
 - Devices: a list of devices to compare location against to check closeness to
   the configured zone
 - Tolerance: the tolerance used to calculate the direction of travel in metres
