@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 unit_of_measurement,
                 state_template)
             )
-    if sensors is None:
+    if not sensors:
         _LOGGER.error("No sensors added")
         return False
     add_devices(sensors)
