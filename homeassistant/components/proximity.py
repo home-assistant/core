@@ -303,7 +303,7 @@ class Proximity(Entity):
         return {
             ATTR_DIST_FROM: self.dist_from,
             ATTR_DIR_OF_TRAVEL: self.dir_of_travel,
-            ATTR_HIDDEN: True,
+            ATTR_HIDDEN: False,
         }
 
     @property
