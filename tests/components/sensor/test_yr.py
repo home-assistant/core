@@ -64,16 +64,16 @@ class TestSensorYr:
             })
 
         state = self.hass.states.get('sensor.yr_pressure')
-        assert 'hPa', state.attributes.get('unit_of_measurement')
+        assert 'mbar' == state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_wind_direction')
-        assert '°', state.attributes.get('unit_of_measurement')
+        assert '°' == state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_humidity')
-        assert '%', state.attributes.get('unit_of_measurement')
+        assert '%' == state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_fog')
-        assert '%', state.attributes.get('unit_of_measurement')
+        assert '%' == state.attributes.get('unit_of_measurement')
 
         state = self.hass.states.get('sensor.yr_wind_speed')
-        assert 'm/s', state.attributes.get('unit_of_measurement')
+        assert 'm/s' == state.attributes.get('unit_of_measurement')
