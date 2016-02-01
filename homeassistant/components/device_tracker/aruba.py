@@ -11,7 +11,7 @@ import logging
 from datetime import timedelta
 import re
 import threading
-import telnetlib
+import pexpect
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
@@ -94,15 +94,18 @@ class ArubaDeviceScanner(object):
     def get_aruba_data(self):
         """ Retrieve data from Aruba Access Point and return parsed result. """
         try:
-            telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'User: ')
-            telnet.write((self.username + '\r\n').encode('ascii'))
-            telnet.read_until(b'Password: ')
-            telnet.write((self.password + '\r\n').encode('ascii'))
-            telnet.read_until(b'#')
-            telnet.write(('show clients\r\n').encode('ascii'))
-            devices_result = telnet.read_until(b'#').split(b'\r\n')
-            telnet.write('exit\r\n'.encode('ascii'))
+            connect = "ssh {}@{}"
+            ssh = pexpect.spawn (connect.format(self.username, self.host))
+            query = ssh.expect(['continue connecting (yes/no)?', 'password:'])
+            if query == 0:
+                ssh.sendline('yes')
+                ssh.expect ('password:')
+            ssh.sendline (self.password )
+            ssh.expect ('#')
+            ssh.sendline ('show clients')
+            ssh.expect ('#')
+            devices_result = ssh.before.split(b'\r\n')
+            ssh.sendline ('exit')
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return
