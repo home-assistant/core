@@ -13,14 +13,14 @@ of travel need to be taken into account. Some examples of its use include:
 - Increase thermostat temperature as you near home
 - Decrease temperature the further away from home you travel
 
-The Proximity entity whihc is created has the following values:
-State = distance from the monitoed zone (in km)
+The Proximity entity which is created has the following values:
+State = distance from the monitored zone (in km)
 Dir_of_travel = direction of the closest device to the monitoed zone. Values
                 'not set'
                 'arrived'
                 'towards'
                 'away_from'
-dist_from_zone = distance from the monitoed zone (in km)
+dist_from_zone = distance from the monitored zone (in km)
 
 Use configuration.yaml to enable the user to easily tune a number of settings:
 - Zone: the zone to which this component is measuring the distance to. Default
@@ -32,7 +32,7 @@ Use configuration.yaml to enable the user to easily tune a number of settings:
 - Tolerance: the tolerance used to calculate the direction of travel in metres
   (to filter out small GPS co-ordinate changes
 
-Loging levels debug, info and error are in use
+Logging levels debug, info and error are in use
 
 Example configuration.yaml entry:
 proximity:
