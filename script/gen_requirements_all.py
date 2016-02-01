@@ -3,7 +3,6 @@
 Generate an updated requirements_all.txt
 """
 
-from collections import OrderedDict
 import importlib
 import os
 import pkgutil
@@ -50,7 +49,7 @@ def comment_requirement(req):
 
 def gather_modules():
     """ Collect the information and construct the output. """
-    reqs = OrderedDict()
+    reqs = {}
 
     errors = []
     output = []
@@ -68,6 +67,10 @@ def gather_modules():
         for req in module.REQUIREMENTS:
             reqs.setdefault(req, []).append(package)
 
+    for key in reqs:
+        reqs[key] = sorted(reqs[key],
+                           key=lambda name: (len(name.split('.')), name))
+
     if errors:
         print("******* ERROR")
         print("Errors while importing: ", ', '.join(errors))
@@ -78,7 +81,7 @@ def gather_modules():
     output.append('\n')
     output.append('\n'.join(core_requirements()))
     output.append('\n')
-    for pkg, requirements in reqs.items():
+    for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements,
                           key=lambda name: (len(name.split('.')), name)):
             output.append('\n# {}'.format(req))
