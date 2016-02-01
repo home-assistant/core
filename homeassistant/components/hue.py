@@ -15,23 +15,21 @@ from urllib.parse import urlparse
 from homeassistant import bootstrap
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
-from homeassistant.helpers import validate_config
 from homeassistant.components import discovery
 from homeassistant.const import (
     CONF_HOST, ATTR_SERVICE, ATTR_DISCOVERED, EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = 'hue'
-
 REQUIREMENTS = ['phue==0.8']
+
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = "phue.conf"
-
 DISCOVER_LIGHTS = 'hue.lights'
-
-_LOGGER = logging.getLogger(__name__)
+HUEBRIDGE = None
 
 # Map ip to request id for configuring
 _CONFIGURING = {}
@@ -54,7 +52,7 @@ def setup(hass, config):
     HUEBRIDGE = {}
 
     # FIXME / This needs cleanup / better config loading
-    #hosts = config.get(CONF_HOST, None)
+    # hosts = config.get(CONF_HOST, None)
     hosts = config[DOMAIN][CONF_HOST]
     if hosts is not None:
         if not isinstance(hosts, list):
@@ -69,7 +67,7 @@ def setup(hass, config):
             _LOGGER.info('Attepring bridge set for %s', host)
             setup_huebridge(hass, host)
     else:
-        _LOGGER.info('No hosts configured for hue component, it\'s up to discovery now')
+        _LOGGER.info('No hosts configured, it\'s up to discovery now')
 
     comp_name = 'light'
     component = get_component(comp_name)
@@ -115,7 +113,7 @@ def setup_huebridge(hass, host):
     # Add instanciated bridge to our own control global
     bridge_id = bridge.get_api().get('config').get('bridgeid')
     if HUEBRIDGE.get(bridge_id):
-        _LOGGER.warning('Bridge already exists in global: %s',bridge_id)
+        _LOGGER.info('Bridge %s already initialized, skipping', bridge_id)
         return
     HUEBRIDGE[bridge_id] = HueBridge(hass, bridge)
 
@@ -159,6 +157,7 @@ class HueBridge(object):
 
         bconfig = self.get_apidata().get('config')
         self.bridge_id = bconfig.get('bridgeid')
+        self.bridge_ip = bconfig.get('ipaddress')
 
         # Support limitations in DiY zigbee bridge 'deconz'
         if bconfig.get('name') == 'RaspBee-GW':
@@ -167,7 +166,7 @@ class HueBridge(object):
             self.bridge_type = 'hue'
 
         # FIXME / debuglog
-        _LOGGER.warning('Successfully initialized new bridge: %s/%s, discovering attached devices', self._bridge.ip, self.bridge_id)
+        _LOGGER.warning('New bridge: %s/%s', self.bridge_ip, self.bridge_id)
         self.process_apidata()
 
     def get_apidata(self):
@@ -189,15 +188,13 @@ class HueBridge(object):
 
         new_lights = []
         for light_id, info in api_states.items():
-            # FIXME / debuglog
-            _LOGGER.warning('Update: processing light %s on bridge %s', light_id, self.bridge_id)
             if light_id not in self.lights.keys():
                 new_lights.append(light_id)
             self.lights[light_id] = info
 
         if new_lights:
             # FIXME / debuglog
-            _LOGGER.warning('Sending discovery event for new light: %s',new_lights)
+            _LOGGER.warning('Sending discovery event: %s', new_lights)
             self.hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: DISCOVER_LIGHTS,
                 ATTR_DISCOVERED: {
@@ -208,4 +205,5 @@ class HueBridge(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
+        """ Update function """
         self.process_apidata()

@@ -6,179 +6,48 @@ Support for Hue lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hue/
 """
-import json
 import logging
-import os
-import socket
 import random
-from datetime import timedelta
-from urllib.parse import urlparse
-
-from homeassistant.loader import get_component
-import homeassistant.util as util
+from homeassistant.components.hue import HUEBRIDGE
 import homeassistant.util.color as color_util
-from homeassistant.const import CONF_HOST, CONF_FILENAME, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
     ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
     ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
+from homeassistant.const import (
+    DEVICE_DEFAULT_NAME)
 
-REQUIREMENTS = ['phue==0.8']
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-
-PHUE_CONFIG_FILE = "phue.conf"
-
-
-# Map ip to request id for configuring
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 
-def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
-    """ Attempt to detect host based on existing configuration. """
-    path = hass.config.path(filename)
-
-    if not os.path.isfile(path):
-        return None
-
-    try:
-        with open(path) as inp:
-            return next(json.loads(''.join(inp)).keys().__iter__())
-    except (ValueError, AttributeError, StopIteration):
-        # ValueError if can't parse as JSON
-        # AttributeError if JSON value is not a dict
-        # StopIteration if no keys
-        return None
-
-
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Gets the Hue lights. """
-    filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
-    if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
-    else:
-        host = config.get(CONF_HOST, None)
-
-        if host is None:
-            host = _find_host_from_config(hass, filename)
-
-        if host is None:
-            _LOGGER.error('No host found in configuration')
-            return False
-
-    # Only act if we are not already configuring this host
-    if host in _CONFIGURING:
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Find and add Hue lights. """
+    if discovery_info is None:
         return
 
-    setup_bridge(host, hass, add_devices_callback, filename)
-
-
-def setup_bridge(host, hass, add_devices_callback, filename):
-    """ Setup a phue bridge based on host parameter. """
-    import phue
-
-    try:
-        bridge = phue.Bridge(
-            host,
-            config_file_path=hass.config.path(filename))
-    except ConnectionRefusedError:  # Wrong host was given
-        _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
-
-        return
-
-    except phue.PhueRegistrationException:
-        _LOGGER.warning("Connected to Hue at %s but not registered.", host)
-
-        request_configuration(host, hass, add_devices_callback, filename)
-
-        return
-
-    # If we came here and configuring this host, mark as done
-    if host in _CONFIGURING:
-        request_id = _CONFIGURING.pop(host)
-
-        configurator = get_component('configurator')
-
-        configurator.request_done(request_id)
-
-    lights = {}
-
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_lights():
-        """ Updates the Hue light objects with latest info from the bridge. """
-        try:
-            api = bridge.get_api()
-        except socket.error:
-            # socket.error when we cannot reach Hue
-            _LOGGER.exception("Cannot reach the bridge")
-            return
-
-        api_states = api.get('lights')
-
-        if not isinstance(api_states, dict):
-            _LOGGER.error("Got unexpected result from Hue API")
-            return
-
-        new_lights = []
-
-        api_name = api.get('config').get('name')
-        if api_name == 'RaspBee-GW':
-            bridge_type = 'deconz'
-        else:
-            bridge_type = 'hue'
-
-        for light_id, info in api_states.items():
-            if light_id not in lights:
-                lights[light_id] = HueLight(int(light_id), info,
-                                            bridge, update_lights,
-                                            bridge_type=bridge_type)
-                new_lights.append(lights[light_id])
-            else:
-                lights[light_id].info = info
-
-        if new_lights:
-            add_devices_callback(new_lights)
-
-    update_lights()
-
-
-def request_configuration(host, hass, add_devices_callback, filename):
-    """ Request configuration steps from the user. """
-    configurator = get_component('configurator')
-
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again.")
-
-        return
-
-    # pylint: disable=unused-argument
-    def hue_configuration_callback(data):
-        """ Actions to do when our configuration callback is called. """
-        setup_bridge(host, hass, add_devices_callback, filename)
-
-    _CONFIGURING[host] = configurator.request_config(
-        hass, "Philips Hue", hue_configuration_callback,
-        description=("Press the button on the bridge to register Philips Hue "
-                     "with Home Assistant."),
-        description_image="/static/images/config_philips_hue.jpg",
-        submit_caption="I have pressed the button"
-    )
+    # FIXME / debuglog
+    _LOGGER.warning('Discovery info: %s', discovery_info)
+    bridge_id = discovery_info.get('bridge_id')
+    for light_id in discovery_info.get('lights'):
+        # FIXME / debuglog
+        _LOGGER.warning('Found HueLamp: %s', light_id)
+        # FIXME / Rewrite this to one add_devices call
+        add_devices([HueLight(bridge_id, light_id)])
 
 
 class HueLight(Light):
     """ Represents a Hue light """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type='hue'):
+    def __init__(self, bridge_id, light_id):
+        self.bridge = HUEBRIDGE.get(bridge_id)
         self.light_id = light_id
-        self.info = info
-        self.bridge = bridge
-        self.update_lights = update_lights
-        self.bridge_type = bridge_type
+
+        self.update_state()
+
+    def update_state(self):
+        """ Update self.info, state of the light """
+        self.info = self.bridge.lights.get(self.light_id)
 
     @property
     def unique_id(self):
@@ -209,7 +78,7 @@ class HueLight(Light):
     @property
     def is_on(self):
         """ True if device is on. """
-        self.update_lights()
+        self.update_state()
 
         return self.info['state']['reachable'] and self.info['state']['on']
 
@@ -238,7 +107,7 @@ class HueLight(Light):
             command['alert'] = 'lselect'
         elif flash == FLASH_SHORT:
             command['alert'] = 'select'
-        elif self.bridge_type == 'hue':
+        elif self.bridge.bridge_type == 'hue':
             command['alert'] = 'none'
 
         effect = kwargs.get(ATTR_EFFECT)
@@ -248,9 +117,11 @@ class HueLight(Light):
         elif effect == EFFECT_RANDOM:
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
-        elif self.bridge_type == 'hue':
+        elif self.bridge.bridge_type == 'hue':
             command['effect'] = 'none'
 
+        # FIXME / debuglog
+        _LOGGER.warning('debug command: %s, %s', self.light_id, command)
         self.bridge.set_light(self.light_id, command)
 
     def turn_off(self, **kwargs):
@@ -262,8 +133,12 @@ class HueLight(Light):
             # 900 seconds.
             command['transitiontime'] = min(9000, kwargs[ATTR_TRANSITION] * 10)
 
+        # FIXME / debuglog
+        _LOGGER.warning('debug command: %s, %s', self.light_id, command)
         self.bridge.set_light(self.light_id, command)
 
     def update(self):
         """ Synchronize state with bridge. """
-        self.update_lights(no_throttle=True)
+        # FIXME / use of throttle?
+        # self.update_lights(no_throttle=True)
+        self.update_state()
