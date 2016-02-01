@@ -129,7 +129,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     entities.add(proximity.entity_id)
 
     def check_proximity_state_change(entity, old_state, new_state):
-        # pylint: disable=too-many-branches,too-many-statements
+        # pylint: disable=too-many-branches,too-many-statements,too-many-locals
         """ Function to perform the proximity checking """
         entity_name = new_state.attributes['friendly_name']
         device_is_in_zone = False
@@ -140,14 +140,13 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             device_state = hass.states.get(device)
             if device_state.state == config[DOMAIN]['zone']:
                 device_is_in_zone = True
-                if not devices_in_zone == '':
+                if devices_in_zone != '':
                     devices_in_zone = devices_in_zone + ', '
                 devices_in_zone = devices_in_zone + device_state.attributes['friendly_name']
                 _LOGGER.info('%s Device: %s is in the monitored zone: %s',
                              entity_name, device, device_state.state)
 
         if device_is_in_zone:
-            entity_state = hass.states.get(entity_id)
             proximity.dist_from = 0
             proximity.dir_of_travel = 'arrived'
             proximity.nearest = devices_in_zone
@@ -320,7 +319,7 @@ class Proximity(Entity):
     def distance_from_zone(self):
         """ returns the distance of the closest device to the zone """
         return self.dist_from
-    
+
     @property
     def nearest_device(self):
         """ returns the name of the device closest to the zone """
