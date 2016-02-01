@@ -98,5 +98,5 @@ class OneWire(Entity):
             temp_string = lines[1][equals_pos+2:]
             temp = round(float(temp_string) / 1000.0, 1)
             if temp < -55 or temp > 125:
-                return 
+                return
             self._state = temp
