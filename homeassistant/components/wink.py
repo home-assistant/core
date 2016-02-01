@@ -22,6 +22,7 @@ DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
 DISCOVER_LOCKS = "wink.locks"
+DISCOVER_GARAGE_DOORS = "wink.garage_doors"
 
 
 def setup(hass, config):
@@ -42,7 +43,8 @@ def setup(hass, config):
              pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
             ('sensor', lambda: pywink.get_sensors or
              pywink.get_eggtrays, DISCOVER_SENSORS),
-            ('lock', pywink.get_locks, DISCOVER_LOCKS)):
+            ('lock', pywink.get_locks, DISCOVER_LOCKS),
+            ('garage_door', pywink.get_garage_doors, DISCOVER_GARAGE_DOORS)):
 
         if func_exists():
             component = get_component(component_name)
