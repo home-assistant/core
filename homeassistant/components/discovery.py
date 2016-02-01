@@ -31,7 +31,7 @@ SERVICE_PLEX = 'plex_mediaserver'
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "switch",
     SERVICE_CAST: "media_player",
-    SERVICE_HUE: "light",
+    SERVICE_HUE: "hue",
     SERVICE_NETGEAR: 'device_tracker',
     SERVICE_SONOS: 'media_player',
     SERVICE_PLEX: 'media_player',
