@@ -135,16 +135,16 @@ class Entity(object):
         state = str(self.state)
         attr = self.state_attributes or {}
 
-        if not self.available:
-            state = STATE_UNAVAILABLE
-            return self.hass.states.set(self.entity_id, state)
-
-        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
-            attr[ATTR_FRIENDLY_NAME] = str(self.name)
-
         if ATTR_UNIT_OF_MEASUREMENT not in attr and \
            self.unit_of_measurement is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = str(self.unit_of_measurement)
+
+        if not self.available:
+            state = STATE_UNAVAILABLE
+            attr = {}
+
+        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
+            attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
         if ATTR_ICON not in attr and self.icon is not None:
             attr[ATTR_ICON] = str(self.icon)
