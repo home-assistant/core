@@ -8,6 +8,7 @@ https://home-assistant.io/components/alexa/
 """
 import enum
 import logging
+import yaml
 
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.util import template
@@ -93,7 +94,17 @@ def _handle_alexa(handler, path_match, data):
                           card['content'])
 
     if action is not None:
-        call_from_config(handler.server.hass, action, True)
+        rendered_action = ""
+        try:
+            yaml.load(response.render(action))
+        except yaml.YAMLError as exc:
+            if hasattr(exc, 'problem_mark'):
+                # pylint: disable=maybe-no-member
+                mark = exc.problem_mark
+                _LOGGER.warning("Error position: (%s:%s)",
+                                mark.line+1, mark.column+1)
+
+        call_from_config(handler.server.hass, rendered_action, True)
 
     handler.write_json(response.as_dict())
 
@@ -138,8 +149,8 @@ class AlexaResponse(object):
             self.card = card
             return
 
-        card["title"] = self._render(title),
-        card["content"] = self._render(content)
+        card["title"] = self.render(title),
+        card["content"] = self.render(content)
         self.card = card
 
     def add_speech(self, speech_type, text):
@@ -150,7 +161,7 @@ class AlexaResponse(object):
 
         self.speech = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: self.render(text)
         }
 
     def add_reprompt(self, speech_type, text):
@@ -161,7 +172,7 @@ class AlexaResponse(object):
 
         self.reprompt = {
             'type': speech_type.value,
-            key: self._render(text)
+            key: self.render(text)
         }
 
     def as_dict(self):
@@ -187,6 +198,6 @@ class AlexaResponse(object):
             'response': response,
         }
 
-    def _render(self, template_string):
+    def render(self, template_string):
         """ Render a response, adding data from intent if available. """
         return template.render(self.hass, template_string, self.variables)
