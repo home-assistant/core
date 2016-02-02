@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE, SUPPORT_PLAY_MEDIA,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
@@ -25,7 +25,7 @@ CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE | SUPPORT_PLAY_MEDIA
+    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA
 KNOWN_HOSTS = []
 
 DEFAULT_PORT = 8009
@@ -79,10 +79,7 @@ class CastDevice(MediaPlayerDevice):
 
     def __init__(self, host, port):
         import pychromecast
-        import pychromecast.controllers.youtube as youtube
         self.cast = pychromecast.Chromecast(host, port)
-        self.youtube = youtube.YouTubeController()
-        self.cast.register_handler(self.youtube)
 
         self.cast.socket_client.receiver_controller.register_status_listener(
             self)
@@ -265,10 +262,6 @@ class CastDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id):
         """ Plays media from a URL """
         self.cast.media_controller.play_media(media_id, media_type)
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        self.youtube.play_video(media_id)
 
     # implementation of chromecast status_listener methods
 
