@@ -1,7 +1,10 @@
 """ Starts home assistant. """
 from __future__ import print_function
 
+from multiprocessing import Process
+import signal
 import sys
+import threading
 import os
 import argparse
 
@@ -204,6 +207,64 @@ def uninstall_osx():
     print("Home Assistant has been uninstalled.")
 
 
+def setup_and_run_hass(config_dir, args):
+    """ Setup HASS and run. Block until stopped. """
+    if args.demo_mode:
+        config = {
+            'frontend': {},
+            'demo': {}
+        }
+        hass = bootstrap.from_config_dict(
+            config, config_dir=config_dir, daemon=args.daemon,
+            verbose=args.verbose, skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days)
+    else:
+        config_file = ensure_config_file(config_dir)
+        print('Config directory:', config_dir)
+        hass = bootstrap.from_config_file(
+            config_file, daemon=args.daemon, verbose=args.verbose,
+            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
+
+    if args.open_ui:
+        def open_browser(event):
+            """ Open the webinterface in a browser. """
+            if hass.config.api is not None:
+                import webbrowser
+                webbrowser.open(hass.config.api.base_url)
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
+
+    hass.start()
+    sys.exit(int(hass.block_till_stopped()))
+
+
+def run_hass_process(hass_proc):
+    """ Runs a child hass process. Returns True if it should be restarted.  """
+    requested_stop = threading.Event()
+    hass_proc.daemon = True
+
+    def request_stop():
+        """ request hass stop """
+        requested_stop.set()
+        hass_proc.terminate()
+
+    try:
+        signal.signal(signal.SIGTERM, request_stop)
+    except ValueError:
+        print('Could not bind to SIGTERM. Are you running in a thread?')
+
+    hass_proc.start()
+    try:
+        hass_proc.join()
+    except KeyboardInterrupt:
+        request_stop()
+        try:
+            hass_proc.join()
+        except KeyboardInterrupt:
+            return False
+    return not requested_stop.isSet() and hass_proc.exitcode == 100
+
+
 def main():
     """ Starts Home Assistant. """
     validate_python()
@@ -233,33 +294,12 @@ def main():
     if args.pid_file:
         write_pid(args.pid_file)
 
-    if args.demo_mode:
-        config = {
-            'frontend': {},
-            'demo': {}
-        }
-        hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, daemon=args.daemon,
-            verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days)
-    else:
-        config_file = ensure_config_file(config_dir)
-        print('Config directory:', config_dir)
-        hass = bootstrap.from_config_file(
-            config_file, daemon=args.daemon, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
+    # Run hass as child process. Restart if necessary.
+    keep_running = True
+    while keep_running:
+        hass_proc = Process(target=setup_and_run_hass, args=(config_dir, args))
+        keep_running = run_hass_process(hass_proc)
 
-    if args.open_ui:
-        def open_browser(event):
-            """ Open the webinterface in a browser. """
-            if hass.config.api is not None:
-                import webbrowser
-                webbrowser.open(hass.config.api.base_url)
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
-
-    hass.start()
-    hass.block_till_stopped()
 
 if __name__ == "__main__":
     main()
