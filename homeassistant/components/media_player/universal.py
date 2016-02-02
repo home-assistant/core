@@ -27,7 +27,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice, DOMAIN,
     SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SERVICE_PLAY_MEDIA, SERVICE_YOUTUBE_VIDEO,
+    SERVICE_PLAY_MEDIA,
     ATTR_SUPPORTED_MEDIA_COMMANDS, ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION,
     ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST, ATTR_MEDIA_ALBUM_NAME,
@@ -396,11 +396,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """ Send seek command. """
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         self._call_service(SERVICE_MEDIA_SEEK, data)
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        data = {'media_id': media_id}
-        self._call_service(SERVICE_YOUTUBE_VIDEO, data)
 
     def play_media(self, media_type, media_id):
         """ Plays a piece of media. """

@@ -24,7 +24,6 @@ SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Denon platform. """
     if not config.get(CONF_HOST):
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """ Represents a Denon device. """
 
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods, abstract-method
 
     def __init__(self, name, host):
         self._name = name
@@ -145,10 +144,6 @@ class DenonDevice(MediaPlayerDevice):
         """ mute (true) or unmute (false) media player. """
         self.telnet_command("MU" + ("ON" if mute else "OFF"))
 
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        raise NotImplementedError()
-
     def media_play(self):
         """ media_play media player. """
         self.telnet_command("NS9A")
@@ -163,9 +158,6 @@ class DenonDevice(MediaPlayerDevice):
 
     def media_previous_track(self):
         self.telnet_command("NS9E")
-
-    def media_seek(self, position):
-        raise NotImplementedError()
 
     def turn_on(self):
         """ turn the media player on. """
