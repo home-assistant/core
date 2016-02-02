@@ -128,7 +128,7 @@ class SensorTemplate(Entity):
             self._state = STATE_ERROR
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
-                # Common during HA startup - so just a trace
-                _LOGGER.info(ex)
+                # Common during HA startup - so just a warning
+                _LOGGER.warning(ex)
                 return
             _LOGGER.error(ex)
