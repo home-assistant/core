@@ -140,6 +140,11 @@ class MySensorsSwitch(SwitchDevice):
         self._values[self.value_type] = STATE_OFF
         self.update_ha_state()
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
+
     def update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
