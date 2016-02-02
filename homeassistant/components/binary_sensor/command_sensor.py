@@ -1,8 +1,11 @@
 """
 homeassistant.components.binary_sensor.command_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure custom shell commands to turn a value
 into a logical value for a binary sensor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.command/
 """
 import logging
 from datetime import timedelta
