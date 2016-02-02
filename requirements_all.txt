@@ -114,6 +114,9 @@ orvibo==1.1.1
 # homeassistant.components.mqtt
 paho-mqtt==1.1
 
+# homeassistant.components.device_tracker.aruba
+pexpect==4.0.1
+
 # homeassistant.components.light.hue
 phue==0.8
 

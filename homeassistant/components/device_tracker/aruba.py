@@ -11,7 +11,7 @@ import logging
 from datetime import timedelta
 import re
 import threading
-import pexpect
+
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
@@ -21,6 +21,7 @@ from homeassistant.components.device_tracker import DOMAIN
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(
@@ -93,27 +94,37 @@ class ArubaDeviceScanner(object):
 
     def get_aruba_data(self):
         """ Retrieve data from Aruba Access Point and return parsed result. """
-        try:
-            connect = "ssh {}@{}"
-            ssh = pexpect.spawn (connect.format(self.username, self.host))
-            query = ssh.expect(['continue connecting (yes/no)?', 'password:'])
-            if query == 0:
-                ssh.sendline('yes')
-                ssh.expect ('password:')
-            ssh.sendline (self.password )
-            ssh.expect ('#')
-            ssh.sendline ('show clients')
-            ssh.expect ('#')
-            devices_result = ssh.before.split(b'\r\n')
-            ssh.sendline ('exit')
-        except EOFError:
-            _LOGGER.exception("Unexpected response from router")
-            return
-        except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router," +
-                              " is telnet enabled?")
-            return
 
+        import pexpect
+        connect = "ssh {}@{}"
+        ssh = pexpect.spawn (connect.format(self.username, self.host))
+        query = ssh.expect(['password:',pexpect.TIMEOUT,pexpect.EOF,'continue connecting (yes/no)?',
+                          'Host key verification failed.','Connection refused','Connection timed out'],timeout=120)        
+        if query == 1:                
+            _LOGGER.error("Timeout")
+            return
+        elif query == 2:
+            _LOGGER.error("Unexpected response from router")
+            return
+        elif query == 3:
+            ssh.sendline('yes')
+            ssh.expect ('password:')
+        elif query == 4:
+            _LOGGER.error("Host key Changed")
+            return
+        elif query == 5:
+            #_LOGGER.error("Connection refused by server")
+            return
+        elif query == 6:
+            #_LOGGER.error("Connection timed out")
+            return
+        ssh.sendline (self.password )
+        ssh.expect ('#')
+        ssh.sendline ('show clients')
+        ssh.expect ('#')
+        devices_result = ssh.before.split(b'\r\n')
+        ssh.sendline ('exit')
+       
         devices = {}
         for device in devices_result:
             match = _DEVICES_REGEX.search(device.decode('utf-8'))
