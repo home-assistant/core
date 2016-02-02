@@ -11,7 +11,9 @@ import logging
 
 from datetime import datetime
 
-from homeassistant.const import TEMP_CELCIUS, ATTR_BATTERY_LEVEL
+from homeassistant.const import (TEMP_CELCIUS,
+                                 ATTR_BATTERY_LEVEL,
+                                 DEVICE_DEFAULT_NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import tellduslive
 
@@ -64,7 +66,8 @@ class TelldusLiveSensor(Entity):
         self._sensor_id = sensor_id
         self._sensor_type = sensor_type
         self._state = None
-        self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
+        self._name = "{} {}".format(sensor_name or DEVICE_DEFAULT_NAME,
+                                    SENSOR_TYPES[sensor_type][0])
         self._last_update = None
         self._battery_level = None
         self.update()
