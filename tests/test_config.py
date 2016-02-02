@@ -94,6 +94,15 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
+    def test_load_yaml_config_raises_error_if_unsafe_yaml(self):
+        """ Test error raised if unsafe YAML. """
+        with open(YAML_PATH, 'w') as f:
+            f.write('hello: !!python/object/apply:os.system')
+
+        with self.assertRaises(HomeAssistantError):
+            config_util.load_yaml_config_file(YAML_PATH)
+
+
     def test_load_yaml_config_preserves_key_order(self):
         with open(YAML_PATH, 'w') as f:
             f.write('hello: 0\n')

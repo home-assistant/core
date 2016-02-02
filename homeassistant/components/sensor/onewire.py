@@ -96,5 +96,7 @@ class OneWire(Entity):
         equals_pos = lines[1].find('t=')
         if equals_pos != -1:
             temp_string = lines[1][equals_pos+2:]
-            temp = float(temp_string) / 1000.0
+            temp = round(float(temp_string) / 1000.0, 1)
+            if temp < -55 or temp > 125:
+                return
             self._state = temp

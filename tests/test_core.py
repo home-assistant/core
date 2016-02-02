@@ -7,6 +7,7 @@ Provides tests to verify that Home Assistant core works.
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import os
+import signal
 import unittest
 from unittest.mock import patch
 import time
@@ -79,15 +80,15 @@ class TestHomeAssistant(unittest.TestCase):
 
         self.assertFalse(blocking_thread.is_alive())
 
-    def test_stopping_with_keyboardinterrupt(self):
+    def test_stopping_with_sigterm(self):
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: calls.append(1))
 
-        def raise_keyboardinterrupt(length):
-            raise KeyboardInterrupt
+        def send_sigterm(length):
+            os.kill(os.getpid(), signal.SIGTERM)
 
-        with patch('homeassistant.core.time.sleep', raise_keyboardinterrupt):
+        with patch('homeassistant.core.time.sleep', send_sigterm):
             self.hass.block_till_stopped()
 
         self.assertEqual(1, len(calls))
