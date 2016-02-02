@@ -59,7 +59,7 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method, unused-argument
+# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the plex platform. """
 
