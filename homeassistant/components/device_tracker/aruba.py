@@ -12,7 +12,6 @@ from datetime import timedelta
 import re
 import threading
 
-
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
@@ -45,6 +44,7 @@ def get_scanner(hass, config):
 
 class ArubaDeviceScanner(object):
     """ This class queries a Aruba Acces Point for connected devices. """
+
     def __init__(self, config):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
@@ -97,10 +97,10 @@ class ArubaDeviceScanner(object):
 
         import pexpect
         connect = "ssh {}@{}"
-        ssh = pexpect.spawn (connect.format(self.username, self.host))
-        query = ssh.expect(['password:',pexpect.TIMEOUT,pexpect.EOF,'continue connecting (yes/no)?',
-                          'Host key verification failed.','Connection refused','Connection timed out'],timeout=120)        
-        if query == 1:                
+        ssh = pexpect.spawn(connect.format(self.username, self.host))
+        query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF, 'continue connecting (yes/no)?',
+                            'Host key verification failed.', 'Connection refused', 'Connection timed out'], timeout=120)
+        if query == 1:
             _LOGGER.error("Timeout")
             return
         elif query == 2:
@@ -108,23 +108,23 @@ class ArubaDeviceScanner(object):
             return
         elif query == 3:
             ssh.sendline('yes')
-            ssh.expect ('password:')
+            ssh.expect('password:')
         elif query == 4:
             _LOGGER.error("Host key Changed")
             return
         elif query == 5:
-            #_LOGGER.error("Connection refused by server")
+            _LOGGER.error("Connection refused by server")
             return
         elif query == 6:
-            #_LOGGER.error("Connection timed out")
+            _LOGGER.error("Connection timed out")
             return
-        ssh.sendline (self.password )
-        ssh.expect ('#')
-        ssh.sendline ('show clients')
-        ssh.expect ('#')
+        ssh.sendline(self.password)
+        ssh.expect('#')
+        ssh.sendline('show clients')
+        ssh.expect('#')
         devices_result = ssh.before.split(b'\r\n')
-        ssh.sendline ('exit')
-       
+        ssh.sendline('exit')
+
         devices = {}
         for device in devices_result:
             match = _DEVICES_REGEX.search(device.decode('utf-8'))
@@ -133,5 +133,5 @@ class ArubaDeviceScanner(object):
                     'ip': match.group('ip'),
                     'mac': match.group('mac').upper(),
                     'name': match.group('name')
-                    }
+                }
         return devices
