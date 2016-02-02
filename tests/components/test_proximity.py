@@ -43,3 +43,16 @@ class TestProximity:
         self.hass.pool.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
+    
+    def device_tracker_test_in_zone(self):
+        self.hass.states.set(
+            'device_tracker.test', 'home',
+            {
+                'friendly_name': 'test',
+                'latitude': 2.1,
+                'longitude': 1.1
+            })
+        state = self.hass.states.get('proximity.home')
+        assert state.state == '0'
+        assert state.attributes.get('nearest') == 'test'
+        assert started.attributes.get('dir_of_travel') == 'arrived'
