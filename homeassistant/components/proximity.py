@@ -220,7 +220,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                           device_state.attributes['longitude'])
 
             if ((dist_closest_to_zone == 0) or
-               (compare_dev_dist < dist_closest_to_zone)):
+                (compare_dev_dist < dist_closest_to_zone)):
                 _LOGGER.debug('%s is closer than %s (%s compared to %s)',
                               device, device_closest_to_zone, compare_dev_dist,
                               dist_closest_to_zone)
@@ -238,8 +238,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                           device, entity)
 
         if (not device_is_closest_to_zone and
-           (proximity.dist_from == round(dist_closest_to_zone)) and
-           (proximity.nearest == entity_name)):
+            (proximity.dist_from == round(dist_closest_to_zone)) and
+            (proximity.nearest == entity_name)):
             _LOGGER.info('%s is still the closest device at distance %s',
                          entity_name, dist_closest_to_zone)
             return
