@@ -22,6 +22,8 @@ DEPENDENCIES = []
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8086
 DEFAULT_DATABASE = 'home_assistant'
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = False
 
 REQUIREMENTS = ['influxdb==2.11.0']
 
@@ -30,6 +32,8 @@ CONF_PORT = 'port'
 CONF_DB_NAME = 'database'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
+CONF_SSL = 'ssl'
+CONF_VERIFY_SSL = 'verify_ssl'
 
 
 def setup(hass, config):
@@ -47,10 +51,14 @@ def setup(hass, config):
     database = util.convert(conf.get(CONF_DB_NAME), str, DEFAULT_DATABASE)
     username = util.convert(conf.get(CONF_USERNAME), str)
     password = util.convert(conf.get(CONF_PASSWORD), str)
+    ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
+    verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
+                              DEFAULT_VERIFY_SSL)
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
-                                password=password, database=database)
+                                password=password, database=database,
+                                ssl=ssl, verify_ssl=verify_ssl)
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
