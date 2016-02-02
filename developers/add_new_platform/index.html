@@ -114,30 +114,7 @@
 
   <p>Components that interact with devices are structured in core- and platform logic. This allows the same logic to be used for different platforms.</p>
 
-<p>For example, the built-in <code>switch</code> component consists of the following files in <a href="https://github.com/balloob/home-assistant/tree/master/homeassistant/components/switch"><code>homeassistant/components/switch/</code></a>:</p>
-
-<table>
-  <thead>
-    <tr>
-      <th>File</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>__init__.py</td>
-      <td>Contains the Switch core logic.</td>
-    </tr>
-    <tr>
-      <td>wemo.py</td>
-      <td>WeMo platform logic. Included if in config <code>platform=wemo</code>.</td>
-    </tr>
-    <tr>
-      <td>tellstick.py</td>
-      <td>Tellstick platform logic. Included if in config <code>platform=tellstick</code>.</td>
-    </tr>
-  </tbody>
-</table>
+<p>For example, the built-in <code>switch</code> component consists of various platform in <a href="https://github.com/balloob/home-assistant/tree/master/homeassistant/components/switch"><code>homeassistant/components/switch/</code></a>. The file <code>\_\_init\_\_.py</code> contains the core logic of all platform and the <code>vendor_name.py</code> files only the relevant platform code.</p>
 
 <p>If you are planning to add support for a new type of device to an existing component, you can get away with only writing platform logic. Have a look at how the component works with other platforms and create a similar file for the platform that you would like to add.</p>
 

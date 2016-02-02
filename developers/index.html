@@ -124,22 +124,24 @@
 
 <h3><a class="title-link" name="starting-development" href="#starting-development"></a> Starting development</h3>
 
-<p>You will need to setup a development environment if you want to start developing a new feature or component for Home Assistant perform theses steps</p>
+<p>You will need to setup a development environment if you want to start developing a new feature or component for Home Assistant perform theses steps. Visit the <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a> and click fork in the top right.</p>
 
 <div class="highlighter-coderay"><div class="CodeRay">
-  <div class="code"><pre>$ git clone https://github.com/balloob/home-assistant.git
+  <div class="code"><pre>$ git clone https://github.com/your_github_username/home-assistant.git
+$ git remote add upstream git@github.com:balloob/home-assistant.git
 $ cd home-assistant
 $ script/setup
 </pre></div>
 </div>
 </div>
 
+<p>we suggest that you setup a <a href="https://docs.python.org/3.4/library/venv.html">virtual environment</a> aka <code>venv</code> before running the setup script.</p>
+
 <p>After following these steps, running <code>hass</code> will invoke your local installation.</p>
 
 <h3><a class="title-link" name="submitting-improvements" href="#submitting-improvements"></a> Submitting improvements</h3>
 
-<p>Improvements to Home Assistant should be submitted one feature at a time using Github pull<br />
-requests.</p>
+<p>Improvements to Home Assistant should be submitted one feature at a time using Github pull requests.</p>
 
 <ol>
   <li>Go to <a href="https://github.com/balloob/home-assistant">the Home Assistant repository</a> and click fork in the top right.</li>
