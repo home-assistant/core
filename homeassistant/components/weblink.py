@@ -25,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup weblink component. """
 
-    # States are in the format DOMAIN.OBJECT_ID
-
     links = config.get(DOMAIN)
 
     for link in links.get('entities'):
