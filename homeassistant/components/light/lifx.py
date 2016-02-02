@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
 
     # register our poll service
-    track_time_change(hass, lifx_library.poll, second=[10,40])
+    track_time_change(hass, lifx_library.poll, second=[10, 40])
 
     lifx_library.probe()
 
