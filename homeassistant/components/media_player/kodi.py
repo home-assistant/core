@@ -22,7 +22,6 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
 
@@ -47,7 +46,7 @@ def _get_image_url(kodi_url):
 class KodiDevice(MediaPlayerDevice):
     """ Represents a XBMC/Kodi device. """
 
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods, abstract-method
 
     def __init__(self, name, url, auth=None):
         import jsonrpc_requests
@@ -263,11 +262,3 @@ class KodiDevice(MediaPlayerDevice):
             self._server.Player.Seek(players[0]['playerid'], time)
 
         self.update_ha_state()
-
-    def turn_on(self):
-        """ turn the media player on. """
-        raise NotImplementedError()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()
