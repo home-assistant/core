@@ -41,7 +41,7 @@ def turn_off(hass, entity_id):
 
 
 def setup(hass, config):
-    """Set up input booleans."""
+    """ Set up input boolean. """
     if not isinstance(config.get(DOMAIN), dict):
         _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
         return False
@@ -68,7 +68,7 @@ def setup(hass, config):
         return False
 
     def toggle_service(service):
-        """Handle a calls to the input boolean services."""
+        """ Handle a calls to the input boolean services. """
         target_inputs = component.extract_from_service(service)
 
         for input_b in target_inputs:
@@ -86,10 +86,10 @@ def setup(hass, config):
 
 
 class InputBoolean(ToggleEntity):
-    """Represent a boolean input within Home Assistant."""
+    """ Represent a boolean input. """
 
     def __init__(self, object_id, name, state, icon):
-        """Initialize a boolean input."""
+        """ Initialize a boolean input. """
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = state
