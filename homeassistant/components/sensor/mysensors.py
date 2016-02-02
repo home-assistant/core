@@ -180,6 +180,11 @@ class MySensorsSensor(Entity):
                                   self.gateway.version)
         return attr
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
+
     def update(self):
         """Update the controller with the latest values from a sensor."""
         node = self.gateway.sensors[self.node_id]
