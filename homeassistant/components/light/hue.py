@@ -8,7 +8,6 @@ https://home-assistant.io/components/light.hue/
 """
 import logging
 import random
-from homeassistant.components.hue import HUEBRIDGE
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
@@ -16,6 +15,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME)
+from homeassistant.components.hue import (
+    HUEBRIDGE, ATTR_HUE_BRIDGEID, ATTR_HUE_LIGHTS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # FIXME / debuglog
     _LOGGER.warning('Discovery info: %s', discovery_info)
-    bridge_id = discovery_info.get('bridge_id')
-    for light_id in discovery_info.get('lights'):
+    bridge_id = discovery_info.get(ATTR_HUE_BRIDGEID)
+    for light_id in discovery_info.get(ATTR_HUE_LIGHTS):
         # FIXME / debuglog
         _LOGGER.warning('Found HueLamp: %s', light_id)
         # FIXME / Rewrite this to one add_devices call
@@ -43,44 +44,39 @@ class HueLight(Light):
         self.bridge = HUEBRIDGE.get(bridge_id)
         self.light_id = light_id
 
-        self.update_state()
-
-    def update_state(self):
-        """ Update self.info, state of the light """
-        self.info = self.bridge.lights.get(self.light_id)
+    def info(self):
+        return self.bridge.get_state(ATTR_HUE_LIGHTS, self.light_id)
 
     @property
     def unique_id(self):
         """ Returns the id of this Hue light """
         return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
+            self.__class__, self.info().get('uniqueid', self.name))
 
     @property
     def name(self):
         """ Get the mame of the Hue light. """
-        return self.info.get('name', DEVICE_DEFAULT_NAME)
+        return self.info().get('name', DEVICE_DEFAULT_NAME)
 
     @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
-        return self.info['state']['bri']
+        return self.info()['state'].get('bri')
 
     @property
     def xy_color(self):
         """ XY color value. """
-        return self.info['state'].get('xy')
+        return self.info()['state'].get('xy')
 
     @property
     def color_temp(self):
         """ CT color value. """
-        return self.info['state'].get('ct')
+        return self.info()['state'].get('ct')
 
     @property
     def is_on(self):
         """ True if device is on. """
-        self.update_state()
-
-        return self.info['state']['reachable'] and self.info['state']['on']
+        return self.info()['state']['reachable'] and self.info()['state']['on']
 
     def turn_on(self, **kwargs):
         """ Turn the specified or all lights on. """
@@ -138,7 +134,5 @@ class HueLight(Light):
         self.bridge.set_light(self.light_id, command)
 
     def update(self):
-        """ Synchronize state with bridge. """
-        # FIXME / use of throttle?
-        # self.update_lights(no_throttle=True)
-        self.update_state()
+        _LOGGER.warning('Light update called for: %s', self.light_id)
+        self.bridge.update()

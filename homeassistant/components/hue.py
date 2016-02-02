@@ -24,11 +24,16 @@ REQUIREMENTS = ['phue==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = "phue.conf"
 DISCOVER_LIGHTS = 'hue.lights'
+
+ATTR_HUE_LIGHTS = 'lights'
+ATTR_HUE_BRIDGEID = 'bridgeid'
+ATTR_HUE_BRIDGEIP = 'ipaddress'
+
 HUEBRIDGE = None
 
 # Map ip to request id for configuring
@@ -51,23 +56,21 @@ def setup(hass, config):
     global HUEBRIDGE
     HUEBRIDGE = {}
 
-    # FIXME / This needs cleanup / better config loading
-    # hosts = config.get(CONF_HOST, None)
-    hosts = config[DOMAIN][CONF_HOST]
-    if hosts is not None:
-        if not isinstance(hosts, list):
-            hosts = [hosts]
+    # Fetch config
+    conf = config.get(DOMAIN, {})
+    if not isinstance(conf, list):
+        conf = [conf]
+    for entry in conf:
+        host = entry.get(CONF_HOST, None)
+        if not host:
+            continue
+        # FIXME / This can only happen when discovery beats configuration
+        # loading right?
+        if host in _CONFIGURING:
+            continue
 
-        for host in hosts:
-            # FIXME / This can only happen when discovery beats configuration
-            # loading right?
-            if host in _CONFIGURING:
-                continue
-
-            _LOGGER.info('Attepring bridge set for %s', host)
-            setup_huebridge(hass, host)
-    else:
-        _LOGGER.info('No hosts configured, it\'s up to discovery now')
+        _LOGGER.info('Attempting bridge setup for %s', host)
+        setup_huebridge(hass, host)
 
     comp_name = 'light'
     component = get_component(comp_name)
@@ -96,8 +99,11 @@ def setup_huebridge(hass, host):
         bridge = phue.Bridge(
             host,
             config_file_path=hass.config.path(PHUE_CONFIG_FILE))
-    except ConnectionRefusedError:  # Wrong host was given
-        _LOGGER.exception("Error connecting to the Hue bridge at %s", host)
+        bridge_id = bridge.get_api().get('config').get(ATTR_HUE_BRIDGEID)
+    except (
+            ConnectionRefusedError,
+            OSError):
+        _LOGGER.error("Error connecting to the Hue bridge at %s", host)
         return
     except phue.PhueRegistrationException:
         _LOGGER.warning("Connected to Hue at %s but not registered.", host)
@@ -111,7 +117,6 @@ def setup_huebridge(hass, host):
         configurator.request_done(request_id)
 
     # Add instanciated bridge to our own control global
-    bridge_id = bridge.get_api().get('config').get('bridgeid')
     if HUEBRIDGE.get(bridge_id):
         _LOGGER.info('Bridge %s already initialized, skipping', bridge_id)
         return
@@ -152,12 +157,12 @@ class HueBridge(object):
         # This will be used to control devices from their platform modules
         self.hass = hass
         self._bridge = bridge
-        self.set_light = self._bridge.set_light
-        self.lights = {}
+        # self.set_light = self._bridge.set_light
+        self.states = {}
 
         bconfig = self.get_apidata().get('config')
-        self.bridge_id = bconfig.get('bridgeid')
-        self.bridge_ip = bconfig.get('ipaddress')
+        self.bridge_id = bconfig.get(ATTR_HUE_BRIDGEID)
+        self.bridge_ip = bconfig.get(ATTR_HUE_BRIDGEIP)
 
         # Support limitations in DiY zigbee bridge 'deconz'
         if bconfig.get('name') == 'RaspBee-GW':
@@ -167,43 +172,53 @@ class HueBridge(object):
 
         # FIXME / debuglog
         _LOGGER.warning('New bridge: %s/%s', self.bridge_ip, self.bridge_id)
-        self.process_apidata()
+        self.update()
+
+    def set_light(self, light_id, command):
+        self._bridge.set_light(int(light_id), command)
+
+    def get_state(self, dev_type, dev_id):
+        try:
+            return self.states[dev_type][dev_id]
+        except ValueError:
+            return None
 
     def get_apidata(self):
-        """ Refresh bridge data from API """
+        """ Refresh state data from bridge """
         try:
-            apidata = self._bridge.get_api()
+            return  self._bridge.get_api()
         except socket.error:
             # socket.error when we cannot reach Hue
             _LOGGER.error("Cannot reach the bridge")
             return
-        return apidata
 
-    def process_apidata(self):
-        """ Updates the Hue light objects with latest info from the bridge. """
-        api_states = self.get_apidata().get('lights')
-        if not isinstance(api_states, dict):
+    #@Throttle(MIN_TIME_BETWEEN_UPDATES, MIN_TIME_BETWEEN_FORCED_UPDATES)
+    def update(self):
+        """
+        Fetch latest info from the bridge.
+
+        """
+        _LOGGER.warning('Refreshing data from bridge: %s', self.bridge_id)
+        lastids = {key: list(val.keys()) for key,val in self.states.items()}
+
+        self.states[ATTR_HUE_LIGHTS] = self.get_apidata().get(ATTR_HUE_LIGHTS)
+        if not isinstance(self.states, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
 
-        new_lights = []
-        for light_id, info in api_states.items():
-            if light_id not in self.lights.keys():
-                new_lights.append(light_id)
-            self.lights[light_id] = info
+        # Calculate differences between last and current
+        newids = {
+            key: list(set(self.states[key]) - set(lastids.get(key,[])))
+            for key in self.states
+        }
 
-        if new_lights:
+        if newids[ATTR_HUE_LIGHTS]:
             # FIXME / debuglog
-            _LOGGER.warning('Sending discovery event: %s', new_lights)
+            _LOGGER.warning('Sending discovery event: %s', newids[ATTR_HUE_LIGHTS])
             self.hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: DISCOVER_LIGHTS,
                 ATTR_DISCOVERED: {
-                    'bridge_id': self.bridge_id,
-                    'lights': new_lights,
+                    ATTR_HUE_BRIDGEID: self.bridge_id,
+                    ATTR_HUE_LIGHTS: newids[ATTR_HUE_LIGHTS],
                 }
             })
-
-    @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update(self):
-        """ Update function """
-        self.process_apidata()
