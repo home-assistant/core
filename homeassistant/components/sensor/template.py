@@ -9,15 +9,19 @@ https://home-assistant.io/components/sensor.template/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
     ATTR_UNIT_OF_MEASUREMENT)
 
-from homeassistant.util import template
+from homeassistant.util import template, slugify
 from homeassistant.exceptions import TemplateError
+
+from homeassistant.components.sensor import DOMAIN
+
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 _LOGGER = logging.getLogger(__name__)
 CONF_SENSORS = 'sensors'
@@ -34,9 +38,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     for device, device_config in config[CONF_SENSORS].items():
+
+        if device != slugify(device):
+            _LOGGER.error("Found invalid key for sensor.template: %s. "
+                          "Use %s instead", device, slugify(device))
+            continue
+
         if not isinstance(device_config, dict):
             _LOGGER.error("Missing configuration data for sensor %s", device)
             continue
+
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
@@ -44,14 +55,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(
                 "Missing %s for sensor %s", CONF_VALUE_TEMPLATE, device)
             continue
+
         sensors.append(
             SensorTemplate(
                 hass,
+                device,
                 friendly_name,
                 unit_of_measurement,
                 state_template)
             )
-    if sensors is None:
+    if not sensors:
         _LOGGER.error("No sensors added")
         return False
     add_devices(sensors)
@@ -64,9 +77,14 @@ class SensorTemplate(Entity):
     # pylint: disable=too-many-arguments
     def __init__(self,
                  hass,
+                 device_id,
                  friendly_name,
                  unit_of_measurement,
                  state_template):
+
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, device_id,
+            hass=hass)
 
         self.hass = hass
         self._name = friendly_name
