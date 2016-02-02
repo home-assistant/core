@@ -16,7 +16,8 @@ from collections import namedtuple
 
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    SERVICE_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
+    EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA)
@@ -47,6 +48,9 @@ _LOGGER = logging.getLogger(__name__)
 # Temporary to support deprecated methods
 _MockHA = namedtuple("MockHomeAssistant", ['bus'])
 
+# The exit code to send to request a restart
+RESTART_EXIT_CODE = 100
+
 
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
@@ -70,28 +74,33 @@ class HomeAssistant(object):
     def block_till_stopped(self):
         """Register service homeassistant/stop and will block until called."""
         request_shutdown = threading.Event()
+        request_restart = threading.Event()
 
         def stop_homeassistant(*args):
             """Stop Home Assistant."""
             request_shutdown.set()
 
+        def restart_homeassistant(*args):
+            """Reset Home Assistant."""
+            request_restart.set()
+            request_shutdown.set()
+
         self.services.register(
             DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
+        self.services.register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant)
 
-        if os.name != "nt":
-            try:
-                signal.signal(signal.SIGTERM, stop_homeassistant)
-            except ValueError:
-                _LOGGER.warning(
-                    'Could not bind to SIGQUIT. Are you running in a thread?')
+        try:
+            signal.signal(signal.SIGTERM, stop_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGTERM. Are you running in a thread?')
 
         while not request_shutdown.isSet():
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                break
+            time.sleep(1)
 
         self.stop()
+        return RESTART_EXIT_CODE if request_restart.isSet() else 0
 
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""

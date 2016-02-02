@@ -126,6 +126,7 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
+SERVICE_HOMEASSISTANT_RESTART = "restart"
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
