@@ -70,25 +70,22 @@ def setup(hass, config):
         """ Listen for new messages on the bus and sends them to Influx. """
 
         state = event.data.get('new_state')
-
-        if state is None:
+        if state is None or state.state in (STATE_UNKNOWN, ''):
             return
 
         if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):
             _state = 1
-        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                             STATE_BELOW_HORIZON):
+        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_BELOW_HORIZON):
             _state = 0
         else:
-            _state = state.state
-            if _state == '':
-                return
             try:
-                _state = float(_state)
+                _state = float(state.state)
             except ValueError:
-                pass
+                _state = state.state
 
-        measurement = state.attributes.get('unit_of_measurement', state.domain)
+        measurement = state.attributes.get('unit_of_measurement')
+        if measurement in (None, ''):
+            measurement = '{}.{}'.format(state.domain, state.object_id)
 
         json_body = [
             {
