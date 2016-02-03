@@ -135,9 +135,11 @@ class SwitchTemplate(SwitchDevice):
         return False
 
     def turn_on(self, **kwargs):
+        """ Fires the on action. """
         call_from_config(self.hass, self._on_action, True)
 
     def turn_off(self, **kwargs):
+        """ Fires the off action. """
         call_from_config(self.hass, self._off_action, True)
 
     @property
@@ -147,7 +149,7 @@ class SwitchTemplate(SwitchDevice):
 
     @property
     def is_off(self):
-        """ True if device is on. """
+        """ True if device is off. """
         return self._state == STATE_FALSE or self._state == STATE_OFF
 
     @property
@@ -160,6 +162,7 @@ class SwitchTemplate(SwitchDevice):
         return self._state
 
     def update(self):
+        """ Updates the state from the template. """
         try:
             self._state = template.render(self.hass, self._template)
         except TemplateError as ex:
