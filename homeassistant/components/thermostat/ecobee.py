@@ -1,29 +1,10 @@
 """
 homeassistant.components.thermostat.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Platform for Ecobee Thermostats.
 
-Ecobee Thermostat Component
-
-This component adds support for Ecobee3 Wireless Thermostats.
-You will need to setup developer access to your thermostat,
-and create and API key on the ecobee website.
-
-The first time you run this component you will see a configuration
-component card in Home Assistant.  This card will contain a PIN code
-that you will need to use to authorize access to your thermostat.  You
-can do this at https://www.ecobee.com/consumerportal/index.html
-Click My Apps, Add application, Enter Pin and click Authorize.
-
-After authorizing the application click the button in the configuration
-card.  Now your thermostat and sensors should shown in home-assistant.
-
-You can use the optional hold_temp parameter to set whether or not holds
-are set indefintely or until the next scheduled event.
-
-ecobee:
-  api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
-  hold_temp: True
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.ecobee/
 """
 import logging
 
@@ -33,15 +14,13 @@ from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
 from homeassistant.const import (TEMP_FAHRENHEIT, STATE_ON, STATE_OFF)
 
 DEPENDENCIES = ['ecobee']
-
 _LOGGER = logging.getLogger(__name__)
-
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup Platform """
+    """ Setup the Ecobee Thermostat Platform. """
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -54,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Thermostat(ThermostatDevice):
-    """ Thermostat class for Ecobee """
+    """ Thermostat class for Ecobee. """
 
     def __init__(self, data, thermostat_index, hold_temp):
         self.data = data
@@ -66,6 +45,7 @@ class Thermostat(ThermostatDevice):
         self.hold_temp = hold_temp
 
     def update(self):
+        """ Get the latest state from the thermostat. """
         self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
