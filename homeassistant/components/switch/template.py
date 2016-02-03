@@ -41,6 +41,7 @@ OFF_ACTION = 'turn_off'
 STATE_TRUE = 'True'
 STATE_FALSE = 'False'
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the switches. """
@@ -122,7 +123,6 @@ class SwitchTemplate(SwitchDevice):
                 self.update_ha_state(True)
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
-
 
     @property
     def name(self):
