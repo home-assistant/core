@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 
-from tests.common import get_test_config_dir, mock_detect_location_info
+from tests.common import get_test_config_dir
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -112,8 +112,6 @@ class TestConfig(unittest.TestCase):
             [('hello', 0), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
-    @mock.patch('homeassistant.util.location.detect_location_info',
-                mock_detect_location_info)
     @mock.patch('builtins.print')
     def test_create_default_config_detect_location(self, mock_print):
         """ Test that detect location sets the correct config keys. """
