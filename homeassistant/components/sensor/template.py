@@ -126,4 +126,9 @@ class SensorTemplate(Entity):
             self._state = template.render(self.hass, self._template)
         except TemplateError as ex:
             self._state = STATE_ERROR
+            if ex.args and ex.args[0].startswith(
+                    "UndefinedError: 'None' has no attribute"):
+                # Common during HA startup - so just a warning
+                _LOGGER.warning(ex)
+                return
             _LOGGER.error(ex)

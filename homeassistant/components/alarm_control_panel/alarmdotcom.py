@@ -57,10 +57,12 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
+        """ No polling needed. """
         return True
 
     @property
     def name(self):
+        """ Returns the name of the device. """
         return self._name
 
     @property

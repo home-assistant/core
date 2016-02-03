@@ -1,33 +1,11 @@
 """
 homeassistant.components.tellduslive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tellduslive Component.
 
-Tellduslive Component
-
-This component adds support for the Telldus Live service.
-Telldus Live is the online service used with Tellstick Net devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.tellduslive/
-
-Developer access to the Telldus Live service is neccessary
-API keys can be aquired from https://api.telldus.com/keys/index
-
-Tellstick Net devices can be auto discovered using the method described in:
-https://developer.telldus.com/doxygen/html/TellStickNet.html
-
-It might be possible to communicate with the Tellstick Net device
-directly, bypassing the Tellstick Live service.
-This however is poorly documented and yet not fully supported (?) according to
-http://developer.telldus.se/ticket/114 and
-https://developer.telldus.com/doxygen/html/TellStickNet.html
-
-API requests to certain methods, as described in
-https://api.telldus.com/explore/sensor/info
-are limited to one request every 10 minutes
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/tellduslive/
 """
-
 from datetime import timedelta
 import logging
 
@@ -37,7 +15,6 @@ from homeassistant.util import Throttle
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
-
 
 DOMAIN = "tellduslive"
 DISCOVER_SWITCHES = "tellduslive.switches"
@@ -80,7 +57,7 @@ class TelldusLiveData(object):
         self._api = TelldusLive(self._client)
 
     def update(self, hass, config):
-        """ Send discovery event if component not yet discovered """
+        """ Send discovery event if component not yet discovered. """
         self._update_sensors()
         self._update_switches()
         for component_name, found_devices, discovery_type in \
@@ -94,7 +71,7 @@ class TelldusLiveData(object):
                                ATTR_DISCOVERED: {}})
 
     def _request(self, what, **params):
-        """ Sends a request to the tellstick live API """
+        """ Sends a request to the Tellstick Live API. """
 
         from tellive.live import const
 
@@ -115,12 +92,12 @@ class TelldusLiveData(object):
         return response
 
     def check_request(self, what, **params):
-        """ Make request, check result if successful """
+        """ Make request, check result if successful. """
         response = self._request(what, **params)
         return response['status'] == "success"
 
     def validate_session(self):
-        """ Make a dummy request to see if the session is valid """
+        """ Make a dummy request to see if the session is valid. """
         try:
             response = self._request("user/profile")
             return 'email' in response
@@ -129,12 +106,12 @@ class TelldusLiveData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_sensors(self):
-        """ Get the latest sensor data from Telldus Live """
+        """ Get the latest sensor data from Telldus Live. """
         _LOGGER.info("Updating sensors from Telldus Live")
         self._sensors = self._request("sensors/list")["sensor"]
 
     def _update_switches(self):
-        """ Get the configured switches from Telldus Live"""
+        """ Get the configured switches from Telldus Live. """
         _LOGGER.info("Updating switches from Telldus Live")
         self._switches = self._request("devices/list")["device"]
         # filter out any group of switches
@@ -142,17 +119,17 @@ class TelldusLiveData(object):
                           if switch["type"] == "device"]
 
     def get_sensors(self):
-        """ Get the configured sensors """
+        """ Get the configured sensors. """
         self._update_sensors()
         return self._sensors
 
     def get_switches(self):
-        """ Get the configured switches """
+        """ Get the configured switches. """
         self._update_switches()
         return self._switches
 
     def get_sensor_value(self, sensor_id, sensor_name):
-        """ Get the latest (possibly cached) sensor value """
+        """ Get the latest (possibly cached) sensor value. """
         self._update_sensors()
         for component in self._sensors:
             if component["id"] == sensor_id:
@@ -163,22 +140,22 @@ class TelldusLiveData(object):
                                 component["lastUpdated"])
 
     def get_switch_state(self, switch_id):
-        """ returns state of switch. """
+        """ Returns the state of an switch. """
         _LOGGER.info("Updating switch state from Telldus Live")
         response = self._request("device/info", id=switch_id)["state"]
         return int(response)
 
     def turn_switch_on(self, switch_id):
-        """ turn switch off """
+        """ Turn switch off. """
         return self.check_request("device/turnOn", id=switch_id)
 
     def turn_switch_off(self, switch_id):
-        """ turn switch on """
+        """ Turn switch on. """
         return self.check_request("device/turnOff", id=switch_id)
 
 
 def setup(hass, config):
-    """ Setup the tellduslive component """
+    """ Setup the Telldus Live component. """
 
     # fixme: aquire app key and provide authentication
     # using username + password

@@ -2,21 +2,17 @@
 """
 homeassistant.components.weblink
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds links to external webpage
+Adds links to external webpages.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/webpage/
+https://home-assistant.io/components/weblink/
 """
-
-# The domain of your component. Should be equal to the name of your component
 import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 DOMAIN = "weblink"
-
-# List of component names (string) your component depends upon
 DEPENDENCIES = []
 
 ATTR_NAME = 'name'
@@ -29,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup weblink component. """
 
-    # States are in the format DOMAIN.OBJECT_ID
-
     links = config.get(DOMAIN)
 
     for link in links.get('entities'):
@@ -41,15 +35,13 @@ def setup(hass, config):
         Link(hass, link.get(ATTR_NAME), link.get(ATTR_URL),
              link.get(ATTR_ICON))
 
-    # return boolean to indicate that initialization was successful
     return True
 
 
 class Link(Entity):
-    """ Represent a link """
+    """ Represent a link. """
 
     def __init__(self, hass, name, url, icon):
-        """ Represents a link. """
         self.hass = hass
         self._name = name
         self._url = url
@@ -59,12 +51,15 @@ class Link(Entity):
 
     @property
     def icon(self):
+        """ Icon to use in the frontend, if any. """
         return self._icon
 
     @property
     def name(self):
+        """ Returns the name of the URL. """
         return self._name
 
     @property
     def state(self):
+        """ Returns the URL. """
         return self._url

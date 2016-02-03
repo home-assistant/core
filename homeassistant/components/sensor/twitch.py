@@ -78,4 +78,5 @@ class TwitchSensor(Entity):
 
     @property
     def icon(self):
+        """ Icon to use in the frontend, if any. """
         return ICON

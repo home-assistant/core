@@ -8,15 +8,12 @@ Tests bootstrap.
 import os
 import tempfile
 import unittest
-from unittest import mock
 
 from homeassistant import core, bootstrap
 from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
-
-from tests.common import mock_detect_location_info
 
 
 class TestBootstrap(unittest.TestCase):
@@ -35,9 +32,7 @@ class TestBootstrap(unittest.TestCase):
                 fp.write('{}:\n'.format(comp).encode('utf-8'))
             fp.flush()
 
-            with mock.patch('homeassistant.util.location.detect_location_info',
-                            mock_detect_location_info):
-                hass = bootstrap.from_config_file(fp.name)
+            hass = bootstrap.from_config_file(fp.name)
 
             components.append('group')
 
