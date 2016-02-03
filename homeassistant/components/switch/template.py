@@ -19,7 +19,10 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE)
 
+from homeassistant.helpers.service import call_from_config
+
 from homeassistant.util import template, slugify
+
 from homeassistant.exceptions import TemplateError
 
 from homeassistant.components.switch import DOMAIN
@@ -132,10 +135,10 @@ class SwitchTemplate(SwitchDevice):
         return False
 
     def turn_on(self, **kwargs):
-        _LOGGER.error("TURN ON not implemented yet")
+        call_from_config(self.hass, self._on_action, True)
 
     def turn_off(self, **kwargs):
-        _LOGGER.error("TURN OFF not implemented yet")
+        call_from_config(self.hass, self._off_action, True)
 
     @property
     def is_on(self):
