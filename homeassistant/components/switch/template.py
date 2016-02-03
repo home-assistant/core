@@ -14,6 +14,8 @@ from homeassistant.components.switch import SwitchDevice
 
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.const import (
+    STATE_ON,
+    STATE_OFF,
     ATTR_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE)
 
@@ -33,6 +35,8 @@ STATE_ERROR = 'error'
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
 
+STATE_TRUE = 'True'
+STATE_FALSE = 'False'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -116,15 +120,11 @@ class SwitchTemplate(SwitchDevice):
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
 
+
     @property
     def name(self):
         """ Returns the name of the device. """
         return self._name
-
-    @property
-    def state(self):
-        """ Returns the state of the device. """
-        return self._state
 
     @property
     def should_poll(self):
@@ -138,15 +138,23 @@ class SwitchTemplate(SwitchDevice):
         _LOGGER.error("TURN OFF not implemented yet")
 
     @property
-    def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
-        return False
-
-    @property
     def is_on(self):
         """ True if device is on. """
-        _LOGGER.error("IS ON CALLED %s", self._state)
-        return self._state == STATE_ON
+        return self._state == STATE_TRUE or self._state == STATE_ON
+
+    @property
+    def is_off(self):
+        """ True if device is on. """
+        return self._state == STATE_FALSE or self._state == STATE_OFF
+
+    @property
+    def state(self):
+        """ Returns the state. """
+        if self.is_on:
+            return STATE_ON
+        if self.is_off:
+            return STATE_OFF
+        return self._state
 
     def update(self):
         try:
