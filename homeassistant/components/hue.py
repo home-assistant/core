@@ -28,11 +28,22 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = "phue.conf"
-DISCOVER_LIGHTS = 'hue.lights'
 
+DISCOVER_LIGHTS = 'hue.light'
+DISCOVER_SWITCHES = 'hue.switch'
+DISCOVER_SENSORS = 'hue.sensor'
+
+# terminology used by phue
 ATTR_HUE_LIGHTS = 'lights'
 ATTR_HUE_BRIDGEID = 'bridgeid'
 ATTR_HUE_BRIDGEIP = 'ipaddress'
+
+# Preparation for tap, switches and dimmers
+DISCOVERY_COMPONENTS = [
+    ('light', DISCOVER_LIGHTS, ATTR_HUE_LIGHTS,),
+    ('switch', DISCOVER_SWITCHES, '',),
+    ('sensor', DISCOVER_SENSORS, '',),
+]
 
 HUEBRIDGE = None
 
@@ -80,7 +91,7 @@ def setup(hass, config):
         """
         Called when a Hue bridge is discovered.
         Response from netdisco recovery is an URI, we just need the host/ip
-        ro initialize the python bridge module
+        ro initialize the phue module
         """
         hostname = urlparse(info[1]).hostname
         setup_huebridge(hass, hostname)
@@ -157,22 +168,23 @@ class HueBridge(object):
         # This will be used to control devices from their platform modules
         self.hass = hass
         self._bridge = bridge
-        # self.set_light = self._bridge.set_light
-        self.states = {}
 
-        bconfig = self.get_apidata().get('config')
-        self.bridge_id = bconfig.get(ATTR_HUE_BRIDGEID)
-        self.bridge_ip = bconfig.get(ATTR_HUE_BRIDGEIP)
+        config = self._fetch_apidata().get('config')
+        self.bridge_id = config.get(ATTR_HUE_BRIDGEID)
+        self.bridge_ip = config.get(ATTR_HUE_BRIDGEIP)
 
         # Support limitations in DiY zigbee bridge 'deconz'
-        if bconfig.get('name') == 'RaspBee-GW':
+        # FIXME / This is based on the name, a user configureable parameter?
+        if config.get('name') == 'RaspBee-GW':
             self.bridge_type = 'deconz'
         else:
             self.bridge_type = 'hue'
 
+        self.states = {}
+        self.update()
+
         # FIXME / debuglog
         _LOGGER.warning('New bridge: %s/%s', self.bridge_ip, self.bridge_id)
-        self.update()
 
     def set_light(self, light_id, command):
         self._bridge.set_light(int(light_id), command)
@@ -183,7 +195,7 @@ class HueBridge(object):
         except ValueError:
             return None
 
-    def get_apidata(self):
+    def _fetch_apidata(self):
         """ Refresh state data from bridge """
         try:
             return  self._bridge.get_api()
@@ -195,13 +207,13 @@ class HueBridge(object):
     #@Throttle(MIN_TIME_BETWEEN_UPDATES, MIN_TIME_BETWEEN_FORCED_UPDATES)
     def update(self):
         """
-        Fetch latest info from the bridge.
-
+        Process bridge api data for states and devices
+        Trigger new discovery events when new devices are found
         """
         _LOGGER.warning('Refreshing data from bridge: %s', self.bridge_id)
         lastids = {key: list(val.keys()) for key,val in self.states.items()}
 
-        self.states[ATTR_HUE_LIGHTS] = self.get_apidata().get(ATTR_HUE_LIGHTS)
+        self.states[ATTR_HUE_LIGHTS] = self._fetch_apidata().get(ATTR_HUE_LIGHTS)
         if not isinstance(self.states, dict):
             _LOGGER.error("Got unexpected result from Hue API")
             return
@@ -215,6 +227,7 @@ class HueBridge(object):
         if newids[ATTR_HUE_LIGHTS]:
             # FIXME / debuglog
             _LOGGER.warning('Sending discovery event: %s', newids[ATTR_HUE_LIGHTS])
+
             self.hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
                 ATTR_SERVICE: DISCOVER_LIGHTS,
                 ATTR_DISCOVERED: {

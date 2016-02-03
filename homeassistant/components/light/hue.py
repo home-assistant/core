@@ -43,6 +43,8 @@ class HueLight(Light):
     def __init__(self, bridge_id, light_id):
         self.bridge = HUEBRIDGE.get(bridge_id)
         self.light_id = light_id
+        # FIXME / debuglog
+        _LOGGER.warning('init new light %s on hub %s', light_id, bridge_id)
 
     def info(self):
         return self.bridge.get_state(ATTR_HUE_LIGHTS, self.light_id)
