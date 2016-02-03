@@ -31,7 +31,8 @@ class TestProximity:
             'proximity': {
                 'zone': 'home',
                 'devices': {
-                    '- device_tracker.test'
+                    '- device_tracker.test1',
+                    '- device_tracker.test2'
                 }
             }
         })
@@ -44,15 +45,47 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
     
-    def device_tracker_test_in_zone(self):
+    def device_tracker_test1_in_zone(self):
         self.hass.states.set(
-            'device_tracker.test', 'home',
+            'device_tracker.test1', 'home',
             {
-                'friendly_name': 'test',
+                'friendly_name': 'test1',
                 'latitude': 2.1,
                 'longitude': 1.1
             })
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
-        assert state.attributes.get('nearest') == 'test'
+        assert state.attributes.get('nearest') == 'test1'
         assert started.attributes.get('dir_of_travel') == 'arrived'
+        
+    def device_trackers_in_zone(self):
+        self.hass.states.set(
+            'device_tracker.test1', 'home',
+            {
+                'friendly_name': 'test1',
+                'latitude': 2.1,
+                'longitude': 1.1
+            })
+        self.hass.states.set(
+            'device_tracker.test2', 'home',
+            {
+                'friendly_name': 'test2',
+                'latitude': 2.1,
+                'longitude': 1.1
+            })
+        state = self.hass.states.get('proximity.home')
+        assert state.state == '0'
+        assert state.attributes.get('nearest') == 'test1, test2'
+        assert started.attributes.get('dir_of_travel') == 'arrived'
+        
+    def device_tracker_test1_away(self):
+        self.hass.states.set(
+            'device_tracker.test1', 'not_home',
+            {
+                'friendly_name': 'test1',
+                'latitude': 20.1,
+                'longitude': 10.1
+            })
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test1'
+        assert started.attributes.get('dir_of_travel') == 'unknown'
