@@ -24,10 +24,10 @@ SENSOR_TYPES = ["Temperature",
 # sensor units - these do not currently align with the API documentation
 SENSOR_UNITS = {"Temperature": "°F",
                 "Humidity": "%",
-                "Pressure": "mb",
-                "Luminance": "cd/m²",
-                "UVIndex": "mW/cm²"}
+                "Pressure": "inHg",
+                "Luminance": "cd/m²"}
 
+FORMAT_NUMBERS = ["Temperature", "Pressure"]
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -97,5 +97,7 @@ class BloomSkySensor(Entity):
                 self._state = "Nighttime"
             else:
                 self._state = "Daytime"
+        elif self._sensor_name in FORMAT_NUMBERS:
+            self._state = "{0:.2f}".format(data)
         else:
             self._state = data
