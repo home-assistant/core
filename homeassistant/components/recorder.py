@@ -226,22 +226,28 @@ class Recorder(threading.Thread):
         # State got deleted
         if state is None:
             state_state = ''
+            state_domain = ''
             state_attr = '{}'
             last_changed = last_updated = now
         else:
+            state_domain = state.domain
             state_state = state.state
             state_attr = json.dumps(state.attributes)
             last_changed = state.last_changed
             last_updated = state.last_updated
 
         info = (
-            entity_id, state_state, state_attr, last_changed, last_updated,
+            entity_id, state_domain, state_state, state_attr,
+            last_changed, last_updated,
             now, self.utc_offset, event_id)
 
         self.query(
-            "INSERT INTO states ("
-            "entity_id, state, attributes, last_changed, last_updated,"
-            "created, utc_offset, event_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            """
+            INSERT INTO states (
+            entity_id, domain, state, attributes, last_changed, last_updated,
+            created, utc_offset, event_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             info)
 
     def record_event(self, event):
@@ -403,6 +409,31 @@ class Recorder(threading.Thread):
             """)
 
             save_migration(4)
+
+        if migration_id < 5:
+            # Add domain so that thermostat graphs look right
+            self.query("""
+                ALTER TABLE states
+                ADD COLUMN domain text
+            """)
+
+            # populate domain with defaults
+            rows = self.query("select distinct entity_id from states")
+            for row in rows:
+                entity_id = row[0]
+                domain = entity_id.split(".")[0]
+                self.query(
+                    "UPDATE states set domain=? where entity_id=?",
+                    domain, entity_id)
+
+            # add indexes we are going to use a lot on selects
+            self.query("""
+                CREATE INDEX states__state_changes ON
+                states (last_changed, last_updated, entity_id)""")
+            self.query("""
+                CREATE INDEX states__significant_changes ON
+                states (domain, last_updated, entity_id)""")
+            save_migration(5)
 
     def _close_connection(self):
         """ Close connection to the database. """
