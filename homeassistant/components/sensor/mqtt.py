@@ -7,7 +7,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import template
 import homeassistant.components.mqtt as mqtt
@@ -42,7 +42,7 @@ class MqttSensor(Entity):
     """ Represents a sensor that can be updated using MQTT. """
     def __init__(self, hass, name, state_topic, qos, unit_of_measurement,
                  value_template):
-        self._state = "-"
+        self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
         self._state_topic = state_topic
