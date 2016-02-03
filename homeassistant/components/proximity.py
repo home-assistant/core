@@ -196,10 +196,10 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
             # calculate the distance to the proximity zone
             dist_to_zone = distance(proximity_latitude,
-                                        proximity_longitude,
-                                        device_state.attributes['latitude'],
-                                        device_state.attributes['longitude'])
-            
+                                    proximity_longitude,
+                                    device_state.attributes['latitude'],
+                                    device_state.attributes['longitude'])
+
             # add the device and distance to a dictionary
             distances_to_zone[device] = round(dist_to_zone / 1000, 1)
             _LOGGER.debug('%s: compare device %s: LAT=%s: LONG='
@@ -210,7 +210,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         # loop through each of the distances collected and work out the closest
         closest_device = ''
         dist_to_zone = 1000000
-        
+
         for device in distances_to_zone:
             _LOGGER.debug('%s: compare distances: device=%s: distance=%s',
                           entity_name, device, distances_to_zone[device])
@@ -219,9 +219,9 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                 closest_device = device
                 _LOGGER.debug('%s: closest device: device=%s: %s < %s',
                               entity_name, device, dist_to_zone,
-                              distances_to_zone[device])                
+                              distances_to_zone[device])
                 dist_to_zone = distances_to_zone[device]
-                
+
         # if the closest device is one of the other devices
         if closest_device != entity:
             proximity.dist_to = round(distances_to_zone[entity])
@@ -232,7 +232,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                           'unknown: device=%s', entity_name,
                           dist_to_zone, closest_device)
             return
-            
+
         # stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG)
         if old_state is None or 'latitude' not in old_state.attributes:
