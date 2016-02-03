@@ -26,19 +26,19 @@ class TestTemplateSensor:
                 'sensors': {
                     'test_template_sensor': {
                         'value_template':
-                            "{{ states.sensor.test_state.state }}"
+                            "It {{ states.sensor.test_state.state }}."
                     }
                 }
             }
         })
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == ''
+        assert state.state == 'It .'
 
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.pool.block_till_done()
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'Works'
+        assert state.state == 'It Works.'
 
     def test_template_syntax_error(self):
         assert sensor.setup(self.hass, {
@@ -55,6 +55,22 @@ class TestTemplateSensor:
 
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.pool.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.state == 'error'
+
+    def test_template_attribute_missing(self):
+        assert sensor.setup(self.hass, {
+            'sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test_template_sensor': {
+                        'value_template':
+                            "It {{ states.sensor.test_state.attributes.missing }}."
+                    }
+                }
+            }
+        })
+
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'error'
 
