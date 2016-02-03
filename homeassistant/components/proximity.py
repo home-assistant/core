@@ -317,9 +317,6 @@ class Proximity(Entity):
         self.dir_of_travel = dir_of_travel
         self.nearest = nearest
 
-    def should_poll(self):
-        return False
-
     @property
     def state(self):
         return self.dist_to
