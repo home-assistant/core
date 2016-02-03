@@ -22,7 +22,7 @@ SENSOR_TYPES = ["Temperature",
                 "UVIndex"]
 
 # sensor units - these do not currently align with the API documentation
-SENSOR_UNITS = {"Temperature": "°C",
+SENSOR_UNITS = {"Temperature": "°F",
                 "Humidity": "%",
                 "Pressure": "mb",
                 "Luminance": "cd/m²",
