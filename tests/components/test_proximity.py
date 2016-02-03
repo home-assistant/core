@@ -200,8 +200,7 @@ class TestProximity:
                 },
                 'devices': {
                     'device_tracker.test1'
-                },
-                'tolerance': '1'
+                }
             }
         })
         
@@ -216,14 +215,6 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
-        self.hass.states.set(
-            'device_tracker.test1', 'not_home',
-            {
-                'friendly_name': 'test1',
-                'latitude': 30.1,
-                'longitude': 15.1
-            })
-        self.hass.pool.block_till_done()
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
@@ -245,8 +236,7 @@ class TestProximity:
                 },
                 'devices': {
                     'device_tracker.test1'
-                },
-                'tolerance': '1'
+                }
             }
         })
         
@@ -261,14 +251,6 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
-        self.hass.states.set(
-            'device_tracker.test1', 'not_home',
-            {
-                'friendly_name': 'test1',
-                'latitude': 30.1,
-                'longitude': 15.1
-            })
-        self.hass.pool.block_till_done()
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
