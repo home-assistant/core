@@ -179,14 +179,19 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                          'calculated', entity_name)
             return
 
-        # calculate the distance of the device from the monitored zone
-        dist_to_zone = distance(proximity_latitude,
-                                proximity_longitude,
-                                new_state.attributes['latitude'],
-                                new_state.attributes['longitude'])
-        dist_to_zone = round(dist_to_zone / 1000, 1)
-        _LOGGER.info('%s: distance to zone is: %s km', entity_name,
-                     dist_to_zone)
+        if new_state.state in ignored_zones:
+            dist_to_zone = -1
+            _LOGGER.info('%s: is in an ignored zone: %s', entity_name,
+                         new_state.state)
+        else:
+            # calculate the distance of the device from the monitored zone
+            dist_to_zone = distance(proximity_latitude,
+                                    proximity_longitude,
+                                    new_state.attributes['latitude'],
+                                    new_state.attributes['longitude'])
+            dist_to_zone = round(dist_to_zone / 1000, 1)
+            _LOGGER.info('%s: distance to zone is: %s km', entity_name,
+                         dist_to_zone)
 
         # compare distance with other devices
         device_is_closest_to_zone = True
@@ -226,7 +231,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                           device_state.attributes['longitude'])
 
             # compare device is closer
-            if dev_dist_to_zone < dist_to_zone:
+            if (dev_dist_to_zone < dist_to_zone) or (dist_to_zone == -1):
                 dev_closest_to_zone = device_state.attributes['friendly_name']
                 dist_closest_to_zone = dev_dist_to_zone
                 device_is_closest_to_zone = False

@@ -552,3 +552,63 @@ class TestProximity:
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
+    
+    def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(self):
+        self.hass.states.set(
+            'device_tracker.test1', 'not_home',
+            {
+                'friendly_name': 'test1'
+            })
+        self.hass.pool.block_till_done()
+        self.hass.states.set(
+            'device_tracker.test2', 'not_home',
+            {
+                'friendly_name': 'test2'
+            })
+        self.hass.pool.block_till_done()
+        assert proximity.setup(self.hass, {
+            'proximity': {
+                'zone': 'home',
+                'ignored_zones': {
+                    'work'
+                },
+                'devices': {
+                    'device_tracker.test1',
+                    'device_tracker.test2'
+                }
+            }
+        })
+        
+        self.hass.states.set(
+            'device_tracker.test1', 'not_home',
+            {
+                'friendly_name': 'test1',
+                'latitude': 20.1,
+                'longitude': 10.1
+            })
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test1'
+        assert state.attributes.get('dir_of_travel') == 'unknown'
+        
+        self.hass.states.set(
+            'device_tracker.test2', 'not_home',
+            {
+                'friendly_name': 'test2',
+                'latitude': 10.1,
+                'longitude': 5.1
+            })
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test2'
+        assert state.attributes.get('dir_of_travel') == 'unknown'
+        
+        self.hass.states.set(
+            'device_tracker.test2', 'work',
+            {
+                'friendly_name': 'test2'
+            })
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get('proximity.home')
+        assert state.attributes.get('nearest') == 'test1'
+        assert state.attributes.get('dir_of_travel') == 'unknown'
