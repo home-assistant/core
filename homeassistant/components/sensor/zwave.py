@@ -36,8 +36,9 @@ WORKAROUND_IGNORE = 'ignore'
 DEVICE_MAPPINGS = {
     PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
 
-    # For some reason Fibaro Wall Plug reports 2 power consumptions. One value updates as the power consumption changes
-    # and the other does not change
+    # For some reason Fibaro Wall Plug reports 2 power consumptions.
+    # One value updates as the power consumption changes
+    # and the other does not change.
     FIBARO_WALL_PLUG_SENSOR_METER: WORKAROUND_IGNORE,
 }
 
