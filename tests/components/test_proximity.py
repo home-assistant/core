@@ -606,7 +606,9 @@ class TestProximity:
         self.hass.states.set(
             'device_tracker.test2', 'work',
             {
-                'friendly_name': 'test2'
+                'friendly_name': 'test2',
+                'latitude': 12.6,
+                'longitude': 7.6
             })
         self.hass.pool.block_till_done()
         state = self.hass.states.get('proximity.home')
