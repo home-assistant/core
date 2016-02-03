@@ -29,6 +29,7 @@ def setup_scanner(hass, config, see):
     # Get the username and password from the configuration
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    name = config.get('name')
 
     if username is None or password is None:
         _LOGGER.error('Must specify a username and password')
@@ -78,7 +79,12 @@ def setup_scanner(hass, config, see):
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
 
-    hass.services.register('device_tracker', 'update_icloud', update_icloud)
+    if name is None:
+        hass.services.register('device_tracker', 'update_icloud',
+                               update_icloud)
+    else:
+        hass.services.register('device_tracker',
+                               'update_icloud_' + name, update_icloud)
 
     track_utc_time_change(
         hass, update_icloud,
