@@ -135,14 +135,14 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         device_is_in_zone = False
         all_devices_in_ignored_zones = True
         devices_in_zone = ''
-        
+
         # check for devices in the monitored zone
         for device in proximity_devices:
             device_state = hass.states.get(device)
-            
+
             if device_state not in ignored_zones:
                 all_devices_in_ignored_zones = False
-            
+
             # check the location of all devices
             if device_state.state == config[DOMAIN]['zone']:
                 device_is_in_zone = True
@@ -181,9 +181,9 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
         # calculate the distance of the device from the monitored zone
         dist_to_zone = distance(proximity_latitude,
-                                      proximity_longitude,
-                                      new_state.attributes['latitude'],
-                                      new_state.attributes['longitude'])
+                                proximity_longitude,
+                                new_state.attributes['latitude'],
+                                new_state.attributes['longitude'])
         dist_to_zone = round(dist_to_zone / 1000, 1)
         _LOGGER.info('%s: distance to zone is: %s km', entity_name,
                      dist_to_zone)
@@ -199,7 +199,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                 _LOGGER.debug('A%s: no need to compare with %s - same device',
                               entity_name, device)
                 continue
-                
+
             # ignore the device if it's in an ignored zone
             device_state = hass.states.get(device)
             if device_state in ignored_zones:
@@ -220,8 +220,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                                         device_state.attributes['latitude'],
                                         device_state.attributes['longitude'])
             dev_dist_to_zone = round(dev_dist_to_zone / 1000, 1)
-            _LOGGER.debug('D%s: compare device %s: co-ordintes: LAT %s: LONG: '
-                          '%s', entity_name, device,
+            _LOGGER.debug('D%s: compare device %s: co-ordinates: LAT %s: LONG:'
+                          ' %s', entity_name, device,
                           device_state.attributes['latitude'],
                           device_state.attributes['longitude'])
 
@@ -237,19 +237,16 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         # having compared the devices, if the device is not the closest
         if not device_is_closest_to_zone:
             # if the closest device has changed
-            if dev_closest_to_zone != entity_id.attributes['nearest']:
+            if dev_closest_to_zone != proximity.nearest:
                 proximity.nearest = dev_closest_to_zone
-                dev_closest_to_home = 'no change'
-                
-            # upsdate all other attributes
-            proximity.dist_to = dist_closest_to_zone
-            proximity.dir_of_travel = 'unknown'
-            proximity.update_ha_state()
-            _LOGGER.debug('F%s Update entity: distance = %s : direction = '
-                          'unknown: device = %s', entity_name,
-                          dist_closest_to_zone, dev_closest_to_zone)
+                proximity.dist_to = dist_closest_to_zone
+                proximity.dir_of_travel = 'unknown'
+                proximity.update_ha_state()
+                _LOGGER.debug('F%s Update entity: distance = %s : direction = '
+                              'unknown: device = %s', entity_name,
+                              dist_closest_to_zone, dev_closest_to_zone)
             return
-           
+
         # stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG)
         if old_state is None or 'latitude' not in old_state.attributes:
@@ -260,7 +257,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             _LOGGER.debug('G%s Update entity: distance = %s: direction = '
                           'unknown: device = %s', entity_id,
                           dist_to_zone, entity_name)
-            _LOGGER.info('%Hs: Cannot determine direction of travel as old '
+            _LOGGER.info('H%s: Cannot determine direction of travel as old '
                          'and/or new LAT or LONG are missing', entity_name)
             return
 
