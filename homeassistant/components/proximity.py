@@ -328,18 +328,3 @@ class Proximity(Entity):
             ATTR_DIR_OF_TRAVEL: self.dir_of_travel,
             ATTR_NEAREST: self.nearest
         }
-
-    @property
-    def direction_of_travel(self):
-        """ returns the direction of travel """
-        return self.dir_of_travel
-
-    @property
-    def distance_to_zone(self):
-        """ returns the distance of the closest device to the zone """
-        return self.dist_to
-
-    @property
-    def nearest_device(self):
-        """ returns the name of the device closest to the zone """
-        return self.nearest
