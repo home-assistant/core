@@ -140,7 +140,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         for device in proximity_devices:
             device_state = hass.states.get(device)
 
-            if device_state not in ignored_zones:
+            if device_state.state not in ignored_zones:
                 all_devices_in_ignored_zones = False
 
             # check the location of all devices
@@ -202,7 +202,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
             # ignore the device if it's in an ignored zone
             device_state = hass.states.get(device)
-            if device_state in ignored_zones:
+            if device_state.state in ignored_zones:
                 _LOGGER.debug('B%s: no need to compare with %s - device is in '
                               'ignored zone', entity_name, device)
                 continue
