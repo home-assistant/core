@@ -79,7 +79,7 @@ def setup_scanner(hass, config, see):
             _LOGGER.info('No iCloud Devices found!')
 
     hass.services.register('device_tracker', 'update_icloud', update_icloud)
-    
+
     track_utc_time_change(
         hass, update_icloud,
         minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL)),
