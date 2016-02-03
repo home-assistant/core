@@ -8,6 +8,10 @@ Tests template switch.
 import homeassistant.core as ha
 import homeassistant.components.switch as switch
 
+from homeassistant.const import (
+    STATE_ON,
+    STATE_OFF)
+
 
 class TestTemplateSwitch:
     """ Test the Template switch. """
@@ -19,7 +23,7 @@ class TestTemplateSwitch:
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_template_state(self):
+    def test_template_state_text(self):
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -41,18 +45,66 @@ class TestTemplateSwitch:
         })
 
 
-        state = self.hass.states.set('switch.test_state', 'On')
+        state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
-        assert state.state == 'On'
+        assert state.state == STATE_ON
 
-        state = self.hass.states.set('switch.test_state', 'Off')
+        state = self.hass.states.set('switch.test_state', STATE_OFF)
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
-        assert state.state == 'Off'
+        assert state.state == STATE_OFF
 
+
+    def test_template_state_boolean_on(self):
+        assert switch.setup(self.hass, {
+            'switch': {
+                'platform': 'template',
+                'switches': {
+                    'test_template_switch': {
+                        'value_template':
+                            "{{ 1 == 1 }}",
+                        'turn_on': {
+                            'service': 'switch.turn_on',
+                            'entity_id': 'switch.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'switch.turn_off',
+                            'entity_id': 'switch.test_state'
+                        },
+                    }
+                }
+            }
+        })
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.state == STATE_ON
+
+    def test_template_state_boolean_off(self):
+        assert switch.setup(self.hass, {
+            'switch': {
+                'platform': 'template',
+                'switches': {
+                    'test_template_switch': {
+                        'value_template':
+                            "{{ 1 == 2 }}",
+                        'turn_on': {
+                            'service': 'switch.turn_on',
+                            'entity_id': 'switch.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'switch.turn_off',
+                            'entity_id': 'switch.test_state'
+                        },
+                    }
+                }
+            }
+        })
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.state == STATE_OFF
 
     def test_template_syntax_error(self):
         assert switch.setup(self.hass, {
@@ -75,7 +127,7 @@ class TestTemplateSwitch:
             }
         })
 
-        state = self.hass.states.set('switch.test_state', 'On')
+        state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.pool.block_till_done()
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == 'error'
