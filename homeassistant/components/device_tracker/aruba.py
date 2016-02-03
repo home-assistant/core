@@ -99,8 +99,10 @@ class ArubaDeviceScanner(object):
         connect = "ssh {}@{}"
         ssh = pexpect.spawn(connect.format(self.username, self.host))
         query = ssh.expect(['password:', pexpect.TIMEOUT, pexpect.EOF,
-                            'continue connecting (yes/no)?', 'Host key verification failed.',
-                            'Connection refused', 'Connection timed out'], timeout=120)
+                            'continue connecting (yes/no)?',
+                            'Host key verification failed.',
+                            'Connection refused',
+                            'Connection timed out'], timeout=120)
         if query == 1:
             _LOGGER.error("Timeout")
             return
