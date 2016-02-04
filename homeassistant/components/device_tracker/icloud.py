@@ -9,7 +9,7 @@ https://home-assistant.io/components/device_tracker.icloud/
 import logging
 
 import re
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ def setup_scanner(hass, config, see):
     # Get the username and password from the configuration
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    name = config.get('name')
+    name = config.get(CONF_NAME, username)
 
     if username is None or password is None:
         _LOGGER.error('Must specify a username and password')
@@ -79,13 +79,8 @@ def setup_scanner(hass, config, see):
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
 
-    if name is None:
-        hass.services.register('device_tracker',
-                               'update_icloud_' + username,
-                               update_icloud)
-    else:
-        hass.services.register('device_tracker',
-                               'update_icloud_' + name, update_icloud)
+    hass.services.register('device_tracker',
+                           'update_icloud_' + name, update_icloud)
 
     track_utc_time_change(
         hass, update_icloud,
