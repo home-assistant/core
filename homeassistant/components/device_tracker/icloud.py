@@ -51,8 +51,6 @@ def setup_scanner(hass, config, see):
         accountname = call.data.get('accountname')
         if accountname is None or accountname == name:
             devicename = call.data.get('devicename')
-            _LOGGER.info('lost_iphone for account %s, device %s',
-                         accountname, devicename)
             for device in api.devices:
                 status = device.status()
                 if devicename is None or devicename == status['name']:
@@ -65,7 +63,6 @@ def setup_scanner(hass, config, see):
         """ Authenticate against iCloud and scan for devices. """
         try:
             accountname = call.data.get('accountname')
-            _LOGGER.info('update_icloud for %s', accountname)
             if accountname is None or accountname == name:
                 # The session timeouts if we are not using it so we
                 # have to re-authenticate. This will send an email.
