@@ -112,6 +112,11 @@ class ZWaveSensor(ZWaveDeviceEntity, Entity):
         return self._value.data
 
     @property
+    def state_attributes(self):
+        """ Returns optional state attributes. """
+        return self.device_state_attributes
+
+    @property
     def unit_of_measurement(self):
         return self._value.units
 
