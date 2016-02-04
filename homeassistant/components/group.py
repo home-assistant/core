@@ -6,7 +6,11 @@ Provides functionality to group devices that can be turned on or off.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
+import logging
+import json
+
 import homeassistant.core as ha
+from homeassistant.util import template
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import (
     Entity, split_entity_id, generate_entity_id)
@@ -21,6 +25,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
+CONF_STATE_TEMPLATE = 'state_template'
+CONF_ATTR_TEMPLATE = 'attr_template'
 
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
@@ -29,6 +35,8 @@ ATTR_VIEW = 'view'
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
                 (STATE_OPEN, STATE_CLOSED)]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _get_group_on_off(state):
@@ -116,12 +124,15 @@ def setup(hass, config):
         entity_ids = conf.get(CONF_ENTITIES)
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
+        state_template = conf.get(CONF_STATE_TEMPLATE)
+        attr_template = conf.get(CONF_ATTR_TEMPLATE)
 
         if isinstance(entity_ids, str):
             entity_ids = [ent.strip() for ent in entity_ids.split(",")]
 
         Group(hass, name, entity_ids, icon=icon, view=view,
-              object_id=object_id)
+              object_id=object_id, state_template=state_template,
+              attr_template=attr_template)
 
     return True
 
@@ -132,7 +143,8 @@ class Group(Entity):
     # pylint: disable=too-many-instance-attributes, too-many-arguments
 
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
+                 icon=None, view=False, object_id=None, state_template=None,
+                 attr_template=None):
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
@@ -145,6 +157,10 @@ class Group(Entity):
         self.tracking = []
         self.group_on = None
         self.group_off = None
+
+        self._attr = {}
+        self._attr_template = attr_template
+        self._state_template = state_template
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
@@ -181,6 +197,9 @@ class Group(Entity):
             data[ATTR_AUTO] = True
         if self._view:
             data[ATTR_VIEW] = True
+
+        data.update(self._attr)
+
         return data
 
     def update_tracked_entity_ids(self, entity_ids):
@@ -213,12 +232,64 @@ class Group(Entity):
             state = self.hass.states.get(entity_id)
 
             if state is not None:
-                self._process_tracked_state(state)
+                self._state_changed_listener(entity_id, None, state)
 
     def _state_changed_listener(self, entity_id, old_state, new_state):
         """ Listener to receive state changes of tracked entities. """
-        self._process_tracked_state(new_state)
+        if self._state_template is None:
+            self._process_tracked_state(new_state)
+        else:
+            self._process_tracked_state_template(entity_id, old_state,
+                                                 new_state)
+        if self._attr_template:
+            self._process_tracked_attr_template(entity_id, old_state,
+                                                new_state)
         self.update_ha_state()
+
+    def _process_tracked_state_template(self, entity_id, old_state,
+                                        new_state):
+        """ Use template to process state from state changes """
+        try:
+            state = json.loads(template.render(self.hass,
+                                               self._state_template,
+                                               {"json": json,
+                                                "entity_id": entity_id,
+                                                "state": self._state,
+                                                "from_state": old_state,
+                                                "to_state": new_state}))
+
+        except ValueError:
+            _LOGGER.exception("State template must output valid json as state")
+            return
+        self._state = state
+
+    def _process_tracked_attr_template(self, entity_id, old_state,
+                                       new_state):
+        """ Use template to process attr from state changes """
+        def merge_dicts(dict1, dict2):
+            """ Merge two dicts, not possible in jinja2 """
+            tmp = dict1.copy()
+            tmp.update(dict2)
+            return tmp
+
+        try:
+            attr = json.loads(template.render(self.hass,
+                                              self._attr_template,
+                                              {"json": json,
+                                               "merge_dicts": merge_dicts,
+                                               "entity_id": entity_id,
+                                               "old_attr": self._attr,
+                                               "from_state": old_state,
+                                               "to_state": new_state}))
+        except ValueError:
+            _LOGGER.exception("Attr template must output valid json as dict")
+            return
+
+        if not isinstance(attr, dict):
+            _LOGGER.error("Attr template must return a attr dict as "
+                          "json, got %s", attr)
+            return
+        self._attr = attr
 
     def _process_tracked_state(self, tr_state):
         """ Updates group state based on a new state of a tracked entity. """
