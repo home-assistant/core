@@ -6,19 +6,18 @@ Monitors SABnzbd NZB client API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sabnzbd/
 """
-from homeassistant.util import Throttle
 from datetime import timedelta
+import logging
 
 from homeassistant.helpers.entity import Entity
-
-import logging
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
                 '#python-sabnzbd==0.1']
 
 SENSOR_TYPES = {
-    'current_status': ['Status', ''],
+    'current_status': ['Status', None],
     'speed': ['Speed', 'MB/s'],
     'queue_size': ['Queue', 'MB'],
     'queue_remaining': ['Left', 'MB'],

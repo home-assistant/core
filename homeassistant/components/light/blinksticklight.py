@@ -8,20 +8,19 @@ https://home-assistant.io/components/light.blinksticklight/
 """
 import logging
 
-from blinkstick import blinkstick
-
-from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
+from homeassistant.components.light import Light, ATTR_RGB_COLOR
 
 _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ["blinkstick==1.1.7"]
-DEPENDENCIES = []
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Add device specified by serial number. """
+    from blinkstick import blinkstick
+
     stick = blinkstick.find_by_serial(config['serial'])
 
     add_devices_callback([BlinkStickLight(stick, config['name'])])

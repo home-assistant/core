@@ -1,7 +1,7 @@
 # coding: utf-8
-""" Constants used by Home Assistant components. """
+"""Constants used by Home Assistant components."""
 
-__version__ = "0.9.0.dev0"
+__version__ = "0.13.0.dev0"
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -10,6 +10,7 @@ MATCH_ALL = '*'
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # #### CONFIG ####
+CONF_ICON = "icon"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
@@ -24,6 +25,9 @@ CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
+CONF_FILENAME = "filename"
+CONF_SCAN_INTERVAL = "scan_interval"
+CONF_VALUE_TEMPLATE = "value_template"
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -53,6 +57,9 @@ STATE_ALARM_ARMED_HOME = 'armed_home'
 STATE_ALARM_ARMED_AWAY = 'armed_away'
 STATE_ALARM_PENDING = 'pending'
 STATE_ALARM_TRIGGERED = 'triggered'
+STATE_LOCKED = 'locked'
+STATE_UNLOCKED = 'unlocked'
+STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -61,6 +68,7 @@ ATTR_NOW = "now"
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = "domain"
 ATTR_SERVICE = "service"
+ATTR_SERVICE_DATA = "service_data"
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = "service_call_id"
@@ -96,6 +104,9 @@ ATTR_BATTERY_LEVEL = "battery_level"
 # For devices which support an armed state
 ATTR_ARMED = "device_armed"
 
+# For devices which support a locked state
+ATTR_LOCKED = "locked"
+
 # For sensors that support 'tripping', eg. motion and door sensors
 ATTR_TRIPPED = "device_tripped"
 
@@ -115,9 +126,11 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
+SERVICE_HOMEASSISTANT_RESTART = "restart"
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
+SERVICE_TOGGLE = 'toggle'
 
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"
@@ -134,6 +147,13 @@ SERVICE_ALARM_DISARM = "alarm_disarm"
 SERVICE_ALARM_ARM_HOME = "alarm_arm_home"
 SERVICE_ALARM_ARM_AWAY = "alarm_arm_away"
 SERVICE_ALARM_TRIGGER = "alarm_trigger"
+
+SERVICE_LOCK = "lock"
+SERVICE_UNLOCK = "unlock"
+
+SERVICE_MOVE_UP = 'move_up'
+SERVICE_MOVE_DOWN = 'move_down'
+SERVICE_STOP = 'stop'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
@@ -152,6 +172,8 @@ URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
 URL_API_BOOTSTRAP = "/api/bootstrap"
 URL_API_ERROR_LOG = "/api/error_log"
+URL_API_LOG_OUT = "/api/log_out"
+URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201

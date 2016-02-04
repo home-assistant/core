@@ -6,6 +6,7 @@ Provides functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
+# pylint: disable=import-error
 import logging
 
 from homeassistant.const import (
@@ -15,60 +16,57 @@ from homeassistant.const import (
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
     SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_YOUTUBE,
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
 
-REQUIREMENTS = ['pychromecast==0.6.12']
+REQUIREMENTS = ['pychromecast==0.7.1']
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_YOUTUBE
+    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA
 KNOWN_HOSTS = []
 
-# pylint: disable=invalid-name
-cast = None
+DEFAULT_PORT = 8009
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the cast platform. """
-    global cast
     import pychromecast
-    cast = pychromecast
-
     logger = logging.getLogger(__name__)
 
     # import CEC IGNORE attributes
     ignore_cec = config.get(CONF_IGNORE_CEC, [])
     if isinstance(ignore_cec, list):
-        cast.IGNORE_CEC += ignore_cec
+        pychromecast.IGNORE_CEC += ignore_cec
     else:
-        logger.error('Chromecast conig, %s must be a list.', CONF_IGNORE_CEC)
+        logger.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
 
     hosts = []
 
-    if discovery_info and discovery_info[0] not in KNOWN_HOSTS:
-        hosts = [discovery_info[0]]
+    if discovery_info and discovery_info in KNOWN_HOSTS:
+        return
+
+    elif discovery_info:
+        hosts = [discovery_info]
 
     elif CONF_HOST in config:
-        hosts = [config[CONF_HOST]]
+        hosts = [(config[CONF_HOST], DEFAULT_PORT)]
 
     else:
-        hosts = (host_port[0] for host_port
-                 in cast.discover_chromecasts()
-                 if host_port[0] not in KNOWN_HOSTS)
+        hosts = [host for host in pychromecast.discover_chromecasts()
+                 if host not in KNOWN_HOSTS]
 
     casts = []
 
     for host in hosts:
         try:
-            casts.append(CastDevice(host))
-        except cast.ChromecastConnectionError:
-            pass
-        else:
+            casts.append(CastDevice(*host))
             KNOWN_HOSTS.append(host)
+        except pychromecast.ChromecastConnectionError:
+            pass
 
     add_devices(casts)
 
@@ -79,11 +77,9 @@ class CastDevice(MediaPlayerDevice):
     # pylint: disable=abstract-method
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, host):
-        import pychromecast.controllers.youtube as youtube
-        self.cast = cast.Chromecast(host)
-        self.youtube = youtube.YouTubeController()
-        self.cast.register_handler(self.youtube)
+    def __init__(self, host, port):
+        import pychromecast
+        self.cast = pychromecast.Chromecast(host, port)
 
         self.cast.socket_client.receiver_controller.register_status_listener(
             self)
@@ -223,11 +219,13 @@ class CastDevice(MediaPlayerDevice):
         """ Turns on the ChromeCast. """
         # The only way we can turn the Chromecast is on is by launching an app
         if not self.cast.status or not self.cast.status.is_active_input:
+            import pychromecast
+
             if self.cast.app_id:
                 self.cast.quit_app()
 
             self.cast.play_media(
-                CAST_SPLASH, cast.STREAM_TYPE_BUFFERED)
+                CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
 
     def turn_off(self):
         """ Turns Chromecast off. """
@@ -261,9 +259,9 @@ class CastDevice(MediaPlayerDevice):
         """ Seek the media to a specific location. """
         self.cast.media_controller.seek(position)
 
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        self.youtube.play_video(media_id)
+    def play_media(self, media_type, media_id):
+        """ Plays media from a URL """
+        self.cast.media_controller.play_media(media_id, media_type)
 
     # implementation of chromecast status_listener methods
 

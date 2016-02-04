@@ -38,10 +38,26 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Sonos platform. """
     import soco
+    import socket
 
-    players = soco.discover()
+    if discovery_info:
+        add_devices([SonosDevice(hass, soco.SoCo(discovery_info))])
+        return True
+
+    players = None
+    hosts = config.get('hosts', None)
+    if hosts:
+        players = []
+        for host in hosts.split(","):
+            host = socket.gethostbyname(host)
+            players.append(soco.SoCo(host))
+
     if not players:
-        _LOGGER.warning('No Sonos speakers found. Disabling: %s', __name__)
+        players = soco.discover(interface_addr=config.get('interface_addr',
+                                                          None))
+
+    if not players:
+        _LOGGER.warning('No Sonos speakers found.')
         return False
 
     add_devices(SonosDevice(hass, p) for p in players)

@@ -301,6 +301,63 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_periodic_seconds(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'seconds': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=0, minute=0, second=2))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_periodic_minutes(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'minutes': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=0, minute=2, second=0))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_periodic_hours(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                    'hours': "/2",
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=2, minute=0, second=0))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_using_after(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
@@ -319,6 +376,24 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    def test_if_not_working_if_no_values_in_conf_provided(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'time',
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(
+            hour=5, minute=0, second=0))
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
 
     @patch('homeassistant.components.automation.time._LOGGER.error')
     def test_if_not_fires_using_wrong_after(self, mock_error):

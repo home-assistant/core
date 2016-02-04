@@ -9,10 +9,19 @@ https://home-assistant.io/components/switch.wemo/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_STANDBY
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.3.2']
+REQUIREMENTS = ['pywemo==0.3.8']
 _LOGGER = logging.getLogger(__name__)
+
+_WEMO_SUBSCRIPTION_REGISTRY = None
+
+ATTR_SENSOR_STATE = "sensor_state"
+ATTR_SWITCH_MODE = "switch_mode"
+
+MAKER_SWITCH_MOMENTARY = "momentary"
+MAKER_SWITCH_TOGGLE = "toggle"
 
 
 # pylint: disable=unused-argument, too-many-function-args
@@ -20,6 +29,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return WeMo switches. """
     import pywemo
     import pywemo.discovery as discovery
+
+    global _WEMO_SUBSCRIPTION_REGISTRY
+    if _WEMO_SUBSCRIPTION_REGISTRY is None:
+        _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
+        _WEMO_SUBSCRIPTION_REGISTRY.start()
+
+        def stop_wemo(event):
+            """ Shutdown Wemo subscriptions and subscription thread on exit"""
+            _LOGGER.info("Shutting down subscriptions.")
+            _WEMO_SUBSCRIPTION_REGISTRY.stop()
+
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     if discovery_info is not None:
         location = discovery_info[2]
@@ -47,6 +68,22 @@ class WemoSwitch(SwitchDevice):
         self.insight_params = None
         self.maker_params = None
 
+        _WEMO_SUBSCRIPTION_REGISTRY.register(wemo)
+        _WEMO_SUBSCRIPTION_REGISTRY.on(
+            wemo, None, self._update_callback)
+
+    def _update_callback(self, _device, _params):
+        """ Called by the wemo device callback to update state. """
+        _LOGGER.info(
+            'Subscription update for  %s',
+            _device)
+        self.update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """ No polling needed with subscriptions """
+        return False
+
     @property
     def unique_id(self):
         """ Returns the id of this WeMo switch """
@@ -56,6 +93,26 @@ class WemoSwitch(SwitchDevice):
     def name(self):
         """ Returns the name of the switch if any. """
         return self.wemo.name
+
+    @property
+    def state_attributes(self):
+        attr = super().state_attributes or {}
+        if self.maker_params:
+            # Is the maker sensor on or off.
+            if self.maker_params['hassensor']:
+                # Note a state of 1 matches the WeMo app 'not triggered'!
+                if self.maker_params['sensorstate']:
+                    attr[ATTR_SENSOR_STATE] = STATE_OFF
+                else:
+                    attr[ATTR_SENSOR_STATE] = STATE_ON
+
+            # Is the maker switch configured as toggle(0) or momentary (1).
+            if self.maker_params['switchmode']:
+                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_MOMENTARY
+            else:
+                attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
+
+        return attr
 
     @property
     def state(self):
@@ -90,28 +147,6 @@ class WemoSwitch(SwitchDevice):
                 return False
             else:
                 return True
-
-    @property
-    def sensor_state(self):
-        """ Is the sensor on or off. """
-        if self.maker_params and self.has_sensor:
-            # Note a state of 1 matches the WeMo app 'not triggered'!
-            if self.maker_params['sensorstate']:
-                return STATE_OFF
-            else:
-                return STATE_ON
-
-    @property
-    def switch_mode(self):
-        """ Is the switch configured as toggle(0) or momentary (1). """
-        if self.maker_params:
-            return self.maker_params['switchmode']
-
-    @property
-    def has_sensor(self):
-        """ Is the sensor present? """
-        if self.maker_params:
-            return self.maker_params['hassensor']
 
     @property
     def is_on(self):

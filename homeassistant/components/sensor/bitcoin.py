@@ -13,28 +13,28 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['blockchain==1.1.2']
+REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
     'wallet': ['Wallet balance', 'BTC'],
-    'exchangerate': ['Exchange rate (1 BTC)', ''],
+    'exchangerate': ['Exchange rate (1 BTC)', None],
     'trade_volume_btc': ['Trade volume', 'BTC'],
     'miners_revenue_usd': ['Miners revenue', 'USD'],
     'btc_mined': ['Mined', 'BTC'],
     'trade_volume_usd': ['Trade volume', 'USD'],
-    'difficulty': ['Difficulty', ''],
+    'difficulty': ['Difficulty', None],
     'minutes_between_blocks': ['Time between Blocks', 'min'],
-    'number_of_transactions': ['No. of Transactions', ''],
+    'number_of_transactions': ['No. of Transactions', None],
     'hash_rate': ['Hash rate', 'PH/s'],
-    'timestamp': ['Timestamp', ''],
-    'mined_blocks': ['Minded Blocks', ''],
-    'blocks_size': ['Block size', ''],
+    'timestamp': ['Timestamp', None],
+    'mined_blocks': ['Minded Blocks', None],
+    'blocks_size': ['Block size', None],
     'total_fees_btc': ['Total fees', 'BTC'],
     'total_btc_sent': ['Total sent', 'BTC'],
     'estimated_btc_sent': ['Estimated sent', 'BTC'],
     'total_btc': ['Total', 'BTC'],
-    'total_blocks': ['Total Blocks', ''],
-    'next_retarget': ['Next retarget', ''],
+    'total_blocks': ['Total Blocks', None],
+    'next_retarget': ['Next retarget', None],
     'estimated_transaction_volume_usd': ['Est. Transaction volume', 'USD'],
     'miners_revenue_btc': ['Miners revenue', 'BTC'],
     'market_price_usd': ['Market price', 'USD']
@@ -47,16 +47,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Bitcoin sensor. """
 
-    try:
-        from blockchain.wallet import Wallet
-        from blockchain import exchangerates, exceptions
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import blockchain. "
-            "Did you maybe not install the 'blockchain' package?")
-
-        return False
+    from blockchain.wallet import Wallet
+    from blockchain import exchangerates, exceptions
 
     wallet_id = config.get('wallet', None)
     password = config.get('password', None)

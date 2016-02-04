@@ -20,7 +20,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME)
 
 DOMAIN = "isy994"
-DEPENDENCIES = []
 REQUIREMENTS = ['PyISY==1.0.5']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
@@ -38,11 +37,7 @@ def setup(hass, config):
     Setup ISY994 component.
     This will automatically import associated lights, switches, and sensors.
     """
-    try:
-        import PyISY
-    except ImportError:
-        _LOGGER.error("Error while importing dependency PyISY.")
-        return False
+    import PyISY
 
     # pylint: disable=global-statement
     # check for required values in configuration file
@@ -117,7 +112,6 @@ class ISYDeviceABC(ToggleEntity):
     def __init__(self, node):
         # setup properties
         self.node = node
-        self.hidden = HIDDEN_STRING in self.raw_name
 
         # track changes
         self._change_handler = self.node.status. \
@@ -181,6 +175,11 @@ class ISYDeviceABC(ToggleEntity):
         """ Returns the cleaned name of the node. """
         return self.raw_name.replace(HIDDEN_STRING, '').strip() \
             .replace('_', ' ')
+
+    @property
+    def hidden(self):
+        """ Suggestion if the entity should be hidden from UIs. """
+        return HIDDEN_STRING in self.raw_name
 
     def update(self):
         """ Update state of the sensor. """

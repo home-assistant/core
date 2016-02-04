@@ -42,3 +42,8 @@ class TestHelpersEntity(unittest.TestCase):
 
         state = self.hass.states.get(self.entity.entity_id)
         self.assertTrue(state.attributes.get(ATTR_HIDDEN))
+
+    def test_split_entity_id(self):
+        """ Test split_entity_id. """
+        self.assertEqual(['domain', 'object_id'],
+                         entity.split_entity_id('domain.object_id'))

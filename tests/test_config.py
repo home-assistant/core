@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE)
 
-from tests.common import get_test_config_dir, mock_detect_location_info
+from tests.common import get_test_config_dir
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -94,22 +94,30 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(HomeAssistantError):
             config_util.load_yaml_config_file(YAML_PATH)
 
-    def test_load_config_loads_yaml_config(self):
-        """ Test correct YAML config loading. """
+    def test_load_yaml_config_raises_error_if_unsafe_yaml(self):
+        """ Test error raised if unsafe YAML. """
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: world')
+            f.write('hello: !!python/object/apply:os.system')
 
-        self.assertEqual({'hello': 'world'},
-                         config_util.load_config_file(YAML_PATH))
+        with self.assertRaises(HomeAssistantError):
+            config_util.load_yaml_config_file(YAML_PATH)
 
-    @mock.patch('homeassistant.util.location.detect_location_info',
-                mock_detect_location_info)
+
+    def test_load_yaml_config_preserves_key_order(self):
+        with open(YAML_PATH, 'w') as f:
+            f.write('hello: 0\n')
+            f.write('world: 1\n')
+
+        self.assertEqual(
+            [('hello', 0), ('world', 1)],
+            list(config_util.load_yaml_config_file(YAML_PATH).items()))
+
     @mock.patch('builtins.print')
     def test_create_default_config_detect_location(self, mock_print):
         """ Test that detect location sets the correct config keys. """
         config_util.ensure_config_exists(CONFIG_DIR)
 
-        config = config_util.load_config_file(YAML_PATH)
+        config = config_util.load_yaml_config_file(YAML_PATH)
 
         self.assertIn(DOMAIN, config)
 

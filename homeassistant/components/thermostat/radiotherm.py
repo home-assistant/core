@@ -21,13 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Radio Thermostat. """
-    try:
-        import radiotherm
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import radiotherm. "
-            "Did you maybe not install the 'radiotherm' package?")
-        return False
+    import radiotherm
 
     hosts = []
     if CONF_HOST in config:
@@ -101,6 +95,7 @@ class RadioThermostat(ThermostatDevice):
         return round(self._target_temperature, 1)
 
     def update(self):
+        """ Update the data from the thermostat. """
         self._current_temperature = self.device.temp['raw']
         self._name = self.device.name['raw']
         if self.device.tmode['human'] == 'Cool':

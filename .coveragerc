@@ -5,8 +5,13 @@ omit =
     homeassistant/__main__.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/alarm_control_panel/alarmdotcom.py
+
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
+
+    homeassistant/components/insteon_hub.py
+    homeassistant/components/*/insteon_hub.py
 
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
@@ -15,7 +20,14 @@ omit =
     homeassistant/components/*/modbus.py
 
     homeassistant/components/*/tellstick.py
+
+    homeassistant/components/tellduslive.py
+    homeassistant/components/*/tellduslive.py
+
     homeassistant/components/*/vera.py
+
+    homeassistant/components/ecobee.py
+    homeassistant/components/*/ecobee.py
 
     homeassistant/components/verisure.py
     homeassistant/components/*/verisure.py
@@ -23,37 +35,56 @@ omit =
     homeassistant/components/wink.py
     homeassistant/components/*/wink.py
 
+    homeassistant/components/zigbee.py
+    homeassistant/components/*/zigbee.py
+
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
-    homeassistant/components/ifttt.py
+    homeassistant/components/mysensors.py
+    homeassistant/components/*/mysensors.py
+
+    homeassistant/components/nest.py
+    homeassistant/components/*/nest.py
+
+    homeassistant/components/rpi_gpio.py
+    homeassistant/components/*/rpi_gpio.py
+
+    homeassistant/components/scsgate.py
+    homeassistant/components/*/scsgate.py
+
+    homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/*
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/ddwrt.py
-    homeassistant/components/device_tracker/geofancy.py
+    homeassistant/components/device_tracker/fritz.py
+    homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/luci.py
-    homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
-    homeassistant/components/device_tracker/owntracks.py
+    homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/thomson.py
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
-    homeassistant/components/device_tracker/snmp.py
+    homeassistant/components/device_tracker/ubus.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/ifttt.py
+    homeassistant/components/statsd.py
+    homeassistant/components/influxdb.py
     homeassistant/components/keyboard.py
-    homeassistant/components/light/hue.py
-    homeassistant/components/light/mqtt.py
-    homeassistant/components/light/limitlessled.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
+    homeassistant/components/light/lifx.py
+    homeassistant/components/light/limitlessled.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/firetv.py
@@ -61,9 +92,10 @@ omit =
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/plex.py
-    homeassistant/components/media_player/squeezebox.py
     homeassistant/components/media_player/sonos.py
-    homeassistant/components/notify/file.py
+    homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/samsungtv.py
+    homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
@@ -73,37 +105,43 @@ omit =
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
+    homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
+    homeassistant/components/notify/googlevoice.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
-    homeassistant/components/sensor/command_sensor.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dweet.py
     homeassistant/components/sensor/efergy.py
+    homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
-    homeassistant/components/sensor/mysensors.py
+    homeassistant/components/sensor/netatmo.py
+    homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
-    homeassistant/components/switch/orvibo.py
     homeassistant/components/sensor/rest.py
-    homeassistant/components/sensor/rpi_gpio.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
+    homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
-    homeassistant/components/switch/command_switch.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
+    homeassistant/components/switch/mystrom.py
+    homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/rest.py
-    homeassistant/components/switch/rpi_gpio.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wemo.py
+    homeassistant/components/thermostat/heatmiser.py
+    homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/honeywell.py
-    homeassistant/components/thermostat/nest.py
+    homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
 
 

@@ -6,6 +6,7 @@ Parses events and generates a human log.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
+import logging
 from datetime import timedelta
 from itertools import groupby
 import re
@@ -14,10 +15,10 @@ from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
-from homeassistant import util
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
-
+from homeassistant.helpers.entity import split_entity_id
+from homeassistant.util import template
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -28,7 +29,9 @@ QUERY_EVENTS_BETWEEN = """
     SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
 """
 
-EVENT_LOGBOOK_ENTRY = 'LOGBOOK_ENTRY'
+_LOGGER = logging.getLogger(__name__)
+
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 GROUP_BY_MINUTES = 15
 
@@ -54,8 +57,22 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """ Listens for download events to download files. """
-    hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
+    # create service handler
+    def log_message(service):
+        """ Handle sending notification message service calls. """
+        message = service.data.get(ATTR_MESSAGE)
+        name = service.data.get(ATTR_NAME)
+        domain = service.data.get(ATTR_DOMAIN, None)
+        entity_id = service.data.get(ATTR_ENTITY_ID, None)
 
+        if not message or not name:
+            return
+
+        message = template.render(hass, message)
+        log_entry(hass, name, message, domain, entity_id)
+
+    hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
+    hass.services.register(DOMAIN, 'log', log_message)
     return True
 
 
@@ -204,12 +221,12 @@ def humanify(events):
                     event.time_fired, "Home Assistant", action,
                     domain=HA_DOMAIN)
 
-            elif event.event_type == EVENT_LOGBOOK_ENTRY:
+            elif event.event_type.lower() == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
                 entity_id = event.data.get(ATTR_ENTITY_ID)
                 if domain is None and entity_id is not None:
                     try:
-                        domain = util.split_entity_id(str(entity_id))[0]
+                        domain = split_entity_id(str(entity_id))[0]
                     except IndexError:
                         pass
 

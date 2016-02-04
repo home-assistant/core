@@ -5,17 +5,17 @@ tests.test_component_http
 Tests Home Assistant HTTP component does what it should do.
 """
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
+from contextlib import closing
 import json
+import tempfile
+import unittest
 from unittest.mock import patch
 
 import requests
 
+from homeassistant import bootstrap, const
 import homeassistant.core as ha
-import homeassistant.bootstrap as bootstrap
-import homeassistant.remote as remote
 import homeassistant.components.http as http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 API_PASSWORD = "test1234"
 
@@ -26,7 +26,7 @@ SERVER_PORT = 8120
 
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
-HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
+HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
 
@@ -39,7 +39,7 @@ def _url(path=""):
 @patch('homeassistant.components.http.util.get_local_ip',
        return_value='127.0.0.1')
 def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server. """
+    """ Initializes a Home Assistant server. """
     global hass
 
     hass = ha.HomeAssistant()
@@ -67,21 +67,34 @@ class TestAPI(unittest.TestCase):
 
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):
-        req = requests.get(
-            _url(remote.URL_API_STATES_ENTITY.format("test")))
+        req = requests.get(_url(const.URL_API))
 
         self.assertEqual(401, req.status_code)
 
     def test_access_denied_with_wrong_password(self):
         req = requests.get(
-            _url(remote.URL_API_STATES_ENTITY.format("test")),
-            headers={HTTP_HEADER_HA_AUTH: 'wrongpassword'})
+            _url(const.URL_API),
+            headers={const.HTTP_HEADER_HA_AUTH: 'wrongpassword'})
 
         self.assertEqual(401, req.status_code)
 
+    def test_access_with_password_in_url(self):
+        req = requests.get(
+            "{}?api_password={}".format(_url(const.URL_API), API_PASSWORD))
+
+        self.assertEqual(200, req.status_code)
+
+    def test_access_via_session(self):
+        session = requests.Session()
+        req = session.get(_url(const.URL_API), headers=HA_HEADERS)
+        self.assertEqual(200, req.status_code)
+
+        req = session.get(_url(const.URL_API))
+        self.assertEqual(200, req.status_code)
+
     def test_api_list_state_entities(self):
         """ Test if the debug interface allows us to list state entities. """
-        req = requests.get(_url(remote.URL_API_STATES),
+        req = requests.get(_url(const.URL_API_STATES),
                            headers=HA_HEADERS)
 
         remote_data = [ha.State.from_dict(item) for item in req.json()]
@@ -91,7 +104,7 @@ class TestAPI(unittest.TestCase):
     def test_api_get_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-            _url(remote.URL_API_STATES_ENTITY.format("test.test")),
+            _url(const.URL_API_STATES_ENTITY.format("test.test")),
             headers=HA_HEADERS)
 
         data = ha.State.from_dict(req.json())
@@ -105,7 +118,7 @@ class TestAPI(unittest.TestCase):
     def test_api_get_non_existing_state(self):
         """ Test if the debug interface allows us to get a state. """
         req = requests.get(
-            _url(remote.URL_API_STATES_ENTITY.format("does_not_exist")),
+            _url(const.URL_API_STATES_ENTITY.format("does_not_exist")),
             headers=HA_HEADERS)
 
         self.assertEqual(404, req.status_code)
@@ -115,7 +128,7 @@ class TestAPI(unittest.TestCase):
 
         hass.states.set("test.test", "not_to_be_set")
 
-        requests.post(_url(remote.URL_API_STATES_ENTITY.format("test.test")),
+        requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "debug_state_change2"}),
                       headers=HA_HEADERS)
 
@@ -130,7 +143,7 @@ class TestAPI(unittest.TestCase):
         new_state = "debug_state_change"
 
         req = requests.post(
-            _url(remote.URL_API_STATES_ENTITY.format(
+            _url(const.URL_API_STATES_ENTITY.format(
                 "test_entity.that_does_not_exist")),
             data=json.dumps({'state': new_state}),
             headers=HA_HEADERS)
@@ -146,7 +159,7 @@ class TestAPI(unittest.TestCase):
         """ Test if API sends appropriate error if we omit state. """
 
         req = requests.post(
-            _url(remote.URL_API_STATES_ENTITY.format(
+            _url(const.URL_API_STATES_ENTITY.format(
                 "test_entity.that_does_not_exist")),
             data=json.dumps({}),
             headers=HA_HEADERS)
@@ -165,7 +178,7 @@ class TestAPI(unittest.TestCase):
         hass.bus.listen_once("test.event_no_data", listener)
 
         requests.post(
-            _url(remote.URL_API_EVENTS_EVENT.format("test.event_no_data")),
+            _url(const.URL_API_EVENTS_EVENT.format("test.event_no_data")),
             headers=HA_HEADERS)
 
         hass.pool.block_till_done()
@@ -186,7 +199,7 @@ class TestAPI(unittest.TestCase):
         hass.bus.listen_once("test_event_with_data", listener)
 
         requests.post(
-            _url(remote.URL_API_EVENTS_EVENT.format("test_event_with_data")),
+            _url(const.URL_API_EVENTS_EVENT.format("test_event_with_data")),
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
 
@@ -206,7 +219,7 @@ class TestAPI(unittest.TestCase):
         hass.bus.listen_once("test_event_bad_data", listener)
 
         req = requests.post(
-            _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
+            _url(const.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
             data=json.dumps('not an object'),
             headers=HA_HEADERS)
 
@@ -217,7 +230,7 @@ class TestAPI(unittest.TestCase):
 
         # Try now with valid but unusable JSON
         req = requests.post(
-            _url(remote.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
+            _url(const.URL_API_EVENTS_EVENT.format("test_event_bad_data")),
             data=json.dumps([1, 2, 3]),
             headers=HA_HEADERS)
 
@@ -226,9 +239,31 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(422, req.status_code)
         self.assertEqual(0, len(test_value))
 
+    def test_api_get_config(self):
+        req = requests.get(_url(const.URL_API_CONFIG),
+                           headers=HA_HEADERS)
+        self.assertEqual(hass.config.as_dict(), req.json())
+
+    def test_api_get_components(self):
+        req = requests.get(_url(const.URL_API_COMPONENTS),
+                           headers=HA_HEADERS)
+        self.assertEqual(hass.config.components, req.json())
+
+    def test_api_get_error_log(self):
+        test_content = 'Test String'
+        with tempfile.NamedTemporaryFile() as log:
+            log.write(test_content.encode('utf-8'))
+            log.flush()
+
+            with patch.object(hass.config, 'path', return_value=log.name):
+                req = requests.get(_url(const.URL_API_ERROR_LOG),
+                                   headers=HA_HEADERS)
+            self.assertEqual(test_content, req.text)
+            self.assertIsNone(req.headers.get('expires'))
+
     def test_api_get_event_listeners(self):
         """ Test if we can get the list of events being listened for. """
-        req = requests.get(_url(remote.URL_API_EVENTS),
+        req = requests.get(_url(const.URL_API_EVENTS),
                            headers=HA_HEADERS)
 
         local = hass.bus.listeners
@@ -241,7 +276,7 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_services(self):
         """ Test if we can get a dict describing current services. """
-        req = requests.get(_url(remote.URL_API_SERVICES),
+        req = requests.get(_url(const.URL_API_SERVICES),
                            headers=HA_HEADERS)
 
         local_services = hass.services.services
@@ -262,7 +297,7 @@ class TestAPI(unittest.TestCase):
         hass.services.register("test_domain", "test_service", listener)
 
         requests.post(
-            _url(remote.URL_API_SERVICES_SERVICE.format(
+            _url(const.URL_API_SERVICES_SERVICE.format(
                 "test_domain", "test_service")),
             headers=HA_HEADERS)
 
@@ -283,7 +318,7 @@ class TestAPI(unittest.TestCase):
         hass.services.register("test_domain", "test_service", listener)
 
         requests.post(
-            _url(remote.URL_API_SERVICES_SERVICE.format(
+            _url(const.URL_API_SERVICES_SERVICE.format(
                 "test_domain", "test_service")),
             data=json.dumps({"test": 1}),
             headers=HA_HEADERS)
@@ -292,28 +327,52 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(1, len(test_value))
 
+    def test_api_template(self):
+        """ Test template API. """
+        hass.states.set('sensor.temperature', 10)
+
+        req = requests.post(
+            _url(const.URL_API_TEMPLATE),
+            data=json.dumps({"template":
+                            '{{ states.sensor.temperature.state }}'}),
+            headers=HA_HEADERS)
+
+        self.assertEqual('10', req.text)
+
+    def test_api_template_error(self):
+        """ Test template API. """
+        hass.states.set('sensor.temperature', 10)
+
+        req = requests.post(
+            _url(const.URL_API_TEMPLATE),
+            data=json.dumps({"template":
+                            '{{ states.sensor.temperature.state'}),
+            headers=HA_HEADERS)
+
+        self.assertEqual(422, req.status_code)
+
     def test_api_event_forward(self):
         """ Test setting up event forwarding. """
 
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             headers=HA_HEADERS)
         self.assertEqual(400, req.status_code)
 
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({'host': '127.0.0.1'}),
             headers=HA_HEADERS)
         self.assertEqual(400, req.status_code)
 
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({'api_password': 'bla-di-bla'}),
             headers=HA_HEADERS)
         self.assertEqual(400, req.status_code)
 
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({
                 'api_password': 'bla-di-bla',
                 'host': '127.0.0.1',
@@ -323,7 +382,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(422, req.status_code)
 
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({
                 'api_password': 'bla-di-bla',
                 'host': '127.0.0.1',
@@ -334,7 +393,7 @@ class TestAPI(unittest.TestCase):
 
         # Setup a real one
         req = requests.post(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({
                 'api_password': API_PASSWORD,
                 'host': '127.0.0.1',
@@ -345,13 +404,13 @@ class TestAPI(unittest.TestCase):
 
         # Delete it again..
         req = requests.delete(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({}),
             headers=HA_HEADERS)
         self.assertEqual(400, req.status_code)
 
         req = requests.delete(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({
                 'host': '127.0.0.1',
                 'port': 'abcd'
@@ -360,10 +419,68 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(422, req.status_code)
 
         req = requests.delete(
-            _url(remote.URL_API_EVENT_FORWARD),
+            _url(const.URL_API_EVENT_FORWARD),
             data=json.dumps({
                 'host': '127.0.0.1',
                 'port': SERVER_PORT
                 }),
             headers=HA_HEADERS)
         self.assertEqual(200, req.status_code)
+
+    def test_stream(self):
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM),
+                                  stream=True, headers=HA_HEADERS)) as req:
+
+            data = self._stream_next_event(req)
+            self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 1, self._listen_count())
+
+            hass.bus.fire('test_event')
+            hass.pool.block_till_done()
+
+            data = self._stream_next_event(req)
+
+            self.assertEqual('test_event', data['event_type'])
+
+    def test_stream_with_restricted(self):
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM),
+                                  data=json.dumps({
+                                      'restrict': 'test_event1,test_event3'}),
+                                  stream=True, headers=HA_HEADERS)) as req:
+
+            data = self._stream_next_event(req)
+            self.assertEqual('ping', data)
+
+            self.assertEqual(listen_count + 2, self._listen_count())
+
+            hass.bus.fire('test_event1')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event2')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event3')
+            hass.pool.block_till_done()
+
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event1', data['event_type'])
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event3', data['event_type'])
+
+    def _stream_next_event(self, stream):
+        data = b''
+        last_new_line = False
+        for dat in stream.iter_content(1):
+            if dat == b'\n' and last_new_line:
+                break
+            data += dat
+            last_new_line = dat == b'\n'
+
+        conv = data.decode('utf-8').strip()[6:]
+
+        return conv if conv == 'ping' else json.loads(conv)
+
+    def _listen_count(self):
+        """ Return number of event listeners. """
+        return sum(hass.bus.listeners.values())

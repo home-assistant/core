@@ -9,29 +9,23 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
-REQUIREMENTS = ['python-forecastio==1.3.3']
-
-try:
-    import forecastio
-except ImportError:
-    forecastio = None
-
 from homeassistant.util import Throttle
 from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['python-forecastio==1.3.3']
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', '', '', '', '', ''],
-    'icon': ['Icon', '', '', '', '', ''],
+    'summary': ['Summary', None, None, None, None, None],
+    'icon': ['Icon', None, None, None, None, None],
     'nearest_storm_distance': ['Nearest Storm Distance',
                                'km', 'm', 'km', 'km', 'm'],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
                               '°', '°', '°', '°', '°'],
-    'precip_type': ['Precip', '', '', '', '', ''],
+    'precip_type': ['Precip', None, None, None, None, None],
     'precip_intensity': ['Precip Intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
     'precip_probability': ['Precip Probability', '%', '%', '%', '%', '%'],
     'temperature': ['Temperature', '°C', '°F', '°C', '°C', '°C'],
@@ -53,11 +47,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Forecast.io sensor. """
-
-    global forecastio  # pylint: disable=invalid-name
-    if forecastio is None:
-        import forecastio as forecastio_
-        forecastio = forecastio_
+    import forecastio
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -141,6 +131,7 @@ class ForeCastSensor(Entity):
     # pylint: disable=too-many-branches
     def update(self):
         """ Gets the latest data from Forecast.io and updates the states. """
+        import forecastio
 
         self.forecast_client.update()
         data = self.forecast_client.data
@@ -156,17 +147,8 @@ class ForeCastSensor(Entity):
                 self._state = data.nearestStormBearing
             elif self.type == 'precip_intensity':
                 self._state = data.precipIntensity
-                if data.precipIntensity == 0:
-                    self._state = 'None'
-                    self._unit_of_measurement = ''
-                else:
-                    self._state = data.precipIntensity
             elif self.type == 'precip_type':
-                if data.precipType is None:
-                    self._state = 'None'
-                    self._unit_of_measurement = ''
-                else:
-                    self._state = data.precipType
+                self._state = data.precipType
             elif self.type == 'precip_probability':
                 self._state = round(data.precipProbability * 100, 1)
             elif self.type == 'dew_point':
@@ -209,6 +191,7 @@ class ForeCastData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """ Gets the latest data from Forecast.io. """
+        import forecastio
 
         forecast = forecastio.load_forecast(self._api_key,
                                             self.latitude,

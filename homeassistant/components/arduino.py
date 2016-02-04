@@ -9,17 +9,11 @@ https://home-assistant.io/components/arduino/
 """
 import logging
 
-try:
-    from PyMata.pymata import PyMata
-except ImportError:
-    PyMata = None
-
 from homeassistant.helpers import validate_config
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "arduino"
-DEPENDENCIES = []
 REQUIREMENTS = ['PyMata==2.07a']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
@@ -28,18 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """ Setup the Arduino component. """
 
-    global PyMata  # pylint: disable=invalid-name
-    if PyMata is None:
-        from PyMata.pymata import PyMata as PyMata_
-        PyMata = PyMata_
-
-    import serial
-
     if not validate_config(config,
                            {DOMAIN: ['port']},
                            _LOGGER):
         return False
 
+    import serial
     global BOARD
     try:
         BOARD = ArduinoBoard(config[DOMAIN]['port'])
@@ -68,6 +56,7 @@ class ArduinoBoard(object):
     """ Represents an Arduino board. """
 
     def __init__(self, port):
+        from PyMata.pymata import PyMata
         self._port = port
         self._board = PyMata(self._port, verbose=False)
 

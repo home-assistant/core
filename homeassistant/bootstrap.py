@@ -24,6 +24,7 @@ import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
@@ -82,7 +83,7 @@ def _setup_component(hass, domain, config):
         return True
     component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in component.DEPENDENCIES
+    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
                     if dep not in hass.config.components]
 
     if missing_deps:
@@ -106,7 +107,7 @@ def _setup_component(hass, domain, config):
 
     # Assumption: if a component does not depend on groups
     # it communicates with devices
-    if group.DOMAIN not in component.DEPENDENCIES:
+    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
         hass.pool.add_worker()
 
     hass.bus.fire(
@@ -133,14 +134,13 @@ def prepare_setup_platform(hass, config, domain, platform_name):
         return platform
 
     # Load dependencies
-    if hasattr(platform, 'DEPENDENCIES'):
-        for component in platform.DEPENDENCIES:
-            if not setup_component(hass, component, config):
-                _LOGGER.error(
-                    'Unable to prepare setup for platform %s because '
-                    'dependency %s could not be initialized', platform_path,
-                    component)
-                return None
+    for component in getattr(platform, 'DEPENDENCIES', []):
+        if not setup_component(hass, component, config):
+            _LOGGER.error(
+                'Unable to prepare setup for platform %s because '
+                'dependency %s could not be initialized', platform_path,
+                component)
+            return None
 
     if not _handle_requirements(hass, platform, platform_path):
         return None
@@ -200,6 +200,10 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     _LOGGER.info('Home Assistant core initialized')
 
+    # give event decorators access to HASS
+    event_decorators.HASS = hass
+    service.HASS = hass
+
     # Setup the components
     for domain in loader.load_order_components(components):
         _setup_component(hass, domain, config)
@@ -224,7 +228,7 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
     enable_logging(hass, verbose, daemon, log_rotate_days)
 
-    config_dict = config_util.load_config_file(config_path)
+    config_dict = config_util.load_yaml_config_file(config_path)
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
@@ -276,7 +280,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                               datefmt='%y-%m-%d %H:%M:%S'))
         logger = logging.getLogger('')
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO)  # this sets the minimum log level
+        logger.setLevel(logging.INFO)
 
     else:
         _LOGGER.error(

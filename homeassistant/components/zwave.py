@@ -6,21 +6,30 @@ Connects Home Assistant to a Z-Wave network.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
-from pprint import pprint
+import sys
+import os.path
 
+from pprint import pprint
+from homeassistant.util import slugify
 from homeassistant import bootstrap
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
+    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION)
+
 
 DOMAIN = "zwave"
-DEPENDENCIES = []
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
+DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
+                                         'python-openzwave', 'config')
+
+SERVICE_ADD_NODE = "add_node"
+SERVICE_REMOVE_NODE = "remove_node"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -33,6 +42,7 @@ COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
+COMMAND_CLASS_ALARM = 113  # 0x71
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -49,7 +59,8 @@ DISCOVERY_COMPONENTS = [
      DISCOVER_SENSORS,
      [COMMAND_CLASS_SENSOR_BINARY,
       COMMAND_CLASS_SENSOR_MULTILEVEL,
-      COMMAND_CLASS_METER],
+      COMMAND_CLASS_METER,
+      COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
      GENRE_USER),
     ('light',
@@ -78,7 +89,7 @@ def _obj_to_dict(obj):
 
 
 def nice_print_node(node):
-    """ Prints a nice formatted node to the output (debug method) """
+    """ Prints a nice formatted node to the output (debug method). """
     node_dict = _obj_to_dict(node)
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
@@ -90,7 +101,7 @@ def nice_print_node(node):
 
 
 def get_config_value(node, value_index):
-    """ Returns the current config value for a specific index """
+    """ Returns the current config value for a specific index. """
 
     try:
         for value in node.values.values():
@@ -120,7 +131,9 @@ def setup(hass, config):
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
-        user_path=hass.config.config_dir)
+        user_path=hass.config.config_dir,
+        config_path=config[DOMAIN].get('config_path',
+                                       DEFAULT_ZWAVE_CONFIG_PATH),)
 
     options.set_console_output(use_debug)
     options.lock()
@@ -170,6 +183,14 @@ def setup(hass, config):
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
 
+    def add_node(event):
+        """ Switch into inclusion mode """
+        NETWORK.controller.begin_command_add_device()
+
+    def remove_node(event):
+        """ Switch into exclusion mode"""
+        NETWORK.controller.begin_command_remove_device()
+
     def stop_zwave(event):
         """ Stop Z-wave. """
         NETWORK.stop()
@@ -184,6 +205,70 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
+        # register add / remove node services for zwave sticks without
+        # hardware inclusion button
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
     return True
+
+
+class ZWaveDeviceEntity:
+    """ Represents a ZWave node entity within Home Assistant. """
+    def __init__(self, value, domain):
+        self._value = value
+        self.entity_id = "{}.{}".format(domain, self._object_id())
+
+    @property
+    def should_poll(self):
+        """ False because we will push our own state to HA when changed. """
+        return False
+
+    @property
+    def unique_id(self):
+        """ Returns a unique id. """
+        return "ZWAVE-{}-{}".format(self._value.node.node_id,
+                                    self._value.object_id)
+
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        name = self._value.node.name or "{} {}".format(
+            self._value.node.manufacturer_name, self._value.node.product_name)
+
+        return "{} {}".format(name, self._value.label)
+
+    def _object_id(self):
+        """ Returns the object_id of the device value.
+        The object_id contains node_id and value instance id
+        to not collide with other entity_ids"""
+
+        object_id = "{}_{}".format(slugify(self.name),
+                                   self._value.node.node_id)
+
+        # Add the instance id if there is more than one instance for the value
+        if self._value.instance > 1:
+            return "{}_{}".format(object_id, self._value.instance)
+
+        return object_id
+
+    @property
+    def state_attributes(self):
+        """ Returns the state attributes. """
+        attrs = {
+            ATTR_NODE_ID: self._value.node.node_id,
+        }
+
+        battery_level = self._value.node.get_battery_level()
+
+        if battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = battery_level
+
+        location = self._value.node.location
+
+        if location:
+            attrs[ATTR_LOCATION] = location
+
+        return attrs

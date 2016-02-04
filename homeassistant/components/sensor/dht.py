@@ -20,7 +20,7 @@ REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
-    'temperature': ['Temperature', ''],
+    'temperature': ['Temperature', None],
     'humidity': ['Humidity', '%']
 }
 # Return cached results if last scan was less then this time ago
@@ -31,15 +31,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the DHT sensor. """
 
-    try:
-        import Adafruit_DHT
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import Adafruit_DHT. "
-            "Did you maybe not install the 'Adafruit_DHT' package?")
-
-        return False
+    # pylint: disable=import-error
+    import Adafruit_DHT
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit

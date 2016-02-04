@@ -7,10 +7,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.foscam/
 """
 import logging
-from homeassistant.helpers import validate_config
-from homeassistant.components.camera import DOMAIN
-from homeassistant.components.camera import Camera
+
 import requests
+
+from homeassistant.helpers import validate_config
+from homeassistant.components.camera import DOMAIN, Camera
 
 _LOGGER = logging.getLogger(__name__)
 

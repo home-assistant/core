@@ -42,6 +42,7 @@ turn_on:
       description: Light effect
       values:
         - colorloop
+        - random
 
 turn_off:
   description: Turn a light off
@@ -49,6 +50,18 @@ turn_off:
   fields:
     entity_id:
       description: Name(s) of entities to turn off
+      example: 'light.kitchen'
+
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60
+
+toggle:
+  description: Toggles a light
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle
       example: 'light.kitchen'
 
     transition:

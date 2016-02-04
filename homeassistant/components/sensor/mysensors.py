@@ -11,145 +11,193 @@ import logging
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT,
+    ATTR_BATTERY_LEVEL,
+    TEMP_CELCIUS,
     STATE_ON, STATE_OFF)
 
-CONF_PORT = "port"
-CONF_DEBUG = "debug"
-CONF_PERSISTENCE = "persistence"
-CONF_PERSISTENCE_FILE = "persistence_file"
-CONF_VERSION = "version"
-
-ATTR_NODE_ID = "node_id"
-ATTR_CHILD_ID = "child_id"
+import homeassistant.components.mysensors as mysensors
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['https://github.com/theolind/pymysensors/archive/'
-                'd4b809c2167650691058d1e29bfd2c4b1792b4b0.zip'
-                '#pymysensors==0.3']
+DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the mysensors platform. """
+    """Setup the mysensors platform for sensors."""
+    # Only act if loaded via mysensors by discovery event.
+    # Otherwise gateway is not setup.
+    if discovery_info is None:
+        return
 
-    import mysensors.mysensors as mysensors
-    import mysensors.const_14 as const
+    for gateway in mysensors.GATEWAYS.values():
+        # Define the S_TYPES and V_TYPES that the platform should handle as
+        # states. Map them in a defaultdict(list).
+        pres = gateway.const.Presentation
+        set_req = gateway.const.SetReq
+        map_sv_types = {
+            pres.S_DOOR: [set_req.V_TRIPPED],
+            pres.S_MOTION: [set_req.V_TRIPPED],
+            pres.S_SMOKE: [set_req.V_TRIPPED],
+            pres.S_TEMP: [set_req.V_TEMP],
+            pres.S_HUM: [set_req.V_HUM],
+            pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
+            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST],
+            pres.S_RAIN: [set_req.V_RAIN, set_req.V_RAINRATE],
+            pres.S_UV: [set_req.V_UV],
+            pres.S_WEIGHT: [set_req.V_WEIGHT, set_req.V_IMPEDANCE],
+            pres.S_POWER: [set_req.V_WATT, set_req.V_KWH],
+            pres.S_DISTANCE: [set_req.V_DISTANCE],
+            pres.S_LIGHT_LEVEL: [set_req.V_LIGHT_LEVEL],
+            pres.S_IR: [set_req.V_IR_SEND, set_req.V_IR_RECEIVE],
+            pres.S_WATER: [set_req.V_FLOW, set_req.V_VOLUME],
+            pres.S_CUSTOM: [set_req.V_VAR1,
+                            set_req.V_VAR2,
+                            set_req.V_VAR3,
+                            set_req.V_VAR4,
+                            set_req.V_VAR5],
+            pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
+                                      set_req.V_SCENE_OFF],
+        }
+        if float(gateway.version) < 1.5:
+            map_sv_types.update({
+                pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
+                pres.S_DUST: [set_req.V_DUST_LEVEL],
+            })
+        if float(gateway.version) >= 1.5:
+            map_sv_types.update({
+                pres.S_COLOR_SENSOR: [set_req.V_RGB],
+                pres.S_MULTIMETER: [set_req.V_VOLTAGE,
+                                    set_req.V_CURRENT,
+                                    set_req.V_IMPEDANCE],
+                pres.S_SPRINKLER: [set_req.V_TRIPPED],
+                pres.S_WATER_LEAK: [set_req.V_TRIPPED],
+                pres.S_SOUND: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_VIBRATION: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_MOISTURE: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_AIR_QUALITY: [set_req.V_LEVEL],
+                pres.S_DUST: [set_req.V_LEVEL],
+            })
+            map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
 
-    devices = {}    # keep track of devices added to HA
-    # Just assume celcius means that the user wants metric for now.
-    # It may make more sense to make this a global config option in the future.
-    is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
-
-    def sensor_update(update_type, nid):
-        """ Callback for sensor updates from the MySensors gateway. """
-        _LOGGER.info("sensor_update %s: node %s", update_type, nid)
-        sensor = gateway.sensors[nid]
-        if sensor.sketch_name is None:
-            return
-        if nid not in devices:
-            devices[nid] = {}
-
-        node = devices[nid]
-        new_devices = []
-        for child_id, child in sensor.children.items():
-            if child_id not in node:
-                node[child_id] = {}
-            for value_type, value in child.values.items():
-                if value_type not in node[child_id]:
-                    name = '{} {}.{}'.format(sensor.sketch_name, nid, child.id)
-                    node[child_id][value_type] = \
-                        MySensorsNodeValue(
-                            nid, child_id, name, value_type, is_metric, const)
-                    new_devices.append(node[child_id][value_type])
-                else:
-                    node[child_id][value_type].update_sensor(
-                        value, sensor.battery_level)
-
-        if new_devices:
-            _LOGGER.info("adding new devices: %s", new_devices)
-            add_devices(new_devices)
-
-    port = config.get(CONF_PORT)
-    if port is None:
-        _LOGGER.error("Missing required key 'port'")
-        return False
-
-    persistence = config.get(CONF_PERSISTENCE, True)
-    persistence_file = config.get(CONF_PERSISTENCE_FILE, 'mysensors.pickle')
-    version = config.get(CONF_VERSION, '1.4')
-
-    gateway = mysensors.SerialGateway(port, sensor_update,
-                                      persistence=persistence,
-                                      persistence_file=persistence_file,
-                                      protocol_version=version)
-    gateway.metric = is_metric
-    gateway.debug = config.get(CONF_DEBUG, False)
-    gateway.start()
-
-    if persistence:
-        for nid in gateway.sensors:
-            sensor_update('sensor_update', nid)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                         lambda event: gateway.stop())
+        devices = {}
+        gateway.platform_callbacks.append(mysensors.pf_callback_factory(
+            map_sv_types, devices, add_devices, MySensorsSensor))
 
 
-class MySensorsNodeValue(Entity):
-    """ Represents the value of a MySensors child node. """
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, node_id, child_id, name, value_type, metric, const):
-        self._name = name
+class MySensorsSensor(Entity):
+    """Represent the value of a MySensors child node."""
+
+    # pylint: disable=too-many-arguments
+
+    def __init__(self, gateway, node_id, child_id, name, value_type):
+        """Setup class attributes on instantiation.
+
+        Args:
+        gateway (GatewayWrapper): Gateway object.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        name (str): Entity name.
+        value_type (str): Value type of child. Value is entity state.
+
+        Attributes:
+        gateway (GatewayWrapper): Gateway object.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        _name (str): Entity name.
+        value_type (str): Value type of child. Value is entity state.
+        battery_level (int): Node battery level.
+        _values (dict): Child values. Non state values set as state attributes.
+        """
+        self.gateway = gateway
         self.node_id = node_id
         self.child_id = child_id
-        self.battery_level = 0
+        self._name = name
         self.value_type = value_type
-        self.metric = metric
-        self._value = ''
-        self.const = const
+        self.battery_level = 0
+        self._values = {}
 
     @property
     def should_poll(self):
-        """ MySensor gateway pushes its state to HA.  """
+        """MySensor gateway pushes its state to HA."""
         return False
 
     @property
     def name(self):
-        """ The name of this sensor. """
+        """The name of this entity."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
-        return self._value
+        """Return the state of the device."""
+        if not self._values:
+            return ''
+        return self._values[self.value_type]
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity. """
-        if self.value_type == self.const.SetReq.V_TEMP:
-            return TEMP_CELCIUS if self.metric else TEMP_FAHRENHEIT
-        elif self.value_type == self.const.SetReq.V_HUM or \
-                self.value_type == self.const.SetReq.V_DIMMER or \
-                self.value_type == self.const.SetReq.V_LIGHT_LEVEL:
-            return '%'
-        return None
+        """Unit of measurement of this entity."""
+        # HA will convert to degrees F if needed
+        unit_map = {
+            self.gateway.const.SetReq.V_TEMP: TEMP_CELCIUS,
+            self.gateway.const.SetReq.V_HUM: '%',
+            self.gateway.const.SetReq.V_DIMMER: '%',
+            self.gateway.const.SetReq.V_LIGHT_LEVEL: '%',
+            self.gateway.const.SetReq.V_WEIGHT: 'kg',
+            self.gateway.const.SetReq.V_DISTANCE: 'm',
+            self.gateway.const.SetReq.V_IMPEDANCE: 'ohm',
+            self.gateway.const.SetReq.V_WATT: 'W',
+            self.gateway.const.SetReq.V_KWH: 'kWh',
+            self.gateway.const.SetReq.V_FLOW: 'm',
+            self.gateway.const.SetReq.V_VOLUME: 'm3',
+            self.gateway.const.SetReq.V_VOLTAGE: 'V',
+            self.gateway.const.SetReq.V_CURRENT: 'A',
+        }
+        unit_map_v15 = {
+            self.gateway.const.SetReq.V_PERCENTAGE: '%',
+        }
+        if float(self.gateway.version) >= 1.5:
+            if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+                return self._values[
+                    self.gateway.const.SetReq.V_UNIT_PREFIX]
+            unit_map.update(unit_map_v15)
+        return unit_map.get(self.value_type)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        device_attr = {}
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                device_attr[self.gateway.const.SetReq(value_type).name] = value
+        return device_attr
 
     @property
     def state_attributes(self):
-        """ Returns the state attributes. """
-        return {
-            ATTR_NODE_ID: self.node_id,
-            ATTR_CHILD_ID: self.child_id,
+        """Return the state attributes."""
+        data = {
+            mysensors.ATTR_PORT: self.gateway.port,
+            mysensors.ATTR_NODE_ID: self.node_id,
+            mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
-    def update_sensor(self, value, battery_level):
-        """ Update a sensor with the latest value from the controller. """
-        _LOGGER.info("%s value = %s", self._name, value)
-        if self.value_type == self.const.SetReq.V_TRIPPED or \
-           self.value_type == self.const.SetReq.V_ARMED:
-            self._value = STATE_ON if int(value) == 1 else STATE_OFF
-        else:
-            self._value = value
-        self.battery_level = battery_level
-        self.update_ha_state()
+        device_attr = self.device_state_attributes
+
+        if device_attr is not None:
+            data.update(device_attr)
+
+        return data
+
+    def update(self):
+        """Update the controller with the latest values from a sensor."""
+        node = self.gateway.sensors[self.node_id]
+        child = node.children[self.child_id]
+        for value_type, value in child.values.items():
+            _LOGGER.info(
+                "%s: value_type %s, value = %s", self._name, value_type, value)
+            if value_type == self.gateway.const.SetReq.V_TRIPPED:
+                self._values[value_type] = STATE_ON if int(
+                    value) == 1 else STATE_OFF
+            else:
+                self._values[value_type] = value
+
+        self.battery_level = node.battery_level

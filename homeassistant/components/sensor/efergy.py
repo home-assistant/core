@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://engage.efergy.com/mobile_proxy/'
 SENSOR_TYPES = {
     'instant_readings': ['Energy Usage', 'kW'],
-    'budget': ['Energy Budget', ''],
-    'cost': ['Energy Cost', ''],
+    'budget': ['Energy Budget', None],
+    'cost': ['Energy Cost', None],
 }
 
 
@@ -97,5 +97,5 @@ class EfergySensor(Entity):
                 self._state = response.json()['sum']
             else:
                 self._state = 'Unknown'
-        except RequestException:
+        except (RequestException, ValueError):
             _LOGGER.warning('Could not update status for %s', self.name)

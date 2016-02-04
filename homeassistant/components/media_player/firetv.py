@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info(
                 'Device %s accessible and ready for control', device_id)
         else:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 'Device %s is not registered with firetv-server', device_id)
     except requests.exceptions.RequestException:
         _LOGGER.error('Could not connect to firetv-server at %s', host)
@@ -104,6 +104,8 @@ class FireTV(object):
 
 class FireTVDevice(MediaPlayerDevice):
     """ Represents an Amazon Fire TV device on the network. """
+
+    # pylint: disable=abstract-method
 
     def __init__(self, host, device, name):
         self._firetv = FireTV(host, device)
@@ -176,15 +178,3 @@ class FireTVDevice(MediaPlayerDevice):
     def media_next_track(self):
         """ Send next track command (results in fast-forward). """
         self._firetv.action('media_next')
-
-    def media_seek(self, position):
-        raise NotImplementedError()
-
-    def mute_volume(self, mute):
-        raise NotImplementedError()
-
-    def play_youtube(self, media_id):
-        raise NotImplementedError()
-
-    def set_volume_level(self, volume):
-        raise NotImplementedError()
