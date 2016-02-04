@@ -17,8 +17,6 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
-# _SPEEDTEST_REGEX = re.compile('Ping:\s(\d+\.\d+)\sms\\nDownload:\s(\d+\.\d+)'
-#                               '\sMbit/s\\nUpload:\s(\d+\.\d+)\sMbit/s\\n')
 _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms\nDownload:\s(\d+\.\d+)'
                               r'\sMbit/s\nUpload:\s(\d+\.\d+)\sMbit/s\n')
 
