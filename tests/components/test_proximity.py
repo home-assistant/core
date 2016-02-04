@@ -551,7 +551,7 @@ class TestProximity:
         self.hass.pool.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.attributes.get('nearest') == 'test1'
-        assert state.attributes.get('dir_of_travel') == 'unknown'
+        assert state.attributes.get('dir_of_travel') == 'stationary'
     
     def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(self):
         self.hass.states.set(
