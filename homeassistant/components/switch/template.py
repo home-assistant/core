@@ -20,11 +20,8 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE)
 
 from homeassistant.helpers.service import call_from_config
-
 from homeassistant.util import template, slugify
-
 from homeassistant.exceptions import TemplateError
-
 from homeassistant.components.switch import DOMAIN
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -117,10 +114,7 @@ class SwitchTemplate(SwitchDevice):
 
         def _update_callback(_event):
             """ Called when the target device changes state. """
-            # This can be called before the entity is properly
-            # initialised, so check before updating state,
-            if self.entity_id:
-                self.update_ha_state(True)
+            self.update_ha_state(True)
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
 
