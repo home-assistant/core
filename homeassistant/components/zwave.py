@@ -255,8 +255,8 @@ class ZWaveDeviceEntity:
         return object_id
 
     @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
+    def device_state_attributes(self):
+        """ Returns device specific state attributes. """
         attrs = {
             ATTR_NODE_ID: self._value.node.node_id,
         }
