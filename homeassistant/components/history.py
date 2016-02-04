@@ -18,6 +18,8 @@ from homeassistant.const import HTTP_BAD_REQUEST
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
+SIGNIFICANT_DOMAINS = ('thermostat',)
+
 URL_HISTORY_PERIOD = re.compile(
     r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
@@ -33,6 +35,37 @@ def last_5_states(entity_id):
     """
 
     return recorder.query_states(query, (entity_id, ))
+
+
+def get_significant_states(start_time, end_time=None, entity_id=None):
+    """Return states changes during UTC period start_time - end_time.
+
+    Significant states are all states where there is a state change,
+    as well as all states from certain domains (for instance
+    thermostat so that we get current temperature in our graphs).
+
+    """
+    where = """
+        (domain in ({}) or last_changed=last_updated)
+        AND last_updated > ?
+    """.format(",".join(["'%s'" % x for x in SIGNIFICANT_DOMAINS]))
+
+    data = [start_time]
+
+    if end_time is not None:
+        where += "AND last_updated < ? "
+        data.append(end_time)
+
+    if entity_id is not None:
+        where += "AND entity_id = ? "
+        data.append(entity_id.lower())
+
+    query = ("SELECT * FROM states WHERE {} "
+             "ORDER BY entity_id, last_updated ASC").format(where)
+
+    states = recorder.query_states(query, data)
+
+    return states_to_json(states, start_time, entity_id)
 
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
@@ -55,20 +88,7 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
     states = recorder.query_states(query, data)
 
-    result = defaultdict(list)
-
-    entity_ids = [entity_id] if entity_id is not None else None
-
-    # Get the states at the start time
-    for state in get_states(start_time, entity_ids):
-        state.last_changed = start_time
-        result[state.entity_id].append(state)
-
-    # Append all changes to it
-    for entity_id, group in groupby(states, lambda state: state.entity_id):
-        result[entity_id].extend(group)
-
-    return result
+    return states_to_json(states, start_time, entity_id)
 
 
 def get_states(utc_point_in_time, entity_ids=None, run=None):
@@ -98,6 +118,33 @@ def get_states(utc_point_in_time, entity_ids=None, run=None):
     """.format(where)
 
     return recorder.query_states(query, where_data)
+
+
+def states_to_json(states, start_time, entity_id):
+    """Converts SQL results into JSON friendly data structure.
+
+    This takes our state list and turns it into a JSON friendly data
+    structure {'entity_id': [list of states], 'entity_id2': [list of states]}
+
+    We also need to go back and create a synthetic zero data point for
+    each list of states, otherwise our graphs won't start on the Y
+    axis correctly.
+    """
+
+    result = defaultdict(list)
+
+    entity_ids = [entity_id] if entity_id is not None else None
+
+    # Get the states at the start time
+    for state in get_states(start_time, entity_ids):
+        state.last_changed = start_time
+        state.last_updated = start_time
+        result[state.entity_id].append(state)
+
+    # Append all changes to it
+    for entity_id, group in groupby(states, lambda state: state.entity_id):
+        result[entity_id].extend(group)
+    return result
 
 
 def get_state(utc_point_in_time, entity_id, run=None):
@@ -152,4 +199,4 @@ def _api_history_period(handler, path_match, data):
     entity_id = data.get('filter_entity_id')
 
     handler.write_json(
-        state_changes_during_period(start_time, end_time, entity_id).values())
+        get_significant_states(start_time, end_time, entity_id).values())
