@@ -45,12 +45,24 @@ def setup_scanner(hass, config, see):
         _LOGGER.exception('Error logging into iCloud Service: %s', error)
         return False
 
-    def keep_alive(now):
-        """ Keeps authenticating iCloud connection. """
+    def lost_iphone(hostname):
+        """ Calls the lost iphone function if the device is found """
         api.authenticate()
-        _LOGGER.info("Authenticate against iCloud")
+        for device in api.devices:
+            status = device.status()
+            _LOGGER.info('lost_iphone: check device %s', status['name'])
+            if hostname == status['name']:
+                _LOGGER.info('lost_iphone: device %s found, playing sound',
+                             status['name'])
+                device.play_sound()
 
-    track_utc_time_change(hass, keep_alive, second=0)
+    def lost_iphone_service(call):
+        """Handle a calls to the lost iphone services."""
+        _LOGGER.info('lost_iphone called for %s', call.data.get('devicename'))
+        lost_iphone(call.data.get('devicename'))
+
+    hass.services.register('device_tracker', 'lost_iphone_' + name,
+                           lost_iphone_service)
 
     def update_icloud(now):
         """ Authenticate against iCloud and scan for devices. """
@@ -62,7 +74,6 @@ def setup_scanner(hass, config, see):
             for device in api.devices:
                 status = device.status()
                 location = device.location()
-                # If the device has a location add it. If not do nothing
                 if location:
                     see(
                         dev_id=re.sub(r"(\s|\W|')",
@@ -81,6 +92,7 @@ def setup_scanner(hass, config, see):
 
     hass.services.register('device_tracker',
                            'update_icloud_' + name, update_icloud)
+    hass.services.call('device_tracker', 'update_icloud_' + name)
 
     track_utc_time_change(
         hass, update_icloud,
