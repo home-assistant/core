@@ -59,6 +59,19 @@ def call_from_config(hass, config, blocking=False):
     hass.services.call(domain, service_name, service_data, blocking)
 
 
+def expand_entity_ids(hass, entity_id):
+    """
+        Helper method for expanding entity_ids from groups.
+    """
+
+    group = get_component('group')
+
+    if isinstance(entity_id, str):
+        return group.expand_entity_ids(hass, [entity_id])
+
+    return [ent_id for ent_id in group.expand_entity_ids(hass, entity_id)]
+
+
 def extract_entity_ids(hass, service_call):
     """
     Helper method to extract a list of entity ids from a service call.
@@ -67,12 +80,10 @@ def extract_entity_ids(hass, service_call):
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = get_component('group')
-
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
 
-    if isinstance(service_ent_id, str):
-        return group.expand_entity_ids(hass, [service_ent_id])
+    if not service_ent_id:
+        return []
 
-    return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
+    return expand_entity_ids(hass, service_ent_id)
