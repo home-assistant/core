@@ -17,8 +17,10 @@ from homeassistant.helpers.entity import Entity
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
-_SPEEDTEST_REGEX = re.compile('Ping:\s(\d+\.\d+)\sms\\nDownload:\s(\d+\.\d+)'
-                              '\sMbit/s\\nUpload:\s(\d+\.\d+)\sMbit/s\\n')
+# _SPEEDTEST_REGEX = re.compile('Ping:\s(\d+\.\d+)\sms\\nDownload:\s(\d+\.\d+)'
+#                               '\sMbit/s\\nUpload:\s(\d+\.\d+)\sMbit/s\\n')
+_SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms\nDownload:\s(\d+\.\d+)'
+                              r'\sMbit/s\nUpload:\s(\d+\.\d+)\sMbit/s\n')
 
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
@@ -103,4 +105,3 @@ class SpeedtestData(object):
         self.data = {'ping': round(float(re_output[1]), 2),
                      'download': round(float(re_output[2]), 2),
                      'upload': round(float(re_output[3]), 2)}
-
