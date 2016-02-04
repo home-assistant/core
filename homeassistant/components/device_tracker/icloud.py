@@ -47,49 +47,45 @@ def setup_scanner(hass, config, see):
 
     def lost_iphone(call):
         """ Calls the lost iphone function if the device is found """
+        devicename = call.data.get('devicename')
         api.authenticate()
-        accountname = call.data.get('accountname')
-        if accountname is None or accountname == name:
-            devicename = call.data.get('devicename')
-            for device in api.devices:
-                status = device.status()
-                if devicename is None or devicename == status['name']:
-                    device.play_sound()
+        for device in api.devices:
+            status = device.status()
+            if devicename == status['name']:
+                device.play_sound()
 
-    hass.services.register('device_tracker', 'lost_iphone',
+    hass.services.register('device_tracker', 'lost_iphone_' + name,
                            lost_iphone)
 
-    def update_icloud(call):
+    def update_icloud(now):
         """ Authenticate against iCloud and scan for devices. """
         try:
-            accountname = call.data.get('accountname')
-            if accountname is None or accountname == name:
-                # The session timeouts if we are not using it so we
-                # have to re-authenticate. This will send an email.
-                api.authenticate()
-                # Loop through every device registered with the iCloud account
-                for device in api.devices:
-                    status = device.status()
-                    location = device.location()
-                    if location:
-                        see(
-                            dev_id=re.sub(r"(\s|\W|')",
-                                          '',
-                                          status['name']),
-                            host_name=status['name'],
-                            gps=(location['latitude'], location['longitude']),
-                            battery=status['batteryLevel']*100,
-                            gps_accuracy=location['horizontalAccuracy']
-                        )
-                    else:
-                        # No location found for the device so continue
-                        continue
+            # The session timeouts if we are not using it so we
+            # have to re-authenticate. This will send an email.
+            api.authenticate()
+            # Loop through every device registered with the iCloud account
+            for device in api.devices:
+                status = device.status()
+                location = device.location()
+                if location:
+                    see(
+                        dev_id=re.sub(r"(\s|\W|')",
+                                      '',
+                                      status['name']),
+                        host_name=status['name'],
+                        gps=(location['latitude'], location['longitude']),
+                        battery=status['batteryLevel']*100,
+                        gps_accuracy=location['horizontalAccuracy']
+                    )
+                else:
+                    # No location found for the device so continue
+                    continue
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
 
     hass.services.register('device_tracker',
-                           'update_icloud', update_icloud)
-    hass.services.call('device_tracker', 'update_icloud')
+                           'update_icloud_' + name, update_icloud)
+    hass.services.call('device_tracker', 'update_icloud_' + name)
 
     track_utc_time_change(
         hass, update_icloud,
