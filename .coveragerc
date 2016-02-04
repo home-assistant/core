@@ -80,6 +80,7 @@ omit =
     homeassistant/components/statsd.py
     homeassistant/components/influxdb.py
     homeassistant/components/keyboard.py
+    homeassistant/components/splunk.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
