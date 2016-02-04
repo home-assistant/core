@@ -131,6 +131,10 @@ $ pip3 install &quot;cython&lt;0.23&quot;
 <span class="key">zwave</span>:
   <span class="key">usb_path</span>: <span class="string"><span class="content">/dev/ttyUSB0</span></span>
   <span class="key">config_path</span>: <span class="string"><span class="content">/usr/local/share/python-openzwave/config</span></span>
+  <span class="key">polling_interval</span>: <span class="string"><span class="content">10000</span></span>
+  <span class="key">customize</span>:
+    <span class="string"><span class="content">sensor.greenwave_powernode_6_port_energy_10:</span></span>
+      <span class="key">polling_intensity</span>: <span class="string"><span class="content">1</span></span>
 </pre></div>
 </div>
 </div>
@@ -140,6 +144,11 @@ $ pip3 install &quot;cython&lt;0.23&quot;
 <ul>
   <li><strong>usb_path</strong> (<em>Required</em>): The port where your device is connected to your Home Assistant host.</li>
   <li><strong>config_path</strong> (<em>Optional</em>): The path to the Python Open Z-Wave configuration files.</li>
+  <li><strong>polling_interval</strong> (<em>Optional</em>): The time period in milliseconds between polls of a nodes value.</li>
+  <li><strong>customize</strong> (<em>Optional</em>): This attribute contains node-specific override values:</li>
+  <ul>
+      <li><strong>polling_intensity</strong> (<em>Optional</em>): Enables polling of a value and sets the frequency of polling (0=none, 1=every time through the list, 2-every other time, etc)</li>
+  </ul>
 </ul>
 
 <p>To find the path of your Z-Wave stick, run:</p>
@@ -149,6 +158,24 @@ $ pip3 install &quot;cython&lt;0.23&quot;
 </pre></div>
 </div>
 </div>
+
+<h4>Events:</h4>
+
+<p>Some devices can also trigger scene activation events, which can be used in automation scripts (for example the press of a button on a wall switch):</p>
+
+<div class="highlighter-coderay"><div class="CodeRay">
+  <div class="code"><pre><span class="key">automation</span>:
+  <span class="key">trigger</span>:
+    <span class="key">platform</span>: <span class="string"><span class="content">event</span></span>
+    <span class="key">event_type</span>: <span class="string"><span class="content">zwave.scene_activated</span></span>
+    <span class="key">event_data</span>:
+      <span class="key">entity_id</span>: <span class="string"><span class="content">zwaveme_zme_wallcs_secure_wall_controller_8</span></span>
+      <span class="key">scene_id</span>: <span class="string"><span class="content">11</span></span>
+</pre></div>
+</div>
+</div>
+
+<p>The <em>entity_id</em> and <em>scene_id</em> of all triggered events can be seen in the console output.</p>
 
 </article>
 
