@@ -231,7 +231,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         if closest_device != entity:
             proximity.dist_to = round(distances_to_zone[closest_device])
             proximity.dir_of_travel = 'unknown'
-            proximity.nearest = closest_device
+            device_state = hass.states.get(closest_device)
+            proximity.nearest = device_state.attributes['friendly_name']
             proximity.update_ha_state()
             _LOGGER.debug('%s: update entity: distance=%s: direction='
                           'unknown: device=%s', entity_name,
