@@ -80,7 +80,8 @@ def setup_scanner(hass, config, see):
             _LOGGER.info('No iCloud Devices found!')
 
     if name is None:
-        hass.services.register('device_tracker', 'update_icloud',
+        hass.services.register('device_tracker',
+                               'update_icloud_' + username,
                                update_icloud)
     else:
         hass.services.register('device_tracker',
