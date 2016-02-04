@@ -216,6 +216,9 @@ slacker==0.6.8
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
 
+# homeassistant.components.sensor.speedtest
+speedtest-cli==0.3.4
+
 # homeassistant.components.light.tellstick
 # homeassistant.components.sensor.tellstick
 # homeassistant.components.switch.tellstick

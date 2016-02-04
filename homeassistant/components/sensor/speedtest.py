@@ -1,12 +1,13 @@
 """
 homeassistant.components.sensor.speedtest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Speedtest.net sensor.
+Speedtest.net sensor based on speedtest-cli.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
 import logging
+import sys
 import re
 from datetime import timedelta
 from subprocess import check_output
@@ -26,13 +27,13 @@ SENSOR_TYPES = {
 }
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Speedtest sensor. """
 
-    data = SpeedtestData()
+    data = SpeedtestData(hass.config.path)
 
     dev = []
     for variable in config['monitored_conditions']:
@@ -71,7 +72,6 @@ class SpeedtestSensor(Entity):
         """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
-    # pylint: disable=too-many-branches
     def update(self):
         """ Gets the latest data from Forecast.io and updates the states. """
         self.speedtest_client.update()
@@ -88,8 +88,9 @@ class SpeedtestSensor(Entity):
 class SpeedtestData(object):
     """ Gets the latest data from speedtest.net. """
 
-    def __init__(self):
+    def __init__(self, path):
         self.data = None
+        self.path = path
         self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -97,6 +98,8 @@ class SpeedtestData(object):
         """ Gets the latest data from speedtest.net. """
         _LOGGER.info('Executing speedtest')
         re_output = _SPEEDTEST_REGEX.split(
-            check_output(["speedtest-cli", "--simple"]).decode("utf-8"))
-        self.data = {'ping': re_output[1], 'download': re_output[2],
-                     'upload': re_output[3]}
+            check_output([sys.executable, self.path(
+                'lib', 'speedtest_cli.py'), '--simple']).decode("utf-8"))
+        self.data = {'ping': round(float(re_output[1]), 2),
+                     'download': round(float(re_output[2]), 2),
+                     'upload': round(float(re_output[3]), 2)}
