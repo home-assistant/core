@@ -53,8 +53,7 @@ class BloomSkyCamera(Camera):
                 self._last_url = self._url
                 self._last_image = response.content
         except requests.exceptions.RequestException as error:
-            self._logger.error("Error getting bloomsky image: {}"
-                               .format(error))
+            self._logger.error("Error getting bloomsky image: %s", error)
             return None
 
         return self._last_image

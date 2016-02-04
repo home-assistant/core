@@ -7,8 +7,8 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/bloomsky/
 """
 import logging
-import requests
 from datetime import timedelta
+import requests
 from homeassistant.util import Throttle
 from homeassistant.helpers import validate_config
 from homeassistant.const import CONF_API_KEY
@@ -66,8 +66,8 @@ class BloomSky(object):
         response = requests.get(self.API_URL,
                                 headers={"Authorization": self._api_key})
         if response.status_code != 200:
-            self._logger.error("Invalid HTTP response: {}"
-                               .format(response.status_code))
+            self._logger.error("Invalid HTTP response: %s",
+                               response.status_code)
             return
         # create dictionary keyed off of the device unique id
         for device in response.json():

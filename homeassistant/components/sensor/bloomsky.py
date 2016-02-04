@@ -27,7 +27,9 @@ SENSOR_UNITS = {"Temperature": "°F",
                 "Pressure": "inHg",
                 "Luminance": "cd/m²"}
 
+# which sensors to format numerically
 FORMAT_NUMBERS = ["Temperature", "Pressure"]
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -43,8 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             device,
                                             variable)])
             else:
-                logger.error("Cannot find definition for device: {}"
-                             .format(variable))
+                logger.error("Cannot find definition for device: %s", variable)
 
 
 class BloomSkySensor(Entity):
