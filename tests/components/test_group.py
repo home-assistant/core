@@ -67,6 +67,38 @@ class TestComponentsGroup(unittest.TestCase):
 
         self.assertEqual(STATE_UNKNOWN, grp.state)
 
+    def test_setup_group_with_template_states(self):
+        self.hass.states.set('cast.living_room', "Plex")
+        self.hass.states.set('cast.bedroom', "Netflix")
+
+        grp = group.Group(
+            self.hass, 'chromecasts',
+            ['cast.living_room', 'cast.bedroom'],
+            state_template="{{json.dumps(to_state.state)}}")
+
+        self.assertEqual("Netflix", grp.state)
+
+    def test_setup_group_with_template_attr(self):
+        self.hass.states.set('cast.living_room', "Plex",
+                             {'apan': [], "2": 3})
+        self.hass.states.set('cast.bedroom', "Netflix",
+                             {"kalle": "kula", "2": 4})
+
+        grp = group.Group(
+            self.hass, 'chromecasts',
+            ['cast.living_room', 'cast.bedroom'],
+            attr_template="{{ json.dumps({'%': 20}) }}")
+
+        self.assertEqual({'%': 20}, grp._attr)
+
+        grp = group.Group(
+            self.hass, 'chromecasts',
+            ['cast.living_room', 'cast.bedroom'],
+            attr_template="{{ json.dumps(merge_dicts(old_attr, "
+                          "to_state.attributes)) }}")
+
+        self.assertEqual({"apan": [], "kalle": "kula", "2": 4}, grp._attr)
+
     def test_setup_empty_group(self):
         """ Try to setup an empty group. """
         grp = group.Group(self.hass, 'nothing', [])
