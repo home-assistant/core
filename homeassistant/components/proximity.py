@@ -115,7 +115,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     proximity_latitude = state.attributes.get('latitude')
     proximity_longitude = state.attributes.get('longitude')
     zone_friendly_name = state.attributes.get('friendly_name')
-    
+
     _LOGGER.debug('zone settings: LAT:%s LONG:%s', proximity_latitude,
                   proximity_longitude)
 
@@ -203,19 +203,19 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
             # calculate the distance to the proximity zone
             dist_to_zone = distance(proximity_latitude,
-                                        proximity_longitude,
-                                        device_state.attributes['latitude'],
-                                        device_state.attributes['longitude'])
-            
+                                    proximity_longitude,
+                                    device_state.attributes['latitude'],
+                                    device_state.attributes['longitude'])
+
             # add the device and distance to a dictionary
             distances_to_zone[device] = round(dist_to_zone / 1000, 1)
             _LOGGER.debug('%s: distance to zone for device %s = %s',
-                          entity_name, device, distances_to_zone[device]) 
+                          entity_name, device, distances_to_zone[device])
 
         # loop through each of the distances collected and work out the closest
         closest_device = ''
         dist_to_zone = 1000000
-        
+
         for device in distances_to_zone:
             _LOGGER.debug('%s: compare distances: device=%s: distance=%s',
                           entity_name, device, distances_to_zone[device])
@@ -224,12 +224,12 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                 closest_device = device
                 _LOGGER.debug('%s: closest device: device=%s: %s < %s',
                               entity_name, device, dist_to_zone,
-                              distances_to_zone[device])                
+                              distances_to_zone[device])
                 dist_to_zone = distances_to_zone[device]
-                
+
         # if the closest device is one of the other devices
         if closest_device != entity:
-            proximity.dist_to = round(distances_to_zone[entity])
+            proximity.dist_to = round(distances_to_zone[closest_device])
             proximity.dir_of_travel = 'unknown'
             proximity.nearest = closest_device
             proximity.update_ha_state()
@@ -237,7 +237,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                           'unknown: device=%s', entity_name,
                           dist_to_zone, closest_device)
             return
-            
+
         # stop if we cannot calculate the direction of travel (i.e. we don't
         # have a previous state and a current LAT and LONG)
         if old_state is None or 'latitude' not in old_state.attributes:
@@ -301,8 +301,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
 class Proximity(Entity):
     """ Represents a Proximity in Home Assistant. """
-    def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel
-                 , nearest):
+    def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
+                 nearest):
         # pylint: disable=too-many-arguments
         self.hass = hass
         self.friendly_name = zone_friendly_name
