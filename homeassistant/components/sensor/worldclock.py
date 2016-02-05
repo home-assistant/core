@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Worldclock Sensor"
+ICON = 'mdi:clock'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,6 +54,11 @@ class WorldClockSensor(Entity):
     def state(self):
         """ Returns the state of the device. """
         return self._state
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return ICON
 
     def update(self):
         """ Gets the time and updates the states. """
