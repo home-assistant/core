@@ -31,3 +31,25 @@ see:
     battery:
       description: Battery level of device
       example: '100'
+
+# Describes the format for available icloud services
+
+update_icloud:
+  description: update the iCloud status of all devices of an account
+
+  fields:
+    accountname:
+      description: name of the account to be updated, either the username or the 'name' from the config
+      example: 'bart'
+
+lost_iphone:
+  description: Plays a lost iphone alert of a device
+
+  fields:
+    accountname:
+      description: name of the account to be updated, either the username or the 'name' from the config
+      example: 'bart'
+
+    devicenam:
+      description: name of the iOS device, if not given then it will play on all devices linked to this account
+      example: 'iPhone Bart'
