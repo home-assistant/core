@@ -131,7 +131,7 @@ def setup(hass, config):
     def publish_service(call):
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
-        payload = call.data.get(ATTR_PAYLOAD)
+        payload = util.template.render(hass, call.data.get(ATTR_PAYLOAD))
         qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
         retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         if msg_topic is None or payload is None:
