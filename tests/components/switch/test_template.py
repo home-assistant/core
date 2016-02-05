@@ -139,7 +139,7 @@ class TestTemplateSwitch:
         state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.pool.block_till_done()
         state = self.hass.states.get('switch.test_template_switch')
-        assert state.state == 'error'
+        assert state.state == 'unavailable'
 
     def test_invalid_name_does_not_create(self):
         assert switch.setup(self.hass, {

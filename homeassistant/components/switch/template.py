@@ -35,9 +35,6 @@ STATE_ERROR = 'error'
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
 
-STATE_TRUE = 'True'
-STATE_FALSE = 'False'
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -139,26 +136,27 @@ class SwitchTemplate(SwitchDevice):
     @property
     def is_on(self):
         """ True if device is on. """
-        return self._state == STATE_TRUE or self._state == STATE_ON
+        return self._value.lower() == 'true' or self._value == STATE_ON
 
     @property
     def is_off(self):
         """ True if device is off. """
-        return self._state == STATE_FALSE or self._state == STATE_OFF
+        return self._value.lower() == 'false' or self._value == STATE_OFF
 
     @property
-    def state(self):
-        """ Returns the state. """
-        if self.is_on:
-            return STATE_ON
-        if self.is_off:
-            return STATE_OFF
-        return self._state
+    def available(self):
+        """Return True if entity is available."""
+        return self.is_on or self.is_off
 
     def update(self):
         """ Updates the state from the template. """
         try:
-            self._state = template.render(self.hass, self._template)
+            self._value = template.render(self.hass, self._template)
+            if not self.available:
+                _LOGGER.error(
+                    "`%s` is not a switch state, setting %s to unavailable",
+                    self._value, self.entity_id)
+
         except TemplateError as ex:
-            self._state = STATE_ERROR
+            self._value = STATE_ERROR
             _LOGGER.error(ex)
