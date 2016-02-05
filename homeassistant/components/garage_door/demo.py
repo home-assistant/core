@@ -38,12 +38,12 @@ class DemoGarageDoor(GarageDoorDevice):
         """ True if device is closed. """
         return self._state == STATE_CLOSED
 
-    def close(self, **kwargs):
+    def close_door(self, **kwargs):
         """ Close the device. """
         self._state = STATE_CLOSED
         self.update_ha_state()
 
-    def open(self, **kwargs):
+    def open_door(self, **kwargs):
         """ Open the device. """
         self._state = STATE_OPEN
         self.update_ha_state()
