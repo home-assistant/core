@@ -19,6 +19,7 @@ DEFAULT_NAME = "CPU speed"
 ATTR_VENDOR = 'Vendor ID'
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
+ICON = 'mdi:pulse'
 
 
 # pylint: disable=unused-variable
@@ -61,6 +62,11 @@ class CpuSpeedSensor(Entity):
                 ATTR_BRAND: self.info['brand'],
                 ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
             }
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return ICON
 
     def update(self):
         """ Gets the latest data and updates the state. """
