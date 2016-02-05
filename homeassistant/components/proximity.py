@@ -102,7 +102,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     proximity_zone = 'zone.' + proximity_zone
 
     state = hass.states.get(proximity_zone)
-    zone_friendly_name = state.name
+    zone_friendly_name = (state.name).lower()
 
     # set the default values
     dist_to_zone = 'not set'
@@ -176,7 +176,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
                 devices_to_calculate = True
 
             # check the location of all devices
-            if device_state.state == self.friendly_name:
+            if (device_state.state).lower() == (self.friendly_name).lower():
                 device_friendly = device_state.name
                 if devices_in_zone != '':
                     devices_in_zone = devices_in_zone + ', '
