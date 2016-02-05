@@ -9,7 +9,6 @@ from datetime import timedelta
 from unittest import mock
 
 from homeassistant import core as ha, loader
-import homeassistant.util.location as location_util
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
@@ -42,23 +41,6 @@ def get_test_home_assistant(num_threads=None):
         loader.prepare(hass)
 
     return hass
-
-
-def mock_detect_location_info():
-    """ Mock implementation of util.detect_location_info. """
-    return location_util.LocationInfo(
-        ip='1.1.1.1',
-        country_code='US',
-        country_name='United States',
-        region_code='CA',
-        region_name='California',
-        city='San Diego',
-        zip_code='92122',
-        time_zone='America/Los_Angeles',
-        latitude='2.0',
-        longitude='1.0',
-        use_fahrenheit=True,
-    )
 
 
 def mock_service(hass, domain, service):
