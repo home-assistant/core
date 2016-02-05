@@ -36,7 +36,7 @@ def setup_scanner(hass, config, see):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     name = config.get(CONF_NAME, username)
-    
+
     iclouddevice = Icloud(hass, username, password, name)
     ICLOUDTRACKERS['icloud.' + name] = iclouddevice
     # add_devices_callback([iclouddevice])
