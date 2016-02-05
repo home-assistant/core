@@ -104,10 +104,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     state = hass.states.get(proximity_zone)
     zone_friendly_name = state.name
 
-    # create an entity so that the proximity values can be used for other
-    # components
-    entities = set()
-
     # set the default values
     dist_to_zone = 'not set'
     dir_of_travel = 'not set'
@@ -119,7 +115,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     proximity.entity_id = entity_id
 
     proximity.update_ha_state()
-    entities.add(proximity.entity_id)
 
     # main command to monitor proximity of devices
     track_state_change(hass, proximity_devices,
