@@ -82,7 +82,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     if 'ignored_zones' in config[DOMAIN]:
         for variable in config[DOMAIN]['ignored_zones']:
             ignored_zones.append(variable)
-            _LOGGER.debug('ignored zones loaded: %s', variable)
 
     # get the devices from configuration.yaml
     if 'devices' not in config[DOMAIN]:
@@ -92,15 +91,12 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     proximity_devices = []
     for variable in config[DOMAIN]['devices']:
         proximity_devices.append(variable)
-        _LOGGER.debug('proximity device added: %s', variable)
 
     # get the direction of travel tolerance from configuration.yaml
     tolerance = config[DOMAIN].get('tolerance', DEFAULT_TOLERANCE)
-    _LOGGER.debug('tolerance set to: %s', tolerance)
 
     # get the zone to monitor proximity to from configuration.yaml
     proximity_zone = config[DOMAIN].get('zone', DEFAULT_PROXIMITY_ZONE)
-    _LOGGER.info('zone set to %s', proximity_zone)
 
     entity_id = DOMAIN + '.' + proximity_zone
     proximity_zone = 'zone.' + proximity_zone
@@ -109,9 +105,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     proximity_latitude = state.attributes.get('latitude')
     proximity_longitude = state.attributes.get('longitude')
     zone_friendly_name = state.name
-
-    _LOGGER.debug('zone settings: LAT:%s LONG:%s', proximity_latitude,
-                  proximity_longitude)
 
     # create an entity so that the proximity values can be used for other
     # components
@@ -149,8 +142,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
                 if devices_in_zone != '':
                     devices_in_zone = devices_in_zone + ', '
                 devices_in_zone = devices_in_zone + device_friendly
-                _LOGGER.debug('%s: %s is in the monitored zone: %s',
-                              entity_name, device, device_state.state)
 
         # no-one to track so reset the entity
         if not devices_to_calculate:
@@ -158,7 +149,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             proximity.dir_of_travel = 'not set'
             proximity.nearest = 'not set'
             proximity.update_ha_state()
-            _LOGGER.debug('%s: all devices in an ignored zone', entity_name)
             return
 
         # at least one device is in the monitored zone so update the entity
@@ -167,14 +157,10 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             proximity.dir_of_travel = 'arrived'
             proximity.nearest = devices_in_zone
             proximity.update_ha_state()
-            _LOGGER.debug('%s: update entity: distance=0: direction='
-                          'arrived: device=%s', entity_name, devices_in_zone)
             return
 
         # we can't check proximity because latitude and longitude don't exist
         if 'latitude' not in new_state.attributes:
-            _LOGGER.debug('%s: not LAT or LONG current position cannot be '
-                          'calculated', entity_name)
             return
 
         # collect distances to the zone for all devices
@@ -183,14 +169,10 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             # ignore devices in an ignored zone
             device_state = hass.states.get(device)
             if device_state.state in ignored_zones:
-                _LOGGER.debug('%s: no need to compare with %s: device is in '
-                              'ignored zone', entity_name, device)
                 continue
 
             # ignore devices if proximity cannot be calculated
             if 'latitude' not in device_state.attributes:
-                _LOGGER.debug('%s: cannot compare with %s: no location '
-                              'attributes', entity_name, device)
                 continue
 
             # calculate the distance to the proximity zone
@@ -201,22 +183,14 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
             # add the device and distance to a dictionary
             distances_to_zone[device] = round(dist_to_zone / 1000, 1)
-            _LOGGER.debug('%s: distance to zone for device %s = %s',
-                          entity_name, device, distances_to_zone[device])
 
         # loop through each of the distances collected and work out the closest
         closest_device = ''
         dist_to_zone = 1000000
 
         for device in distances_to_zone:
-            _LOGGER.debug('%s: compare distances: device=%s: distance=%s',
-                          entity_name, device, distances_to_zone[device])
-
             if distances_to_zone[device] < dist_to_zone:
                 closest_device = device
-                _LOGGER.debug('%s: closest device: device=%s: %s < %s',
-                              entity_name, device, dist_to_zone,
-                              distances_to_zone[device])
                 dist_to_zone = distances_to_zone[device]
 
         # if the closest device is one of the other devices
@@ -226,9 +200,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             device_state = hass.states.get(closest_device)
             proximity.nearest = device_state.name
             proximity.update_ha_state()
-            _LOGGER.debug('%s: update entity: distance=%s: direction='
-                          'unknown: device=%s', entity_name,
-                          dist_to_zone, closest_device)
             return
 
         # stop if we cannot calculate the direction of travel (i.e. we don't
@@ -238,11 +209,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
             proximity.dir_of_travel = 'unknown'
             proximity.nearest = entity_name
             proximity.update_ha_state()
-            _LOGGER.debug('%s: update entity: distance=%s: direction='
-                          'unknown: device=%s', entity_id,
-                          dist_to_zone, entity_name)
-            _LOGGER.debug('%s: cannot determine direction of travel: old '
-                          'and/or new LAT or LONG are missing', entity_name)
             return
 
         # reset the variables
@@ -252,26 +218,18 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         old_distance = distance(proximity_latitude, proximity_longitude,
                                 old_state.attributes['latitude'],
                                 old_state.attributes['longitude'])
-        _LOGGER.debug('%s: old distance=%s', entity_name, old_distance)
         new_distance = distance(proximity_latitude, proximity_longitude,
                                 new_state.attributes['latitude'],
                                 new_state.attributes['longitude'])
-        _LOGGER.debug('%s: new distance=%s', entity_name, new_distance)
         distance_travelled = round(new_distance - old_distance, 1)
 
         # check for tolerance
         if distance_travelled < tolerance * -1:
             direction_of_travel = 'towards'
-            _LOGGER.debug('%s: travelled=%s: moving=%s', entity_name,
-                          distance_travelled, direction_of_travel)
         elif distance_travelled > tolerance:
             direction_of_travel = 'away_from'
-            _LOGGER.debug('%s: travelled=%s: moving=%s', entity_name,
-                          distance_travelled, direction_of_travel)
         else:
             direction_of_travel = 'stationary'
-            _LOGGER.debug('%s: distance travelled too small: %s',
-                          entity_name, distance_travelled)
 
         # update the proximity entity
         proximity.dist_to = round(dist_to_zone)
@@ -306,6 +264,11 @@ class Proximity(Entity):
     @property
     def state(self):
         return self.dist_to
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity """
+        return "km"
 
     @property
     def state_attributes(self):
