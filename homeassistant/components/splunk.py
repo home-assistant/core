@@ -4,9 +4,11 @@ homeassistant.components.splunk
 Splunk component which allows you to send data to an Splunk instance
 utilizing the HTTP Event Collector.
 """
-import logging
-import requests
 import json
+import logging
+
+import requests
+
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
 from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
