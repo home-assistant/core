@@ -196,10 +196,10 @@ pyuserinput==0.1.9
 # homeassistant.components.light.vera
 # homeassistant.components.sensor.vera
 # homeassistant.components.switch.vera
-pyvera==0.2.7
+pyvera==0.2.8
 
 # homeassistant.components.switch.wemo
-pywemo==0.3.8
+pywemo==0.3.9
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
