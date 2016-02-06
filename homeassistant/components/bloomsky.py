@@ -18,16 +18,14 @@ BLOOMSKY = None
 
 _LOGGER = logging.getLogger(__name__)
 
-# the BloomSky only updates every 5-8 minutes as per the API spec so there's
+# The BloomSky only updates every 5-8 minutes as per the API spec so there's
 # no point in polling the API more frequently
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 
 # pylint: disable=unused-argument,too-few-public-methods
 def setup(hass, config):
-    """
-    Setup BloomSky component.
-    """
+    """ Setup BloomSky component. """
     if not validate_config(
             config,
             {DOMAIN: [CONF_API_KEY]},
@@ -46,7 +44,7 @@ def setup(hass, config):
 
 
 class BloomSky(object):
-    """Handle all communication with the BloomSky API"""
+    """ Handle all communication with the BloomSky API. """
 
     # API documentation at http://weatherlution.com/bloomsky-api/
 

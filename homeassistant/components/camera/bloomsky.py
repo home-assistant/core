@@ -1,10 +1,10 @@
 """
-homeassistant.components.sensor.bloomsky
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for BloomSky weather station.
+homeassistant.components.camera.bloomsky
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for a camera of a BloomSky weather station.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/bloomsky/
+https://home-assistant.io/components/camera.bloomsky/
 """
 import logging
 import requests
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class BloomSkyCamera(Camera):
-    """ Represents the images published from the BloomSky's camera """
+    """ Represents the images published from the BloomSky's camera. """
 
     def __init__(self, bs, device):
         """ set up for access to the BloomSky camera images """
@@ -39,7 +39,7 @@ class BloomSkyCamera(Camera):
         self._logger = logging.getLogger(__name__)
 
     def camera_image(self):
-        """ update the camera's image if it has changed """
+        """ Update the camera's image if it has changed. """
         try:
             self._url = self._bloomsky.devices[self._id]["Data"]["ImageURL"]
             self._bloomsky.refresh_devices()
@@ -56,5 +56,5 @@ class BloomSkyCamera(Camera):
 
     @property
     def name(self):
-        """ the name of this BloomSky device """
+        """ The name of this BloomSky device. """
         return self._name
