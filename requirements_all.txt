@@ -106,6 +106,7 @@ liffylights==0.9.4
 limitlessled==1.0.0
 
 # homeassistant.components.sensor.mfi
+# homeassistant.components.switch.mfi
 mficlient==0.2
 
 # homeassistant.components.discovery
