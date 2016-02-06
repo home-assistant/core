@@ -20,7 +20,8 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA,
+    RESTART_EXIT_CODE)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
@@ -47,9 +48,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Temporary to support deprecated methods
 _MockHA = namedtuple("MockHomeAssistant", ['bus'])
-
-# The exit code to send to request a restart
-RESTART_EXIT_CODE = 100
 
 
 class HomeAssistant(object):
