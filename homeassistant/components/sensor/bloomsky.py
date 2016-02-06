@@ -1,10 +1,10 @@
 """
 homeassistant.components.sensor.bloomsky
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for BloomSky weather station.
+Support the sensor of a BloomSky weather station.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/bloomsky/
+https://home-assistant.io/components/sensor.bloomsky/
 """
 import logging
 import homeassistant.components.bloomsky as bloomsky
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ["bloomsky"]
 
-# these are the available sensors
+# These are the available sensors
 SENSOR_TYPES = ["Temperature",
                 "Humidity",
                 "Rain",
@@ -21,19 +21,19 @@ SENSOR_TYPES = ["Temperature",
                 "Night",
                 "UVIndex"]
 
-# sensor units - these do not currently align with the API documentation
+# Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS = {"Temperature": "°F",
                 "Humidity": "%",
                 "Pressure": "inHg",
                 "Luminance": "cd/m²"}
 
-# which sensors to format numerically
+# Which sensors to format numerically
 FORMAT_NUMBERS = ["Temperature", "Pressure"]
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up the available BloomSky weather sensors """
+    """ Set up the available BloomSky weather sensors. """
 
     logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BloomSkySensor(Entity):
-    """ Represents a single sensor in a BloomSky device """
+    """ Represents a single sensor in a BloomSky device. """
 
     def __init__(self, bs, device, sensor_name):
         self._bloomsky = bs
@@ -61,21 +61,21 @@ class BloomSkySensor(Entity):
 
     @property
     def name(self):
-        """ the name of the BloomSky device and this sensor """
+        """ The name of the BloomSky device and this sensor. """
         return "{} {}".format(self._client_name, self._sensor_name)
 
     @property
     def state(self):
-        """ the current state (i.e. value) of this sensor """
+        """ The current state (i.e. value) of this sensor. """
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ this sensor's units """
+        """ This sensor's units. """
         return SENSOR_UNITS.get(self._sensor_name, None)
 
     def update(self):
-        """ request an update from the BloomSky API """
+        """ Request an update from the BloomSky API. """
         self._bloomsky.refresh_devices()
         # TS is a Unix epoch timestamp for the last time the BloomSky servers
         # heard from this device. If that value hasn't changed, the value has
@@ -86,7 +86,7 @@ class BloomSkySensor(Entity):
             self._sensor_update = last_ts
 
     def process_state(self, device):
-        """ handle the response from the BloomSky API for this sensor"""
+        """ Handle the response from the BloomSky API for this sensor. """
         data = device["Data"][self._sensor_name]
         if self._sensor_name == "Rain":
             if data:
