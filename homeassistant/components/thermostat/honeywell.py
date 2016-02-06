@@ -9,32 +9,31 @@ https://home-assistant.io/components/thermostat.honeywell/
 import logging
 import socket
 
+import requests
+
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS,
+                                 TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['evohomeclient==0.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AWAY_TEMP = "away_temperature"
+US_SYSTEM_SWITCH_POSITIONS = {1: 'Heat',
+                              2: 'Off',
+                              3: 'Cool'}
+US_BASEURL = 'https://mytotalconnectcomfort.com/portal'
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the honeywel thermostat. """
+def _setup_round(username, password, config, add_devices):
     from evohomeclient import EvohomeClient
 
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
     try:
         away_temp = float(config.get(CONF_AWAY_TEMP, 16))
     except ValueError:
         _LOGGER.error("value entered for item %s should convert to a number",
                       CONF_AWAY_TEMP)
-        return False
-    if username is None or password is None:
-        _LOGGER.error("Missing required configuration items %s or %s",
-                      CONF_USERNAME, CONF_PASSWORD)
         return False
 
     evo_api = EvohomeClient(username, password)
@@ -51,6 +50,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Connection error logging into the honeywell evohome web service"
         )
         return False
+
+
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up the honeywel thermostat. """
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    thermostat_id = config.get('id')
+
+    if username is None or password is None:
+        _LOGGER.error("Missing required configuration items %s or %s",
+                      CONF_USERNAME, CONF_PASSWORD)
+        return False
+
+    if thermostat_id:
+        add_devices([HoneywellUSThermostat(thermostat_id, username, password)])
+    else:
+        return _setup_round(username, password, config, add_devices)
 
 
 class RoundThermostat(ThermostatDevice):
@@ -135,3 +152,117 @@ class RoundThermostat(ThermostatDevice):
         else:
             self._name = data['name']
             self._is_dhw = False
+
+
+class HoneywellUSThermostat(ThermostatDevice):
+    """ Represents a Honeywell US Thermostat. """
+
+    def __init__(self, ident, username, password):
+        self._ident = ident
+        self._username = username
+        self._password = password
+        self._session = requests.Session()
+        # Maybe this should be configurable?
+        self._timeout = 30
+        # Yeah, really.
+        self._session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        self._update()
+
+    def _login(self):
+        self._session.get(US_BASEURL, timeout=self._timeout)
+        params = {'UserName': self._username,
+                  'Password': self._password,
+                  'RememberMe': 'false',
+                  'timeOffset': 480}
+        resp = self._session.post(US_BASEURL, params=params,
+                                  timeout=self._timeout)
+        if resp.status_code != 200:
+            _LOGGER('Login failed for user %(user)s',
+                    dict(user=self._username))
+            return False
+        else:
+            return True
+
+    def _get_data(self):
+        if not self._login():
+            return
+        url = '%s/Device/CheckDataSession/%s' % (US_BASEURL, self._ident)
+        resp = self._session.get(url, timeout=self._timeout)
+        if resp.status_code < 300:
+            return resp.json()
+        else:
+            return {'error': resp.status_code}
+
+    def _set_data(self, data):
+        if not self._login():
+            return
+        url = '%s/Device/SubmitControlScreenChanges' % US_BASEURL
+        data['DeviceID'] = self._ident
+        resp = self._session.post(url, data=data, timeout=self._timeout)
+        if resp.status_code < 300:
+            return resp.json()
+        else:
+            return {'error': resp.status_code}
+
+    def _update(self):
+        self._data = self._get_data()['latestData']
+
+    @property
+    def is_fan_on(self):
+        return self._data['fanData']['fanIsRunning']
+
+    @property
+    def name(self):
+        return 'honeywell'
+
+    @property
+    def unit_of_measurement(self):
+        unit = self._data['uiData']['DisplayUnits']
+        if unit == 'F':
+            return TEMP_FAHRENHEIT
+        else:
+            return TEMP_CELCIUS
+
+    @property
+    def current_temperature(self):
+        self._update()
+        return self._data['uiData']['DispTemperature']
+
+    @property
+    def target_temperature(self):
+        setpoint = US_SYSTEM_SWITCH_POSITIONS.get(
+            self._data['uiData']['SystemSwitchPosition'],
+            'Off')
+        return self._data['uiData']['%sSetpoint' % setpoint]
+
+    def set_temperature(self, temperature):
+        """ Set target temperature. """
+        data = {'SystemSwitch': None,
+                'HeatSetpoint': None,
+                'CoolSetpoint': None,
+                'HeatNextPeriod': None,
+                'CoolNextPeriod': None,
+                'StatusHeat': None,
+                'StatusCool': None,
+                'FanMode': None}
+        setpoint = US_SYSTEM_SWITCH_POSITIONS.get(
+            self._data['uiData']['SystemSwitchPosition'],
+            'Off')
+        data['%sSetpoint' % setpoint] = temperature
+        self._set_data(data)
+
+    @property
+    def device_state_attributes(self):
+        """ Return device specific state attributes. """
+        fanmodes = {0: "auto",
+                    1: "on",
+                    2: "circulate"}
+        return {"fan": (self._data['fanData']['fanIsRunning'] and
+                        'running' or 'idle'),
+                "fanmode": fanmodes[self._data['fanData']['fanMode']]}
+
+    def turn_away_mode_on(self):
+        pass
+
+    def turn_away_mode_off(self):
+        pass
