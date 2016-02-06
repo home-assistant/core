@@ -105,6 +105,9 @@ liffylights==0.9.4
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
+# homeassistant.components.sensor.mfi
+mficlient==0.2
+
 # homeassistant.components.discovery
 netdisco==0.5.2
 

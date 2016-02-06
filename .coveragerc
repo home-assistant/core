@@ -121,6 +121,7 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
+    homeassistant/components/sensor/mfi.py
     homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
