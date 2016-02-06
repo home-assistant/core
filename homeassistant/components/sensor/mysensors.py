@@ -151,23 +151,26 @@ class MySensorsSensor(Entity):
             self.gateway.const.SetReq.V_VOLTAGE: 'V',
             self.gateway.const.SetReq.V_CURRENT: 'A',
         }
-        unit_map_v15 = {
-            self.gateway.const.SetReq.V_PERCENTAGE: '%',
-        }
         if float(self.gateway.version) >= 1.5:
             if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
                 return self._values[
                     self.gateway.const.SetReq.V_UNIT_PREFIX]
-            unit_map.update(unit_map_v15)
+            unit_map.update({self.gateway.const.SetReq.V_PERCENTAGE: '%'})
         return unit_map.get(self.value_type)
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
+        set_req = self.gateway.const.SetReq
         device_attr = {}
         for value_type, value in self._values.items():
             if value_type != self.value_type:
-                device_attr[self.gateway.const.SetReq(value_type).name] = value
+                try:
+                    device_attr[set_req(value_type).name] = value
+                except ValueError:
+                    _LOGGER.error('value_type %s is not valid for mysensors '
+                                  'version %s', value_type,
+                                  self.gateway.version)
         return device_attr
 
     @property
