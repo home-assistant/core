@@ -153,6 +153,9 @@ pyicloud==0.7.2
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.2
 
+# homeassistant.components.alarm_control_panel.nx584
+pynx584==0.1
+
 # homeassistant.components.sensor.openweathermap
 pyowm==2.3.0
 
