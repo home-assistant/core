@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCH_MODELS = [
     'Outlet',
+    'Output 5v',
+    'Output 12v',
+    'Output 24v',
 ]
 
 
