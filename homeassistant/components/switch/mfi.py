@@ -1,36 +1,11 @@
 """
 homeassistant.components.switch.mfi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Ubiquiti mFi Switches.
+Support for Ubiquiti mFi switches.
 
-Configuration:
-
-sensor:
-  platform: mfi
-  host: ADDRESS
-  port: PORT
-  username: USERNAME
-  password: PASSWORD
-
-Variable:
-
-host
-*Required
-ADDRESS is the IP or hostname of your mFi controller.
-
-port
-*Optional
-PORT is the port of your mFi controller (usually 6443)
-
-username
-*Required
-USERNAME is the mFi admin username
-
-password
-*Required
-PASSWORD is the mFi admin user's password
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.mfi/
 """
-
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice

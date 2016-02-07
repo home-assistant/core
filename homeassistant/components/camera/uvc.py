@@ -1,29 +1,10 @@
 """
-Ubiquiti Unifi Video Cameras
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for Ubiquiti's UVC cameras
+homeassistant.components.camera.uvc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for Ubiquiti's UVC cameras.
 
-Configuration:
-
-camera:
-  platform: uvc
-  nvr: ADDRESS
-  port: PORT
-  key: APIKEY
-
-Variable:
-
-nvr
-*Required
-ADDRESS should be the IP or hostname of the NVR server
-
-port
-*Optional
-PORT is the port number to use for accessing the NVR
-
-key
-*Required
-APIKEY should be the API key available from the NVR web interface
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.uvc/
 """
 import logging
 import socket
