@@ -179,11 +179,6 @@ class ThermostatDevice(Entity):
         return self.target_temperature or STATE_UNKNOWN
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
     def state_attributes(self):
         """ Returns optional state attributes. """
 
@@ -210,11 +205,6 @@ class ThermostatDevice(Entity):
         is_fan_on = self.is_fan_on
         if is_fan_on is not None:
             data[ATTR_FAN] = STATE_ON if is_fan_on else STATE_OFF
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            data.update(device_attr)
 
         return data
 

@@ -118,7 +118,7 @@ class VeraSensor(Entity):
             return '%'
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         attr = {}
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
