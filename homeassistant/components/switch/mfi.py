@@ -12,12 +12,15 @@ from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['mficlient==0.2']
+REQUIREMENTS = ['mficlient==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 SWITCH_MODELS = [
     'Outlet',
+    'Output 5v',
+    'Output 12v',
+    'Output 24v',
 ]
 
 
@@ -56,6 +59,7 @@ class MfiSwitch(SwitchDevice):
     """ An mFi switch-able device. """
     def __init__(self, port):
         self._port = port
+        self._target_state = None
 
     @property
     def should_poll(self):
@@ -75,14 +79,17 @@ class MfiSwitch(SwitchDevice):
 
     def update(self):
         self._port.refresh()
+        if self._target_state is not None:
+            self._port.data['output'] = float(self._target_state)
+            self._target_state = None
 
     def turn_on(self):
         self._port.control(True)
-        self._port.data['output'] = 1.0
+        self._target_state = True
 
     def turn_off(self):
         self._port.control(False)
-        self._port.data['output'] = 0.0
+        self._target_state = False
 
     @property
     def current_power_mwh(self):
@@ -91,6 +98,6 @@ class MfiSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         attr = {}
-        attr['volts'] = self._port.data.get('v_rms', 0)
-        attr['amps'] = self._port.data.get('i_rms', 0)
+        attr['volts'] = round(self._port.data.get('v_rms', 0), 1)
+        attr['amps'] = round(self._port.data.get('i_rms', 0), 1)
         return attr
