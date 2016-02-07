@@ -243,8 +243,8 @@ def run_hass_process(hass_proc):
     requested_stop = threading.Event()
     hass_proc.daemon = True
 
-    def request_stop():
-        """ request hass stop """
+    def request_stop(*args):
+        """ request hass stop, *args is for signal handler callback """
         requested_stop.set()
         hass_proc.terminate()
 
