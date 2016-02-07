@@ -1,22 +1,10 @@
 """
-Networx NX584 interface
-~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.alarm_control_panel.nx584
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for NX584 alarm control panels.
 
-Configuration:
-
-To use the Example custom component you will need to add the following to
-your configuration.yaml file.
-
-alarm_control_panel:
-  platform: nx584
-  host: localhost:5007
-
-Variable:
-
-host
-*Optional
-HOST should be a something like "localhost:5007" which is the
-connection information for talking to the pynx584 backend server.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/alarm_control_panel.nx584/
 """
 import logging
 import requests
@@ -57,18 +45,22 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
+        """ Polling needed. """
         return True
 
     @property
     def name(self):
+        """ Returns the name of the device. """
         return self._name
 
     @property
     def code_format(self):
+        """ Characters if code is defined. """
         return '[0-9]{4}([0-9]{2})?'
 
     @property
     def state(self):
+        """ Returns the state of the device. """
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
@@ -97,13 +89,17 @@ class NX584Alarm(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_AWAY
 
     def alarm_disarm(self, code=None):
+        """ Send disarm command. """
         self._alarm.disarm(code)
 
     def alarm_arm_home(self, code=None):
+        """ Send arm home command. """
         self._alarm.arm('home')
 
     def alarm_arm_away(self, code=None):
+        """ Send arm away command. """
         self._alarm.arm('auto')
 
     def alarm_trigger(self, code=None):
+        """ Alarm trigger command. """
         raise NotImplementedError()
