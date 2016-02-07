@@ -113,8 +113,8 @@ class TelldusLiveSensor(Entity):
             return self._value_as_humidity
 
     @property
-    def state_attributes(self):
-        attrs = dict()
+    def device_state_attributes(self):
+        attrs = {}
         if self._battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = self._battery_level
         if self._last_updated is not None:

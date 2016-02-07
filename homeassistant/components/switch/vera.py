@@ -102,8 +102,8 @@ class VeraSwitch(SwitchDevice):
         return self._name
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
 
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
