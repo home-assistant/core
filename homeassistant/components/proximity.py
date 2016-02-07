@@ -47,7 +47,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     for variable in config[DOMAIN]['devices']:
         proximity_devices.append(variable)
 
-    # Gget the direction of travel tolerance from configuration.yaml
+    # Get the direction of travel tolerance from configuration.yaml
     tolerance = config[DOMAIN].get('tolerance', DEFAULT_TOLERANCE)
 
     # Get the zone to monitor proximity to from configuration.yaml
@@ -75,7 +75,6 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     track_state_change(hass, proximity_devices,
                        proximity.check_proximity_state_change)
 
-    # Tells the bootstrapper that the component was successfully initialized
     return True
 
 
@@ -102,7 +101,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity """
+        """ Unit of measurement of this entity. """
         return "km"
 
     @property
