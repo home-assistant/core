@@ -85,7 +85,7 @@ def setup(hass, config):
 
         measurement = state.attributes.get('unit_of_measurement')
         if measurement in (None, ''):
-            measurement = '{}.{}'.format(state.domain, state.object_id)
+            measurement = state.entity_id
 
         json_body = [
             {
