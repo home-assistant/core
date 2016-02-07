@@ -130,11 +130,6 @@ class SwitchDevice(ToggleEntity):
         return None
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
     def state_attributes(self):
         """ Returns optional state attributes. """
         data = {}
@@ -143,10 +138,5 @@ class SwitchDevice(ToggleEntity):
             value = getattr(self, prop)
             if value:
                 data[attr] = value
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            data.update(device_attr)
 
         return data

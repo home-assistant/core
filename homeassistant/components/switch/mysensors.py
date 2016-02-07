@@ -100,34 +100,24 @@ class MySensorsSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        set_req = self.gateway.const.SetReq
-        device_attr = {}
-        for value_type, value in self._values.items():
-            if value_type != self.value_type:
-                try:
-                    device_attr[set_req(value_type).name] = value
-                except ValueError:
-                    _LOGGER.error('value_type %s is not valid for mysensors '
-                                  'version %s', value_type,
-                                  self.gateway.version)
-        return device_attr
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = {
+        attr = {
             mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
-        device_attr = self.device_state_attributes
+        set_req = self.gateway.const.SetReq
 
-        if device_attr is not None:
-            data.update(device_attr)
-
-        return data
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                try:
+                    attr[set_req(value_type).name] = value
+                except ValueError:
+                    _LOGGER.error('value_type %s is not valid for mysensors '
+                                  'version %s', value_type,
+                                  self.gateway.version)
+        return attr
 
     @property
     def is_on(self):
