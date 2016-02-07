@@ -95,7 +95,10 @@ class HomeAssistant(object):
                 'Could not bind to SIGTERM. Are you running in a thread?')
 
         while not request_shutdown.isSet():
-            time.sleep(1)
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                break
 
         self.stop()
         return RESTART_EXIT_CODE if request_restart.isSet() else 0
