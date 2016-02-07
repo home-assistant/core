@@ -14,14 +14,24 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['mficlient==0.2']
+REQUIREMENTS = ['mficlient==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+STATE_ON = 'on'
+STATE_OFF = 'off'
+DIGITS = {
+    'volts': 1,
+    'amps': 1,
+    'active_power': 0,
+    'temperature': 1,
+}
 SENSOR_MODELS = [
     'Ubiquiti mFi-THS',
     'Ubiquiti mFi-CS',
     'Outlet',
+    'Input Analog',
+    'Input Digital',
 ]
 
 
@@ -69,7 +79,11 @@ class MfiSensor(Entity):
 
     @property
     def state(self):
-        return self._port.value
+        if self._port.model == 'Input Digital':
+            return self._port.value > 0 and STATE_ON or STATE_OFF
+        else:
+            digits = DIGITS.get(self._port.tag, 0)
+            return round(self._port.value, digits)
 
     @property
     def unit_of_measurement(self):
@@ -77,6 +91,8 @@ class MfiSensor(Entity):
             return TEMP_CELCIUS
         elif self._port.tag == 'active_pwr':
             return 'Watts'
+        elif self._port.model == 'Input Digital':
+            return 'State'
         return self._port.tag
 
     def update(self):
