@@ -14,6 +14,9 @@ from requests.auth import HTTPBasicAuth
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
+from homeassistant.const import HTTP_OK
+
+CONTENT_TYPE_HEADER = 'Content-Type'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +44,17 @@ class MjpegCamera(Camera):
         self._password = device_info.get('password')
         self._mjpeg_url = device_info['mjpeg_url']
 
+    def camera_stream(self):
+        """ Return a mjpeg stream image response directly from the camera. """
+        if self._username and self._password:
+            return requests.get(self._mjpeg_url,
+                                auth=HTTPBasicAuth(self._username,
+                                                   self._password),
+                                stream=True)
+        else:
+            return requests.get(self._mjpeg_url,
+                                stream=True)
+
     def camera_image(self):
         """ Return a still image response from the camera. """
 
@@ -55,16 +69,22 @@ class MjpegCamera(Camera):
                     jpg = data[jpg_start:jpg_end + 2]
                     return jpg
 
-        if self._username and self._password:
-            with closing(requests.get(self._mjpeg_url,
-                                      auth=HTTPBasicAuth(self._username,
-                                                         self._password),
-                                      stream=True)) as response:
-                return process_response(response)
-        else:
-            with closing(requests.get(self._mjpeg_url,
-                                      stream=True)) as response:
-                return process_response(response)
+        with closing(self.camera_stream()) as response:
+            return process_response(response)
+
+    def mjpeg_stream(self, handler):
+        """ Generate an HTTP MJPEG stream from the camera. """
+        response = self.camera_stream()
+        content_type = response.headers[CONTENT_TYPE_HEADER]
+
+        handler.send_response(HTTP_OK)
+        handler.send_header(CONTENT_TYPE_HEADER, content_type)
+        handler.end_headers()
+
+        for chunk in response.iter_content(chunk_size=1024):
+            if not chunk:
+                break
+            handler.wfile.write(chunk)
 
     @property
     def name(self):
