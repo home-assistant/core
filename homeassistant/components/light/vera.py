@@ -71,13 +71,9 @@ class VeraLight(VeraSwitch):
     """ Represents a Vera Light, including dimmable. """
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
-
-        if self.vera_device.is_dimmable:
-            attr[ATTR_BRIGHTNESS] = self.vera_device.get_brightness()
-
-        return attr
+    def brightness(self):
+        """Brightness of the light."""
+        return self.vera_device.get_brightness()
 
     def turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:

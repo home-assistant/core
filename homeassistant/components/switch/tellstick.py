@@ -8,8 +8,7 @@ https://home-assistant.io/components/switch.tellstick/
 """
 import logging
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
-                                 ATTR_FRIENDLY_NAME)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import ToggleEntity
 
 SIGNAL_REPETITIONS = 1
@@ -63,7 +62,6 @@ class TellstickSwitchDevice(ToggleEntity):
         import tellcore.constants as tellcore_constants
 
         self.tellstick_device = tellstick_device
-        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self.signal_repetitions = signal_repetitions
 
         self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
@@ -78,11 +76,6 @@ class TellstickSwitchDevice(ToggleEntity):
     def name(self):
         """ Returns the name of the switch if any. """
         return self.tellstick_device.name
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
 
     @property
     def is_on(self):
