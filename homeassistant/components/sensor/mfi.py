@@ -14,7 +14,7 @@ from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['mficlient==0.2']
+REQUIREMENTS = ['mficlient==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
