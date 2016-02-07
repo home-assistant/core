@@ -95,8 +95,8 @@ class WemoSwitch(SwitchDevice):
         return self.wemo.name
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
         if self.maker_params:
             # Is the maker sensor on or off.
             if self.maker_params['hassensor']:

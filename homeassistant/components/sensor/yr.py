@@ -100,7 +100,7 @@ class YrSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns state attributes. """
         data = {
             'about': "Weather forecast from yr.no, delivered by the"

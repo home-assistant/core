@@ -75,7 +75,7 @@ class SwissPublicTransportSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns the state attributes. """
         if self._times is not None:
             return {
