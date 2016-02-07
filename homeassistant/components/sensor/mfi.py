@@ -20,6 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_ON = 'on'
 STATE_OFF = 'off'
+DIGITS = {
+    'volts': 1,
+    'amps': 1,
+    'active_power': 0,
+    'temperature': 1,
+}
 SENSOR_MODELS = [
     'Ubiquiti mFi-THS',
     'Ubiquiti mFi-CS',
@@ -76,7 +82,8 @@ class MfiSensor(Entity):
         if self._port.model == 'Input Digital':
             return self._port.value > 0 and STATE_ON or STATE_OFF
         else:
-            return self._port.value
+            digits = DIGITS.get(self._port.tag, 0)
+            return round(self._port.value, digits)
 
     @property
     def unit_of_measurement(self):

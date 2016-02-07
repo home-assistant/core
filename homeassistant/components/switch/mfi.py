@@ -98,6 +98,6 @@ class MfiSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         attr = {}
-        attr['volts'] = self._port.data.get('v_rms', 0)
-        attr['amps'] = self._port.data.get('i_rms', 0)
+        attr['volts'] = round(self._port.data.get('v_rms', 0), 1)
+        attr['amps'] = round(self._port.data.get('i_rms', 0), 1)
         return attr
