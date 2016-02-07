@@ -13,7 +13,7 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
-    ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
+    ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "wink"
 REQUIREMENTS = ['python-wink==0.5.0']
@@ -79,13 +79,6 @@ class WinkToggleDevice(ToggleEntity):
     def is_on(self):
         """ True if light is on. """
         return self.wink.state()
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.wink.name()
-        }
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """

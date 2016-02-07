@@ -54,7 +54,7 @@ class CpuSpeedSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns the state attributes. """
         if self.info is not None:
             return {

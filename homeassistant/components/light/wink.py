@@ -37,6 +37,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class WinkLight(WinkToggleDevice):
     """ Represents a Wink light. """
 
+    @property
+    def brightness(self):
+        """Brightness of the light."""
+        return int(self.wink.brightness() * 255)
+
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
@@ -47,15 +52,3 @@ class WinkLight(WinkToggleDevice):
 
         else:
             self.wink.set_state(True)
-
-    @property
-    def state_attributes(self):
-        attr = super().state_attributes
-
-        if self.is_on:
-            brightness = self.wink.brightness()
-
-            if brightness is not None:
-                attr[ATTR_BRIGHTNESS] = int(brightness * 255)
-
-        return attr

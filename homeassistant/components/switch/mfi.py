@@ -114,8 +114,8 @@ class MfiSwitch(SwitchDevice):
         return int(self._port.data.get('active_pwr', 0) * 1000)
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
         attr['volts'] = self._port.data.get('v_rms', 0)
         attr['amps'] = self._port.data.get('i_rms', 0)
         return attr
