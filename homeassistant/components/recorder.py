@@ -412,19 +412,27 @@ class Recorder(threading.Thread):
 
         if migration_id < 5:
             # Add domain so that thermostat graphs look right
-            self.query("""
-                ALTER TABLE states
-                ADD COLUMN domain text
-            """)
+            try:
+                cur.execute("""
+                    ALTER TABLE states
+                    ADD COLUMN domain text
+                """)
+            except sqlite3.OperationalError:
+                # We had a bug in this migration for a while on dev
+                # Without this, dev-users will have to throw away their db
+                pass
+
+            # TravisCI has Python compiled against an old version of SQLite3
+            # which misses the instr method.
+            self.conn.create_function(
+                "instr", 2,
+                lambda string, substring: string.find(substring) + 1)
 
             # populate domain with defaults
-            rows = self.query("select distinct entity_id from states")
-            for row in rows:
-                entity_id = row[0]
-                domain = entity_id.split(".")[0]
-                self.query(
-                    "UPDATE states set domain=? where entity_id=?",
-                    domain, entity_id)
+            cur.execute("""
+                UPDATE states
+                set domain=substr(entity_id, 0, instr(entity_id, '.'))
+            """)
 
             # add indexes we are going to use a lot on selects
             self.query("""
