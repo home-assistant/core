@@ -11,7 +11,6 @@ import logging
 import re
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +27,6 @@ ATTR_ACCOUNTNAME = 'accountname'
 ICLOUDTRACKERS = {}
 
 
-# def setup_scanner(hass, config, see, add_devices_callback):
 def setup_scanner(hass, config, see):
     """ Set up the iCloud Scanner. """
 
@@ -38,16 +36,14 @@ def setup_scanner(hass, config, see):
     name = config.get(CONF_NAME, username)
 
     iclouddevice = Icloud(hass, username, password, name)
-    ICLOUDTRACKERS['icloud.' + name] = iclouddevice
-    # add_devices_callback([iclouddevice])
+    ICLOUDTRACKERS[name] = iclouddevice
 
     def lost_iphone(call):
         """ Calls the lost iphone function if the device is found """
         accountname = call.data.get('accountname')
-        entity_id = 'icloud.' + accountname
         devicename = call.data.get('devicename')
-        if entity_id in ICLOUDTRACKERS:
-            ICLOUDTRACKERS[entity_id].lost_iphone(devicename)
+        if accountname in ICLOUDTRACKERS:
+            ICLOUDTRACKERS[accountname].lost_iphone(devicename)
 
     hass.services.register('device_tracker', 'lost_iphone',
                            lost_iphone)
@@ -55,9 +51,8 @@ def setup_scanner(hass, config, see):
     def update_icloud(call):
         """ Calls the update function of an icloud account """
         accountname = call.data.get('accountname')
-        entity_id = 'icloud.' + accountname
-        if entity_id in ICLOUDTRACKERS:
-            ICLOUDTRACKERS[entity_id].update_icloud(see)
+        if accountname in ICLOUDTRACKERS:
+            ICLOUDTRACKERS[accountname].update_icloud(see)
 
     hass.services.register('device_tracker',
                            'update_icloud', update_icloud)
@@ -72,7 +67,7 @@ def setup_scanner(hass, config, see):
     return True
 
 
-class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
+class Icloud(object):  # pylint: disable=too-many-instance-attributes
     """ Represents a Proximity in Home Assistant. """
     def __init__(self, hass, username, password, name):
         # pylint: disable=too-many-arguments
@@ -100,48 +95,50 @@ class Icloud(Entity):  # pylint: disable=too-many-instance-attributes
 
     @property
     def state(self):
+        """ returns the state of the icloud tracker """
         return self.api is not None
 
     @property
     def state_attributes(self):
+        """ returns the friendlyname of the icloud tracker """
         return {
-            ATTR_USERNAME: self.username,
-            ATTR_PASSWORD: self.password,
             ATTR_ACCOUNTNAME: self.accountname
         }
 
     def lost_iphone(self, devicename):
         """ Calls the lost iphone function if the device is found """
-        self.api.authenticate()
-        for device in self.api.devices:
-            status = device.status()
-            if devicename is None or devicename == status['name']:
-                device.play_sound()
+        if self.api is not None:
+            self.api.authenticate()
+            for device in self.api.devices:
+                status = device.status()
+                if devicename is None or devicename == status['name']:
+                    device.play_sound()
 
     def update_icloud(self, see):
         """ Authenticate against iCloud and scan for devices. """
-        from pyicloud.exceptions import PyiCloudNoDevicesException
+        if self.api is not None:
+            from pyicloud.exceptions import PyiCloudNoDevicesException
 
-        try:
-            # The session timeouts if we are not using it so we
-            # have to re-authenticate. This will send an email.
-            self.api.authenticate()
-            # Loop through every device registered with the iCloud account
-            for device in self.api.devices:
-                status = device.status()
-                location = device.location()
-                if location:
-                    see(
-                        dev_id=re.sub(r"(\s|\W|')",
-                                      '',
-                                      status['name']),
-                        host_name=status['name'],
-                        gps=(location['latitude'], location['longitude']),
-                        battery=status['batteryLevel']*100,
-                        gps_accuracy=location['horizontalAccuracy']
-                    )
-                else:
-                    # No location found for the device so continue
-                    continue
-        except PyiCloudNoDevicesException:
-            _LOGGER.info('No iCloud Devices found!')
+            try:
+                # The session timeouts if we are not using it so we
+                # have to re-authenticate. This will send an email.
+                self.api.authenticate()
+                # Loop through every device registered with the iCloud account
+                for device in self.api.devices:
+                    status = device.status()
+                    location = device.location()
+                    if location:
+                        see(
+                            dev_id=re.sub(r"(\s|\W|')",
+                                          '',
+                                          status['name']),
+                            host_name=status['name'],
+                            gps=(location['latitude'], location['longitude']),
+                            battery=status['batteryLevel']*100,
+                            gps_accuracy=location['horizontalAccuracy']
+                        )
+                    else:
+                        # No location found for the device so continue
+                        continue
+            except PyiCloudNoDevicesException:
+                _LOGGER.info('No iCloud Devices found!')
