@@ -24,7 +24,7 @@ ent_switch = 'switch.test'
 min_temp = 3.0
 max_temp = 65.0
 target_temp = 42.0
-
+tol_temp = 1
 
 class TestThermostatHeatControl(unittest.TestCase):
     """ Test the Heat Control thermostat. """
@@ -60,7 +60,8 @@ class TestThermostatHeatControl(unittest.TestCase):
             'target_sensor': ent_sensor,
             'min_temp': min_temp,
             'max_temp': max_temp,
-            'target_temp': target_temp
+            'target_temp': target_temp,
+            'tol_temp': tol_temp
         }})
         state = self.hass.states.get(entity)
         self.assertEqual(min_temp, state.attributes.get('min_temp'))
@@ -97,11 +98,61 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ent_switch, call.data['entity_id'])
 
+    def test_temperature_tolerance_switches_off_heater_with_default_value(self):
+        self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(29.8)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ent_switch, call.data['entity_id'])
+
+    def test_temperature_tolerance_switches_on_heater_with_default_value(self):
+        self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(29.6)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ent_switch, call.data['entity_id'])
+
+    def test_temperature_tolerance_turns_off_heater_with_user_defined_value(self):
+        self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(29.1)
+        tol_temp = 1
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ent_switch, call.data['entity_id'])
+
+    def test_temperature_tolerance_turns_on_heater_with_user_defined_value(self):
+        self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(28.9)
+        tol_temp = 1
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ent_switch, call.data['entity_id'])
+
     def test_set_temp_change_turns_on_heater(self):
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 30)
         self.hass.pool.block_till_done()
-        self._setup_sensor(25)
+        self._setup_sensor(29)
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
         call = self.calls[0]
