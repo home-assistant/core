@@ -68,13 +68,47 @@ class TestMQTT(unittest.TestCase):
         self.assertEqual('test-payload',
                          self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
 
-    def test_service_call_without_topic_does_not_publush(self):
+    def test_service_call_without_topic_does_not_publish(self):
         self.hass.bus.fire(EVENT_CALL_SERVICE, {
             ATTR_DOMAIN: mqtt.DOMAIN,
             ATTR_SERVICE: mqtt.SERVICE_PUBLISH
         })
         self.hass.pool.block_till_done()
         self.assertTrue(not mqtt.MQTT_CLIENT.publish.called)
+
+    def test_service_call_with_template_payload_renders_template(self):
+        """
+        If 'payload_template' is provided and 'payload' is not, then render it.
+        """
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1+1 }}"
+        }, blocking=True)
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "2")
+
+    def test_service_call_with_payload_doesnt_render_template(self):
+        """
+        If a 'payload' is provided then use that instead of 'payload_template'.
+        """
+        payload = "not a template"
+        payload_template = "a template"
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: payload,
+            mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
+        }, blocking=True)
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], payload)
+
+    def test_service_call_without_payload_or_payload_template(self):
+        """
+        If neither 'payload' or 'payload_template' is provided then fail.
+        """
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic"
+        }, blocking=True)
+        self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
 
     def test_subscribe_topic(self):
         mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
