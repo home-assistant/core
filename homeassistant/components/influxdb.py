@@ -25,7 +25,7 @@ DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['influxdb==2.11.0']
+REQUIREMENTS = ['influxdb==2.12.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
