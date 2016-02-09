@@ -4877,7 +4877,7 @@ case"touchend":return this.addPointerListenerEnd(t,e,i,n);case"touchmove":return
   }
   iron-image {
     border-radius: 50%;
-  }</style><template><style>/* required styles */
+  }</style><template><div class="marker"><template is="dom-if" if="[[icon]]"><iron-icon icon="[[icon]]"></iron-icon></template><template is="dom-if" if="[[value]]">[[value]]</template><template is="dom-if" if="[[image]]"><iron-image sizing="cover" class="fit" src="[[image]]"></iron-image></template></div></template></dom-module><style>/* required styles */
 
 .leaflet-map-pane,
 .leaflet-tile,
@@ -5355,7 +5355,7 @@ case"touchend":return this.addPointerListenerEnd(t,e,i,n);case"touchmove":return
 .leaflet-div-icon {
 	background: #fff;
 	border: 1px solid #666;
-	}</style><div class="marker"><template is="dom-if" if="[[icon]]"><iron-icon icon="[[icon]]"></iron-icon></template><template is="dom-if" if="[[value]]">[[value]]</template><template is="dom-if" if="[[image]]"><iron-image sizing="cover" class="fit" src="[[image]]"></iron-image></template></div></template></dom-module><style>/* Otherwise they go through overlays. */
+	}</style><style>/* Otherwise they go through overlays. */
   .leaflet-top, .leaflet-bottom {
     z-index: 0;
   }</style><dom-module id="partial-map" assetpath="layouts/"><style>.map {
