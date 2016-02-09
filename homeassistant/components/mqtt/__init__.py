@@ -14,6 +14,7 @@ import time
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
+from homeassistant.util import template
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -49,6 +50,7 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
+ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = 'qos'
 ATTR_RETAIN = 'retain'
 
@@ -131,11 +133,25 @@ def setup(hass, config):
     def publish_service(call):
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
-        payload = util.template.render(hass, call.data.get(ATTR_PAYLOAD))
-        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
-        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
+        payload = call.data.get(ATTR_PAYLOAD)
+        if payload is None:
+            try:
+                payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+                if payload_template is None:
+                    _LOGGER.error(
+                        "You must set either '%s' or '%s' to use this service",
+                        ATTR_PAYLOAD, ATTR_PAYLOAD_TEMPLATE)
+                    return
+                payload = template.render(hass, payload_template)
+            except AttributeError as exc:
+                _LOGGER.error(
+                    "Unable to publish to '%s': rendering payload template of "
+                    "'%s' failed because %s.",
+                    msg_topic, payload_template, exc)
         if msg_topic is None or payload is None:
             return
+        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
+        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
