@@ -55,9 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
     if config['name']:
-      name = config['name']
+        name = config['name']
     else:
-      name = DEFAULT_NAME
+        name = DEFAULT_NAME
 
     try:
         for variable in config['monitored_conditions']:
