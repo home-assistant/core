@@ -99,6 +99,7 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/samsungtv.py
+    homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/squeezebox.py
     homeassistant/components/notify/free_mobile.py
