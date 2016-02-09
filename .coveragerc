@@ -138,7 +138,6 @@ omit =
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
-    homeassistant/components/switch/mfi.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/rest.py
