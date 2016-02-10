@@ -57,11 +57,14 @@ ATTR_RETAIN = 'retain'
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-def publish(hass, topic, payload, qos=None, retain=None):
+# pylint: disable=too-many-arguments
+def publish(hass, topic, payload=None, qos=None,
+            retain=None, payload_template=None):
     """Publish message to an MQTT topic."""
     data = {
         ATTR_TOPIC: topic,
         ATTR_PAYLOAD: payload,
+        ATTR_PAYLOAD_TEMPLATE: payload_template
     }
     if qos is not None:
         data[ATTR_QOS] = qos
@@ -70,6 +73,7 @@ def publish(hass, topic, payload, qos=None, retain=None):
         data[ATTR_RETAIN] = retain
 
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
+# pylint: enable=too-many-arguments
 
 
 def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
@@ -134,24 +138,25 @@ def setup(hass, config):
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
+        payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
+        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
+        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         if payload is None:
+            if payload_template is None:
+                _LOGGER.error(
+                    "You must set either '%s' or '%s' to use this service",
+                    ATTR_PAYLOAD, ATTR_PAYLOAD_TEMPLATE)
+                return
             try:
-                payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
-                if payload_template is None:
-                    _LOGGER.error(
-                        "You must set either '%s' or '%s' to use this service",
-                        ATTR_PAYLOAD, ATTR_PAYLOAD_TEMPLATE)
-                    return
                 payload = template.render(hass, payload_template)
-            except AttributeError as exc:
+            except template.jinja2.TemplateError as exc:
                 _LOGGER.error(
                     "Unable to publish to '%s': rendering payload template of "
                     "'%s' failed because %s.",
                     msg_topic, payload_template, exc)
+                return
         if msg_topic is None or payload is None:
             return
-        qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
-        retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
         MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
