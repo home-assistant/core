@@ -57,23 +57,28 @@ ATTR_RETAIN = 'retain'
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-# pylint: disable=too-many-arguments
-def publish(hass, topic, payload=None, qos=None,
-            retain=None, payload_template=None):
-    """Publish message to an MQTT topic."""
-    data = {
-        ATTR_TOPIC: topic,
-        ATTR_PAYLOAD: payload,
-        ATTR_PAYLOAD_TEMPLATE: payload_template
-    }
+def _build_publish_data(topic, qos, retain):
+    """Build the arguments for the publish service without the payload."""
+    data = {ATTR_TOPIC: topic}
     if qos is not None:
         data[ATTR_QOS] = qos
-
     if retain is not None:
         data[ATTR_RETAIN] = retain
+    return data
 
+
+def publish(hass, topic, payload, qos=None, retain=None):
+    """Publish message to an MQTT topic."""
+    data = _build_publish_data(topic, qos, retain)
+    data[ATTR_PAYLOAD] = payload
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
-# pylint: enable=too-many-arguments
+
+
+def publish_template(hass, topic, payload_template, qos=None, retain=None):
+    """Publish message to an MQTT topic using a template payload."""
+    data = _build_publish_data(topic, qos, retain)
+    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
+    hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
 def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
