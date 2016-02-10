@@ -49,7 +49,7 @@ class RestNotificationService(BaseNotificationService):
     def __init__(self, resource, method, message_param_name,
                  title_param_name, target_param_name):
         self._resource = resource
-        self._method = method
+        self._method = method.upper()
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
@@ -62,18 +62,18 @@ class RestNotificationService(BaseNotificationService):
         }
 
         if self._title_param_name is not None:
-            data.update({self._title_param_name: kwargs.get(ATTR_TITLE)})
+            data[self._title_param_name] = kwargs.get(ATTR_TITLE)
 
         if self._target_param_name is not None:
-            data.update({self._title_param_name: kwargs.get(ATTR_TARGET)})
+            data[self._title_param_name] = kwargs.get(ATTR_TARGET)
 
-        if self._method.upper() == 'POST':
+        if self._method == 'POST':
             response = requests.post(self._resource, data=data, timeout=10)
-        elif self._method.upper() == 'POST_JSON':
+        elif self._method == 'POST_JSON':
             response = requests.post(self._resource, json=data, timeout=10)
         else:   # default GET
             response = requests.get(self._resource, params=data, timeout=10)
 
-        if response.status_code != 200 and response.status_code != 201:
+        if response.status_code not in (200, 201):
             _LOGGER.exception(
-                "Error sending message. Response: %s", response.reason)
+                "Error sending message. Response %d: %s:", response.status_code, response.reason)
