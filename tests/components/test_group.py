@@ -236,3 +236,14 @@ class TestComponentsGroup(unittest.TestCase):
         grp2 = group.Group(self.hass, 'Je suis Charlie')
 
         self.assertNotEqual(grp1.entity_id, grp2.entity_id)
+
+    def test_expand_entity_ids_expands_nested_groups(self):
+        group.Group(self.hass, 'light', ['light.test_1', 'light.test_2'])
+        group.Group(self.hass, 'switch', ['switch.test_1', 'switch.test_2'])
+        group.Group(self.hass, 'group_of_groups', ['group.light',
+                                                   'group.switch'])
+
+        self.assertEqual(
+            ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
+            sorted(group.expand_entity_ids(self.hass,
+                                           ['group.group_of_groups'])))
