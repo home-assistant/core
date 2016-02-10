@@ -76,4 +76,5 @@ class RestNotificationService(BaseNotificationService):
 
         if response.status_code not in (200, 201):
             _LOGGER.exception(
-                "Error sending message. Response %d: %s:", response.status_code, response.reason)
+                "Error sending message. Response %d: %s:",
+                response.status_code, response.reason)
