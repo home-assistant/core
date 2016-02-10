@@ -12,7 +12,6 @@ import signal
 import threading
 import enum
 import functools as ft
-from collections import namedtuple
 
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
@@ -45,9 +44,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 MIN_WORKER_THREAD = 2
 
 _LOGGER = logging.getLogger(__name__)
-
-# Temporary to support deprecated methods
-_MockHA = namedtuple("MockHomeAssistant", ['bus'])
 
 
 class HomeAssistant(object):
@@ -113,46 +109,6 @@ class HomeAssistant(object):
         self.pool.block_till_done()
 
         self.pool.stop()
-
-    def track_point_in_time(self, action, point_in_time):
-        """Deprecated method as of 8/4/2015 to track point in time."""
-        _LOGGER.warning(
-            'hass.track_point_in_time is deprecated. '
-            'Please use homeassistant.helpers.event.track_point_in_time')
-        import homeassistant.helpers.event as helper
-        helper.track_point_in_time(self, action, point_in_time)
-
-    def track_point_in_utc_time(self, action, point_in_time):
-        """Deprecated method as of 8/4/2015 to track point in UTC time."""
-        _LOGGER.warning(
-            'hass.track_point_in_utc_time is deprecated. '
-            'Please use homeassistant.helpers.event.track_point_in_utc_time')
-        import homeassistant.helpers.event as helper
-        helper.track_point_in_utc_time(self, action, point_in_time)
-
-    def track_utc_time_change(self, action,
-                              year=None, month=None, day=None,
-                              hour=None, minute=None, second=None):
-        """Deprecated method as of 8/4/2015 to track UTC time change."""
-        # pylint: disable=too-many-arguments
-        _LOGGER.warning(
-            'hass.track_utc_time_change is deprecated. '
-            'Please use homeassistant.helpers.event.track_utc_time_change')
-        import homeassistant.helpers.event as helper
-        helper.track_utc_time_change(self, action, year, month, day, hour,
-                                     minute, second)
-
-    def track_time_change(self, action,
-                          year=None, month=None, day=None,
-                          hour=None, minute=None, second=None, utc=False):
-        """Deprecated method as of 8/4/2015 to track time change."""
-        # pylint: disable=too-many-arguments
-        _LOGGER.warning(
-            'hass.track_time_change is deprecated. '
-            'Please use homeassistant.helpers.event.track_time_change')
-        import homeassistant.helpers.event as helper
-        helper.track_time_change(self, action, year, month, day, hour,
-                                 minute, second)
 
 
 class JobPriority(util.OrderedEnum):
@@ -526,15 +482,6 @@ class StateMachine(object):
                 event_data['old_state'] = old_state
 
             self._bus.fire(EVENT_STATE_CHANGED, event_data)
-
-    def track_change(self, entity_ids, action, from_state=None, to_state=None):
-        """DEPRECATED AS OF 8/4/2015."""
-        _LOGGER.warning(
-            'hass.states.track_change is deprecated. '
-            'Use homeassistant.helpers.event.track_state_change instead.')
-        import homeassistant.helpers.event as helper
-        helper.track_state_change(_MockHA(self._bus), entity_ids, action,
-                                  from_state, to_state)
 
 
 # pylint: disable=too-few-public-methods
