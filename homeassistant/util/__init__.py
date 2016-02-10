@@ -15,6 +15,7 @@ import socket
 import random
 import string
 from functools import wraps
+from types import MappingProxyType
 
 from .dt import datetime_to_local_str, utcnow
 
@@ -42,7 +43,7 @@ def slugify(text):
 
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
-    if isinstance(inp, dict):
+    if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
