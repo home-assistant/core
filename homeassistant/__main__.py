@@ -300,7 +300,7 @@ def main():
         return 0
     if args.restart_osx:
         uninstall_osx()
-        # A small delay is needed on systems to let the unload finish.
+        # A small delay is needed on some systems to let the unload finish.
         time.sleep(0.5)
         install_osx()
         return 0
