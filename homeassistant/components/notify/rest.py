@@ -11,12 +11,14 @@ import requests
 
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, BaseNotificationService)
+    DOMAIN, ATTR_TITLE, ATTR_TARGET, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_METHOD = 'GET'
-DEFAULT_PARAM_NAME = 'message'
+DEFAULT_MESSAGE_PARAM_NAME = 'message'
+DEFAULT_TITLE_PARAM_NAME = None
+DEFAULT_TARGET_PARAM_NAME = None
 
 
 def get_service(hass, config):
@@ -28,36 +30,50 @@ def get_service(hass, config):
         return None
 
     method = config.get('method', DEFAULT_METHOD)
-    param_name = config.get('param_name', DEFAULT_PARAM_NAME)
+    message_param_name = config.get('message_param_name',
+                                    DEFAULT_MESSAGE_PARAM_NAME)
+    title_param_name = config.get('title_param_name',
+                                  DEFAULT_TITLE_PARAM_NAME)
+    target_param_name = config.get('target_param_name',
+                                   DEFAULT_TARGET_PARAM_NAME)
 
-    return RestNotificationService(config['resource'], method, param_name)
+    return RestNotificationService(config['resource'], method,
+                                   message_param_name, title_param_name,
+                                   target_param_name)
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, disable-msg=too-many-arguments
 class RestNotificationService(BaseNotificationService):
     """ Implements notification service for REST. """
 
-    def __init__(self, resource, method=DEFAULT_METHOD,
-                 param_name=DEFAULT_PARAM_NAME):
+    def __init__(self, resource, method, message_param_name,
+                 title_param_name, target_param_name):
         self._resource = resource
         self._method = method
-        self.param_name = param_name
+        self._message_param_name = message_param_name
+        self._title_param_name = title_param_name
+        self._target_param_name = target_param_name
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
         data = {
-            self.param_name: message
+            self._message_param_name: message
         }
 
-        if self._method.upper() == 'GET':
-            response = requests.get(self._resource, params=data)
-        elif self._method.upper() == 'POST':
-            response = requests.post(self._resource, data=data)
-        elif self._method.upper() == 'JSON':
-            response = requests.post(self._resource, json=data)
+        if self._title_param_name is not None:
+            data.update({self._title_param_name: kwargs.get(ATTR_TITLE)})
 
-        if (response.status_code != requests.codes.ok and
-                response.status_code != requests.codes.created):
+        if self._target_param_name is not None:
+            data.update({self._title_param_name: kwargs.get(ATTR_TARGET)})
+
+        if self._method.upper() == 'POST':
+            response = requests.post(self._resource, data=data, timeout=10)
+        elif self._method.upper() == 'POST_JSON':
+            response = requests.post(self._resource, json=data, timeout=10)
+        else:   # default GET
+            response = requests.get(self._resource, params=data, timeout=10)
+
+        if response.status_code != 200 and response.status_code != 201:
             _LOGGER.exception(
                 "Error sending message. Response: %s", response.reason)
