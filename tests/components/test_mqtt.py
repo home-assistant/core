@@ -80,10 +80,9 @@ class TestMQTT(unittest.TestCase):
         """
         If 'payload_template' is provided and 'payload' is not, then render it.
         """
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1+1 }}"
-        }, blocking=True)
+        mqtt.publish(self.hass, "test/topic",
+                     **{mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1+1 }}"})
+        self.hass.pool.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
         self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "2")
 
@@ -93,11 +92,9 @@ class TestMQTT(unittest.TestCase):
         """
         payload = "not a template"
         payload_template = "a template"
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: payload,
-            mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
-        }, blocking=True)
+        mqtt.publish(self.hass, "test/topic", payload,
+                     **{mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template})
+        self.hass.pool.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
         self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], payload)
 
@@ -105,9 +102,8 @@ class TestMQTT(unittest.TestCase):
         """
         If neither 'payload' or 'payload_template' is provided then fail.
         """
-        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
-            mqtt.ATTR_TOPIC: "test/topic"
-        }, blocking=True)
+        mqtt.publish(self.hass, "test/topic")
+        self.hass.pool.block_till_done()
         self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
 
     def test_subscribe_topic(self):
