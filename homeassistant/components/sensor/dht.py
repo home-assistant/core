@@ -23,6 +23,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', None],
     'humidity': ['Humidity', '%']
 }
+DEFAULT_NAME = "DHT Sensor"
 # Return cached results if last scan was less then this time ago
 # DHT11 is able to deliver data once per second, DHT22 once every two
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
@@ -53,12 +54,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = DHTClient(Adafruit_DHT, sensor, pin)
     dev = []
+    name = config.get('name', DEFAULT_NAME)
+
     try:
         for variable in config['monitored_conditions']:
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(DHTSensor(data, variable, unit))
+                dev.append(DHTSensor(data, variable, unit, name))
     except KeyError:
         pass
 
@@ -69,8 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DHTSensor(Entity):
     """ Implements an DHT sensor. """
 
-    def __init__(self, dht_client, sensor_type, temp_unit):
-        self.client_name = 'DHT sensor'
+    def __init__(self, dht_client, sensor_type, temp_unit, name):
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.dht_client = dht_client
         self.temp_unit = temp_unit
