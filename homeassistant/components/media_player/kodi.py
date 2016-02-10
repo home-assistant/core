@@ -35,12 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-def _get_image_url(kodi_url):
-    """ Helper function that parses the thumbnail URLs used by Kodi. """
-    url_components = urllib.parse.urlparse(kodi_url)
 
-    if url_components.scheme == 'image':
-        return urllib.parse.unquote(url_components.netloc)
 
 
 class KodiDevice(MediaPlayerDevice):
@@ -155,7 +150,17 @@ class KodiDevice(MediaPlayerDevice):
     def media_image_url(self):
         """ Image url of current playing media. """
         if self._item is not None:
-            return _get_image_url(self._item['thumbnail'])
+            return self._get_image_url()
+
+    def _get_image_url(self):
+        """ Helper function that parses the thumbnail URLs used by Kodi. """
+        url_components = urllib.parse.urlparse(self._item['thumbnail'])
+        
+        if url_components.scheme == 'image':
+            return\
+                self._url.split('/jsonrpc')[0] +\
+                "/image/" +\
+                urllib.parse.quote_plus(self._item['thumbnail'])
 
     @property
     def media_title(self):
