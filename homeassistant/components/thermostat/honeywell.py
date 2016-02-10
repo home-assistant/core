@@ -52,20 +52,42 @@ def _setup_round(username, password, config, add_devices):
         return False
 
 
+# config will be used later
+# pylint: disable=unused-argument
+def _setup_us(username, password, config, add_devices):
+    session = requests.Session()
+    if not HoneywellUSThermostat.do_login(session, username, password):
+        _LOGGER.error('Failed to login to honeywell account %s', username)
+        return False
+
+    thermostats = HoneywellUSThermostat.get_devices(session)
+    if not thermostats:
+        _LOGGER.error('No thermostats found in account %s', username)
+        return False
+
+    add_devices([HoneywellUSThermostat(id_, username, password,
+                                       name=name,
+                                       session=session)
+                 for id_, name in thermostats.items()])
+
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the honeywel thermostat. """
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    thermostat_id = config.get('id')
+    region = config.get('region', 'eu').lower()
 
     if username is None or password is None:
         _LOGGER.error("Missing required configuration items %s or %s",
                       CONF_USERNAME, CONF_PASSWORD)
         return False
+    if region not in ('us', 'eu'):
+        _LOGGER.error('Region `%s` is invalid (use either us or eu)', region)
+        return False
 
-    if thermostat_id:
-        add_devices([HoneywellUSThermostat(thermostat_id, username, password)])
+    if region == 'us':
+        return _setup_us(username, password, config, add_devices)
     else:
         return _setup_round(username, password, config, add_devices)
 
@@ -157,35 +179,81 @@ class RoundThermostat(ThermostatDevice):
 class HoneywellUSThermostat(ThermostatDevice):
     """ Represents a Honeywell US Thermostat. """
 
-    def __init__(self, ident, username, password):
+    # pylint: disable=too-many-arguments
+    def __init__(self, ident, username, password, name='honeywell',
+                 session=None):
         self._ident = ident
         self._username = username
         self._password = password
-        self._session = requests.Session()
+        self._name = name
+        if not session:
+            self._session = requests.Session()
+            self._login()
+        self._session = session
         # Maybe this should be configurable?
         self._timeout = 30
         # Yeah, really.
         self._session.headers['X-Requested-With'] = 'XMLHttpRequest'
         self._update()
 
-    def _login(self):
-        self._session.get(US_BASEURL, timeout=self._timeout)
-        params = {'UserName': self._username,
-                  'Password': self._password,
+    @staticmethod
+    def get_devices(session):
+        """ Return a dict of devices.
+
+        :param session: A session already primed from do_login
+        :returns: A dict of devices like: device_id=name
+        """
+        url = '%s/Location/GetLocationListData' % US_BASEURL
+        resp = session.post(url, params={'page': 1, 'filter': ''})
+        if resp.status_code == 200:
+            return {device['DeviceID']: device['Name']
+                    for device in resp.json()[0]['Devices']}
+        else:
+            return None
+
+    @staticmethod
+    def do_login(session, username, password, timeout=30):
+        """ Log into mytotalcomfort.com
+
+        :param session: A requests.Session object to use
+        :param username: Account username
+        :param password: Account password
+        :param timeout: Timeout to use with requests
+        :returns: A boolean indicating success
+        """
+        session.headers['X-Requested-With'] = 'XMLHttpRequest'
+        session.get(US_BASEURL, timeout=timeout)
+        params = {'UserName': username,
+                  'Password': password,
                   'RememberMe': 'false',
                   'timeOffset': 480}
-        resp = self._session.post(US_BASEURL, params=params,
-                                  timeout=self._timeout)
+        resp = session.post(US_BASEURL, params=params,
+                            timeout=timeout)
         if resp.status_code != 200:
-            _LOGGER('Login failed for user %(user)s',
-                    dict(user=self._username))
+            _LOGGER('Login failed for user %s', username)
             return False
         else:
             return True
 
+    def _login(self):
+        return self.do_login(self._session, self._username, self._password,
+                             timeout=self._timeout)
+
+    def _keepalive(self):
+        resp = self._session.get('%s/Account/KeepAlive')
+        if resp.status_code != 200:
+            if self._login():
+                _LOGGER.info('Re-logged into honeywell account')
+            else:
+                _LOGGER.error('Failed to re-login to honeywell account')
+                return False
+        else:
+            _LOGGER.debug('Keepalive succeeded')
+        return True
+
     def _get_data(self):
-        if not self._login():
-            return
+        if not self._keepalive:
+            return {'error': 'not logged in'}
         url = '%s/Device/CheckDataSession/%s' % (US_BASEURL, self._ident)
         resp = self._session.get(url, timeout=self._timeout)
         if resp.status_code < 300:
@@ -194,8 +262,8 @@ class HoneywellUSThermostat(ThermostatDevice):
             return {'error': resp.status_code}
 
     def _set_data(self, data):
-        if not self._login():
-            return
+        if not self._keepalive:
+            return {'error': 'not logged in'}
         url = '%s/Device/SubmitControlScreenChanges' % US_BASEURL
         data['DeviceID'] = self._ident
         resp = self._session.post(url, data=data, timeout=self._timeout)
@@ -205,7 +273,9 @@ class HoneywellUSThermostat(ThermostatDevice):
             return {'error': resp.status_code}
 
     def _update(self):
-        self._data = self._get_data()['latestData']
+        data = self._get_data()['latestData']
+        if 'error' not in data:
+            self._data = data
 
     @property
     def is_fan_on(self):
@@ -213,7 +283,7 @@ class HoneywellUSThermostat(ThermostatDevice):
 
     @property
     def name(self):
-        return 'honeywell'
+        return self._name
 
     @property
     def unit_of_measurement(self):
