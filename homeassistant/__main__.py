@@ -7,6 +7,7 @@ import sys
 import threading
 import os
 import argparse
+import time
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
@@ -299,6 +300,8 @@ def main():
         return 0
     if args.restart_osx:
         uninstall_osx()
+        # A small delay is needed on systems to let the unload finish.
+        time.sleep(0.5)
         install_osx()
         return 0
 
