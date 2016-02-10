@@ -21,6 +21,9 @@ SoCo==0.11.1
 # homeassistant.components.notify.twitter
 TwitterAPI==2.3.6
 
+# homeassistant.components.apcupsd
+apcaccess==0.0.4
+
 # homeassistant.components.sun
 astral==0.9
 
