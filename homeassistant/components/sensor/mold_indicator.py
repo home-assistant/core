@@ -27,7 +27,7 @@ MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
 
 ATTR_DEWPOINT = "Dewpoint"
-ATTR_CRITICAL_TEMP = "Estimated Critical Temperature"
+ATTR_CRITICAL_TEMP = "Est. Crit. Temp"
 
 
 # pylint: disable=unused-argument
