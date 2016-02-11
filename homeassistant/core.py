@@ -10,9 +10,9 @@ import time
 import logging
 import signal
 import threading
+from types import MappingProxyType
 import enum
 import functools as ft
-from collections import namedtuple
 
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
@@ -20,7 +20,8 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
     EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
     EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA,
+    RESTART_EXIT_CODE)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util as util
@@ -44,12 +45,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 MIN_WORKER_THREAD = 2
 
 _LOGGER = logging.getLogger(__name__)
-
-# Temporary to support deprecated methods
-_MockHA = namedtuple("MockHomeAssistant", ['bus'])
-
-# The exit code to send to request a restart
-RESTART_EXIT_CODE = 100
 
 
 class HomeAssistant(object):
@@ -97,7 +92,10 @@ class HomeAssistant(object):
                 'Could not bind to SIGTERM. Are you running in a thread?')
 
         while not request_shutdown.isSet():
-            time.sleep(1)
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                break
 
         self.stop()
         return RESTART_EXIT_CODE if request_restart.isSet() else 0
@@ -112,46 +110,6 @@ class HomeAssistant(object):
         self.pool.block_till_done()
 
         self.pool.stop()
-
-    def track_point_in_time(self, action, point_in_time):
-        """Deprecated method as of 8/4/2015 to track point in time."""
-        _LOGGER.warning(
-            'hass.track_point_in_time is deprecated. '
-            'Please use homeassistant.helpers.event.track_point_in_time')
-        import homeassistant.helpers.event as helper
-        helper.track_point_in_time(self, action, point_in_time)
-
-    def track_point_in_utc_time(self, action, point_in_time):
-        """Deprecated method as of 8/4/2015 to track point in UTC time."""
-        _LOGGER.warning(
-            'hass.track_point_in_utc_time is deprecated. '
-            'Please use homeassistant.helpers.event.track_point_in_utc_time')
-        import homeassistant.helpers.event as helper
-        helper.track_point_in_utc_time(self, action, point_in_time)
-
-    def track_utc_time_change(self, action,
-                              year=None, month=None, day=None,
-                              hour=None, minute=None, second=None):
-        """Deprecated method as of 8/4/2015 to track UTC time change."""
-        # pylint: disable=too-many-arguments
-        _LOGGER.warning(
-            'hass.track_utc_time_change is deprecated. '
-            'Please use homeassistant.helpers.event.track_utc_time_change')
-        import homeassistant.helpers.event as helper
-        helper.track_utc_time_change(self, action, year, month, day, hour,
-                                     minute, second)
-
-    def track_time_change(self, action,
-                          year=None, month=None, day=None,
-                          hour=None, minute=None, second=None, utc=False):
-        """Deprecated method as of 8/4/2015 to track time change."""
-        # pylint: disable=too-many-arguments
-        _LOGGER.warning(
-            'hass.track_time_change is deprecated. '
-            'Please use homeassistant.helpers.event.track_time_change')
-        import homeassistant.helpers.event as helper
-        helper.track_time_change(self, action, year, month, day, hour,
-                                 minute, second)
 
 
 class JobPriority(util.OrderedEnum):
@@ -352,7 +310,7 @@ class State(object):
 
         self.entity_id = entity_id.lower()
         self.state = state
-        self.attributes = attributes or {}
+        self.attributes = MappingProxyType(attributes or {})
         self.last_updated = dt_util.strip_microseconds(
             last_updated or dt_util.utcnow())
 
@@ -380,12 +338,6 @@ class State(object):
             self.attributes.get(ATTR_FRIENDLY_NAME) or
             self.object_id.replace('_', ' '))
 
-    def copy(self):
-        """Return a copy of the state."""
-        return State(self.entity_id, self.state,
-                     dict(self.attributes), self.last_changed,
-                     self.last_updated)
-
     def as_dict(self):
         """Return a dict representation of the State.
 
@@ -394,7 +346,7 @@ class State(object):
         """
         return {'entity_id': self.entity_id,
                 'state': self.state,
-                'attributes': self.attributes,
+                'attributes': dict(self.attributes),
                 'last_changed': dt_util.datetime_to_str(self.last_changed),
                 'last_updated': dt_util.datetime_to_str(self.last_updated)}
 
@@ -458,14 +410,11 @@ class StateMachine(object):
     def all(self):
         """Create a list of all states."""
         with self._lock:
-            return [state.copy() for state in self._states.values()]
+            return list(self._states.values())
 
     def get(self, entity_id):
         """Retrieve state of entity_id or None if not found."""
-        state = self._states.get(entity_id.lower())
-
-        # Make a copy so people won't mutate the state
-        return state.copy() if state else None
+        return self._states.get(entity_id.lower())
 
     def is_state(self, entity_id, state):
         """Test if entity exists and is specified state."""
@@ -525,15 +474,6 @@ class StateMachine(object):
                 event_data['old_state'] = old_state
 
             self._bus.fire(EVENT_STATE_CHANGED, event_data)
-
-    def track_change(self, entity_ids, action, from_state=None, to_state=None):
-        """DEPRECATED AS OF 8/4/2015."""
-        _LOGGER.warning(
-            'hass.states.track_change is deprecated. '
-            'Use homeassistant.helpers.event.track_state_change instead.')
-        import homeassistant.helpers.event as helper
-        helper.track_state_change(_MockHA(self._bus), entity_ids, action,
-                                  from_state, to_state)
 
 
 # pylint: disable=too-few-public-methods

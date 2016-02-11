@@ -80,7 +80,20 @@ class Entity(object):
 
     @property
     def state_attributes(self):
-        """Return the state attributes."""
+        """
+        Return the state attributes.
+
+        Implemented by component base class.
+        """
+        return None
+
+    @property
+    def device_state_attributes(self):
+        """
+        Return device specific state attributes.
+
+        Implemented by platform classes.
+        """
         return None
 
     @property
@@ -134,6 +147,11 @@ class Entity(object):
 
         state = str(self.state)
         attr = self.state_attributes or {}
+
+        device_attr = self.device_state_attributes
+
+        if device_attr is not None:
+            attr.update(device_attr)
 
         if ATTR_UNIT_OF_MEASUREMENT not in attr and \
            self.unit_of_measurement is not None:

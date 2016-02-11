@@ -48,7 +48,7 @@ def as_utc(dattim):
     if dattim.tzinfo == UTC:
         return dattim
     elif dattim.tzinfo is None:
-        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
+        dattim = DEFAULT_TIME_ZONE.localize(dattim)
 
     return dattim.astimezone(UTC)
 
@@ -58,7 +58,7 @@ def as_local(dattim):
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
     elif dattim.tzinfo is None:
-        dattim = dattim.replace(tzinfo=UTC)
+        dattim = UTC.localize(dattim)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 

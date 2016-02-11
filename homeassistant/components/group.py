@@ -71,7 +71,7 @@ def expand_entity_ids(hass, entity_ids):
             if domain == DOMAIN:
                 found_ids.extend(
                     ent_id for ent_id
-                    in get_entity_ids(hass, entity_id)
+                    in expand_entity_ids(hass, get_entity_ids(hass, entity_id))
                     if ent_id not in found_ids)
 
             else:

@@ -87,7 +87,7 @@ class RfxtrxSensor(Entity):
         return self._name
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         return self.event.values
 
     @property
