@@ -54,6 +54,7 @@ import logging
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.location import distance
+from homeassistant.components import zone
 
 DEPENDENCIES = ['zone', 'device_tracker']
 
@@ -171,12 +172,24 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         # check for devices in the monitored zone
         for device in self.proximity_devices:
             device_state = self.hass.states.get(device)
+            if 'latitude' not in device_state.attributes:
+                continue
 
-            if device_state.state not in self.ignored_zones:
-                devices_to_calculate = True
+            device_state_lat = device_state.attributes['latitude']
+            device_state_lon = device_state.attributes['longitude']
+
+            for ignored_zone in self.ignored_zones:
+                ignored_zone_state = self.hass.states.get('zone.' +
+                                                          ignored_zone)
+                if not zone.in_zone(ignored_zone_state,
+                                    device_state_lat,
+                                    device_state_lon):
+                    devices_to_calculate = True
 
             # check the location of all devices
-            if (device_state.state).lower() == (self.friendly_name).lower():
+            if zone.in_zone(zone_state,
+                            device_state_lat,
+                            device_state_lon):
                 device_friendly = device_state.name
                 if devices_in_zone != '':
                     devices_in_zone = devices_in_zone + ', '
@@ -207,18 +220,31 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         for device in self.proximity_devices:
             # ignore devices in an ignored zone
             device_state = self.hass.states.get(device)
-            if device_state.state in self.ignored_zones:
-                continue
 
             # ignore devices if proximity cannot be calculated
             if 'latitude' not in device_state.attributes:
                 continue
 
+            device_state_lat = device_state.attributes['latitude']
+            device_state_lon = device_state.attributes['longitude']
+
+            device_in_ignored_zone = False
+            for ignored_zone in self.ignored_zones:
+                ignored_zone_state = self.hass.states.get('zone.' +
+                                                          ignored_zone)
+                if zone.in_zone(ignored_zone_state,
+                                device_state_lat,
+                                device_state_lon):
+                    device_in_ignored_zone = True
+                    continue
+            if device_in_ignored_zone:
+                continue
+
             # calculate the distance to the proximity zone
             dist_to_zone = distance(proximity_latitude,
                                     proximity_longitude,
-                                    device_state.attributes['latitude'],
-                                    device_state.attributes['longitude'])
+                                    device_state_lat,
+                                    device_state_lon)
 
             # add the device and distance to a dictionary
             distances_to_zone[device] = round(dist_to_zone / 1000, 1)
