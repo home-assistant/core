@@ -5,7 +5,6 @@ Provides a sensor to track various status aspects of a UPS.
 """
 import logging
 
-from homeassistant.core import JobPriority
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import apcupsd
@@ -32,28 +31,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(
             "You must include a '%s' when configuring an APCUPSd sensor.",
             apcupsd.CONF_TYPE)
-        return
+        return False
     typ = typ.upper()
 
-    # Get a status reading from APCUPSd and check whether the user provided
-    # 'type' is present in the output. If we're not able to check, then assume
-    # the user knows what they're doing.
-    # pylint: disable=broad-except
-    status = None
-    try:
-        status = apcupsd.GET_STATUS()
-        if typ not in status:
-            _LOGGER.error(
-                "Specified '%s' of '%s' does not appear in the APCUPSd status "
-                "output.", apcupsd.CONF_TYPE, typ)
-            return
-    except Exception as exc:
-        _LOGGER.warning(
-            "Unable to fetch initial value from ACPUPSd to check that '%s' is "
-            "a supported '%s': %s", typ, apcupsd.CONF_TYPE, exc)
-    unit = SPECIFIC_UNITS.get(typ)
+    if typ not in apcupsd.DATA.status:
+        _LOGGER.error(
+            "Specified '%s' of '%s' does not appear in the APCUPSd status "
+            "output.", apcupsd.CONF_TYPE, typ)
+        return False
+
     add_entities((
-        Sensor(hass, config, unit=unit, initial_status=status),
+        Sensor(config, apcupsd.DATA, unit=SPECIFIC_UNITS.get(typ)),
     ))
 
 
@@ -72,16 +60,12 @@ def infer_unit(value):
 
 class Sensor(Entity):
     """ Generic sensor entity for APCUPSd status values. """
-    def __init__(self, hass, config, unit=None, initial_status=None):
+    def __init__(self, config, data, unit=None):
         self._config = config
         self._unit = unit
-        self._state = None
+        self._data = data
         self._inferred_unit = None
-        if initial_status is None:
-            hass.pool.add_job(
-                JobPriority.EVENT_STATE, (self.update_ha_state, True))
-        else:
-            self._update_from_status(initial_status)
+        self.update()
 
     @property
     def name(self):
@@ -99,9 +83,5 @@ class Sensor(Entity):
 
     def update(self):
         """ Get the latest status and use it to update our sensor state. """
-        self._update_from_status(apcupsd.GET_STATUS())
-
-    def _update_from_status(self, status):
-        """ Set state and infer unit from status. """
         key = self._config[apcupsd.CONF_TYPE].upper()
-        self._state, self._inferred_unit = infer_unit(status[key])
+        self._state, self._inferred_unit = infer_unit(self._data.status[key])
