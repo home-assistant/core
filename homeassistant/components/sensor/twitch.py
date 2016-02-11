@@ -67,7 +67,7 @@ class TwitchSensor(Entity):
             self._state = STATE_OFFLINE
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns the state attributes. """
         if self._state == STATE_STREAMING:
             return {

@@ -425,11 +425,6 @@ class MediaPlayerDevice(Entity):
         """ Flags of media commands that are supported. """
         return 0
 
-    @property
-    def device_state_attributes(self):
-        """ Extra attributes a device wants to expose. """
-        return None
-
     def turn_on(self):
         """ turn the media player on. """
         raise NotImplementedError()
@@ -545,10 +540,5 @@ class MediaPlayerDevice(Entity):
 
             if self.media_image_url:
                 state_attr[ATTR_ENTITY_PICTURE] = self.media_image_url
-
-        device_attr = self.device_state_attributes
-
-        if device_attr:
-            state_attr.update(device_attr)
 
         return state_attr

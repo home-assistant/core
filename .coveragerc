@@ -6,9 +6,13 @@ omit =
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/alarm_control_panel/alarmdotcom.py
+    homeassistant/components/alarm_control_panel/nx584.py
 
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
+
+    homeassistant/components/bloomsky.py
+    homeassistant/components/*/bloomsky.py
 
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
@@ -102,6 +106,7 @@ omit =
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
+    homeassistant/components/notify/rest.py
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/syslog.py
