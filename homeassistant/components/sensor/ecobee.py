@@ -64,6 +64,11 @@ class EcobeeSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self):
+        """Unique id of this sensor."""
+        return "sensor_ecobee_{}_{}".format(self.type, self.index)
+
+    @property
     def unit_of_measurement(self):
         """ Unit of measurement this sensor expresses itself in. """
         return self._unit_of_measurement

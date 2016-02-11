@@ -12,8 +12,10 @@ import socket
 import time
 
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
+from homeassistant.util import template
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -49,24 +51,34 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
+ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = 'qos'
 ATTR_RETAIN = 'retain'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-def publish(hass, topic, payload, qos=None, retain=None):
-    """Publish message to an MQTT topic."""
-    data = {
-        ATTR_TOPIC: topic,
-        ATTR_PAYLOAD: payload,
-    }
+def _build_publish_data(topic, qos, retain):
+    """Build the arguments for the publish service without the payload."""
+    data = {ATTR_TOPIC: topic}
     if qos is not None:
         data[ATTR_QOS] = qos
-
     if retain is not None:
         data[ATTR_RETAIN] = retain
+    return data
 
+
+def publish(hass, topic, payload, qos=None, retain=None):
+    """Publish message to an MQTT topic."""
+    data = _build_publish_data(topic, qos, retain)
+    data[ATTR_PAYLOAD] = payload
+    hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
+
+
+def publish_template(hass, topic, payload_template, qos=None, retain=None):
+    """Publish message to an MQTT topic using a template payload."""
+    data = _build_publish_data(topic, qos, retain)
+    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
@@ -132,15 +144,34 @@ def setup(hass, config):
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
         payload = call.data.get(ATTR_PAYLOAD)
+        payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos = call.data.get(ATTR_QOS, DEFAULT_QOS)
         retain = call.data.get(ATTR_RETAIN, DEFAULT_RETAIN)
+        if payload is None:
+            if payload_template is None:
+                _LOGGER.error(
+                    "You must set either '%s' or '%s' to use this service",
+                    ATTR_PAYLOAD, ATTR_PAYLOAD_TEMPLATE)
+                return
+            try:
+                payload = template.render(hass, payload_template)
+            except template.jinja2.TemplateError as exc:
+                _LOGGER.error(
+                    "Unable to publish to '%s': rendering payload template of "
+                    "'%s' failed because %s.",
+                    msg_topic, payload_template, exc)
+                return
         if msg_topic is None or payload is None:
             return
         MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
-    hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
+                           descriptions.get(SERVICE_PUBLISH))
 
     return True
 

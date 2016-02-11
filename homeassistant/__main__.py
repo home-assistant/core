@@ -7,10 +7,12 @@ import sys
 import threading
 import os
 import argparse
+import time
 
 from homeassistant import bootstrap
 import homeassistant.config as config_util
-from homeassistant.const import __version__, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (__version__, EVENT_HOMEASSISTANT_START,
+                                 RESTART_EXIT_CODE)
 
 
 def validate_python():
@@ -76,6 +78,11 @@ def get_arguments():
         '--demo-mode',
         action='store_true',
         help='Start Home Assistant in demo mode')
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Start Home Assistant in debug mode. Runs in single process to '
+        'enable use of interactive debuggers.')
     parser.add_argument(
         '--open-ui',
         action='store_true',
@@ -207,8 +214,11 @@ def uninstall_osx():
     print("Home Assistant has been uninstalled.")
 
 
-def setup_and_run_hass(config_dir, args):
-    """ Setup HASS and run. Block until stopped. """
+def setup_and_run_hass(config_dir, args, top_process=False):
+    """
+    Setup HASS and run. Block until stopped. Will assume it is running in a
+    subprocess unless top_process is set to true.
+    """
     if args.demo_mode:
         config = {
             'frontend': {},
@@ -235,7 +245,11 @@ def setup_and_run_hass(config_dir, args):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
     hass.start()
-    sys.exit(int(hass.block_till_stopped()))
+    exit_code = int(hass.block_till_stopped())
+
+    if not top_process:
+        sys.exit(exit_code)
+    return exit_code
 
 
 def run_hass_process(hass_proc):
@@ -243,8 +257,8 @@ def run_hass_process(hass_proc):
     requested_stop = threading.Event()
     hass_proc.daemon = True
 
-    def request_stop():
-        """ request hass stop """
+    def request_stop(*args):
+        """ request hass stop, *args is for signal handler callback """
         requested_stop.set()
         hass_proc.terminate()
 
@@ -262,7 +276,10 @@ def run_hass_process(hass_proc):
             hass_proc.join()
         except KeyboardInterrupt:
             return False
-    return not requested_stop.isSet() and hass_proc.exitcode == 100
+
+    return (not requested_stop.isSet() and
+            hass_proc.exitcode == RESTART_EXIT_CODE,
+            hass_proc.exitcode)
 
 
 def main():
@@ -277,14 +294,16 @@ def main():
     # os x launchd functions
     if args.install_osx:
         install_osx()
-        return
+        return 0
     if args.uninstall_osx:
         uninstall_osx()
-        return
+        return 0
     if args.restart_osx:
         uninstall_osx()
+        # A small delay is needed on some systems to let the unload finish.
+        time.sleep(0.5)
         install_osx()
-        return
+        return 0
 
     # daemon functions
     if args.pid_file:
@@ -294,12 +313,23 @@ def main():
     if args.pid_file:
         write_pid(args.pid_file)
 
+    # Run hass in debug mode if requested
+    if args.debug:
+        sys.stderr.write('Running in debug mode. '
+                         'Home Assistant will not be able to restart.\n')
+        exit_code = setup_and_run_hass(config_dir, args, top_process=True)
+        if exit_code == RESTART_EXIT_CODE:
+            sys.stderr.write('Home Assistant requested a '
+                             'restart in debug mode.\n')
+        return exit_code
+
     # Run hass as child process. Restart if necessary.
     keep_running = True
     while keep_running:
         hass_proc = Process(target=setup_and_run_hass, args=(config_dir, args))
-        keep_running = run_hass_process(hass_proc)
+        keep_running, exit_code = run_hass_process(hass_proc)
+    return exit_code
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

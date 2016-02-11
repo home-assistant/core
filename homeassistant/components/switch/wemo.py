@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.3.8']
+REQUIREMENTS = ['pywemo==0.3.9']
 _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
@@ -95,8 +95,8 @@ class WemoSwitch(SwitchDevice):
         return self.wemo.name
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
         if self.maker_params:
             # Is the maker sensor on or off.
             if self.maker_params['hassensor']:
@@ -152,6 +152,18 @@ class WemoSwitch(SwitchDevice):
     def is_on(self):
         """ True if switch is on. """
         return self.wemo.get_state()
+
+    @property
+    def available(self):
+        """ True if switch is available. """
+        if (self.wemo.model_name == 'Insight' and
+                self.insight_params is None):
+            return False
+
+        if (self.wemo.model_name == 'Maker' and
+                self.maker_params is None):
+            return False
+        return True
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
