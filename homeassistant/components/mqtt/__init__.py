@@ -12,6 +12,7 @@ import socket
 import time
 
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
 from homeassistant.util import template
@@ -166,7 +167,11 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
 
-    hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service)
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
+                           descriptions.get(SERVICE_PUBLISH))
 
     return True
 
