@@ -152,7 +152,7 @@ omit =
     homeassistant/components/thermostat/honeywell.py
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
-
+    homeassistant/components/garage_door/wink.py
 
 [report]
 # Regexes for lines to exclude from consideration
