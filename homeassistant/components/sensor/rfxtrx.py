@@ -21,7 +21,9 @@ DATA_TYPES = OrderedDict([
     ('Humidity', '%'),
     ('Barometer', ''),
     ('Wind direction', ''),
-    ('Rain rate', '')])
+    ('Rain rate', ''),
+    ('Energy usage', 'W'),
+    ('Total usage', 'W')])
 _LOGGER = logging.getLogger(__name__)
 
 
