@@ -1,4 +1,4 @@
-# Home Assistant [![Build Status](https://travis-ci.org/balloob/home-assistant.svg?branch=master)](https://travis-ci.org/balloob/home-assistant) [![Coverage Status](https://img.shields.io/coveralls/balloob/home-assistant.svg)](https://coveralls.io/r/balloob/home-assistant?branch=master) [![Join the chat at https://gitter.im/balloob/home-assistant](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/balloob/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Home Assistent [![Build Status](https://travis-ci.org/balloob/home-assistant.svg?branch=master)](https://travis-ci.org/balloob/home-assistant) [![Coverage Status](https://img.shields.io/coveralls/balloob/home-assistant.svg)](https://coveralls.io/r/balloob/home-assistant?branch=master) [![Join the chat at https://gitter.im/balloob/home-assistant](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/balloob/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [demo]: https://home-assistant.io/demo/
 
