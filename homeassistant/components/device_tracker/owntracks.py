@@ -95,7 +95,8 @@ def setup_scanner(hass, config, see):
                         MOBILE_BEACONS_ACTIVE[dev_id].append(location)
                 else:
                     # Normal region
-                    kwargs['location_name'] = location
+                    if not zone.attributes.get('passive'):
+                        kwargs['location_name'] = location
 
                     regions = REGIONS_ENTERED[dev_id]
                     if location not in regions:
@@ -115,7 +116,8 @@ def setup_scanner(hass, config, see):
             if new_region:
                 # Exit to previous region
                 zone = hass.states.get("zone.{}".format(new_region))
-                kwargs['location_name'] = new_region
+                if not zone.attributes.get('passive'):
+                    kwargs['location_name'] = new_region
                 _set_gps_from_zone(kwargs, zone)
                 _LOGGER.info("Exit from to %s", new_region)
 
