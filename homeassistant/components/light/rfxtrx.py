@@ -40,10 +40,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
                 rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
-                if not isinstance(rfxobject.device, rfxtrxmod.LightDevice):
-                    _LOGGER.exception("%s is not a light",
-                                      entity_info[ATTR_NAME])
-                    return
                 new_light = RfxtrxLight(
                     entity_info[ATTR_NAME], rfxobject, datas
                 )
@@ -54,7 +50,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def light_update(event):
         """ Callback for light updates from the RFXtrx gateway. """
-        if not isinstance(event.device, rfxtrxmod.LightDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
+                not event.device.known_to_be_dimmable:
             return
 
         # Add entity if not exist and the automatic_add is True
