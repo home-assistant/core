@@ -91,11 +91,11 @@ class GarageDoorDevice(Entity):
         """ Is the garage door closed or opened. """
         return None
 
-    def close(self):
+    def close_door(self):
         """ Closes the garage door. """
         raise NotImplementedError()
 
-    def open(self):
+    def open_door(self):
         """ Opens the garage door. """
         raise NotImplementedError()
 
