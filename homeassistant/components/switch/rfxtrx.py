@@ -49,8 +49,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if not isinstance(event.device, rfxtrxmod.SwitchDevice) or \
-                isinstance(event.device, rfxtrxmod.LightDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
+                event.device.known_to_be_dimmable:
             return
 
         # Add entity if not exist and the automatic_add is True
