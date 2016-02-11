@@ -6,7 +6,7 @@ Component to interface with garage doors that can be controlled remotely.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/garage_door/
 """
-from datetime import timedelta
+
 import logging
 import os
 
@@ -27,10 +27,6 @@ ENTITY_ID_ALL_GARAGE_DOORS = group.ENTITY_ID_FORMAT.format('all_garage_doors')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_CLOSED = "closed"
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_GARAGE_DOORS: 'wink'
@@ -38,20 +34,19 @@ DISCOVERY_PLATFORMS = {
 
 _LOGGER = logging.getLogger(__name__)
 
-
 def is_closed(hass, entity_id=None):
     """ Returns if the garage door is closed based on the statemachine. """
     entity_id = entity_id or ENTITY_ID_ALL_GARAGE_DOORS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
-def close_door(hass, entity_id=None):
+def close(hass, entity_id=None):
     """ Closes all or specified garage door. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE, data)
 
 
-def open_door(hass, entity_id=None):
+def open(hass, entity_id=None):
     """ Open all or specified garage door. """
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN, data)
@@ -70,9 +65,9 @@ def setup(hass, config):
 
         for item in target_locks:
             if service.service == SERVICE_CLOSE:
-                item.close_door()
+                item.close()
             else:
-                item.open_door()
+                item.open()
 
             if item.should_poll:
                 item.update_ha_state(True)
@@ -96,11 +91,11 @@ class GarageDoorDevice(Entity):
         """ Is the garage door closed or opened. """
         return None
 
-    def close_door(self):
+    def close(self):
         """ Closes the garage door. """
         raise NotImplementedError()
 
-    def open_door(self):
+    def open(self):
         """ Opens the garage door. """
         raise NotImplementedError()
 
@@ -110,3 +105,4 @@ class GarageDoorDevice(Entity):
         if closed is None:
             return STATE_UNKNOWN
         return STATE_CLOSED if closed else STATE_OPEN
+
