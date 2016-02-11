@@ -232,7 +232,7 @@ class Recorder(threading.Thread):
         else:
             state_domain = state.domain
             state_state = state.state
-            state_attr = json.dumps(state.attributes)
+            state_attr = json.dumps(dict(state.attributes))
             last_changed = state.last_changed
             last_updated = state.last_updated
 
