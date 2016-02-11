@@ -9,13 +9,20 @@ https://home-assistant.io/components/light.vera/
 import logging
 
 from requests.exceptions import RequestException
-from homeassistant.components.switch.vera import VeraSwitch
+import homeassistant.util.dt as dt_util
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_ON
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_TRIPPED,
+    ATTR_ARMED,
+    ATTR_LAST_TRIP_TIME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_OFF)
 
-REQUIREMENTS = ['pyvera==0.2.7']
+REQUIREMENTS = ['pyvera==0.2.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,17 +74,35 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(lights)
 
 
-class VeraLight(VeraSwitch):
+class VeraLight(Light):
     """ Represents a Vera Light, including dimmable. """
 
+    def __init__(self, vera_device, controller, extra_data=None):
+        self.vera_device = vera_device
+        self.extra_data = extra_data
+        self.controller = controller
+        if self.extra_data and self.extra_data.get('name'):
+            self._name = self.extra_data.get('name')
+        else:
+            self._name = self.vera_device.name
+        self._state = STATE_OFF
+
+        self.controller.register(vera_device, self._update_callback)
+        self.update()
+
+    def _update_callback(self, _device):
+        self.update_ha_state(True)
+
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def name(self):
+        """ Get the mame of the switch. """
+        return self._name
 
+    @property
+    def brightness(self):
+        """Brightness of the light."""
         if self.vera_device.is_dimmable:
-            attr[ATTR_BRIGHTNESS] = self.vera_device.get_brightness()
-
-        return attr
+            return self.vera_device.get_brightness()
 
     def turn_on(self, **kwargs):
         if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
@@ -87,3 +112,49 @@ class VeraLight(VeraSwitch):
 
         self._state = STATE_ON
         self.update_ha_state(True)
+
+    def turn_off(self, **kwargs):
+        self.vera_device.switch_off()
+        self._state = STATE_OFF
+        self.update_ha_state()
+
+    @property
+    def device_state_attributes(self):
+        attr = {}
+
+        if self.vera_device.has_battery:
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
+
+        if self.vera_device.is_armable:
+            armed = self.vera_device.is_armed
+            attr[ATTR_ARMED] = 'True' if armed else 'False'
+
+        if self.vera_device.is_trippable:
+            last_tripped = self.vera_device.last_trip
+            if last_tripped is not None:
+                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
+                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
+                    utc_time)
+            else:
+                attr[ATTR_LAST_TRIP_TIME] = None
+            tripped = self.vera_device.is_tripped
+            attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
+
+        attr['Vera Device Id'] = self.vera_device.vera_device_id
+
+    @property
+    def should_poll(self):
+        """ Tells Home Assistant not to poll this entity. """
+        return False
+
+    @property
+    def is_on(self):
+        """ True if device is on. """
+        return self._state == STATE_ON
+
+    def update(self):
+        """ Called by the vera device callback to update state. """
+        if self.vera_device.is_switched_on():
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
