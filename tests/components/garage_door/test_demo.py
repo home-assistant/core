@@ -37,14 +37,14 @@ class TestGarageDoorDemo(unittest.TestCase):
         self.hass.states.is_state(RIGHT, 'open')
 
     def test_open_door(self):
-        gd.open(self.hass, LEFT)
+        gd.open_door(self.hass, LEFT)
 
         self.hass.pool.block_till_done()
 
         self.assertTrue(gd.is_closed(self.hass, LEFT))
 
     def test_close_door(self):
-        gd.close(self.hass, RIGHT)
+        gd.close_door(self.hass, RIGHT)
 
         self.hass.pool.block_till_done()
 
