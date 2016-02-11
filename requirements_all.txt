@@ -190,9 +190,6 @@ python-telegram-bot==3.2.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
 
-# homeassistant.components.garage_door.wink
-python-wink==0.4.2
-
 # homeassistant.components.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
