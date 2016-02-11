@@ -25,17 +25,20 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
 
+    url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
+
+    jsonrpc_url = config.get('url')  # deprecated
+    if jsonrpc_url:
+        url = jsonrpc_url.rstrip('/jsonrpc')
+
     add_devices([
         KodiDevice(
             config.get('name', 'Kodi'),
-            config.get('url'),
+            url,
             auth=(
                 config.get('user', ''),
                 config.get('password', ''))),
     ])
-
-
-
 
 
 class KodiDevice(MediaPlayerDevice):
@@ -47,12 +50,13 @@ class KodiDevice(MediaPlayerDevice):
         import jsonrpc_requests
         self._name = name
         self._url = url
-        self._server = jsonrpc_requests.Server(url, auth=auth)
+        self._server = jsonrpc_requests.Server(
+            '{}/jsonrpc'.format(self._url),
+            auth=auth)
         self._players = None
         self._properties = None
         self._item = None
         self._app_properties = None
-
         self.update()
 
     @property
@@ -155,12 +159,11 @@ class KodiDevice(MediaPlayerDevice):
     def _get_image_url(self):
         """ Helper function that parses the thumbnail URLs used by Kodi. """
         url_components = urllib.parse.urlparse(self._item['thumbnail'])
-        
+
         if url_components.scheme == 'image':
-            return\
-                self._url.split('/jsonrpc')[0] +\
-                "/image/" +\
-                urllib.parse.quote_plus(self._item['thumbnail'])
+            return '{}/image/{}'.format(
+                self._url,
+                urllib.parse.quote_plus(self._item['thumbnail']))
 
     @property
     def media_title(self):
