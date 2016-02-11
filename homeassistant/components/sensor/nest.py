@@ -21,7 +21,7 @@ SENSOR_TYPES = ['humidity',
                 'last_connection',
                 'battery_level']
 
-SENSOR_UNITS = {'humidity': '%', 'battery_level': '%'}
+SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V'}
 
 SENSOR_TEMP_TYPES = ['temperature',
                      'target',
