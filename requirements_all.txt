@@ -194,6 +194,7 @@ python-telegram-bot==3.2.0
 python-twitch==1.2.0
 
 # homeassistant.components.wink
+# homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
