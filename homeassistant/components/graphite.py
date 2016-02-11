@@ -23,8 +23,8 @@ import time
 
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    STATE_ON, STATE_OFF)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import state
 
 DOMAIN = "graphite"
 _LOGGER = logging.getLogger(__name__)
@@ -92,13 +92,10 @@ class GraphiteFeeder(threading.Thread):
     def _report_attributes(self, entity_id, new_state):
         now = time.time()
         things = dict(new_state.attributes)
-        state = new_state.state
-        if state in (STATE_ON, STATE_OFF):
-            state = float(state == STATE_ON)
-        else:
-            state = None
-        if state is not None:
-            things['state'] = state
+        try:
+            things['state'] = state.state_as_number(new_state)
+        except ValueError:
+            pass
         lines = ['%s.%s.%s %f %i' % (self._prefix,
                                      entity_id, key.replace(' ', '_'),
                                      value, now)
