@@ -56,6 +56,11 @@ def setup(hass, config):
                            {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
         return False
+    if not all(CONF_PORT in gateway
+               for gateway in config[DOMAIN][CONF_GATEWAYS]):
+        _LOGGER.error('Missing required configuration items '
+                      'in %s: %s', DOMAIN, CONF_PORT)
+        return False
 
     import mysensors.mysensors as mysensors
 
