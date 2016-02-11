@@ -106,4 +106,3 @@ class GarageDoorDevice(Entity):
         if closed is None:
             return STATE_UNKNOWN
         return STATE_CLOSED if closed else STATE_OPEN
-
