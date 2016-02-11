@@ -7,7 +7,7 @@ Tests demo garage door component.
 import unittest
 
 import homeassistant.core as ha
-from homeassistant.components import garage_door
+import homeassistant.components.garage_door as gd
 
 
 LEFT = 'garage_door.left_garage_door'
@@ -19,7 +19,7 @@ class TestGarageDoorDemo(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = ha.HomeAssistant()
-        self.assertTrue(garage_door.setup(self.hass, {
+        self.assertTrue(gd.setup(self.hass, {
             'garage_door': {
                 'platform': 'demo'
             }
@@ -30,22 +30,22 @@ class TestGarageDoorDemo(unittest.TestCase):
         self.hass.stop()
 
     def test_is_closed(self):
-        self.assertTrue(garage_door.is_closed(self.hass, LEFT))
+        self.assertTrue(gd.is_closed(self.hass, LEFT))
         self.hass.states.is_state(LEFT, 'close')
 
-        self.assertFalse(garage_door.is_closed(self.hass, RIGHT))
+        self.assertFalse(gd.is_closed(self.hass, RIGHT))
         self.hass.states.is_state(RIGHT, 'open')
 
     def test_open_door(self):
-        garage_door.open_door(self.hass, LEFT)
+        gd.open_door(self.hass, LEFT)
 
         self.hass.pool.block_till_done()
 
-        self.assertFalse(garage_door.is_closed(self.hass, LEFT))
+        self.assertFalse(gd.is_closed(self.hass, LEFT))
 
     def test_close_door(self):
-        garage_door.close_door(self.hass, RIGHT)
+        gd.close_door(self.hass, RIGHT)
 
         self.hass.pool.block_till_done()
 
-        self.assertTrue(garage_door.is_closed(self.hass, RIGHT))
+        self.assertTrue(gd.is_closed(self.hass, RIGHT))
