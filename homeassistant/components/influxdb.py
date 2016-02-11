@@ -9,10 +9,8 @@ https://home-assistant.io/components/influxdb/
 import logging
 import homeassistant.util as util
 from homeassistant.helpers import validate_config
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
-                                 STATE_UNLOCKED, STATE_LOCKED, STATE_UNKNOWN)
-from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
-                                          STATE_BELOW_HORIZON)
+from homeassistant.helpers import state as state_helper
+from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,15 +71,10 @@ def setup(hass, config):
         if state is None or state.state in (STATE_UNKNOWN, ''):
             return
 
-        if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):
-            _state = 1
-        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_BELOW_HORIZON):
-            _state = 0
-        else:
-            try:
-                _state = float(state.state)
-            except ValueError:
-                _state = state.state
+        try:
+            _state = state_helper.state_as_number(state)
+        except ValueError:
+            _state = state.state
 
         measurement = state.attributes.get('unit_of_measurement')
         if measurement in (None, ''):
