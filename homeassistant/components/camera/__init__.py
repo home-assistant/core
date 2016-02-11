@@ -33,8 +33,6 @@ SWITCH_ACTION_SNAPSHOT = 'snapshot'
 
 SERVICE_CAMERA = 'camera_service'
 
-STATE_RECORDING = 'recording'
-
 DEFAULT_RECORDING_SECONDS = 30
 
 # Maps discovered services to their platforms
@@ -46,6 +44,7 @@ DIR_DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
 REC_DIR_PREFIX = 'recording-'
 REC_IMG_PREFIX = 'recording_image-'
 
+STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
@@ -121,33 +120,7 @@ def setup(hass, config):
         try:
             camera.is_streaming = True
             camera.update_ha_state()
-
-            handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
-            handler.request.sendall(bytes(
-                'Content-type: multipart/x-mixed-replace; \
-                    boundary=--jpgboundary\r\n\r\n', 'utf-8'))
-            handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
-
-            # MJPEG_START_HEADER.format()
-
-            while True:
-                img_bytes = camera.camera_image()
-                if img_bytes is None:
-                    continue
-                headers_str = '\r\n'.join((
-                    'Content-length: {}'.format(len(img_bytes)),
-                    'Content-type: image/jpeg',
-                )) + '\r\n\r\n'
-
-                handler.request.sendall(
-                    bytes(headers_str, 'utf-8') +
-                    img_bytes +
-                    bytes('\r\n', 'utf-8'))
-
-                handler.request.sendall(
-                    bytes('--jpgboundary\r\n', 'utf-8'))
-
-                time.sleep(0.5)
+            camera.mjpeg_stream(handler)
 
         except (requests.RequestException, IOError):
             camera.is_streaming = False
@@ -189,6 +162,34 @@ class Camera(Entity):
     def camera_image(self):
         """ Return bytes of camera image. """
         raise NotImplementedError()
+
+    def mjpeg_stream(self, handler):
+        """ Generate an HTTP MJPEG stream from camera images. """
+        handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
+        handler.request.sendall(bytes(
+            'Content-type: multipart/x-mixed-replace; \
+                boundary=--jpgboundary\r\n\r\n', 'utf-8'))
+        handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
+
+        # MJPEG_START_HEADER.format()
+        while True:
+            img_bytes = self.camera_image()
+            if img_bytes is None:
+                continue
+            headers_str = '\r\n'.join((
+                'Content-length: {}'.format(len(img_bytes)),
+                'Content-type: image/jpeg',
+            )) + '\r\n\r\n'
+
+            handler.request.sendall(
+                bytes(headers_str, 'utf-8') +
+                img_bytes +
+                bytes('\r\n', 'utf-8'))
+
+            handler.request.sendall(
+                bytes('--jpgboundary\r\n', 'utf-8'))
+
+            time.sleep(0.5)
 
     @property
     def state(self):

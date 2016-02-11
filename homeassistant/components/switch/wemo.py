@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pywemo==0.3.8']
+REQUIREMENTS = ['pywemo==0.3.10']
 _LOGGER = logging.getLogger(__name__)
 
 _WEMO_SUBSCRIPTION_REGISTRY = None
@@ -22,6 +22,17 @@ ATTR_SWITCH_MODE = "switch_mode"
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
+
+
+def _find_manual_wemos(pywemo, static_config):
+    for address in static_config:
+        port = pywemo.ouimeaux_device.probe_wemo(address)
+        if not port:
+            _LOGGER.warning('Unable to probe wemo at %s', address)
+            continue
+        _LOGGER.info('Adding static wemo at %s:%i', address, port)
+        url = 'http://%s:%i/setup.xml' % (address, port)
+        yield pywemo.discovery.device_from_description(url, None)
 
 
 # pylint: disable=unused-argument, too-many-function-args
@@ -60,6 +71,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         [WemoSwitch(switch) for switch in switches
          if isinstance(switch, pywemo.Switch)])
 
+    # Add manually-defined wemo devices
+    if discovery_info is None and 'static' in config:
+        add_devices_callback(
+            [WemoSwitch(wemo)
+             for wemo in _find_manual_wemos(pywemo, config['static'])])
+
 
 class WemoSwitch(SwitchDevice):
     """ Represents a WeMo switch. """
@@ -95,8 +112,8 @@ class WemoSwitch(SwitchDevice):
         return self.wemo.name
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
         if self.maker_params:
             # Is the maker sensor on or off.
             if self.maker_params['hassensor']:
@@ -152,6 +169,18 @@ class WemoSwitch(SwitchDevice):
     def is_on(self):
         """ True if switch is on. """
         return self.wemo.get_state()
+
+    @property
+    def available(self):
+        """ True if switch is available. """
+        if (self.wemo.model_name == 'Insight' and
+                self.insight_params is None):
+            return False
+
+        if (self.wemo.model_name == 'Maker' and
+                self.maker_params is None):
+            return False
+        return True
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """

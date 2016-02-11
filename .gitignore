@@ -69,9 +69,15 @@ nosetests.xml
 
 .python-version
 
+# emacs auto backups
+*~
+*#
+*.orig
+
 # venv stuff
 pyvenv.cfg
 pip-selfcheck.json
+venv
 
 # vimmy stuff
 *.swp

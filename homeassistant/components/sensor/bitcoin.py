@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['blockchain==1.1.2']
+REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
     'wallet': ['Wallet balance', 'BTC'],
@@ -39,6 +39,7 @@ OPTION_TYPES = {
     'miners_revenue_btc': ['Miners revenue', 'BTC'],
     'market_price_usd': ['Market price', 'USD']
 }
+ICON = 'mdi:currency-btc'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -47,16 +48,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Get the Bitcoin sensor. """
 
-    try:
-        from blockchain.wallet import Wallet
-        from blockchain import exchangerates, exceptions
-
-    except ImportError:
-        _LOGGER.exception(
-            "Unable to import blockchain. "
-            "Did you maybe not install the 'blockchain' package?")
-
-        return False
+    from blockchain.wallet import Wallet
+    from blockchain import exchangerates, exceptions
 
     wallet_id = config.get('wallet', None)
     password = config.get('password', None)
@@ -115,6 +108,11 @@ class BitcoinSensor(Entity):
     @property
     def unit_of_measurement(self):
         return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return ICON
 
     # pylint: disable=too-many-branches
     def update(self):

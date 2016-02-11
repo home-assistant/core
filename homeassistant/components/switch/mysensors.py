@@ -7,7 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors.html
 """
 import logging
-from collections import defaultdict
 
 from homeassistant.components.switch import SwitchDevice
 
@@ -30,33 +29,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states.
-        s_types = [
-            gateway.const.Presentation.S_DOOR,
-            gateway.const.Presentation.S_MOTION,
-            gateway.const.Presentation.S_SMOKE,
-            gateway.const.Presentation.S_LIGHT,
-            gateway.const.Presentation.S_LOCK,
-        ]
-        v_types = [
-            gateway.const.SetReq.V_ARMED,
-            gateway.const.SetReq.V_LIGHT,
-            gateway.const.SetReq.V_LOCK_STATUS,
-        ]
+        # states. Map them in a defaultdict(list).
+        pres = gateway.const.Presentation
+        set_req = gateway.const.SetReq
+        map_sv_types = {
+            pres.S_DOOR: [set_req.V_ARMED],
+            pres.S_MOTION: [set_req.V_ARMED],
+            pres.S_SMOKE: [set_req.V_ARMED],
+            pres.S_LIGHT: [set_req.V_LIGHT],
+            pres.S_LOCK: [set_req.V_LOCK_STATUS],
+        }
         if float(gateway.version) >= 1.5:
-            s_types.extend([
-                gateway.const.Presentation.S_BINARY,
-                gateway.const.Presentation.S_SPRINKLER,
-                gateway.const.Presentation.S_WATER_LEAK,
-                gateway.const.Presentation.S_SOUND,
-                gateway.const.Presentation.S_VIBRATION,
-                gateway.const.Presentation.S_MOISTURE,
-            ])
-            v_types.extend([gateway.const.SetReq.V_STATUS, ])
+            map_sv_types.update({
+                pres.S_BINARY: [set_req.V_STATUS, set_req.V_LIGHT],
+                pres.S_SPRINKLER: [set_req.V_STATUS],
+                pres.S_WATER_LEAK: [set_req.V_ARMED],
+                pres.S_SOUND: [set_req.V_ARMED],
+                pres.S_VIBRATION: [set_req.V_ARMED],
+                pres.S_MOISTURE: [set_req.V_ARMED],
+            })
+            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
 
-        devices = defaultdict(list)
+        devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            s_types, v_types, devices, add_devices, MySensorsSwitch))
+            map_sv_types, devices, add_devices, MySensorsSwitch))
 
 
 class MySensorsSwitch(SwitchDevice):
@@ -104,26 +100,24 @@ class MySensorsSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        device_attr = dict(self._values)
-        device_attr.pop(self.value_type, None)
-        return device_attr
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = {
+        attr = {
             mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
-        device_attr = self.device_state_attributes
+        set_req = self.gateway.const.SetReq
 
-        if device_attr is not None:
-            data.update(device_attr)
-
-        return data
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                try:
+                    attr[set_req(value_type).name] = value
+                except ValueError:
+                    _LOGGER.error('value_type %s is not valid for mysensors '
+                                  'version %s', value_type,
+                                  self.gateway.version)
+        return attr
 
     @property
     def is_on(self):
@@ -145,6 +139,11 @@ class MySensorsSwitch(SwitchDevice):
             self.node_id, self.child_id, self.value_type, 0)
         self._values[self.value_type] = STATE_OFF
         self.update_ha_state()
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
 
     def update(self):
         """Update the controller with the latest value from a sensor."""

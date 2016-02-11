@@ -23,6 +23,7 @@ ATTR_DEPARTURE_TIME2 = 'Next on departure'
 ATTR_START = 'Start'
 ATTR_TARGET = 'Destination'
 ATTR_REMAINING_TIME = 'Remaining time'
+ICON = 'mdi:bus'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -74,7 +75,7 @@ class SwissPublicTransportSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns the state attributes. """
         if self._times is not None:
             return {
@@ -85,6 +86,11 @@ class SwissPublicTransportSensor(Entity):
                 ATTR_REMAINING_TIME: '{}'.format(
                     ':'.join(str(self._times[2]).split(':')[:2]))
             }
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return ICON
 
     # pylint: disable=too-many-branches
     def update(self):

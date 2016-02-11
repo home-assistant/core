@@ -15,9 +15,9 @@ import socket
 import random
 import string
 from functools import wraps
+from types import MappingProxyType
 
 from .dt import datetime_to_local_str, utcnow
-
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -43,7 +43,7 @@ def slugify(text):
 
 def repr_helper(inp):
     """ Helps creating a more readable string representation of objects. """
-    if isinstance(inp, dict):
+    if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
@@ -181,8 +181,10 @@ class OrderedSet(collections.MutableSet):
             curr = curr[1]
 
     def pop(self, last=True):  # pylint: disable=arguments-differ
-        """ Pops element of the end of the set.
-            Set last=False to pop from the beginning. """
+        """
+        Pops element of the end of the set.
+        Set last=False to pop from the beginning.
+        """
         if not self:
             raise KeyError('set is empty')
         key = self.end[1][0] if last else self.end[2][0]

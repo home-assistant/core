@@ -12,20 +12,34 @@ import datetime
 
 from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
-import homeassistant.components.zwave as zwave
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_ON, STATE_OFF,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_LOCATION)
+from homeassistant.components.zwave import (
+    NETWORK, ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SENSOR_BINARY,
+    COMMAND_CLASS_SENSOR_MULTILEVEL, COMMAND_CLASS_METER, TYPE_DECIMAL,
+    COMMAND_CLASS_ALARM, ZWaveDeviceEntity, get_config_value)
 
-PHILIO = '013c'
-PHILIO_SLIM_SENSOR = '0002'
+from homeassistant.const import (
+    STATE_ON, STATE_OFF, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+
+PHILIO = '0x013c'
+PHILIO_SLIM_SENSOR = '0x0002'
 PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
 
+FIBARO = '0x010f'
+FIBARO_WALL_PLUG = '0x1000'
+FIBARO_WALL_PLUG_SENSOR_METER = (FIBARO, FIBARO_WALL_PLUG, 8)
+
 WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
+WORKAROUND_IGNORE = 'ignore'
 
 DEVICE_MAPPINGS = {
     PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+
+    # For some reason Fibaro Wall Plug reports 2 power consumptions.
+    # One value updates as the power consumption changes
+    # and the other does not change.
+    FIBARO_WALL_PLUG_SENSOR_METER: WORKAROUND_IGNORE,
 }
 
 
@@ -41,14 +55,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
     value.set_change_verified(False)
 
-    # if 1 in groups and (zwave.NETWORK.controller.node_id not in
+    # if 1 in groups and (NETWORK.controller.node_id not in
     #                     groups[1].associations):
-    #     node.groups[1].add_association(zwave.NETWORK.controller.node_id)
+    #     node.groups[1].add_association(NETWORK.controller.node_id)
 
     specific_sensor_key = (value.node.manufacturer_id,
                            value.node.product_id,
@@ -58,80 +72,44 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if specific_sensor_key in DEVICE_MAPPINGS:
         if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
             # Default the multiplier to 4
-            re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+            re_arm_multiplier = (get_config_value(value.node, 9) or 4)
             add_devices([
                 ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
             ])
+        elif DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+            return
 
     # generic Device mappings
-    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
+    elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value)])
 
-    elif value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
+    elif value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == zwave.COMMAND_CLASS_METER and
-          value.type == zwave.TYPE_DECIMAL):
+    elif (value.command_class == COMMAND_CLASS_METER and
+          value.type == TYPE_DECIMAL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif value.command_class == zwave.COMMAND_CLASS_ALARM:
+    elif value.command_class == COMMAND_CLASS_ALARM:
         add_devices([ZWaveAlarmSensor(value)])
 
 
-class ZWaveSensor(Entity):
+class ZWaveSensor(ZWaveDeviceEntity, Entity):
     """ Represents a Z-Wave sensor. """
 
     def __init__(self, sensor_value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        self._value = sensor_value
-        self._node = sensor_value.node
+        ZWaveDeviceEntity.__init__(self, sensor_value, DOMAIN)
 
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     @property
-    def should_poll(self):
-        """ False because we will push our own state to HA when changed. """
-        return False
-
-    @property
-    def unique_id(self):
-        """ Returns a unique id. """
-        return "ZWAVE-{}-{}".format(self._node.node_id, self._value.object_id)
-
-    @property
-    def name(self):
-        """ Returns the name of the device. """
-        name = self._node.name or "{} {}".format(
-            self._node.manufacturer_name, self._node.product_name)
-
-        return "{} {}".format(name, self._value.label)
-
-    @property
     def state(self):
         """ Returns the state of the sensor. """
         return self._value.data
-
-    @property
-    def state_attributes(self):
-        """ Returns the state attributes. """
-        attrs = {
-            zwave.ATTR_NODE_ID: self._node.node_id,
-        }
-
-        battery_level = self._node.get_battery_level()
-
-        if battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = battery_level
-
-        location = self._node.location
-
-        if location:
-            attrs[ATTR_LOCATION] = location
-
-        return attrs
 
     @property
     def unit_of_measurement(self):

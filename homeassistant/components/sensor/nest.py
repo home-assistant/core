@@ -1,6 +1,6 @@
 """
 homeassistant.components.sensor.nest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Nest Thermostat Sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -21,7 +21,7 @@ SENSOR_TYPES = ['humidity',
                 'last_connection',
                 'battery_level']
 
-SENSOR_UNITS = {'humidity': '%', 'battery_level': '%'}
+SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V'}
 
 SENSOR_TEMP_TYPES = ['temperature',
                      'target',
@@ -30,7 +30,7 @@ SENSOR_TEMP_TYPES = ['temperature',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    "Setup Nest Sensor from config file"
+    """ Setup Nest Sensor. """
 
     logger = logging.getLogger(__name__)
     try:
@@ -85,11 +85,11 @@ class NestBasicSensor(NestSensor):
     @property
     def state(self):
         """ Returns the state of the sensor. """
-
         return getattr(self.device, self.variable)
 
     @property
     def unit_of_measurement(self):
+        """ Unit the value is expressed in. """
         return SENSOR_UNITS.get(self.variable, None)
 
 
@@ -98,10 +98,12 @@ class NestTempSensor(NestSensor):
 
     @property
     def unit_of_measurement(self):
+        """ Unit the value is expressed in. """
         return TEMP_CELCIUS
 
     @property
     def state(self):
+        """ Returns the state of the sensor. """
         temp = getattr(self.device, self.variable)
         if temp is None:
             return None

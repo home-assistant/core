@@ -27,7 +27,6 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the squeezebox platform. """
     if not config.get(CONF_HOST):
@@ -138,7 +137,7 @@ class LogitechMediaServer(object):
 class SqueezeBoxDevice(MediaPlayerDevice):
     """ Represents a SqueezeBox device. """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
@@ -202,9 +201,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ Image url of current playing media. """
         if 'artwork_url' in self._status:
             media_url = self._status['artwork_url']
-        else:
+        elif 'id' in self._status:
             media_url = ('/music/{track_id}/cover.jpg').format(
-                track_id=self._status["id"])
+                track_id=self._status['id'])
+        else:
+            media_url = ('/music/current/cover.jpg?player={player}').format(
+                player=self._id)
 
         base_url = 'http://{server}:{port}/'.format(
             server=self._lms.host,
@@ -289,7 +291,3 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._lms.query(self._id, 'power', '1')
         self.update_ha_state()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()

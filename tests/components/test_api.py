@@ -39,7 +39,7 @@ def _url(path=""):
 @patch('homeassistant.components.http.util.get_local_ip',
        return_value='127.0.0.1')
 def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server. """
+    """ Initializes a Home Assistant server. """
     global hass
 
     hass = ha.HomeAssistant()
