@@ -8,8 +8,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID)
-
+    STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID,
+    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
+    STATE_OPEN, STATE_CLOSED)
+from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
+                                          STATE_BELOW_HORIZON)
 from homeassistant.components.media_player import (SERVICE_PLAY_MEDIA)
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,3 +95,30 @@ def reproduce_state(hass, states, blocking=False):
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
         hass.services.call(service_domain, service, data, blocking)
+
+
+def state_as_number(state):
+    """Try to coerce our state to a number.
+
+    Raises ValueError if this is not possible.
+    """
+
+    if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                       STATE_OPEN):
+        return 1
+    elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
+                         STATE_BELOW_HORIZON, STATE_CLOSED):
+        return 0
+    else:
+        try:
+            # This distinction is probably not important,
+            # but in case something downstream cares about
+            # int vs. float, try to be helpful here.
+            if '.' in state.state:
+                return float(state.state)
+            else:
+                return int(state.state)
+        except (ValueError, TypeError):
+            pass
+
+    raise ValueError('State is not a number')
