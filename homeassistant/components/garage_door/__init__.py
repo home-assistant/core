@@ -1,12 +1,11 @@
 """
 homeassistant.components.garage_door
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with garage doors that can be controlled remotely.
 
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/garage_door/
 """
-
 import logging
 import os
 
@@ -84,7 +83,7 @@ def setup(hass, config):
 
 
 class GarageDoorDevice(Entity):
-    """ Represents a garage door within Home Assistant. """
+    """ Represents a garage door. """
     # pylint: disable=no-self-use
 
     @property
@@ -102,6 +101,7 @@ class GarageDoorDevice(Entity):
 
     @property
     def state(self):
+        """ State of the garage door. """
         closed = self.is_closed
         if closed is None:
             return STATE_UNKNOWN
