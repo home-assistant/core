@@ -39,7 +39,9 @@ def setup(hass, config):
 
     from influxdb import InfluxDBClient, exceptions
 
-    if not validate_config(config, {DOMAIN: ['host']}, _LOGGER):
+    if not validate_config(config, {DOMAIN: ['host',
+                                             CONF_USERNAME,
+                                             CONF_PASSWORD]}, _LOGGER):
         return False
 
     conf = config[DOMAIN]
