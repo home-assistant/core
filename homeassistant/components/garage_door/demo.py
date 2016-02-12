@@ -1,7 +1,6 @@
 """
 homeassistant.components.garage_door.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Demo platform that has two fake garage doors.
 """
 from homeassistant.components.garage_door import GarageDoorDevice
