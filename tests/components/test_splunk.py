@@ -64,7 +64,8 @@ class TestSplunk(unittest.TestCase):
         valid = {'1': 1,
                  '1.0': 1.0,
                  STATE_ON: 1,
-                 STATE_OFF: 0}
+                 STATE_OFF: 0,
+                 'foo': 'foo'}
         for in_, out in valid.items():
             state = mock.MagicMock(state=in_,
                                    domain='fake',
@@ -86,8 +87,3 @@ class TestSplunk(unittest.TestCase):
                 payload['host'], data=payload,
                 headers={'Authorization': 'Splunk secret'})
             self.mock_post.reset_mock()
-
-        for invalid in ('foo', '', object):
-            state = mock.MagicMock(state=invalid)
-            self.handler_method(mock.MagicMock(data={'new_state': state}))
-            self.assertFalse(self.mock_post.called)
