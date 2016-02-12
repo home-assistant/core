@@ -13,7 +13,7 @@ from datetime import timedelta
 from subprocess import check_output
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import event
+from homeassistant.helpers.event import track_time_change
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Speedtest sensor. """
 
-    data = SpeedtestData(hass, event, config)
+    data = SpeedtestData(hass, config)
 
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
@@ -90,18 +90,17 @@ class SpeedtestSensor(Entity):
 class SpeedtestData(object):
     """ Gets the latest data from speedtest.net. """
 
-    def __init__(self, hass, event, config):
+    def __init__(self, hass, config):
         self.data = None
         self.hass = hass
         self.path = hass.config.path
-        self.event = event
-        self.event.track_time_change(self.hass, self.update,
-                                     minute=config.get(CONF_MINUTE, 0),
-                                     hour=config.get(CONF_HOUR, None),
-                                     day=config.get(CONF_DAY, None))
+        track_time_change(self.hass, self.update,
+                          minute=config.get(CONF_MINUTE, 0),
+                          hour=config.get(CONF_HOUR, None),
+                          day=config.get(CONF_DAY, None))
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, event=None):
+    def update(self, now):
         """ Gets the latest data from speedtest.net. """
         _LOGGER.info('Executing speedtest')
         re_output = _SPEEDTEST_REGEX.split(
