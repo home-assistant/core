@@ -103,6 +103,7 @@ omit =
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/nma.py
+    homeassistant/components/notify/command_line.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
