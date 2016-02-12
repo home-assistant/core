@@ -20,8 +20,8 @@ import homeassistant.util.dt as dt_util
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
-_SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms\nDownload:\s(\d+\.\d+)'
-                              r'\sMbit/s\nUpload:\s(\d+\.\d+)\sMbit/s\n')
+_SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+Download:\s(\d+\.\d+)'
+                              r'\sMbit/s[\r\n]+Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_MINUTE = 'minute'
