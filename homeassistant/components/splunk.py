@@ -50,7 +50,7 @@ def setup(hass, config):
         uri_scheme = "https://"
     else:
         uri_scheme = "http://"
-    event_collector = uri_scheme + host + ":" + port + \
+    event_collector = uri_scheme + host + ":" + str(port) + \
         "/services/collector/event"
     headers = {'Authorization': 'Splunk ' + token}
 
@@ -65,7 +65,7 @@ def setup(hass, config):
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
-            _state = state.state
+            return
 
         json_body = [
             {
