@@ -1,7 +1,10 @@
 """
 homeassistant.components.sensor.apcupsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides a sensor to track various status aspects of a UPS.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.apcupsd/
 """
 import logging
 
@@ -9,11 +12,8 @@ from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import apcupsd
 
-
 DEPENDENCIES = [apcupsd.DOMAIN]
-
 DEFAULT_NAME = "UPS Status"
-
 SPECIFIC_UNITS = {
     "ITEMP": TEMP_CELCIUS
 }
@@ -69,14 +69,17 @@ class Sensor(Entity):
 
     @property
     def name(self):
+        """ The name of the UPS sensor. """
         return self._config.get("name", DEFAULT_NAME)
 
     @property
     def state(self):
+        """ True if the UPS is online, else False. """
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
         if self._unit is None:
             return self._inferred_unit
         return self._unit
