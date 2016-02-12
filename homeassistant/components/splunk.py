@@ -25,7 +25,7 @@ DOMAIN = "splunk"
 DEPENDENCIES = []
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = '8088'
+DEFAULT_PORT = 8088
 DEFAULT_SSL = False
 
 CONF_HOST = 'host'
@@ -48,12 +48,9 @@ def setup(hass, config):
     port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
     token = util.convert(conf.get(CONF_TOKEN), str)
     use_ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
-    if use_ssl:
-        uri_scheme = "https://"
-    else:
-        uri_scheme = "http://"
-    event_collector = uri_scheme + host + ":" + port + \
-        "/services/collector/event"
+    uri_scheme = "https://" if use_ssl else "http://"
+    event_collector = "{}{}:{}/services/collector/event".format(uri_scheme,
+                                                                host, port)
     headers = {'Authorization': 'Splunk ' + token}
 
     def splunk_event_listener(event):
