@@ -153,7 +153,6 @@ class MySensorsSwitch(SwitchDevice):
             _LOGGER.info(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_ARMED or \
-               value_type == self.gateway.const.SetReq.V_STATUS or \
                value_type == self.gateway.const.SetReq.V_LIGHT or \
                value_type == self.gateway.const.SetReq.V_LOCK_STATUS:
                 self._values[value_type] = (
