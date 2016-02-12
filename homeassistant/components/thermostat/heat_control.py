@@ -18,8 +18,6 @@ from homeassistant.const import (
 
 DEPENDENCIES = ['switch', 'sensor']
 
-TOL_TEMP = 0.3
-
 CONF_NAME = 'name'
 DEFAULT_NAME = 'Heat Control'
 CONF_HEATER = 'heater'
@@ -27,6 +25,8 @@ CONF_SENSOR = 'target_sensor'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
+CONF_TOL_TEMP = 'tol_temp'
+DEFAULT_TOL_TEMP = 0.3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     min_temp = util.convert(config.get(CONF_MIN_TEMP), float, None)
     max_temp = util.convert(config.get(CONF_MAX_TEMP), float, None)
     target_temp = util.convert(config.get(CONF_TARGET_TEMP), float, None)
+    tol_temp = util.convert(config.get(CONF_TOL_TEMP), float, DEFAULT_TOL_TEMP)
 
     if None in (heater_entity_id, sensor_entity_id):
         _LOGGER.error('Missing required key %s or %s', CONF_HEATER,
@@ -47,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
-                             min_temp, max_temp, target_temp)])
+                             min_temp, max_temp, target_temp, tol_temp)])
 
 
 # pylint: disable=too-many-instance-attributes
@@ -55,7 +56,7 @@ class HeatControl(ThermostatDevice):
     """ Represents a HeatControl device. """
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
-                 min_temp, max_temp, target_temp):
+                 min_temp, max_temp, target_temp, tol_temp):
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
@@ -65,6 +66,7 @@ class HeatControl(ThermostatDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
+        self._tol_temp = tol_temp
         self._unit = None
 
         track_state_change(hass, sensor_entity_id, self._sensor_changed)
@@ -171,7 +173,7 @@ class HeatControl(ThermostatDevice):
         if not self._active:
             return
 
-        too_cold = self._target_temp - self._cur_temp > TOL_TEMP
+        too_cold = self._target_temp - self._cur_temp > self._tol_temp
         is_heating = self._is_heating
 
         if too_cold and not is_heating:
