@@ -145,7 +145,7 @@ class Entity(object):
         if force_refresh:
             self.update()
 
-        state = str(self.state)
+        state = STATE_UNKNOWN if self.state is None else str(self.state)
         attr = self.state_attributes or {}
 
         device_attr = self.device_state_attributes
