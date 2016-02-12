@@ -1,6 +1,6 @@
 """
 homeassistant.components.garage_door.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink garage doors.
 
 For more details about this platform, please refer to the documentation at
