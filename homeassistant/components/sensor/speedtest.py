@@ -14,6 +14,8 @@ from subprocess import check_output
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
+from homeassistant.components.sensor import DOMAIN
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Setup the Speedtest sensor. """
 
     data = SpeedtestData(hass, config)
-
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         if sensor not in SENSOR_TYPES:
@@ -48,6 +49,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev.append(SpeedtestSensor(data, sensor))
 
     add_devices(dev)
+
+    def update(call=None):
+        """ Update service for manual updates. """
+        data.update(dt_util.now())
+        for sensor in dev:
+            sensor.update()
+
+    hass.services.register(DOMAIN, 'update_speedtest', update)
 
 
 # pylint: disable=too-few-public-methods
