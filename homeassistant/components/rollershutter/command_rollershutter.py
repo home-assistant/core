@@ -9,14 +9,11 @@ https://home-assistant.io/components/rollershutter.command_rollershutter/
 import logging
 import subprocess
 
-#import homeassistant.components.scsgate as scsgate
 from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
-
-#DEPENDENCIES = ['scsgate']
 
 DEFAULT_NAME = "Command Rollershutter"
 
@@ -24,19 +21,9 @@ DEFAULT_NAME = "Command Rollershutter"
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return rollershutter controlled by shell commands. """
 
-#    devices = config.get('devices', {})
     devices = config.get('rollershutters', {})
     rollershutters = []
-    logger = logging.getLogger(__name__)
-
-#    add_devices_callback([CommandRollershutter(
-#        hass,
-#        config.get('name', DEFAULT_NAME),
-#        config.get('upcmd', 'true'),
-#        config.get('downcmd', 'true'),
-#        config.get('stopcmd', 'true'),
-#        config.get(CONF_VALUE_TEMPLATE, False))])
-
+#    logger = logging.getLogger(__name__)
 
     for dev_name, properties in devices.items():
         rollershutters.append(
@@ -50,6 +37,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get(CONF_VALUE_TEMPLATE, False)))
 
     add_devices_callback(rollershutters)
+
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class CommandRollershutter(RollershutterDevice):
@@ -117,29 +105,42 @@ class CommandRollershutter(RollershutterDevice):
 #        return None
         return self._state
 
+    def _query_state(self):
+        """ Query for state. """
+        if not self._command_state:
+            _LOGGER.error('No state command specified')
+            return
+        if self._value_template:
+            return CommandRollershutter._query_state_value(self._command_state)
+        return CommandRollershutter._query_state_code(self._command_state)
+
+    def update(self):
+        """ Update device state. """
+        if self._command_state:
+            payload = str(self._query_state())
+            if self._value_template:
+                payload = template.render_with_possible_json_value(
+                    self._hass, self._value_template, payload)
+            self._state = (payload.lower() == "true")
+
     def move_up(self, **kwargs):
         """ Move the rollershutter up. """
+#        CommandRollershutter._rollershutter(self._command_up)
         if (CommandRollershutter._rollershutter(self._command_up) and
                 not self._command_state):
-            self._state = True #Up
+            self._state = True  # Up
             self.update_ha_state()
 
     def move_down(self, **kwargs):
         """ Move the rollershutter down. """
         if (CommandRollershutter._rollershutter(self._command_down) and
                 not self._command_state):
-            self._state = True #Down
+            self._state = True  # Down
             self.update_ha_state()
 
     def stop(self, **kwargs):
         """ Stop the device. """
         if (CommandRollershutter._rollershutter(self._command_stop) and
                 not self._command_state):
-            self._state = False #Stop
+            self._state = False  # Stop
             self.update_ha_state()
-
-#    def process_event(self, message):
-#        """ Handle a SCSGate message related with this rollershutter """
-#        self._logger.debug(
-#            "Rollershutter %s, got message %s",
-#            self._scs_id, message.toggled)
