@@ -211,10 +211,20 @@ def _matcher(subject, pattern):
 
     Pattern is either a tuple of allowed subjects or a `MATCH_ALL`.
     """
-    if isinstance(pattern, str) and pattern.startswith('/'):
-        try:
-            return subject % float(pattern.lstrip('/')) == 0
-        except ValueError:
+    if isinstance(pattern, str):
+        if pattern.startswith('/'):
+            _pattern = pattern.lstrip('/')
+            if _pattern.contains('+'):
+                _ptrn = _pattern.split('+')
+                try:
+                    return subject % (float(_ptrn[0])-float(_ptrn[1]))
+                except ValueError:
+                    return False
+            else:
+                try:
+                    return subject % float(_pattern) == 0
+                except ValueError:
+                    return False
+        else:
             return False
-
     return MATCH_ALL == pattern or subject in pattern
