@@ -39,8 +39,9 @@ class CommandLineNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """ Send a message to a command_line. """
         try:
-            subprocess.call("{} \"{}\"".format(self.command,
-                                               shlex.quote(message)),
-                            shell=True)
+            subprocess.check_call(
+                "{} {}".format(self.command,
+                               shlex.quote(message)),
+                shell=True)
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', self.command)
