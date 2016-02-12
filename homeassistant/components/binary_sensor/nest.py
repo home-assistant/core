@@ -13,7 +13,7 @@ import homeassistant.components.nest as nest
 from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-
+DEPENDENCIES = ['nest']
 BINARY_TYPES = ['fan',
                 'hvac_ac_state',
                 'hvac_aux_heater_state',
