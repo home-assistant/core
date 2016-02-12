@@ -11,7 +11,7 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wink, isy994, zwave, insteon_hub)
+    group, discovery, wink, isy994, zwave, insteon_hub, hue)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -61,8 +61,8 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LIGHTS: 'wink',
     insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
+    hue.DISCOVER_LIGHTS: 'hue',
     isy994.DISCOVER_LIGHTS: 'isy994',
-    discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
 }
 
