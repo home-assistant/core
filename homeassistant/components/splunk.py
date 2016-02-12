@@ -65,7 +65,7 @@ def setup(hass, config):
         try:
             _state = state_helper.state_as_number(state)
         except ValueError:
-            return
+            _state = state.state
 
         json_body = [
             {
