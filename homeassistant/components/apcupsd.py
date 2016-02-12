@@ -3,12 +3,14 @@ homeassistant.components.apcupsd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Sets up and provides access to the status output of APCUPSd via its Network
 Information Server (NIS).
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/apcupsd/
 """
 import logging
 from datetime import timedelta
 
 from homeassistant.util import Throttle
-
 
 DOMAIN = "apcupsd"
 REQUIREMENTS = ("apcaccess==0.0.4",)
