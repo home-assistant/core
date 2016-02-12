@@ -50,7 +50,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def light_update(event):
         """ Callback for light updates from the RFXtrx gateway. """
-        if not isinstance(event.device, rfxtrxmod.LightingDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
+                not event.device.known_to_be_dimmable:
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -74,13 +75,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             add_devices_callback([new_light])
 
         # Check if entity exists or previously added automatically
-        if entity_id in rfxtrx.RFX_DEVICES \
-                and isinstance(rfxtrx.RFX_DEVICES[entity_id], RfxtrxLight):
+        if entity_id in rfxtrx.RFX_DEVICES:
             _LOGGER.debug(
                 "EntityID: %s light_update. Command: %s",
                 entity_id,
                 event.values['Command']
             )
+
             if event.values['Command'] == 'On'\
                     or event.values['Command'] == 'Off':
 
@@ -90,15 +91,27 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 rfxtrx.RFX_DEVICES[entity_id]._state = is_on
                 rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
 
-                # Fire event
-                if rfxtrx.RFX_DEVICES[entity_id].should_fire_event:
-                    rfxtrx.RFX_DEVICES[entity_id].hass.bus.fire(
-                        EVENT_BUTTON_PRESSED, {
-                            ATTR_ENTITY_ID:
-                                rfxtrx.RFX_DEVICES[entity_id].entity_id,
-                            ATTR_STATE: event.values['Command'].lower()
-                        }
-                    )
+            elif event.values['Command'] == 'Set level':
+                # pylint: disable=protected-access
+                rfxtrx.RFX_DEVICES[entity_id]._brightness = \
+                    (event.values['Dim level'] * 255 // 100)
+
+                # Update the rfxtrx device state
+                is_on = rfxtrx.RFX_DEVICES[entity_id]._brightness > 0
+                rfxtrx.RFX_DEVICES[entity_id]._state = is_on
+                rfxtrx.RFX_DEVICES[entity_id].update_ha_state()
+            else:
+                return
+
+            # Fire event
+            if rfxtrx.RFX_DEVICES[entity_id].should_fire_event:
+                rfxtrx.RFX_DEVICES[entity_id].hass.bus.fire(
+                    EVENT_BUTTON_PRESSED, {
+                        ATTR_ENTITY_ID:
+                            rfxtrx.RFX_DEVICES[entity_id].entity_id,
+                        ATTR_STATE: event.values['Command'].lower()
+                    }
+                )
 
     # Subscribe to main rfxtrx events
     if light_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
