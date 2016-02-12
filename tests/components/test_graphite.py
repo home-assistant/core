@@ -102,15 +102,20 @@ class TestGraphite(unittest.TestCase):
     @mock.patch('time.time')
     def test_report_with_string_state(self, mock_time):
         mock_time.return_value = 12345
+        expected = [
+            'ha.entity.foo 1.000000 12345',
+            'ha.entity.state 1.000000 12345',
+            ]
         state = mock.MagicMock(state='above_horizon', attributes={'foo': 1.0})
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
-            mock_send.assert_called_once_with('ha.entity.foo 1.000000 12345')
+            actual = mock_send.call_args_list[0][0][0].split('\n')
+            self.assertEqual(sorted(expected), sorted(actual))
 
     @mock.patch('time.time')
     def test_report_with_binary_state(self, mock_time):
         mock_time.return_value = 12345
-        state = mock.MagicMock(state=STATE_ON, attributes={'foo': 1.0})
+        state = ha.State('domain.entity', STATE_ON, {'foo': 1.0})
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
             expected = ['ha.entity.foo 1.000000 12345',
