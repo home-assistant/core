@@ -164,7 +164,7 @@ def update_component(get_function, status):
         for overview in get_function():
             try:
                 status[overview.id] = overview
-            except IndexError:
+            except AttributeError:
                 status[overview.deviceLabel] = overview
     except (ConnectionError, VERISURE_ERROR) as ex:
         _LOGGER.error('Caught connection error %s, tries to reconnect', ex)

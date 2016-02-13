@@ -128,10 +128,7 @@ class VerisureMouseDetection(Entity):
     @property
     def unit_of_measurement(self):
         """ Unit of measurement of this entity """
-        if verisure.MOUSEDETECTION_STATUS[self._id].count >= 1:
-            return "Mice"
-        else:
-            return "Mouse"
+        return "Mice"
 
     def update(self):
         """ update sensor """
