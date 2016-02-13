@@ -88,7 +88,7 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4
+https://github.com/theolind/pymysensors/archive/f0c928532167fb24823efa793ec21ca646fd37a6.zip#pymysensors==0.5
 
 # homeassistant.components.notify.googlevoice
 https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1
