@@ -1,6 +1,6 @@
 """
 tests.components.garage_door.test_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests demo garage door component.
 """

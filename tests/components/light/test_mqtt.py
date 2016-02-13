@@ -1,6 +1,6 @@
 """
 tests.components.light.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mqtt light.
 

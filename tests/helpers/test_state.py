@@ -24,12 +24,10 @@ from tests.common import get_test_home_assistant, mock_service
 
 
 class TestStateHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant event helpers.
-    """
+    """ Tests the Home Assistant event helpers. """
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """ Things to be run when tests are started. """
         self.hass = get_test_home_assistant()
         core_components.setup(self.hass, {})
 
@@ -165,24 +163,18 @@ class TestStateHelpers(unittest.TestCase):
                 ha.State('domain.test', _state, {})))
 
     def test_as_number_coercion(self):
-        for _state in ('0', '0.0'):
+        for _state in ('0', '0.0', 0, 0.0):
             self.assertEqual(
-                0.0, float(state.state_as_number(
-                ha.State('domain.test', _state, {}))))
-        for _state in ('1', '1.0'):
+                0.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
+        for _state in ('1', '1.0', 1, 1.0):
             self.assertEqual(
-                1.0, float(state.state_as_number(
-                    ha.State('domain.test', _state, {}))))
-
-    def test_as_number_tries_to_keep_types(self):
-        result = state.state_as_number(ha.State('domain.test', '1', {}))
-        self.assertTrue(isinstance(result, int))
-        result = state.state_as_number(ha.State('domain.test', '1.0', {}))
-        self.assertTrue(isinstance(result, float))
+                1.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
 
     def test_as_number_invalid_cases(self):
-        for _state in ('', 'foo', 'foo.bar', None, False, True, None,
-                       object, object()):
+        for _state in ('', 'foo', 'foo.bar', None, False, True, object,
+                       object()):
             self.assertRaises(ValueError,
                               state.state_as_number,
                               ha.State('domain.test', _state, {}))

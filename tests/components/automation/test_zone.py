@@ -1,6 +1,6 @@
 """
-tests.components.automation.test_location
-±±±~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.automation.test_zone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests location automation.
 """

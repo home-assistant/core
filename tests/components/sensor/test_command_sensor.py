@@ -1,10 +1,9 @@
 """
-tests.components.sensor.command_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.sensor.test_command_sensor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command sensor.
 """
-
 import unittest
 
 import homeassistant.core as ha
@@ -12,7 +11,7 @@ from homeassistant.components.sensor import command_sensor
 
 
 class TestCommandSensorSensor(unittest.TestCase):
-    """ Test the Template sensor. """
+    """ Test the Command line sensor. """
 
     def setUp(self):
         self.hass = ha.HomeAssistant()
@@ -22,7 +21,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_setup(self):
-        """ Test sensor setup """
+        """ Test sensor setup. """
         config = {'name': 'Test',
                   'unit_of_measurement': 'in',
                   'command': 'echo 5'}
@@ -43,7 +42,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual('5', entity.state)
 
     def test_setup_bad_config(self):
-        """ Test setup with a bad config """
+        """ Test setup with a bad configuration. """
         config = {}
 
         devices = []
@@ -59,7 +58,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual(0, len(devices))
 
     def test_template(self):
-        """ Test command sensor with template """
+        """ Test command sensor with template. """
         data = command_sensor.CommandSensorData('echo 50')
 
         entity = command_sensor.CommandSensor(
@@ -68,7 +67,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual(5, float(entity.state))
 
     def test_bad_command(self):
-        """ Test bad command """
+        """ Test bad command. """
         data = command_sensor.CommandSensorData('asdfasdf')
         data.update()
 

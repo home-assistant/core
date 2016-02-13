@@ -6,12 +6,8 @@ Tests demo media_player component.
 """
 import unittest
 from unittest.mock import patch
-from pprint import pprint
 import homeassistant.core as ha
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.media_player as mp
-
 
 entity_id = 'media_player.walkman'
 
@@ -138,4 +134,3 @@ class TestDemoMediaPlayer(unittest.TestCase):
         mp.media_seek(self.hass, 100, ent_id)
         self.hass.pool.block_till_done()
         assert mock_seek.called
-

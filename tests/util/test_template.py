@@ -1,8 +1,8 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_template
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests Home Assistant util methods.
+Tests Home Assistant template util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest

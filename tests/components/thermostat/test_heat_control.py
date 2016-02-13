@@ -15,7 +15,7 @@ from homeassistant.const import (
     TEMP_CELCIUS,
 )
 import homeassistant.core as ha
-from homeassistant.components import switch, thermostat
+from homeassistant.components import thermostat
 
 
 entity = 'thermostat.test'
@@ -138,4 +138,3 @@ class TestThermostatHeatControl(unittest.TestCase):
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
-

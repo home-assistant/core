@@ -1,6 +1,6 @@
 """
 tests.components.test_graphite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests graphite feeder.
 """
@@ -89,6 +89,7 @@ class TestGraphite(unittest.TestCase):
                  'bat': 'NaN',
                  }
         expected = [
+            'ha.entity.state 0.000000 12345',
             'ha.entity.foo 1.000000 12345',
             'ha.entity.bar 2.000000 12345',
             'ha.entity.baz 1.000000 12345',

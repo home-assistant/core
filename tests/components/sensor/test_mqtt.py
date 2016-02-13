@@ -2,7 +2,7 @@
 tests.components.sensor.test_mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests mqtt sensor.
+Tests MQTT sensor.
 """
 import unittest
 
