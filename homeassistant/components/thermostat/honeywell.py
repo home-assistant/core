@@ -9,21 +9,16 @@ https://home-assistant.io/components/thermostat.honeywell/
 import logging
 import socket
 
-import requests
-
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS,
                                  TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['evohomeclient==0.2.4']
+REQUIREMENTS = ['evohomeclient==0.2.4',
+                'somecomfort==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AWAY_TEMP = "away_temperature"
-US_SYSTEM_SWITCH_POSITIONS = {1: 'Heat',
-                              2: 'Off',
-                              3: 'Cool'}
-US_BASEURL = 'https://mytotalconnectcomfort.com/portal'
 
 
 def _setup_round(username, password, config, add_devices):
@@ -55,20 +50,21 @@ def _setup_round(username, password, config, add_devices):
 # config will be used later
 # pylint: disable=unused-argument
 def _setup_us(username, password, config, add_devices):
-    session = requests.Session()
-    if not HoneywellUSThermostat.do_login(session, username, password):
+    import somecomfort
+
+    try:
+        client = somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
         _LOGGER.error('Failed to login to honeywell account %s', username)
         return False
-
-    thermostats = HoneywellUSThermostat.get_devices(session)
-    if not thermostats:
-        _LOGGER.error('No thermostats found in account %s', username)
+    except somecomfort.SomeComfortError as ex:
+        _LOGGER.error('Failed to initialize honeywell client: %s', str(ex))
         return False
 
-    add_devices([HoneywellUSThermostat(id_, username, password,
-                                       name=name,
-                                       session=session)
-                 for id_, name in thermostats.items()])
+    add_devices([HoneywellUSThermostat(client, device)
+                 for location in client.locations_by_id.values()
+                 for device in location.devices_by_id.values()])
+    return True
 
 
 # pylint: disable=unused-argument
@@ -179,157 +175,52 @@ class RoundThermostat(ThermostatDevice):
 class HoneywellUSThermostat(ThermostatDevice):
     """ Represents a Honeywell US Thermostat. """
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, ident, username, password, name='honeywell',
-                 session=None):
-        self._ident = ident
-        self._username = username
-        self._password = password
-        self._name = name
-        if not session:
-            self._session = requests.Session()
-            self._login()
-        self._session = session
-        # Maybe this should be configurable?
-        self._timeout = 30
-        # Yeah, really.
-        self._session.headers['X-Requested-With'] = 'XMLHttpRequest'
-        self._update()
-
-    @staticmethod
-    def get_devices(session):
-        """ Return a dict of devices.
-
-        :param session: A session already primed from do_login
-        :returns: A dict of devices like: device_id=name
-        """
-        url = '%s/Location/GetLocationListData' % US_BASEURL
-        resp = session.post(url, params={'page': 1, 'filter': ''})
-        if resp.status_code == 200:
-            return {device['DeviceID']: device['Name']
-                    for device in resp.json()[0]['Devices']}
-        else:
-            return None
-
-    @staticmethod
-    def do_login(session, username, password, timeout=30):
-        """ Log into mytotalcomfort.com
-
-        :param session: A requests.Session object to use
-        :param username: Account username
-        :param password: Account password
-        :param timeout: Timeout to use with requests
-        :returns: A boolean indicating success
-        """
-        session.headers['X-Requested-With'] = 'XMLHttpRequest'
-        session.get(US_BASEURL, timeout=timeout)
-        params = {'UserName': username,
-                  'Password': password,
-                  'RememberMe': 'false',
-                  'timeOffset': 480}
-        resp = session.post(US_BASEURL, params=params,
-                            timeout=timeout)
-        if resp.status_code != 200:
-            _LOGGER('Login failed for user %s', username)
-            return False
-        else:
-            return True
-
-    def _login(self):
-        return self.do_login(self._session, self._username, self._password,
-                             timeout=self._timeout)
-
-    def _keepalive(self):
-        resp = self._session.get('%s/Account/KeepAlive')
-        if resp.status_code != 200:
-            if self._login():
-                _LOGGER.info('Re-logged into honeywell account')
-            else:
-                _LOGGER.error('Failed to re-login to honeywell account')
-                return False
-        else:
-            _LOGGER.debug('Keepalive succeeded')
-        return True
-
-    def _get_data(self):
-        if not self._keepalive:
-            return {'error': 'not logged in'}
-        url = '%s/Device/CheckDataSession/%s' % (US_BASEURL, self._ident)
-        resp = self._session.get(url, timeout=self._timeout)
-        if resp.status_code < 300:
-            return resp.json()
-        else:
-            return {'error': resp.status_code}
-
-    def _set_data(self, data):
-        if not self._keepalive:
-            return {'error': 'not logged in'}
-        url = '%s/Device/SubmitControlScreenChanges' % US_BASEURL
-        data['DeviceID'] = self._ident
-        resp = self._session.post(url, data=data, timeout=self._timeout)
-        if resp.status_code < 300:
-            return resp.json()
-        else:
-            return {'error': resp.status_code}
-
-    def _update(self):
-        data = self._get_data()['latestData']
-        if 'error' not in data:
-            self._data = data
+    def __init__(self, client, device):
+        self._client = client
+        self._device = device
 
     @property
     def is_fan_on(self):
-        return self._data['fanData']['fanIsRunning']
+        return self._device.fan_running
 
     @property
     def name(self):
-        return self._name
+        return self._device.name
 
     @property
     def unit_of_measurement(self):
-        unit = self._data['uiData']['DisplayUnits']
-        if unit == 'F':
-            return TEMP_FAHRENHEIT
-        else:
-            return TEMP_CELCIUS
+        return (TEMP_CELCIUS if self._device.temperature_unit == 'C'
+                else TEMP_FAHRENHEIT)
 
     @property
     def current_temperature(self):
-        self._update()
-        return self._data['uiData']['DispTemperature']
+        self._device.refresh()
+        return self._device.current_temperature
 
     @property
     def target_temperature(self):
-        setpoint = US_SYSTEM_SWITCH_POSITIONS.get(
-            self._data['uiData']['SystemSwitchPosition'],
-            'Off')
-        return self._data['uiData']['%sSetpoint' % setpoint]
+        if self._device.system_mode == 'cool':
+            return self._device.setpoint_cool
+        else:
+            return self._device.setpoint_heat
 
     def set_temperature(self, temperature):
         """ Set target temperature. """
-        data = {'SystemSwitch': None,
-                'HeatSetpoint': None,
-                'CoolSetpoint': None,
-                'HeatNextPeriod': None,
-                'CoolNextPeriod': None,
-                'StatusHeat': None,
-                'StatusCool': None,
-                'FanMode': None}
-        setpoint = US_SYSTEM_SWITCH_POSITIONS.get(
-            self._data['uiData']['SystemSwitchPosition'],
-            'Off')
-        data['%sSetpoint' % setpoint] = temperature
-        self._set_data(data)
+        import somecomfort
+        try:
+            if self._device.system_mode == 'cool':
+                self._device.setpoint_cool = temperature
+            else:
+                self._device.setpoint_heat = temperature
+        except somecomfort.SomeComfortError:
+            _LOGGER.error('Temperature %.1f out of range', temperature)
 
     @property
     def device_state_attributes(self):
         """ Return device specific state attributes. """
-        fanmodes = {0: "auto",
-                    1: "on",
-                    2: "circulate"}
-        return {"fan": (self._data['fanData']['fanIsRunning'] and
-                        'running' or 'idle'),
-                "fanmode": fanmodes[self._data['fanData']['fanMode']]}
+        return {'fan': (self.is_fan_on and 'running' or 'idle'),
+                'fanmode': self._device.fan_mode,
+                'system_mode': self._device.system_mode}
 
     def turn_away_mode_on(self):
         pass
