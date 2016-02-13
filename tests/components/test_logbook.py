@@ -1,6 +1,6 @@
 """
-tests.test_component_logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_logbook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the logbook component.
 """

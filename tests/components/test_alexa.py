@@ -1,6 +1,6 @@
 """
-tests.test_component_alexa
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_alexa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant Alexa component does what it should do.
 """
@@ -33,7 +33,7 @@ calls = []
 @patch('homeassistant.components.http.util.get_local_ip',
        return_value='127.0.0.1')
 def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
-    """Initalize a Home Assistant server for testing this module."""
+    """ Initalize a Home Assistant server for testing this module. """
     global hass
 
     hass = ha.HomeAssistant()

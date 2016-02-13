@@ -1,6 +1,6 @@
 """
 tests.components.switch.test_mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mFi switch.
 """

@@ -1,6 +1,6 @@
 """
-custom_components.device_tracker.test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+config.custom_components.device_tracker.test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides a mock device scanner.
 """

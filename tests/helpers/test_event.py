@@ -1,6 +1,6 @@
 """
 tests.helpers.event_test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests event helpers.
 """

@@ -267,7 +267,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 9, { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 9, {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -285,7 +285,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 11, { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 11, {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -304,7 +304,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -323,7 +323,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -342,7 +342,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10, entity state value should not be tested
-        self.hass.states.set('test.entity', '9', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', '9', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -380,7 +380,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9, 'not_test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 9, 'not_test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -399,7 +399,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 3 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': [11, 15, 3] })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': [11, 15, 3]})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -418,7 +418,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': '0.9' })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': '0.9'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -437,7 +437,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11, 'not_test_attribute': 9  })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 11, 'not_test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
