@@ -89,7 +89,7 @@ def setup(hass, config):
                     'domain': state.domain,
                     'entity_id': state.object_id,
                 },
-                'time': event.time_fired,
+                'time': event.time_fired.timestamp(),
                 'fields': {
                     'value': _state,
                 }
