@@ -1,10 +1,9 @@
 """
-tests.components.sensor.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.sensor.test_template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests template sensor.
 """
-
 import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
 

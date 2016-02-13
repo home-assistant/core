@@ -1,6 +1,6 @@
 """
 tests.components.switch.test_command_switch
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command switch.
 """
@@ -55,7 +55,6 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-
     def test_state_value(self):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
@@ -79,7 +78,7 @@ class TestCommandSwitch(unittest.TestCase):
 
             switch.turn_on(self.hass, 'switch.test')
             self.hass.pool.block_till_done()
-        
+
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
@@ -88,7 +87,6 @@ class TestCommandSwitch(unittest.TestCase):
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
-
 
     def test_state_json_value(self):
         with tempfile.TemporaryDirectory() as tempdirname:

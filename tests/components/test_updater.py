@@ -1,6 +1,6 @@
 """
-tests.test_updater
-~~~~~~~~~~~~~~~~~~
+tests.components.test_updater
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests updater component.
 """

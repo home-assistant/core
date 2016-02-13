@@ -1,6 +1,6 @@
 """
 tests.components.sensor.test_mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mFi sensor.
 """

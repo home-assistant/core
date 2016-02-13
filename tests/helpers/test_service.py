@@ -15,9 +15,7 @@ from tests.common import get_test_home_assistant, mock_service
 
 
 class TestServiceHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant service helpers.
-    """
+    """ Tests the Home Assistant service helpers. """
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """

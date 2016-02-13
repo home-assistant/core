@@ -1,6 +1,6 @@
 """
 tests.test_component_device_sun_light_trigger
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests device sun light trigger component.
 """

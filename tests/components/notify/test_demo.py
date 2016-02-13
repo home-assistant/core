@@ -1,7 +1,8 @@
 """
 tests.components.notify.test_demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tests notify demo component
+
+Tests notify demo component.
 """
 import unittest
 

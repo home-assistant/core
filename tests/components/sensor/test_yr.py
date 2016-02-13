@@ -1,6 +1,6 @@
 """
 tests.components.sensor.test_yr
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Yr sensor.
 """
@@ -73,7 +73,7 @@ class TestSensorYr:
         assert '1025.1' == state.state
 
         state = self.hass.states.get('sensor.yr_wind_direction')
-        assert '°'== state.attributes.get('unit_of_measurement')
+        assert '°' == state.attributes.get('unit_of_measurement')
         assert '81.8' == state.state
 
         state = self.hass.states.get('sensor.yr_humidity')

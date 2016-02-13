@@ -1,6 +1,6 @@
 """
-tests.test_component_http
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_api
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant HTTP component does what it should do.
 """

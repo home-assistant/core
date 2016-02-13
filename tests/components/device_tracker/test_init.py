@@ -1,6 +1,6 @@
 """
-tests.test_component_device_tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.device_tracker.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the device tracker compoments.
 """

@@ -1,6 +1,6 @@
 """
-tests.test_component_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests MQTT component.
 """
@@ -63,10 +63,12 @@ class TestMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('test-topic',
-                         self.calls[0][0].data['service_data'][mqtt.ATTR_TOPIC])
-        self.assertEqual('test-payload',
-                         self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
+        self.assertEqual(
+                'test-topic',
+                self.calls[0][0].data['service_data'][mqtt.ATTR_TOPIC])
+        self.assertEqual(
+                'test-payload',
+                self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
 
     def test_service_call_without_topic_does_not_publish(self):
         self.hass.bus.fire(EVENT_CALL_SERVICE, {

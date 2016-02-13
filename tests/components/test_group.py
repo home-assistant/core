@@ -1,6 +1,6 @@
 """
 tests.test_component_group
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the group compoments.
 """
