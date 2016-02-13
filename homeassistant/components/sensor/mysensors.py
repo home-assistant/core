@@ -1,5 +1,6 @@
 """
-homeassistant.components.sensor.mysensors
+homeassistant.components.sensor.mysensors.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors sensors.
 
@@ -30,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a defaultdict(list).
+        # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
@@ -151,48 +152,46 @@ class MySensorsSensor(Entity):
             self.gateway.const.SetReq.V_VOLTAGE: 'V',
             self.gateway.const.SetReq.V_CURRENT: 'A',
         }
-        unit_map_v15 = {
-            self.gateway.const.SetReq.V_PERCENTAGE: '%',
-        }
         if float(self.gateway.version) >= 1.5:
             if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
                 return self._values[
                     self.gateway.const.SetReq.V_UNIT_PREFIX]
-            unit_map.update(unit_map_v15)
+            unit_map.update({self.gateway.const.SetReq.V_PERCENTAGE: '%'})
         return unit_map.get(self.value_type)
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        device_attr = {}
-        for value_type, value in self._values.items():
-            if value_type != self.value_type:
-                device_attr[self.gateway.const.SetReq(value_type).name] = value
-        return device_attr
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = {
+        attr = {
             mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
-        device_attr = self.device_state_attributes
+        set_req = self.gateway.const.SetReq
 
-        if device_attr is not None:
-            data.update(device_attr)
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                try:
+                    attr[set_req(value_type).name] = value
+                except ValueError:
+                    _LOGGER.error('value_type %s is not valid for mysensors '
+                                  'version %s', value_type,
+                                  self.gateway.version)
+        return attr
 
-        return data
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
 
     def update(self):
         """Update the controller with the latest values from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_TRIPPED:
                 self._values[value_type] = STATE_ON if int(

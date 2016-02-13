@@ -141,7 +141,7 @@ class Configurator(object):
 
         state = self.hass.states.get(entity_id)
 
-        new_data = state.attributes
+        new_data = dict(state.attributes)
         new_data[ATTR_ERRORS] = error
 
         self.hass.states.set(entity_id, STATE_CONFIGURE, new_data)

@@ -22,43 +22,41 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the kodi platform. """
+
+    url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
+
+    jsonrpc_url = config.get('url')  # deprecated
+    if jsonrpc_url:
+        url = jsonrpc_url.rstrip('/jsonrpc')
 
     add_devices([
         KodiDevice(
             config.get('name', 'Kodi'),
-            config.get('url'),
+            url,
             auth=(
                 config.get('user', ''),
                 config.get('password', ''))),
     ])
 
 
-def _get_image_url(kodi_url):
-    """ Helper function that parses the thumbnail URLs used by Kodi. """
-    url_components = urllib.parse.urlparse(kodi_url)
-
-    if url_components.scheme == 'image':
-        return urllib.parse.unquote(url_components.netloc)
-
-
 class KodiDevice(MediaPlayerDevice):
     """ Represents a XBMC/Kodi device. """
 
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods, abstract-method
 
     def __init__(self, name, url, auth=None):
         import jsonrpc_requests
         self._name = name
         self._url = url
-        self._server = jsonrpc_requests.Server(url, auth=auth)
+        self._server = jsonrpc_requests.Server(
+            '{}/jsonrpc'.format(self._url),
+            auth=auth)
         self._players = None
         self._properties = None
         self._item = None
         self._app_properties = None
-
         self.update()
 
     @property
@@ -156,7 +154,16 @@ class KodiDevice(MediaPlayerDevice):
     def media_image_url(self):
         """ Image url of current playing media. """
         if self._item is not None:
-            return _get_image_url(self._item['thumbnail'])
+            return self._get_image_url()
+
+    def _get_image_url(self):
+        """ Helper function that parses the thumbnail URLs used by Kodi. """
+        url_components = urllib.parse.urlparse(self._item['thumbnail'])
+
+        if url_components.scheme == 'image':
+            return '{}/image/{}'.format(
+                self._url,
+                urllib.parse.quote_plus(self._item['thumbnail']))
 
     @property
     def media_title(self):
@@ -263,11 +270,3 @@ class KodiDevice(MediaPlayerDevice):
             self._server.Player.Seek(players[0]['playerid'], time)
 
         self.update_ha_state()
-
-    def turn_on(self):
-        """ turn the media player on. """
-        raise NotImplementedError()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()

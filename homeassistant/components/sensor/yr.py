@@ -28,7 +28,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
     'windSpeed': ['Wind speed', 'm/s'],
     'windGust': ['Wind gust', 'm/s'],
-    'pressure': ['Pressure', 'mbar'],
+    'pressure': ['Pressure', 'hPa'],
     'windDirection': ['Wind direction', '°'],
     'humidity': ['Humidity', '%'],
     'fog': ['Fog', '%'],
@@ -100,7 +100,7 @@ class YrSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Returns state attributes. """
         data = {
             'about': "Weather forecast from yr.no, delivered by the"

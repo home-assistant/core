@@ -9,7 +9,6 @@ from datetime import timedelta
 from unittest import mock
 
 from homeassistant import core as ha, loader
-import homeassistant.util.location as location_util
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
@@ -42,23 +41,6 @@ def get_test_home_assistant(num_threads=None):
         loader.prepare(hass)
 
     return hass
-
-
-def mock_detect_location_info():
-    """ Mock implementation of util.detect_location_info. """
-    return location_util.LocationInfo(
-        ip='1.1.1.1',
-        country_code='US',
-        country_name='United States',
-        region_code='CA',
-        region_name='California',
-        city='San Diego',
-        zip_code='92122',
-        time_zone='America/Los_Angeles',
-        latitude='2.0',
-        longitude='1.0',
-        use_fahrenheit=True,
-    )
 
 
 def mock_service(hass, domain, service):
@@ -145,11 +127,26 @@ class MockHTTP(object):
 class MockModule(object):
     """ Provides a fake module. """
 
-    def __init__(self, domain, dependencies=[], setup=None):
+    def __init__(self, domain=None, dependencies=[], setup=None):
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
         # Setup a mock setup if none given.
-        self.setup = lambda hass, config: False if setup is None else setup
+        if setup is None:
+            self.setup = lambda hass, config: False
+        else:
+            self.setup = setup
+
+
+class MockPlatform(object):
+    """ Provides a fake platform. """
+
+    def __init__(self, setup_platform=None, dependencies=[]):
+        self.DEPENDENCIES = dependencies
+        self._setup_platform = setup_platform
+
+    def setup_platform(self, hass, config, add_devices, discovery_info=None):
+        if self._setup_platform is not None:
+            self._setup_platform(hass, config, add_devices, discovery_info)
 
 
 class MockToggleDevice(ToggleEntity):
