@@ -1,3 +1,9 @@
+"""
+tests.__init__
+~~~~~~~~~~~~~~
+
+Tests initialization.
+"""
 import betamax
 
 from homeassistant.util import location

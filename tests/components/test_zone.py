@@ -1,6 +1,6 @@
 """
 tests.components.test_zone
-±±±~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests zone component.
 """

@@ -2,7 +2,7 @@
 tests.components.switch.test_mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests mqtt switch.
+Tests MQTT switch.
 """
 import unittest
 

@@ -1,6 +1,6 @@
 """
 tests.test_core
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 Provides tests to verify that Home Assistant core works.
 """

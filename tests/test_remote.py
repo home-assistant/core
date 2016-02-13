@@ -1,6 +1,6 @@
 """
 tests.remote
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 Tests Home Assistant remote methods and classes.
 Uses port 8122 for master, 8123 for slave

@@ -1,6 +1,6 @@
 """
-custom_components.light.test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+config.custom_components.light.test
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Provides a mock switch platform.
 

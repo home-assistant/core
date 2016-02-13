@@ -1,6 +1,6 @@
 """
-tests.test_helper_entity_component
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.helpers.test_entity_component
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the entity component helper.
 """

@@ -1,4 +1,9 @@
-# -*- coding: utf-8 -*-
+"""
+tests.components.test_weblink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tests weblink component.
+"""
 import unittest
 
 import homeassistant.core as ha

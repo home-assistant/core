@@ -1,10 +1,9 @@
 """
 tests.components.binary_sensor.command_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command binary sensor.
 """
-
 import unittest
 
 import homeassistant.core as ha

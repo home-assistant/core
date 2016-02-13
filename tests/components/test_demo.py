@@ -1,6 +1,6 @@
 """
 tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests demo component.
 """
