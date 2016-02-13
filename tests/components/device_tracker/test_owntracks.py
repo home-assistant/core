@@ -109,6 +109,16 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
                 'longitude': 1.0,
                 'radius': 100000
             })
+
+        self.hass.states.set(
+        'zone.passive', 'zoning',
+        {
+            'name': 'zone',
+            'latitude': 3.0,
+            'longitude': 1.0,
+            'radius': 10,
+            'passive': True
+        })
         # Clear state between teste
         self.hass.states.set(DEVICE_TRACKER_STATE, None)
         owntracks.REGIONS_ENTERED = defaultdict(list)
@@ -247,6 +257,42 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         message['desc'] = "inner_2"
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('outer')
+
+    def test_event_entry_exit_passive_zone(self):
+        # Enter passive zone
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "passive"
+        self.send_message(EVENT_TOPIC, message)
+
+        # Should pick up gps put not zone
+        self.assert_location_state('not_home')
+        self.assert_location_latitude(3.0)
+        self.assert_location_accuracy(10.0)
+
+        # Enter inner2 zone
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "inner_2"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner_2')
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
+
+        # Exit inner_2 - should be in 'passive'
+        # ie gps co-ords - but not zone
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = "inner_2"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('not_home')
+        self.assert_location_latitude(3.0)
+        self.assert_location_accuracy(10.0)
+
+        # Exit passive - should be in 'outer'
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = "passive"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('outer')
+        self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
 
     def test_event_entry_unknown_zone(self):
         # Just treat as location update

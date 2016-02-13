@@ -39,6 +39,7 @@ OPTION_TYPES = {
     'miners_revenue_btc': ['Miners revenue', 'BTC'],
     'market_price_usd': ['Market price', 'USD']
 }
+ICON = 'mdi:currency-btc'
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -107,6 +108,11 @@ class BitcoinSensor(Entity):
     @property
     def unit_of_measurement(self):
         return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """ Icon to use in the frontend, if any. """
+        return ICON
 
     # pylint: disable=too-many-branches
     def update(self):

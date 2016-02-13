@@ -24,7 +24,9 @@ CONF_DEBUG = 'debug'
 CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
+CONF_BAUD_RATE = 'baud_rate'
 DEFAULT_VERSION = '1.4'
+DEFAULT_BAUD_RATE = 115200
 
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
@@ -54,18 +56,24 @@ def setup(hass, config):
                            {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
         return False
+    if not all(CONF_PORT in gateway
+               for gateway in config[DOMAIN][CONF_GATEWAYS]):
+        _LOGGER.error('Missing required configuration items '
+                      'in %s: %s', DOMAIN, CONF_PORT)
+        return False
 
     import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
     is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
 
-    def setup_gateway(port, persistence, persistence_file, version):
+    def setup_gateway(port, persistence, persistence_file, version, baud_rate):
         """Return gateway after setup of the gateway."""
         gateway = mysensors.SerialGateway(port, event_callback=None,
                                           persistence=persistence,
                                           persistence_file=persistence_file,
-                                          protocol_version=version)
+                                          protocol_version=version,
+                                          baud=baud_rate)
         gateway.metric = is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
         gateway = GatewayWrapper(gateway, version)
@@ -98,8 +106,9 @@ def setup(hass, config):
         persistence_file = gway.get(
             CONF_PERSISTENCE_FILE,
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
+        baud_rate = gway.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE)
         GATEWAYS[port] = setup_gateway(
-            port, persistence, persistence_file, version)
+            port, persistence, persistence_file, version, baud_rate)
 
     for (component, discovery_service) in DISCOVERY_COMPONENTS:
         # Ensure component is loaded

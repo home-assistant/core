@@ -8,11 +8,11 @@ https://home-assistant.io/components/light.wink/
 """
 import logging
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, Light, ATTR_COLOR_TEMP)
 from homeassistant.components.wink import WinkToggleDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.4.2']
+REQUIREMENTS = ['python-wink==0.5.0']
 
 TEMP_MIN = 1900               # Wink minimum temperature
 TEMP_MAX = 6500               # Wink maximum temperature
@@ -39,8 +39,31 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         WinkLight(light) for light in pywink.get_bulbs())
 
 
-class WinkLight(WinkToggleDevice):
+class WinkLight(Light):
     """ Represents a Wink light. """
+
+    def __init__(self, wink):
+        self.wink = wink
+
+    @property
+    def unique_id(self):
+        """ Returns the id of this Wink switch. """
+        return "{}.{}".format(self.__class__, self.wink.device_id())
+
+    @property
+    def name(self):
+        """ Returns the name of the light if any. """
+        return self.wink.name()
+
+    @property
+    def is_on(self):
+        """ True if light is on. """
+        return self.wink.state()
+
+    @property
+    def brightness(self):
+        """Brightness of the light."""
+        return int(self.wink.brightness() * 255)
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
@@ -60,20 +83,10 @@ class WinkLight(WinkToggleDevice):
 
         self.wink.set_state(True, brightness, temp_kelvin)
 
-    @property
-    def state_attributes(self):
-        attr = super().state_attributes
+    def turn_off(self):
+        """ Turns the switch off. """
+        self.wink.set_state(False)
 
-        if self.is_on:
-            brightness = self.wink.brightness()
-            temp_kelvin = self.wink.color_temperature_kelvin()
-
-            if brightness is not None:
-                attr[ATTR_BRIGHTNESS] = int(brightness * 255)
-            if temp_kelvin is not None:
-                attr[ATTR_COLOR_TEMP] = int(TEMP_MIN_HASS +
-                                            (TEMP_MAX_HASS - TEMP_MIN_HASS) *
-                                            (temp_kelvin - TEMP_MIN) /
-                                            (TEMP_MAX - TEMP_MIN))
-
-        return attr
+    def update(self):
+        """ Update state of the light. """
+        self.wink.update_state()

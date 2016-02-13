@@ -151,6 +151,9 @@ SERVICE_ALARM_TRIGGER = "alarm_trigger"
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
 
+SERVICE_OPEN = "open"
+SERVICE_CLOSE = "close"
+
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
 SERVICE_STOP = 'stop'
@@ -197,3 +200,6 @@ HTTP_HEADER_EXPIRES = "Expires"
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
 CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
+
+# The exit code to send to request a restart
+RESTART_EXIT_CODE = 100

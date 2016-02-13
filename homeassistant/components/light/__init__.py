@@ -301,11 +301,6 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
     def state_attributes(self):
         """ Returns optional state attributes. """
         data = {}
@@ -321,10 +316,5 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            data.update(device_attr)
 
         return data
