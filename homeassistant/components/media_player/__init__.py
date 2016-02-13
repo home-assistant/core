@@ -32,7 +32,6 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_PLEX: 'plex',
 }
 
-SERVICE_YOUTUBE_VIDEO = 'play_youtube_video'
 SERVICE_PLAY_MEDIA = 'play_media'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
@@ -68,13 +67,11 @@ SUPPORT_VOLUME_SET = 4
 SUPPORT_VOLUME_MUTE = 8
 SUPPORT_PREVIOUS_TRACK = 16
 SUPPORT_NEXT_TRACK = 32
-SUPPORT_YOUTUBE = 64
+
 SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
 SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
-
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
 
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
@@ -200,6 +197,13 @@ def media_previous_track(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
+def media_seek(hass, position, entity_id=None):
+    """ Send the media player the command to seek in current playing media. """
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_MEDIA_SEEK_POSITION] = position
+    hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
+
+
 def play_media(hass, media_type, media_id, entity_id=None):
     """ Send the media player the command for playing media. """
     data = {"media_type": media_type, "media_id": media_id}
@@ -283,27 +287,13 @@ def setup(hass, config):
         position = service.data[ATTR_MEDIA_SEEK_POSITION]
 
         for player in target_players:
-            player.seek(position)
+            player.media_seek(position)
 
             if player.should_poll:
                 player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
                            descriptions.get(SERVICE_MEDIA_SEEK))
-
-    def play_youtube_video_service(service, media_id=None):
-        """ Plays specified media_id on the media player. """
-        if media_id is None:
-            service.data.get('video')
-
-        if media_id is None:
-            return
-
-        for player in component.extract_from_service(service):
-            player.play_youtube(media_id)
-
-            if player.should_poll:
-                player.update_ha_state(True)
 
     def play_media_service(service):
         """ Plays specified media_id on the media player. """
@@ -321,20 +311,6 @@ def setup(hass, config):
 
             if player.should_poll:
                 player.update_ha_state(True)
-
-    hass.services.register(
-        DOMAIN, "start_fireplace",
-        lambda service: play_youtube_video_service(service, "eyU3bRy2x44"),
-        descriptions.get('start_fireplace'))
-
-    hass.services.register(
-        DOMAIN, "start_epic_sax",
-        lambda service: play_youtube_video_service(service, "kxopViU98Xo"),
-        descriptions.get('start_epic_sax'))
-
-    hass.services.register(
-        DOMAIN, SERVICE_YOUTUBE_VIDEO, play_youtube_video_service,
-        descriptions.get(SERVICE_YOUTUBE_VIDEO))
 
     hass.services.register(
         DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
@@ -449,11 +425,6 @@ class MediaPlayerDevice(Entity):
         """ Flags of media commands that are supported. """
         return 0
 
-    @property
-    def device_state_attributes(self):
-        """ Extra attributes a device wants to expose. """
-        return None
-
     def turn_on(self):
         """ turn the media player on. """
         raise NotImplementedError()
@@ -490,10 +461,6 @@ class MediaPlayerDevice(Entity):
         """ Send seek command. """
         raise NotImplementedError()
 
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()
-
     def play_media(self, media_type, media_id):
         """ Plays a piece of media. """
         raise NotImplementedError()
@@ -528,11 +495,6 @@ class MediaPlayerDevice(Entity):
     def support_next_track(self):
         """ Boolean if next track command supported. """
         return bool(self.supported_media_commands & SUPPORT_NEXT_TRACK)
-
-    @property
-    def support_youtube(self):
-        """ Boolean if YouTube is supported. """
-        return bool(self.supported_media_commands & SUPPORT_YOUTUBE)
 
     @property
     def support_play_media(self):
@@ -578,10 +540,5 @@ class MediaPlayerDevice(Entity):
 
             if self.media_image_url:
                 state_attr[ATTR_ENTITY_PICTURE] = self.media_image_url
-
-        device_attr = self.device_state_attributes
-
-        if device_attr:
-            state_attr.update(device_attr)
 
         return state_attr

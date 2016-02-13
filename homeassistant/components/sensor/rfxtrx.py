@@ -21,7 +21,9 @@ DATA_TYPES = OrderedDict([
     ('Humidity', '%'),
     ('Barometer', ''),
     ('Wind direction', ''),
-    ('Rain rate', '')])
+    ('Rain rate', ''),
+    ('Energy usage', 'W'),
+    ('Total usage', 'W')])
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -87,7 +89,7 @@ class RfxtrxSensor(Entity):
         return self._name
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         return self.event.values
 
     @property

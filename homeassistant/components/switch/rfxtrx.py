@@ -49,7 +49,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if not isinstance(event.device, rfxtrxmod.LightingDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
+                event.device.known_to_be_dimmable:
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -73,8 +74,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             add_devices_callback([new_switch])
 
         # Check if entity exists or previously added automatically
-        if entity_id in rfxtrx.RFX_DEVICES \
-                and isinstance(rfxtrx.RFX_DEVICES[entity_id], RfxtrxSwitch):
+        if entity_id in rfxtrx.RFX_DEVICES:
             _LOGGER.debug(
                 "EntityID: %s switch_update. Command: %s",
                 entity_id,

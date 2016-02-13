@@ -9,8 +9,8 @@ https://home-assistant.io/components/rfxtrx/
 import logging
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
-                '#RFXtrx==0.2']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.4.zip' +
+                '#RFXtrx==0.4']
 
 DOMAIN = "rfxtrx"
 
@@ -37,6 +37,8 @@ def setup(hass, config):
         """ Callback all subscribers for RFXtrx gateway. """
 
         # Log RFXCOM event
+        if not event.device.id_string:
+            return
         entity_id = slugify(event.device.id_string.lower())
         packet_id = "".join("{0:02x}".format(x) for x in event.data)
         entity_name = "%s : %s" % (entity_id, packet_id)
