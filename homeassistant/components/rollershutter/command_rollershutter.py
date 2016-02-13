@@ -49,7 +49,7 @@ class CommandRollershutter(RollershutterDevice):
 
         self._hass = hass
         self._name = name
-        self._state = False
+        self._state = 0  # False
         self._command_up = command_up
         self._command_down = command_down
         self._command_stop = command_stop
@@ -120,8 +120,11 @@ class CommandRollershutter(RollershutterDevice):
             payload = str(self._query_state())
             if self._value_template:
                 payload = template.render_with_possible_json_value(
+#                    self._hass, self._value_template, payload, 'Unknown')
                     self._hass, self._value_template, payload)
-            self._state = (payload.lower() == "true")
+            self._state = int(payload)
+#            self._state = payload
+#            self._state = (payload.lower() == "true")
 
     def move_up(self, **kwargs):
         """ Move the rollershutter up. """
