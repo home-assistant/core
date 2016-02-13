@@ -61,9 +61,14 @@ def _setup_us(username, password, config, add_devices):
         _LOGGER.error('Failed to initialize honeywell client: %s', str(ex))
         return False
 
+    dev_id = config.get('thermostat')
+    loc_id = config.get('location')
+
     add_devices([HoneywellUSThermostat(client, device)
                  for location in client.locations_by_id.values()
-                 for device in location.devices_by_id.values()])
+                 for device in location.devices_by_id.values()
+                 if ((not loc_id or location.locationid == loc_id) and
+                     (not dev_id or device.deviceid == dev_id))])
     return True
 
 

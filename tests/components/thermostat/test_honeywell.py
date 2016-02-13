@@ -67,6 +67,69 @@ class TestHoneywell(unittest.TestCase):
         self.assertFalse(result)
         self.assertFalse(add_devices.called)
 
+    @mock.patch('somecomfort.SomeComfort')
+    @mock.patch('homeassistant.components.thermostat.'
+                'honeywell.HoneywellUSThermostat')
+    def _test_us_filtered_devices(self, mock_ht, mock_sc, loc=None, dev=None):
+        config = {
+            CONF_USERNAME: 'user',
+            CONF_PASSWORD: 'pass',
+            'region': 'us',
+            'location': loc,
+            'thermostat': dev,
+        }
+        locations = {
+            1: mock.MagicMock(locationid=mock.sentinel.loc1,
+                              devices_by_id={
+                                  11: mock.MagicMock(
+                                      deviceid=mock.sentinel.loc1dev1),
+                                  12: mock.MagicMock(
+                                      deviceid=mock.sentinel.loc1dev2),
+                              }),
+            2: mock.MagicMock(locationid=mock.sentinel.loc2,
+                              devices_by_id={
+                                  21: mock.MagicMock(
+                                      deviceid=mock.sentinel.loc2dev1),
+                              }),
+            3: mock.MagicMock(locationid=mock.sentinel.loc3,
+                              devices_by_id={
+                                  31: mock.MagicMock(
+                                      deviceid=mock.sentinel.loc3dev1),
+                              }),
+        }
+        mock_sc.return_value = mock.MagicMock(locations_by_id=locations)
+        hass = mock.MagicMock()
+        add_devices = mock.MagicMock()
+        self.assertEqual(True,
+                         honeywell.setup_platform(hass, config, add_devices))
+
+        return mock_ht.call_args_list, mock_sc
+
+    def test_us_filtered_thermostat_1(self):
+        result, client = self._test_us_filtered_devices(
+            dev=mock.sentinel.loc1dev1)
+        devices = [x[0][1].deviceid for x in result]
+        self.assertEqual([mock.sentinel.loc1dev1], devices)
+
+    def test_us_filtered_thermostat_2(self):
+        result, client = self._test_us_filtered_devices(
+            dev=mock.sentinel.loc2dev1)
+        devices = [x[0][1].deviceid for x in result]
+        self.assertEqual([mock.sentinel.loc2dev1], devices)
+
+    def test_us_filtered_location_1(self):
+        result, client = self._test_us_filtered_devices(
+            loc=mock.sentinel.loc1)
+        devices = [x[0][1].deviceid for x in result]
+        self.assertEqual([mock.sentinel.loc1dev1,
+                          mock.sentinel.loc1dev2], devices)
+
+    def test_us_filtered_location_2(self):
+        result, client = self._test_us_filtered_devices(
+            loc=mock.sentinel.loc2)
+        devices = [x[0][1].deviceid for x in result]
+        self.assertEqual([mock.sentinel.loc2dev1], devices)
+
 
 class TestHoneywellUS(unittest.TestCase):
     def setup_method(self, method):
