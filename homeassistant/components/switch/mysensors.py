@@ -1,5 +1,6 @@
 """
-homeassistant.components.switch.mysensors
+homeassistant.components.switch.mysensors.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors switches.
 
@@ -29,14 +30,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a defaultdict(list).
+        # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
             pres.S_DOOR: [set_req.V_ARMED],
             pres.S_MOTION: [set_req.V_ARMED],
             pres.S_SMOKE: [set_req.V_ARMED],
-            pres.S_LIGHT: [set_req.V_LIGHT],
             pres.S_LOCK: [set_req.V_LOCK_STATUS],
         }
         if float(gateway.version) >= 1.5:
@@ -48,7 +48,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_VIBRATION: [set_req.V_ARMED],
                 pres.S_MOISTURE: [set_req.V_ARMED],
             })
-            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
@@ -100,28 +99,24 @@ class MySensorsSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        device_attr = {}
-        for value_type, value in self._values.items():
-            if value_type != self.value_type:
-                device_attr[self.gateway.const.SetReq(value_type).name] = value
-        return device_attr
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = {
+        attr = {
             mysensors.ATTR_PORT: self.gateway.port,
             mysensors.ATTR_NODE_ID: self.node_id,
             mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
-        device_attr = self.device_state_attributes
+        set_req = self.gateway.const.SetReq
 
-        if device_attr is not None:
-            data.update(device_attr)
-
-        return data
+        for value_type, value in self._values.items():
+            if value_type != self.value_type:
+                try:
+                    attr[set_req(value_type).name] = value
+                except ValueError:
+                    _LOGGER.error('value_type %s is not valid for mysensors '
+                                  'version %s', value_type,
+                                  self.gateway.version)
+        return attr
 
     @property
     def is_on(self):
@@ -134,25 +129,33 @@ class MySensorsSwitch(SwitchDevice):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
-        self._values[self.value_type] = STATE_ON
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_ON
+            self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
-        self._values[self.value_type] = STATE_OFF
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_OFF
+            self.update_ha_state()
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_ARMED or \
-               value_type == self.gateway.const.SetReq.V_STATUS or \
                value_type == self.gateway.const.SetReq.V_LIGHT or \
                value_type == self.gateway.const.SetReq.V_LOCK_STATUS:
                 self._values[value_type] = (

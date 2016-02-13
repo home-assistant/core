@@ -1,10 +1,10 @@
 """
-homeassistant.components.insteon
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+homeassistant.components.insteon_hub
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Insteon Hub.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/insteon/
+https://home-assistant.io/components/insteon_hub/
 """
 import logging
 import homeassistant.bootstrap as bootstrap

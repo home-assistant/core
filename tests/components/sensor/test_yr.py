@@ -43,37 +43,47 @@ class TestSensorYr:
 
         state = self.hass.states.get('sensor.yr_symbol')
 
+        assert '46' == state.state
         assert state.state.isnumeric()
         assert state.attributes.get('unit_of_measurement') is None
 
     def test_custom_setup(self, betamax_session):
+        now = datetime(2016, 1, 5, 1, tzinfo=dt_util.UTC)
+
         with patch('homeassistant.components.sensor.yr.requests.Session',
                    return_value=betamax_session):
-            assert sensor.setup(self.hass, {
-                'sensor': {
-                    'platform': 'yr',
-                    'elevation': 0,
-                    'monitored_conditions': {
-                        'pressure',
-                        'windDirection',
-                        'humidity',
-                        'fog',
-                        'windSpeed'
+            with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+                       return_value=now):
+                assert sensor.setup(self.hass, {
+                    'sensor': {
+                        'platform': 'yr',
+                        'elevation': 0,
+                        'monitored_conditions': {
+                            'pressure',
+                            'windDirection',
+                            'humidity',
+                            'fog',
+                            'windSpeed'
+                        }
                     }
-                }
-            })
+                })
 
         state = self.hass.states.get('sensor.yr_pressure')
-        assert 'hPa', state.attributes.get('unit_of_measurement')
+        assert 'hPa' == state.attributes.get('unit_of_measurement')
+        assert '1025.1' == state.state
 
         state = self.hass.states.get('sensor.yr_wind_direction')
-        assert '°', state.attributes.get('unit_of_measurement')
+        assert '°'== state.attributes.get('unit_of_measurement')
+        assert '81.8' == state.state
 
         state = self.hass.states.get('sensor.yr_humidity')
-        assert '%', state.attributes.get('unit_of_measurement')
+        assert '%' == state.attributes.get('unit_of_measurement')
+        assert '79.6' == state.state
 
         state = self.hass.states.get('sensor.yr_fog')
-        assert '%', state.attributes.get('unit_of_measurement')
+        assert '%' == state.attributes.get('unit_of_measurement')
+        assert '0.0' == state.state
 
         state = self.hass.states.get('sensor.yr_wind_speed')
         assert 'm/s', state.attributes.get('unit_of_measurement')
+        assert '4.3' == state.state

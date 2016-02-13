@@ -57,10 +57,12 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
+        """ No polling needed. """
         return True
 
     @property
     def name(self):
+        """ Returns the name of the device. """
         return self._name
 
     @property
@@ -88,7 +90,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         # Open another session to alarm.com to fire off the command
         _alarm = Alarmdotcom(self._username, self._password, timeout=10)
         _alarm.disarm()
-        self.update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
@@ -98,7 +99,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         # Open another session to alarm.com to fire off the command
         _alarm = Alarmdotcom(self._username, self._password, timeout=10)
         _alarm.arm_stay()
-        self.update_ha_state()
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
@@ -108,7 +108,6 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         # Open another session to alarm.com to fire off the command
         _alarm = Alarmdotcom(self._username, self._password, timeout=10)
         _alarm.arm_away()
-        self.update_ha_state()
 
     def _validate_code(self, code, state):
         """ Validate given code. """

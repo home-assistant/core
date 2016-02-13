@@ -22,14 +22,24 @@ from homeassistant.components.zwave import (
 from homeassistant.const import (
     STATE_ON, STATE_OFF, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
-PHILIO = '013c'
-PHILIO_SLIM_SENSOR = '0002'
+PHILIO = '0x013c'
+PHILIO_SLIM_SENSOR = '0x0002'
 PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
 
+FIBARO = '0x010f'
+FIBARO_WALL_PLUG = '0x1000'
+FIBARO_WALL_PLUG_SENSOR_METER = (FIBARO, FIBARO_WALL_PLUG, 8)
+
 WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
+WORKAROUND_IGNORE = 'ignore'
 
 DEVICE_MAPPINGS = {
     PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
+
+    # For some reason Fibaro Wall Plug reports 2 power consumptions.
+    # One value updates as the power consumption changes
+    # and the other does not change.
+    FIBARO_WALL_PLUG_SENSOR_METER: WORKAROUND_IGNORE,
 }
 
 
@@ -66,6 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([
                 ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
             ])
+        elif DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+            return
 
     # generic Device mappings
     elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
