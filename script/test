@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# script/test: Run test suite for application. Optionallly pass in a path to an
+# script/test: Run test suite for application. Optionally pass in a path to an
 #              individual test file to run a single test.
 
 cd "$(dirname "$0")/.."
@@ -8,10 +8,10 @@ cd "$(dirname "$0")/.."
 echo "Running tests..."
 
 if [ "$1" = "coverage" ]; then
-  py.test --cov --cov-report=
+  py.test -v --timeout=30 --cov --cov-report=
   TEST_STATUS=$?
 else
-  py.test
+  py.test -v --timeout=30
   TEST_STATUS=$?
 fi
 

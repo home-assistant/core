@@ -1,9 +1,12 @@
 """
 homeassistant.components.sensor.zigbee
-
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Contains functionality to use a ZigBee device as a sensor.
-"""
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.zigbee/
+
+"""
 import logging
 from binascii import hexlify
 
@@ -36,9 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ZigBeeTemperatureSensor(Entity):
-    """
-    Allows usage of an XBee Pro as a temperature sensor.
-    """
+    """ Allows usage of an XBee Pro as a temperature sensor. """
     def __init__(self, hass, config):
         self._config = config
         self._temp = None

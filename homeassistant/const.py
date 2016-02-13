@@ -1,7 +1,7 @@
 # coding: utf-8
-""" Constants used by Home Assistant components. """
+"""Constants used by Home Assistant components."""
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -26,7 +26,7 @@ CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
-
+CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 
 # #### EVENTS ####
@@ -59,6 +59,7 @@ STATE_ALARM_PENDING = 'pending'
 STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
+STATE_UNAVAILABLE = 'unavailable'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Contains current time for a TIME_CHANGED event
@@ -67,6 +68,7 @@ ATTR_NOW = "now"
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = "domain"
 ATTR_SERVICE = "service"
+ATTR_SERVICE_DATA = "service_data"
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = "service_call_id"
@@ -124,6 +126,7 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
+SERVICE_HOMEASSISTANT_RESTART = "restart"
 
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
@@ -147,6 +150,9 @@ SERVICE_ALARM_TRIGGER = "alarm_trigger"
 
 SERVICE_LOCK = "lock"
 SERVICE_UNLOCK = "unlock"
+
+SERVICE_OPEN = "open"
+SERVICE_CLOSE = "close"
 
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
@@ -194,3 +200,6 @@ HTTP_HEADER_EXPIRES = "Expires"
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'
 CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
+
+# The exit code to send to request a restart
+RESTART_EXIT_CODE = 100

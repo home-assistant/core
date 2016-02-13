@@ -1,29 +1,10 @@
 """
 homeassistant.components.sensor.ecobee
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Sensor platform for Ecobee sensors.
 
-Ecobee Thermostat Component
-
-This component adds support for Ecobee3 Wireless Thermostats.
-You will need to setup developer access to your thermostat,
-and create and API key on the ecobee website.
-
-The first time you run this component you will see a configuration
-component card in Home Assistant.  This card will contain a PIN code
-that you will need to use to authorize access to your thermostat.  You
-can do this at https://www.ecobee.com/consumerportal/index.html
-Click My Apps, Add application, Enter Pin and click Authorize.
-
-After authorizing the application click the button in the configuration
-card.  Now your thermostat and sensors should shown in home-assistant.
-
-You can use the optional hold_temp parameter to set whether or not holds
-are set indefintely or until the next scheduled event.
-
-ecobee:
-  api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
-  hold_temp: True
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.ecobee/
 """
 import logging
 
@@ -32,7 +13,6 @@ from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
 
 DEPENDENCIES = ['ecobee']
-
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
     'humidity': ['Humidity', '%'],
@@ -40,12 +20,11 @@ SENSOR_TYPES = {
 }
 
 _LOGGER = logging.getLogger(__name__)
-
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors. """
+    """ Sets up the Ecobee sensors. """
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -63,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EcobeeSensor(Entity):
-    """ An ecobee sensor. """
+    """ An Ecobee sensor. """
 
     def __init__(self, sensor_name, sensor_type, sensor_index):
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
@@ -76,6 +55,7 @@ class EcobeeSensor(Entity):
 
     @property
     def name(self):
+        """ Returns the name of the Ecobee sensor.. """
         return self._name.rstrip()
 
     @property
@@ -84,10 +64,17 @@ class EcobeeSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self):
+        """Unique id of this sensor."""
+        return "sensor_ecobee_{}_{}".format(self._name, self.index)
+
+    @property
     def unit_of_measurement(self):
+        """ Unit of measurement this sensor expresses itself in. """
         return self._unit_of_measurement
 
     def update(self):
+        """ Get the latest state of the sensor. """
         data = ecobee.NETWORK
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):
