@@ -1,31 +1,11 @@
 """
 homeassistant.components.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ecobee component
 
-Ecobee Component
-
-This component adds support for Ecobee3 Wireless Thermostats.
-You will need to setup developer access to your thermostat,
-and create and API key on the ecobee website.
-
-The first time you run this component you will see a configuration
-component card in Home Assistant.  This card will contain a PIN code
-that you will need to use to authorize access to your thermostat.  You
-can do this at https://www.ecobee.com/consumerportal/index.html
-Click My Apps, Add application, Enter Pin and click Authorize.
-
-After authorizing the application click the button in the configuration
-card.  Now your thermostat and sensors should shown in home-assistant.
-
-You can use the optional hold_temp parameter to set whether or not holds
-are set indefintely or until the next scheduled event.
-
-ecobee:
-  api_key: asdfasdfasdfasdfasdfaasdfasdfasdfasdf
-  hold_temp: True
-
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/ecobee/
 """
-
 from datetime import timedelta
 import logging
 import os
@@ -82,7 +62,7 @@ def request_configuration(network, hass, config):
 
 
 def setup_ecobee(hass, network, config):
-    """ Setup ecobee thermostat """
+    """ Setup Ecobee thermostat. """
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
         request_configuration(network, hass, config)
