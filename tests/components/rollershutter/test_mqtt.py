@@ -1,6 +1,6 @@
 """
 tests.components.rollershutter.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests MQTT rollershutter.
 """

@@ -1,8 +1,8 @@
 """
 tests.components.test_statsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests statsd feeder.
+Tests StatsD feeder.
 """
 import unittest
 from unittest import mock

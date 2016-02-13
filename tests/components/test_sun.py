@@ -1,6 +1,6 @@
 """
-tests.test_component_sun
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_sun
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Sun component.
 """

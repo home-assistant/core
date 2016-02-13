@@ -1,6 +1,6 @@
 """
 tests.components.automation.test_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests state automation.
 """

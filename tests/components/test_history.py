@@ -1,6 +1,6 @@
 """
-tests.test_component_history
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_history
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the history component.
 """

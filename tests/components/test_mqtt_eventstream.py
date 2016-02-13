@@ -1,6 +1,6 @@
 """
-tests.test_component_mqtt_eventstream
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_mqtt_eventstream
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests MQTT eventstream component.
 """

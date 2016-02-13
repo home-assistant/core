@@ -1,12 +1,9 @@
 """
-tests.components.introduction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_introduction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test introduction.
-
-This test is primarily to ensure that default components don't crash HASS.
 """
-
 import unittest
 
 import homeassistant.core as ha

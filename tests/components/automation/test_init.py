@@ -1,6 +1,7 @@
 """
 tests.components.automation.test_init
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Tests automation component.
 """
 import unittest

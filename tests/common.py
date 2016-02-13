@@ -1,6 +1,6 @@
 """
-tests.helper
-~~~~~~~~~~~~~
+tests.common
+~~~~~~~~~~~~
 
 Helper method for writing tests.
 """

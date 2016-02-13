@@ -1,6 +1,6 @@
 """
-tests.test_component_configurator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_configurator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Configurator component.
 """

@@ -1,6 +1,6 @@
 """
 tests.helpers.test_event_decorators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests event decorator helpers.
 """

@@ -1,8 +1,8 @@
 """
-tests.components.sensor.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.device_tracker.test_owntracks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests template sensor.
+Tests Owntracks device tracker.
 """
 import json
 import os
@@ -111,14 +111,14 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
             })
 
         self.hass.states.set(
-        'zone.passive', 'zoning',
-        {
-            'name': 'zone',
-            'latitude': 3.0,
-            'longitude': 1.0,
-            'radius': 10,
-            'passive': True
-        })
+            'zone.passive', 'zoning',
+            {
+                'name': 'zone',
+                'latitude': 3.0,
+                'longitude': 1.0,
+                'radius': 10,
+                'passive': True
+            })
         # Clear state between teste
         self.hass.states.set(DEVICE_TRACKER_STATE, None)
         owntracks.REGIONS_ENTERED = defaultdict(list)
