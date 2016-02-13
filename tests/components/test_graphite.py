@@ -1,6 +1,6 @@
 """
 tests.components.test_graphite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests graphite feeder.
 """

@@ -1,6 +1,6 @@
 """
-tests.test_helper_entity
-~~~~~~~~~~~~~~~~~~~~~~~~
+tests.helpers.test_entity
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the entity helper.
 """

@@ -1,8 +1,8 @@
 """
-tests.test_component_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests switch component.
+Tests light component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
@@ -18,7 +18,7 @@ from tests.common import mock_service, get_test_home_assistant
 
 
 class TestLight(unittest.TestCase):
-    """ Test the switch module. """
+    """ Test the light module. """
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant()

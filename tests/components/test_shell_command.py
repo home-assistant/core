@@ -1,8 +1,8 @@
 """
-tests.test_shell_command
-~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_shell_command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests Shell command component.
 """
 import os
 import tempfile

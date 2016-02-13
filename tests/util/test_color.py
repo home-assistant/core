@@ -1,4 +1,7 @@
 """
+tests.util.test_color
+~~~~~~~~~~~~~~~~~~~~~
+
 Tests Home Assistant color util methods.
 """
 import unittest
