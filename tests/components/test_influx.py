@@ -5,6 +5,7 @@ tests.components.test_influxdb
 Tests influxdb component.
 """
 import copy
+import datetime
 import unittest
 from unittest import mock
 
@@ -96,6 +97,7 @@ class TestInfluxDB(unittest.TestCase):
     def test_event_listener(self, mock_influx):
         self._setup(mock_influx)
 
+        stamp = datetime.datetime(2015, 10, 21)
         valid = {'1': 1,
                  '1.0': 1.0,
                  STATE_ON: 1,
@@ -108,14 +110,14 @@ class TestInfluxDB(unittest.TestCase):
                                    object_id='entity',
                                    attributes=attrs)
             event = mock.MagicMock(data={'new_state': state},
-                                   time_fired=12345)
+                                   time_fired=stamp)
             body = [{
                 'measurement': 'foobars',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
                 },
-                'time': 12345,
+                'time': 1445385600.0,
                 'fields': {
                     'value': out,
                 },
@@ -128,6 +130,7 @@ class TestInfluxDB(unittest.TestCase):
     def test_event_listener_no_units(self, mock_influx):
         self._setup(mock_influx)
 
+        stamp = datetime.datetime(2015, 10, 21)
         for unit in (None, ''):
             if unit:
                 attrs = {'unit_of_measurement': unit}
@@ -139,14 +142,14 @@ class TestInfluxDB(unittest.TestCase):
                                    object_id='entity',
                                    attributes=attrs)
             event = mock.MagicMock(data={'new_state': state},
-                                   time_fired=12345)
+                                   time_fired=stamp)
             body = [{
                 'measurement': 'entity-id',
                 'tags': {
                     'domain': 'fake',
                     'entity_id': 'entity',
                 },
-                'time': 12345,
+                'time': 1445385600.0,
                 'fields': {
                     'value': 1,
                 },
@@ -159,13 +162,14 @@ class TestInfluxDB(unittest.TestCase):
     def test_event_listener_fail_write(self, mock_influx):
         self._setup(mock_influx)
 
+        stamp = datetime.datetime(2015, 10, 21)
         state = mock.MagicMock(state=1,
                                domain='fake',
                                entity_id='entity-id',
                                object_id='entity',
                                attributes={})
         event = mock.MagicMock(data={'new_state': state},
-                               time_fired=12345)
+                               time_fired=stamp)
         self.mock_client.write_points.side_effect = \
             influx_client.exceptions.InfluxDBClientError('foo')
         self.handler_method(event)
