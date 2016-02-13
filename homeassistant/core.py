@@ -309,7 +309,7 @@ class State(object):
                 "Format should be <domain>.<object_id>").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = state
+        self.state = str(state)
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = dt_util.strip_microseconds(
             last_updated or dt_util.utcnow())
