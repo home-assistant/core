@@ -4,16 +4,8 @@ homeassistant.components.graphite
 Component that records all events and state changes and feeds the data to
 a graphite installation.
 
-Example configuration:
-
- graphite:
-   host: foobar
-   port: 2003
-   prefix: ha
-
-All config elements are optional, and assumed to be on localhost at the
-default port if not specified. Prefix is the metric prefix in graphite,
-and defaults to 'ha'.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/graphite/
 """
 import logging
 import queue
