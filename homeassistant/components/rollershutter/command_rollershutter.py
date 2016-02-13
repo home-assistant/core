@@ -30,10 +30,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             CommandRollershutter(
                 hass,
                 properties.get('name', dev_name),
+                # properties.get('name', DEFAULT_NAME),
                 properties.get('upcmd', 'true'),
                 properties.get('downcmd', 'true'),
                 properties.get('stopcmd', 'true'),
-                properties.get('statecmd', 'true'),
+                properties.get('statecmd', 'false'),
                 properties.get(CONF_VALUE_TEMPLATE, False)))
 
     add_devices_callback(rollershutters)
@@ -111,8 +112,8 @@ class CommandRollershutter(RollershutterDevice):
             _LOGGER.error('No state command specified')
             return
         if self._value_template:
-            return CommandRollershutter._query_state_value(self._command_state)
-        return CommandRollershutter._query_state_code(self._command_state)
+            return self._query_state_value(self._command_state)
+        return self._query_state_code(self._command_state)
 
     def update(self):
         """ Update device state. """
@@ -120,28 +121,26 @@ class CommandRollershutter(RollershutterDevice):
             payload = str(self._query_state())
             if self._value_template:
                 payload = template.render_with_possible_json_value(
-                    # self._hass, self._value_template, payload, 'Unknown')
                     self._hass, self._value_template, payload)
             self._state = int(payload)
-            # self._state = (payload.lower() == "true")
 
     def move_up(self, **kwargs):
         """ Move the rollershutter up. """
-        if (CommandRollershutter._rollershutter(self._command_up) and
+        if (self._rollershutter(self._command_up) and
                 not self._command_state):
             self._state = True  # Up
             self.update_ha_state()
 
     def move_down(self, **kwargs):
         """ Move the rollershutter down. """
-        if (CommandRollershutter._rollershutter(self._command_down) and
+        if (self._rollershutter(self._command_down) and
                 not self._command_state):
             self._state = True  # Down
             self.update_ha_state()
 
     def stop(self, **kwargs):
         """ Stop the device. """
-        if (CommandRollershutter._rollershutter(self._command_stop) and
+        if (self._rollershutter(self._command_stop) and
                 not self._command_state):
             self._state = False  # Stop
             self.update_ha_state()
