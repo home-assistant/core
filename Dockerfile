@@ -6,6 +6,8 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
+RUN pip3 install --no-cache-dir colorlog
+
 # For the nmap tracker
 RUN apt-get update && \
     apt-get install -y --no-install-recommends nmap net-tools && \
