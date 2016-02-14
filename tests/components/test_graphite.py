@@ -132,6 +132,16 @@ class TestGraphite(unittest.TestCase):
             actual = mock_send.call_args_list[0][0][0].split('\n')
             self.assertEqual(sorted(expected), sorted(actual))
 
+    @mock.patch('time.time')
+    def test_send_to_graphite_errors(self, mock_time):
+        mock_time.return_value = 12345
+        state = ha.State('domain.entity', STATE_ON, {'foo': 1.0})
+        with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
+            mock_send.side_effect = socket.error
+            self.gf._report_attributes('entity', state)
+            mock_send.side_effect = socket.gaierror
+            self.gf._report_attributes('entity', state)
+
     @mock.patch('socket.socket')
     def test_send_to_graphite(self, mock_socket):
         self.gf._send_to_graphite('foo')
