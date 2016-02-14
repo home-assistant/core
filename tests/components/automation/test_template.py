@@ -256,7 +256,8 @@ class TestAutomationTemplate(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
-                    'value_template': '{{ not is_state("test.entity", "world") }}',
+                    'value_template':
+                    '{{ not is_state("test.entity", "world") }}',
                 },
                 'action': {
                     'service': 'test.automation'

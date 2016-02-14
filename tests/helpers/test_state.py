@@ -14,8 +14,8 @@ from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
-    STATE_OFF, STATE_OPEN, STATE_CLOSED,
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
+    STATE_OPEN, STATE_CLOSED,
+    STATE_LOCKED, STATE_UNLOCKED,
     STATE_ON, STATE_OFF)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
