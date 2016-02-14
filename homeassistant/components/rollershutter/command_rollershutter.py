@@ -15,18 +15,18 @@ from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Command Rollershutter"
+# DEFAULT_NAME = "Command Rollershutter"
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return rollershutter controlled by shell commands. """
 
-    devices = config.get('rollershutters', {})
-    rollershutters = []
+    rollershutters = config.get('rollershutters', {})
+    devices = []
 #    logger = logging.getLogger(__name__)
 
-    for dev_name, properties in devices.items():
-        rollershutters.append(
+    for dev_name, properties in rollershutters.items():
+        devices.append(
             CommandRollershutter(
                 hass,
                 properties.get('name', dev_name),
@@ -34,10 +34,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('upcmd', 'true'),
                 properties.get('downcmd', 'true'),
                 properties.get('stopcmd', 'true'),
-                properties.get('statecmd', 'false'),
+                properties.get('statecmd', False),
                 properties.get(CONF_VALUE_TEMPLATE, False)))
 
-    add_devices_callback(rollershutters)
+    add_devices_callback(devices)
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
@@ -126,21 +126,24 @@ class CommandRollershutter(RollershutterDevice):
 
     def move_up(self, **kwargs):
         """ Move the rollershutter up. """
-        if (self._rollershutter(self._command_up) and
-                not self._command_state):
-            self._state = True  # Up
-            self.update_ha_state()
+        self._rollershutter(self._command_up)
+#        if (self._rollershutter(self._command_up) and
+#                not self._command_state):
+#            self._state = True  # Up
+#            self.update_ha_state()
 
     def move_down(self, **kwargs):
         """ Move the rollershutter down. """
-        if (self._rollershutter(self._command_down) and
-                not self._command_state):
-            self._state = True  # Down
-            self.update_ha_state()
+        self._rollershutter(self._command_down)
+#        if (self._rollershutter(self._command_down) and
+#                not self._command_state):
+#            self._state = True  # Down
+#            self.update_ha_state()
 
     def stop(self, **kwargs):
         """ Stop the device. """
-        if (self._rollershutter(self._command_stop) and
-                not self._command_state):
-            self._state = False  # Stop
-            self.update_ha_state()
+        self._rollershutter(self._command_stop)
+#        if (self._rollershutter(self._command_stop) and
+#                not self._command_state):
+#            self._state = False  # Stop
+#            self.update_ha_state()
