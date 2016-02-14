@@ -16,8 +16,7 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_PLATFORM_DISCOVERED,
-    EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
-    ATTR_FRIENDLY_NAME)
+    EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "isy994"
 REQUIREMENTS = ['PyISY==1.0.5']
@@ -147,7 +146,7 @@ class ISYDeviceABC(ToggleEntity):
     @property
     def state_attributes(self):
         """ Returns the state attributes for the node. """
-        attr = {ATTR_FRIENDLY_NAME: self.name}
+        attr = {}
         for name, prop in self._attrs.items():
             attr[name] = getattr(self, prop)
             attr = self._attr_filter(attr)
