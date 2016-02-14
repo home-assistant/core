@@ -11,12 +11,11 @@ from unittest.mock import patch
 
 import requests
 
-import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
-from tests.common import get_test_instance_port
+from tests.common import get_test_instance_port, get_test_home_assistant
 
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
@@ -37,7 +36,7 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')

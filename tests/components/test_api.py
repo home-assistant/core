@@ -17,7 +17,7 @@ from homeassistant import bootstrap, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
-from tests.common import get_test_instance_port
+from tests.common import get_test_instance_port, get_test_home_assistant
 
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
@@ -38,7 +38,7 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initializes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')

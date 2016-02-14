@@ -6,15 +6,16 @@ Tests command sensor.
 """
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.components.sensor import command_sensor
+
+from tests.common import get_test_home_assistant
 
 
 class TestCommandSensorSensor(unittest.TestCase):
     """ Test the Command line sensor. """
 
     def setUp(self):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
         """ Stop down stuff we started. """

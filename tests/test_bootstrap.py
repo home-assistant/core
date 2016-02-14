@@ -9,11 +9,13 @@ import os
 import tempfile
 import unittest
 
-from homeassistant import core, bootstrap
+from homeassistant import bootstrap
 from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+
+from tests.common import get_test_home_assistant
 
 
 class TestBootstrap(unittest.TestCase):
@@ -53,7 +55,7 @@ class TestBootstrap(unittest.TestCase):
             with open(check_file, 'w'):
                 pass
 
-            hass = core.HomeAssistant()
+            hass = get_test_home_assistant()
             hass.config.config_dir = config_dir
 
             self.assertTrue(os.path.isfile(check_file))
@@ -74,7 +76,7 @@ class TestBootstrap(unittest.TestCase):
             with open(check_file, 'w'):
                 pass
 
-            hass = core.HomeAssistant()
+            hass = get_test_home_assistant()
             hass.config.config_dir = config_dir
 
             bootstrap.process_ha_config_upgrade(hass)
@@ -88,7 +90,7 @@ class TestBootstrap(unittest.TestCase):
                   CONF_NAME: 'Test',
                   CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
 
-        hass = core.HomeAssistant()
+        hass = get_test_home_assistant()
 
         bootstrap.process_ha_core_config(hass, config)
 
