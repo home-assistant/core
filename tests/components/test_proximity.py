@@ -4,15 +4,16 @@ tests.components.test_proximity
 
 Tests proximity component.
 """
-import homeassistant.core as ha
 from homeassistant.components import proximity
+
+from tests.common import get_test_home_assistant
 
 
 class TestProximity:
     """ Test the Proximity component. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set(
             'zone.home', 'zoning',
             {
@@ -162,7 +163,8 @@ class TestProximity:
         self.hass.pool.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
-        assert (state.attributes.get('nearest') == 'test1, test2') or (state.attributes.get('nearest') == 'test2, test1')
+        assert ((state.attributes.get('nearest') == 'test1, test2') or
+                (state.attributes.get('nearest') == 'test2, test1'))
         assert state.attributes.get('dir_of_travel') == 'arrived'
 
     def test_device_tracker_test1_away(self):
@@ -447,7 +449,7 @@ class TestProximity:
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
 
-    def test_device_tracker_test1_awayfurther_than_test2_first_test1_than_test2_than_test1(self):
+    def test_device_tracker_test1_awayfurther_test2_first(self):
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
