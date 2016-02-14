@@ -439,7 +439,20 @@ class StateMachine(object):
         entity_id = entity_id.lower()
 
         with self._lock:
-            return self._states.pop(entity_id, None) is not None
+            old_state = self._states.pop(entity_id, None)
+
+            if old_state is None:
+                return False
+
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': None,
+            }
+
+            self._bus.fire(EVENT_STATE_CHANGED, event_data)
+
+            return True
 
     def set(self, entity_id, new_state, attributes=None):
         """Set the state of an entity, add entity if it does not exist.
@@ -469,10 +482,11 @@ class StateMachine(object):
             state = State(entity_id, new_state, attributes, last_changed)
             self._states[entity_id] = state
 
-            event_data = {'entity_id': entity_id, 'new_state': state}
-
-            if old_state:
-                event_data['old_state'] = old_state
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': state,
+            }
 
             self._bus.fire(EVENT_STATE_CHANGED, event_data)
 
