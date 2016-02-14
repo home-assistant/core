@@ -71,7 +71,7 @@ def setup(hass, config):
             {
                 'domain': state.domain,
                 'entity_id': state.object_id,
-                'attributes': state.attributes,
+                'attributes': dict(state.attributes),
                 'time': str(event.time_fired),
                 'value': _state,
             }
