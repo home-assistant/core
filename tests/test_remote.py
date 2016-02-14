@@ -135,9 +135,17 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(hass.states.all(), remote.get_states(master_api))
         self.assertEqual([], remote.get_states(broken_api))
 
+    def test_remove_state(self):
+        """ Test Python API set_state. """
+        hass.states.set('test.remove_state', 'set_test')
+
+        self.assertIn('test.remove_state', hass.states.entity_ids())
+        remote.remove_state(master_api, 'test.remove_state')
+        self.assertNotIn('test.remove_state', hass.states.entity_ids())
+
     def test_set_state(self):
         """ Test Python API set_state. """
-        hass.states.set('test.test', 'set_test')
+        remote.set_state(master_api, 'test.test', 'set_test')
 
         state = hass.states.get('test.test')
 
@@ -224,6 +232,29 @@ class TestRemoteClasses(unittest.TestCase):
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
+
+    def test_statemachine_remove_from_master(self):
+        hass.states.set("remote.master_remove", "remove me!")
+        hass.pool.block_till_done()
+
+        self.assertIn('remote.master_remove', slave.states.entity_ids())
+
+        hass.states.remove("remote.master_remove")
+        hass.pool.block_till_done()
+
+        self.assertNotIn('remote.master_remove', slave.states.entity_ids())
+
+    def test_statemachine_remove_from_slave(self):
+        hass.states.set("remote.slave_remove", "remove me!")
+        hass.pool.block_till_done()
+
+        self.assertIn('remote.slave_remove', slave.states.entity_ids())
+
+        self.assertTrue(slave.states.remove("remote.slave_remove"))
+        slave.pool.block_till_done()
+        hass.pool.block_till_done()
+
+        self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
     def test_eventbus_fire(self):
         """ Test if events fired from the eventbus get fired. """
