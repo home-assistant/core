@@ -6,15 +6,16 @@ Tests Home Assistant template util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
-import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
+
+from tests.common import get_test_home_assistant
 
 
 class TestUtilTemplate(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

@@ -24,6 +24,8 @@ from homeassistant.helpers.event import (
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
 
+from tests.common import get_test_home_assistant
+
 
 class TestEventHelpers(unittest.TestCase):
     """
@@ -32,7 +34,7 @@ class TestEventHelpers(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
