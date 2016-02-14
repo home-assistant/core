@@ -24,7 +24,7 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
     """Generate a unique entity ID based on given entity IDs or used ids."""
-    name = name.lower() or DEVICE_DEFAULT_NAME.lower()
+    name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
             raise RuntimeError("Missing required parameter currentids or hass")
@@ -71,7 +71,7 @@ class Entity(object):
     @property
     def name(self):
         """Return the name of the entity."""
-        return DEVICE_DEFAULT_NAME
+        return None
 
     @property
     def state(self):
@@ -161,7 +161,7 @@ class Entity(object):
             state = STATE_UNAVAILABLE
             attr = {}
 
-        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
+        if self.name is not None:
             attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
         if ATTR_ICON not in attr and self.icon is not None:
