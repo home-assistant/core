@@ -20,7 +20,6 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
@@ -150,7 +149,7 @@ class TestEventBus(unittest.TestCase):
         self.bus._pool.add_worker()
         old_count = len(self.bus.listeners)
 
-        listener = lambda x: len
+        def listener(_): pass
 
         self.bus.listen('test', listener)
 
@@ -280,12 +279,26 @@ class TestStateMachine(unittest.TestCase):
 
     def test_remove(self):
         """ Test remove method. """
-        self.assertTrue('light.bowl' in self.states.entity_ids())
+        self.pool.add_worker()
+        events = []
+        self.bus.listen(EVENT_STATE_CHANGED,
+                        lambda event: events.append(event))
+
+        self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
-        self.assertFalse('light.bowl' in self.states.entity_ids())
+        self.pool.block_till_done()
+
+        self.assertNotIn('light.bowl', self.states.entity_ids())
+        self.assertEqual(1, len(events))
+        self.assertEqual('light.bowl', events[0].data.get('entity_id'))
+        self.assertIsNotNone(events[0].data.get('old_state'))
+        self.assertEqual('light.bowl', events[0].data['old_state'].entity_id)
+        self.assertIsNone(events[0].data.get('new_state'))
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
+        self.pool.block_till_done()
+        self.assertEqual(1, len(events))
 
     def test_case_insensitivty(self):
         self.pool.add_worker()
