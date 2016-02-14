@@ -171,7 +171,8 @@ class TestGraphite(unittest.TestCase):
                 return self.gf._quit_object
             elif runs:
                 runs.append(1)
-                return mock.MagicMock(event_type='somethingelse')
+                return mock.MagicMock(event_type='somethingelse',
+                                      data={'new_event': None})
             else:
                 runs.append(1)
                 return event
