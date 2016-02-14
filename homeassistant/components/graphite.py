@@ -110,7 +110,7 @@ class GraphiteFeeder(threading.Thread):
                 self._queue.task_done()
                 return
             elif (event.event_type == EVENT_STATE_CHANGED and
-                  'new_state' in event.data):
+                  event.data.get('new_state')):
                 self._report_attributes(event.data['entity_id'],
                                         event.data['new_state'])
             self._queue.task_done()
