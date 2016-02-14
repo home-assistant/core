@@ -11,6 +11,7 @@ import logging
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
+from homeassistant.components import api
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
@@ -25,20 +26,22 @@ FRONTEND_URLS = [
     re.compile(r'/states(/([a-zA-Z\._\-0-9/]+)|)'),
 ]
 
+URL_API_BOOTSTRAP = "/api/bootstrap"
+
 _FINGERPRINT = re.compile(r'^(\w+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
 def setup(hass, config):
     """ Setup serving the frontend. """
-    if 'http' not in hass.config.components:
-        _LOGGER.error('Dependency http is not loaded')
-        return False
-
     for url in FRONTEND_URLS:
         hass.http.register_path('GET', url, _handle_get_root, False)
 
     hass.http.register_path('GET', '/service_worker.js',
                             _handle_get_service_worker, False)
+
+    # Bootstrap API
+    hass.http.register_path(
+        'GET', URL_API_BOOTSTRAP, _handle_get_api_bootstrap)
 
     # Static files
     hass.http.register_path(
@@ -52,6 +55,18 @@ def setup(hass, config):
         _handle_get_local, False)
 
     return True
+
+
+def _handle_get_api_bootstrap(handler, path_match, data):
+    """ Returns all data needed to bootstrap Home Assistant. """
+    hass = handler.server.hass
+
+    handler.write_json({
+        'config': hass.config.as_dict(),
+        'states': hass.states.all(),
+        'events': api.events_json(hass),
+        'services': api.services_json(hass),
+    })
 
 
 def _handle_get_root(handler, path_match, data):
