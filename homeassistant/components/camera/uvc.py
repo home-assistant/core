@@ -14,7 +14,7 @@ import requests
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
 
-REQUIREMENTS = ['uvcclient==0.5']
+REQUIREMENTS = ['uvcclient==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,10 +82,17 @@ class UnifiVideoCamera(Camera):
                               dict(name=self._name, addr=addr))
             except socket.error:
                 pass
+            except uvc_camera.CameraConnectError:
+                pass
+            except uvc_camera.CameraAuthError:
+                pass
 
         if not camera:
             _LOGGER.error('Unable to login to camera')
             return None
 
-        camera.login()
-        return camera.get_snapshot()
+        try:
+            camera.login()
+            return camera.get_snapshot()
+        except uvc_camera.CameraConnectError:
+            _LOGGER.error('Failed to connect to camera %s', self._name)
