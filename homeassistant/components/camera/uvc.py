@@ -70,6 +70,15 @@ class UnifiVideoCamera(Camera):
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['recordingSettings']['fullTimeRecordEnabled']
 
+    @property
+    def brand(self):
+        return 'Ubiquiti'
+
+    @property
+    def model(self):
+        caminfo = self._nvr.get_camera(self._uuid)
+        return caminfo['model']
+
     def _login(self):
         from uvcclient import camera as uvc_camera
         caminfo = self._nvr.get_camera(self._uuid)
