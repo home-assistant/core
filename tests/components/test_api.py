@@ -17,15 +17,11 @@ from homeassistant import bootstrap, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
+from tests.common import get_test_instance_port
+
 API_PASSWORD = "test1234"
-
-# Somehow the socket that holds the default port does not get released
-# when we close down HA in a different test case. Until I have figured
-# out what is going on, let's run this test on a different port.
-SERVER_PORT = 8120
-
+SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-
 HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
@@ -386,7 +382,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps({
                 'api_password': 'bla-di-bla',
                 'host': '127.0.0.1',
-                'port': '8125'
+                'port': get_test_instance_port()
                 }),
             headers=HA_HEADERS)
         self.assertEqual(422, req.status_code)
