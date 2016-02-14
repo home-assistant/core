@@ -64,7 +64,7 @@ class TestTemplateSensor:
                 'sensors': {
                     'test_template_sensor': {
                         'value_template':
-                            "It {{ states.sensor.test_state.attributes.missing }}."
+                        "It {{ states.sensor.test_state.attributes.missing }}."
                     }
                 }
             }

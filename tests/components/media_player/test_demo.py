@@ -114,7 +114,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
                     state.attributes.get('supported_media_commands'))
 
-    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.media_seek')
+    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
+           'media_seek')
     def test_play_media(self, mock_seek):
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.living_room'
