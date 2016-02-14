@@ -404,8 +404,9 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for state in self._states.values()
-                if state.domain == domain_filter]
+        with self._lock:
+            return [state.entity_id for state in self._states.values()
+                    if state.domain == domain_filter]
 
     def all(self):
         """Create a list of all states."""
