@@ -6,7 +6,7 @@ The process is straight-forward.
 
  - Fork the Home Assistant [git repository](https://github.com/balloob/home-assistant).
  - Write the code for your device, notification service, sensor, or IoT thing.
- - Check it with ``pylint`` and ``flake8``.
+ - Ensure tests work
  - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
 
 Still interested? Then you should read the next sections and get more details. 
@@ -66,6 +66,29 @@ The frontend is composed of [Polymer](https://www.polymer-project.org) web-compo
 
 When you are done with development and ready to commit your changes, run `build_frontend`, set `development=0` in your config and validate that everything still works.
 
+## Testing your code
+
+To test your code before submission, used the `tox` tool.
+
+    ```shell
+    > pip install -U tox
+    > tox
+    ```
+
+This will run unit tests against python 3.4 and 3.5 (if both are
+available locally), as well as run a set of tests which validate
+`pep8` and `pylint` style of the code.
+
+You can optionally run tests on only one tox target using the `-e`
+option to select an environment.
+
+For instance `tox -e lint` will run the linters only, `tox -e py34`
+will run unit tests only on python 3.4.
+
 ### Notes on PyLint and PEP8 validation
 
-In case a PyLint warning cannot be avoided, add a comment to disable the PyLint check for that line. This can be done using the format `# pylint: disable=YOUR-ERROR-NAME`. Example of an unavoidable PyLint warning is if you do not use the passed in datetime if you're listening for time change.
+In case a PyLint warning cannot be avoided, add a comment to disable
+the PyLint check for that line. This can be done using the format
+`# pylint: disable=YOUR-ERROR-NAME`. Example of an unavoidable PyLint
+warning is if you do not use the passed in datetime if you're
+listening for time change.
