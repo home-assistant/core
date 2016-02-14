@@ -7,10 +7,11 @@ Tests the group compoments.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN)
 import homeassistant.components.group as group
+
+from tests.common import get_test_home_assistant
 
 
 class TestComponentsGroup(unittest.TestCase):
@@ -18,7 +19,7 @@ class TestComponentsGroup(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """ Init needed objects. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
         self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('light.Ceiling', STATE_OFF)

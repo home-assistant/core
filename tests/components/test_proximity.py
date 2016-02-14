@@ -4,15 +4,16 @@ tests.components.test_proximity
 
 Tests proximity component.
 """
-import homeassistant.core as ha
 from homeassistant.components import proximity
+
+from tests.common import get_test_home_assistant
 
 
 class TestProximity:
     """ Test the Proximity component. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set(
             'zone.home', 'zoning',
             {
