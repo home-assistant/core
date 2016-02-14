@@ -6,16 +6,16 @@ Tests mqtt automation.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import (
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
 class TestAutomationMQTT(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
 

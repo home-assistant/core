@@ -6,8 +6,9 @@ Tests demo media_player component.
 """
 import unittest
 from unittest.mock import patch
-import homeassistant.core as ha
 import homeassistant.components.media_player as mp
+
+from tests.common import get_test_home_assistant
 
 entity_id = 'media_player.walkman'
 
@@ -16,7 +17,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     """ Test the media_player module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
