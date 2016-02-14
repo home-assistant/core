@@ -124,6 +124,9 @@ ATTR_LONGITUDE = "longitude"
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY = 'gps_accuracy'
 
+# If state is assumed
+ATTR_ASSUMED_STATE = 'assumed_state'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 SERVICE_HOMEASSISTANT_RESTART = "restart"
