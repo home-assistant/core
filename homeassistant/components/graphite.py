@@ -98,6 +98,8 @@ class GraphiteFeeder(threading.Thread):
         _LOGGER.debug('Sending to graphite: %s', lines)
         try:
             self._send_to_graphite('\n'.join(lines))
+        except socket.gaierror:
+            _LOGGER.error('Unable to connect to host %s', self._host)
         except socket.error:
             _LOGGER.exception('Failed to send data to graphite')
 
