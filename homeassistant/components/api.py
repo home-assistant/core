@@ -59,6 +59,9 @@ def setup(hass, config):
     hass.http.register_path(
         'PUT', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _handle_post_state_entity)
+    hass.http.register_path(
+        'DELETE', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        _handle_delete_state_entity)
 
     # /events
     hass.http.register_path('GET', URL_API_EVENTS, _handle_get_api_events)
@@ -224,6 +227,22 @@ def _handle_post_state_entity(handler, path_match, data):
         location=URL_API_STATES_ENTITY.format(entity_id))
 
 
+def _handle_delete_state_entity(handler, path_match, data):
+    """Handle request to delete an entity from state machine.
+
+    This handles the following paths:
+    /api/states/<entity_id>
+    """
+    entity_id = path_match.group('entity_id')
+
+    if handler.server.hass.states.remove(entity_id):
+        handler.write_json_message(
+            "Entity not found", HTTP_NOT_FOUND)
+    else:
+        handler.write_json_message(
+            "Entity removed", HTTP_OK)
+
+
 def _handle_get_api_events(handler, path_match, data):
     """ Handles getting overview of event listeners. """
     handler.write_json(events_json(handler.server.hass))
@@ -242,6 +261,7 @@ def _handle_api_post_events_event(handler, path_match, event_data):
     if event_data is not None and not isinstance(event_data, dict):
         handler.write_json_message(
             "event_data should be an object", HTTP_UNPROCESSABLE_ENTITY)
+        return
 
     event_origin = ha.EventOrigin.remote
 
