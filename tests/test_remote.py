@@ -3,8 +3,6 @@ tests.remote
 ~~~~~~~~~~~~
 
 Tests Home Assistant remote methods and classes.
-Uses port 8122 for master, 8123 for slave
-Uses port 8125 as a port that nothing runs on
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
@@ -16,9 +14,13 @@ import homeassistant.remote as remote
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
-API_PASSWORD = "test1234"
+from tests.common import get_test_instance_port, get_test_home_assistant
 
-HTTP_BASE_URL = "http://127.0.0.1:8122"
+API_PASSWORD = "test1234"
+MASTER_PORT = get_test_instance_port()
+SLAVE_PORT = get_test_instance_port()
+BROKEN_PORT = get_test_instance_port()
+HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
@@ -36,7 +38,7 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
     global hass, slave, master_api, broken_api
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
@@ -44,25 +46,25 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
     bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: 8122}})
+         http.CONF_SERVER_PORT: MASTER_PORT}})
 
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
 
-    master_api = remote.API("127.0.0.1", API_PASSWORD, 8122)
+    master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
     # Start slave
     slave = remote.HomeAssistant(master_api)
     bootstrap.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: 8130}})
+         http.CONF_SERVER_PORT: SLAVE_PORT}})
 
     slave.start()
 
     # Setup API pointing at nothing
-    broken_api = remote.API("127.0.0.1", "", 8125)
+    broken_api = remote.API("127.0.0.1", "", BROKEN_PORT)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -83,7 +85,7 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(
             remote.APIStatus.INVALID_PASSWORD,
             remote.validate_api(
-                remote.API("127.0.0.1", API_PASSWORD + "A", 8122)))
+                remote.API("127.0.0.1", API_PASSWORD + "A", MASTER_PORT)))
 
         self.assertEqual(
             remote.APIStatus.CANNOT_CONNECT, remote.validate_api(broken_api))
@@ -210,7 +212,7 @@ class TestRemoteClasses(unittest.TestCase):
         # Wrong port
         self.assertRaises(
             ha.HomeAssistantError, remote.HomeAssistant,
-            remote.API('127.0.0.1', API_PASSWORD, 8125))
+            remote.API('127.0.0.1', API_PASSWORD, BROKEN_PORT))
 
     def test_statemachine_init(self):
         """ Tests if remote.StateMachine copies all states on init. """

@@ -6,16 +6,17 @@ Tests automation component.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
+
+from tests.common import get_test_home_assistant
 
 
 class TestAutomation(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.calls = []
 
         def record_call(service):

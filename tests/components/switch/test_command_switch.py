@@ -9,16 +9,17 @@ import os
 import tempfile
 import unittest
 
-from homeassistant import core
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
+
+from tests.common import get_test_home_assistant
 
 
 class TestCommandSwitch(unittest.TestCase):
     """ Test the command switch. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = core.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
