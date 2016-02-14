@@ -249,7 +249,7 @@ tellive-py==0.5.2
 transmissionrpc==0.11
 
 # homeassistant.components.camera.uvc
-uvcclient==0.5
+uvcclient==0.6
 
 # homeassistant.components.verisure
 vsure==0.5.0
