@@ -45,7 +45,9 @@ class TestUtilTemplate(unittest.TestCase):
             'open10',
             template.render(
                 self.hass,
-                '{% for state in states.sensor %}{{ state.state }}{% endfor %}'))
+                """
+{% for state in states.sensor %}{{ state.state }}{% endfor %}
+                """))
 
     def test_rounding_value(self):
         self.hass.states.set('sensor.temperature', 12.78)
@@ -63,7 +65,8 @@ class TestUtilTemplate(unittest.TestCase):
             '128',
             template.render(
                 self.hass,
-                '{{ states.sensor.temperature.state | multiply(10) | round }}'))
+                '{{ states.sensor.temperature.state | multiply(10) | round }}'
+            ))
 
     def test_passing_vars_as_keywords(self):
         self.assertEqual(
@@ -91,7 +94,7 @@ class TestUtilTemplate(unittest.TestCase):
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json', 'hello'))
 
-    def test_render_with_possible_json_value_with_template_error_error_value(self):
+    def test_render_with_possible_json_value_with_template_error_value(self):
         self.assertEqual(
             '-',
             template.render_with_possible_json_value(
@@ -107,7 +110,9 @@ class TestUtilTemplate(unittest.TestCase):
             'exists',
             template.render(
                 self.hass,
-                '{% if states.test.object %}exists{% else %}not exists{% endif %}'))
+                """
+{% if states.test.object %}exists{% else %}not exists{% endif %}
+                """))
 
     def test_is_state(self):
         self.hass.states.set('test.object', 'available')
@@ -115,7 +120,9 @@ class TestUtilTemplate(unittest.TestCase):
             'yes',
             template.render(
                 self.hass,
-                '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'))
+                """
+{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}
+                """))
 
     def test_is_state_attr(self):
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
@@ -123,7 +130,9 @@ class TestUtilTemplate(unittest.TestCase):
             'yes',
             template.render(
                 self.hass,
-                '{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}'))
+                """
+{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
+                """))
 
     def test_states_function(self):
         self.hass.states.set('test.object', 'available')

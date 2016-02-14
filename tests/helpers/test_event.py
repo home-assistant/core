@@ -7,13 +7,22 @@ Tests event helpers.
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from astral import Astral
 
 import homeassistant.core as ha
-from homeassistant.helpers.event import *
+from homeassistant.helpers.event import (
+    track_point_in_utc_time,
+    track_point_in_time,
+    track_utc_time_change,
+    track_time_change,
+    track_state_change,
+    track_sunrise,
+    track_sunset,
+)
 from homeassistant.components import sun
+import homeassistant.util.dt as dt_util
 
 
 class TestEventHelpers(unittest.TestCase):
