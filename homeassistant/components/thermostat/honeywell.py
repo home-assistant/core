@@ -19,13 +19,14 @@ REQUIREMENTS = ['evohomeclient==0.2.4',
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AWAY_TEMP = "away_temperature"
+DEFAULT_AWAY_TEMP = 16
 
 
 def _setup_round(username, password, config, add_devices):
     from evohomeclient import EvohomeClient
 
     try:
-        away_temp = float(config.get(CONF_AWAY_TEMP, 16))
+        away_temp = float(config.get(CONF_AWAY_TEMP, DEFAULT_AWAY_TEMP))
     except ValueError:
         _LOGGER.error("value entered for item %s should convert to a number",
                       CONF_AWAY_TEMP)
@@ -45,6 +46,7 @@ def _setup_round(username, password, config, add_devices):
             "Connection error logging into the honeywell evohome web service"
         )
         return False
+    return True
 
 
 # config will be used later
