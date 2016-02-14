@@ -8,7 +8,6 @@ https://home-assistant.io/components/notify.command_line/
 """
 import logging
 import subprocess
-import shlex
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, BaseNotificationService)
@@ -38,10 +37,12 @@ class CommandLineNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a command_line. """
+
         try:
-            subprocess.check_call(
-                "{} {}".format(self.command,
-                               shlex.quote(message)),
-                shell=True)
-        except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', self.command)
+            proc = subprocess.Popen(self.command, universal_newlines=True,
+                                    stdin=subprocess.PIPE, shell=True)
+            proc.communicate(input=message)
+            if proc.returncode != 0:
+                _LOGGER.error('Command failed: %s', self.command)
+        except subprocess.SubprocessError:
+            _LOGGER.error('Error trying to exec Command: %s', self.command)
