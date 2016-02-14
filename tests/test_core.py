@@ -25,6 +25,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
+from tests.common import get_test_home_assistant
+
 PST = pytz.timezone('America/Los_Angeles')
 
 
@@ -35,7 +37,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
 

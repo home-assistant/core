@@ -6,8 +6,9 @@ Tests demo lock component.
 """
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.components import lock
+
+from tests.common import get_test_home_assistant
 
 
 FRONT = 'lock.front_door'
@@ -18,7 +19,7 @@ class TestLockDemo(unittest.TestCase):
     """ Test the demo lock. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.assertTrue(lock.setup(self.hass, {
             'lock': {
                 'platform': 'demo'

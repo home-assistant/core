@@ -131,7 +131,6 @@ class TestHoneywell(unittest.TestCase):
         devices = [x[0][1].deviceid for x in result]
         self.assertEqual([mock.sentinel.loc2dev1], devices)
 
-
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.thermostat.honeywell.'
                 'RoundThermostat')
