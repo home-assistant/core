@@ -12,19 +12,36 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-
 def load_yaml(fname):
     """Load a YAML file."""
     try:
-        with open(fname, encoding='utf-8') as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.safe_load(conf_file) or {}
+        return _merge_multidoc_yaml(fname)
     except yaml.YAMLError:
         error = 'Error reading YAML configuration file {}'.format(fname)
         _LOGGER.exception(error)
         raise HomeAssistantError(error)
 
+
+def _merge_multidoc_yaml(fname):
+    with open(fname, encoding='utf-8') as conf_file:
+        config = {}
+        for document in yaml.safe_load_all(conf_file):
+            if not isinstance(document, dict):
+                return document
+            for key, value in document.items():
+                if key in config:
+                    oldvalue = config[key]
+                    if not isinstance(oldvalue, list):
+                        oldvalue = [ oldvalue ]
+                        config[key] = oldvalue
+
+                    if isinstance(value, list):
+                        oldvalue.extend(value)
+                    else:
+                        oldvalue.append(value)
+                else:
+                    config[key] = value
+    return config
 
 def _include_yaml(loader, node):
     """
