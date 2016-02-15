@@ -56,6 +56,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 class TestFrontend(unittest.TestCase):
     """ Test the frontend. """
 
+    def tearDown(self):
+        hass.pool.block_till_done()
+
     def test_frontend_and_static(self):
         """ Tests if we can get the frontend. """
         req = requests.get(_url(""))
