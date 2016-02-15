@@ -43,8 +43,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
                 rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
                 new_light = RfxtrxLight(
-                    entity_info[ATTR_NAME], rfxobject, datas, signal_repetitions
-                )
+                    entity_info[ATTR_NAME], rfxobject, datas,
+                    signal_repetitions)
                 rfxtrx.RFX_DEVICES[entity_id] = new_light
                 lights.append(new_light)
 
@@ -72,8 +72,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             entity_name = "%s : %s" % (entity_id, pkt_id)
             datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
-            signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
-            new_light = RfxtrxLight(entity_name, event, datas, signal_repetitions)
+            signal_repetitions = config.get('signal_repetitions',
+                                            SIGNAL_REPETITIONS)
+            new_light = RfxtrxLight(entity_name, event, datas,
+                                    signal_repetitions)
             rfxtrx.RFX_DEVICES[entity_id] = new_light
             add_devices_callback([new_light])
 
