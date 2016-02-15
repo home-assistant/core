@@ -172,12 +172,12 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('rgb_color'))
 
+        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
+                          '{"hello": [1, 2, 3]}')
         fire_mqtt_message(self.hass, 'test_light_rgb/status',
                           '{"hello": "ON"}')
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status',
                           '{"hello": "50"}')
-        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
-                          '{"hello": [1, 2, 3]}')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
