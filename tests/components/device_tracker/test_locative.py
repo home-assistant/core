@@ -64,6 +64,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 class TestLocative(unittest.TestCase):
     """ Test Locative """
 
+    def tearDown(self):
+        hass.pool.block_till_done()
+
     def test_missing_data(self, update_config):
         data = {
             'latitude': 1.0,

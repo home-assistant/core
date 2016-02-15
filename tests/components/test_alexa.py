@@ -102,6 +102,9 @@ def _req(data={}):
 class TestAlexa(unittest.TestCase):
     """ Test Alexa. """
 
+    def tearDown(self):
+        hass.pool.block_till_done()
+
     def test_launch_request(self):
         data = {
             'version': '1.0',
