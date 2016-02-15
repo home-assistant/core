@@ -12,9 +12,9 @@ import homeassistant.components.device_tracker as device_tracker
 from datetime import timedelta
 from tests.common import get_test_home_assistant
 
+
 class TestProximityZones:
     """ Test the Proximity_zones component. """
-
 
     def setup_method(self, method):
         self.hass = get_test_home_assistant()
