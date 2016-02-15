@@ -167,7 +167,7 @@ class RfxtrxLight(Light):
         if brightness is None:
             self._brightness = 100
             for _ in range(self.signal_repetitions):
-                self._eventent.device.send_on(rfxtrx.RFXOBJECT.transport)
+                self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
         else:
             self._brightness = ((brightness + 4) * 100 // 255 - 1)
             for _ in range(self.signal_repetitions):
