@@ -13,7 +13,7 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON,
     DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_UNAVAILABLE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_ASSUMED_STATE)
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)
@@ -116,6 +116,11 @@ class Entity(object):
         """Return True if entity is available."""
         return True
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return False
+
     def update(self):
         """Retrieve latest state."""
         pass
@@ -164,11 +169,14 @@ class Entity(object):
         if self.name is not None:
             attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
-        if ATTR_ICON not in attr and self.icon is not None:
+        if self.icon is not None:
             attr[ATTR_ICON] = str(self.icon)
 
         if self.hidden:
             attr[ATTR_HIDDEN] = bool(self.hidden)
+
+        if self.assumed_state:
+            attr[ATTR_ASSUMED_STATE] = bool(self.assumed_state)
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))
