@@ -157,7 +157,6 @@ class RfxtrxLight(Light):
         """Return True if unable to access real state of entity."""
         return True
 
-
     def turn_on(self, **kwargs):
         """ Turn the light on. """
         brightness = kwargs.get(ATTR_BRIGHTNESS)
