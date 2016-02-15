@@ -7,7 +7,6 @@ Tests Home Assistant HTTP component does what it should do.
 # pylint: disable=protected-access,too-many-public-methods
 import re
 import unittest
-from unittest.mock import patch
 
 import requests
 
@@ -30,9 +29,7 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
@@ -58,6 +55,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 
 class TestFrontend(unittest.TestCase):
     """ Test the frontend. """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     def test_frontend_and_static(self):
         """ Tests if we can get the frontend. """

@@ -32,9 +32,7 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initializes a Home Assistant server. """
     global hass
 
@@ -60,6 +58,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 
 class TestAPI(unittest.TestCase):
     """ Test the API. """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):

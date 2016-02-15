@@ -6,7 +6,6 @@ Tests Home Assistant remote methods and classes.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -24,7 +23,8 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-hass, slave, master_api, broken_api = None, None, None, None
+broken_api = remote.API('127.0.0.1', BROKEN_PORT)
+hass, slave, master_api = None, None, None
 
 
 def _url(path=""):
@@ -32,11 +32,9 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
-    global hass, slave, master_api, broken_api
+    global hass, slave, master_api
 
     hass = get_test_home_assistant()
 
@@ -63,20 +61,19 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
 
     slave.start()
 
-    # Setup API pointing at nothing
-    broken_api = remote.API("127.0.0.1", "", BROKEN_PORT)
-
 
 def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server and slave. """
-    global hass, slave
-
     slave.stop()
     hass.stop()
 
 
 class TestRemoteMethods(unittest.TestCase):
     """ Test the homeassistant.remote module. """
+
+    def tearDown(self):
+        slave.pool.block_till_done()
+        hass.pool.block_till_done()
 
     def test_validate_api(self):
         """ Test Python API validate_api. """
@@ -198,9 +195,23 @@ class TestRemoteMethods(unittest.TestCase):
         # Should not raise an exception
         remote.call_service(broken_api, "test_domain", "test_service")
 
+    def test_json_encoder(self):
+        """ Test the JSON Encoder. """
+        ha_json_enc = remote.JSONEncoder()
+        state = hass.states.get('test.test')
+
+        self.assertEqual(state.as_dict(), ha_json_enc.default(state))
+
+        # Default method raises TypeError if non HA object
+        self.assertRaises(TypeError, ha_json_enc.default, 1)
+
 
 class TestRemoteClasses(unittest.TestCase):
     """ Test the homeassistant.remote module. """
+
+    def tearDown(self):
+        slave.pool.block_till_done()
+        hass.pool.block_till_done()
 
     def test_home_assistant_init(self):
         """ Test HomeAssistant init. """
@@ -216,12 +227,8 @@ class TestRemoteClasses(unittest.TestCase):
 
     def test_statemachine_init(self):
         """ Tests if remote.StateMachine copies all states on init. """
-        self.assertEqual(len(hass.states.all()),
-                         len(slave.states.all()))
-
-        for state in hass.states.all():
-            self.assertEqual(
-                state, slave.states.get(state.entity_id))
+        self.assertEqual(sorted(hass.states.all()),
+                         sorted(slave.states.all()))
 
     def test_statemachine_set(self):
         """ Tests if setting the state on a slave is recorded. """
@@ -276,13 +283,3 @@ class TestRemoteClasses(unittest.TestCase):
         hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
-
-    def test_json_encoder(self):
-        """ Test the JSON Encoder. """
-        ha_json_enc = remote.JSONEncoder()
-        state = hass.states.get('test.test')
-
-        self.assertEqual(state.as_dict(), ha_json_enc.default(state))
-
-        # Default method raises TypeError if non HA object
-        self.assertRaises(TypeError, ha_json_enc.default, 1)
