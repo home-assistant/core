@@ -7,7 +7,6 @@ Tests Home Assistant Alexa component does what it should do.
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 import json
-from unittest.mock import patch
 
 import requests
 
@@ -29,9 +28,7 @@ hass = None
 calls = []
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalize a Home Assistant server for testing this module. """
     global hass
 
@@ -104,6 +101,9 @@ def _req(data={}):
 
 class TestAlexa(unittest.TestCase):
     """ Test Alexa. """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     def test_launch_request(self):
         data = {

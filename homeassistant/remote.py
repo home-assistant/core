@@ -148,13 +148,10 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
 
+        self.pool.stop()
+
         # Disconnect master event forwarding
         disconnect_remote_events(self.remote_api, self.config.api)
-
-        # Wait till all responses to homeassistant_stop are done
-        self.pool.block_till_done()
-
-        self.pool.stop()
 
 
 class EventBus(ha.EventBus):
