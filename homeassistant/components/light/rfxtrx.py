@@ -155,15 +155,17 @@ class RfxtrxLight(Light):
     def turn_on(self, **kwargs):
         """ Turn the light on. """
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if not self._event:
+            return
 
         if brightness is None:
             self._brightness = 100
+            self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
         else:
             self._brightness = ((brightness + 4) * 100 // 255 - 1)
-
-        if hasattr(self, '_event') and self._event:
             self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
                                         self._brightness)
+
 
         self._brightness = (self._brightness * 255 // 100)
         self._state = True
