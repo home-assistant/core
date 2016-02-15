@@ -28,9 +28,7 @@ def _url(data={}):
     return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
