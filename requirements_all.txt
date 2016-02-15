@@ -115,6 +115,9 @@ mficlient==0.2.2
 # homeassistant.components.discovery
 netdisco==0.5.2
 
+# homeassistant.components.sensor.neurio_energy
+neurio==0.2.10
+
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
 
