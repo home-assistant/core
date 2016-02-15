@@ -1,9 +1,4 @@
-"""
-homeassistant.util.color.
-
-~~~~~~~~~~~~~~~~~~~~~~~~
-Color util methods.
-"""
+"""Color util methods."""
 
 
 # Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
@@ -89,7 +84,7 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
     return (r, g, b)
 
 
-def rgb_hex_to_list(hex_string):
+def rgb_hex_to_rgb_list(hex_string):
     """Return an RGB color value list from a hex color string."""
     return [int(hex_string[i:i + len(hex_string) // 3], 16)
             for i in range(0,
