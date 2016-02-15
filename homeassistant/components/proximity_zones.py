@@ -3,21 +3,25 @@ custom_components.proximity_zones
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 proximity_zones:
-- zone: home
+  home:
+    zone: home
     ignored_zones:
       - twork
       - elschool
     devices:
-      - device_tracker.nwaring_nickmobile
-      - device_tracker.eleanorsiphone
-      - device_tracker.tsiphone
+      - nwaring_nickmobile
+      - eleanorsiphone
+      - tsiphone
     tolerance: 1
-- zone: work
+    name: Home
+  work:
+    zone: work
     ignored_zones:
       - home
     devices:
-      - device_tracker.nwaring_nickmobile
+      - nwaring_nickmobile
     tolerance: 10
+    name: Work Nick
 """
 
 import logging
@@ -68,7 +72,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
         proximity_devices = []
         for variable in prox_config['devices']:
-            proximity_devices.append(variable)
+            proximity_devices.append('device_tracker.' + variable)
 
         ignored_zones = []
         if 'ignored_zones' in prox_config:
@@ -79,13 +83,13 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         tolerance = prox_config.get('tolerance', DEFAULT_TOLERANCE)
 
         # get the zone to monitor proximity to from configuration.yaml
-        proximity_zone = prox_config.get('zone', DEFAULT_PROXIMITY_ZONE)
+        proximity_zone = 'zone.' + prox_config.get('zone',
+                                                   DEFAULT_PROXIMITY_ZONE)
 
         friendly_name = prox_config.get(CONF_NAME, prox)
 
         entity_id = DOMAIN + '.' + prox
-        proximity_zone = 'zone.' + proximity_zone
-
+        
         state = hass.states.get(proximity_zone)
         zone_friendly_name = (state.name).lower()
 
