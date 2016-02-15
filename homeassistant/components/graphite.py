@@ -98,6 +98,8 @@ class GraphiteFeeder(threading.Thread):
         _LOGGER.debug('Sending to graphite: %s', lines)
         try:
             self._send_to_graphite('\n'.join(lines))
+        except socket.gaierror:
+            _LOGGER.error('Unable to connect to host %s', self._host)
         except socket.error:
             _LOGGER.exception('Failed to send data to graphite')
 
@@ -108,7 +110,7 @@ class GraphiteFeeder(threading.Thread):
                 self._queue.task_done()
                 return
             elif (event.event_type == EVENT_STATE_CHANGED and
-                  'new_state' in event.data):
+                  event.data.get('new_state')):
                 self._report_attributes(event.data['entity_id'],
                                         event.data['new_state'])
             self._queue.task_done()
