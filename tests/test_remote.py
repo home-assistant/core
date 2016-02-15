@@ -6,7 +6,6 @@ Tests Home Assistant remote methods and classes.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
-from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -24,7 +23,8 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-hass, slave, master_api, broken_api = None, None, None, None
+broken_api = remote.API('127.0.0.1', BROKEN_PORT)
+hass, slave, master_api = None, None, None
 
 
 def _url(path=""):
@@ -32,9 +32,7 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server and Slave instance. """
     global hass, slave, master_api, broken_api
 
@@ -62,9 +60,6 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
          http.CONF_SERVER_PORT: SLAVE_PORT}})
 
     slave.start()
-
-    # Setup API pointing at nothing
-    broken_api = remote.API("127.0.0.1", "", BROKEN_PORT)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
