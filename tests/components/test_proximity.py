@@ -6,21 +6,23 @@ Tests proximity component.
 """
 
 import homeassistant.core as ha
+import os
 from homeassistant.components import proximity
 from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
 from datetime import datetime, timedelta
+from tests.common import get_test_home_assistant
 
 class TestProximity:
     """ Test the Proximity component. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
         
-        assert zone.setup(self.hass, {
+        zone.setup(self.hass, {
             'zone': [
                 {
                     'name': 'home',
@@ -36,14 +38,6 @@ class TestProximity:
                 },
             ]
         })
-        self.hass.pool.block_till_done()
-        
-        zone_state = self.hass.states.get('zone.home')
-        assert zone_state.state == 'zoning'
-        proximity_latitude = zone_state.attributes.get('latitude')
-        assert proximity_latitude == 2.1
-        proximity_longitude = zone_state.attributes.get('longitude')
-        assert proximity_longitude == 1.1
         
         dev_id = 'test1'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -69,7 +63,6 @@ class TestProximity:
                 'latitude': 50,
                 'longitude': 50
             })
-        self.hass.pool.block_till_done()
         
         dev_id = 'test2'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
@@ -88,11 +81,15 @@ class TestProximity:
                 'latitude': 50,
                 'longitude': 50
             })
-        self.hass.pool.block_till_done()
         
     def teardown_method(self, method):
         """ Stop down stuff we started. """
         self.hass.stop()
+        
+        try:
+            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
+        except FileNotFoundError:
+            pass
         
     def test_proximity(self):
         assert proximity.setup(self.hass, {
@@ -259,7 +256,8 @@ class TestProximity:
         self.hass.pool.block_till_done()
         state = self.hass.states.get('proximity.home')
         assert state.state == '0'
-        assert (state.attributes.get('nearest') == 'test1, test2') or (state.attributes.get('nearest') == 'test2, test1')
+        assert ((state.attributes.get('nearest') == 'test1, test2') or
+                (state.attributes.get('nearest') == 'test2, test1'))
         assert state.attributes.get('dir_of_travel') == 'arrived'
         
     def test_device_tracker_test1_away(self):
@@ -548,7 +546,7 @@ class TestProximity:
         assert state.attributes.get('nearest') == 'test1'
         assert state.attributes.get('dir_of_travel') == 'unknown'
         
-    def test_device_tracker_test1_awayfurther_than_test2_first_test1_than_test2_than_test1(self):
+    def test_device_tracker_test1_awayfurther_test2_first(self):
         self.hass.states.set(
             'device_tracker.test1', 'not_home',
             {
