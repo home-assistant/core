@@ -132,6 +132,11 @@ class RfxtrxSwitch(SwitchDevice):
         """ True if light is on. """
         return self._state
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return True
+
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         if self._event:
