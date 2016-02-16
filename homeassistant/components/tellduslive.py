@@ -86,10 +86,8 @@ class TelldusLiveData(object):
 
     def validate_session(self):
         """ Make a dummy request to see if the session is valid """
-        try:
-            return 'email' in self.request("user/profile")
-        except RuntimeError:
-            return False
+        response = self.request("user/profile")
+        return response and 'email' in response
 
     def discover(self):
         """ Update states, will trigger discover """
@@ -143,10 +141,13 @@ class TelldusLiveData(object):
         # re-use sessions, instead it opens a new session for each request
         # this needs to be fixed
 
-        response = self._client.request(what, params)
-
-        _LOGGER.debug("got response %s", response)
-        return response
+        try:
+            response = self._client.request(what, params)
+            _LOGGER.debug("got response %s", response)
+            return response
+        except (ConnectionError, TimeoutError):
+            _LOGGER.error("failed to make request to Tellduslive servers")
+            return None
 
     def update_devices(self,
                        local_devices,
@@ -172,21 +173,15 @@ class TelldusLiveData(object):
 
     def update_sensors(self):
         """ update local list of sensors """
-        try:
-            self._sensors = self.update_devices(self._sensors,
-                                                request_sensors(),
-                                                "sensor")
-        except OSError:
-            _LOGGER.warning("could not update sensors")
+        self._sensors = self.update_devices(self._sensors,
+                                            request_sensors(),
+                                            "sensor")
 
     def update_switches(self):
         """ update local list of switches """
-        try:
-            self._switches = self.update_devices(self._switches,
-                                                 request_switches(),
-                                                 "switch")
-        except OSError:
-            _LOGGER.warning("could not update switches")
+        self._switches = self.update_devices(self._switches,
+                                             request_switches(),
+                                             "switch")
 
     def _check_request(self, what, **params):
         """ Make request, check result if successful """
