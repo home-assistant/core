@@ -62,7 +62,7 @@ def setup_scanner(hass, config, see):
             see_beacons(dev_id, kwargs)
 
     def owntracks_event_update(topic, payload, qos):
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches, too-many-statements
         """ MQTT event (geofences) received. """
 
         # Docs on available data:
@@ -92,7 +92,10 @@ def setup_scanner(hass, config, see):
                 if zone is None:
                     if data['t'] == 'b':
                         # Not a HA zone, and a beacon so assume mobile
-                        MOBILE_BEACONS_ACTIVE[dev_id].append(location)
+                        beacons = MOBILE_BEACONS_ACTIVE[dev_id]
+                        if location not in beacons:
+                            beacons.append(location)
+                        _LOGGER.info("Added beacon %s", location)
                 else:
                     # Normal region
                     if not zone.attributes.get('passive'):
@@ -108,28 +111,30 @@ def setup_scanner(hass, config, see):
                 see_beacons(dev_id, kwargs)
 
         elif data['event'] == 'leave':
-            regions = REGIONS_ENTERED[dev_id]
-            if location in regions:
-                regions.remove(location)
-            new_region = regions[-1] if regions else None
+            with LOCK:
+                regions = REGIONS_ENTERED[dev_id]
+                if location in regions:
+                    regions.remove(location)
+                new_region = regions[-1] if regions else None
 
-            if new_region:
-                # Exit to previous region
-                zone = hass.states.get("zone.{}".format(new_region))
-                if not zone.attributes.get('passive'):
-                    kwargs['location_name'] = new_region
-                _set_gps_from_zone(kwargs, zone)
-                _LOGGER.info("Exit from to %s", new_region)
+                if new_region:
+                    # Exit to previous region
+                    zone = hass.states.get("zone.{}".format(new_region))
+                    if not zone.attributes.get('passive'):
+                        kwargs['location_name'] = new_region
+                    _set_gps_from_zone(kwargs, zone)
+                    _LOGGER.info("Exit to %s", new_region)
 
-            else:
-                _LOGGER.info("Exit to GPS")
+                else:
+                    _LOGGER.info("Exit to GPS")
 
-            see(**kwargs)
-            see_beacons(dev_id, kwargs)
+                see(**kwargs)
+                see_beacons(dev_id, kwargs)
 
-            beacons = MOBILE_BEACONS_ACTIVE[dev_id]
-            if location in beacons:
-                beacons.remove(location)
+                beacons = MOBILE_BEACONS_ACTIVE[dev_id]
+                if location in beacons:
+                    beacons.remove(location)
+                    _LOGGER.info("Remove beacon %s", location)
 
         else:
             _LOGGER.error(
@@ -141,6 +146,8 @@ def setup_scanner(hass, config, see):
         """ Set active beacons to the current location """
 
         kwargs = kwargs_param.copy()
+        # the battery state applies to the tracking device, not the beacon
+        kwargs.pop('battery', None)
         for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
