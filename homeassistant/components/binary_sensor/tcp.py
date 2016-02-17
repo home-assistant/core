@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """ Create the BinarySensor. """
     if not BinarySensor.validate_config(config):
         return False
-    add_entities((BinarySensor(config),))
+    add_entities((BinarySensor(hass, config),))
 
 
 class BinarySensor(Sensor, BinarySensorDevice):
