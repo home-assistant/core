@@ -14,7 +14,7 @@ from homeassistant.const import (STATE_UNKNOWN, STATE_ALARM_DISARMED,
                                  STATE_ALARM_ARMED_AWAY)
 import homeassistant.components.alarm_control_panel as alarm
 
-REQUIREMENTS = ['pynx584==0.1']
+REQUIREMENTS = ['pynx584==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
