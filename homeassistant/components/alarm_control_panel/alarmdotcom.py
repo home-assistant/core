@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ['https://github.com/Xorso/pyalarmdotcom'
-                '/archive/0.0.7.zip'
-                '#pyalarmdotcom==0.0.7']
+                '/archive/0.1.1.zip'
+                '#pyalarmdotcom==0.1.1']
 DEFAULT_NAME = 'Alarm.com'
 
 
