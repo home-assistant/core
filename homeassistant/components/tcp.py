@@ -10,6 +10,7 @@ CONF_TIMEOUT = "timeout"
 CONF_PAYLOAD = "payload"
 CONF_UNIT = "unit"
 CONF_VALUE_REGEX = "value_regex"
+CONF_VALUE_TEMPLATE = "value_template"
 CONF_VALUE_ON = "value_on"
 CONF_BUFFER_SIZE = "buffer_size"
 
