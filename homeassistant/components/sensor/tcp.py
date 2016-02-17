@@ -5,14 +5,16 @@ Provides a sensor which gets its values from a TCP socket.
 """
 import logging
 import socket
-import re
 from select import select
 
 from homeassistant.const import CONF_NAME, CONF_HOST
+from homeassistant.util import template
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tcp import (
     DOMAIN, CONF_PORT, CONF_TIMEOUT, CONF_PAYLOAD, CONF_UNIT, CONF_VALUE_REGEX,
-    CONF_VALUE_ON, CONF_BUFFER_SIZE, DEFAULT_TIMEOUT, DEFAULT_BUFFER_SIZE
+    CONF_VALUE_TEMPLATE, CONF_VALUE_ON, CONF_BUFFER_SIZE, DEFAULT_TIMEOUT,
+    DEFAULT_BUFFER_SIZE
 )
 
 
@@ -25,15 +27,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """ Create the Sensor. """
     if not Sensor.validate_config(config):
         return False
-    add_entities((Sensor(config),))
+    add_entities((Sensor(hass, config),))
 
 
 class Sensor(Entity):
     """ Sensor Entity which gets its value from a TCP socket. """
     required = tuple()
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
         """ Set all the config values if they exist and get initial state. """
+        self._hass = hass
         self._config = {
             CONF_NAME: config.get(CONF_NAME),
             CONF_HOST: config[CONF_HOST],
@@ -42,6 +45,7 @@ class Sensor(Entity):
             CONF_PAYLOAD: config[CONF_PAYLOAD],
             CONF_UNIT: config.get(CONF_UNIT),
             CONF_VALUE_REGEX: config.get(CONF_VALUE_REGEX),
+            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
             CONF_BUFFER_SIZE: config.get(
                 CONF_BUFFER_SIZE, DEFAULT_BUFFER_SIZE),
@@ -78,6 +82,7 @@ class Sensor(Entity):
     def update(self):
         """ Get the latest value for this sensor. """
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         try:
             sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
         except socket.error as err:
@@ -85,6 +90,7 @@ class Sensor(Entity):
                 "Unable to connect to %s on port %s: %s",
                 self._config[CONF_HOST], self._config[CONF_PORT], err)
             return
+
         try:
             sock.send(self._config[CONF_PAYLOAD].encode())
         except socket.error as err:
@@ -93,6 +99,7 @@ class Sensor(Entity):
                 self._config[CONF_PAYLOAD], self._config[CONF_HOST],
                 self._config[CONF_PORT], err)
             return
+
         readable, _, _ = select([sock], [], [], self._config[CONF_TIMEOUT])
         if not readable:
             _LOGGER.warning(
@@ -101,20 +108,20 @@ class Sensor(Entity):
                 self._config[CONF_TIMEOUT], self._config[CONF_PAYLOAD],
                 self._config[CONF_HOST], self._config[CONF_PORT])
             return
+
         value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
-        if self._config[CONF_VALUE_REGEX] is not None:
-            match = re.match(self._config[CONF_VALUE_REGEX], value)
-            if match is None:
-                _LOGGER.warning(
-                    "Unable to match value using value_regex of %r: %r",
-                    self._config[CONF_VALUE_REGEX], value)
-                return
+
+        if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = match.groups()[0]
-            except IndexError:
-                _LOGGER.error(
-                    "You must include a capture group in the regex for %r: %r",
-                    self.name, self._config[CONF_VALUE_REGEX])
+                self._state = template.render(
+                    self._hass,
+                    self._config[CONF_VALUE_TEMPLATE],
+                    value=value)
                 return
-            return
+            except TemplateError as err:
+                _LOGGER.error(
+                    "Unable to render template of %r with value: %r",
+                    self._config[CONF_VALUE_TEMPLATE], value)
+                return
+
         self._state = value
