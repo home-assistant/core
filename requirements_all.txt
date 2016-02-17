@@ -164,7 +164,8 @@ pyicloud==0.7.2
 pynetgear==0.3.2
 
 # homeassistant.components.alarm_control_panel.nx584
-pynx584==0.1
+# homeassistant.components.binary_sensor.nx584
+pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
 pyowm==2.3.0
