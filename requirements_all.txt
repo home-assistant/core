@@ -158,6 +158,9 @@ https://github.com/theolind/pymysensors/archive/cc5d0b325e13c2b623fa934f69eea7cd
 # homeassistant.components.notify.googlevoice
 https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1
 
+# homeassistant.components.alarm_control_panel.simplisafe
+https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
+
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
