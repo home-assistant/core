@@ -70,7 +70,7 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.4.zip#RFXtrx==0.4
 https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-https://github.com/Xorso/pyalarmdotcom/archive/0.0.7.zip#pyalarmdotcom==0.0.7
+https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
