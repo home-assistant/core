@@ -307,3 +307,13 @@ class TestHoneywellUS(unittest.TestCase):
         expected['fan'] = 'idle'
         self.device.fan_running = False
         self.assertEqual(expected, self.honeywell.device_state_attributes)
+
+    def test_with_no_fan(self):
+        self.device.fan_running = False
+        self.device.fan_mode = None
+        expected = {
+            'fan': 'idle',
+            'fanmode': None,
+            'system_mode': 'heat',
+        }
+        self.assertEqual(expected, self.honeywell.device_state_attributes)
