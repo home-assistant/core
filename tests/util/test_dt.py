@@ -1,6 +1,6 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_dt
+~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant date util methods.
 """

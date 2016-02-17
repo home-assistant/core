@@ -12,7 +12,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_ON, STATE_OFF
 
-REQUIREMENTS = ['psutil==3.2.2']
+REQUIREMENTS = ['psutil==3.4.2']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -67,10 +67,12 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
+        """ Returns the name of the sensor. """
         return self._name.rstrip()
 
     @property
     def icon(self):
+        """ Icon to use in the frontend, if any. """
         return SENSOR_TYPES[self.type][2]
 
     @property
@@ -80,10 +82,12 @@ class SystemMonitorSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
+        """ Get the latest system informations. """
         import psutil
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent

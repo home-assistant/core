@@ -20,12 +20,7 @@ REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Find and return Temper sensors. """
-    try:
-        # pylint: disable=no-name-in-module, import-error
-        from temperusb.temper import TemperHandler
-    except ImportError:
-        _LOGGER.error('Failed to import temperusb')
-        return False
+    from temperusb.temper import TemperHandler
 
     temp_unit = hass.config.temperature_unit
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)

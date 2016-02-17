@@ -13,15 +13,16 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, CONF_ACCESS_TOKEN,
-    ATTR_SERVICE, ATTR_DISCOVERED, ATTR_FRIENDLY_NAME)
+    ATTR_SERVICE, ATTR_DISCOVERED)
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.3.1']
+REQUIREMENTS = ['python-wink==0.6.0']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
 DISCOVER_LOCKS = "wink.locks"
+DISCOVER_GARAGE_DOORS = "wink.garage_doors"
 
 
 def setup(hass, config):
@@ -37,10 +38,13 @@ def setup(hass, config):
     # Load components for the devices in the Wink that we support
     for component_name, func_exists, discovery_type in (
             ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
-            ('switch', pywink.get_switches, DISCOVER_SWITCHES),
-            ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays,
-             DISCOVER_SENSORS),
-            ('lock', pywink.get_locks, DISCOVER_LOCKS)):
+            ('switch', lambda: pywink.get_switches or
+             pywink.get_sirens or
+             pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
+            ('sensor', lambda: pywink.get_sensors or
+             pywink.get_eggtrays, DISCOVER_SENSORS),
+            ('lock', pywink.get_locks, DISCOVER_LOCKS),
+            ('garage_door', pywink.get_garage_doors, DISCOVER_GARAGE_DOORS)):
 
         if func_exists():
             component = get_component(component_name)
@@ -77,13 +81,6 @@ class WinkToggleDevice(ToggleEntity):
     def is_on(self):
         """ True if light is on. """
         return self.wink.state()
-
-    @property
-    def state_attributes(self):
-        """ Returns optional state attributes. """
-        return {
-            ATTR_FRIENDLY_NAME: self.wink.name()
-        }
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """

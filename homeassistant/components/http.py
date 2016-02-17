@@ -112,10 +112,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             _LOGGER.info("running http in development mode")
 
         if ssl_certificate is not None:
-            wrap_kwargs = {'certfile': ssl_certificate}
-            if ssl_key is not None:
-                wrap_kwargs['keyfile'] = ssl_key
-            self.socket = ssl.wrap_socket(self.socket, **wrap_kwargs)
+            context = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH)
+            context.load_cert_chain(ssl_certificate, keyfile=ssl_key)
+            self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
         """ Starts the HTTP server. """
@@ -198,12 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self.authenticated = (self.server.api_password is None
-                              or self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password
-                              or data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password
-                              or self.verify_session())
+        self.authenticated = (self.server.api_password is None or
+                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password or
+                              data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password or
+                              self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')

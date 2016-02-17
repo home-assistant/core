@@ -1,30 +1,6 @@
 #!/bin/sh
+#
+# NOTE: all testing is now driven through tox. The tox command below
+# performs roughly what this test did in the past.
 
-# script/test: Run test suite for application. Optionallly pass in a path to an
-#              individual test file to run a single test.
-
-cd "$(dirname "$0")/.."
-
-echo "Running tests..."
-
-if [ "$1" = "coverage" ]; then
-  py.test --cov --cov-report=
-  TEST_STATUS=$?
-else
-  py.test
-  TEST_STATUS=$?
-fi
-
-if [ "$NO_LINT" = "1" ]; then
-  LINT_STATUS=0
-else
-  script/lint
-  LINT_STATUS=$?
-fi
-
-if [ $LINT_STATUS -eq 0 ]
-then
-  exit $TEST_STATUS
-else
-  exit $LINT_STATUS
-fi
+tox -e py34

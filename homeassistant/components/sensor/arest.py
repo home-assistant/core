@@ -11,8 +11,8 @@ import logging
 
 import requests
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, \
-    DEVICE_DEFAULT_NAME
+from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
+                                 DEVICE_DEFAULT_NAME)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import template, Throttle

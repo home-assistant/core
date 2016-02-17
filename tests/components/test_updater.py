@@ -1,6 +1,6 @@
 """
-tests.test_updater
-~~~~~~~~~~~~~~~~~~
+tests.components.test_updater
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests updater component.
 """
@@ -9,11 +9,10 @@ from unittest.mock import patch
 
 import requests
 
-import homeassistant.core as ha
 from homeassistant.const import __version__ as CURRENT_VERSION
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
-from tests.common import fire_time_changed
+from tests.common import fire_time_changed, get_test_home_assistant
 
 NEW_VERSION = '10000.0'
 
@@ -22,7 +21,7 @@ class TestUpdater(unittest.TestCase):
     """ Test the demo lock. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

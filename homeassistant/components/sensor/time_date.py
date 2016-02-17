@@ -59,6 +59,15 @@ class TimeDateSensor(Entity):
         """ Returns the state of the device. """
         return self._state
 
+    @property
+    def icon(self):
+        if "date" in self.type and "time" in self.type:
+            return "mdi:calendar-clock"
+        elif "date" in self.type:
+            return "mdi:calendar"
+        else:
+            return "mdi:clock"
+
     def update(self):
         """ Gets the latest data and updates the states. """
 

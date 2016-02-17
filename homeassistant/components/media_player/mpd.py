@@ -9,11 +9,6 @@ https://home-assistant.io/components/media_player.mpd/
 import logging
 import socket
 
-try:
-    import mpd
-except ImportError:
-    mpd = None
-
 
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
@@ -40,10 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     location = config.get('location', 'MPD')
     password = config.get('password', None)
 
-    global mpd  # pylint: disable=invalid-name
-    if mpd is None:
-        import mpd as mpd_
-        mpd = mpd_
+    import mpd
 
     # pylint: disable=no-member
     try:
@@ -82,6 +74,8 @@ class MpdDevice(MediaPlayerDevice):
     # pylint: disable=no-member, abstract-method
 
     def __init__(self, server, port, location, password):
+        import mpd
+
         self.server = server
         self.port = port
         self._name = location
@@ -95,6 +89,7 @@ class MpdDevice(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        import mpd
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()

@@ -59,7 +59,7 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method, unused-argument
+# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the plex platform. """
 
@@ -112,7 +112,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
             {host: {'token': token}}):
         _LOGGER.error('failed to save config file')
 
-    _LOGGER.info('Connected to: htts://%s', host)
+    _LOGGER.info('Connected to: http://%s', host)
 
     plex_clients = {}
     plex_sessions = {}

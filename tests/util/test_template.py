@@ -1,20 +1,21 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_template
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests Home Assistant util methods.
+Tests Home Assistant template util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
-import homeassistant.core as ha
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
+
+from tests.common import get_test_home_assistant
 
 
 class TestUtilTemplate(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -45,7 +46,9 @@ class TestUtilTemplate(unittest.TestCase):
             'open10',
             template.render(
                 self.hass,
-                '{% for state in states.sensor %}{{ state.state }}{% endfor %}'))
+                """
+{% for state in states.sensor %}{{ state.state }}{% endfor %}
+                """))
 
     def test_rounding_value(self):
         self.hass.states.set('sensor.temperature', 12.78)
@@ -63,7 +66,8 @@ class TestUtilTemplate(unittest.TestCase):
             '128',
             template.render(
                 self.hass,
-                '{{ states.sensor.temperature.state | multiply(10) | round }}'))
+                '{{ states.sensor.temperature.state | multiply(10) | round }}'
+            ))
 
     def test_passing_vars_as_keywords(self):
         self.assertEqual(
@@ -91,7 +95,7 @@ class TestUtilTemplate(unittest.TestCase):
             template.render_with_possible_json_value(
                 self.hass, '{{ value_json', 'hello'))
 
-    def test_render_with_possible_json_value_with_template_error_error_value(self):
+    def test_render_with_possible_json_value_with_template_error_value(self):
         self.assertEqual(
             '-',
             template.render_with_possible_json_value(
@@ -107,7 +111,9 @@ class TestUtilTemplate(unittest.TestCase):
             'exists',
             template.render(
                 self.hass,
-                '{% if states.test.object %}exists{% else %}not exists{% endif %}'))
+                """
+{% if states.test.object %}exists{% else %}not exists{% endif %}
+                """))
 
     def test_is_state(self):
         self.hass.states.set('test.object', 'available')
@@ -115,7 +121,9 @@ class TestUtilTemplate(unittest.TestCase):
             'yes',
             template.render(
                 self.hass,
-                '{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}'))
+                """
+{% if is_state("test.object", "available") %}yes{% else %}no{% endif %}
+                """))
 
     def test_is_state_attr(self):
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
@@ -123,7 +131,9 @@ class TestUtilTemplate(unittest.TestCase):
             'yes',
             template.render(
                 self.hass,
-                '{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}'))
+                """
+{% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
+                """))
 
     def test_states_function(self):
         self.hass.states.set('test.object', 'available')

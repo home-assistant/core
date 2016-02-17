@@ -1,21 +1,22 @@
 """
 tests.components.automation.test_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests state automation.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
 import homeassistant.components.automation.state as state
+
+from tests.common import get_test_home_assistant
 
 
 class TestAutomationState(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 

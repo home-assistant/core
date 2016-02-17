@@ -13,17 +13,21 @@ import homeassistant.components as core_components
 from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
+from homeassistant.const import (
+    STATE_OPEN, STATE_CLOSED,
+    STATE_LOCKED, STATE_UNLOCKED,
+    STATE_ON, STATE_OFF)
+from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
+                                          STATE_BELOW_HORIZON)
 
 from tests.common import get_test_home_assistant, mock_service
 
 
 class TestStateHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant event helpers.
-    """
+    """ Tests the Home Assistant event helpers. """
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """ Things to be run when tests are started. """
         self.hass = get_test_home_assistant()
         core_components.setup(self.hass, {})
 
@@ -146,3 +150,31 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(['light.test1', 'light.test2'],
                          last_call.data.get('entity_id'))
         self.assertEqual(95, last_call.data.get('brightness'))
+
+    def test_as_number_states(self):
+        zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
+                       STATE_BELOW_HORIZON)
+        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON)
+        for _state in zero_states:
+            self.assertEqual(0, state.state_as_number(
+                ha.State('domain.test', _state, {})))
+        for _state in one_states:
+            self.assertEqual(1, state.state_as_number(
+                ha.State('domain.test', _state, {})))
+
+    def test_as_number_coercion(self):
+        for _state in ('0', '0.0', 0, 0.0):
+            self.assertEqual(
+                0.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
+        for _state in ('1', '1.0', 1, 1.0):
+            self.assertEqual(
+                1.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
+
+    def test_as_number_invalid_cases(self):
+        for _state in ('', 'foo', 'foo.bar', None, False, True, object,
+                       object()):
+            self.assertRaises(ValueError,
+                              state.state_as_number,
+                              ha.State('domain.test', _state, {}))

@@ -1,11 +1,17 @@
-"""Module with location helpers."""
+"""
+homeassistant.util.location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Module with location helpers.
+
+detect_location_info and elevation are mocked by default during tests.
+"""
 import collections
 
 import requests
 from vincenty import vincenty
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-
 
 LocationInfo = collections.namedtuple(
     "LocationInfo",
@@ -40,7 +46,6 @@ def distance(lat1, lon1, lat2, lon2):
 
 def elevation(latitude, longitude):
     """ Return elevation for given latitude and longitude. """
-
     req = requests.get(ELEVATION_URL, params={
         'locations': '{},{}'.format(latitude, longitude),
         'sensor': 'false',

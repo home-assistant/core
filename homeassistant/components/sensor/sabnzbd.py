@@ -17,7 +17,7 @@ REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 '#python-sabnzbd==0.1']
 
 SENSOR_TYPES = {
-    'current_status': ['Status', ''],
+    'current_status': ['Status', None],
     'speed': ['Speed', 'MB/s'],
     'queue_size': ['Queue', 'MB'],
     'queue_remaining': ['Left', 'MB'],

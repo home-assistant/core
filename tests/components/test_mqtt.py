@@ -1,6 +1,6 @@
 """
-tests.test_component_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests MQTT component.
 """
@@ -63,16 +63,56 @@ class TestMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('test-topic', self.calls[0][0].data[mqtt.ATTR_TOPIC])
-        self.assertEqual('test-payload', self.calls[0][0].data[mqtt.ATTR_PAYLOAD])
+        self.assertEqual(
+                'test-topic',
+                self.calls[0][0].data['service_data'][mqtt.ATTR_TOPIC])
+        self.assertEqual(
+                'test-payload',
+                self.calls[0][0].data['service_data'][mqtt.ATTR_PAYLOAD])
 
-    def test_service_call_without_topic_does_not_publush(self):
+    def test_service_call_without_topic_does_not_publish(self):
         self.hass.bus.fire(EVENT_CALL_SERVICE, {
             ATTR_DOMAIN: mqtt.DOMAIN,
             ATTR_SERVICE: mqtt.SERVICE_PUBLISH
         })
         self.hass.pool.block_till_done()
         self.assertTrue(not mqtt.MQTT_CLIENT.publish.called)
+
+    def test_service_call_with_template_payload_renders_template(self):
+        """
+        If 'payload_template' is provided and 'payload' is not, then render it.
+        """
+        mqtt.publish_template(self.hass, "test/topic", "{{ 1+1 }}")
+        self.hass.pool.block_till_done()
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "2")
+
+    def test_service_call_with_payload_doesnt_render_template(self):
+        """
+        If a 'payload' is provided then use that instead of 'payload_template'.
+        """
+        payload = "not a template"
+        payload_template = "a template"
+        # Call the service directly because the helper functions don't allow
+        # you to provide payload AND payload_template.
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: payload,
+            mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
+        }, blocking=True)
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], payload)
+
+    def test_service_call_without_payload_or_payload_template(self):
+        """
+        If neither 'payload' or 'payload_template' is provided then fail.
+        """
+        # Call the service directly because the helper functions require you to
+        # provide a payload.
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic"
+        }, blocking=True)
+        self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
 
     def test_subscribe_topic(self):
         mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
@@ -144,8 +184,15 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         self.hass = get_test_home_assistant(1)
-        mock_mqtt_component(self.hass)
-        self.calls = []
+        # mock_mqtt_component(self.hass)
+
+        with mock.patch('paho.mqtt.client.Client'):
+            mqtt.setup(self.hass, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'mock-broker',
+                }
+            })
+            self.hass.config.components.append(mqtt.DOMAIN)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -162,7 +209,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
         message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
 
-        mqtt._mqtt_on_message(None, {'hass': self.hass}, message)
+        mqtt.MQTT_CLIENT._mqtt_on_message(None, {'hass': self.hass}, message)
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(calls))
@@ -173,36 +220,55 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     def test_mqtt_failed_connection_results_in_disconnect(self):
         for result_code in range(1, 6):
-            mqttc = mock.MagicMock()
-            mqtt._mqtt_on_connect(mqttc, {'topics': {}}, 0, result_code)
-            self.assertTrue(mqttc.disconnect.called)
+            mqtt.MQTT_CLIENT._mqttc = mock.MagicMock()
+            mqtt.MQTT_CLIENT._mqtt_on_connect(None, {'topics': {}}, 0,
+                                              result_code)
+            self.assertTrue(mqtt.MQTT_CLIENT._mqttc.disconnect.called)
 
     def test_mqtt_subscribes_topics_on_connect(self):
-        prev_topics = {
-            'topic/test': 1,
-            'home/sensor': 2,
-            'still/pending': None
-        }
-        mqttc = mock.MagicMock()
-        mqtt._mqtt_on_connect(mqttc, {'topics': prev_topics}, 0, 0)
-        self.assertFalse(mqttc.disconnect.called)
+        from collections import OrderedDict
+        prev_topics = OrderedDict()
+        prev_topics['topic/test'] = 1,
+        prev_topics['home/sensor'] = 2,
+        prev_topics['still/pending'] = None
+
+        mqtt.MQTT_CLIENT.topics = prev_topics
+        mqtt.MQTT_CLIENT.progress = {1: 'still/pending'}
+        # Return values for subscribe calls (rc, mid)
+        mqtt.MQTT_CLIENT._mqttc.subscribe.side_effect = ((0, 2), (0, 3))
+        mqtt.MQTT_CLIENT._mqtt_on_connect(None, None, 0, 0)
+        self.assertFalse(mqtt.MQTT_CLIENT._mqttc.disconnect.called)
 
         expected = [(topic, qos) for topic, qos in prev_topics.items()
                     if qos is not None]
-        self.assertEqual(expected, [call[1] for call
-                                    in mqttc.subscribe.mock_calls])
+        self.assertEqual(
+            expected,
+            [call[1] for call in mqtt.MQTT_CLIENT._mqttc.subscribe.mock_calls])
+        self.assertEqual({
+            1: 'still/pending',
+            2: 'topic/test',
+            3: 'home/sensor',
+        }, mqtt.MQTT_CLIENT.progress)
 
     def test_mqtt_disconnect_tries_no_reconnect_on_stop(self):
-        mqttc = mock.MagicMock()
-        mqtt._mqtt_on_disconnect(mqttc, {}, 0)
-        self.assertFalse(mqttc.reconnect.called)
+        mqtt.MQTT_CLIENT._mqtt_on_disconnect(None, None, 0)
+        self.assertFalse(mqtt.MQTT_CLIENT._mqttc.reconnect.called)
 
     @mock.patch('homeassistant.components.mqtt.time.sleep')
     def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
-        mqttc = mock.MagicMock()
-        mqttc.reconnect.side_effect = [1, 1, 1, 0]
-        mqtt._mqtt_on_disconnect(mqttc, {}, 1)
-        self.assertTrue(mqttc.reconnect.called)
-        self.assertEqual(4, len(mqttc.reconnect.mock_calls))
+        mqtt.MQTT_CLIENT.topics = {
+            'test/topic': 1,
+            'test/progress': None
+        }
+        mqtt.MQTT_CLIENT.progress = {
+            1: 'test/progress'
+        }
+        mqtt.MQTT_CLIENT._mqttc.reconnect.side_effect = [1, 1, 1, 0]
+        mqtt.MQTT_CLIENT._mqtt_on_disconnect(None, None, 1)
+        self.assertTrue(mqtt.MQTT_CLIENT._mqttc.reconnect.called)
+        self.assertEqual(4, len(mqtt.MQTT_CLIENT._mqttc.reconnect.mock_calls))
         self.assertEqual([1, 2, 4],
                          [call[1][0] for call in mock_sleep.mock_calls])
+
+        self.assertEqual({'test/topic': 1}, mqtt.MQTT_CLIENT.topics)
+        self.assertEqual({}, mqtt.MQTT_CLIENT.progress)

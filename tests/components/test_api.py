@@ -1,6 +1,6 @@
 """
-tests.test_component_http
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_api
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant HTTP component does what it should do.
 """
@@ -17,15 +17,11 @@ from homeassistant import bootstrap, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
+from tests.common import get_test_instance_port, get_test_home_assistant
+
 API_PASSWORD = "test1234"
-
-# Somehow the socket that holds the default port does not get released
-# when we close down HA in a different test case. Until I have figured
-# out what is going on, let's run this test on a different port.
-SERVER_PORT = 8120
-
+SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-
 HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
@@ -36,13 +32,11 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server. """
+def setUpModule():   # pylint: disable=invalid-name
+    """ Initializes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
@@ -64,6 +58,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 
 class TestAPI(unittest.TestCase):
     """ Test the API. """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):
@@ -386,7 +383,7 @@ class TestAPI(unittest.TestCase):
             data=json.dumps({
                 'api_password': 'bla-di-bla',
                 'host': '127.0.0.1',
-                'port': '8125'
+                'port': get_test_instance_port()
                 }),
             headers=HA_HEADERS)
         self.assertEqual(422, req.status_code)

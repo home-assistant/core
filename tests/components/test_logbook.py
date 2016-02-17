@@ -1,6 +1,6 @@
 """
-tests.test_component_logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_logbook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the logbook component.
 """
@@ -14,20 +14,57 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from tests.common import get_test_home_assistant, mock_http_component
+from tests.common import mock_http_component, get_test_home_assistant
 
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
 
-    def test_setup(self):
+    def setUp(self):
         """ Test setup method. """
-        try:
-            hass = get_test_home_assistant()
-            mock_http_component(hass)
-            self.assertTrue(logbook.setup(hass, {}))
-        finally:
-            hass.stop()
+        self.hass = get_test_home_assistant()
+        mock_http_component(self.hass)
+        self.assertTrue(logbook.setup(self.hass, {}))
+
+    def tearDown(self):
+        self.hass.stop()
+
+    def test_service_call_create_logbook_entry(self):
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+        self.hass.services.call(logbook.DOMAIN, 'log', {
+            logbook.ATTR_NAME: 'Alarm',
+            logbook.ATTR_MESSAGE: 'is triggered',
+            logbook.ATTR_DOMAIN: 'switch',
+            logbook.ATTR_ENTITY_ID: 'test_switch'
+        }, True)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(calls))
+        last_call = calls[-1]
+
+        self.assertEqual('Alarm', last_call.data.get(logbook.ATTR_NAME))
+        self.assertEqual('is triggered', last_call.data.get(
+            logbook.ATTR_MESSAGE))
+        self.assertEqual('switch', last_call.data.get(logbook.ATTR_DOMAIN))
+        self.assertEqual('test_switch', last_call.data.get(
+            logbook.ATTR_ENTITY_ID))
+
+    def test_service_call_create_log_book_entry_no_message(self):
+        calls = []
+
+        def event_listener(event):
+            calls.append(event)
+
+        self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
+        self.hass.services.call(logbook.DOMAIN, 'log', {}, True)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(0, len(calls))
 
     def test_humanify_filter_sensor(self):
         """ Test humanify filter too frequent sensor values. """
@@ -49,6 +86,16 @@ class TestComponentHistory(unittest.TestCase):
 
         self.assert_entry(
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
+
+    def test_entry_to_dict(self):
+        entry = logbook.Entry(
+            dt_util.utcnow(), 'Alarm', 'is triggered', 'switch', 'test_switch'
+        )
+        data = entry.as_dict()
+        self.assertEqual('Alarm', data.get(logbook.ATTR_NAME))
+        self.assertEqual('is triggered', data.get(logbook.ATTR_MESSAGE))
+        self.assertEqual('switch', data.get(logbook.ATTR_DOMAIN))
+        self.assertEqual('test_switch', data.get(logbook.ATTR_ENTITY_ID))
 
     def test_home_assistant_start_stop_grouped(self):
         """ Tests if home assistant start and stop events are grouped if

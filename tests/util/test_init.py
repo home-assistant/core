@@ -1,6 +1,6 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_init
+~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant util methods.
 """
@@ -35,11 +35,6 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test", util.slugify("T-!@#$!#@$!$est"))
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
-
-    def test_split_entity_id(self):
-        """ Test split_entity_id. """
-        self.assertEqual(['domain', 'object_id'],
-                         util.split_entity_id('domain.object_id'))
 
     def test_repr_helper(self):
         """ Test repr_helper. """

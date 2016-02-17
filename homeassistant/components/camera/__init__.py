@@ -1,8 +1,6 @@
 # pylint: disable=too-many-lines
 """
-homeassistant.components.camera
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component to interface with various cameras.
+Component to interface with cameras.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
@@ -24,34 +22,17 @@ from homeassistant.const import (
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
-GROUP_NAME_ALL_CAMERAS = 'all_cameras'
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-SWITCH_ACTION_RECORD = 'record'
-SWITCH_ACTION_SNAPSHOT = 'snapshot'
-
-SERVICE_CAMERA = 'camera_service'
-
-STATE_RECORDING = 'recording'
-
-DEFAULT_RECORDING_SECONDS = 30
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {}
 
-FILE_DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S-%f'
-DIR_DATETIME_FORMAT = '%Y-%m-%d_%H-%M-%S'
-
-REC_DIR_PREFIX = 'recording-'
-REC_IMG_PREFIX = 'recording_image-'
-
+STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
-CAMERA_PROXY_URL = '/api/camera_proxy_stream/{0}'
-CAMERA_STILL_URL = '/api/camera_proxy/{0}'
-ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?time={1}'
+ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
 
 MULTIPART_BOUNDARY = '--jpegboundary'
 MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
@@ -59,8 +40,7 @@ MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Track states and offer events for cameras. """
-
+    """Initialize camera component."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
@@ -79,7 +59,7 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
-        """ Proxies the camera image via the HA server. """
+        """Serve the camera image via the HA server."""
         entity_id = path_match.group(ATTR_ENTITY_ID)
         camera = component.entities.get(entity_id)
 
@@ -105,7 +85,8 @@ def setup(hass, config):
     # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
         """
-        Proxies the camera image as an mjpeg stream via the HA server.
+        Proxy the camera image as an mjpeg stream via the HA server.
+
         This function takes still images from the IP camera and turns them
         into an MJPEG stream.  This means that HA can return a live video
         stream even with only a still image URL available.
@@ -121,33 +102,7 @@ def setup(hass, config):
         try:
             camera.is_streaming = True
             camera.update_ha_state()
-
-            handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
-            handler.request.sendall(bytes(
-                'Content-type: multipart/x-mixed-replace; \
-                    boundary=--jpgboundary\r\n\r\n', 'utf-8'))
-            handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
-
-            # MJPEG_START_HEADER.format()
-
-            while True:
-                img_bytes = camera.camera_image()
-                if img_bytes is None:
-                    continue
-                headers_str = '\r\n'.join((
-                    'Content-length: {}'.format(len(img_bytes)),
-                    'Content-type: image/jpeg',
-                )) + '\r\n\r\n'
-
-                handler.request.sendall(
-                    bytes(headers_str, 'utf-8') +
-                    img_bytes +
-                    bytes('\r\n', 'utf-8'))
-
-                handler.request.sendall(
-                    bytes('--jpgboundary\r\n', 'utf-8'))
-
-                time.sleep(0.5)
+            camera.mjpeg_stream(handler)
 
         except (requests.RequestException, IOError):
             camera.is_streaming = False
@@ -163,36 +118,70 @@ def setup(hass, config):
 
 
 class Camera(Entity):
-    """ The base class for camera components. """
+    """The base class for camera entities."""
 
     def __init__(self):
+        """Initialize a camera."""
         self.is_streaming = False
+
+    @property
+    def should_poll(self):
+        """No need to poll cameras."""
+        return False
 
     @property
     # pylint: disable=no-self-use
     def is_recording(self):
-        """ Returns true if the device is recording. """
+        """Return true if the device is recording."""
         return False
 
     @property
     # pylint: disable=no-self-use
     def brand(self):
-        """ Should return a string of the camera brand. """
+        """Camera brand."""
         return None
 
     @property
     # pylint: disable=no-self-use
     def model(self):
-        """ Returns string of camera model. """
+        """Camera model."""
         return None
 
     def camera_image(self):
-        """ Return bytes of camera image. """
+        """Return bytes of camera image."""
         raise NotImplementedError()
+
+    def mjpeg_stream(self, handler):
+        """Generate an HTTP MJPEG stream from camera images."""
+        handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
+        handler.request.sendall(bytes(
+            'Content-type: multipart/x-mixed-replace; \
+                boundary=--jpgboundary\r\n\r\n', 'utf-8'))
+        handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
+
+        # MJPEG_START_HEADER.format()
+        while True:
+            img_bytes = self.camera_image()
+            if img_bytes is None:
+                continue
+            headers_str = '\r\n'.join((
+                'Content-length: {}'.format(len(img_bytes)),
+                'Content-type: image/jpeg',
+            )) + '\r\n\r\n'
+
+            handler.request.sendall(
+                bytes(headers_str, 'utf-8') +
+                img_bytes +
+                bytes('\r\n', 'utf-8'))
+
+            handler.request.sendall(
+                bytes('--jpgboundary\r\n', 'utf-8'))
+
+            time.sleep(0.5)
 
     @property
     def state(self):
-        """ Returns the state of the entity. """
+        """Camera state."""
         if self.is_recording:
             return STATE_RECORDING
         elif self.is_streaming:
@@ -202,10 +191,9 @@ class Camera(Entity):
 
     @property
     def state_attributes(self):
-        """ Returns optional state attributes. """
+        """Camera state attributes."""
         attr = {
-            ATTR_ENTITY_PICTURE: ENTITY_IMAGE_URL.format(
-                self.entity_id, time.time()),
+            ATTR_ENTITY_PICTURE: ENTITY_IMAGE_URL.format(self.entity_id),
         }
 
         if self.model:

@@ -1,6 +1,6 @@
 """
-tests.test_component_history
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_history
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the history component.
 """
@@ -8,7 +8,7 @@ Tests the history component.
 from datetime import timedelta
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
 
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
@@ -143,3 +143,60 @@ class TestComponentHistory(unittest.TestCase):
         hist = history.state_changes_during_period(start, end, entity_id)
 
         self.assertEqual(states, hist[entity_id])
+
+    def test_get_significant_states(self):
+        """test that only significant states are returned with
+        get_significant_states.
+
+        We inject a bunch of state updates from media player and
+        thermostat. We should get back every thermostat change that
+        includes an attribute change, but only the state updates for
+        media player (attribute changes are not significant and not returned).
+
+        """
+        self.init_recorder()
+        mp = 'media_player.test'
+        therm = 'thermostat.test'
+
+        def set_state(entity_id, state, **kwargs):
+            self.hass.states.set(entity_id, state, **kwargs)
+            self.wait_recording_done()
+            return self.hass.states.get(entity_id)
+
+        zero = dt_util.utcnow()
+        one = zero + timedelta(seconds=1)
+        two = one + timedelta(seconds=1)
+        three = two + timedelta(seconds=1)
+        four = three + timedelta(seconds=1)
+
+        states = {therm: [], mp: []}
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=one):
+            states[mp].append(
+                set_state(mp, 'idle',
+                          attributes={'media_title': str(sentinel.mt1)}))
+            states[mp].append(
+                set_state(mp, 'YouTube',
+                          attributes={'media_title': str(sentinel.mt2)}))
+            states[therm].append(
+                set_state(therm, 20, attributes={'current_temperature': 19.5}))
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=two):
+            # this state will be skipped only different in time
+            set_state(mp, 'YouTube',
+                      attributes={'media_title': str(sentinel.mt3)})
+            states[therm].append(
+                set_state(therm, 21, attributes={'current_temperature': 19.8}))
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=three):
+            states[mp].append(
+                set_state(mp, 'Netflix',
+                          attributes={'media_title': str(sentinel.mt4)}))
+            # attributes changed even though state is the same
+            states[therm].append(
+                set_state(therm, 21, attributes={'current_temperature': 20}))
+
+        hist = history.get_significant_states(zero, four)
+        self.assertEqual(states, hist)

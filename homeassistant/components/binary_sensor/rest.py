@@ -21,7 +21,7 @@ DEFAULT_METHOD = 'GET'
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup REST binary sensors."""
+    """ Setup REST binary sensors. """
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
@@ -41,10 +41,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class RestBinarySensor(BinarySensorDevice):
-    """REST binary sensor."""
+    """ A REST binary sensor. """
 
     def __init__(self, hass, rest, name, value_template):
-        """Initialize a REST binary sensor."""
+        """ Initialize a REST binary sensor. """
         self._hass = hass
         self.rest = rest
         self._name = name
@@ -54,12 +54,12 @@ class RestBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Name of the binary sensor."""
+        """ Name of the binary sensor. """
         return self._name
 
     @property
     def is_on(self):
-        """Return if the binary sensor is on."""
+        """ Return if the binary sensor is on. """
         if self.rest.data is None:
             return False
 
@@ -69,5 +69,5 @@ class RestBinarySensor(BinarySensorDevice):
         return bool(int(self.rest.data))
 
     def update(self):
-        """Get the latest data from REST API and updates the state."""
+        """ Get the latest data from REST API and updates the state. """
         self.rest.update()

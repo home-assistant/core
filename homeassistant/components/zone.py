@@ -10,8 +10,8 @@ import logging
 
 from homeassistant.const import (
     ATTR_HIDDEN, ATTR_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME)
-from homeassistant.helpers import extract_domain_configs, generate_entity_id
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import extract_domain_configs
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util.location import distance
 
 DOMAIN = "zone"
@@ -23,6 +23,9 @@ DEFAULT_NAME = 'Unnamed zone'
 
 ATTR_RADIUS = 'radius'
 DEFAULT_RADIUS = 100
+
+ATTR_PASSIVE = 'passive'
+DEFAULT_PASSIVE = False
 
 ICON_HOME = 'mdi:home'
 
@@ -37,6 +40,9 @@ def active_zone(hass, latitude, longitude, radius=0):
     closest = None
 
     for zone in zones:
+        if zone.attributes.get(ATTR_PASSIVE):
+            continue
+
         zone_dist = distance(
             latitude, longitude,
             zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
@@ -78,13 +84,14 @@ def setup(hass, config):
             longitude = entry.get(ATTR_LONGITUDE)
             radius = entry.get(ATTR_RADIUS, DEFAULT_RADIUS)
             icon = entry.get(ATTR_ICON)
+            passive = entry.get(ATTR_PASSIVE, DEFAULT_PASSIVE)
 
             if None in (latitude, longitude):
                 logging.getLogger(__name__).error(
                     'Each zone needs a latitude and longitude.')
                 continue
 
-            zone = Zone(hass, name, latitude, longitude, radius, icon)
+            zone = Zone(hass, name, latitude, longitude, radius, icon, passive)
             zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
                                                 entities)
             zone.update_ha_state()
@@ -92,7 +99,7 @@ def setup(hass, config):
 
     if ENTITY_ID_HOME not in entities:
         zone = Zone(hass, hass.config.location_name, hass.config.latitude,
-                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME)
+                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 
@@ -101,17 +108,15 @@ def setup(hass, config):
 
 class Zone(Entity):
     """ Represents a Zone in Home Assistant. """
-    # pylint: disable=too-many-arguments
-    def __init__(self, hass, name, latitude, longitude, radius, icon):
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
         self.hass = hass
         self._name = name
-        self.latitude = latitude
-        self.longitude = longitude
-        self.radius = radius
+        self._latitude = latitude
+        self._longitude = longitude
+        self._radius = radius
         self._icon = icon
-
-    def should_poll(self):
-        return False
+        self._passive = passive
 
     @property
     def name(self):
@@ -128,9 +133,12 @@ class Zone(Entity):
 
     @property
     def state_attributes(self):
-        return {
+        data = {
             ATTR_HIDDEN: True,
-            ATTR_LATITUDE: self.latitude,
-            ATTR_LONGITUDE: self.longitude,
-            ATTR_RADIUS: self.radius,
+            ATTR_LATITUDE: self._latitude,
+            ATTR_LONGITUDE: self._longitude,
+            ATTR_RADIUS: self._radius,
         }
+        if self._passive:
+            data[ATTR_PASSIVE] = self._passive
+        return data

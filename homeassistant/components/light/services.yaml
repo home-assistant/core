@@ -55,3 +55,15 @@ turn_off:
     transition:
       description: Duration in seconds it takes to get to next state
       example: 60
+
+toggle:
+  description: Toggles a light
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle
+      example: 'light.kitchen'
+
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60

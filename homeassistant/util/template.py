@@ -1,7 +1,6 @@
 """
 homeassistant.util.template
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Template utility methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods

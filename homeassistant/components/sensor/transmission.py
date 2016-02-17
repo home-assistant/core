@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {
-    'current_status': ['Status', ''],
+    'current_status': ['Status', None],
     'download_speed': ['Down Speed', 'MB/s'],
     'upload_speed': ['Up Speed', 'MB/s']
 }

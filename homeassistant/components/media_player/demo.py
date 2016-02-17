@@ -7,11 +7,11 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, YOUTUBE_COVER_URL_FORMAT,
+    MediaPlayerDevice,
     MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_YOUTUBE,
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK)
+    SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA)
 
 
 # pylint: disable=unused-argument
@@ -26,9 +26,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
+YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
+
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_YOUTUBE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -150,10 +152,9 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         """ Flags of media commands that are supported. """
         return YOUTUBE_PLAYER_SUPPORT
 
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
+    def play_media(self, media_type, media_id):
+        """ Plays a piece of media. """
         self.youtube_id = media_id
-        self._media_title = 'some YouTube video'
         self.update_ha_state()
 
 
@@ -234,7 +235,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """ Flags of media commands that are supported. """
         support = MUSIC_PLAYER_SUPPORT
 
-        if self._cur_track > 1:
+        if self._cur_track > 0:
             support |= SUPPORT_PREVIOUS_TRACK
 
         if self._cur_track < len(self.tracks)-1:

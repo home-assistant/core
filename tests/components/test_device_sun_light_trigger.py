@@ -1,6 +1,6 @@
 """
 tests.test_component_device_sun_light_trigger
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests device sun light trigger component.
 """
@@ -19,17 +19,15 @@ from tests.common import (
     ensure_sun_set)
 
 
-KNOWN_DEV_PATH = None
+KNOWN_DEV_CSV_PATH = os.path.join(get_test_config_dir(),
+                                  device_tracker.CSV_DEVICES)
+KNOWN_DEV_YAML_PATH = os.path.join(get_test_config_dir(),
+                                   device_tracker.YAML_DEVICES)
 
 
 def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
-    global KNOWN_DEV_PATH
-
-    KNOWN_DEV_PATH = os.path.join(get_test_config_dir(),
-                                  device_tracker.CSV_DEVICES)
-
-    with open(KNOWN_DEV_PATH, 'w') as fil:
+    with open(KNOWN_DEV_CSV_PATH, 'w') as fil:
         fil.write('device,name,track,picture\n')
         fil.write('DEV1,device 1,1,http://example.com/dev1.jpg\n')
         fil.write('DEV2,device 2,1,http://example.com/dev2.jpg\n')
@@ -37,8 +35,9 @@ def setUpModule():   # pylint: disable=invalid-name
 
 def tearDownModule():   # pylint: disable=invalid-name
     """ Stops the Home Assistant server. """
-    os.remove(os.path.join(get_test_config_dir(),
-                           device_tracker.YAML_DEVICES))
+    for fil in (KNOWN_DEV_CSV_PATH, KNOWN_DEV_YAML_PATH):
+        if os.path.isfile(fil):
+            os.remove(fil)
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):

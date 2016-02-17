@@ -226,22 +226,28 @@ class Recorder(threading.Thread):
         # State got deleted
         if state is None:
             state_state = ''
+            state_domain = ''
             state_attr = '{}'
             last_changed = last_updated = now
         else:
+            state_domain = state.domain
             state_state = state.state
-            state_attr = json.dumps(state.attributes)
+            state_attr = json.dumps(dict(state.attributes))
             last_changed = state.last_changed
             last_updated = state.last_updated
 
         info = (
-            entity_id, state_state, state_attr, last_changed, last_updated,
+            entity_id, state_domain, state_state, state_attr,
+            last_changed, last_updated,
             now, self.utc_offset, event_id)
 
         self.query(
-            "INSERT INTO states ("
-            "entity_id, state, attributes, last_changed, last_updated,"
-            "created, utc_offset, event_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            """
+            INSERT INTO states (
+            entity_id, domain, state, attributes, last_changed, last_updated,
+            created, utc_offset, event_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             info)
 
     def record_event(self, event):
@@ -279,7 +285,8 @@ class Recorder(threading.Thread):
                 else:
                     return cur.fetchall()
 
-        except sqlite3.IntegrityError:
+        except (sqlite3.IntegrityError, sqlite3.OperationalError,
+                sqlite3.ProgrammingError):
             _LOGGER.exception(
                 "Error querying the database using: %s", sql_query)
             return []
@@ -323,7 +330,7 @@ class Recorder(threading.Thread):
             migration_id = 0
 
         if migration_id < 1:
-            self.query("""
+            cur.execute("""
                 CREATE TABLE recorder_runs (
                     run_id integer primary key,
                     start integer,
@@ -332,7 +339,7 @@ class Recorder(threading.Thread):
                     created integer)
             """)
 
-            self.query("""
+            cur.execute("""
                 CREATE TABLE events (
                     event_id integer primary key,
                     event_type text,
@@ -340,10 +347,10 @@ class Recorder(threading.Thread):
                     origin text,
                     created integer)
             """)
-            self.query(
+            cur.execute(
                 'CREATE INDEX events__event_type ON events(event_type)')
 
-            self.query("""
+            cur.execute("""
                 CREATE TABLE states (
                     state_id integer primary key,
                     entity_id text,
@@ -353,56 +360,89 @@ class Recorder(threading.Thread):
                     last_updated integer,
                     created integer)
             """)
-            self.query('CREATE INDEX states__entity_id ON states(entity_id)')
+            cur.execute('CREATE INDEX states__entity_id ON states(entity_id)')
 
             save_migration(1)
 
         if migration_id < 2:
-            self.query("""
+            cur.execute("""
                 ALTER TABLE events
                 ADD COLUMN time_fired integer
             """)
 
-            self.query('UPDATE events SET time_fired=created')
+            cur.execute('UPDATE events SET time_fired=created')
 
             save_migration(2)
 
         if migration_id < 3:
             utc_offset = self.utc_offset
 
-            self.query("""
+            cur.execute("""
                 ALTER TABLE recorder_runs
                 ADD COLUMN utc_offset integer
             """)
 
-            self.query("""
+            cur.execute("""
                 ALTER TABLE events
                 ADD COLUMN utc_offset integer
             """)
 
-            self.query("""
+            cur.execute("""
                 ALTER TABLE states
                 ADD COLUMN utc_offset integer
             """)
 
-            self.query("UPDATE recorder_runs SET utc_offset=?", [utc_offset])
-            self.query("UPDATE events SET utc_offset=?", [utc_offset])
-            self.query("UPDATE states SET utc_offset=?", [utc_offset])
+            cur.execute("UPDATE recorder_runs SET utc_offset=?", [utc_offset])
+            cur.execute("UPDATE events SET utc_offset=?", [utc_offset])
+            cur.execute("UPDATE states SET utc_offset=?", [utc_offset])
 
             save_migration(3)
 
         if migration_id < 4:
             # We had a bug where we did not save utc offset for recorder runs
-            self.query(
+            cur.execute(
                 """UPDATE recorder_runs SET utc_offset=?
                    WHERE utc_offset IS NULL""", [self.utc_offset])
 
-            self.query("""
+            cur.execute("""
                 ALTER TABLE states
                 ADD COLUMN event_id integer
             """)
 
             save_migration(4)
+
+        if migration_id < 5:
+            # Add domain so that thermostat graphs look right
+            try:
+                cur.execute("""
+                    ALTER TABLE states
+                    ADD COLUMN domain text
+                """)
+            except sqlite3.OperationalError:
+                # We had a bug in this migration for a while on dev
+                # Without this, dev-users will have to throw away their db
+                pass
+
+            # TravisCI has Python compiled against an old version of SQLite3
+            # which misses the instr method.
+            self.conn.create_function(
+                "instr", 2,
+                lambda string, substring: string.find(substring) + 1)
+
+            # populate domain with defaults
+            cur.execute("""
+                UPDATE states
+                set domain=substr(entity_id, 0, instr(entity_id, '.'))
+            """)
+
+            # add indexes we are going to use a lot on selects
+            cur.execute("""
+                CREATE INDEX states__state_changes ON
+                states (last_changed, last_updated, entity_id)""")
+            cur.execute("""
+                CREATE INDEX states__significant_changes ON
+                states (domain, last_updated, entity_id)""")
+            save_migration(5)
 
     def _close_connection(self):
         """ Close connection to the database. """

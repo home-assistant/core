@@ -11,8 +11,10 @@ https://home-assistant.io/components/light.zwave/
 from threading import Timer
 
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-import homeassistant.components.zwave as zwave
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS, DOMAIN
+from homeassistant.components.zwave import (
+    COMMAND_CLASS_SWITCH_MULTILEVEL, TYPE_BYTE, GENRE_USER, NETWORK,
+    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -20,14 +22,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
+    value = node.values[discovery_info[ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
+    if value.command_class != COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
-    if value.type != zwave.TYPE_BYTE:
+    if value.type != TYPE_BYTE:
         return
-    if value.genre != zwave.GENRE_USER:
+    if value.genre != GENRE_USER:
         return
 
     value.set_change_verified(False)
@@ -45,15 +47,14 @@ def brightness_state(value):
         return 255, STATE_OFF
 
 
-class ZwaveDimmer(Light):
+class ZwaveDimmer(ZWaveDeviceEntity, Light):
     """ Provides a Z-Wave dimmer. """
     # pylint: disable=too-many-arguments
     def __init__(self, value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        self._value = value
-        self._node = value.node
+        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._brightness, self._state = brightness_state(value)
 
@@ -87,18 +88,6 @@ class ZwaveDimmer(Light):
         self.update_ha_state()
 
     @property
-    def should_poll(self):
-        """ No polling needed for a light. """
-        return False
-
-    @property
-    def name(self):
-        """ Returns the name of the device if any. """
-        name = self._node.name or "{}".format(self._node.product_name)
-
-        return "{}".format(name or self._value.label)
-
-    @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
         return self._brightness
@@ -118,10 +107,10 @@ class ZwaveDimmer(Light):
         # brightness.
         brightness = (self._brightness / 255) * 99
 
-        if self._node.set_dimmer(self._value.value_id, brightness):
+        if self._value.node.set_dimmer(self._value.value_id, brightness):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._node.set_dimmer(self._value.value_id, 0):
+        if self._value.node.set_dimmer(self._value.value_id, 0):
             self._state = STATE_OFF

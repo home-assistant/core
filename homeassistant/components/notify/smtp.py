@@ -21,37 +21,38 @@ def get_service(hass, config):
     """ Get the mail notification service. """
 
     if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['server', 'port', 'sender', 'username',
-                                     'password', 'recipient']},
+                           {DOMAIN: ['recipient']},
                            _LOGGER):
         return None
 
-    smtp_server = config['server']
-    port = int(config['port'])
-    username = config['username']
-    password = config['password']
-    starttls = int(config['starttls'])
+    smtp_server = config.get('server', 'localhost')
+    port = int(config.get('port', '25'))
+    username = config.get('username', None)
+    password = config.get('password', None)
+    starttls = int(config.get('starttls', 0))
+    debug = config.get('debug', 0)
 
     server = None
     try:
-        server = smtplib.SMTP(smtp_server, port)
+        server = smtplib.SMTP(smtp_server, port, timeout=5)
+        server.set_debuglevel(debug)
         server.ehlo()
         if starttls == 1:
             server.starttls()
             server.ehlo()
+        if username and password:
+            try:
+                server.login(username, password)
 
-        try:
-            server.login(username, password)
-
-        except (smtplib.SMTPException, smtplib.SMTPSenderRefused):
-            _LOGGER.exception("Please check your settings.")
-
-            return None
+            except (smtplib.SMTPException, smtplib.SMTPSenderRefused):
+                _LOGGER.exception("Please check your settings.")
+                return None
 
     except smtplib.socket.gaierror:
         _LOGGER.exception(
-            "SMTP server not found. "
-            "Please check the IP address or hostname of your SMTP server.")
+            "SMTP server not found (%s:%s). "
+            "Please check the IP address or hostname of your SMTP server.",
+            smtp_server, port)
 
         return None
 
@@ -68,7 +69,7 @@ def get_service(hass, config):
 
     return MailNotificationService(
         smtp_server, port, config['sender'], starttls, username, password,
-        config['recipient'])
+        config['recipient'], debug)
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
@@ -77,7 +78,7 @@ class MailNotificationService(BaseNotificationService):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server, port, sender, starttls, username,
-                 password, recipient):
+                 password, recipient, debug):
         self._server = server
         self._port = port
         self._sender = sender
@@ -85,24 +86,26 @@ class MailNotificationService(BaseNotificationService):
         self.username = username
         self.password = password
         self.recipient = recipient
+        self.debug = debug
         self.tries = 2
-        self.mail = None
-
-        self.connect()
 
     def connect(self):
         """ Connect/Authenticate to SMTP Server """
 
-        self.mail = smtplib.SMTP(self._server, self._port)
-        self.mail.ehlo_or_helo_if_needed()
+        mail = smtplib.SMTP(self._server, self._port, timeout=5)
+        mail.set_debuglevel(self.debug)
+        mail.ehlo_or_helo_if_needed()
         if self.starttls == 1:
-            self.mail.starttls()
-            self.mail.ehlo()
-        self.mail.login(self.username, self.password)
+            mail.starttls()
+            mail.ehlo()
+        if self.username and self.password:
+            mail.login(self.username, self.password)
+        return mail
 
     def send_message(self, message="", **kwargs):
         """ Send a message to a user. """
 
+        mail = self.connect()
         subject = kwargs.get(ATTR_TITLE)
 
         msg = MIMEText(message)
@@ -113,10 +116,13 @@ class MailNotificationService(BaseNotificationService):
 
         for _ in range(self.tries):
             try:
-                self.mail.sendmail(self._sender, self.recipient,
-                                   msg.as_string())
+                mail.sendmail(self._sender, self.recipient,
+                              msg.as_string())
                 break
             except smtplib.SMTPException:
                 _LOGGER.warning('SMTPException sending mail: '
                                 'retrying connection')
-                self.connect()
+                mail.quit()
+                mail = self.connect()
+
+        mail.quit()

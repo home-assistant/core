@@ -13,11 +13,13 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import slugify
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.components.rfxtrx import ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID, \
-    ATTR_NAME, EVENT_BUTTON_PRESSED
+from homeassistant.components.rfxtrx import (
+    ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID,
+    ATTR_NAME, EVENT_BUTTON_PRESSED)
 
 
 DEPENDENCIES = ['rfxtrx']
+SIGNAL_REPETITIONS = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # Add switch from config file
     switchs = []
     devices = config.get('devices')
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
     if devices:
         for entity_id, entity_info in devices.items():
             if entity_id not in rfxtrx.RFX_DEVICES:
@@ -40,7 +43,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
                 rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
                 newswitch = RfxtrxSwitch(
-                    entity_info[ATTR_NAME], rfxobject, datas)
+                    entity_info[ATTR_NAME], rfxobject, datas,
+                    signal_repetitions)
                 rfxtrx.RFX_DEVICES[entity_id] = newswitch
                 switchs.append(newswitch)
 
@@ -48,7 +52,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def switch_update(event):
         """ Callback for sensor updates from the RFXtrx gateway. """
-        if not isinstance(event.device, rfxtrxmod.LightingDevice):
+        if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
+                event.device.known_to_be_dimmable:
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -67,13 +72,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             entity_name = "%s : %s" % (entity_id, pkt_id)
             datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
-            new_switch = RfxtrxSwitch(entity_name, event, datas)
+            signal_repetitions = config.get('signal_repetitions',
+                                            SIGNAL_REPETITIONS)
+            new_switch = RfxtrxSwitch(entity_name, event, datas,
+                                      signal_repetitions)
             rfxtrx.RFX_DEVICES[entity_id] = new_switch
             add_devices_callback([new_switch])
 
         # Check if entity exists or previously added automatically
-        if entity_id in rfxtrx.RFX_DEVICES \
-                and isinstance(rfxtrx.RFX_DEVICES[entity_id], RfxtrxSwitch):
+        if entity_id in rfxtrx.RFX_DEVICES:
             _LOGGER.debug(
                 "EntityID: %s switch_update. Command: %s",
                 entity_id,
@@ -105,11 +112,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class RfxtrxSwitch(SwitchDevice):
     """ Provides a RFXtrx switch. """
-    def __init__(self, name, event, datas):
+    def __init__(self, name, event, datas, signal_repetitions):
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
+        self.signal_repetitions = signal_repetitions
 
     @property
     def should_poll(self):
@@ -131,9 +139,17 @@ class RfxtrxSwitch(SwitchDevice):
         """ True if light is on. """
         return self._state
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return True
+
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        if self._event:
+        if not self._event:
+            return
+
+        for _ in range(self.signal_repetitions):
             self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
 
         self._state = True
@@ -141,7 +157,10 @@ class RfxtrxSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        if self._event:
+        if not self._event:
+            return
+
+        for _ in range(self.signal_repetitions):
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._state = False

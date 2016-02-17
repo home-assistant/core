@@ -6,6 +6,7 @@ Offers numeric state listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#numeric-state-trigger
 """
+from functools import partial
 import logging
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
@@ -18,6 +19,14 @@ CONF_BELOW = "below"
 CONF_ABOVE = "above"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _renderer(hass, value_template, state):
+    """Render state value."""
+    if value_template is None:
+        return state.state
+
+    return template.render(hass, value_template, {'state': state})
 
 
 def trigger(hass, config, action):
@@ -38,12 +47,7 @@ def trigger(hass, config, action):
                       CONF_BELOW, CONF_ABOVE)
         return False
 
-    if value_template is not None:
-        renderer = lambda value: template.render(hass,
-                                                 value_template,
-                                                 {'state': value})
-    else:
-        renderer = lambda value: value.state
+    renderer = partial(_renderer, hass, value_template)
 
     # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
@@ -79,12 +83,7 @@ def if_action(hass, config):
                       CONF_BELOW, CONF_ABOVE)
         return None
 
-    if value_template is not None:
-        renderer = lambda value: template.render(hass,
-                                                 value_template,
-                                                 {'state': value})
-    else:
-        renderer = lambda value: value.state
+    renderer = partial(_renderer, hass, value_template)
 
     def if_numeric_state():
         """ Test numeric state condition. """
