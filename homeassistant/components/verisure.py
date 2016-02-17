@@ -29,7 +29,7 @@ DISCOVER_ALARMS = 'verisure.alarm_control_panel'
 DISCOVER_LOCKS = 'verisure.lock'
 
 DEPENDENCIES = ['alarm_control_panel']
-REQUIREMENTS = ['vsure==0.5.0']
+REQUIREMENTS = ['vsure==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
