@@ -49,15 +49,20 @@ class GraphiteFeeder(threading.Thread):
         self._prefix = prefix.rstrip('.')
         self._queue = queue.Queue()
         self._quit_object = object()
+        self._we_started = False
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                              self.start_listen)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                              self.shutdown)
         hass.bus.listen(EVENT_STATE_CHANGED, self.event_listener)
+        _LOGGER.debug('Graphite feeding to %s:%i initialized',
+                      self._host, self._port)
 
     def start_listen(self, event):
         """ Start event-processing thread. """
+        _LOGGER.debug('Event processing thread started')
+        self._we_started = True
         self.start()
 
     def shutdown(self, event):
@@ -67,11 +72,17 @@ class GraphiteFeeder(threading.Thread):
         clean up (and no penalty for killing in-process
         connections to graphite.
         """
+        _LOGGER.debug('Event processing signaled exit')
         self._queue.put(self._quit_object)
 
     def event_listener(self, event):
         """ Queue an event for processing. """
-        self._queue.put(event)
+        if self.is_alive() or not self._we_started:
+            _LOGGER.debug('Received event')
+            self._queue.put(event)
+        else:
+            _LOGGER.error('Graphite feeder thread has died, not '
+                          'queuing event!')
 
     def _send_to_graphite(self, data):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -107,10 +118,23 @@ class GraphiteFeeder(threading.Thread):
         while True:
             event = self._queue.get()
             if event == self._quit_object:
+                _LOGGER.debug('Event processing thread stopped')
                 self._queue.task_done()
                 return
             elif (event.event_type == EVENT_STATE_CHANGED and
                   event.data.get('new_state')):
-                self._report_attributes(event.data['entity_id'],
-                                        event.data['new_state'])
+                _LOGGER.debug('Processing STATE_CHANGED event for %s',
+                              event.data['entity_id'])
+                try:
+                    self._report_attributes(event.data['entity_id'],
+                                            event.data['new_state'])
+                # pylint: disable=broad-except
+                except Exception:
+                    # Catch this so we can avoid the thread dying and
+                    # make it visible.
+                    _LOGGER.exception('Failed to process STATE_CHANGED event')
+            else:
+                _LOGGER.warning('Processing unexpected event type %s',
+                                event.event_type)
+
             self._queue.task_done()
