@@ -57,10 +57,10 @@ class WinkLockDevice(LockDevice):
         """ True if device is locked. """
         return self.wink.state()
 
-    def lock(self):
+    def lock(self, **kwargs):
         """ Lock the device. """
         self.wink.set_state(True)
 
-    def unlock(self):
+    def unlock(self, **kwargs):
         """ Unlock the device. """
         self.wink.set_state(False)
