@@ -42,7 +42,6 @@ class TestCommandRollerShutter(unittest.TestCase):
             mock_run.assert_called_once_with('runme', shell=True)
 
     def test_state_value(self):
-        # add_devices = mock.MagicMock()
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'rollershutter_status')
             test_rollershutter = {
@@ -53,7 +52,6 @@ class TestCommandRollerShutter(unittest.TestCase):
                 'value_template': '{{ value }}'
             }
             self.assertTrue(rollershutter.setup(self.hass, {
-            # self.assertTrue(cmd_rs.setup_platform(self.hass, {
                 'rollershutter': {
                     'platform': 'command_rollershutter',
                     'rollershutters': {
@@ -61,7 +59,6 @@ class TestCommandRollerShutter(unittest.TestCase):
                     }
                 }
             }))
-            # }, add_devices))
 
             state = self.hass.states.get('rollershutter.test')
             self.assertEqual('unknown', state.state)
