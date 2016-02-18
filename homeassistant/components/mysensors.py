@@ -146,7 +146,11 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                     continue
                 name = '{} {}.{}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
-                devices[key] = entity_class(
+                if isinstance(entity_class, dict):
+                    device_class = entity_class[child.type]
+                else:
+                    device_class = entity_class
+                devices[key] = device_class(
                     gateway, node_id, child.id, name, value_type)
 
                 _LOGGER.info('Adding new devices: %s', devices[key])
