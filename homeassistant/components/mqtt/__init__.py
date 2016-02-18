@@ -40,6 +40,14 @@ CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
 CONF_PROTOCOL = 'protocol'
 
+CONF_BIRTH_MESSAGE = 'birth_message'
+CONF_WILL_MESSAGE = 'will_message'
+
+CONF_MESSAGE_TOPIC = 'topic'
+CONF_MESSAGE_PAYLOAD = 'payload'
+CONF_MESSAGE_QOS = 'qos'
+CONF_MESSAGE_RETAIN = 'retain'
+
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
 
@@ -110,6 +118,22 @@ def setup(hass, config):
     certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
     protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
 
+    messages = {
+        'birth': None,
+        'will': None
+    }
+
+    for message in (CONF_BIRTH_MESSAGE, CONF_WILL_MESSAGE): 
+        if message in conf:
+            index = message.replace('_message', '')
+
+            messages[index] = {
+                'topic': util.convert(conf[message].get(CONF_MESSAGE_TOPIC), str),
+                'payload': util.convert(conf[message].get(CONF_MESSAGE_PAYLOAD), str),
+                'qos': util.convert(conf[message].get(CONF_MESSAGE_QOS), int, DEFAULT_QOS),
+                'retain': util.convert(conf[message].get(CONF_MESSAGE_RETAIN), bool)
+            }
+
     if protocol not in (PROTOCOL_31, PROTOCOL_311):
         _LOGGER.error('Invalid protocol specified: %s. Allowed values: %s, %s',
                       protocol, PROTOCOL_31, PROTOCOL_311)
@@ -124,7 +148,7 @@ def setup(hass, config):
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate, protocol)
+                           password, certificate, protocol, messages)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -181,13 +205,14 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, protocol):
+                 password, certificate, protocol, messages):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
         self.hass = hass
         self.topics = {}
         self.progress = {}
+        self.messages = messages
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31
@@ -203,6 +228,9 @@ class MQTT(object):
             self._mqttc.username_pw_set(username, password)
         if certificate is not None:
             self._mqttc.tls_set(certificate)
+
+        if 'will' in messages:
+            self._mqttc.will_set(messages['will']['topic'], messages['will']['payload'], messages['will']['qos'], messages['will']['retain'])
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
@@ -267,6 +295,9 @@ class MQTT(object):
             # qos is None if we were in process of subscribing
             if qos is not None:
                 self.subscribe(topic, qos)
+                
+        if 'birth' in self.messages:
+            self._mqttc.publish(self.messages['birth']['topic'], self.messages['birth']['payload'], self.messages['birth']['qos'], self.messages['birth']['retain'])
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
