@@ -133,7 +133,8 @@ def setup(hass, config):
                 'payload':
                     util.convert(conf[message].get(CONF_MESSAGE_PAYLOAD), str),
                 'qos':
-                    util.convert(conf[message].get(CONF_MESSAGE_QOS), int, DEFAULT_QOS),
+                    util.convert(conf[message].get(
+                        CONF_MESSAGE_QOS), int, DEFAULT_QOS),
                 'retain':
                     util.convert(conf[message].get(CONF_MESSAGE_RETAIN), bool)
             }
