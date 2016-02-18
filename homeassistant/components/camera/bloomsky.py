@@ -8,7 +8,7 @@ https://home-assistant.io/components/camera.bloomsky/
 """
 import logging
 import requests
-import homeassistant.components.bloomsky as bloomsky
+from homeassistant.loader import get_component
 from homeassistant.components.camera import Camera
 
 DEPENDENCIES = ["bloomsky"]
@@ -17,6 +17,7 @@ DEPENDENCIES = ["bloomsky"]
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ set up access to BloomSky cameras """
+    bloomsky = get_component('bloomsky')
     for device in bloomsky.BLOOMSKY.devices.values():
         add_devices_callback([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
 

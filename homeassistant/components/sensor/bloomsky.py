@@ -7,7 +7,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.bloomsky/
 """
 import logging
-import homeassistant.components.bloomsky as bloomsky
+from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ["bloomsky"]
@@ -36,6 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Set up the available BloomSky weather sensors. """
 
     logger = logging.getLogger(__name__)
+    bloomsky = get_component('bloomsky')
 
     for device_key in bloomsky.BLOOMSKY.devices:
         device = bloomsky.BLOOMSKY.devices[device_key]
