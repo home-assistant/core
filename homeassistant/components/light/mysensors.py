@@ -130,13 +130,14 @@ class MySensorsLight(Light):
         """Turn on light child device."""
         set_req = self.gateway.const.SetReq
 
-        if not self._state:
+        if not self._state and set_req.V_LIGHT in self._values:
             self.gateway.set_child_value(
                 self.node_id, self.child_id, set_req.V_LIGHT, 1)
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._state = True
+            self.update_ha_state()
 
     def _turn_on_dimmer(self, **kwargs):
         """Turn on dimmer child device."""
@@ -153,6 +154,7 @@ class MySensorsLight(Light):
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._brightness = brightness
+            self.update_ha_state()
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
@@ -176,11 +178,6 @@ class MySensorsLight(Light):
             # optimistically assume that light has changed state
             self._rgb = rgb
             self._white = white
-
-    def _turn_on(self):
-        """Turn the device on."""
-        if self.gateway.optimistic:
-            # optimistically assume that light has changed state
             self.update_ha_state()
 
     def _turn_off_light(self, value_type=None, value=None):
@@ -211,7 +208,7 @@ class MySensorsLight(Light):
                 value = '00000000'
         return {ATTR_VALUE_TYPE: self.value_type, ATTR_VALUE: value}
 
-    def _turn_off(self, value_type=None, value=None):
+    def _turn_off_main(self, value_type=None, value=None):
         """Turn the device off."""
         if value_type is None or value is None:
             _LOGGER.warning(
@@ -257,7 +254,7 @@ class MySensorsLight(Light):
             self._white = color_list.pop()
         self._rgb = color_list
 
-    def _update(self):
+    def _update_main(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -271,114 +268,94 @@ class MySensorsLight(Light):
 class MySensorsLightPlain(MySensorsLight):
     """Light child class to MySensorsLight."""
 
-    def __init__(self, *args):
-        """Setup instance attributes."""
-        super().__init__(*args)
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        super()._turn_on_light()
-        super()._turn_on()
+        self._turn_on_light()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = super()._turn_off_light()
-        super()._turn_off(value_type=ret[
+        ret = self._turn_off_light()
+        self._turn_off_main(value_type=ret[
             ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        super()._update()
-        super()._update_light()
+        self._update_main()
+        self._update_light()
 
 
 class MySensorsLightDimmer(MySensorsLight):
     """Dimmer child class to MySensorsLight."""
 
-    def __init__(self, *args):
-        """Setup instance attributes."""
-        super().__init__(*args)
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        super()._turn_on_light()
-        super()._turn_on_dimmer(**kwargs)
-        super()._turn_on()
+        self._turn_on_light()
+        self._turn_on_dimmer(**kwargs)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = super()._turn_off_dimmer()
-        ret = super()._turn_off_light(
+        ret = self._turn_off_dimmer()
+        ret = self._turn_off_light(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        super()._turn_off(
+        self._turn_off_main(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        super()._update()
-        super()._update_light()
-        super()._update_dimmer()
+        self._update_main()
+        self._update_light()
+        self._update_dimmer()
 
 
 class MySensorsLightRGB(MySensorsLight):
     """RGB child class to MySensorsLight."""
 
-    def __init__(self, *args):
-        """Setup instance attributes."""
-        super().__init__(*args)
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        super()._turn_on_light()
-        super()._turn_on_dimmer(**kwargs)
-        super()._turn_on_rgb_and_w('%02x%02x%02x', **kwargs)
-        super()._turn_on()
+        self._turn_on_light()
+        self._turn_on_dimmer(**kwargs)
+        self._turn_on_rgb_and_w('%02x%02x%02x', **kwargs)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = super()._turn_off_rgb_or_w()
-        ret = super()._turn_off_dimmer(
+        ret = self._turn_off_rgb_or_w()
+        ret = self._turn_off_dimmer(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        ret = super()._turn_off_light(
+        ret = self._turn_off_light(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        super()._turn_off(
+        self._turn_off_main(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        super()._update()
-        super()._update_light()
-        super()._update_dimmer()
-        super()._update_rgb_or_w()
+        self._update_main()
+        self._update_light()
+        self._update_dimmer()
+        self._update_rgb_or_w()
 
 
 class MySensorsLightRGBW(MySensorsLight):
     """RGBW child class to MySensorsLight."""
 
-    def __init__(self, *args):
-        """Setup instance attributes."""
-        super().__init__(*args)
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        super()._turn_on_light()
-        super()._turn_on_dimmer(**kwargs)
-        super()._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
-        super()._turn_on()
+        self._turn_on_light()
+        self._turn_on_dimmer(**kwargs)
+        self._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        ret = super()._turn_off_rgb_or_w()
-        ret = super()._turn_off_dimmer(
+        ret = self._turn_off_rgb_or_w()
+        ret = self._turn_off_dimmer(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        ret = super()._turn_off_light(
+        ret = self._turn_off_light(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        super()._turn_off(
+        self._turn_off_main(
             value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
-        super()._update()
-        super()._update_light()
-        super()._update_dimmer()
-        super()._update_rgb_or_w()
+        self._update_main()
+        self._update_light()
+        self._update_dimmer()
+        self._update_rgb_or_w()
