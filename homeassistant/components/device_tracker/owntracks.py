@@ -13,11 +13,15 @@ from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
+from homeassistant.components.device_tracker import DOMAIN
 
 DEPENDENCIES = ['mqtt']
 
 REGIONS_ENTERED = defaultdict(list)
 MOBILE_BEACONS_ACTIVE = defaultdict(list)
+
+MAX_GPS_ACCURACY = 500
+CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 
 BEACON_DEV_ID = 'beacon'
 
@@ -49,6 +53,12 @@ def setup_scanner(hass, config, see):
             return
 
         dev_id, kwargs = _parse_see_args(topic, data)
+
+        # Check for GPS accuracy
+        if (kwargs['gps_accuracy'] is not None) and (
+            kwargs['gps_accuracy'] > MAX_GPS_ACCURACY):
+            _LOGGER.debug("location update ignored (GPS not accurate enough)")
+            return
 
         # Block updates if we're in a region
         with LOCK:
@@ -85,6 +95,12 @@ def setup_scanner(hass, config, see):
             location = STATE_HOME
 
         dev_id, kwargs = _parse_see_args(topic, data)
+
+        # Check for GPS accuracy
+        if (kwargs['gps_accuracy'] is not None) and (
+            kwargs['gps_accuracy'] > MAX_GPS_ACCURACY):
+            _LOGGER.debug("location update ignored (GPS not accurate enough)")
+            return
 
         if data['event'] == 'enter':
             zone = hass.states.get("zone.{}".format(location))
@@ -149,6 +165,10 @@ def setup_scanner(hass, config, see):
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
 
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
+
+    # Check if a Maximum GPS Accuracy is provided in the conf
+    if config[DOMAIN][CONF_MAX_GPS_ACCURACY]:
+        MAX_GPS_ACCURACY = config[DOMAIN][CONF_MAX_GPS_ACCURACY]
 
     return True
 
