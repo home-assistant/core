@@ -41,6 +41,9 @@ ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
+# sensors for which no state changes are ignored
+SENSOR_WHITELIST = []
+
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """ Adds an entry to the logbook. """
@@ -59,6 +62,12 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 def setup(hass, config):
     """ Listens for download events to download files. """
     # create service handler
+
+    # pylint: disable=global-statement
+    global SENSOR_WHITELIST
+    SENSOR_WHITELIST = \
+        config[DOMAIN].get("sensor_whitelist", []) if DOMAIN in config else []
+
     def log_message(service):
         """ Handle sending notification message service calls. """
         message = service.data.get(ATTR_MESSAGE)
@@ -135,6 +144,11 @@ def humanify(events):
     """
     # pylint: disable=too-many-branches
 
+    def _show_only_last(entity_id):
+        return entity_id is not None and \
+            entity_id.startswith('sensor.') and \
+            entity_id not in SENSOR_WHITELIST
+
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -157,7 +171,7 @@ def humanify(events):
                 if entity_id is None:
                     continue
 
-                if entity_id.startswith('sensor.'):
+                if _show_only_last(entity_id):
                     last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -191,9 +205,10 @@ def humanify(events):
                     continue
 
                 domain = to_state.domain
-
+                entity_id = event.data.get('entity_id')
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
+                   _show_only_last(entity_id) and \
                    event != last_sensor_event[to_state.entity_id]:
                     continue
 

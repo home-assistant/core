@@ -16,6 +16,8 @@ from homeassistant.components import logbook
 
 from tests.common import mock_http_component, get_test_home_assistant
 
+WHITELISTED_SENSOR = "sensor.frontdoor_hall"
+
 
 class TestComponentHistory(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
@@ -24,7 +26,10 @@ class TestComponentHistory(unittest.TestCase):
         """ Test setup method. """
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
-        self.assertTrue(logbook.setup(self.hass, {}))
+        self.assertTrue(
+            logbook.setup(self.hass,
+                          {logbook.DOMAIN: {"sensor_whitelist":
+                                            WHITELISTED_SENSOR}}))
 
     def tearDown(self):
         self.hass.stop()
@@ -128,6 +133,23 @@ class TestComponentHistory(unittest.TestCase):
         self.assert_entry(
             entries[0], name=name, message=message,
             domain='sun', entity_id=entity_id)
+
+    def test_no_events_ignored_for_whitelisted_sensor(self):
+        """ Tests that all entries are shown for a whitelisted sensor. """
+        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointB = pointA.replace(minute=5)
+        pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+        pointD = pointC + timedelta(seconds=10)
+
+        entity_id = WHITELISTED_SENSOR
+        eventA = self.create_state_changed_event(pointA, entity_id, "open")
+        eventB = self.create_state_changed_event(pointB, entity_id, "closed")
+        eventC = self.create_state_changed_event(pointC, entity_id, "open")
+        eventD = self.create_state_changed_event(pointD, entity_id, "closed")
+
+        entries = list(logbook.humanify((eventA, eventB, eventC, eventD)))
+
+        self.assertEqual(4, len(entries))
 
     def assert_entry(self, entry, when=None, name=None, message=None,
                      domain=None, entity_id=None):
