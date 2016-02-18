@@ -103,12 +103,7 @@ class HomeAssistant(object):
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
-
         self.bus.fire(EVENT_HOMEASSISTANT_STOP)
-
-        # Wait till all responses to homeassistant_stop are done
-        self.pool.block_till_done()
-
         self.pool.stop()
 
 
@@ -309,7 +304,7 @@ class State(object):
                 "Format should be <domain>.<object_id>").format(entity_id))
 
         self.entity_id = entity_id.lower()
-        self.state = state
+        self.state = str(state)
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = dt_util.strip_microseconds(
             last_updated or dt_util.utcnow())
@@ -404,8 +399,9 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for state in self._states.values()
-                if state.domain == domain_filter]
+        with self._lock:
+            return [state.entity_id for state in self._states.values()
+                    if state.domain == domain_filter]
 
     def all(self):
         """Create a list of all states."""
@@ -438,7 +434,20 @@ class StateMachine(object):
         entity_id = entity_id.lower()
 
         with self._lock:
-            return self._states.pop(entity_id, None) is not None
+            old_state = self._states.pop(entity_id, None)
+
+            if old_state is None:
+                return False
+
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': None,
+            }
+
+            self._bus.fire(EVENT_STATE_CHANGED, event_data)
+
+            return True
 
     def set(self, entity_id, new_state, attributes=None):
         """Set the state of an entity, add entity if it does not exist.
@@ -468,10 +477,11 @@ class StateMachine(object):
             state = State(entity_id, new_state, attributes, last_changed)
             self._states[entity_id] = state
 
-            event_data = {'entity_id': entity_id, 'new_state': state}
-
-            if old_state:
-                event_data['old_state'] = old_state
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': state,
+            }
 
             self._bus.fire(EVENT_STATE_CHANGED, event_data)
 

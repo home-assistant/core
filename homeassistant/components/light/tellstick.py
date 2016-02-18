@@ -7,8 +7,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tellstick/
 """
 from homeassistant.components.light import Light, ATTR_BRIGHTNESS
-from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
-                                 ATTR_FRIENDLY_NAME)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 REQUIREMENTS = ['tellcore-py==1.1.2']
 SIGNAL_REPETITIONS = 1
 
@@ -58,7 +57,6 @@ class TellstickLight(Light):
         import tellcore.constants as tellcore_constants
 
         self.tellstick_device = tellstick_device
-        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick_device.name}
         self.signal_repetitions = signal_repetitions
         self._brightness = 0
 

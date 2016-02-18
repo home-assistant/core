@@ -7,14 +7,13 @@ Tests universal media_player component.
 from copy import copy
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.switch as switch
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
 
-from tests.common import mock_service
+from tests.common import mock_service, get_test_home_assistant
 
 
 class MockMediaPlayer(media_player.MediaPlayerDevice):
@@ -87,7 +86,7 @@ class TestMediaPlayer(unittest.TestCase):
     """ Test the media_player module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
         self.mock_mp_1 = MockMediaPlayer(self.hass, 'mock1')
         self.mock_mp_1.update_ha_state()

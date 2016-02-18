@@ -109,16 +109,5 @@ def state_as_number(state):
     elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
                          STATE_BELOW_HORIZON, STATE_CLOSED):
         return 0
-    else:
-        try:
-            # This distinction is probably not important,
-            # but in case something downstream cares about
-            # int vs. float, try to be helpful here.
-            if '.' in state.state:
-                return float(state.state)
-            else:
-                return int(state.state)
-        except (ValueError, TypeError):
-            pass
 
-    raise ValueError('State is not a number')
+    return float(state.state)

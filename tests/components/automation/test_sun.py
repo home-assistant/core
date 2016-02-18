@@ -8,19 +8,18 @@ from datetime import datetime
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 from homeassistant.components import sun
 import homeassistant.components.automation as automation
 import homeassistant.util.dt as dt_util
 
-from tests.common import fire_time_changed
+from tests.common import fire_time_changed, get_test_home_assistant
 
 
 class TestAutomationSun(unittest.TestCase):
     """ Test the sun automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.components.append('sun')
 
         self.calls = []

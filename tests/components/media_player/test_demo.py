@@ -6,8 +6,9 @@ Tests demo media_player component.
 """
 import unittest
 from unittest.mock import patch
-import homeassistant.core as ha
 import homeassistant.components.media_player as mp
+
+from tests.common import get_test_home_assistant
 
 entity_id = 'media_player.walkman'
 
@@ -16,7 +17,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     """ Test the media_player module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -114,7 +115,8 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
                     state.attributes.get('supported_media_commands'))
 
-    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.media_seek')
+    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
+           'media_seek')
     def test_play_media(self, mock_seek):
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.living_room'

@@ -7,6 +7,7 @@ Tests StatsD feeder.
 import unittest
 from unittest import mock
 
+import homeassistant.core as ha
 import homeassistant.components.statsd as statsd
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
@@ -78,6 +79,6 @@ class TestStatsd(unittest.TestCase):
             mock_gauge.return_value.send.reset_mock()
 
         for invalid in ('foo', '', object):
-            state = mock.MagicMock(state=invalid)
-            handler_method(mock.MagicMock(data={'new_state': state}))
+            handler_method(mock.MagicMock(data={
+                'new_state': ha.State('domain.test', invalid, {})}))
             self.assertFalse(mock_gauge.return_value.send.called)

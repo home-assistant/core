@@ -14,8 +14,8 @@ from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
-    STATE_OFF, STATE_OPEN, STATE_CLOSED,
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
+    STATE_OPEN, STATE_CLOSED,
+    STATE_LOCKED, STATE_UNLOCKED,
     STATE_ON, STATE_OFF)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
@@ -163,24 +163,18 @@ class TestStateHelpers(unittest.TestCase):
                 ha.State('domain.test', _state, {})))
 
     def test_as_number_coercion(self):
-        for _state in ('0', '0.0'):
-            self.assertEqual(0.0, float(
-                    state.state_as_number(
-                    ha.State('domain.test', _state, {}))))
-        for _state in ('1', '1.0'):
+        for _state in ('0', '0.0', 0, 0.0):
             self.assertEqual(
-                1.0, float(state.state_as_number(
-                    ha.State('domain.test', _state, {}))))
-
-    def test_as_number_tries_to_keep_types(self):
-        result = state.state_as_number(ha.State('domain.test', '1', {}))
-        self.assertTrue(isinstance(result, int))
-        result = state.state_as_number(ha.State('domain.test', '1.0', {}))
-        self.assertTrue(isinstance(result, float))
+                0.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
+        for _state in ('1', '1.0', 1, 1.0):
+            self.assertEqual(
+                1.0, state.state_as_number(
+                    ha.State('domain.test', _state, {})))
 
     def test_as_number_invalid_cases(self):
-        for _state in ('', 'foo', 'foo.bar', None, False, True, None,
-                       object, object()):
+        for _state in ('', 'foo', 'foo.bar', None, False, True, object,
+                       object()):
             self.assertRaises(ValueError,
                               state.state_as_number,
                               ha.State('domain.test', _state, {}))

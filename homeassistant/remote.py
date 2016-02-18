@@ -148,13 +148,10 @@ class HomeAssistant(ha.HomeAssistant):
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
 
+        self.pool.stop()
+
         # Disconnect master event forwarding
         disconnect_remote_events(self.remote_api, self.config.api)
-
-        # Wait till all responses to homeassistant_stop are done
-        self.pool.block_till_done()
-
-        self.pool.stop()
 
 
 class EventBus(ha.EventBus):
@@ -247,6 +244,13 @@ class StateMachine(ha.StateMachine):
 
         bus.listen(ha.EVENT_STATE_CHANGED, self._state_changed_listener)
 
+    def remove(self, entity_id):
+        """Remove the state of an entity.
+
+        Returns boolean to indicate if an entity was removed.
+        """
+        return remove_state(self._api, entity_id)
+
     def set(self, entity_id, new_state, attributes=None):
         """ Calls set_state on remote API . """
         set_state(self._api, entity_id, new_state, attributes)
@@ -258,7 +262,10 @@ class StateMachine(ha.StateMachine):
 
     def _state_changed_listener(self, event):
         """ Listens for state changed events and applies them. """
-        self._states[event.data['entity_id']] = event.data['new_state']
+        if event.data['new_state'] is None:
+            self._states.pop(event.data['entity_id'], None)
+        else:
+            self._states[event.data['entity_id']] = event.data['new_state']
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -413,6 +420,26 @@ def get_states(api):
         _LOGGER.exception("Error fetching states")
 
         return []
+
+
+def remove_state(api, entity_id):
+    """Call API to remove state for entity_id.
+
+    Returns True if entity is gone (removed/never existed).
+    """
+    try:
+        req = api(METHOD_DELETE, URL_API_STATES_ENTITY.format(entity_id))
+
+        if req.status_code in (200, 404):
+            return True
+
+        _LOGGER.error("Error removing state: %d - %s",
+                      req.status_code, req.text)
+        return False
+    except HomeAssistantError:
+        _LOGGER.exception("Error removing state")
+
+        return False
 
 
 def set_state(api, entity_id, new_state, attributes=None):

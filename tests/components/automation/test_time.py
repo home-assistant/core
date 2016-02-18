@@ -8,20 +8,19 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 from homeassistant.components.automation import time, event
 from homeassistant.const import CONF_PLATFORM
 
-from tests.common import fire_time_changed
+from tests.common import fire_time_changed, get_test_home_assistant
 
 
 class TestAutomationTime(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.calls = []
 
         def record_call(service):

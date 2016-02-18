@@ -34,16 +34,19 @@ def track_state_change(hass, entity_ids, action, from_state=None,
         if event.data['entity_id'] not in entity_ids:
             return
 
-        if 'old_state' in event.data:
-            old_state = event.data['old_state'].state
-        else:
+        if event.data['old_state'] is None:
             old_state = None
+        else:
+            old_state = event.data['old_state'].state
 
-        if _matcher(old_state, from_state) and \
-           _matcher(event.data['new_state'].state, to_state):
+        if event.data['new_state'] is None:
+            new_state = None
+        else:
+            new_state = event.data['new_state'].state
 
+        if _matcher(old_state, from_state) and _matcher(new_state, to_state):
             action(event.data['entity_id'],
-                   event.data.get('old_state'),
+                   event.data['old_state'],
                    event.data['new_state'])
 
     hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)

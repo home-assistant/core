@@ -6,8 +6,9 @@ Tests demo garage door component.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.garage_door as gd
+
+from tests.common import get_test_home_assistant
 
 
 LEFT = 'garage_door.left_garage_door'
@@ -18,7 +19,7 @@ class TestGarageDoorDemo(unittest.TestCase):
     """ Test the demo garage door. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.assertTrue(gd.setup(self.hass, {
             'garage_door': {
                 'platform': 'demo'

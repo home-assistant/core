@@ -9,9 +9,10 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
 import homeassistant.util.dt as dt_util
+
+from tests.common import get_test_home_assistant
 
 
 @pytest.mark.usefixtures('betamax_session')
@@ -19,7 +20,7 @@ class TestSensorYr:
     """ Test the Yr sensor. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
 

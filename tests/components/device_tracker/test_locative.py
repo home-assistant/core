@@ -13,9 +13,9 @@ from homeassistant import bootstrap, const
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, get_test_instance_port
 
-SERVER_PORT = 8126
+SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
 
 hass = None
@@ -28,9 +28,7 @@ def _url(data={}):
     return "{}{}locative?{}".format(HTTP_BASE_URL, const.URL_API, data)
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
@@ -65,6 +63,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 @patch('homeassistant.components.device_tracker.update_config')
 class TestLocative(unittest.TestCase):
     """ Test Locative """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     def test_missing_data(self, update_config):
         data = {
@@ -128,7 +129,8 @@ class TestLocative(unittest.TestCase):
         # Enter the Home
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
-        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                    data['device'])).state
         self.assertEqual(state_name, 'home')
 
         data['id'] = 'HOME'
@@ -137,7 +139,8 @@ class TestLocative(unittest.TestCase):
         # Exit Home
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
-        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                    data['device'])).state
         self.assertEqual(state_name, 'not_home')
 
         data['id'] = 'hOmE'
@@ -146,7 +149,8 @@ class TestLocative(unittest.TestCase):
         # Enter Home again
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
-        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                    data['device'])).state
         self.assertEqual(state_name, 'home')
 
         data['trigger'] = 'exit'
@@ -154,7 +158,8 @@ class TestLocative(unittest.TestCase):
         # Exit Home
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
-        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                    data['device'])).state
         self.assertEqual(state_name, 'not_home')
 
         data['id'] = 'work'
@@ -163,7 +168,8 @@ class TestLocative(unittest.TestCase):
         # Enter Work
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
-        state_name = hass.states.get('{}.{}'.format('device_tracker', data['device'])).state
+        state_name = hass.states.get('{}.{}'.format('device_tracker',
+                                                    data['device'])).state
         self.assertEqual(state_name, 'work')
 
     def test_exit_after_enter(self, update_config):
@@ -181,7 +187,8 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
 
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        state = hass.states.get('{}.{}'.format('device_tracker',
+                                               data['device']))
         self.assertEqual(state.state, 'home')
 
         data['id'] = 'Work'
@@ -190,7 +197,8 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
 
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        state = hass.states.get('{}.{}'.format('device_tracker',
+                                               data['device']))
         self.assertEqual(state.state, 'work')
 
         data['id'] = 'Home'
@@ -200,7 +208,8 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
 
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        state = hass.states.get('{}.{}'.format('device_tracker',
+                                               data['device']))
         self.assertEqual(state.state, 'work')
 
     def test_exit_first(self, update_config):
@@ -218,5 +227,6 @@ class TestLocative(unittest.TestCase):
         req = requests.get(_url(data))
         self.assertEqual(200, req.status_code)
 
-        state = hass.states.get('{}.{}'.format('device_tracker', data['device']))
+        state = hass.states.get('{}.{}'.format('device_tracker',
+                                               data['device']))
         self.assertEqual(state.state, 'not_home')
