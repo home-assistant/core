@@ -123,15 +123,19 @@ def setup(hass, config):
         'will': None
     }
 
-    for message in (CONF_BIRTH_MESSAGE, CONF_WILL_MESSAGE): 
+    for message in (CONF_BIRTH_MESSAGE, CONF_WILL_MESSAGE):
         if message in conf:
             index = message.replace('_message', '')
 
             messages[index] = {
-                'topic': util.convert(conf[message].get(CONF_MESSAGE_TOPIC), str),
-                'payload': util.convert(conf[message].get(CONF_MESSAGE_PAYLOAD), str),
-                'qos': util.convert(conf[message].get(CONF_MESSAGE_QOS), int, DEFAULT_QOS),
-                'retain': util.convert(conf[message].get(CONF_MESSAGE_RETAIN), bool)
+                'topic':
+                    util.convert(conf[message].get(CONF_MESSAGE_TOPIC), str),
+                'payload':
+                    util.convert(conf[message].get(CONF_MESSAGE_PAYLOAD), str),
+                'qos':
+                    util.convert(conf[message].get(CONF_MESSAGE_QOS), int, DEFAULT_QOS),
+                'retain':
+                    util.convert(conf[message].get(CONF_MESSAGE_RETAIN), bool)
             }
 
     if protocol not in (PROTOCOL_31, PROTOCOL_311):
@@ -229,8 +233,11 @@ class MQTT(object):
         if certificate is not None:
             self._mqttc.tls_set(certificate)
 
-        if 'will' in messages:
-            self._mqttc.will_set(messages['will']['topic'], messages['will']['payload'], messages['will']['qos'], messages['will']['retain'])
+        if messages['will']:
+            self._mqttc.will_set(messages['will']['topic'],
+                                 messages['will']['payload'],
+                                 messages['will']['qos'],
+                                 messages['will']['retain'])
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
@@ -295,9 +302,12 @@ class MQTT(object):
             # qos is None if we were in process of subscribing
             if qos is not None:
                 self.subscribe(topic, qos)
-                
-        if 'birth' in self.messages:
-            self._mqttc.publish(self.messages['birth']['topic'], self.messages['birth']['payload'], self.messages['birth']['qos'], self.messages['birth']['retain'])
+
+        if self.messages['birth']:
+            self._mqttc.publish(self.messages['birth']['topic'],
+                                self.messages['birth']['payload'],
+                                self.messages['birth']['qos'],
+                                self.messages['birth']['retain'])
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
