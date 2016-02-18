@@ -8,7 +8,6 @@ https://home-assistant.io/components/scene/
 """
 import base64
 import logging
-
 import requests
 
 from homeassistant.const import (
@@ -16,16 +15,11 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-DOMAIN = 'pv_scene'
+DOMAIN = 'powerview_scene'
 DEPENDENCIES = ['group']
 STATE = 'scening'
 
 HUB_ADDRESS = 'address'
-CONF_ENTITIES = "entities"
-
-
-# SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
-
 
 def activate(hass, entity_id=None):
     """ Activate a scene. """
@@ -47,8 +41,7 @@ def setup(hass, config):
     _api_address = "http://" + pv_config[HUB_ADDRESS]
     _scenes = requests.get(_api_address + "/api/scenes/").json()['sceneData']
 
-
-    component.add_entities(PowerViewScene(hass,pv_scene,_api_address)
+    component.add_entities(PowerViewScene(hass, pv_scene, _api_address)
                            for pv_scene in _scenes)
 
     def handle_scene_service(service):
@@ -63,45 +56,18 @@ def setup(hass, config):
     return True
 
 
-# def _process_config(scene_config):
-#     """ Process passed in config into a format to work with. """
-#     name = scene_config.get('name')
-#
-#     states = {}
-#     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
-#
-#     for entity_id in c_entities:
-#         if isinstance(c_entities[entity_id], dict):
-#             entity_attrs = c_entities[entity_id].copy()
-#             state = entity_attrs.pop('state', None)
-#             attributes = entity_attrs
-#         else:
-#             state = c_entities[entity_id]
-#             attributes = {}
-#
-#         # YAML translates 'on' to a boolean
-#         # http://yaml.org/type/bool.html
-#         if isinstance(state, bool):
-#             state = STATE_ON if state else STATE_OFF
-#         else:
-#             state = str(state)
-#
-#         states[entity_id.lower()] = State(entity_id, state, attributes)
-#
-#     return SceneConfig(name, states)
-
-
 class PowerViewScene(Entity):
-    def decode_base64(str):
-        return base64.b64decode(str).decode('utf-8')
-
     """ A powerview scene is a group of entities and the states we want them to be. """
+
+    @staticmethod
+    def decode_base64(string):
+        """returns a utf-8 encoded string converted from a base64 encoding """
+        return base64.b64decode(string).decode('utf-8')
 
     def __init__(self, hass, scene_config, api_address):
         self.hass = hass
         self._name = PowerViewScene.decode_base64(scene_config["name"])
         self._scene_id = str(scene_config["id"])
-        self.scene_config = scene_config
         self.api_address = api_address
         self.update()
 
@@ -120,17 +86,13 @@ class PowerViewScene(Entity):
     @property
     def entity_ids(self):
         """ Entity IDs part of this scene. """
-        return self.scene_config.states.keys()
+        pass
 
     @property
     def state_attributes(self):
-        pass
         """ Scene state attributes. """
-        # return {
-        #     ATTR_ENTITY_ID: list(self.entity_ids),
-        # }
+        pass
 
     def activate(self):
-        """ Activates scene. Tries to get entities into requested state. """
-        # reproduce_state(self.hass, self.scene_config.states.values(), True)
-        _stat = requests.get(self.api_address + "/api/scenes?sceneid=" + self._scene_id)
+        """ Activates scene. sends a get request to communicate with the powerview hub """
+        requests.get(self.api_address + "/api/scenes?sceneid=" + self._scene_id)
