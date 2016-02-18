@@ -6,8 +6,7 @@ Provides a binary_sensor which gets its values from a TCP socket.
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.tcp import DOMAIN, CONF_VALUE_ON
-from homeassistant.components.sensor.tcp import Sensor
+from homeassistant.components.sensor.tcp import Sensor, DOMAIN, CONF_VALUE_ON
 
 
 DEPENDENCIES = [DOMAIN]
@@ -22,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities((BinarySensor(hass, config),))
 
 
-class BinarySensor(Sensor, BinarySensorDevice):
+class BinarySensor(BinarySensorDevice, Sensor):
     """ A binary sensor which is on when its state == CONF_VALUE_ON. """
     required = (CONF_VALUE_ON,)
 
