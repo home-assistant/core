@@ -20,7 +20,7 @@ from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
     URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
     URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_BOOTSTRAP, URL_API_ERROR_LOG, URL_API_LOG_OUT,
+    URL_API_CONFIG, URL_API_ERROR_LOG, URL_API_LOG_OUT,
     URL_API_TEMPLATE, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
     HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
     HTTP_UNPROCESSABLE_ENTITY, HTTP_HEADER_CONTENT_TYPE,
@@ -48,10 +48,6 @@ def setup(hass, config):
     # /api/config
     hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config)
 
-    # /api/bootstrap
-    hass.http.register_path(
-        'GET', URL_API_BOOTSTRAP, _handle_get_api_bootstrap)
-
     # /states
     hass.http.register_path('GET', URL_API_STATES, _handle_get_api_states)
     hass.http.register_path(
@@ -63,6 +59,9 @@ def setup(hass, config):
     hass.http.register_path(
         'PUT', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _handle_post_state_entity)
+    hass.http.register_path(
+        'DELETE', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        _handle_delete_state_entity)
 
     # /events
     hass.http.register_path('GET', URL_API_EVENTS, _handle_get_api_events)
@@ -180,18 +179,6 @@ def _handle_get_api_config(handler, path_match, data):
     handler.write_json(handler.server.hass.config.as_dict())
 
 
-def _handle_get_api_bootstrap(handler, path_match, data):
-    """ Returns all data needed to bootstrap Home Assistant. """
-    hass = handler.server.hass
-
-    handler.write_json({
-        'config': hass.config.as_dict(),
-        'states': hass.states.all(),
-        'events': _events_json(hass),
-        'services': _services_json(hass),
-    })
-
-
 def _handle_get_api_states(handler, path_match, data):
     """ Returns a dict containing all entity ids and their state. """
     handler.write_json(handler.server.hass.states.all())
@@ -240,9 +227,25 @@ def _handle_post_state_entity(handler, path_match, data):
         location=URL_API_STATES_ENTITY.format(entity_id))
 
 
+def _handle_delete_state_entity(handler, path_match, data):
+    """Handle request to delete an entity from state machine.
+
+    This handles the following paths:
+    /api/states/<entity_id>
+    """
+    entity_id = path_match.group('entity_id')
+
+    if handler.server.hass.states.remove(entity_id):
+        handler.write_json_message(
+            "Entity not found", HTTP_NOT_FOUND)
+    else:
+        handler.write_json_message(
+            "Entity removed", HTTP_OK)
+
+
 def _handle_get_api_events(handler, path_match, data):
     """ Handles getting overview of event listeners. """
-    handler.write_json(_events_json(handler.server.hass))
+    handler.write_json(events_json(handler.server.hass))
 
 
 def _handle_api_post_events_event(handler, path_match, event_data):
@@ -258,6 +261,7 @@ def _handle_api_post_events_event(handler, path_match, event_data):
     if event_data is not None and not isinstance(event_data, dict):
         handler.write_json_message(
             "event_data should be an object", HTTP_UNPROCESSABLE_ENTITY)
+        return
 
     event_origin = ha.EventOrigin.remote
 
@@ -277,7 +281,7 @@ def _handle_api_post_events_event(handler, path_match, event_data):
 
 def _handle_get_api_services(handler, path_match, data):
     """ Handles getting overview of services. """
-    handler.write_json(_services_json(handler.server.hass))
+    handler.write_json(services_json(handler.server.hass))
 
 
 # pylint: disable=invalid-name
@@ -390,13 +394,13 @@ def _handle_post_api_template(handler, path_match, data):
         return
 
 
-def _services_json(hass):
+def services_json(hass):
     """ Generate services data to JSONify. """
     return [{"domain": key, "services": value}
             for key, value in hass.services.services.items()]
 
 
-def _events_json(hass):
+def events_json(hass):
     """ Generate event data to JSONify. """
     return [{"event": key, "listener_count": value}
             for key, value in hass.bus.listeners.items()]

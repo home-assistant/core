@@ -4,7 +4,6 @@ tests.components.switch.template
 
 Tests template switch.
 """
-import homeassistant.core as ha
 import homeassistant.components as core
 import homeassistant.components.switch as switch
 
@@ -12,12 +11,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
 
+from tests.common import get_test_home_assistant
+
 
 class TestTemplateSwitch:
     """ Test the Template switch. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
         self.calls = []
 

@@ -1,15 +1,21 @@
 sudo: false
-language: python
+matrix:
+  fast_finish: true
+  include:
+    - python: "3.4"
+      env: TOXENV=py34
+    - python: "3.4"
+      env: TOXENV=requirements
+    - python: "3.5"
+      env: TOXENV=lint
+    - python: "3.5"
+      env: TOXENV=py35
 cache:
   directories:
     - $HOME/.cache/pip
-    # - "$HOME/virtualenv/python$TRAVIS_PYTHON_VERSION"
-python:
-  - 3.4
-  - 3.5
-install:
-  - "true"
+install: pip install -U tox
+language: python
 script:
-  - script/cibuild
-matrix:
-  fast_finish: true
+  - tox
+  - pip install coveralls
+  - coveralls

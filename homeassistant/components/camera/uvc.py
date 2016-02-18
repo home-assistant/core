@@ -14,7 +14,7 @@ import requests
 from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
 
-REQUIREMENTS = ['uvcclient==0.5']
+REQUIREMENTS = ['uvcclient==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +58,8 @@ class UnifiVideoCamera(Camera):
         self._uuid = uuid
         self._name = name
         self.is_streaming = False
+        self._connect_addr = None
+        self._camera = None
 
     @property
     def name(self):
@@ -68,24 +70,64 @@ class UnifiVideoCamera(Camera):
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['recordingSettings']['fullTimeRecordEnabled']
 
-    def camera_image(self):
-        from uvcclient import camera as uvc_camera
+    @property
+    def brand(self):
+        return 'Ubiquiti'
 
+    @property
+    def model(self):
         caminfo = self._nvr.get_camera(self._uuid)
+        return caminfo['model']
+
+    def _login(self):
+        from uvcclient import camera as uvc_camera
+        caminfo = self._nvr.get_camera(self._uuid)
+        if self._connect_addr:
+            addrs = [self._connect_addr]
+        else:
+            addrs = [caminfo['host'], caminfo['internalHost']]
+
         camera = None
-        for addr in [caminfo['host'], caminfo['internalHost']]:
+        for addr in addrs:
             try:
                 camera = uvc_camera.UVCCameraClient(addr,
                                                     caminfo['username'],
                                                     'ubnt')
+                camera.login()
                 _LOGGER.debug('Logged into UVC camera %(name)s via %(addr)s',
                               dict(name=self._name, addr=addr))
+                self._connect_addr = addr
             except socket.error:
                 pass
-
+            except uvc_camera.CameraConnectError:
+                pass
+            except uvc_camera.CameraAuthError:
+                pass
         if not camera:
             _LOGGER.error('Unable to login to camera')
             return None
 
-        camera.login()
-        return camera.get_snapshot()
+        self._camera = camera
+        return True
+
+    def camera_image(self):
+        from uvcclient import camera as uvc_camera
+        if not self._camera:
+            if not self._login():
+                return
+
+        def _get_image(retry=True):
+            try:
+                return self._camera.get_snapshot()
+            except uvc_camera.CameraConnectError:
+                _LOGGER.error('Unable to contact camera')
+            except uvc_camera.CameraAuthError:
+                if retry:
+                    self._login()
+                    return _get_image(retry=False)
+                else:
+                    _LOGGER.error('Unable to log into camera, unable '
+                                  'to get snapshot')
+                    raise
+
+        return _get_image()

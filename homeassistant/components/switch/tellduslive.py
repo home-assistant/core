@@ -41,6 +41,11 @@ class TelldusLiveSwitch(ToggleEntity):
         return True
 
     @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return True
+
+    @property
     def name(self):
         """ Returns the name of the switch if any. """
         return self._switch["name"]
