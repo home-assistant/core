@@ -1,7 +1,4 @@
 """
-homeassistant.components.sensor.mysensors.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors sensors.
 
 For more details about this platform, please refer to the documentation at
