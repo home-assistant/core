@@ -17,6 +17,17 @@ DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+SENSOR_CLASSES = [
+    None,        # Generic on/off
+    'opening',   # Door, window, etc
+    'motion',    # Motion sensor
+    'gas',       # CO, CO2, etc
+    'smoke',     # Smoke detector
+    'moisture',  # Specifically a wetness sensor
+    'light',     # Lightness threshold
+    'power',     # Power, over-current, etc
+    'safety',    # Generic on=unsafe, off=safe
+    ]
 
 
 def setup(hass, config):
@@ -47,3 +58,14 @@ class BinarySensorDevice(Entity):
     def friendly_state(self):
         """ Returns the friendly state of the binary sensor. """
         return None
+
+    @property
+    def sensor_class(self):
+        """ Returns the class of this sensor, from SENSOR_CASSES. """
+        return None
+
+    @property
+    def device_state_attributes(self):
+        return {
+            'sensor_class': self.sensor_class,
+        }
