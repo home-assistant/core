@@ -5,11 +5,13 @@ tests.components.automation.test_state
 Tests state automation.
 """
 import unittest
+from datetime import timedelta
 
+import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 import homeassistant.components.automation.state as state
 
-from tests.common import get_test_home_assistant
+from tests.common import fire_time_changed, get_test_home_assistant
 
 
 class TestAutomationState(unittest.TestCase):
@@ -352,3 +354,72 @@ class TestAutomationState(unittest.TestCase):
                 'entity_id': 'test.entity',
                 'from': True,
             }, lambda x: x))
+
+    def test_if_fails_setup_bad_for(self):
+        self.assertFalse(state.trigger(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'to': 'world',
+                'for': {
+                    'invalid': 5
+                },
+            }, lambda x: x))
+
+    def test_if_fails_setup_for_without_to(self):
+        self.assertFalse(state.trigger(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'for': {
+                    'seconds': 5
+                },
+            }, lambda x: x))
+
+    def test_if_not_fires_on_entity_change_with_for(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'to': 'world',
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.pool.block_till_done()
+        self.hass.states.set('test.entity', 'not_world')
+        self.hass.pool.block_till_done()
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_fires_on_entity_change_with_for(self):
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'to': 'world',
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.pool.block_till_done()
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
