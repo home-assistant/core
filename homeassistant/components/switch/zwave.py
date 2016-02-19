@@ -15,7 +15,7 @@ from homeassistant.components.zwave import (
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Find and return demo switches. """
-    if discovery_info is None:
+    if discovery_info is None or NETWORK is None:
         return
 
     node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
