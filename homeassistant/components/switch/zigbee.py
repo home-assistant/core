@@ -10,7 +10,6 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.zigbee import (
     ZigBeeDigitalOut, ZigBeeDigitalOutConfig)
 
-
 DEPENDENCIES = ["zigbee"]
 
 

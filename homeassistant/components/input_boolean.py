@@ -9,9 +9,9 @@ at https://home-assistant.io/components/input_boolean/
 import logging
 
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers.entity_component import EntityComponent
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
 
 DOMAIN = 'input_boolean'

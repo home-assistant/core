@@ -10,10 +10,7 @@ import logging
 
 import homeassistant.components.verisure as verisure
 from homeassistant.components.lock import LockDevice
-
-from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_CODE = 'code'

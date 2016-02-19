@@ -9,9 +9,9 @@ https://home-assistant.io/components/sensor.dht/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 # update this requirement to upstream as soon as it supports python3
 REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'

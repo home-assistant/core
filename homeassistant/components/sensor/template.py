@@ -9,17 +9,13 @@ https://home-assistant.io/components/sensor.template/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.core import EVENT_STATE_CHANGED
-from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
-    CONF_VALUE_TEMPLATE,
-    ATTR_UNIT_OF_MEASUREMENT)
-
-from homeassistant.util import template, slugify
-from homeassistant.exceptions import TemplateError
-
 from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+from homeassistant.core import EVENT_STATE_CHANGED
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.util import slugify, template
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

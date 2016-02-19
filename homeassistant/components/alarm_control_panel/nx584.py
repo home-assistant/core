@@ -7,12 +7,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.nx584/
 """
 import logging
+
 import requests
 
-from homeassistant.const import (STATE_UNKNOWN, STATE_ALARM_DISARMED,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_ARMED_AWAY)
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
+    STATE_UNKNOWN)
 
 REQUIREMENTS = ['pynx584==0.2']
 

@@ -8,9 +8,9 @@ https://home-assistant.io/components/sensor.apcupsd/
 """
 import logging
 
+from homeassistant.components import apcupsd
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components import apcupsd
 
 DEPENDENCIES = [apcupsd.DOMAIN]
 DEFAULT_NAME = "UPS Status"

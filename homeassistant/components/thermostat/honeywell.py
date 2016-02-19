@@ -10,8 +10,8 @@ import logging
 import socket
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, TEMP_CELCIUS,
-                                 TEMP_FAHRENHEIT)
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['evohomeclient==0.2.4',
                 'somecomfort==0.2.1']

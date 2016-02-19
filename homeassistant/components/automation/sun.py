@@ -9,9 +9,9 @@ at https://home-assistant.io/components/automation/#sun-trigger
 import logging
 from datetime import timedelta
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.helpers.event import track_sunrise, track_sunset
-import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ['sun']
 

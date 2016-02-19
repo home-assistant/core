@@ -8,9 +8,9 @@ https://home-assistant.io/components/sensor.ecobee/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import ecobee
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecobee']
 SENSOR_TYPES = {

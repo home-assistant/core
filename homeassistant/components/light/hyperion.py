@@ -6,12 +6,12 @@ Support for Hyperion remotes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hyperion/
 """
+import json
 import logging
 import socket
-import json
 
+from homeassistant.components.light import ATTR_RGB_COLOR, Light
 from homeassistant.const import CONF_HOST
-from homeassistant.components.light import (Light, ATTR_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = []

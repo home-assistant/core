@@ -6,10 +6,10 @@ Zwave platform that handles simple binary switches.
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-from homeassistant.components.switch import SwitchDevice, DOMAIN
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components.zwave import (
-    COMMAND_CLASS_SWITCH_BINARY, TYPE_BOOL, GENRE_USER, NETWORK,
-    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
+    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SWITCH_BINARY, GENRE_USER,
+    NETWORK, TYPE_BOOL, ZWaveDeviceEntity)
 
 
 # pylint: disable=unused-argument

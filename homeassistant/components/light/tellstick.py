@@ -6,8 +6,9 @@ Support for Tellstick lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tellstick/
 """
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+
 REQUIREMENTS = ['tellcore-py==1.1.2']
 SIGNAL_REPETITIONS = 1
 

@@ -8,19 +8,15 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 import time
-
 from datetime import timedelta
 
 from homeassistant import bootstrap
-from homeassistant.loader import get_component
-
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
 from homeassistant.const import (
-    EVENT_PLATFORM_DISCOVERED,
-    ATTR_SERVICE, ATTR_DISCOVERED,
-    CONF_USERNAME, CONF_PASSWORD)
-
+    ATTR_DISCOVERED, ATTR_SERVICE, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers import validate_config
+from homeassistant.loader import get_component
+from homeassistant.util import Throttle
 
 DOMAIN = "verisure"
 DISCOVER_SENSORS = 'verisure.sensors'

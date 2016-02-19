@@ -7,20 +7,20 @@ to query this database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
+import atexit
+import json
 import logging
-import threading
 import queue
 import sqlite3
-from datetime import datetime, date
-import json
-import atexit
+import threading
+from datetime import date, datetime
 
-from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
-from homeassistant.remote import JSONEncoder
 from homeassistant.const import (
-    MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.core import Event, EventOrigin, State
+from homeassistant.remote import JSONEncoder
 
 DOMAIN = "recorder"
 

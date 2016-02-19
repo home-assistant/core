@@ -9,9 +9,8 @@ https://home-assistant.io/components/device_tracker.locative/
 import logging
 from functools import partial
 
-from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
 
 _LOGGER = logging.getLogger(__name__)
 

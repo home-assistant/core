@@ -9,9 +9,9 @@ https://home-assistant.io/components/sensor.tellstick/
 import logging
 from collections import namedtuple
 
+import homeassistant.util as util
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 

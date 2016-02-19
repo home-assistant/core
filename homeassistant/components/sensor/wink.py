@@ -8,8 +8,8 @@ at https://home-assistant.io/components/sensor.wink/
 """
 import logging
 
+from homeassistant.const import CONF_ACCESS_TOKEN, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_ACCESS_TOKEN, STATE_OPEN, STATE_CLOSED
 
 REQUIREMENTS = ['python-wink==0.6.0']
 
