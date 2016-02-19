@@ -7,15 +7,15 @@ through SNMP.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.snmp/
 """
-import logging
-from datetime import timedelta
-import threading
 import binascii
+import logging
+import threading
+from datetime import timedelta
 
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

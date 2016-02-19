@@ -7,16 +7,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
+
 import homeassistant.components.rfxtrx as rfxtrx
-
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.util import slugify
-
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.components.rfxtrx import (
-    ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID,
-    ATTR_NAME, EVENT_BUTTON_PRESSED)
-
+    ATTR_FIREEVENT, ATTR_NAME, ATTR_PACKETID, ATTR_STATE, EVENT_BUTTON_PRESSED)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.util import slugify
 
 DEPENDENCIES = ['rfxtrx']
 SIGNAL_REPETITIONS = 1

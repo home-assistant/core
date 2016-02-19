@@ -9,11 +9,9 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
+    CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 

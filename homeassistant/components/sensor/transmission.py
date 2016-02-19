@@ -6,12 +6,12 @@ Monitors Transmission BitTorrent client API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.transmission/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.util import Throttle
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 SENSOR_TYPES = {

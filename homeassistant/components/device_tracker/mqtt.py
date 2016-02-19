@@ -7,8 +7,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.mqtt/
 """
 import logging
-from homeassistant import util
+
 import homeassistant.components.mqtt as mqtt
+from homeassistant import util
 
 DEPENDENCIES = ['mqtt']
 

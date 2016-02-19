@@ -9,8 +9,8 @@ at https://home-assistant.io/components/input_select/
 import logging
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
 
 DOMAIN = 'input_select'

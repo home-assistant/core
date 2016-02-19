@@ -9,8 +9,8 @@ https://home-assistant.io/components/sensor.systemmonitor/
 import logging
 
 import homeassistant.util.dt as dt_util
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_ON, STATE_OFF
 
 REQUIREMENTS = ['psutil==3.4.2']
 SENSOR_TYPES = {

@@ -6,8 +6,8 @@ Provides a binary sensor to track online status of a UPS.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.apcupsd/
 """
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components import apcupsd
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = [apcupsd.DOMAIN]
 DEFAULT_NAME = "UPS Online Status"

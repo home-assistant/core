@@ -9,7 +9,7 @@ https://home-assistant.io/components/switch.mfi/
 import logging
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['mficlient==0.2.2']

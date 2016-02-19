@@ -9,10 +9,9 @@ https://home-assistant.io/components/conversation/
 import logging
 import re
 
-
 from homeassistant import core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 
 DOMAIN = "conversation"
 

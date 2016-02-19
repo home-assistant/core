@@ -12,7 +12,7 @@ from datetime import timedelta
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import template, Throttle
+from homeassistant.util import Throttle, template
 
 _LOGGER = logging.getLogger(__name__)
 
