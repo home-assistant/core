@@ -47,10 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     players = None
     hosts = config.get('hosts', None)
     if hosts:
+        # Support retro compatibility with comma separated list of hosts
+        # from config
+        hosts = hosts.split(',') if isinstance(hosts, str) else hosts
         players = []
-        for host in hosts.split(","):
-            host = socket.gethostbyname(host)
-            players.append(soco.SoCo(host))
+        for host in hosts:
+            players.append(soco.SoCo(socket.gethostbyname(host)))
 
     if not players:
         players = soco.discover(interface_addr=config.get('interface_addr',
