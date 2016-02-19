@@ -387,16 +387,17 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         exit_message = REGION_LEAVE_MESSAGE.copy()
         exit_message['desc'] = IBEACON_DEVICE
 
+        for i in range(0, 20):
+            fire_mqtt_message(
+                self.hass, EVENT_TOPIC, json.dumps(enter_message))
+            fire_mqtt_message(
+                self.hass, EVENT_TOPIC, json.dumps(exit_message))
+
         fire_mqtt_message(
             self.hass, EVENT_TOPIC, json.dumps(enter_message))
-        fire_mqtt_message(
-            self.hass, EVENT_TOPIC, json.dumps(exit_message))
-        fire_mqtt_message(
-            self.hass, EVENT_TOPIC, json.dumps(enter_message))
-        fire_mqtt_message(
-            self.hass, EVENT_TOPIC, json.dumps(exit_message))
 
         self.hass.pool.block_till_done()
+        self.send_message(EVENT_TOPIC, exit_message)
         self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
 
     def test_mobile_multiple_enter_exit(self):
