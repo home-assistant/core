@@ -70,8 +70,6 @@ def trigger(hass, config, action):
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
             """ Fires on state changes and cancels
                 for listener if state changed. """
-            logging.getLogger(__name__).error(
-                'state_for_cancel_listener')
             if inner_to_s == to_s:
                 return
             hass.bus.remove_listener(EVENT_TIME_CHANGED, for_time_listener)
