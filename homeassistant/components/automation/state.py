@@ -63,8 +63,6 @@ def trigger(hass, config, action):
 
         def state_for_listener(now):
             """ Fires on state changes after a delay and calls action. """
-            logging.getLogger(__name__).error('Listener fired')
-
             hass.bus.remove_listener(
                 EVENT_STATE_CHANGED, for_state_listener)
             action()
@@ -76,7 +74,6 @@ def trigger(hass, config, action):
                 'state_for_cancel_listener')
             if inner_to_s == to_s:
                 return
-            logging.getLogger(__name__).error('Listeners removed')
             hass.bus.remove_listener(EVENT_TIME_CHANGED, for_time_listener)
             hass.bus.remove_listener(
                 EVENT_STATE_CHANGED, for_state_listener)
@@ -87,7 +84,6 @@ def trigger(hass, config, action):
                 hours=(hours or 0.0),
                 minutes=(minutes or 0.0),
                 seconds=(seconds or 0.0))
-            logging.getLogger(__name__).error('Listeners added')
             for_time_listener = track_point_in_time(
                 hass, state_for_listener, target_tm)
             for_state_listener = track_state_change(
