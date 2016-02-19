@@ -7,6 +7,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/statsd/
 """
 import logging
+
 import homeassistant.util as util
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers import state as state_helper

@@ -9,9 +9,9 @@ https://home-assistant.io/components/arduino/
 """
 import logging
 
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import validate_config
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "arduino"
 REQUIREMENTS = ['PyMata==2.07a']

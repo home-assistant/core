@@ -8,9 +8,10 @@ https://home-assistant.io/components/switch.rpi_gpio/
 """
 
 import logging
+
 import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (DEVICE_DEFAULT_NAME)
 
 DEFAULT_INVERT_LOGIC = False
 

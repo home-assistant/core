@@ -8,10 +8,10 @@ https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import logging
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.util import template
 import homeassistant.components.mqtt as mqtt
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
 

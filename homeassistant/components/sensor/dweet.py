@@ -6,14 +6,13 @@ Displays values from Dweet.io.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dweet/
 """
-from datetime import timedelta
-import logging
 import json
+import logging
+from datetime import timedelta
 
-from homeassistant.util import Throttle
-from homeassistant.util import template
+from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_UNKNOWN, CONF_VALUE_TEMPLATE)
+from homeassistant.util import Throttle, template
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['dweepy==0.2.0']

@@ -8,10 +8,10 @@ https://home-assistant.io/components/notify.pushover/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['python-pushover==0.2']
 _LOGGER = logging.getLogger(__name__)

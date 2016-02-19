@@ -6,8 +6,8 @@ Monitors SABnzbd NZB client API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sabnzbd/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

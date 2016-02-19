@@ -8,11 +8,12 @@ https://home-assistant.io/components/light.lifx/
 """
 # pylint: disable=missing-docstring
 
-import logging
 import colorsys
+import logging
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
-from homeassistant.components.light import \
-    (Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION)
 
 _LOGGER = logging.getLogger(__name__)
 

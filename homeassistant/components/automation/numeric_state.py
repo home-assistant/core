@@ -6,13 +6,12 @@ Offers numeric state listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#numeric-state-trigger
 """
-from functools import partial
 import logging
+from functools import partial
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util import template
-
 
 CONF_ENTITY_ID = "entity_id"
 CONF_BELOW = "below"

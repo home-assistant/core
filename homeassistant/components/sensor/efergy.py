@@ -8,7 +8,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.efergy/
 """
 import logging
-from requests import get, RequestException
+
+from requests import RequestException, get
 
 from homeassistant.helpers.entity import Entity
 

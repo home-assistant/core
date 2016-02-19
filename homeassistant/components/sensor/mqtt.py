@@ -7,10 +7,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
+
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import template
-import homeassistant.components.mqtt as mqtt
 
 _LOGGER = logging.getLogger(__name__)
 

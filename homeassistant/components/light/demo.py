@@ -7,8 +7,7 @@ Demo platform that implements lights.
 import random
 
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP)
-
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, Light)
 
 LIGHT_COLORS = [
     [237, 224, 33],

@@ -6,11 +6,12 @@ Support for DS18B20 One Wire Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.onewire/
 """
-from glob import glob
 import logging
 import os
 import time
-from homeassistant.const import TEMP_CELCIUS, STATE_UNKNOWN
+from glob import glob
+
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 
 BASE_DIR = '/sys/bus/w1/devices/'

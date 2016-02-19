@@ -9,10 +9,9 @@ at https://home-assistant.io/components/automation/#zone-trigger
 import logging
 
 from homeassistant.components import zone
-from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
-
+from homeassistant.helpers.event import track_state_change
 
 CONF_ENTITY_ID = "entity_id"
 CONF_ZONE = "zone"

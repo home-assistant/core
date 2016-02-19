@@ -8,7 +8,7 @@ https://home-assistant.io/components/light.blinksticklight/
 """
 import logging
 
-from homeassistant.components.light import Light, ATTR_RGB_COLOR
+from homeassistant.components.light import ATTR_RGB_COLOR, Light
 
 _LOGGER = logging.getLogger(__name__)
 
