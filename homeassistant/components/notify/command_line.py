@@ -1,6 +1,6 @@
 """
 homeassistant.components.notify.command_line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 command_line notification service.
 
 For more details about this platform, please refer to the documentation at
