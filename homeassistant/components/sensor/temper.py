@@ -7,8 +7,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.temper/
 """
 import logging
-from homeassistant.helpers.entity import Entity
+
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

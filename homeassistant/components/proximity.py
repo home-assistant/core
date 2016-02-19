@@ -8,8 +8,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/proximity/
 """
 import logging
-from homeassistant.helpers.event import track_state_change
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util.location import distance
 
 DEPENDENCIES = ['zone', 'device_tracker']

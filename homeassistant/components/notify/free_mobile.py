@@ -7,10 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.free_mobile/
 """
 import logging
+
+from homeassistant.components.notify import DOMAIN, BaseNotificationService
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.helpers import validate_config
-from homeassistant.components.notify import (
-    DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_USERNAME, CONF_ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['freesms==0.1.0']

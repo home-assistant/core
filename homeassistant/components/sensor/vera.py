@@ -7,13 +7,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.vera/
 """
 import logging
-from requests.exceptions import RequestException
-import homeassistant.util.dt as dt_util
 
-from homeassistant.helpers.entity import Entity
+from requests.exceptions import RequestException
+
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_TRIPPED, ATTR_ARMED, ATTR_LAST_TRIP_TIME,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_STOP)
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
+    EVENT_HOMEASSISTANT_STOP, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyvera==0.2.8']
 

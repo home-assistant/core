@@ -8,9 +8,8 @@ at https://home-assistant.io/components/automation/#state-trigger
 """
 import logging
 
-from homeassistant.helpers.event import track_state_change
 from homeassistant.const import MATCH_ALL
-
+from homeassistant.helpers.event import track_state_change
 
 CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"

@@ -6,13 +6,13 @@ Adds support for Radio Thermostat wifi-enabled home thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.radiotherm/
 """
-import logging
 import datetime
+import logging
 from urllib.error import URLError
 
-from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
-                                                 STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (CONF_HOST, TEMP_FAHRENHEIT)
+from homeassistant.components.thermostat import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
 
 REQUIREMENTS = ['radiotherm==1.2']
 HOLD_TEMP = 'hold_temp'

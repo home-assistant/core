@@ -7,13 +7,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
 import logging
+
 import homeassistant.bootstrap as bootstrap
-from homeassistant.helpers import validate_config
-from homeassistant.loader import get_component
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY, ATTR_DISCOVERED,
-    ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"
 REQUIREMENTS = ['insteon_hub==0.4.5']

@@ -8,10 +8,10 @@ https://home-assistant.io/components/isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (ISYDeviceABC, ISY, SENSOR_STRING,
-                                             HIDDEN_STRING)
+from homeassistant.components.isy994 import (
+    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

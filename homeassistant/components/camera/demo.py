@@ -4,8 +4,9 @@ homeassistant.components.camera.demo
 Demo platform that has a fake camera.
 """
 import os
-from homeassistant.components.camera import Camera
+
 import homeassistant.util.dt as dt_util
+from homeassistant.components.camera import Camera
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

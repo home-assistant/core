@@ -10,22 +10,21 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
-import threading
-import logging
-import json
 import enum
+import json
+import logging
+import threading
 import urllib.parse
 
 import requests
 
-import homeassistant.core as ha
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.bootstrap as bootstrap
-
+import homeassistant.core as ha
 from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH, URL_API, URL_API_STATES,
-    URL_API_STATES_ENTITY, URL_API_EVENTS, URL_API_EVENTS_EVENT,
-    URL_API_SERVICES, URL_API_SERVICES_SERVICE, URL_API_EVENT_FORWARD)
+    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
+    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
+    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY)
+from homeassistant.exceptions import HomeAssistantError
 
 METHOD_GET = "get"
 METHOD_POST = "post"

@@ -9,18 +9,12 @@ https://home-assistant.io/components/light.vera/
 import logging
 
 from requests.exceptions import RequestException
+
 import homeassistant.util.dt as dt_util
-
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
-
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TRIPPED,
-    ATTR_ARMED,
-    ATTR_LAST_TRIP_TIME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_ON,
-    STATE_OFF)
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
+    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = ['pyvera==0.2.8']
 

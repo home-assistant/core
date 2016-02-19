@@ -7,11 +7,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.rest/
 """
 import logging
+
 import requests
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, ATTR_TARGET, BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, DOMAIN, BaseNotificationService)
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 

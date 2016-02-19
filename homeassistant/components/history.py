@@ -7,12 +7,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history/
 """
 import re
+from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
-from collections import defaultdict
 
-import homeassistant.util.dt as dt_util
 import homeassistant.components.recorder as recorder
+import homeassistant.util.dt as dt_util
 from homeassistant.const import HTTP_BAD_REQUEST
 
 DOMAIN = 'history'

@@ -8,6 +8,7 @@ https://home-assistant.io/components/scsgate/
 """
 import logging
 from threading import Lock
+
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 
 REQUIREMENTS = ['scsgate==0.1.0']

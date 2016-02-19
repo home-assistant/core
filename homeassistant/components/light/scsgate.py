@@ -7,10 +7,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.scsgate/
 """
 import logging
+
 import homeassistant.components.scsgate as scsgate
-
 from homeassistant.components.light import Light
-
 from homeassistant.const import ATTR_ENTITY_ID
 
 DEPENDENCIES = ['scsgate']

@@ -10,11 +10,11 @@ https://home-assistant.io/components/light.zwave/
 # pylint: disable=import-error
 from threading import Timer
 
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS, DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN, Light
 from homeassistant.components.zwave import (
-    COMMAND_CLASS_SWITCH_MULTILEVEL, TYPE_BYTE, GENRE_USER, NETWORK,
-    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
+    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SWITCH_MULTILEVEL, GENRE_USER,
+    NETWORK, TYPE_BYTE, ZWaveDeviceEntity)
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
