@@ -11,7 +11,7 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wink, isy994, zwave, insteon_hub, mysensors)
+    group, discovery, wemo, wink, isy994, zwave, insteon_hub, mysensors)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -59,6 +59,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
+    wemo.DISCOVER_LIGHTS: 'wemo',
     wink.DISCOVER_LIGHTS: 'wink',
     insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
     isy994.DISCOVER_LIGHTS: 'isy994',
