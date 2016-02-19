@@ -41,7 +41,7 @@ class TestNX584SensorSetup(unittest.TestCase):
         hass = mock.MagicMock()
         self.assertTrue(nx584.setup_platform(hass, {}, add_devices))
         mock_nx.assert_has_calls([
-            mock.call(zone)
+            mock.call(zone, 'opening')
             for zone in self.fake_zones])
         self.assertTrue(add_devices.called)
         nx584_client.Client.assert_called_once_with('http://localhost:5007')
@@ -58,8 +58,8 @@ class TestNX584SensorSetup(unittest.TestCase):
         hass = mock.MagicMock()
         self.assertTrue(nx584.setup_platform(hass, config, add_devices))
         mock_nx.assert_has_calls([
-            mock.call(self.fake_zones[0]),
-            mock.call(self.fake_zones[2]),
+            mock.call(self.fake_zones[0], 'opening'),
+            mock.call(self.fake_zones[2], 'motion'),
             ])
         self.assertTrue(add_devices.called)
         nx584_client.Client.assert_called_once_with('http://foo:123')
@@ -74,6 +74,9 @@ class TestNX584SensorSetup(unittest.TestCase):
     def test_setup_bad_config(self):
         bad_configs = [
             {'exclude_zones': ['a']},
+            {'zone_types': {'a': 'b'}},
+            {'zone_types': {1: 'notatype'}},
+            {'zone_types': {'notazone': 'motion'}},
         ]
         for config in bad_configs:
             self._test_assert_graceful_fail(config)
@@ -98,7 +101,7 @@ class TestNX584SensorSetup(unittest.TestCase):
 class TestNX584ZoneSensor(unittest.TestCase):
     def test_sensor_normal(self):
         zone = {'number': 1, 'name': 'foo', 'state': True}
-        sensor = nx584.NX584ZoneSensor(zone)
+        sensor = nx584.NX584ZoneSensor(zone, 'motion')
         self.assertEqual('foo', sensor.name)
         self.assertFalse(sensor.should_poll)
         self.assertTrue(sensor.is_on)
@@ -113,8 +116,8 @@ class TestNX584Watcher(unittest.TestCase):
         zone1 = {'number': 1, 'name': 'foo', 'state': True}
         zone2 = {'number': 2, 'name': 'bar', 'state': True}
         zones = {
-            1: nx584.NX584ZoneSensor(zone1),
-            2: nx584.NX584ZoneSensor(zone2),
+            1: nx584.NX584ZoneSensor(zone1, 'motion'),
+            2: nx584.NX584ZoneSensor(zone2, 'motion'),
         }
         watcher = nx584.NX584Watcher(None, zones)
         watcher._process_zone_event({'zone': 1, 'zone_state': False})
