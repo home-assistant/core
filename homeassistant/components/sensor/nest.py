@@ -62,8 +62,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                        device,
                                                        json_variable)])
                     else:
-                        for test in WEATHER_VARIABLES:
-                            logger.error('NEST VAR: %s', test)
                         logger.error('Nest sensor type: "%s" does not exist',
                                      variable)
     except socket.error:
