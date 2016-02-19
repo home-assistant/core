@@ -6,26 +6,24 @@ Provides a Rest API for Home Assistant.
 For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
-import re
-import logging
-import threading
 import json
+import logging
+import re
+import threading
 
 import homeassistant.core as ha
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.state import TrackStates
 import homeassistant.remote as rem
-from homeassistant.util import template
 from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
-    URL_API, URL_API_STATES, URL_API_EVENTS, URL_API_SERVICES, URL_API_STREAM,
-    URL_API_EVENT_FORWARD, URL_API_STATES_ENTITY, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_ERROR_LOG, URL_API_LOG_OUT,
-    URL_API_TEMPLATE, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP, MATCH_ALL,
-    HTTP_OK, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY, HTTP_HEADER_CONTENT_TYPE,
-    CONTENT_TYPE_TEXT_PLAIN)
-
+    CONTENT_TYPE_TEXT_PLAIN, EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
+    HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_HEADER_CONTENT_TYPE, HTTP_NOT_FOUND,
+    HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, MATCH_ALL, URL_API, URL_API_COMPONENTS,
+    URL_API_CONFIG, URL_API_ERROR_LOG, URL_API_EVENT_FORWARD, URL_API_EVENTS,
+    URL_API_LOG_OUT, URL_API_SERVICES, URL_API_STATES, URL_API_STATES_ENTITY,
+    URL_API_STREAM, URL_API_TEMPLATE)
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.state import TrackStates
+from homeassistant.util import template
 
 DOMAIN = 'api'
 DEPENDENCIES = ['http']

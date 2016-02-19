@@ -10,10 +10,9 @@ https://home-assistant.io/components/zigbee/
 import logging
 from binascii import hexlify, unhexlify
 
-from homeassistant.core import JobPriority
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
-
 
 DOMAIN = "zigbee"
 REQUIREMENTS = ("xbee-helper==0.0.6",)

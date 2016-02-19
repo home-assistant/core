@@ -8,12 +8,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.netgear/
 """
 import logging
-from datetime import timedelta
 import threading
+from datetime import timedelta
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)

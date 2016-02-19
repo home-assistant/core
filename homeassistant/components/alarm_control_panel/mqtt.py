@@ -7,11 +7,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.mqtt/
 """
 import logging
-import homeassistant.components.mqtt as mqtt
-import homeassistant.components.alarm_control_panel as alarm
 
+import homeassistant.components.alarm_control_panel as alarm
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)

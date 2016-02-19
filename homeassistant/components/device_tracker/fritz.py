@@ -10,10 +10,10 @@ https://home-assistant.io/components/device_tracker.fritz/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
 REQUIREMENTS = ['fritzconnection==0.4.6']
 

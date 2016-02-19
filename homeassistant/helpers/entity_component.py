@@ -1,14 +1,13 @@
 """Provides helpers for components that manage entities."""
 from threading import Lock
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.components import discovery, group
+from homeassistant.const import ATTR_ENTITY_ID, CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.components import group, discovery
-from homeassistant.const import ATTR_ENTITY_ID
 
 DEFAULT_SCAN_INTERVAL = 15
 

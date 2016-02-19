@@ -9,19 +9,19 @@ https://home-assistant.io/components/light.hue/
 import json
 import logging
 import os
-import socket
 import random
+import socket
 from datetime import timedelta
 from urllib.parse import urlparse
 
-from homeassistant.loader import get_component
 import homeassistant.util as util
 import homeassistant.util.color as color_util
-from homeassistant.const import CONF_HOST, CONF_FILENAME, DEVICE_DEFAULT_NAME
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_XY_COLOR, ATTR_COLOR_TEMP,
-    ATTR_TRANSITION, ATTR_FLASH, FLASH_LONG, FLASH_SHORT,
-    ATTR_EFFECT, EFFECT_COLORLOOP, EFFECT_RANDOM, ATTR_RGB_COLOR)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
+    FLASH_LONG, FLASH_SHORT, Light)
+from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
+from homeassistant.loader import get_component
 
 REQUIREMENTS = ['phue==0.8']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

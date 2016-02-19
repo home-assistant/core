@@ -13,8 +13,8 @@ import threading
 
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_PLATFORM_DISCOVERED,
-    ATTR_SERVICE, ATTR_DISCOVERED)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
+    EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
 REQUIREMENTS = ['netdisco==0.5.2']

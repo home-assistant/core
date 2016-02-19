@@ -7,6 +7,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.mystrom/
 """
 import logging
+
 import requests
 
 from homeassistant.components.switch import SwitchDevice

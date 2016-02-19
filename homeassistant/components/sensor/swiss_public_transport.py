@@ -9,11 +9,12 @@ https://home-assistant.io/components/sensor.swiss_public_transport/
 """
 import logging
 from datetime import timedelta
+
 import requests
 
-from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'

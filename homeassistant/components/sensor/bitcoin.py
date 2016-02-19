@@ -9,9 +9,8 @@ https://home-assistant.io/components/sensor.bitcoin/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)

@@ -6,14 +6,14 @@ Provides an interface to the XBMC/Kodi JSON-RPC API
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
-import urllib
 import logging
+import urllib
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF)
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['jsonrpc-requests==0.1']

@@ -10,7 +10,6 @@ from homeassistant.components.light import Light
 from homeassistant.components.zigbee import (
     ZigBeeDigitalOut, ZigBeeDigitalOutConfig)
 
-
 DEPENDENCIES = ["zigbee"]
 
 

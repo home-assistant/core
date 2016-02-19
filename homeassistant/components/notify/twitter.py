@@ -7,10 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.twitter/
 """
 import logging
-from homeassistant.helpers import validate_config
-from homeassistant.components.notify import (
-    DOMAIN, BaseNotificationService)
+
+from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.3.6']

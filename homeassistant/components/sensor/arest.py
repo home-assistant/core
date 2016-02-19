@@ -6,16 +6,16 @@ The arest sensor will consume an exposed aREST API of a device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arest/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import requests
 
-from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
-                                 DEVICE_DEFAULT_NAME)
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, DEVICE_DEFAULT_NAME)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import template, Throttle
+from homeassistant.util import Throttle, template
 
 _LOGGER = logging.getLogger(__name__)
 
