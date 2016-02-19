@@ -7,15 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
 import logging
-import sys
 import re
+import sys
 from datetime import timedelta
 from subprocess import check_output
-from homeassistant.util import Throttle
+
+import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.components.sensor import DOMAIN
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)

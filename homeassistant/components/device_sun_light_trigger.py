@@ -10,10 +10,11 @@ https://home-assistant.io/components/device_sun_light_trigger/
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers.event import track_point_in_time, track_state_change
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
-from . import light, sun, device_tracker, group
+from homeassistant.helpers.event import track_point_in_time, track_state_change
+
+from . import device_tracker, group, light, sun
 
 DOMAIN = "device_sun_light_trigger"
 DEPENDENCIES = ['light', 'device_tracker', 'group', 'sun']

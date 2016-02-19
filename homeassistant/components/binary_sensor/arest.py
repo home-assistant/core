@@ -6,13 +6,13 @@ The arest sensor will consume an exposed aREST API of a device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.arest/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import requests
 
-from homeassistant.util import Throttle
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

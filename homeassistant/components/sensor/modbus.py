@@ -9,10 +9,9 @@ https://home-assistant.io/components/sensor.modbus/
 import logging
 
 import homeassistant.components.modbus as modbus
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    TEMP_CELCIUS, TEMP_FAHRENHEIT,
-    STATE_ON, STATE_OFF)
+    STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']

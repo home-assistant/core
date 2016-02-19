@@ -10,8 +10,8 @@ https://home-assistant.io/components/sensor.arduino/
 import logging
 
 import homeassistant.components.arduino as arduino
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['arduino']
 

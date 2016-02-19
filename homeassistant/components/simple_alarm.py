@@ -9,8 +9,8 @@ https://home-assistant.io/components/simple_alarm/
 import logging
 
 import homeassistant.loader as loader
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_OFF, STATE_ON
 from homeassistant.helpers.event import track_state_change
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME
 
 DOMAIN = "simple_alarm"
 

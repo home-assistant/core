@@ -3,9 +3,9 @@ homeassistant.components.rollershutter.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Demo platform for the rollorshutter component.
 """
+from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.components.rollershutter import RollershutterDevice
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

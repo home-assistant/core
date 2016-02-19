@@ -10,8 +10,8 @@ import enum
 import logging
 
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.util import template
 from homeassistant.helpers.service import call_from_config
+from homeassistant.util import template
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']

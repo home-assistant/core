@@ -1,19 +1,17 @@
 """Helpers that help with state related things."""
-from collections import defaultdict
 import json
 import logging
+from collections import defaultdict
 
-from homeassistant.core import State
 import homeassistant.util.dt as dt_util
+from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
+from homeassistant.components.sun import (
+    STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID,
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
-    STATE_OPEN, STATE_CLOSED)
-from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
-                                          STATE_BELOW_HORIZON)
-from homeassistant.components.media_player import (SERVICE_PLAY_MEDIA)
+    ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, STATE_CLOSED, STATE_LOCKED, STATE_OFF, STATE_ON,
+    STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_UNLOCKED)
+from homeassistant.core import State
 
 _LOGGER = logging.getLogger(__name__)
 

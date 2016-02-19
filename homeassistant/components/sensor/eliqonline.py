@@ -8,8 +8,9 @@ https://home-assistant.io/components/sensor.eliqonline/
 """
 import logging
 from urllib.error import URLError
+
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 

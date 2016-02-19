@@ -7,17 +7,18 @@ presence.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.luci/
 """
-import logging
 import json
-from datetime import timedelta
+import logging
 import re
 import threading
+from datetime import timedelta
+
 import requests
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)

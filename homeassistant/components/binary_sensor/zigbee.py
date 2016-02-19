@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.zigbee import (
     ZigBeeDigitalIn, ZigBeeDigitalInConfig)
 
-
 DEPENDENCIES = ["zigbee"]
 
 
