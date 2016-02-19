@@ -5,7 +5,7 @@ Provides a sensor which gets its values from a TCP socket.
 """
 import logging
 import socket
-from select import select
+import select
 
 from homeassistant.const import CONF_NAME, CONF_HOST
 from homeassistant.util import template
@@ -88,35 +88,36 @@ class Sensor(Entity):
 
     def update(self):
         """ Get the latest value for this sensor. """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.connect(
+                    (self._config[CONF_HOST], self._config[CONF_PORT]))
+            except socket.error as err:
+                _LOGGER.error(
+                    "Unable to connect to %s on port %s: %s",
+                    self._config[CONF_HOST], self._config[CONF_PORT], err)
+                return
 
-        try:
-            sock.connect((self._config[CONF_HOST], self._config[CONF_PORT]))
-        except socket.error as err:
-            _LOGGER.error(
-                "Unable to connect to %s on port %s: %s",
-                self._config[CONF_HOST], self._config[CONF_PORT], err)
-            return
+            try:
+                sock.send(self._config[CONF_PAYLOAD].encode())
+            except socket.error as err:
+                _LOGGER.error(
+                    "Unable to send payload %r to %s on port %s: %s",
+                    self._config[CONF_PAYLOAD], self._config[CONF_HOST],
+                    self._config[CONF_PORT], err)
+                return
 
-        try:
-            sock.send(self._config[CONF_PAYLOAD].encode())
-        except socket.error as err:
-            _LOGGER.error(
-                "Unable to send payload %r to %s on port %s: %s",
-                self._config[CONF_PAYLOAD], self._config[CONF_HOST],
-                self._config[CONF_PORT], err)
-            return
+            readable, _, _ = select.select(
+                [sock], [], [], self._config[CONF_TIMEOUT])
+            if not readable:
+                _LOGGER.warning(
+                    "Timeout (%s second(s)) waiting for a response after "
+                    "sending %r to %s on port %s.",
+                    self._config[CONF_TIMEOUT], self._config[CONF_PAYLOAD],
+                    self._config[CONF_HOST], self._config[CONF_PORT])
+                return
 
-        readable, _, _ = select([sock], [], [], self._config[CONF_TIMEOUT])
-        if not readable:
-            _LOGGER.warning(
-                "Timeout (%s second(s)) waiting for a response after sending "
-                "%r to %s on port %s.",
-                self._config[CONF_TIMEOUT], self._config[CONF_PAYLOAD],
-                self._config[CONF_HOST], self._config[CONF_PORT])
-            return
-
-        value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
+            value = sock.recv(self._config[CONF_BUFFER_SIZE]).decode()
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
