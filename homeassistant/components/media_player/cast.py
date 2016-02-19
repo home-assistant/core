@@ -9,16 +9,14 @@ https://home-assistant.io/components/media_player.cast/
 # pylint: disable=import-error
 import logging
 
-from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_OFF,
-    STATE_UNKNOWN, CONF_HOST)
-
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+    STATE_UNKNOWN)
 
 REQUIREMENTS = ['pychromecast==0.7.1']
 CONF_IGNORE_CEC = 'ignore_cec'

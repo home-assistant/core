@@ -8,9 +8,9 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
+from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['sleekxmpp==1.3.1', 'dnspython3==1.12.0']
 

@@ -12,8 +12,8 @@ import time
 
 import requests
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    SENSOR_CLASSES)
+from homeassistant.components.binary_sensor import (
+    SENSOR_CLASSES, BinarySensorDevice)
 
 REQUIREMENTS = ['pynx584==0.2']
 _LOGGER = logging.getLogger(__name__)

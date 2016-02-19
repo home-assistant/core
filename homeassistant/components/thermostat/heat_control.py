@@ -10,11 +10,11 @@ import logging
 
 import homeassistant.util as util
 from homeassistant.components import switch
-from homeassistant.components.thermostat import (ThermostatDevice, STATE_IDLE,
-                                                 STATE_HEAT)
-from homeassistant.helpers.event import track_state_change
+from homeassistant.components.thermostat import (
+    STATE_HEAT, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.event import track_state_change
 
 DEPENDENCIES = ['switch', 'sensor']
 

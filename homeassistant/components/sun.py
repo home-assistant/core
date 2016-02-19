@@ -10,10 +10,11 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util as util
-from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
-from homeassistant.helpers.entity import Entity
+from homeassistant.util import dt as dt_util
+from homeassistant.util import location as location_util
 
 REQUIREMENTS = ['astral==0.9']
 DOMAIN = "sun"

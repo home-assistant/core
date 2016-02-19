@@ -8,9 +8,9 @@ https://home-assistant.io/components/sensor.torque/
 """
 
 import re
+
 from homeassistant.const import HTTP_OK
 from homeassistant.helpers.entity import Entity
-
 
 DOMAIN = 'torque'
 DEPENDENCIES = ['http']

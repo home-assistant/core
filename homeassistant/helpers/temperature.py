@@ -5,8 +5,8 @@ homeassistant.helpers.temperature
 Methods to help handle temperature in Home Assistant.
 """
 
-from homeassistant.const import TEMP_CELCIUS
 import homeassistant.util.temperature as temp_util
+from homeassistant.const import TEMP_CELCIUS
 
 
 def convert(temperature, unit, to_unit):

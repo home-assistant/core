@@ -9,9 +9,8 @@ documentation at https://home-assistant.io/components/verisure/
 import logging
 
 import homeassistant.components.verisure as verisure
-
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -6,15 +6,15 @@ Ecobee component
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ecobee/
 """
-from datetime import timedelta
 import logging
 import os
+from datetime import timedelta
 
-from homeassistant.loader import get_component
 from homeassistant import bootstrap
-from homeassistant.util import Throttle
 from homeassistant.const import (
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED, CONF_API_KEY)
+    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.loader import get_component
+from homeassistant.util import Throttle
 
 DOMAIN = "ecobee"
 DISCOVER_THERMOSTAT = "ecobee.thermostat"

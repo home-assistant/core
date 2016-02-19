@@ -6,13 +6,9 @@ https://home-assistant.io/components/switch.mysensors/
 """
 import logging
 
-from homeassistant.components.switch import SwitchDevice
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_ON, STATE_OFF)
-
 import homeassistant.components.mysensors as mysensors
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []

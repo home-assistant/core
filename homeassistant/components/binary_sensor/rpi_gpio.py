@@ -8,9 +8,10 @@ https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
 
 import logging
+
 import homeassistant.components.rpi_gpio as rpi_gpio
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import (DEVICE_DEFAULT_NAME)
+from homeassistant.const import DEVICE_DEFAULT_NAME
 
 DEFAULT_PULL_MODE = "UP"
 DEFAULT_BOUNCETIME = 50

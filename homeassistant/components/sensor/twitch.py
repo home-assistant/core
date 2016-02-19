@@ -6,8 +6,8 @@ A sensor for the Twitch stream status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
 """
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.helpers.entity import Entity
 
 STATE_STREAMING = 'streaming'
 STATE_OFFLINE = 'offline'

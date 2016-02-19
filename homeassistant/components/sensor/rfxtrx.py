@@ -9,9 +9,9 @@ https://home-assistant.io/components/sensor.rfxtrx/
 import logging
 from collections import OrderedDict
 
-from homeassistant.const import (TEMP_CELCIUS)
-from homeassistant.helpers.entity import Entity
 import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 DEPENDENCIES = ['rfxtrx']

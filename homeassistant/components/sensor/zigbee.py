@@ -10,11 +10,10 @@ https://home-assistant.io/components/sensor.zigbee/
 import logging
 from binascii import hexlify
 
-from homeassistant.core import JobPriority
-from homeassistant.const import TEMP_CELCIUS
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import zigbee
-
+from homeassistant.const import TEMP_CELCIUS
+from homeassistant.core import JobPriority
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ["zigbee"]
 _LOGGER = logging.getLogger(__name__)

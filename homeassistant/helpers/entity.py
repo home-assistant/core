@@ -4,16 +4,15 @@ homeassistant.helpers.entity.
 Provides ABC for entities in HA.
 """
 
-from collections import defaultdict
 import re
-
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.util import ensure_unique_string, slugify
+from collections import defaultdict
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON,
-    DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_UNAVAILABLE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_ASSUMED_STATE)
+    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.util import ensure_unique_string, slugify
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)

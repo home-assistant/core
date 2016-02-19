@@ -6,14 +6,10 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    TEMP_CELCIUS,
-    STATE_ON, STATE_OFF)
-
 import homeassistant.components.mysensors as mysensors
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []

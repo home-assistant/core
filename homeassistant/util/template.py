@@ -6,8 +6,10 @@ Template utility methods for rendering strings with HA data.
 # pylint: disable=too-few-public-methods
 import json
 import logging
+
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
+
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import TemplateError
 

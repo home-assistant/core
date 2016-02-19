@@ -10,14 +10,11 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 import homeassistant.bootstrap as bootstrap
-
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
-    TEMP_CELCIUS,)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS)
+from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
 CONF_PORT = 'port'
