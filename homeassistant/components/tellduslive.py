@@ -6,15 +6,15 @@ Tellduslive Component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellduslive/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-from homeassistant.loader import get_component
 from homeassistant import bootstrap
-from homeassistant.util import Throttle
-from homeassistant.helpers import validate_config
 from homeassistant.const import (
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers import validate_config
+from homeassistant.loader import get_component
+from homeassistant.util import Throttle
 
 DOMAIN = "tellduslive"
 

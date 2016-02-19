@@ -7,8 +7,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.bloomsky/
 """
 import logging
-from homeassistant.loader import get_component
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.loader import get_component
 
 DEPENDENCIES = ["bloomsky"]
 

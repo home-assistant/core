@@ -3,8 +3,8 @@ homeassistant.components.sensor.demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Demo platform that has a couple of fake sensors.
 """
+from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import TEMP_CELCIUS, ATTR_BATTERY_LEVEL
 
 
 # pylint: disable=unused-argument

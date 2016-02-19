@@ -9,15 +9,11 @@ https://home-assistant.io/components/media_player.mpd/
 import logging
 import socket
 
-
-from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_OFF)
-
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    MEDIA_TYPE_MUSIC)
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['python-mpd2==0.5.4']

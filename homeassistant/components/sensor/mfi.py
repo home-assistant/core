@@ -8,11 +8,10 @@ https://home-assistant.io/components/sensor.mfi/
 """
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 TEMP_CELCIUS)
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS
 from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['mficlient==0.2.2']
 

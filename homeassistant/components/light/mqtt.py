@@ -6,12 +6,12 @@ Allows to configure a MQTT light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt/
 """
-from functools import partial
 import logging
+from functools import partial
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.light import (Light,
-                                            ATTR_BRIGHTNESS, ATTR_RGB_COLOR)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
 from homeassistant.util.template import render_with_possible_json_value
 
 _LOGGER = logging.getLogger(__name__)

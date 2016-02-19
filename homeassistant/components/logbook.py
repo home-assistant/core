@@ -7,16 +7,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
 import logging
+import re
 from datetime import timedelta
 from itertools import groupby
-import re
 
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
-from homeassistant.const import (
-    EVENT_STATE_CHANGED, STATE_NOT_HOME, STATE_ON, STATE_OFF,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
 from homeassistant.util import template
 

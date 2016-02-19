@@ -9,27 +9,27 @@ After bootstrapping you can add your own components or
 start by calling homeassistant.start_home_assistant(bus)
 """
 
-from collections import defaultdict
 import logging
 import logging.handlers
 import os
 import shutil
 import sys
+from collections import defaultdict
 
-import homeassistant.core as core
-import homeassistant.util.dt as date_util
-import homeassistant.util.package as pkg_util
-import homeassistant.util.location as loc_util
-import homeassistant.config as config_util
-import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+import homeassistant.config as config_util
+import homeassistant.core as core
+import homeassistant.loader as loader
+import homeassistant.util.dt as date_util
+import homeassistant.util.location as loc_util
+import homeassistant.util.package as pkg_util
+from homeassistant.const import (
+    CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+    CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
 from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 

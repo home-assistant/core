@@ -8,10 +8,10 @@ https://home-assistant.io/components/sensor.nest/
 """
 import logging
 import socket
-import homeassistant.components.nest as nest
 
-from homeassistant.helpers.entity import Entity
+import homeassistant.components.nest as nest
 from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',

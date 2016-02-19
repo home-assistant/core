@@ -11,8 +11,8 @@ import socket
 
 import requests
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
+from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['uvcclient==0.6']
 

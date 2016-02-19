@@ -6,17 +6,16 @@ Connects Home Assistant to a Z-Wave network.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
-import sys
 import os.path
-
+import sys
 from pprint import pprint
-from homeassistant.util import slugify, convert
+
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE)
-
+    ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
+    ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.util import convert, slugify
 
 DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
