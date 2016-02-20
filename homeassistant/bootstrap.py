@@ -1,13 +1,4 @@
-"""
-homeassistant.bootstrap
-~~~~~~~~~~~~~~~~~~~~~~~
-Provides methods to bootstrap a home assistant instance.
-
-Each method will return a tuple (bus, statemachine).
-
-After bootstrapping you can add your own components or
-start by calling homeassistant.start_home_assistant(bus)
-"""
+"""Provides methods to bootstrap a home assistant instance."""
 
 import logging
 import logging.handlers
@@ -15,6 +6,7 @@ import os
 import shutil
 import sys
 from collections import defaultdict
+from threading import RLock
 
 import homeassistant.components as core_components
 import homeassistant.components.group as group
@@ -32,6 +24,8 @@ from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+_SETUP_LOCK = RLock()
+_CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
@@ -78,42 +72,57 @@ def _handle_requirements(hass, component, name):
 
 
 def _setup_component(hass, domain, config):
-    """ Setup a component for Home Assistant. """
+    """Setup a component for Home Assistant."""
+    # pylint: disable=too-many-return-statements
     if domain in hass.config.components:
         return True
-    component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                    if dep not in hass.config.components]
+    with _SETUP_LOCK:
+        # It might have been loaded while waiting for lock
+        if domain in hass.config.components:
+            return True
 
-    if missing_deps:
-        _LOGGER.error(
-            'Not initializing %s because not all dependencies loaded: %s',
-            domain, ", ".join(missing_deps))
-        return False
-
-    if not _handle_requirements(hass, component, domain):
-        return False
-
-    try:
-        if not component.setup(hass, config):
-            _LOGGER.error('component %s failed to initialize', domain)
+        if domain in _CURRENT_SETUP:
+            _LOGGER.error('Attempt made to setup %s during setup of %s',
+                          domain, domain)
             return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception('Error during setup of component %s', domain)
-        return False
 
-    hass.config.components.append(component.DOMAIN)
+        component = loader.get_component(domain)
+        missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
+                        if dep not in hass.config.components]
 
-    # Assumption: if a component does not depend on groups
-    # it communicates with devices
-    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
-        hass.pool.add_worker()
+        if missing_deps:
+            _LOGGER.error(
+                'Not initializing %s because not all dependencies loaded: %s',
+                domain, ", ".join(missing_deps))
+            return False
 
-    hass.bus.fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+        if not _handle_requirements(hass, component, domain):
+            return False
 
-    return True
+        _CURRENT_SETUP.append(domain)
+
+        try:
+            if not component.setup(hass, config):
+                _LOGGER.error('component %s failed to initialize', domain)
+                return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
+            return False
+        finally:
+            _CURRENT_SETUP.remove(domain)
+
+        hass.config.components.append(component.DOMAIN)
+
+        # Assumption: if a component does not depend on groups
+        # it communicates with devices
+        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+            hass.pool.add_worker()
+
+        hass.bus.fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+
+        return True
 
 
 def prepare_setup_platform(hass, config, domain, platform_name):
