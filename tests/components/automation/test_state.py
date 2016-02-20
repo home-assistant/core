@@ -7,7 +7,7 @@ Tests state automation.
 import unittest
 from datetime import timedelta
 from unittest.mock import patch
-import time
+
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 import homeassistant.components.automation.state as state
