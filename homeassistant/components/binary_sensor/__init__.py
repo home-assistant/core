@@ -64,7 +64,7 @@ class BinarySensorDevice(Entity):
 
     @property
     def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CASSES."""
+        """Return the class of this sensor, from SENSOR_CLASSES."""
         return None
 
     @property
