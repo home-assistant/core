@@ -62,11 +62,6 @@ class BinarySensorDevice(Entity):
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
-    def friendly_state(self):
-        """Return the friendly state of the binary sensor."""
-        return None
-
-    @property
     def sensor_class(self):
         """Return the class of this sensor, from SENSOR_CASSES."""
         return None
@@ -74,6 +69,9 @@ class BinarySensorDevice(Entity):
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
-        return {
-            'sensor_class': self.sensor_class,
-        }
+        attr = {}
+
+        if self.sensor_class is not None:
+            attr['sensor_class'] = self.sensor_class
+
+        return attr
