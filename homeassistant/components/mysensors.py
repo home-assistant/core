@@ -158,7 +158,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
 
 
 class GatewayWrapper(object):
-    """Gateway wrapper class, by subclassing serial gateway."""
+    """Gateway wrapper class."""
 
     def __init__(self, gateway, version, optimistic):
         """Setup class attributes on instantiation.
@@ -173,6 +173,7 @@ class GatewayWrapper(object):
         version (str): Version of mysensors API.
         platform_callbacks (list): Callback functions, one per platform.
         const (module): Mysensors API constants.
+        optimistic (bool): Send values to actuators without feedback state.
         __initialised (bool): True if GatewayWrapper is initialised.
         """
         self._wrapped_gateway = gateway
