@@ -42,12 +42,14 @@ GATEWAYS = None
 DISCOVER_SENSORS = 'mysensors.sensors'
 DISCOVER_SWITCHES = 'mysensors.switches'
 DISCOVER_LIGHTS = 'mysensors.lights'
+DISCOVER_BINARY_SENSORS = 'mysensors.binary_sensor'
 
 # Maps discovered services to their platforms
 DISCOVERY_COMPONENTS = [
     ('sensor', DISCOVER_SENSORS),
     ('switch', DISCOVER_SWITCHES),
     ('light', DISCOVER_LIGHTS),
+    ('binary_sensor', DISCOVER_BINARY_SENSORS),
 ]
 
 
@@ -148,7 +150,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                 else:
                     device_class = entity_class
                 devices[key] = device_class(
-                    gateway, node_id, child.id, name, value_type)
+                    gateway, node_id, child.id, name, value_type, child.type)
 
                 _LOGGER.info('Adding new devices: %s', devices[key])
                 add_devices([devices[key]])
