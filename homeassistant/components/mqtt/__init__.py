@@ -102,7 +102,7 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     MQTT_CLIENT.subscribe(topic, qos)
 
 
-def setup(hass, config):
+def setup(hass, config):  # pylint: disable=R0914
     """Start the MQTT protocol service."""
     if not validate_config(config, {DOMAIN: ['broker']}, _LOGGER):
         return False
