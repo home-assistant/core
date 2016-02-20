@@ -34,6 +34,7 @@ SERVICE_REMOVE_NODE = "remove_node"
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
 DISCOVER_LIGHTS = "zwave.light"
+DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
@@ -54,13 +55,13 @@ TYPE_BYTE = "Byte"
 TYPE_BOOL = "Bool"
 TYPE_DECIMAL = "Decimal"
 
+
 # list of tuple (DOMAIN, discovered service, supported command
 # classes, value type)
 DISCOVERY_COMPONENTS = [
     ('sensor',
      DISCOVER_SENSORS,
-     [COMMAND_CLASS_SENSOR_BINARY,
-      COMMAND_CLASS_SENSOR_MULTILEVEL,
+     [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
       COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
@@ -75,7 +76,13 @@ DISCOVERY_COMPONENTS = [
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
      GENRE_USER),
+    ('binary_sensor',
+     DISCOVER_BINARY_SENSORS,
+     [COMMAND_CLASS_SENSOR_BINARY],
+     TYPE_BOOL,
+     GENRE_USER)
 ]
+
 
 ATTR_NODE_ID = "node_id"
 ATTR_VALUE_ID = "value_id"
