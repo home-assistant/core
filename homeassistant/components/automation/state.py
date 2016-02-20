@@ -24,6 +24,31 @@ CONF_STATE = "state"
 CONF_FOR = "for"
 
 
+def get_time_config(config):
+    """ Helper function to extract the time specified in the config """
+    if CONF_FOR in config:
+        hours = config[CONF_FOR].get(CONF_HOURS)
+        minutes = config[CONF_FOR].get(CONF_MINUTES)
+        seconds = config[CONF_FOR].get(CONF_SECONDS)
+
+        if hours is None and minutes is None and seconds is None:
+            logging.getLogger(__name__).error(
+                "Received invalid value for '%s': %s",
+                config[CONF_FOR], CONF_FOR)
+            return False
+
+        if config.get(CONF_TO) is None and config.get(CONF_STATE) is None:
+            logging.getLogger(__name__).error(
+                "For: requires a to: value'%s': %s",
+                config[CONF_FOR], CONF_FOR)
+            return False
+
+        return timedelta(hours=(hours or 0.0),
+                         minutes=(minutes or 0.0),
+                         seconds=(seconds or 0.0))
+    return False
+
+
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
@@ -42,20 +67,8 @@ def trigger(hass, config, action):
         return False
 
     if CONF_FOR in config:
-        hours = config[CONF_FOR].get(CONF_HOURS)
-        minutes = config[CONF_FOR].get(CONF_MINUTES)
-        seconds = config[CONF_FOR].get(CONF_SECONDS)
-
-        if hours is None and minutes is None and seconds is None:
-            logging.getLogger(__name__).error(
-                "Received invalid value for '%s': %s",
-                config[CONF_FOR], CONF_FOR)
-            return False
-
-        if config.get(CONF_TO) is None and config.get(CONF_STATE) is None:
-            logging.getLogger(__name__).error(
-                "For: requires a to: value'%s': %s",
-                config[CONF_FOR], CONF_FOR)
+        time_delta = get_time_config(config)
+        if time_delta is False:
             return False
 
     def state_automation_listener(entity, from_s, to_s):
@@ -77,11 +90,7 @@ def trigger(hass, config, action):
                 EVENT_STATE_CHANGED, for_state_listener)
 
         if CONF_FOR in config:
-            now = dt_util.now()
-            target_tm = now + timedelta(
-                hours=(hours or 0.0),
-                minutes=(minutes or 0.0),
-                seconds=(seconds or 0.0))
+            target_tm = dt_util.now() + time_delta
             for_time_listener = track_point_in_time(
                 hass, state_for_listener, target_tm)
             for_state_listener = track_state_change(
@@ -101,6 +110,11 @@ def if_action(hass, config):
     entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
 
+    if CONF_FOR in config:
+        time_delta = get_time_config(config)
+        if time_delta is False:
+            return False
+
     if entity_id is None or state is None:
         logging.getLogger(__name__).error(
             "Missing if-condition configuration key %s or %s", CONF_ENTITY_ID,
@@ -111,6 +125,13 @@ def if_action(hass, config):
 
     def if_state():
         """ Test if condition. """
-        return hass.states.is_state(entity_id, state)
+        if hass.states.is_state(entity_id, state):
+            if CONF_FOR in config:
+                target_tm = dt_util.now() - time_delta
+                return target_tm > hass.states.get(entity_id).last_changed
+            else:
+                return True
+        else:
+            return False
 
     return if_state
