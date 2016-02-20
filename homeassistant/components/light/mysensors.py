@@ -58,7 +58,8 @@ class MySensorsLight(Light):
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup instance attributes."""
         self.gateway = gateway
         self.node_id = node_id
