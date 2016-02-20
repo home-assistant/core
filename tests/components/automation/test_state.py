@@ -6,7 +6,7 @@ Tests state automation.
 """
 import unittest
 from datetime import timedelta
-
+import time
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 import homeassistant.components.automation.state as state
@@ -421,5 +421,39 @@ class TestAutomationState(unittest.TestCase):
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_on_for_condition(self):
+        self.hass.states.set('test.entity', 'on')
+        self.assertTrue(automation.setup(self.hass, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'condition': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'state': 'on',
+                    'for': {
+                        'seconds': 3
+                    },
+                },
+
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        }))
+
+        # not enough time has passed
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+        # wait until we have passed the condition
+        time.sleep(4)
+        self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
