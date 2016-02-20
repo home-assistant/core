@@ -1,37 +1,25 @@
 """
-Support the sensor of a BloomSky weather station.
+Support the binary sensors of a BloomSky weather station.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.bloomsky/
+https://home-assistant.io/components/binary_sensor.bloomsky/
 """
 import logging
 
-from homeassistant.const import TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ["bloomsky"]
 
-# These are the available sensors
-SENSOR_TYPES = ["Temperature",
-                "Humidity",
-                "Pressure",
-                "Luminance",
-                "UVIndex"]
-
-# Sensor units - these do not currently align with the API documentation
-SENSOR_UNITS = {"Temperature": TEMP_FAHRENHEIT,
-                "Humidity": "%",
-                "Pressure": "inHg",
-                "Luminance": "cd/m²"}
-
-# Which sensors to format numerically
-FORMAT_NUMBERS = ["Temperature", "Pressure"]
+# These are the available sensors mapped to binary_sensor class
+SENSOR_TYPES = {
+    "Rain": "moisture",
+    "Night": None,
+}
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the available BloomSky weather sensors."""
+    """Set up the available BloomSky weather binary sensors."""
     logger = logging.getLogger(__name__)
     bloomsky = get_component('bloomsky')
     sensors = config.get('monitored_conditions', SENSOR_TYPES)
@@ -46,16 +34,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 logger.error("Cannot find definition for device: %s", variable)
 
 
-class BloomSkySensor(Entity):
-    """Represents a single sensor in a BloomSky device."""
+class BloomSkySensor(BinarySensorDevice):
+    """ Represents a single binary sensor in a BloomSky device. """
 
     def __init__(self, bs, device, sensor_name):
-        """Initialize a bloomsky sensor."""
+        """Initialize a bloomsky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
         self._name = "{} {}".format(device["DeviceName"], sensor_name)
-        self._unique_id = "bloomsky_sensor {}".format(self._name)
+        self._unique_id = "bloomsky_binary_sensor {}".format(self._name)
         self.update()
 
     @property
@@ -69,23 +57,18 @@ class BloomSkySensor(Entity):
         return self._unique_id
 
     @property
-    def state(self):
-        """The current state (i.e. value) of this sensor."""
-        return self._state
+    def sensor_class(self):
+        """Return the class of this sensor, from SENSOR_CLASSES."""
+        return SENSOR_TYPES.get(self._sensor_name)
 
     @property
-    def unit_of_measurement(self):
-        """Return the sensor units."""
-        return SENSOR_UNITS.get(self._sensor_name, None)
+    def is_on(self):
+        """If binary sensor is on."""
+        return self._state
 
     def update(self):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
 
-        state = \
+        self._state = \
             self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
-
-        if self._sensor_name in FORMAT_NUMBERS:
-            self._state = "{0:.2f}".format(state)
-        else:
-            self._state = state
