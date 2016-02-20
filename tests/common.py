@@ -146,7 +146,7 @@ class MockModule(object):
         self.DEPENDENCIES = dependencies
         # Setup a mock setup if none given.
         if setup is None:
-            self.setup = lambda hass, config: False
+            self.setup = lambda hass, config: True
         else:
             self.setup = setup
 
