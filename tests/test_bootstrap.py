@@ -61,6 +61,7 @@ class TestBootstrap(unittest.TestCase):
             self.assertTrue(os.path.isfile(check_file))
             bootstrap.process_ha_config_upgrade(hass)
             self.assertFalse(os.path.isfile(check_file))
+            hass.stop()
 
     def test_not_remove_lib_if_not_upgrade(self):
         with tempfile.TemporaryDirectory() as config_dir:
@@ -82,6 +83,7 @@ class TestBootstrap(unittest.TestCase):
             bootstrap.process_ha_config_upgrade(hass)
 
             self.assertTrue(os.path.isfile(check_file))
+            hass.stop()
 
     def test_entity_customization(self):
         """ Test entity customization through config """
@@ -102,6 +104,7 @@ class TestBootstrap(unittest.TestCase):
         state = hass.states.get('test.test')
 
         self.assertTrue(state.attributes['hidden'])
+        hass.stop()
 
     def test_handle_setup_circular_dependency(self):
         hass = get_test_home_assistant()
@@ -116,3 +119,4 @@ class TestBootstrap(unittest.TestCase):
 
         bootstrap.setup_component(hass, 'comp_a')
         self.assertEqual(['comp_a'], hass.config.components)
+        hass.stop()
