@@ -9,13 +9,13 @@ import os
 import tempfile
 import unittest
 
-from homeassistant import bootstrap
+from homeassistant import bootstrap, loader
 from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockModule
 
 
 class TestBootstrap(unittest.TestCase):
@@ -102,3 +102,17 @@ class TestBootstrap(unittest.TestCase):
         state = hass.states.get('test.test')
 
         self.assertTrue(state.attributes['hidden'])
+
+    def test_handle_setup_circular_dependency(self):
+        hass = get_test_home_assistant()
+
+        loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
+
+        def setup_a(hass, config):
+            bootstrap.setup_component(hass, 'comp_b')
+            return True
+
+        loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
+
+        bootstrap.setup_component(hass, 'comp_a')
+        self.assertEqual(['comp_a'], hass.config.components)
