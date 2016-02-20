@@ -11,7 +11,10 @@ from homeassistant.const import STATE_ON, STATE_OFF
 
 
 class TestBinarySensor(unittest.TestCase):
+    """Test the binary_sensor base class."""
+
     def test_state(self):
+        """Test binary sensor state."""
         sensor = binary_sensor.BinarySensorDevice()
         self.assertEqual(STATE_OFF, sensor.state)
         with mock.patch('homeassistant.components.binary_sensor.'
@@ -26,11 +29,12 @@ class TestBinarySensor(unittest.TestCase):
                              binary_sensor.BinarySensorDevice().state)
 
     def test_attributes(self):
+        """Test binary sensor attributes."""
         sensor = binary_sensor.BinarySensorDevice()
         self.assertEqual({'sensor_class': None},
-                         sensor.device_state_attributes)
+                         sensor.state_attributes)
         with mock.patch('homeassistant.components.binary_sensor.'
                         'BinarySensorDevice.sensor_class',
                         new='motion'):
             self.assertEqual({'sensor_class': 'motion'},
-                             sensor.device_state_attributes)
+                             sensor.state_attributes)
