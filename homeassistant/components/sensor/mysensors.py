@@ -8,7 +8,7 @@ import logging
 
 import homeassistant.components.mysensors as mysensors
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS)
+    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,27 +129,28 @@ class MySensorsSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit of measurement of this entity."""
-        # HA will convert to degrees F if needed
+        set_req = self.gateway.const.SetReq
         unit_map = {
-            self.gateway.const.SetReq.V_TEMP: TEMP_CELCIUS,
-            self.gateway.const.SetReq.V_HUM: '%',
-            self.gateway.const.SetReq.V_DIMMER: '%',
-            self.gateway.const.SetReq.V_LIGHT_LEVEL: '%',
-            self.gateway.const.SetReq.V_WEIGHT: 'kg',
-            self.gateway.const.SetReq.V_DISTANCE: 'm',
-            self.gateway.const.SetReq.V_IMPEDANCE: 'ohm',
-            self.gateway.const.SetReq.V_WATT: 'W',
-            self.gateway.const.SetReq.V_KWH: 'kWh',
-            self.gateway.const.SetReq.V_FLOW: 'm',
-            self.gateway.const.SetReq.V_VOLUME: 'm3',
-            self.gateway.const.SetReq.V_VOLTAGE: 'V',
-            self.gateway.const.SetReq.V_CURRENT: 'A',
+            set_req.V_TEMP: (TEMP_CELCIUS
+                             if self.gateway.metric else TEMP_FAHRENHEIT),
+            set_req.V_HUM: '%',
+            set_req.V_DIMMER: '%',
+            set_req.V_LIGHT_LEVEL: '%',
+            set_req.V_WEIGHT: 'kg',
+            set_req.V_DISTANCE: 'm',
+            set_req.V_IMPEDANCE: 'ohm',
+            set_req.V_WATT: 'W',
+            set_req.V_KWH: 'kWh',
+            set_req.V_FLOW: 'm',
+            set_req.V_VOLUME: 'm3',
+            set_req.V_VOLTAGE: 'V',
+            set_req.V_CURRENT: 'A',
         }
         if float(self.gateway.version) >= 1.5:
-            if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+            if set_req.V_UNIT_PREFIX in self._values:
                 return self._values[
-                    self.gateway.const.SetReq.V_UNIT_PREFIX]
-            unit_map.update({self.gateway.const.SetReq.V_PERCENTAGE: '%'})
+                    set_req.V_UNIT_PREFIX]
+            unit_map.update({set_req.V_PERCENTAGE: '%'})
         return unit_map.get(self.value_type)
 
     @property
