@@ -13,6 +13,7 @@ import requests
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import bloomsky
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
@@ -26,7 +27,9 @@ SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {}
+DISCOVERY_PLATFORMS = {
+    bloomsky.DISCOVER_CAMERAS: 'bloomsky',
+}
 
 STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
