@@ -90,7 +90,7 @@ def trigger(hass, config, action):
                 EVENT_STATE_CHANGED, for_state_listener)
 
         if CONF_FOR in config:
-            target_tm = dt_util.now() + time_delta
+            target_tm = dt_util.utcnow() + time_delta
             for_time_listener = track_point_in_time(
                 hass, state_for_listener, target_tm)
             for_state_listener = track_state_change(
@@ -112,7 +112,7 @@ def if_action(hass, config):
 
     if CONF_FOR in config:
         time_delta = get_time_config(config)
-        if time_delta is False:
+        if not time_delta:
             return False
 
     if entity_id is None or state is None:
@@ -125,13 +125,13 @@ def if_action(hass, config):
 
     def if_state():
         """ Test if condition. """
-        if hass.states.is_state(entity_id, state):
-            if CONF_FOR in config:
-                target_tm = dt_util.now() - time_delta
-                return target_tm > hass.states.get(entity_id).last_changed
-            else:
-                return True
-        else:
-            return False
+        is_state = hass.states.is_state(entity_id, state)
+
+        if CONF_FOR not in config:
+            return is_state
+
+        target_tm = dt_util.utcnow() - time_delta
+        return (is_state and
+                target_tm > hass.states.get(entity_id).last_changed)
 
     return if_state
