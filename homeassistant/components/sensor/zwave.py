@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_ALARM, COMMAND_CLASS_METER,
-    COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
+    COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
     TYPE_DECIMAL, ZWaveDeviceEntity, get_config_value)
 from homeassistant.const import (
     STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
@@ -79,9 +79,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
 
     # generic Device mappings
-    elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
-        add_devices([ZWaveBinarySensor(value)])
-
     elif value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
@@ -118,16 +115,6 @@ class ZWaveSensor(ZWaveDeviceEntity, Entity):
         """ Called when a value has changed on the network. """
         if self._value.value_id == value.value_id:
             self.update_ha_state()
-
-
-# pylint: disable=too-few-public-methods
-class ZWaveBinarySensor(ZWaveSensor):
-    """ Represents a binary sensor within Z-Wave. """
-
-    @property
-    def state(self):
-        """ Returns the state of the sensor. """
-        return STATE_ON if self._value.data else STATE_OFF
 
 
 class ZWaveTriggerSensor(ZWaveSensor):
