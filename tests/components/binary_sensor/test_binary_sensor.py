@@ -31,8 +31,7 @@ class TestBinarySensor(unittest.TestCase):
     def test_attributes(self):
         """Test binary sensor attributes."""
         sensor = binary_sensor.BinarySensorDevice()
-        self.assertEqual({'sensor_class': None},
-                         sensor.state_attributes)
+        self.assertEqual({}, sensor.state_attributes)
         with mock.patch('homeassistant.components.binary_sensor.'
                         'BinarySensorDevice.sensor_class',
                         new='motion'):
