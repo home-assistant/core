@@ -1,15 +1,16 @@
 """
-Support for MySensors sensors.
+Support for MySensors binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors/
+https://home-assistant.io/components/binary_sensor.mysensors/
 """
 import logging
 
 import homeassistant.components.mysensors as mysensors
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.entity import Entity
+    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, SENSOR_CLASSES)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -28,56 +29,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_TEMP: [set_req.V_TEMP],
-            pres.S_HUM: [set_req.V_HUM],
-            pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
-            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST],
-            pres.S_RAIN: [set_req.V_RAIN, set_req.V_RAINRATE],
-            pres.S_UV: [set_req.V_UV],
-            pres.S_WEIGHT: [set_req.V_WEIGHT, set_req.V_IMPEDANCE],
-            pres.S_POWER: [set_req.V_WATT, set_req.V_KWH],
-            pres.S_DISTANCE: [set_req.V_DISTANCE],
-            pres.S_LIGHT_LEVEL: [set_req.V_LIGHT_LEVEL],
-            pres.S_IR: [set_req.V_IR_SEND, set_req.V_IR_RECEIVE],
-            pres.S_WATER: [set_req.V_FLOW, set_req.V_VOLUME],
-            pres.S_CUSTOM: [set_req.V_VAR1,
-                            set_req.V_VAR2,
-                            set_req.V_VAR3,
-                            set_req.V_VAR4,
-                            set_req.V_VAR5],
-            pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
-                                      set_req.V_SCENE_OFF],
+            pres.S_DOOR: [set_req.V_TRIPPED],
+            pres.S_MOTION: [set_req.V_TRIPPED],
+            pres.S_SMOKE: [set_req.V_TRIPPED],
         }
-        if float(gateway.version) < 1.5:
-            map_sv_types.update({
-                pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
-                pres.S_DUST: [set_req.V_DUST_LEVEL],
-            })
         if float(gateway.version) >= 1.5:
             map_sv_types.update({
-                pres.S_COLOR_SENSOR: [set_req.V_RGB],
-                pres.S_MULTIMETER: [set_req.V_VOLTAGE,
-                                    set_req.V_CURRENT,
-                                    set_req.V_IMPEDANCE],
                 pres.S_SPRINKLER: [set_req.V_TRIPPED],
                 pres.S_WATER_LEAK: [set_req.V_TRIPPED],
-                pres.S_SOUND: [set_req.V_LEVEL],
-                pres.S_VIBRATION: [set_req.V_LEVEL],
-                pres.S_MOISTURE: [set_req.V_LEVEL],
-                pres.S_AIR_QUALITY: [set_req.V_LEVEL],
-                pres.S_DUST: [set_req.V_LEVEL],
+                pres.S_SOUND: [set_req.V_TRIPPED],
+                pres.S_VIBRATION: [set_req.V_TRIPPED],
+                pres.S_MOISTURE: [set_req.V_TRIPPED],
             })
-            map_sv_types[pres.S_LIGHT_LEVEL].append(set_req.V_LEVEL)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsSensor))
+            map_sv_types, devices, add_devices, MySensorsBinarySensor))
 
 
-class MySensorsSensor(Entity):
+class MySensorsBinarySensor(BinarySensorDevice):
     """Represent the value of a MySensors child node."""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
 
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
@@ -97,6 +70,7 @@ class MySensorsSensor(Entity):
         child_id (str): Id of child.
         _name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
         """
@@ -105,6 +79,7 @@ class MySensorsSensor(Entity):
         self.child_id = child_id
         self._name = name
         self.value_type = value_type
+        self.child_type = child_type
         self.battery_level = 0
         self._values = {}
 
@@ -117,40 +92,6 @@ class MySensorsSensor(Entity):
     def name(self):
         """The name of this entity."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if not self._values:
-            return ''
-        return self._values[self.value_type]
-
-    @property
-    def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
-        set_req = self.gateway.const.SetReq
-        unit_map = {
-            set_req.V_TEMP: (TEMP_CELCIUS
-                             if self.gateway.metric else TEMP_FAHRENHEIT),
-            set_req.V_HUM: '%',
-            set_req.V_DIMMER: '%',
-            set_req.V_LIGHT_LEVEL: '%',
-            set_req.V_WEIGHT: 'kg',
-            set_req.V_DISTANCE: 'm',
-            set_req.V_IMPEDANCE: 'ohm',
-            set_req.V_WATT: 'W',
-            set_req.V_KWH: 'kWh',
-            set_req.V_FLOW: 'm',
-            set_req.V_VOLUME: 'm3',
-            set_req.V_VOLTAGE: 'V',
-            set_req.V_CURRENT: 'A',
-        }
-        if float(self.gateway.version) >= 1.5:
-            if set_req.V_UNIT_PREFIX in self._values:
-                return self._values[
-                    set_req.V_UNIT_PREFIX]
-            unit_map.update({set_req.V_PERCENTAGE: '%'})
-        return unit_map.get(self.value_type)
 
     @property
     def device_state_attributes(self):
@@ -173,6 +114,33 @@ class MySensorsSensor(Entity):
                                   'version %s', value_type,
                                   self.gateway.version)
         return attr
+
+    @property
+    def is_on(self):
+        """Return True if the binary sensor is on."""
+        if self.value_type in self._values:
+            return self._values[self.value_type] == STATE_ON
+        return False
+
+    @property
+    def sensor_class(self):
+        """Return the class of this sensor, from SENSOR_CASSES."""
+        pres = self.gateway.const.Presentation
+        class_map = {
+            pres.S_DOOR: 'opening',
+            pres.S_MOTION: 'motion',
+            pres.S_SMOKE: 'smoke',
+        }
+        if float(self.gateway.version) >= 1.5:
+            class_map.update({
+                pres.S_SPRINKLER: 'sprinkler',
+                pres.S_WATER_LEAK: 'leak',
+                pres.S_SOUND: 'sound',
+                pres.S_VIBRATION: 'vibration',
+                pres.S_MOISTURE: 'moisture',
+            })
+        if class_map.get(self.child_type) in SENSOR_CLASSES:
+            return class_map.get(self.child_type)
 
     @property
     def available(self):
