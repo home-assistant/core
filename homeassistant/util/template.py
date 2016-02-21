@@ -148,17 +148,17 @@ class LocationHelpers(object):
 
 
 def forgiving_round(value, precision=0):
-    """ Rounding method that accepts strings. """
+    """Rounding filter that accepts strings."""
     try:
         value = round(float(value), precision)
         return int(value) if precision == 0 else value
-    except ValueError:
+    except (ValueError, TypeError):
         # If value can't be converted to float
         return value
 
 
 def multiply(value, amount):
-    """ Converts to float and multiplies value. """
+    """Filter to convert value to float and multiply it."""
     try:
         return float(value) * amount
     except ValueError:
@@ -167,9 +167,10 @@ def multiply(value, amount):
 
 
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
-    """ Home Assistant template environment. """
+    """Home Assistant template environment."""
 
     def is_safe_callable(self, obj):
+        """Test if callback is safe."""
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
 ENV = TemplateEnvironment()
