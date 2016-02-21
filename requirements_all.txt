@@ -225,6 +225,9 @@ radiotherm==1.2
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.5.1
 
+# homeassistant.components.sensor.deutsche_bahn
+schiene==0.14
+
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
