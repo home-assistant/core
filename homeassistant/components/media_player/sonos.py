@@ -6,17 +6,15 @@ Provides an interface to Sonos players (via SoCo)
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
-import logging
 import datetime
+import logging
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    MEDIA_TYPE_MUSIC)
-
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -47,10 +45,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     players = None
     hosts = config.get('hosts', None)
     if hosts:
+        # Support retro compatibility with comma separated list of hosts
+        # from config
+        hosts = hosts.split(',') if isinstance(hosts, str) else hosts
         players = []
-        for host in hosts.split(","):
-            host = socket.gethostbyname(host)
-            players.append(soco.SoCo(host))
+        for host in hosts:
+            players.append(soco.SoCo(socket.gethostbyname(host)))
 
     if not players:
         players = soco.discover(interface_addr=config.get('interface_addr',

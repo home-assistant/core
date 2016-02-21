@@ -6,17 +6,11 @@ https://home-assistant.io/components/light.mysensors/
 """
 import logging
 
-from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR)
-
-from homeassistant.util.color import (
-    rgb_hex_to_rgb_list)
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_ON, STATE_OFF)
-
 import homeassistant.components.mysensors as mysensors
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.util.color import rgb_hex_to_rgb_list
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_RGB_WHITE = 'rgb_white'
@@ -64,7 +58,8 @@ class MySensorsLight(Light):
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup instance attributes."""
         self.gateway = gateway
         self.node_id = node_id

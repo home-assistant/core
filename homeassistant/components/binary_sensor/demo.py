@@ -9,17 +9,23 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Demo binary sensors. """
     add_devices([
-        DemoBinarySensor('Basement Floor Wet', False),
-        DemoBinarySensor('Movement Backyard', True),
+        DemoBinarySensor('Basement Floor Wet', False, 'moisture'),
+        DemoBinarySensor('Movement Backyard', True, 'motion'),
     ])
 
 
 class DemoBinarySensor(BinarySensorDevice):
     """ A Demo binary sensor. """
 
-    def __init__(self, name, state):
+    def __init__(self, name, state, sensor_class):
         self._name = name
         self._state = state
+        self._sensor_type = sensor_class
+
+    @property
+    def sensor_class(self):
+        """ Return our class. """
+        return self._sensor_type
 
     @property
     def should_poll(self):

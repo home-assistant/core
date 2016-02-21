@@ -6,13 +6,14 @@ The rest sensor will consume responses sent by an exposed REST API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
+
 import requests
 
-from homeassistant.const import (CONF_VALUE_TEMPLATE, STATE_UNKNOWN)
-from homeassistant.util import template, Throttle
+from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle, template
 
 _LOGGER = logging.getLogger(__name__)
 

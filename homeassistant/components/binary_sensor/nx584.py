@@ -12,7 +12,8 @@ import time
 
 import requests
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    SENSOR_CLASSES, BinarySensorDevice)
 
 REQUIREMENTS = ['pynx584==0.2']
 _LOGGER = logging.getLogger(__name__)
@@ -24,9 +25,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     host = config.get('host', 'localhost:5007')
     exclude = config.get('exclude_zones', [])
+    zone_types = config.get('zone_types', {})
 
     if not all(isinstance(zone, int) for zone in exclude):
         _LOGGER.error('Invalid excluded zone specified (use zone number)')
+        return False
+
+    if not all(isinstance(zone, int) and ztype in SENSOR_CLASSES
+               for zone, ztype in zone_types.items()):
+        _LOGGER.error('Invalid zone_types entry')
         return False
 
     try:
@@ -42,7 +49,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     zone_sensors = {
-        zone['number']: NX584ZoneSensor(zone)
+        zone['number']: NX584ZoneSensor(
+            zone,
+            zone_types.get(zone['number'], 'opening'))
         for zone in zones
         if zone['number'] not in exclude}
     if zone_sensors:
@@ -58,8 +67,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NX584ZoneSensor(BinarySensorDevice):
     """Represents a NX584 zone as a sensor."""
 
-    def __init__(self, zone):
+    def __init__(self, zone, zone_type):
         self._zone = zone
+        self._zone_type = zone_type
+
+    @property
+    def sensor_class(self):
+        return self._zone_type
 
     @property
     def should_poll(self):

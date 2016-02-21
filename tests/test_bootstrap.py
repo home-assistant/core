@@ -9,13 +9,13 @@ import os
 import tempfile
 import unittest
 
-from homeassistant import bootstrap
+from homeassistant import bootstrap, loader
 from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockModule
 
 
 class TestBootstrap(unittest.TestCase):
@@ -61,6 +61,7 @@ class TestBootstrap(unittest.TestCase):
             self.assertTrue(os.path.isfile(check_file))
             bootstrap.process_ha_config_upgrade(hass)
             self.assertFalse(os.path.isfile(check_file))
+            hass.stop()
 
     def test_not_remove_lib_if_not_upgrade(self):
         with tempfile.TemporaryDirectory() as config_dir:
@@ -82,6 +83,7 @@ class TestBootstrap(unittest.TestCase):
             bootstrap.process_ha_config_upgrade(hass)
 
             self.assertTrue(os.path.isfile(check_file))
+            hass.stop()
 
     def test_entity_customization(self):
         """ Test entity customization through config """
@@ -102,3 +104,19 @@ class TestBootstrap(unittest.TestCase):
         state = hass.states.get('test.test')
 
         self.assertTrue(state.attributes['hidden'])
+        hass.stop()
+
+    def test_handle_setup_circular_dependency(self):
+        hass = get_test_home_assistant()
+
+        loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
+
+        def setup_a(hass, config):
+            bootstrap.setup_component(hass, 'comp_b')
+            return True
+
+        loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
+
+        bootstrap.setup_component(hass, 'comp_a')
+        self.assertEqual(['comp_a'], hass.config.components)
+        hass.stop()

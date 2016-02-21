@@ -7,10 +7,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
+
 import homeassistant.util as util
-from homeassistant.helpers import validate_config
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN
 from homeassistant.helpers import state as state_helper
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNKNOWN)
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 

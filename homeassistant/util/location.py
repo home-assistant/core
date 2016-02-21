@@ -9,6 +9,7 @@ detect_location_info and elevation are mocked by default during tests.
 import collections
 
 import requests
+
 from vincenty import vincenty
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'

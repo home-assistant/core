@@ -8,21 +8,14 @@ https://home-assistant.io/components/switch.template/
 """
 import logging
 
-from homeassistant.helpers.entity import generate_entity_id
-
-from homeassistant.components.switch import SwitchDevice
-
-from homeassistant.core import EVENT_STATE_CHANGED
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
-    ATTR_FRIENDLY_NAME,
-    CONF_VALUE_TEMPLATE)
-
-from homeassistant.helpers.service import call_from_config
-from homeassistant.util import template, slugify
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON)
+from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
-from homeassistant.components.switch import DOMAIN
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.service import call_from_config
+from homeassistant.util import slugify, template
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

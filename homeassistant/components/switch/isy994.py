@@ -8,9 +8,11 @@ https://home-assistant.io/components/isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
-                                             HIDDEN_STRING)
-from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
+from homeassistant.components.isy994 import (
+    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
+from homeassistant.const import STATE_OFF, STATE_ON  # STATE_OPEN, STATE_CLOSED
+
+
 # The frontend doesn't seem to fully support the open and closed states yet.
 # Once it does, the HA.doors programs should report open and closed instead of
 # off and on. It appears that on should be open and off should be closed.

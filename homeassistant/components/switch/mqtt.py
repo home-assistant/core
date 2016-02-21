@@ -7,9 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
 import logging
+
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,6 +96,11 @@ class MqttSwitch(SwitchDevice):
     def is_on(self):
         """ True if device is on. """
         return self._state
+
+    @property
+    def assumed_state(self):
+        """Return True if we do optimistic updates."""
+        return self._optimistic
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """

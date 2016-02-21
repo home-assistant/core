@@ -6,7 +6,6 @@ Demo notification service.
 """
 from homeassistant.components.notify import ATTR_TITLE, BaseNotificationService
 
-
 EVENT_NOTIFY = "notify"
 
 

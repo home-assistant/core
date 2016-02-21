@@ -8,10 +8,10 @@ https://home-assistant.io/components/isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
-                                             HIDDEN_STRING)
-from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_HOME,
-                                 STATE_NOT_HOME, STATE_ON, STATE_OFF)
+from homeassistant.components.isy994 import (
+    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
+from homeassistant.const import (
+    STATE_CLOSED, STATE_HOME, STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN)
 
 DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
                           'Temperature_Average', 'Pressure', 'Dew_Point',

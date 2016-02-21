@@ -14,8 +14,7 @@ import threading
 import time
 
 from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state
 
 DOMAIN = "graphite"
