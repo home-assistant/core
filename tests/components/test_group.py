@@ -8,7 +8,8 @@ Tests the group compoments.
 import unittest
 
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN)
+    STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
+    ATTR_ASSUMED_STATE, )
 import homeassistant.components.group as group
 
 from tests.common import get_test_home_assistant
@@ -21,19 +22,13 @@ class TestComponentsGroup(unittest.TestCase):
         """ Init needed objects. """
         self.hass = get_test_home_assistant()
 
-        self.hass.states.set('light.Bowl', STATE_ON)
-        self.hass.states.set('light.Ceiling', STATE_OFF)
-        test_group = group.Group(
-            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
-
-        self.group_entity_id = test_group.entity_id
-
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
 
     def test_setup_group_with_mixed_groupable_states(self):
         """ Try to setup a group with mixed groupable states """
+        self.hass.states.set('light.Bowl', STATE_ON)
         self.hass.states.set('device_tracker.Paulus', STATE_HOME)
         group.Group(
             self.hass, 'person_and_light',
@@ -46,6 +41,8 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_setup_group_with_a_non_existing_state(self):
         """ Try to setup a group with a non existing state """
+        self.hass.states.set('light.Bowl', STATE_ON)
+
         grp = group.Group(
             self.hass, 'light_and_nothing',
             ['light.Bowl', 'non.existing'])
@@ -70,11 +67,15 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_monitor_group(self):
         """ Test if the group keeps track of states. """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
         # Test if group setup in our init mode is ok
-        self.assertIn(self.group_entity_id, self.hass.states.entity_ids())
+        self.assertIn(test_group.entity_id, self.hass.states.entity_ids())
 
-        group_state = self.hass.states.get(self.group_entity_id)
+        group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
         self.assertTrue(group_state.attributes.get(group.ATTR_AUTO))
 
@@ -83,54 +84,73 @@ class TestComponentsGroup(unittest.TestCase):
         Test if the group turns off if the last device that was on turns off.
         """
         self.hass.states.set('light.Bowl', STATE_OFF)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
         self.hass.pool.block_till_done()
 
-        group_state = self.hass.states.get(self.group_entity_id)
+        group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_OFF, group_state.state)
 
     def test_group_turns_on_if_all_are_off_and_one_turns_on(self):
         """
         Test if group turns on if all devices were turned off and one turns on.
         """
-        # Make sure all are off.
         self.hass.states.set('light.Bowl', STATE_OFF)
-        self.hass.pool.block_till_done()
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
         # Turn one on
         self.hass.states.set('light.Ceiling', STATE_ON)
         self.hass.pool.block_till_done()
 
-        group_state = self.hass.states.get(self.group_entity_id)
+        group_state = self.hass.states.get(test_group.entity_id)
         self.assertEqual(STATE_ON, group_state.state)
 
     def test_is_on(self):
         """ Test is_on method. """
-        self.assertTrue(group.is_on(self.hass, self.group_entity_id))
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+
+        self.assertTrue(group.is_on(self.hass, test_group.entity_id))
         self.hass.states.set('light.Bowl', STATE_OFF)
         self.hass.pool.block_till_done()
-        self.assertFalse(group.is_on(self.hass, self.group_entity_id))
+        self.assertFalse(group.is_on(self.hass, test_group.entity_id))
 
         # Try on non existing state
         self.assertFalse(group.is_on(self.hass, 'non.existing'))
 
     def test_expand_entity_ids(self):
         """ Test expand_entity_ids method. """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+
         self.assertEqual(sorted(['light.ceiling', 'light.bowl']),
                          sorted(group.expand_entity_ids(
-                             self.hass, [self.group_entity_id])))
+                             self.hass, [test_group.entity_id])))
 
     def test_expand_entity_ids_does_not_return_duplicates(self):
         """ Test that expand_entity_ids does not return duplicates. """
-        self.assertEqual(
-            ['light.bowl', 'light.ceiling'],
-            sorted(group.expand_entity_ids(
-                self.hass, [self.group_entity_id, 'light.Ceiling'])))
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
             sorted(group.expand_entity_ids(
-                self.hass, ['light.bowl', self.group_entity_id])))
+                self.hass, [test_group.entity_id, 'light.Ceiling'])))
+
+        self.assertEqual(
+            ['light.bowl', 'light.ceiling'],
+            sorted(group.expand_entity_ids(
+                self.hass, ['light.bowl', test_group.entity_id])))
 
     def test_expand_entity_ids_ignores_non_strings(self):
         """ Test that non string elements in lists are ignored. """
@@ -138,9 +158,14 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_get_entity_ids(self):
         """ Test get_entity_ids method. """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+
         self.assertEqual(
             ['light.bowl', 'light.ceiling'],
-            sorted(group.get_entity_ids(self.hass, self.group_entity_id)))
+            sorted(group.get_entity_ids(self.hass, test_group.entity_id)))
 
     def test_get_entity_ids_with_domain_filter(self):
         """ Test if get_entity_ids works with a domain_filter. """
@@ -190,13 +215,18 @@ class TestComponentsGroup(unittest.TestCase):
 
     def test_setup(self):
         """ Test setup method. """
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
+
         self.assertTrue(
             group.setup(
                 self.hass,
                 {
                     group.DOMAIN: {
                         'second_group': {
-                            'entities': 'light.Bowl, ' + self.group_entity_id,
+                            'entities': 'light.Bowl, ' + test_group.entity_id,
                             'icon': 'mdi:work',
                             'view': True,
                         },
@@ -207,7 +237,7 @@ class TestComponentsGroup(unittest.TestCase):
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))
         self.assertEqual(STATE_ON, group_state.state)
-        self.assertEqual(set((self.group_entity_id, 'light.bowl')),
+        self.assertEqual(set((test_group.entity_id, 'light.bowl')),
                          set(group_state.attributes['entity_id']))
         self.assertIsNone(group_state.attributes.get(group.ATTR_AUTO))
         self.assertEqual('mdi:work',
@@ -242,3 +272,27 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.test_1', 'light.test_2', 'switch.test_1', 'switch.test_2'],
             sorted(group.expand_entity_ids(self.hass,
                                            ['group.group_of_groups'])))
+
+    def test_set_assumed_state_based_on_tracked(self):
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.states.set('light.Ceiling', STATE_OFF)
+        test_group = group.Group(
+            self.hass, 'init_group',
+            ['light.Bowl', 'light.Ceiling', 'sensor.no_exist'])
+
+        state = self.hass.states.get(test_group.entity_id)
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        self.hass.states.set('light.Bowl', STATE_ON, {
+            ATTR_ASSUMED_STATE: True
+        })
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get(test_group.entity_id)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        self.hass.states.set('light.Bowl', STATE_ON)
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get(test_group.entity_id)
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
