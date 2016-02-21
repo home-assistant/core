@@ -142,6 +142,7 @@ omit =
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/edimax.py
+    homeassistant/components/switch/dlink.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
