@@ -84,6 +84,19 @@ class TestUtilTemplate(unittest.TestCase):
                 '{{ "no_number" | round }}'
             ))
 
+    def test_multiply(self):
+        tests = {
+            None: 'None',
+            10: '100',
+            '"abcd"': 'abcd'
+        }
+
+        for inp, out in tests.items():
+            self.assertEqual(
+                out,
+                template.render(self.hass,
+                                '{{ %s | multiply(10) | round }}' % inp))
+
     def test_passing_vars_as_keywords(self):
         self.assertEqual(
             '127', template.render(self.hass, '{{ hello }}', hello=127))
