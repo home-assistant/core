@@ -10,17 +10,16 @@ at https://home-assistant.io/components/zwave/
 # pylint: disable=import-error
 import datetime
 
-from homeassistant.helpers.event import track_point_in_time
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.zwave import (
-    NETWORK, ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SENSOR_BINARY,
-    COMMAND_CLASS_SENSOR_MULTILEVEL, COMMAND_CLASS_METER, TYPE_DECIMAL,
-    COMMAND_CLASS_ALARM, ZWaveDeviceEntity, get_config_value)
-
+    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_ALARM, COMMAND_CLASS_METER,
+    COMMAND_CLASS_SENSOR_BINARY, COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
+    TYPE_DECIMAL, ZWaveDeviceEntity, get_config_value)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_point_in_time
 
 PHILIO = '0x013c'
 PHILIO_SLIM_SENSOR = '0x0002'
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #   platform: zwave
     #
     # `setup_platform` will be called without `discovery_info`.
-    if discovery_info is None:
+    if discovery_info is None or NETWORK is None:
         return
 
     node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]

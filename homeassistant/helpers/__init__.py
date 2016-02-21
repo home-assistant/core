@@ -61,4 +61,4 @@ def config_per_platform(config, domain, logger):
 def extract_domain_configs(config, domain):
     """ Extract keys from config for given domain name. """
     pattern = re.compile(r'^{}(| .+)$'.format(domain))
-    return (key for key in config.keys() if pattern.match(key))
+    return [key for key in config.keys() if pattern.match(key)]

@@ -1,6 +1,6 @@
 """
-ha_tests.test_loader
-~~~~~~~~~~~~~~~~~~~~~~
+tests.test_loader
+~~~~~~~~~~~~~~~~~
 
 Provides tests to verify that we can load components.
 """

@@ -8,7 +8,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.efergy/
 """
 import logging
-from requests import get, RequestException
+
+from requests import RequestException, get
 
 from homeassistant.helpers.entity import Entity
 
@@ -97,5 +98,5 @@ class EfergySensor(Entity):
                 self._state = response.json()['sum']
             else:
                 self._state = 'Unknown'
-        except (RequestException, ValueError):
+        except (RequestException, ValueError, KeyError):
             _LOGGER.warning('Could not update status for %s', self.name)

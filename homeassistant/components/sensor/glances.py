@@ -6,14 +6,14 @@ Gathers system information of hosts which running glances.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import requests
 
-from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

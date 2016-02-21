@@ -1,42 +1,38 @@
 """
-tests.test_component_alexa
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_alexa
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant Alexa component does what it should do.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 import json
-from unittest.mock import patch
 
 import requests
 
 from homeassistant import bootstrap, const
-import homeassistant.core as ha
 from homeassistant.components import alexa, http
 
+from tests.common import get_test_instance_port, get_test_home_assistant
+
 API_PASSWORD = "test1234"
-
-# Somehow the socket that holds the default port does not get released
-# when we close down HA in a different test case. Until I have figured
-# out what is going on, let's run this test on a different port.
-SERVER_PORT = 8119
-
+SERVER_PORT = get_test_instance_port()
 API_URL = "http://127.0.0.1:{}{}".format(SERVER_PORT, alexa.API_ENDPOINT)
-
 HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
+
+SESSION_ID = 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000'
+APPLICATION_ID = 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+REQUEST_ID = 'amzn1.echo-api.request.0000000-0000-0000-0000-00000000000'
 
 hass = None
 calls = []
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
-    """Initalize a Home Assistant server for testing this module."""
+def setUpModule():   # pylint: disable=invalid-name
+    """ Initalize a Home Assistant server for testing this module. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     bootstrap.setup_component(
         hass, http.DOMAIN,
@@ -53,10 +49,16 @@ def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
                         'type': 'plaintext',
                         'text':
                         """
-                            {%- if is_state('device_tracker.paulus', 'home') and is_state('device_tracker.anne_therese', 'home') -%}
+                            {%- if is_state('device_tracker.paulus', 'home')
+                                   and is_state('device_tracker.anne_therese',
+                                                'home') -%}
                                 You are both home, you silly
                             {%- else -%}
-                                Anne Therese is at {{ states("device_tracker.anne_therese") }} and Paulus is at {{ states("device_tracker.paulus") }}
+                                Anne Therese is at {{
+                                    states("device_tracker.anne_therese")
+                                }} and Paulus is at {{
+                                    states("device_tracker.paulus")
+                                }}
                             {% endif %}
                         """,
                     }
@@ -100,14 +102,17 @@ def _req(data={}):
 class TestAlexa(unittest.TestCase):
     """ Test Alexa. """
 
+    def tearDown(self):
+        hass.pool.block_till_done()
+
     def test_launch_request(self):
         data = {
             'version': '1.0',
             'session': {
                 'new': True,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {},
                 'user': {
@@ -116,7 +121,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'LaunchRequest',
-                'requestId': 'amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z'
             }
         }
@@ -130,9 +135,9 @@ class TestAlexa(unittest.TestCase):
             'version': '1.0',
             'session': {
                 'new': False,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {
                     'supportedHoroscopePeriods': {
@@ -147,7 +152,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'IntentRequest',
-                'requestId': ' amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'GetZodiacHoroscopeIntent',
@@ -162,7 +167,8 @@ class TestAlexa(unittest.TestCase):
         }
         req = _req(data)
         self.assertEqual(200, req.status_code)
-        text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
+        text = req.json().get('response', {}).get('outputSpeech',
+                                                  {}).get('text')
         self.assertEqual('You told us your sign is virgo.', text)
 
     def test_intent_request_with_slots_but_no_value(self):
@@ -170,9 +176,9 @@ class TestAlexa(unittest.TestCase):
             'version': '1.0',
             'session': {
                 'new': False,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {
                     'supportedHoroscopePeriods': {
@@ -187,7 +193,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'IntentRequest',
-                'requestId': ' amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'GetZodiacHoroscopeIntent',
@@ -201,7 +207,8 @@ class TestAlexa(unittest.TestCase):
         }
         req = _req(data)
         self.assertEqual(200, req.status_code)
-        text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
+        text = req.json().get('response', {}).get('outputSpeech',
+                                                  {}).get('text')
         self.assertEqual('You told us your sign is .', text)
 
     def test_intent_request_without_slots(self):
@@ -209,9 +216,9 @@ class TestAlexa(unittest.TestCase):
             'version': '1.0',
             'session': {
                 'new': False,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {
                     'supportedHoroscopePeriods': {
@@ -226,7 +233,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'IntentRequest',
-                'requestId': ' amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'WhereAreWeIntent',
@@ -235,16 +242,19 @@ class TestAlexa(unittest.TestCase):
         }
         req = _req(data)
         self.assertEqual(200, req.status_code)
-        text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
+        text = req.json().get('response', {}).get('outputSpeech',
+                                                  {}).get('text')
 
-        self.assertEqual('Anne Therese is at unknown and Paulus is at unknown', text)
+        self.assertEqual('Anne Therese is at unknown and Paulus is at unknown',
+                         text)
 
         hass.states.set('device_tracker.paulus', 'home')
         hass.states.set('device_tracker.anne_therese', 'home')
 
         req = _req(data)
         self.assertEqual(200, req.status_code)
-        text = req.json().get('response', {}).get('outputSpeech', {}).get('text')
+        text = req.json().get('response', {}).get('outputSpeech',
+                                                  {}).get('text')
         self.assertEqual('You are both home, you silly', text)
 
     def test_intent_request_calling_service(self):
@@ -252,9 +262,9 @@ class TestAlexa(unittest.TestCase):
             'version': '1.0',
             'session': {
                 'new': False,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {},
                 'user': {
@@ -263,7 +273,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'IntentRequest',
-                'requestId': ' amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'CallServiceIntent',
@@ -285,9 +295,9 @@ class TestAlexa(unittest.TestCase):
             'version': '1.0',
             'session': {
                 'new': False,
-                'sessionId': 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000',
+                'sessionId': SESSION_ID,
                 'application': {
-                    'applicationId': 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
+                    'applicationId': APPLICATION_ID
                 },
                 'attributes': {
                     'supportedHoroscopePeriods': {
@@ -302,7 +312,7 @@ class TestAlexa(unittest.TestCase):
             },
             'request': {
                 'type': 'SessionEndedRequest',
-                'requestId': 'amzn1.echo-api.request.0000000-0000-0000-0000-00000000000',
+                'requestId': REQUEST_ID,
                 'timestamp': '2015-05-13T12:34:56Z',
                 'reason': 'USER_INITIATED'
             }

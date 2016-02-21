@@ -1,5 +1,12 @@
+"""
+tests.__init__
+~~~~~~~~~~~~~~
+
+Tests initialization.
+"""
 import betamax
 
+from homeassistant import util
 from homeassistant.util import location
 
 with betamax.Betamax.configure() as config:
@@ -22,3 +29,4 @@ location.detect_location_info = lambda: location.LocationInfo(
 )
 
 location.elevation = lambda latitude, longitude: 0
+util.get_local_ip = lambda: '127.0.0.1'

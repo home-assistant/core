@@ -7,18 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.rfxtrx/
 """
 import logging
-import homeassistant.components.rfxtrx as rfxtrx
 
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
+import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.rfxtrx import (
+    ATTR_FIREEVENT, ATTR_NAME, ATTR_PACKETID, ATTR_STATE, EVENT_BUTTON_PRESSED)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.util import slugify
 
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.components.rfxtrx import (
-    ATTR_STATE, ATTR_FIREEVENT, ATTR_PACKETID,
-    ATTR_NAME, EVENT_BUTTON_PRESSED)
-
-
 DEPENDENCIES = ['rfxtrx']
+SIGNAL_REPETITIONS = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     lights = []
     devices = config.get('devices', None)
+    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     if devices:
         for entity_id, entity_info in devices.items():
@@ -41,8 +40,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
                 rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
                 new_light = RfxtrxLight(
-                    entity_info[ATTR_NAME], rfxobject, datas
-                )
+                    entity_info[ATTR_NAME], rfxobject, datas,
+                    signal_repetitions)
                 rfxtrx.RFX_DEVICES[entity_id] = new_light
                 lights.append(new_light)
 
@@ -70,7 +69,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             entity_name = "%s : %s" % (entity_id, pkt_id)
             datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
-            new_light = RfxtrxLight(entity_name, event, datas)
+            signal_repetitions = config.get('signal_repetitions',
+                                            SIGNAL_REPETITIONS)
+            new_light = RfxtrxLight(entity_name, event, datas,
+                                    signal_repetitions)
             rfxtrx.RFX_DEVICES[entity_id] = new_light
             add_devices_callback([new_light])
 
@@ -120,11 +122,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class RfxtrxLight(Light):
     """ Provides a RFXtrx light. """
-    def __init__(self, name, event, datas):
+    def __init__(self, name, event, datas, signal_repetitions):
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
+        self.signal_repetitions = signal_repetitions
         self._brightness = 0
 
     @property
@@ -152,18 +155,26 @@ class RfxtrxLight(Light):
         """ Brightness of this light between 0..255. """
         return self._brightness
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return True
+
     def turn_on(self, **kwargs):
         """ Turn the light on. """
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if not self._event:
+            return
 
         if brightness is None:
             self._brightness = 100
+            for _ in range(self.signal_repetitions):
+                self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
         else:
             self._brightness = ((brightness + 4) * 100 // 255 - 1)
-
-        if hasattr(self, '_event') and self._event:
-            self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
-                                        self._brightness)
+            for _ in range(self.signal_repetitions):
+                self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
+                                            self._brightness)
 
         self._brightness = (self._brightness * 255 // 100)
         self._state = True
@@ -172,7 +183,10 @@ class RfxtrxLight(Light):
     def turn_off(self, **kwargs):
         """ Turn the light off. """
 
-        if hasattr(self, '_event') and self._event:
+        if not self._event:
+            return
+
+        for _ in range(self.signal_repetitions):
             self._event.device.send_off(rfxtrx.RFXOBJECT.transport)
 
         self._brightness = 0

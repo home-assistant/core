@@ -9,7 +9,7 @@ https://home-assistant.io/components/notify.pushbullet/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TARGET, BaseNotificationService)
+    ATTR_TARGET, ATTR_TITLE, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)

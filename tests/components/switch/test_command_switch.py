@@ -1,6 +1,6 @@
 """
 tests.components.switch.test_command_switch
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command switch.
 """
@@ -9,16 +9,17 @@ import os
 import tempfile
 import unittest
 
-from homeassistant import core
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
+
+from tests.common import get_test_home_assistant
 
 
 class TestCommandSwitch(unittest.TestCase):
     """ Test the command switch. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = core.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -55,7 +56,6 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
 
-
     def test_state_value(self):
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
@@ -79,7 +79,7 @@ class TestCommandSwitch(unittest.TestCase):
 
             switch.turn_on(self.hass, 'switch.test')
             self.hass.pool.block_till_done()
-        
+
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
@@ -88,7 +88,6 @@ class TestCommandSwitch(unittest.TestCase):
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_OFF, state.state)
-
 
     def test_state_json_value(self):
         with tempfile.TemporaryDirectory() as tempdirname:

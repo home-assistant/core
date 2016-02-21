@@ -1,20 +1,21 @@
 """
 tests.components.automation.test_template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests template automation.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
+
+from tests.common import get_test_home_assistant
 
 
 class TestAutomationTemplate(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
@@ -256,7 +257,8 @@ class TestAutomationTemplate(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
-                    'value_template': '{{ not is_state("test.entity", "world") }}',
+                    'value_template':
+                    '{{ not is_state("test.entity", "world") }}',
                 },
                 'action': {
                     'service': 'test.automation'

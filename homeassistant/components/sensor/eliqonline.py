@@ -7,8 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.eliqonline/
 """
 import logging
+from urllib.error import URLError
+
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,5 +75,5 @@ class EliqSensor(Entity):
         try:
             response = self.api.get_data_now(channelid=self.channel_id)
             self._state = int(response.power)
-        except TypeError:  # raised by eliqonline library on any HTTP error
-            pass
+        except (TypeError, URLError):
+            _LOGGER.error("could not connect to the eliqonline servers")

@@ -1,6 +1,6 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_init
+~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant util methods.
 """

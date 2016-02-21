@@ -1,22 +1,23 @@
 """
 tests.components.rollershutter.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests MQTT rollershutter.
 """
 import unittest
 
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
-import homeassistant.core as ha
 import homeassistant.components.rollershutter as rollershutter
 from tests.common import mock_mqtt_component, fire_mqtt_message
+
+from tests.common import get_test_home_assistant
 
 
 class TestRollershutterMQTT(unittest.TestCase):
     """ Test the MQTT rollershutter. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name

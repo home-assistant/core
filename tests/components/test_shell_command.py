@@ -1,8 +1,8 @@
 """
-tests.test_shell_command
-~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_shell_command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests demo component.
+Tests Shell command component.
 """
 import os
 import tempfile
@@ -10,15 +10,16 @@ import unittest
 from unittest.mock import patch
 from subprocess import SubprocessError
 
-from homeassistant import core
 from homeassistant.components import shell_command
+
+from tests.common import get_test_home_assistant
 
 
 class TestShellCommand(unittest.TestCase):
     """ Test the demo module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = core.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

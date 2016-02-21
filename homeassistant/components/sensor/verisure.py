@@ -9,9 +9,8 @@ documentation at https://home-assistant.io/components/verisure/
 import logging
 
 import homeassistant.components.verisure as verisure
-
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +36,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for value in verisure.CLIMATE_STATUS.values()
         if verisure.SHOW_HYGROMETERS and
         hasattr(value, 'humidity') and value.humidity
+        ])
+
+    sensors.extend([
+        VerisureMouseDetection(value)
+        for value in verisure.MOUSEDETECTION_STATUS.values()
+        if verisure.SHOW_MOUSEDETECTION and
+        hasattr(value, 'amountText') and value.amountText
         ])
 
     add_devices(sensors)
@@ -98,3 +104,31 @@ class VerisureHygrometer(Entity):
     def update(self):
         """ update sensor """
         verisure.update_climate()
+
+
+class VerisureMouseDetection(Entity):
+    """ represents a Verisure mousedetector within home assistant. """
+
+    def __init__(self, mousedetection_status):
+        self._id = mousedetection_status.deviceLabel
+
+    @property
+    def name(self):
+        """ Returns the name of the device. """
+        return '{} {}'.format(
+            verisure.MOUSEDETECTION_STATUS[self._id].location,
+            "Mouse")
+
+    @property
+    def state(self):
+        """ Returns the state of the device. """
+        return verisure.MOUSEDETECTION_STATUS[self._id].count
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity """
+        return "Mice"
+
+    def update(self):
+        """ update sensor """
+        verisure.update_mousedetection()

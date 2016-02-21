@@ -7,13 +7,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import homeassistant.core as ha
-from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.entity import (
-    Entity, split_entity_id, generate_entity_id)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF,
-    STATE_HOME, STATE_NOT_HOME, STATE_OPEN, STATE_CLOSED,
-    STATE_UNKNOWN, CONF_NAME, CONF_ICON)
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_UNKNOWN)
+from homeassistant.helpers.entity import (
+    Entity, generate_entity_id, split_entity_id)
+from homeassistant.helpers.event import track_state_change
 
 DOMAIN = 'group'
 

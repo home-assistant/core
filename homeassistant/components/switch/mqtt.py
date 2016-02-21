@@ -7,9 +7,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
 import logging
+
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.util import template
 
 _LOGGER = logging.getLogger(__name__)

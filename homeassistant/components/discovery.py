@@ -1,6 +1,4 @@
 """
-homeassistant.components.discovery
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Starts a service to scan in intervals for new devices.
 
 Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
@@ -13,8 +11,8 @@ import threading
 
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_PLATFORM_DISCOVERED,
-    ATTR_SERVICE, ATTR_DISCOVERED)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
+    EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
 REQUIREMENTS = ['netdisco==0.5.2']
@@ -39,22 +37,39 @@ SERVICE_HANDLERS = {
 
 
 def listen(hass, service, callback):
-    """
-    Setup listener for discovery of specific service.
+    """Setup listener for discovery of specific service.
+
     Service can be a string or a list/tuple.
     """
-
     if isinstance(service, str):
         service = (service,)
     else:
         service = tuple(service)
 
     def discovery_event_listener(event):
-        """ Listens for discovery events. """
+        """Listen for discovery events."""
         if event.data[ATTR_SERVICE] in service:
-            callback(event.data[ATTR_SERVICE], event.data[ATTR_DISCOVERED])
+            callback(event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED))
 
     hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
+
+
+def discover(hass, service, discovered=None, component=None, hass_config=None):
+    """Fire discovery event.
+
+    Can ensure a component is loaded.
+    """
+    if component is not None:
+        bootstrap.setup_component(hass, component, hass_config)
+
+    data = {
+        ATTR_SERVICE: service
+    }
+
+    if discovered is not None:
+        data[ATTR_DISCOVERED] = discovered
+
+    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
 
 
 def setup(hass, config):

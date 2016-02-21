@@ -7,6 +7,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+
 from homeassistant.util import slugify
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.4.zip' +

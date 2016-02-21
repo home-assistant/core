@@ -14,8 +14,9 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELCIUS,
 )
-import homeassistant.core as ha
-from homeassistant.components import switch, thermostat
+from homeassistant.components import thermostat
+
+from tests.common import get_test_home_assistant
 
 
 entity = 'thermostat.test'
@@ -30,7 +31,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     """ Test the Heat Control thermostat. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELCIUS
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
@@ -138,4 +139,3 @@ class TestThermostatHeatControl(unittest.TestCase):
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
-

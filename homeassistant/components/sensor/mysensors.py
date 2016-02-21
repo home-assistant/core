@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.mysensors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -8,14 +6,10 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    TEMP_CELCIUS,
-    STATE_ON, STATE_OFF)
-
 import homeassistant.components.mysensors as mysensors
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -30,13 +24,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a defaultdict(list).
+        # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_DOOR: [set_req.V_TRIPPED],
-            pres.S_MOTION: [set_req.V_TRIPPED],
-            pres.S_SMOKE: [set_req.V_TRIPPED],
             pres.S_TEMP: [set_req.V_TEMP],
             pres.S_HUM: [set_req.V_HUM],
             pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
@@ -70,9 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                     set_req.V_IMPEDANCE],
                 pres.S_SPRINKLER: [set_req.V_TRIPPED],
                 pres.S_WATER_LEAK: [set_req.V_TRIPPED],
-                pres.S_SOUND: [set_req.V_TRIPPED, set_req.V_LEVEL],
-                pres.S_VIBRATION: [set_req.V_TRIPPED, set_req.V_LEVEL],
-                pres.S_MOISTURE: [set_req.V_TRIPPED, set_req.V_LEVEL],
+                pres.S_SOUND: [set_req.V_LEVEL],
+                pres.S_VIBRATION: [set_req.V_LEVEL],
+                pres.S_MOISTURE: [set_req.V_LEVEL],
                 pres.S_AIR_QUALITY: [set_req.V_LEVEL],
                 pres.S_DUST: [set_req.V_LEVEL],
             })
@@ -88,7 +79,8 @@ class MySensorsSensor(Entity):
 
     # pylint: disable=too-many-arguments
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup class attributes on instantiation.
 
         Args:
@@ -97,6 +89,7 @@ class MySensorsSensor(Entity):
         child_id (str): Id of child.
         name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
 
         Attributes:
         gateway (GatewayWrapper): Gateway object.
@@ -135,27 +128,28 @@ class MySensorsSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit of measurement of this entity."""
-        # HA will convert to degrees F if needed
+        set_req = self.gateway.const.SetReq
         unit_map = {
-            self.gateway.const.SetReq.V_TEMP: TEMP_CELCIUS,
-            self.gateway.const.SetReq.V_HUM: '%',
-            self.gateway.const.SetReq.V_DIMMER: '%',
-            self.gateway.const.SetReq.V_LIGHT_LEVEL: '%',
-            self.gateway.const.SetReq.V_WEIGHT: 'kg',
-            self.gateway.const.SetReq.V_DISTANCE: 'm',
-            self.gateway.const.SetReq.V_IMPEDANCE: 'ohm',
-            self.gateway.const.SetReq.V_WATT: 'W',
-            self.gateway.const.SetReq.V_KWH: 'kWh',
-            self.gateway.const.SetReq.V_FLOW: 'm',
-            self.gateway.const.SetReq.V_VOLUME: 'm3',
-            self.gateway.const.SetReq.V_VOLTAGE: 'V',
-            self.gateway.const.SetReq.V_CURRENT: 'A',
+            set_req.V_TEMP: (TEMP_CELCIUS
+                             if self.gateway.metric else TEMP_FAHRENHEIT),
+            set_req.V_HUM: '%',
+            set_req.V_DIMMER: '%',
+            set_req.V_LIGHT_LEVEL: '%',
+            set_req.V_WEIGHT: 'kg',
+            set_req.V_DISTANCE: 'm',
+            set_req.V_IMPEDANCE: 'ohm',
+            set_req.V_WATT: 'W',
+            set_req.V_KWH: 'kWh',
+            set_req.V_FLOW: 'm',
+            set_req.V_VOLUME: 'm3',
+            set_req.V_VOLTAGE: 'V',
+            set_req.V_CURRENT: 'A',
         }
         if float(self.gateway.version) >= 1.5:
-            if self.gateway.const.SetReq.V_UNIT_PREFIX in self._values:
+            if set_req.V_UNIT_PREFIX in self._values:
                 return self._values[
-                    self.gateway.const.SetReq.V_UNIT_PREFIX]
-            unit_map.update({self.gateway.const.SetReq.V_PERCENTAGE: '%'})
+                    set_req.V_UNIT_PREFIX]
+            unit_map.update({set_req.V_PERCENTAGE: '%'})
         return unit_map.get(self.value_type)
 
     @property
@@ -190,7 +184,7 @@ class MySensorsSensor(Entity):
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_TRIPPED:
                 self._values[value_type] = STATE_ON if int(

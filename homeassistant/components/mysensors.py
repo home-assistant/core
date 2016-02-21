@@ -1,5 +1,6 @@
 """
-homeassistant.components.mysensors
+homeassistant.components.mysensors.
+
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MySensors component that connects to a MySensors gateway via pymysensors
 API.
@@ -9,14 +10,11 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 import homeassistant.bootstrap as bootstrap
-
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED,
-    TEMP_CELCIUS,)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS)
+from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
 CONF_PORT = 'port'
@@ -25,6 +23,7 @@ CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
 CONF_BAUD_RATE = 'baud_rate'
+CONF_OPTIMISTIC = 'optimistic'
 DEFAULT_VERSION = '1.4'
 DEFAULT_BAUD_RATE = 115200
 
@@ -32,7 +31,7 @@ DOMAIN = 'mysensors'
 DEPENDENCIES = []
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    '005bff4c5ca7a56acd30e816bc3bcdb5cb2d46fd.zip#pymysensors==0.4']
+    'f0c928532167fb24823efa793ec21ca646fd37a6.zip#pymysensors==0.5']
 _LOGGER = logging.getLogger(__name__)
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
@@ -40,13 +39,17 @@ ATTR_PORT = 'port'
 
 GATEWAYS = None
 
-DISCOVER_SENSORS = "mysensors.sensors"
-DISCOVER_SWITCHES = "mysensors.switches"
+DISCOVER_SENSORS = 'mysensors.sensors'
+DISCOVER_SWITCHES = 'mysensors.switches'
+DISCOVER_LIGHTS = 'mysensors.lights'
+DISCOVER_BINARY_SENSORS = 'mysensors.binary_sensor'
 
 # Maps discovered services to their platforms
 DISCOVERY_COMPONENTS = [
     ('sensor', DISCOVER_SENSORS),
     ('switch', DISCOVER_SWITCHES),
+    ('light', DISCOVER_LIGHTS),
+    ('binary_sensor', DISCOVER_BINARY_SENSORS),
 ]
 
 
@@ -76,7 +79,8 @@ def setup(hass, config):
                                           baud=baud_rate)
         gateway.metric = is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
-        gateway = GatewayWrapper(gateway, version)
+        optimistic = config[DOMAIN].get(CONF_OPTIMISTIC, False)
+        gateway = GatewayWrapper(gateway, version, optimistic)
         # pylint: disable=attribute-defined-outside-init
         gateway.event_callback = gateway.callback_factory()
 
@@ -141,8 +145,12 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                     continue
                 name = '{} {}.{}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
-                devices[key] = entity_class(
-                    gateway, node_id, child.id, name, value_type)
+                if isinstance(entity_class, dict):
+                    device_class = entity_class[child.type]
+                else:
+                    device_class = entity_class
+                devices[key] = device_class(
+                    gateway, node_id, child.id, name, value_type, child.type)
 
                 _LOGGER.info('Adding new devices: %s', devices[key])
                 add_devices([devices[key]])
@@ -152,26 +160,29 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
 
 
 class GatewayWrapper(object):
-    """Gateway wrapper class, by subclassing serial gateway."""
+    """Gateway wrapper class."""
 
-    def __init__(self, gateway, version):
+    def __init__(self, gateway, version, optimistic):
         """Setup class attributes on instantiation.
 
         Args:
         gateway (mysensors.SerialGateway): Gateway to wrap.
         version (str): Version of mysensors API.
+        optimistic (bool): Send values to actuators without feedback state.
 
         Attributes:
         _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
         version (str): Version of mysensors API.
         platform_callbacks (list): Callback functions, one per platform.
         const (module): Mysensors API constants.
+        optimistic (bool): Send values to actuators without feedback state.
         __initialised (bool): True if GatewayWrapper is initialised.
         """
         self._wrapped_gateway = gateway
         self.version = version
         self.platform_callbacks = []
         self.const = self.get_const()
+        self.optimistic = optimistic
         self.__initialised = True
 
     def __getattr__(self, name):
@@ -204,7 +215,7 @@ class GatewayWrapper(object):
         """Return a new callback function."""
         def node_update(update_type, node_id):
             """Callback for node updates from the MySensors gateway."""
-            _LOGGER.info('update %s: node %s', update_type, node_id)
+            _LOGGER.debug('update %s: node %s', update_type, node_id)
             for callback in self.platform_callbacks:
                 callback(self, node_id)
 

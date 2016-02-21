@@ -7,6 +7,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ifttt/
 """
 import logging
+
 import requests
 
 from homeassistant.helpers import validate_config

@@ -1,21 +1,27 @@
-# -*- coding: utf-8 -*-
+"""
+tests.components.test_weblink
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tests weblink component.
+"""
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.components import weblink
 
+from tests.common import get_test_home_assistant
 
-class TestComponentHistory(unittest.TestCase):
+
+class TestComponentWeblink(unittest.TestCase):
     """ Tests homeassistant.components.history module. """
 
     def setUp(self):
         """ Test setup method. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
         self.hass.stop()
 
-    def test_setup(self):
+    def test_entities_get_created(self):
         self.assertTrue(weblink.setup(self.hass, {
             weblink.DOMAIN: {
                 'entities': [
@@ -27,3 +33,8 @@ class TestComponentHistory(unittest.TestCase):
                 ]
             }
         }))
+
+        state = self.hass.states.get('weblink.my_router')
+
+        assert state is not None
+        assert state.state == 'http://127.0.0.1/'

@@ -6,13 +6,13 @@ Adds support for Nest thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
 """
-import socket
 import logging
+import socket
 
-from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
-                                                 STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (TEMP_CELCIUS)
 import homeassistant.components.nest as nest
+from homeassistant.components.thermostat import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import TEMP_CELCIUS
 
 DEPENDENCIES = ['nest']
 

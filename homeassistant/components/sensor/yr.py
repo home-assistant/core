@@ -10,11 +10,11 @@ import logging
 
 import requests
 
-from homeassistant.const import (ATTR_ENTITY_PICTURE,
-                                 CONF_LATITUDE,
-                                 CONF_LONGITUDE)
+from homeassistant.const import (
+    ATTR_ENTITY_PICTURE, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import location, dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util import location
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -13,9 +13,9 @@ import logging
 import requests
 
 import homeassistant.util as util
-from homeassistant.helpers import validate_config
-from homeassistant.helpers import state as state_helper
 from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.helpers import state as state_helper
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ def setup(hass, config):
             {
                 'domain': state.domain,
                 'entity_id': state.object_id,
-                'attributes': state.attributes,
+                'attributes': dict(state.attributes),
                 'time': str(event.time_fired),
                 'value': _state,
             }

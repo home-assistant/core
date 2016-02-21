@@ -8,14 +8,12 @@ https://home-assistant.io/components/sensor.tellduslive/
 
 """
 import logging
-
 from datetime import datetime
 
-from homeassistant.const import (TEMP_CELCIUS,
-                                 ATTR_BATTERY_LEVEL,
-                                 DEVICE_DEFAULT_NAME)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import tellduslive
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, TEMP_CELCIUS)
+from homeassistant.helpers.entity import Entity
 
 ATTR_LAST_UPDATED = "time_last_updated"
 

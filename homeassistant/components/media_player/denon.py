@@ -6,16 +6,14 @@ Provides an interface to Denon Network Receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.denon/
 """
-import telnetlib
 import logging
+import telnetlib
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    DOMAIN)
-from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 

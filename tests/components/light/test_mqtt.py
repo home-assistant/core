@@ -1,6 +1,6 @@
 """
 tests.components.light.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mqtt light.
 
@@ -46,16 +46,16 @@ light:
 import unittest
 
 from homeassistant.const import STATE_ON, STATE_OFF
-import homeassistant.core as ha
 import homeassistant.components.light as light
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import (
+  get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
 
 
 class TestLightMQTT(unittest.TestCase):
     """ Test the MQTT light. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -172,12 +172,12 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('rgb_color'))
 
+        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
+                          '{"hello": [1, 2, 3]}')
         fire_mqtt_message(self.hass, 'test_light_rgb/status',
                           '{"hello": "ON"}')
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status',
                           '{"hello": "50"}')
-        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
-                          '{"hello": [1, 2, 3]}')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')

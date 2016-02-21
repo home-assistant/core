@@ -4,16 +4,15 @@ homeassistant.helpers.entity.
 Provides ABC for entities in HA.
 """
 
-from collections import defaultdict
 import re
-
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.util import ensure_unique_string, slugify
+from collections import defaultdict
 
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON,
-    DEVICE_DEFAULT_NAME, STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_UNAVAILABLE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.util import ensure_unique_string, slugify
 
 # Dict mapping entity_id to a boolean that overwrites the hidden property
 _OVERWRITE = defaultdict(dict)
@@ -24,7 +23,7 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
     """Generate a unique entity ID based on given entity IDs or used ids."""
-    name = name.lower() or DEVICE_DEFAULT_NAME.lower()
+    name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
             raise RuntimeError("Missing required parameter currentids or hass")
@@ -71,7 +70,7 @@ class Entity(object):
     @property
     def name(self):
         """Return the name of the entity."""
-        return DEVICE_DEFAULT_NAME
+        return None
 
     @property
     def state(self):
@@ -116,6 +115,11 @@ class Entity(object):
         """Return True if entity is available."""
         return True
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return False
+
     def update(self):
         """Retrieve latest state."""
         pass
@@ -145,7 +149,7 @@ class Entity(object):
         if force_refresh:
             self.update()
 
-        state = str(self.state)
+        state = STATE_UNKNOWN if self.state is None else str(self.state)
         attr = self.state_attributes or {}
 
         device_attr = self.device_state_attributes
@@ -161,14 +165,17 @@ class Entity(object):
             state = STATE_UNAVAILABLE
             attr = {}
 
-        if ATTR_FRIENDLY_NAME not in attr and self.name is not None:
+        if self.name is not None:
             attr[ATTR_FRIENDLY_NAME] = str(self.name)
 
-        if ATTR_ICON not in attr and self.icon is not None:
+        if self.icon is not None:
             attr[ATTR_ICON] = str(self.icon)
 
         if self.hidden:
             attr[ATTR_HIDDEN] = bool(self.hidden)
+
+        if self.assumed_state:
+            attr[ATTR_ASSUMED_STATE] = bool(self.assumed_state)
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))

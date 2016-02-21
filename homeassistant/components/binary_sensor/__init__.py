@@ -12,17 +12,36 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
+from homeassistant.components import (bloomsky, mysensors)
 
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+SENSOR_CLASSES = [
+    None,        # Generic on/off
+    'opening',   # Door, window, etc
+    'motion',    # Motion sensor
+    'gas',       # CO, CO2, etc
+    'smoke',     # Smoke detector
+    'moisture',  # Specifically a wetness sensor
+    'light',     # Lightness threshold
+    'power',     # Power, over-current, etc
+    'safety',    # Generic on=unsafe, off=safe
+]
+
+# Maps discovered services to their platforms
+DISCOVERY_PLATFORMS = {
+    bloomsky.DISCOVER_BINARY_SENSORS: 'bloomsky',
+    mysensors.DISCOVER_BINARY_SENSORS: 'mysensors',
+}
 
 
 def setup(hass, config):
-    """ Track states and offer events for binary sensors. """
+    """Track states and offer events for binary sensors."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
+        DISCOVERY_PLATFORMS)
 
     component.setup(config)
 
@@ -31,19 +50,29 @@ def setup(hass, config):
 
 # pylint: disable=no-self-use
 class BinarySensorDevice(Entity):
-    """ Represents a binary sensor. """
+    """Represent a binary sensor."""
 
     @property
     def is_on(self):
-        """ True if the binary sensor is on. """
+        """Return True if the binary sensor is on."""
         return None
 
     @property
     def state(self):
-        """ Returns the state of the binary sensor. """
+        """Return the state of the binary sensor."""
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
-    def friendly_state(self):
-        """ Returns the friendly state of the binary sensor. """
+    def sensor_class(self):
+        """Return the class of this sensor, from SENSOR_CLASSES."""
         return None
+
+    @property
+    def state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {}
+
+        if self.sensor_class is not None:
+            attr['sensor_class'] = self.sensor_class
+
+        return attr

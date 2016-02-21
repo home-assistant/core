@@ -7,10 +7,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.free_mobile/
 """
 import logging
-from homeassistant.helpers import validate_config
+
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TARGET, BaseNotificationService)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+    ATTR_TARGET, DOMAIN, BaseNotificationService)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['https://github.com/w1ll1am23/pygooglevoice-sms/archive/'

@@ -8,10 +8,10 @@ https://home-assistant.io/components/binary_sensor.nest/
 """
 import logging
 import socket
-import homeassistant.components.nest as nest
 
-from homeassistant.components.sensor.nest import NestSensor
+import homeassistant.components.nest as nest
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.sensor.nest import NestSensor
 
 DEPENDENCIES = ['nest']
 BINARY_TYPES = ['fan',
