@@ -156,12 +156,12 @@ class LocationMethods(object):
             states = list(entities)
         else:
             if isinstance(entities, State):
-                entity_id = entities.entity_id
+                gr_entity_id = entities.entity_id
             else:
-                entity_id = str(entities)
+                gr_entity_id = str(entities)
 
             states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [entity_id])]
+                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
 
         return loc_helper.closest(latitude, longitude, states)
 
