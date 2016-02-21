@@ -8,6 +8,7 @@ Tests Home Assistant template util methods.
 import unittest
 from unittest.mock import patch
 
+from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
 import homeassistant.util.dt as dt_util
@@ -272,4 +273,203 @@ class TestUtilTemplate(unittest.TestCase):
             'None',
             template.render(
                 self.hass,
-                '{{ distance("123", "abc") | round }}'))
+                '{{ distance("123", "abc") }}'))
+
+        self.assertEqual(
+            'None',
+            template.render(
+                self.hass,
+                '{{ distance("123") }}'))
+
+        self.hass.states.set('test.object_2', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        self.assertEqual(
+            'None',
+            template.render(
+                self.hass,
+                '{{ distance("123", states.test_object_2) }}'))
+
+
+    def test_closest_function_home_vs_domain(self):
+        self.hass.states.set('test_domain.object', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('not_test_domain.but_closer', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        self.assertEqual(
+            'test_domain.object',
+            template.render(self.hass,
+                            '{{ closest(states.test_domain).entity_id }}'))
+
+    def test_closest_function_home_vs_all_states(self):
+        self.hass.states.set('test_domain.object', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('test_domain_2.and_closer', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        self.assertEqual(
+            'test_domain_2.and_closer',
+            template.render(self.hass,
+                            '{{ closest(states).entity_id }}'))
+
+    def test_closest_function_home_vs_group_entity_id(self):
+        self.hass.states.set('test_domain.object', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('not_in_group.but_closer', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        group.Group(self.hass, 'location group', ['test_domain.object'])
+
+        self.assertEqual(
+            'test_domain.object',
+            template.render(self.hass,
+                            '{{ closest("group.location_group").entity_id }}'))
+
+    def test_closest_function_home_vs_group_state(self):
+        self.hass.states.set('test_domain.object', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('not_in_group.but_closer', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        group.Group(self.hass, 'location group', ['test_domain.object'])
+
+        self.assertEqual(
+            'test_domain.object',
+            template.render(
+                self.hass,
+                '{{ closest(states.group.location_group).entity_id }}'))
+
+    def test_closest_function_to_coord(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('test_domain.closest_zone', 'happy', {
+            'latitude': self.hass.config.latitude + 0.2,
+            'longitude': self.hass.config.longitude + 0.2,
+        })
+
+        self.hass.states.set('zone.far_away', 'zoning', {
+            'latitude': self.hass.config.latitude + 0.3,
+            'longitude': self.hass.config.longitude + 0.3,
+        })
+
+        self.assertEqual(
+            'test_domain.closest_zone',
+            template.render(
+                self.hass,
+                '{{ closest("%s", %s, states.test_domain).entity_id }}'
+                % (self.hass.config.latitude + 0.3,
+                   self.hass.config.longitude + 0.3))
+        )
+
+    def test_closest_function_to_entity_id(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('test_domain.closest_zone', 'happy', {
+            'latitude': self.hass.config.latitude + 0.2,
+            'longitude': self.hass.config.longitude + 0.2,
+        })
+
+        self.hass.states.set('zone.far_away', 'zoning', {
+            'latitude': self.hass.config.latitude + 0.3,
+            'longitude': self.hass.config.longitude + 0.3,
+        })
+
+        self.assertEqual(
+            'test_domain.closest_zone',
+            template.render(
+                self.hass,
+                '{{ closest("zone.far_away", states.test_domain).entity_id }}')
+        )
+
+    def test_closest_function_to_state(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.hass.states.set('test_domain.closest_zone', 'happy', {
+            'latitude': self.hass.config.latitude + 0.2,
+            'longitude': self.hass.config.longitude + 0.2,
+        })
+
+        self.hass.states.set('zone.far_away', 'zoning', {
+            'latitude': self.hass.config.latitude + 0.3,
+            'longitude': self.hass.config.longitude + 0.3,
+        })
+
+        self.assertEqual(
+            'test_domain.closest_zone',
+            template.render(
+                self.hass,
+                '{{ closest(states.zone.far_away, '
+                'states.test_domain).entity_id }}')
+        )
+
+    def test_closest_function_invalid_state(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        for state in ('states.zone.non_existing', '"zone.non_existing"'):
+            self.assertEqual(
+                'None',
+                template.render(
+                    self.hass, '{{ closest(%s, states) }}' % state))
+
+    def test_closest_function_state_with_invalid_location(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': 'invalid latitude',
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.assertEqual(
+            'None',
+            template.render(
+                self.hass,
+                '{{ closest(states.test_domain.closest_home, '
+                'states) }}'))
+
+    def test_closest_function_invalid_coordinates(self):
+        self.hass.states.set('test_domain.closest_home', 'happy', {
+            'latitude': self.hass.config.latitude + 0.1,
+            'longitude': self.hass.config.longitude + 0.1,
+        })
+
+        self.assertEqual(
+            'None',
+            template.render(self.hass,
+                            '{{ closest("invalid", "coord", states) }}'))
+
+    def test_closest_function_no_location_states(self):
+        self.assertEqual('None',
+                         template.render(self.hass, '{{ closest(states) }}'))
