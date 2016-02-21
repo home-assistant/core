@@ -292,7 +292,6 @@ class TestUtilTemplate(unittest.TestCase):
                 self.hass,
                 '{{ distance("123", states.test_object_2) }}'))
 
-
     def test_closest_function_home_vs_domain(self):
         self.hass.states.set('test_domain.object', 'happy', {
             'latitude': self.hass.config.latitude + 0.1,
