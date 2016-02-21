@@ -70,8 +70,12 @@ def setup(hass, config):
         """ Execute a service call to script.<script name>. """
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script = component.entities.get(entity_id)
-        if script:
-            script.turn_on()
+        if not script:
+            return
+        if script.is_on:
+            _LOGGER.warning("Script %s already running.", entity_id)
+            return
+        script.turn_on()
 
     for object_id, cfg in config[DOMAIN].items():
         if object_id != slugify(object_id):
