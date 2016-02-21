@@ -45,7 +45,7 @@ light:
 """
 import unittest
 
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.light as light
 from tests.common import (
   get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
@@ -115,6 +115,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
         self.hass.pool.block_till_done()
@@ -201,6 +202,7 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         light.turn_on(self.hass, 'light.test')
         self.hass.pool.block_till_done()
