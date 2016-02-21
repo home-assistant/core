@@ -162,3 +162,84 @@ class TestUtilTemplate(unittest.TestCase):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
             template.render(self.hass, '{{ utcnow().isoformat() }}'))
+
+    def test_distance_function_with_1_state(self):
+        self.hass.states.set('test.object', 'happy', {
+            'latitude': 32.87336,
+            'longitude': -117.22943,
+        })
+
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass, '{{ distance(states.test.object) | round }}'))
+
+    def test_distance_function_with_2_states(self):
+        self.hass.states.set('test.object', 'happy', {
+            'latitude': 32.87336,
+            'longitude': -117.22943,
+        })
+
+        self.hass.states.set('test.object_2', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass,
+                '{{ distance(states.test.object, states.test.object_2)'
+                '| round }}'))
+
+    def test_distance_function_with_1_coord(self):
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass, '{{ distance("32.87336", "-117.22943") | round }}'))
+
+    def test_distance_function_with_2_coords(self):
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass,
+                '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
+                % (self.hass.config.latitude, self.hass.config.longitude)))
+
+    def test_distance_function_with_1_state_1_coord(self):
+        self.hass.states.set('test.object_2', 'happy', {
+            'latitude': self.hass.config.latitude,
+            'longitude': self.hass.config.longitude,
+        })
+
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass,
+                '{{ distance("32.87336", "-117.22943", states.test.object_2) '
+                '| round }}'))
+
+        self.assertEqual(
+            '187',
+            template.render(
+                self.hass,
+                '{{ distance(states.test.object_2, "32.87336", "-117.22943") '
+                '| round }}'))
+
+    def test_distance_function_return_None_if_invalid_state(self):
+        self.hass.states.set('test.object_2', 'happy', {
+            'latitude': 10,
+        })
+
+        self.assertEqual(
+            'None',
+            template.render(
+                self.hass,
+                '{{ distance(states.test.object_2) | round }}'))
+
+    def test_distance_function_return_None_if_invalid_coord(self):
+        self.assertEqual(
+            'None',
+            template.render(
+                self.hass,
+                '{{ distance("123", "abc") | round }}'))

@@ -10,9 +10,10 @@ import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import convert, dt as dt_util, location
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -42,11 +43,14 @@ def render(hass, template, variables=None, **kwargs):
     if variables is not None:
         kwargs.update(variables)
 
+    location_helper = LocationHelpers(hass)
+
     try:
         return ENV.from_string(template, {
-            'states': AllStates(hass),
+            'distance': location_helper.distance,
             'is_state': hass.states.is_state,
             'is_state_attr': hass.states.is_state_attr,
+            'states': AllStates(hass),
             'now': dt_util.now,
             'utcnow': dt_util.utcnow,
         }).render(kwargs).strip()
@@ -86,6 +90,61 @@ class DomainStates(object):
             (state for state in self._hass.states.all()
              if state.domain == self._domain),
             key=lambda state: state.entity_id))
+
+
+class LocationHelpers(object):
+    """Class to expose distance helpers to templates."""
+
+    def __init__(self, hass):
+        """Initialize distance helpers."""
+        self._hass = hass
+
+    def distance(self, *args):
+        """Calculate distance.
+
+        Will calculate distance from home to a point or between points.
+        Points can be passed in using state objects or lat/lng coordinates.
+        """
+        locations = []
+
+        to_process = list(args)
+
+        while to_process:
+            value = to_process.pop(0)
+
+            if isinstance(value, State):
+                latitude = value.attributes.get(ATTR_LATITUDE)
+                longitude = value.attributes.get(ATTR_LONGITUDE)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning(
+                        'Distance:State does not contains a location: %s',
+                        value)
+                    return None
+
+            else:
+                # We expect this and next value to be lat&lng
+                if not to_process:
+                    _LOGGER.warning(
+                        'Distance:Expected latitude and longitude, got %s',
+                        value)
+                    return None
+
+                value_2 = to_process.pop(0)
+                latitude = convert(value, float)
+                longitude = convert(value_2, float)
+
+                if latitude is None or longitude is None:
+                    _LOGGER.warning('Distance:Unable to process latitude and '
+                                    'longitude: %s, %s', value, value_2)
+                    return None
+
+            locations.append((latitude, longitude))
+
+        if len(locations) == 1:
+            return self._hass.config.distance(*locations[0])
+
+        return location.distance(*locations[0] + locations[1])
 
 
 def forgiving_round(value, precision=0):
