@@ -6,8 +6,11 @@ Tests Home Assistant template util methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
+from unittest.mock import patch
+
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant
 
@@ -143,3 +146,19 @@ class TestUtilTemplate(unittest.TestCase):
         self.assertEqual(
             'unknown',
             template.render(self.hass, '{{ states("test.object2") }}'))
+
+    @patch('homeassistant.core.dt_util.now', return_value=dt_util.now())
+    @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
+           return_value=True)
+    def test_now_function(self, mock_is_safe, mock_now):
+        self.assertEqual(
+            dt_util.now().isoformat(),
+            template.render(self.hass, '{{ now().isoformat() }}'))
+
+    @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
+    @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
+           return_value=True)
+    def test_utcnow_function(self, mock_is_safe, mock_utcnow):
+        self.assertEqual(
+            dt_util.utcnow().isoformat(),
+            template.render(self.hass, '{{ utcnow().isoformat() }}'))
