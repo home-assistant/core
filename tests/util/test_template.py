@@ -159,21 +159,26 @@ class TestUtilTemplate(unittest.TestCase):
             'unknown',
             template.render(self.hass, '{{ states("test.object2") }}'))
 
-    @patch('homeassistant.core.dt_util.now', return_value=dt_util.now())
+    @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
     @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
            return_value=True)
-    def test_now_function(self, mock_is_safe, mock_now):
+    def test_now(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
-            dt_util.now().isoformat(),
-            template.render(self.hass, '{{ now().isoformat() }}'))
+            dt_util.utcnow().isoformat(),
+            template.render(self.hass, '{{ now.isoformat() }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
     @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
            return_value=True)
-    def test_utcnow_function(self, mock_is_safe, mock_utcnow):
+    def test_utcnow(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
-            template.render(self.hass, '{{ utcnow().isoformat() }}'))
+            template.render(self.hass, '{{ utcnow.isoformat() }}'))
+
+    def test_utcnow_is_exactly_now(self):
+        self.assertEqual(
+            'True',
+            template.render(self.hass, '{{ utcnow == now }}'))
 
     def test_distance_function_with_1_state(self):
         self.hass.states.set('test.object', 'happy', {
