@@ -15,7 +15,7 @@ from itertools import islice
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    STATE_ON)
+    SERVICE_TOGGLE, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity, split_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -61,6 +61,11 @@ def turn_off(hass, entity_id):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
 
+def toggle(hass, entity_id):
+    """ Toggles script. """
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
+
+
 def setup(hass, config):
     """ Load the scripts from the configuration. """
 
@@ -103,8 +108,14 @@ def setup(hass, config):
         for script in component.extract_from_service(service):
             script.turn_off()
 
+    def toggle_service(service):
+        """ Toggles a script. """
+        for script in component.extract_from_service(service):
+            script.toggle()
+
     hass.services.register(DOMAIN, SERVICE_TURN_ON, turn_on_service)
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, turn_off_service)
+    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service)
 
     return True
 

@@ -269,3 +269,36 @@ class TestScript(unittest.TestCase):
         script.turn_on(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(calls))
+
+    def test_toggle_service(self):
+        event = 'test_event'
+        calls = []
+
+        def record_event(event):
+            calls.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test': {
+                    'sequence': [{
+                        'delay': {
+                            'seconds': 5
+                        }
+                    }, {
+                        'event': event,
+                    }]
+                }
+            }
+        }))
+
+        script.toggle(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(calls))
+
+        script.toggle(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(calls))
