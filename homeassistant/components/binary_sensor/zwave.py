@@ -41,6 +41,7 @@ class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
 
     def __init__(self, value, sensor_class):
         self._sensor_type = sensor_class
+        # pylint: disable=import-error
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
