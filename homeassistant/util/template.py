@@ -12,6 +12,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import TemplateError
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -45,7 +46,9 @@ def render(hass, template, variables=None, **kwargs):
         return ENV.from_string(template, {
             'states': AllStates(hass),
             'is_state': hass.states.is_state,
-            'is_state_attr': hass.states.is_state_attr
+            'is_state_attr': hass.states.is_state_attr,
+            'now': now(),
+            'utcnow': utcnow()
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
@@ -102,6 +105,16 @@ def multiply(value, amount):
     except ValueError:
         # If value can't be converted to float
         return value
+
+
+def now():
+    """ Renders the current time for the time zone. """
+    return dt_util.now()
+
+
+def utcnow():
+    """ Renders the current UTC time. """
+    return dt_util.utcnow()
 
 
 class TemplateEnvironment(ImmutableSandboxedEnvironment):

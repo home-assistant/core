@@ -8,6 +8,7 @@ Tests Home Assistant template util methods.
 import unittest
 from homeassistant.exceptions import TemplateError
 from homeassistant.util import template
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant
 
@@ -68,6 +69,13 @@ class TestUtilTemplate(unittest.TestCase):
                 self.hass,
                 '{{ states.sensor.temperature.state | multiply(10) | round }}'
             ))
+
+    def test_rendering_now(self):
+        self.assertEqual(
+            dt_util.datetime_to_local_str(dt_util.now()),
+            template.render(self.hass,
+                            '{{ now }}',
+                            now=dt_util.datetime_to_local_str(dt_util.now())))
 
     def test_passing_vars_as_keywords(self):
         self.assertEqual(
