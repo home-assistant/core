@@ -162,7 +162,7 @@ def multiply(value, amount):
     """Filter to convert value to float and multiply it."""
     try:
         return float(value) * amount
-    except ValueError:
+    except (ValueError, TypeError):
         # If value can't be converted to float
         return value
 
