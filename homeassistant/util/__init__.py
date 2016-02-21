@@ -57,7 +57,7 @@ def convert(value, to_type, default=None):
     """ Converts value to to_type, returns default if fails. """
     try:
         return default if value is None else to_type(value)
-    except ValueError:
+    except (ValueError, TypeError):
         # If value could not be converted
         return default
 
