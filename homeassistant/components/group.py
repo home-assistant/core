@@ -9,7 +9,8 @@ https://home-assistant.io/components/group/
 import homeassistant.core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_UNKNOWN)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_UNKNOWN,
+    ATTR_ASSUMED_STATE, )
 from homeassistant.helpers.entity import (
     Entity, generate_entity_id, split_entity_id)
 from homeassistant.helpers.event import track_state_change
@@ -144,6 +145,7 @@ class Group(Entity):
         self.tracking = []
         self.group_on = None
         self.group_off = None
+        self._assumed_state = False
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
@@ -182,6 +184,11 @@ class Group(Entity):
             data[ATTR_VIEW] = True
         return data
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return self._assumed_state
+
     def update_tracked_entity_ids(self, entity_ids):
         """ Update the tracked entity IDs. """
         self.stop()
@@ -207,47 +214,77 @@ class Group(Entity):
     def update(self):
         """ Query all the tracked states and determine current group state. """
         self._state = STATE_UNKNOWN
+        self._update_group_state()
+
+    def _state_changed_listener(self, entity_id, old_state, new_state):
+        """ Listener to receive state changes of tracked entities. """
+        self._update_group_state(new_state)
+        self.update_ha_state()
+
+    @property
+    def _tracking_states(self):
+        """States that the group is tracking."""
+        states = []
 
         for entity_id in self.tracking:
             state = self.hass.states.get(entity_id)
 
             if state is not None:
-                self._process_tracked_state(state)
+                states.append(state)
 
-    def _state_changed_listener(self, entity_id, old_state, new_state):
-        """ Listener to receive state changes of tracked entities. """
-        self._process_tracked_state(new_state)
-        self.update_ha_state()
+        return states
 
-    def _process_tracked_state(self, tr_state):
-        """ Updates group state based on a new state of a tracked entity. """
+    def _update_group_state(self, tr_state=None):
+        """Update group state.
+
+        Optionally you can provide the only state changed since last update
+        allowing this method to take shortcuts.
+        """
+        # pylint: disable=too-many-branches
+        # To store current states of group entities. Might not be needed.
+        states = None
+        gr_state, gr_on, gr_off = self._state, self.group_on, self.group_off
 
         # We have not determined type of group yet
-        if self.group_on is None:
-            self.group_on, self.group_off = _get_group_on_off(tr_state.state)
+        if gr_on is None:
+            if tr_state is None:
+                states = self._tracking_states
 
-            if self.group_on is not None:
-                # New state of the group is going to be based on the first
-                # state that we can recognize
-                self._state = tr_state.state
+                for state in states:
+                    gr_on, gr_off = \
+                        _get_group_on_off(state.state)
+                    if gr_on is not None:
+                        break
+            else:
+                gr_on, gr_off = _get_group_on_off(tr_state.state)
 
+            if gr_on is not None:
+                self.group_on, self.group_off = gr_on, gr_off
+
+        # We cannot determine state of the group
+        if gr_on is None:
             return
 
-        # There is already a group state
-        cur_gr_state = self._state
-        group_on, group_off = self.group_on, self.group_off
+        if tr_state is None or (gr_state == gr_on and
+                                tr_state.state == gr_off):
+            if states is None:
+                states = self._tracking_states
 
-        # if cur_gr_state = OFF and tr_state = ON: set ON
-        # if cur_gr_state = ON and tr_state = OFF: research
-        # else: ignore
+            if any(state.state == gr_on for state in states):
+                self._state = gr_on
+            else:
+                self._state = gr_off
 
-        if cur_gr_state == group_off and tr_state.state == group_on:
-            self._state = group_on
+        elif tr_state.state in (gr_on, gr_off):
+            self._state = tr_state.state
 
-        elif cur_gr_state == group_on and tr_state.state == group_off:
+        if tr_state is None or self._assumed_state and \
+           not tr_state.attributes.get(ATTR_ASSUMED_STATE):
+            if states is None:
+                states = self._tracking_states
 
-            # Set to off if no other states are on
-            if not any(self.hass.states.is_state(ent_id, group_on)
-                       for ent_id in self.tracking
-                       if tr_state.entity_id != ent_id):
-                self._state = group_off
+            self._assumed_state = any(state.attributes.get(ATTR_ASSUMED_STATE)
+                                      for state in states)
+
+        elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
+            self._assumed_state = True
