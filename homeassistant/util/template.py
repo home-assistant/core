@@ -12,6 +12,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.exceptions import TemplateError
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -45,7 +46,9 @@ def render(hass, template, variables=None, **kwargs):
         return ENV.from_string(template, {
             'states': AllStates(hass),
             'is_state': hass.states.is_state,
-            'is_state_attr': hass.states.is_state_attr
+            'is_state_attr': hass.states.is_state_attr,
+            'now': dt_util.now,
+            'utcnow': dt_util.utcnow,
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
