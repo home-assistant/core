@@ -6,7 +6,7 @@ Tests MQTT switch.
 """
 import unittest
 
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.switch as switch
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
@@ -37,6 +37,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', 'beer on')
         self.hass.pool.block_till_done()
@@ -64,6 +65,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         switch.turn_on(self.hass, 'switch.test')
         self.hass.pool.block_till_done()
