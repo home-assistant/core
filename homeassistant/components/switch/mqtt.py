@@ -97,6 +97,11 @@ class MqttSwitch(SwitchDevice):
         """ True if device is on. """
         return self._state
 
+    @property
+    def assumed_state(self):
+        """Return True if we do optimistic updates."""
+        return self._optimistic
+
     def turn_on(self, **kwargs):
         """ Turn the device on. """
         mqtt.publish(self.hass, self._command_topic, self._payload_on,
