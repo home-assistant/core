@@ -44,6 +44,7 @@ def render(hass, template, variables=None, **kwargs):
         kwargs.update(variables)
 
     location_helper = LocationHelpers(hass)
+    utcnow = dt_util.utcnow()
 
     try:
         return ENV.from_string(template, {
@@ -51,8 +52,8 @@ def render(hass, template, variables=None, **kwargs):
             'is_state': hass.states.is_state,
             'is_state_attr': hass.states.is_state_attr,
             'states': AllStates(hass),
-            'now': dt_util.now,
-            'utcnow': dt_util.utcnow,
+            'now': dt_util.as_local(utcnow),
+            'utcnow': utcnow,
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
