@@ -38,34 +38,24 @@ class WinkSensorDevice(Entity):
 
     def __init__(self, wink):
         self.wink = wink
-        capability = self.wink.capability()
-        if capability == "humidity":
-            self._unit_of_measurement = "%"
-        elif capability == "temperature":
-            self._unit_of_measurement = "°C"
-        elif capability == "brightness":
-            self._unit_of_measurement = "%"
-        else:
-            self._unit_of_measurement = None
+        self._unit_of_measurement = self.wink.UNIT
 
     @property
     def state(self):
         """ Returns the state. """
         capability = self.wink.capability()
-        if capability == "opened":
-            state = STATE_OPEN if self.is_open else STATE_CLOSED
-        elif capability == "humidity":
+        if capability == "humidity":
             state = self.wink.humidity_percentage()
         elif capability == "temperature":
             state = self.wink.temperature_float()
-        elif capability == "brightness":
-            state = self.wink.brightness_percentage()
         elif capability == "loudness":
-            state = self.wink.loudness_boolean()
+            state = STATE_OPEN if self.wink.loudness_boolean() else STATE_CLOSED
         elif capability == "vibration":
-            state = self.wink.vibration_boolean()
+            state = STATE_OPEN if self.wink.vibration_boolean() else STATE_CLOSED
+        elif capability == "brightness":
+            state = STATE_OPEN if self.wink.brightness_boolean() else STATE_CLOSED
         else:
-           state = STATE_OPEN
+            state = STATE_OPEN if self.is_open else STATE_CLOSED
         return state
 
     @property
