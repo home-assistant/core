@@ -76,7 +76,6 @@ class HomeAssistantScene(Scene):
     def __init__(self, hass, scene_config):
         self.hass = hass
         self.scene_config = scene_config
-        self.update()
 
     @property
     def name(self):
