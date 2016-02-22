@@ -58,12 +58,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Currency "%s" is not available. Using "USD".', currency)
         currency = 'USD'
 
-    wallet = Wallet(wallet_id, password)
-
-    try:
-        wallet.get_balance()
-    except exceptions.APIException as error:
-        _LOGGER.error(error)
+    if wallet_id is not None and password is not None:
+        wallet = Wallet(wallet_id, password)
+        try:
+            wallet.get_balance()
+        except exceptions.APIException as error:
+            _LOGGER.error(error)
+            wallet = None
+    else:
         wallet = None
 
     data = BitcoinData()
