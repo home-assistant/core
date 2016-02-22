@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import (
-    group, discovery, wink, isy994, verisure, zwave, tellduslive, mysensors)
+    group, wemo, wink, isy994, verisure, zwave, tellduslive, mysensors)
 
 DOMAIN = 'switch'
 SCAN_INTERVAL = 30
@@ -35,7 +35,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_WEMO: 'wemo',
+    wemo.DISCOVER_SWITCHES: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
     verisure.DISCOVER_SWITCHES: 'verisure',
