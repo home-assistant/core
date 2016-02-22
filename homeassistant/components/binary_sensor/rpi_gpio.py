@@ -1,12 +1,9 @@
 """
-homeassistant.components.binary_sensor.rpi_gpio
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a binary sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
-
 import logging
 
 import homeassistant.components.rpi_gpio as rpi_gpio
@@ -23,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Raspberry PI GPIO devices. """
+    """Sets up the Raspberry PI GPIO devices."""
 
     pull_mode = config.get('pull_mode', DEFAULT_PULL_MODE)
     bouncetime = config.get('bouncetime', DEFAULT_BOUNCETIME)
@@ -39,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOBinarySensor(BinarySensorDevice):
-    """ Represents a binary sensor that uses Raspberry Pi GPIO. """
+    """Represents a binary sensor that uses Raspberry Pi GPIO."""
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         # pylint: disable=no-member
 
@@ -53,22 +50,22 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._state = rpi_gpio.read_input(self._port)
 
         def read_gpio(port):
-            """ Reads state from GPIO. """
+            """Reads state from GPIO."""
             self._state = rpi_gpio.read_input(self._port)
             self.update_ha_state()
         rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
 
     @property
     def should_poll(self):
-        """ No polling needed. """
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ The name of the sensor. """
+        """The name of the sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """ Returns the state of the entity. """
+        """Returns the state of the entity."""
         return self._state != self._invert_logic

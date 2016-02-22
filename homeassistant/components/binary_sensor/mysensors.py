@@ -54,7 +54,8 @@ class MySensorsBinarySensor(BinarySensorDevice):
 
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
-        """Setup class attributes on instantiation.
+        """
+        Setup class attributes on instantiation.
 
         Args:
         gateway (GatewayWrapper): Gateway object.
@@ -124,7 +125,7 @@ class MySensorsBinarySensor(BinarySensorDevice):
 
     @property
     def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CASSES."""
+        """Return the class of this sensor, from SENSOR_CLASSES."""
         pres = self.gateway.const.Presentation
         class_map = {
             pres.S_DOOR: 'opening',

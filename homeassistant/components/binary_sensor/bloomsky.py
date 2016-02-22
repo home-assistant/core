@@ -38,7 +38,7 @@ class BloomSkySensor(BinarySensorDevice):
     """ Represents a single binary sensor in a BloomSky device. """
 
     def __init__(self, bs, device, sensor_name):
-        """Initialize a bloomsky binary sensor."""
+        """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
