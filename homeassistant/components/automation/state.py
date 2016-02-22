@@ -24,6 +24,32 @@ CONF_STATE = "state"
 CONF_FOR = "for"
 
 
+def get_time_config(config):
+    """ Helper function to extract the time specified in the config """
+    if CONF_FOR not in config:
+        return None
+
+    hours = config[CONF_FOR].get(CONF_HOURS)
+    minutes = config[CONF_FOR].get(CONF_MINUTES)
+    seconds = config[CONF_FOR].get(CONF_SECONDS)
+
+    if hours is None and minutes is None and seconds is None:
+        logging.getLogger(__name__).error(
+            "Received invalid value for '%s': %s",
+            config[CONF_FOR], CONF_FOR)
+        return None
+
+    if config.get(CONF_TO) is None and config.get(CONF_STATE) is None:
+        logging.getLogger(__name__).error(
+            "For: requires a to: value'%s': %s",
+            config[CONF_FOR], CONF_FOR)
+        return None
+
+    return timedelta(hours=(hours or 0.0),
+                     minutes=(minutes or 0.0),
+                     seconds=(seconds or 0.0))
+
+
 def trigger(hass, config, action):
     """ Listen for state changes based on `config`. """
     entity_id = config.get(CONF_ENTITY_ID)
@@ -31,32 +57,19 @@ def trigger(hass, config, action):
     if entity_id is None:
         logging.getLogger(__name__).error(
             "Missing trigger configuration key %s", CONF_ENTITY_ID)
-        return False
+        return None
 
     from_state = config.get(CONF_FROM, MATCH_ALL)
     to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
+    time_delta = get_time_config(config)
 
     if isinstance(from_state, bool) or isinstance(to_state, bool):
         logging.getLogger(__name__).error(
             'Config error. Surround to/from values with quotes.')
-        return False
+        return None
 
-    if CONF_FOR in config:
-        hours = config[CONF_FOR].get(CONF_HOURS)
-        minutes = config[CONF_FOR].get(CONF_MINUTES)
-        seconds = config[CONF_FOR].get(CONF_SECONDS)
-
-        if hours is None and minutes is None and seconds is None:
-            logging.getLogger(__name__).error(
-                "Received invalid value for '%s': %s",
-                config[CONF_FOR], CONF_FOR)
-            return False
-
-        if config.get(CONF_TO) is None and config.get(CONF_STATE) is None:
-            logging.getLogger(__name__).error(
-                "For: requires a to: value'%s': %s",
-                config[CONF_FOR], CONF_FOR)
-            return False
+    if CONF_FOR in config and time_delta is None:
+        return None
 
     def state_automation_listener(entity, from_s, to_s):
         """ Listens for state changes and calls action. """
@@ -76,12 +89,8 @@ def trigger(hass, config, action):
             hass.bus.remove_listener(
                 EVENT_STATE_CHANGED, for_state_listener)
 
-        if CONF_FOR in config:
-            now = dt_util.now()
-            target_tm = now + timedelta(
-                hours=(hours or 0.0),
-                minutes=(minutes or 0.0),
-                seconds=(seconds or 0.0))
+        if time_delta is not None:
+            target_tm = dt_util.utcnow() + time_delta
             for_time_listener = track_point_in_time(
                 hass, state_for_listener, target_tm)
             for_state_listener = track_state_change(
@@ -107,10 +116,18 @@ def if_action(hass, config):
             CONF_STATE)
         return None
 
+    time_delta = get_time_config(config)
+    if CONF_FOR in config and time_delta is None:
+        return None
+
     state = str(state)
 
     def if_state():
         """ Test if condition. """
-        return hass.states.is_state(entity_id, state)
+        is_state = hass.states.is_state(entity_id, state)
+        return (time_delta is None and is_state or
+                time_delta is not None and
+                dt_util.utcnow() - time_delta >
+                hass.states.get(entity_id).last_changed)
 
     return if_state

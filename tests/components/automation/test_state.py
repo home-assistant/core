@@ -6,6 +6,7 @@ Tests state automation.
 """
 import unittest
 from datetime import timedelta
+from unittest.mock import patch
 
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
@@ -423,3 +424,60 @@ class TestAutomationState(unittest.TestCase):
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+
+    def test_if_fires_on_for_condition(self):
+        point1 = dt_util.utcnow()
+        point2 = point1 + timedelta(seconds=10)
+        with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+            mock_utcnow.return_value = point1
+            self.hass.states.set('test.entity', 'on')
+            self.assertTrue(automation.setup(self.hass, {
+                automation.DOMAIN: {
+                    'trigger': {
+                        'platform': 'event',
+                        'event_type': 'test_event',
+                    },
+                    'condition': {
+                        'platform': 'state',
+                        'entity_id': 'test.entity',
+                        'state': 'on',
+                        'for': {
+                            'seconds': 5
+                        },
+                    },
+
+                    'action': {
+                        'service': 'test.automation'
+                    }
+                }
+            }))
+
+            # not enough time has passed
+            self.hass.bus.fire('test_event')
+            self.hass.pool.block_till_done()
+            self.assertEqual(0, len(self.calls))
+
+            # Time travel 10 secs into the future
+            mock_utcnow.return_value = point2
+            self.hass.bus.fire('test_event')
+            self.hass.pool.block_till_done()
+            self.assertEqual(1, len(self.calls))
+
+    def test_if_fails_setup_for_without_time(self):
+        self.assertIsNone(state.if_action(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'state': 'on',
+                'for': {},
+            }))
+
+    def test_if_fails_setup_for_without_entity(self):
+        self.assertIsNone(state.if_action(
+            self.hass, {
+                'platform': 'state',
+                'state': 'on',
+                'for': {
+                    'seconds': 5
+                },
+            }))
