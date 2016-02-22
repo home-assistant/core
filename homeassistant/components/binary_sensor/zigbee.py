@@ -1,6 +1,4 @@
 """
-homeassistant.components.binary_sensor.zigbee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Contains functionality to use a ZigBee device as a binary sensor.
 
 For more details about this platform, please refer to the documentation at
@@ -14,7 +12,7 @@ DEPENDENCIES = ["zigbee"]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """ Create and add an entity based on the configuration. """
+    """Create and add an entity based on the configuration."""
     add_entities([
         ZigBeeBinarySensor(hass, ZigBeeDigitalInConfig(config))
     ])
