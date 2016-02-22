@@ -38,11 +38,40 @@ class WinkSensorDevice(Entity):
 
     def __init__(self, wink):
         self.wink = wink
+        capability = self.wink.capability()
+        if capability == "humidity":
+            self._unit_of_measurement = "%"
+        elif capability == "temperature":
+            self._unit_of_measurement = "°C"
+        elif capability == "brightness":
+            self._unit_of_measurement = "%"
+        else:
+            self._unit_of_measurement = None
 
     @property
     def state(self):
         """ Returns the state. """
-        return STATE_OPEN if self.is_open else STATE_CLOSED
+        capability = self.wink.capability()
+        if capability == "opened":
+            state = STATE_OPEN if self.is_open else STATE_CLOSED
+        elif capability == "humidity":
+            state = self.wink.humidity_percentage()
+        elif capability == "temperature":
+            state = self.wink.temperature_float()
+        elif capability == "brightness":
+            state = self.wink.brightness_percentage()
+        elif capability == "loudness":
+            state = self.wink.loudness_boolean()
+        elif capability == "vibration":
+            state = self.wink.vibration_boolean()
+        else:
+           state = STATE_OPEN
+        return state
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
 
     @property
     def unique_id(self):
