@@ -14,6 +14,7 @@ import homeassistant.components.rollershutter as rollershutter
 from homeassistant.components.rollershutter import (
     command_rollershutter as cmd_rs)
 
+
 class TestCommandRollerShutter(unittest.TestCase):
     def setup_method(self, method):
         self.hass = ha.HomeAssistant()
@@ -79,5 +80,3 @@ class TestCommandRollerShutter(unittest.TestCase):
 
             state = self.hass.states.get('rollershutter.test')
             self.assertEqual('closed', state.state)
-
-
