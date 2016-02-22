@@ -1,13 +1,9 @@
 """
-homeassistant.components.binary_sensor.zwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Z-Wave sensors.
 
 For more details about this platform, please refer to the documentation
-at https://home-assistant.io/components/zwave/
+https://home-assistant.io/components/binary_sensor.zwave/
 """
-
-
 import logging
 
 from homeassistant.components.zwave import (
@@ -23,7 +19,7 @@ DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for sensors."""
+    """Setup the Z-Wave platform for sensors."""
 
     if discovery_info is None or NETWORK is None:
         return
@@ -37,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
-    """ Represents a binary sensor within Z-Wave. """
+    """Represents a binary sensor within Z-Wave."""
 
     def __init__(self, value, sensor_class):
         self._sensor_type = sensor_class
@@ -62,9 +58,10 @@ class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     def value_changed(self, value):
-        """ Called when a value has changed on the network. """
+        """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
             self.update_ha_state()
