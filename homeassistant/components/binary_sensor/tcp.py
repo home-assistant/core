@@ -1,5 +1,5 @@
 """
-Provides a binary_sensor which gets its values from a TCP socket.
+Provides a binary sensor which gets its values from a TCP socket.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.tcp/
