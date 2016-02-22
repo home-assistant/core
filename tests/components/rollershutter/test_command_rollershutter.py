@@ -40,59 +40,10 @@ class TestCommandRollerShutter(unittest.TestCase):
             self.assertEqual('foo bar', result)
             mock_run.assert_called_once_with('runme', shell=True)
 
-    def test_state_attributes_current_position(self):
-        # self.assertTrue(rollershutter.setup(self.hass, {
-        add_devices = mock.MagicMock()
-        self.assertTrue(cmd_rs.setup_platform(self.hass, {
-            'rollershutter': {
-                'platform': 'command_rollershutter',
-                'name': 'test',
-                'upcmd': 'up-cmd',
-                'downcmd': 'down-cmd',
-                'stopcmd': 'stop-cmd',
-                'statecmd': 'state-cmd'
-            }
-        # }))
-        }, add_devices))
-
-        state_attributes_dict = self.hass.states.get(
-            'rollershutter.test').attributes
-        self.assertFalse('current_position' in state_attributes_dict)
-
-        # fire_mqtt_message(self.hass, 'state-topic', '0')
-        fire_state_changed(self.hass, 'state-cmd', '0')
-        self.hass.pool.block_till_done()
-        current_position = self.hass.states.get(
-            'rollershutter.test').attributes['current_position']
-        self.assertEqual(0, current_position)
-
-        # fire_mqtt_message(self.hass, 'state-topic', '50')
-        fire_state_changed(self.hass, 'state-cmd', '50')
-        self.hass.pool.block_till_done()
-        current_position = self.hass.states.get(
-            'rollershutter.test').attributes['current_position']
-        self.assertEqual(50, current_position)
-
-        # fire_mqtt_message(self.hass, 'state-topic', '101')
-        fire_state_changed(self.hass, 'state-cmd', '101')
-        self.hass.pool.block_till_done()
-        current_position = self.hass.states.get(
-            'rollershutter.test').attributes['current_position']
-        self.assertEqual(50, current_position)
-
-        # fire_mqtt_message(self.hass, 'state-topic', 'non-numeric')
-        fire_state_changed(self.hass, 'state-cmd', 'non-numeric')
-        self.hass.pool.block_till_done()
-        current_position = self.hass.states.get(
-            'rollershutter.test').attributes['current_position']
-        self.assertEqual(50, current_position)
-
     def test_state_value(self):
-#        add_devices = mock.MagicMock()
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'rollershutter_status')
             test_rollershutter = {
-#                'name': 'foo',
                 'statecmd': 'cat {}'.format(path),
                 'upcmd': 'echo 1 > {}'.format(path),
                 'downcmd': 'echo 1 > {}'.format(path),
@@ -100,7 +51,6 @@ class TestCommandRollerShutter(unittest.TestCase):
                 'value_template': '{{ value }}'
             }
             self.assertTrue(rollershutter.setup(self.hass, {
-#            self.assertTrue(cmd_rs.setup_platform(self.hass, {
                 'rollershutter': {
                     'platform': 'command_rollershutter',
                     'rollershutters': {
@@ -108,7 +58,6 @@ class TestCommandRollerShutter(unittest.TestCase):
                     }
                 }
             }))
-#            }, add_devices))
 
             state = self.hass.states.get('rollershutter.test')
             self.assertEqual('unknown', state.state)
