@@ -1,6 +1,4 @@
 """
-homeassistant.components.binary_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with binary sensors (sensors which only know two states)
 that can be monitored.
 

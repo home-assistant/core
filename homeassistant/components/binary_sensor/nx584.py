@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.nx584
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for exposing nx584 elements as sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -73,18 +71,22 @@ class NX584ZoneSensor(BinarySensorDevice):
 
     @property
     def sensor_class(self):
+        """Return the class of this sensor, from SENSOR_CLASSES."""
         return self._zone_type
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def name(self):
+        """Name of the binary sensor."""
         return self._zone['name']
 
     @property
     def is_on(self):
+        """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone['state']
 
