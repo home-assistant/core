@@ -41,7 +41,8 @@ def setup(hass, config):
     for entry in config:
         if DOMAIN in entry:
             if not any(CONF_PLATFORM in key for key in config[entry]):
-                config[entry] = {'platform': 'homeassistant', 'config': config[entry]}
+                config[entry] = {'platform': 'homeassistant',
+                                 'config': config[entry]}
 
     component = EntityComponent(logger, DOMAIN, hass)
 
