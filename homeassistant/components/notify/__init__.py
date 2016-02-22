@@ -89,7 +89,7 @@ def setup(hass, config):
         service_call_handler = partial(notify_message, notify_service)
         service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
         hass.services.register(DOMAIN, service_notify, service_call_handler,
-                               descriptions.get(service_notify))
+                               descriptions.get(SERVICE_NOTIFY))
         success = True
 
     return success
