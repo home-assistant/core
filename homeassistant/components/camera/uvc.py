@@ -14,7 +14,7 @@ import requests
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['uvcclient==0.6']
+REQUIREMENTS = ['uvcclient==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,18 +81,27 @@ class UnifiVideoCamera(Camera):
 
     def _login(self):
         from uvcclient import camera as uvc_camera
+        from uvcclient import store as uvc_store
+
         caminfo = self._nvr.get_camera(self._uuid)
         if self._connect_addr:
             addrs = [self._connect_addr]
         else:
             addrs = [caminfo['host'], caminfo['internalHost']]
 
+        store = uvc_store.get_info_store()
+        password = store.get_camera_password(self._uuid)
+        if password is None:
+            _LOGGER.debug('Logging into camera %(name)s with default password',
+                         dict(name=self._name))
+            password = 'ubnt'
+
         camera = None
         for addr in addrs:
             try:
                 camera = uvc_camera.UVCCameraClient(addr,
                                                     caminfo['username'],
-                                                    'ubnt')
+                                                    password)
                 camera.login()
                 _LOGGER.debug('Logged into UVC camera %(name)s via %(addr)s',
                               dict(name=self._name, addr=addr))
