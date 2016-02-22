@@ -1,7 +1,8 @@
 """
-homeassistant.components.sensor.tcp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides a sensor which gets its values from a TCP socket.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.tcp/
 """
 import logging
 import socket
@@ -11,9 +12,6 @@ from homeassistant.const import CONF_NAME, CONF_HOST
 from homeassistant.util import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-
-
-# DEPENDENCIES = [DOMAIN]
 
 DOMAIN = "tcp"
 
@@ -32,18 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """ Create the Sensor. """
+    """Create the TCP Sensor."""
     if not Sensor.validate_config(config):
         return False
     add_entities((Sensor(hass, config),))
 
 
 class Sensor(Entity):
-    """ Sensor Entity which gets its value from a TCP socket. """
+    """Sensor entity which gets its value from a TCP socket."""
     required = tuple()
 
     def __init__(self, hass, config):
-        """ Set all the config values if they exist and get initial state. """
+        """Set all the config values if they exist and get initial state."""
         self._hass = hass
         self._config = {
             CONF_NAME: config.get(CONF_NAME),
@@ -62,7 +60,7 @@ class Sensor(Entity):
 
     @classmethod
     def validate_config(cls, config):
-        """ Ensure the config has all of the necessary values. """
+        """Ensure the configuration has all of the necessary values."""
         always_required = (CONF_HOST, CONF_PORT, CONF_PAYLOAD)
         for key in always_required + tuple(cls.required):
             if key not in config:
@@ -73,6 +71,7 @@ class Sensor(Entity):
 
     @property
     def name(self):
+        """The name of this sensor."""
         name = self._config[CONF_NAME]
         if name is not None:
             return name
@@ -80,14 +79,16 @@ class Sensor(Entity):
 
     @property
     def state(self):
+        """Return the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """Unit of measurement of this entity."""
         return self._config[CONF_UNIT]
 
     def update(self):
-        """ Get the latest value for this sensor. """
+        """Get the latest value for this sensor."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
                 sock.connect(
