@@ -262,7 +262,7 @@ unifi==1.2.4
 urllib3
 
 # homeassistant.components.camera.uvc
-uvcclient==0.6
+uvcclient==0.8
 
 # homeassistant.components.verisure
 vsure==0.5.1
