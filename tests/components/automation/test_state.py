@@ -462,3 +462,22 @@ class TestAutomationState(unittest.TestCase):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(1, len(self.calls))
+
+    def test_if_fails_setup_for_without_time(self):
+        self.assertIsNone(state.if_action(
+            self.hass, {
+                'platform': 'state',
+                'entity_id': 'test.entity',
+                'state': 'on',
+                'for': {},
+            }))
+
+    def test_if_fails_setup_for_without_entity(self):
+        self.assertIsNone(state.if_action(
+            self.hass, {
+                'platform': 'state',
+                'state': 'on',
+                'for': {
+                    'seconds': 5
+                },
+            }))
