@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.transmission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Monitors Transmission BitTorrent client API.
+Support for monitoring the Transmission BitTorrent client API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.transmission/
@@ -27,7 +25,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Transmission sensors. """
+    """Sets up the Transmission sensors."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
 
@@ -40,9 +38,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not host:
         _LOGGER.error('Missing config variable %s', CONF_HOST)
         return False
-
-    # import logging
-    # logging.getLogger('transmissionrpc').setLevel(logging.DEBUG)
 
     transmission_api = transmissionrpc.Client(
         host, port=port, user=username, password=password)
@@ -69,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TransmissionSensor(Entity):
-    """ A Transmission sensor. """
+    """A Transmission sensor."""
 
     def __init__(self, sensor_type, transmission_client, client_name):
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -81,16 +76,17 @@ class TransmissionSensor(Entity):
 
     @property
     def name(self):
+        """Returns the name of the sensor."""
         return self.client_name + ' ' + self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def refresh_transmission_data(self):
@@ -106,7 +102,7 @@ class TransmissionSensor(Entity):
                 )
 
     def update(self):
-        """ Gets the latest data from Transmission and updates the state. """
+        """Gets the latest data from Transmission and updates the state."""
         self.refresh_transmission_data()
         if self.type == 'current_status':
             if self.transmission_client.session:

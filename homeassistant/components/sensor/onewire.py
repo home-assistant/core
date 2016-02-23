@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.onewire
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for DS18B20 One Wire Sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -27,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the one wire Sensors. """
+    """Sets up the one wire Sensors."""
 
     if DEVICE_FILES == []:
         _LOGGER.error('No onewire sensor found.')
@@ -58,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OneWire(Entity):
-    """ An One wire Sensor. """
+    """An One wire Sensor."""
 
     def __init__(self, name, device_file):
         self._name = name
@@ -67,7 +65,7 @@ class OneWire(Entity):
         self.update()
 
     def _read_temp_raw(self):
-        """ Read the temperature as it is returned by the sensor. """
+        """Read the temperature as it is returned by the sensor."""
         ds_device_file = open(self._device_file, 'r')
         lines = ds_device_file.readlines()
         ds_device_file.close()
@@ -75,21 +73,21 @@ class OneWire(Entity):
 
     @property
     def name(self):
-        """ The name of the sensor. """
+        """The name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit the value is expressed in. """
+        """Unit the value is expressed in."""
         return TEMP_CELCIUS
 
     def update(self):
-        """ Gets the latest data from the device. """
+        """Gets the latest data from the device."""
         lines = self._read_temp_raw()
         while lines[0].strip()[-3:] != 'YES':
             time.sleep(0.2)

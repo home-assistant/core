@@ -1,7 +1,6 @@
 """
-homeassistant.components.sensor.neurio_energy
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Monitors home energy use as measured by an neurio hub using its official API.
+Support for monitoring  an neurio hub.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.neurio_energy/
 """
@@ -19,7 +18,7 @@ ICON = 'mdi:flash'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Neurio sensor. """
+    """Sets up the Neurio sensor."""
     api_key = config.get("api_key")
     api_secret = config.get("api_secret")
     sensor_id = config.get("sensor_id")
@@ -43,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class NeurioEnergy(Entity):
-    """ Implements an Neurio energy. """
+    """Implements an Neurio energy."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, api_key, api_secret, sensor_id):
@@ -56,26 +55,26 @@ class NeurioEnergy(Entity):
 
     @property
     def name(self):
-        """ Returns the name. """
+        """Returns the name of th sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def icon(self):
-        """ Icon to use in the frontend, if any. """
+        """Icon to use in the frontend, if any."""
         return ICON
 
     def update(self):
-        """ Gets the Neurio monitor data from the web service. """
+        """Gets the Neurio monitor data from the web service."""
         import neurio
         try:
             neurio_tp = neurio.TokenProvider(key=self.api_key,

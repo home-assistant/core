@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Shows sensor values from RFXtrx sensors.
+Support for RFXtrx sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rfxtrx/
@@ -28,11 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Setup the RFXtrx platform. """
+    """Setup the RFXtrx platform."""
     from RFXtrx import SensorEvent
 
     def sensor_update(event):
-        """ Callback for sensor updates from the RFXtrx gateway. """
+        """Callback for sensor updates from the RFXtrx gateway."""
         if isinstance(event, SensorEvent):
             entity_id = slugify(event.device.id_string.lower())
 
@@ -56,7 +54,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxSensor(Entity):
-    """ Represents a RFXtrx sensor. """
+    """Represents a RFXtrx sensor."""
 
     def __init__(self, event):
         self.event = event
@@ -74,25 +72,27 @@ class RfxtrxSensor(Entity):
                                          id_string)
 
     def __str__(self):
+        """Returns the name."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         if self._data_type:
             return self.event.values[self._data_type]
         return None
 
     @property
     def name(self):
-        """ Get the name of the sensor. """
+        """Get the name of the sensor."""
         return self._name
 
     @property
     def device_state_attributes(self):
+        """Returns the state attributes."""
         return self.event.values
 
     @property
     def unit_of_measurement(self):
-        """ Unit this state is expressed in. """
+        """Unit this state is expressed in."""
         return self._unit_of_measurement
