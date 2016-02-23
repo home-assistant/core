@@ -49,11 +49,20 @@ class WinkSensorDevice(Entity):
         elif capability == "temperature":
             state = self.wink.temperature_float()
         elif capability == "loudness":
-            state = STATE_OPEN if self.wink.loudness_boolean() else STATE_CLOSED
+            if self.wink.loudness_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
         elif capability == "vibration":
-            state = STATE_OPEN if self.wink.vibration_boolean() else STATE_CLOSED
+            if self.wink.vibration_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
         elif capability == "brightness":
-            state = STATE_OPEN if self.wink.brightness_boolean() else STATE_CLOSED
+            if self.wink.brightness_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
         else:
             state = STATE_OPEN if self.is_open else STATE_CLOSED
         return state
