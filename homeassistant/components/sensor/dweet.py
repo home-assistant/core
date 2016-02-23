@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.dweet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Displays values from Dweet.io.
+Support for showing values from Dweet.io.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dweet/
@@ -20,13 +18,13 @@ REQUIREMENTS = ['dweepy==0.2.0']
 DEFAULT_NAME = 'Dweet.io Sensor'
 CONF_DEVICE = 'device'
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-variable, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Dweet sensor. """
+    """Setup the Dweet sensor."""
     import dweepy
 
     device = config.get('device')
@@ -60,8 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class DweetSensor(Entity):
-    """ Implements a Dweet sensor. """
-
+    """Implements a Dweet sensor."""
     def __init__(self, hass, dweet, name, value_template, unit_of_measurement):
         self.hass = hass
         self.dweet = dweet
@@ -73,17 +70,17 @@ class DweetSensor(Entity):
 
     @property
     def name(self):
-        """ The name of the sensor. """
+        """The name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit the value is expressed in. """
+        """Unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """ Returns the state. """
+        """Returns the state."""
         if self.dweet.data is None:
             return STATE_UNKNOWN
         else:
@@ -93,21 +90,20 @@ class DweetSensor(Entity):
             return value
 
     def update(self):
-        """ Gets the latest data from REST API. """
+        """Gets the latest data from REST API."""
         self.dweet.update()
 
 
 # pylint: disable=too-few-public-methods
 class DweetData(object):
-    """ Class for handling the data retrieval. """
-
+    """Class for handling the data retrieval."""
     def __init__(self, device):
         self._device = device
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from Dweet.io. """
+        """Gets the latest data from Dweet.io."""
         import dweepy
 
         try:

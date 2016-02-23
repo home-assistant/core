@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.twitch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A sensor for the Twitch stream status.
+Support for the Twitch stream status.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
@@ -21,13 +19,13 @@ DOMAIN = 'twitch'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Twitch platform. """
+    """Sets up the Twitch platform."""
     add_devices(
         [TwitchSensor(channel) for channel in config.get('channels', [])])
 
 
 class TwitchSensor(Entity):
-    """ Represents an Twitch channel. """
+    """Represents an Twitch channel."""
 
     # pylint: disable=abstract-method
     def __init__(self, channel):
@@ -40,22 +38,22 @@ class TwitchSensor(Entity):
 
     @property
     def should_poll(self):
-        """ Device should be polled. """
+        """Device should be polled."""
         return True
 
     @property
     def name(self):
-        """ Returns the name of the sensor. """
+        """Returns the name of the sensor."""
         return self._channel
 
     @property
     def state(self):
-        """ State of the sensor. """
+        """State of the sensor."""
         return self._state
 
     # pylint: disable=no-member
     def update(self):
-        """ Update device state. """
+        """Update device state."""
         from twitch.api import v3 as twitch
         stream = twitch.streams.by_channel(self._channel).get('stream')
         if stream:
@@ -68,7 +66,7 @@ class TwitchSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """ Returns the state attributes. """
+        """Returns the state attributes."""
         if self._state == STATE_STREAMING:
             return {
                 ATTR_GAME: self._game,
@@ -78,5 +76,5 @@ class TwitchSensor(Entity):
 
     @property
     def icon(self):
-        """ Icon to use in the frontend, if any. """
+        """Icon to use in the frontend, if any."""
         return ICON

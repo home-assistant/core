@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.dht
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adafruit DHT temperature and humidity sensor.
+Support for Adafruit DHT temperature and humidity sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dht/
@@ -13,7 +11,7 @@ from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-# update this requirement to upstream as soon as it supports python3
+# Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
                 '4101340de8d2457dd194bca1e8d11cbfc237e919.zip'
                 '#Adafruit_DHT==1.1.0']
@@ -30,8 +28,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the DHT sensor. """
-
+    """Get the DHT sensor."""
     # pylint: disable=import-error
     import Adafruit_DHT
 
@@ -70,8 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class DHTSensor(Entity):
-    """ Implements an DHT sensor. """
-
+    """Implements an DHT sensor."""
     def __init__(self, dht_client, sensor_type, temp_unit, name):
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -84,21 +80,21 @@ class DHTSensor(Entity):
 
     @property
     def name(self):
+        """Returns the name of the sensor."""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """ Gets the latest data from the DHT and updates the states. """
-
+        """Gets the latest data from the DHT and updates the states."""
         self.dht_client.update()
         data = self.dht_client.data
 
@@ -111,8 +107,7 @@ class DHTSensor(Entity):
 
 
 class DHTClient(object):
-    """ Gets the latest data from the DHT sensor. """
-
+    """Gets the latest data from the DHT sensor."""
     def __init__(self, adafruit_dht, sensor, pin):
         self.adafruit_dht = adafruit_dht
         self.sensor = sensor
@@ -121,7 +116,7 @@ class DHTClient(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data the DHT sensor. """
+        """Gets the latest data the DHT sensor."""
         humidity, temperature = self.adafruit_dht.read_retry(self.sensor,
                                                              self.pin)
         if temperature:
