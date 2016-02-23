@@ -1,7 +1,5 @@
 """
-homeassistant.components.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-MQTT component, using paho-mqtt.
+Support for MQTT message handling..
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
@@ -15,7 +13,7 @@ import time
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
-from homeassistant.util import template
+from homeassistant.helpers import template
 from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)

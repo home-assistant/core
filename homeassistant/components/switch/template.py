@@ -1,7 +1,5 @@
 """
-homeassistant.components.switch.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows the creation of a switch that integrates other components together
+Support for switches which integrates with other components.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.template/
@@ -15,7 +13,8 @@ from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.service import call_from_config
-from homeassistant.util import slugify, template
+from homeassistant.helpers import template
+from homeassistant.util import slugify
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -31,7 +30,7 @@ OFF_ACTION = 'turn_off'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the switches. """
+    """Sets up the Template switch."""
 
     switches = []
     if config.get(CONF_SWITCHES) is None:
@@ -80,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SwitchTemplate(SwitchDevice):
-    """ Represents a Template Switch. """
+    """Represents a Template switch."""
 
     # pylint: disable=too-many-arguments
     def __init__(self,
@@ -103,37 +102,37 @@ class SwitchTemplate(SwitchDevice):
         self.update()
 
         def _update_callback(_event):
-            """ Called when the target device changes state. """
+            """Called when the target device changes state."""
             self.update_ha_state(True)
 
         self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the switch."""
         return self._name
 
     @property
     def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
+        """No polling needed."""
         return False
 
     def turn_on(self, **kwargs):
-        """ Fires the on action. """
+        """Fires the on action."""
         call_from_config(self.hass, self._on_action, True)
 
     def turn_off(self, **kwargs):
-        """ Fires the off action. """
+        """Fires the off action."""
         call_from_config(self.hass, self._off_action, True)
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """True if device is on."""
         return self._value.lower() == 'true' or self._value == STATE_ON
 
     @property
     def is_off(self):
-        """ True if device is off. """
+        """True if device is off."""
         return self._value.lower() == 'false' or self._value == STATE_OFF
 
     @property
@@ -142,7 +141,7 @@ class SwitchTemplate(SwitchDevice):
         return self.is_on or self.is_off
 
     def update(self):
-        """ Updates the state from the template. """
+        """Updates the state from the template."""
         try:
             self._value = template.render(self.hass, self._template)
             if not self.available:

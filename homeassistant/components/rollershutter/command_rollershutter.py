@@ -1,7 +1,5 @@
 """
-homeassistant.components.rollershutter.command_rollershutter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a command rollershutter.
+Support for command roller shutters.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter.command_rollershutter/
@@ -11,13 +9,13 @@ import subprocess
 
 from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return rollershutter controlled by shell commands. """
+    """Setup rollershutter controlled by shell commands."""
 
     rollershutters = config.get('rollershutters', {})
     devices = []
