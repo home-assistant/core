@@ -46,26 +46,20 @@ class SteamSensor(Entity):
     @property
     def state(self):
         """ State of the sensor. """
-        if self._profile.status == 1:
-            account_state = 'Online'
-        elif self._profile.status == 2:
-            account_state = 'Busy'
-        elif self._profile.status == 3:
-            account_state = 'Away'
-        elif self._profile.status == 4:
-            account_state = 'Snooze'
-        elif self._profile.status == 5:
-            account_state = 'Trade'
-        elif self._profile.status == 6:
-            account_state = 'Play'
-        else:
-            account_state = 'Offline'
-        return account_state
+        return self._state
 
     # pylint: disable=no-member
     def update(self):
         """ Update device state. """
         self._profile = self._steamod.user.profile(self._account)
+        self._state = {
+            1: 'Online',
+            2: 'Busy',
+            3: 'Away',
+            4: 'Snooze',
+            5: 'Trade',
+            6: 'Play',
+        }.get(self._profile.status, 'Offline')
 
     @property
     def device_state_attributes(self):
