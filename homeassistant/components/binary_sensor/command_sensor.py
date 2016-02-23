@@ -11,7 +11,7 @@ from datetime import timedelta
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.command_sensor import CommandSensorData
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 

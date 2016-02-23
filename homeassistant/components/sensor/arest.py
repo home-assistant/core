@@ -13,11 +13,12 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE, DEVICE_DEFAULT_NAME)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle, template
+from homeassistant.helpers import template
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 CONF_RESOURCE = 'resource'
