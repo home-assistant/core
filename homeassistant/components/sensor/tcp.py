@@ -9,7 +9,7 @@ import socket
 import select
 
 from homeassistant.const import CONF_NAME, CONF_HOST
-from homeassistant.util import template
+from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 

@@ -10,7 +10,7 @@ import logging
 
 from homeassistant.const import CONF_VALUE_TEMPLATE, EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 

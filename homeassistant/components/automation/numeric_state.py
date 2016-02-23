@@ -11,7 +11,7 @@ from functools import partial
 
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers.event import track_state_change
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 CONF_ENTITY_ID = "entity_id"
 CONF_BELOW = "below"

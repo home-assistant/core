@@ -1,7 +1,5 @@
 """
-homeassistant.util.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Template utility methods for rendering strings with HA data.
+Template helper methods for rendering strings with HA data.
 """
 # pylint: disable=too-few-public-methods
 import json
@@ -23,8 +21,10 @@ _SENTINEL = object()
 
 def render_with_possible_json_value(hass, template, value,
                                     error_value=_SENTINEL):
-    """ Renders template with value exposed.
-        If valid JSON will expose value_json too. """
+    """
+    Renders template with value exposed.
+    If valid JSON will expose value_json too.
+    """
     variables = {
         'value': value
     }
@@ -41,7 +41,7 @@ def render_with_possible_json_value(hass, template, value,
 
 
 def render(hass, template, variables=None, **kwargs):
-    """ Render given template. """
+    """Render given template."""
     if variables is not None:
         kwargs.update(variables)
 
@@ -63,7 +63,7 @@ def render(hass, template, variables=None, **kwargs):
 
 
 class AllStates(object):
-    """ Class to expose all HA states as attributes. """
+    """Class to expose all HA states as attributes."""
     def __init__(self, hass):
         self._hass = hass
 
@@ -80,7 +80,7 @@ class AllStates(object):
 
 
 class DomainStates(object):
-    """ Class to expose a specific HA domain as attributes. """
+    """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
         self._hass = hass
