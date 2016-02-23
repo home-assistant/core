@@ -1,7 +1,5 @@
 """
-homeassistant.components.rollershutter.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a MQTT rollershutter.
+Support for MQTT roller shutters.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter.mqtt/
@@ -11,7 +9,7 @@ import logging
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +23,7 @@ DEFAULT_PAYLOAD_STOP = "STOP"
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add MQTT Rollershutter """
+    """Add MQTT Rollershutter."""
 
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
@@ -45,7 +43,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttRollershutter(RollershutterDevice):
-    """ Represents a rollershutter that can be controlled using MQTT. """
+    """Represents a rollershutter that can be controlled using MQTT."""
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_up, payload_down, payload_stop, value_template):
         self._state = None
@@ -62,7 +60,7 @@ class MqttRollershutter(RollershutterDevice):
             return
 
         def message_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
+            """A new MQTT message has been received."""
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
@@ -77,12 +75,12 @@ class MqttRollershutter(RollershutterDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ The name of the rollershutter. """
+        """The name of the rollershutter."""
         return self._name
 
     @property
@@ -94,16 +92,16 @@ class MqttRollershutter(RollershutterDevice):
         return self._state
 
     def move_up(self, **kwargs):
-        """ Move the rollershutter up. """
+        """Move the rollershutter up."""
         mqtt.publish(self.hass, self._command_topic, self._payload_up,
                      self._qos)
 
     def move_down(self, **kwargs):
-        """ Move the rollershutter down. """
+        """Move the rollershutter down."""
         mqtt.publish(self.hass, self._command_topic, self._payload_down,
                      self._qos)
 
     def stop(self, **kwargs):
-        """ Stop the device. """
+        """Stop the device."""
         mqtt.publish(self.hass, self._command_topic, self._payload_stop,
                      self._qos)
