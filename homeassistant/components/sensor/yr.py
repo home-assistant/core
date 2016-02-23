@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.yr
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Yr.no weather service.
+Support for Yr.no weather service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
@@ -41,8 +39,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the Yr.no sensor. """
-
+    """Get the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get('elevation')
@@ -77,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class YrSensor(Entity):
-    """ Implements an Yr.no sensor. """
+    """Implements an Yr.no sensor."""
 
     def __init__(self, sensor_type, weather):
         self.client_name = 'yr'
@@ -92,16 +89,17 @@ class YrSensor(Entity):
 
     @property
     def name(self):
+        """The name of the sensor."""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     @property
     def device_state_attributes(self):
-        """ Returns state attributes. """
+        """Returns state attributes. """
         data = {
             'about': "Weather forecast from yr.no, delivered by the"
                      " Norwegian Meteorological Institute and the NRK"
@@ -116,20 +114,19 @@ class YrSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """ Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """ Gets the latest data from yr.no and updates the states. """
-
+        """Gets the latest data from yr.no and updates the states."""
         now = dt_util.utcnow()
-        # check if data should be updated
+        # Check if data should be updated
         if self._update is not None and now <= self._update:
             return
 
         self._weather.update()
 
-        # find sensor
+        # Find sensor
         for time_entry in self._weather.data['product']['time']:
             valid_from = dt_util.str_to_datetime(
                 time_entry['@from'], "%Y-%m-%dT%H:%M:%SZ")
@@ -167,7 +164,7 @@ class YrSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class YrData(object):
-    """ Gets the latest data and updates the states. """
+    """Gets the latest data and updates the states."""
 
     def __init__(self, coordinates):
         self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
@@ -178,8 +175,8 @@ class YrData(object):
         self.update()
 
     def update(self):
-        """ Gets the latest data from yr.no """
-        # check if new will be available
+        """Gets the latest data from yr.no."""
+        # Check if new will be available
         if self._nextrun is not None and dt_util.utcnow() <= self._nextrun:
             return
         try:

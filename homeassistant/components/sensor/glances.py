@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.glances
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Gathers system information of hosts which running glances.
+Support gahtering system information of hosts which are running glances.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.glances/
@@ -39,13 +37,13 @@ SENSOR_TYPES = {
 }
 
 _LOGGER = logging.getLogger(__name__)
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Glances sensor. """
+    """Setup the Glances sensor."""
 
     host = config.get(CONF_HOST)
     port = config.get('port', CONF_PORT)
@@ -85,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class GlancesSensor(Entity):
-    """ Implements a Glances sensor. """
+    """Implements a Glances sensor."""
 
     def __init__(self, rest, name, sensor_type):
         self.rest = rest
@@ -97,7 +95,7 @@ class GlancesSensor(Entity):
 
     @property
     def name(self):
-        """ The name of the sensor. """
+        """The name of the sensor."""
         if self._name is None:
             return SENSOR_TYPES[self.type][0]
         else:
@@ -105,13 +103,13 @@ class GlancesSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """ Unit the value is expressed in. """
+        """Unit the value is expressed in."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches, too-many-return-statements
     @property
     def state(self):
-        """ Returns the state of the resources. """
+        """Returns the state of the resources."""
         value = self.rest.data
 
         if value is not None:
@@ -149,21 +147,20 @@ class GlancesSensor(Entity):
                 return value['processcount']['sleeping']
 
     def update(self):
-        """ Gets the latest data from REST API. """
+        """Gets the latest data from REST API."""
         self.rest.update()
 
 
 # pylint: disable=too-few-public-methods
 class GlancesData(object):
-    """ Class for handling the data retrieval. """
-
+    """Class for handling the data retrieval."""
     def __init__(self, resource):
         self._resource = resource
         self.data = dict()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from the Glances REST API. """
+        """Gets the latest data from the Glances REST API."""
         try:
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()

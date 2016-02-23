@@ -110,7 +110,7 @@ class MySensorsSensor(Entity):
 
     @property
     def should_poll(self):
-        """MySensor gateway pushes its state to HA."""
+        """No polling needed."""
         return False
 
     @property

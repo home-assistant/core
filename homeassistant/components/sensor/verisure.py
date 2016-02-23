@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -16,8 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Verisure platform. """
-
+    """Sets up the Verisure platform."""
     if not verisure.MY_PAGES:
         _LOGGER.error('A connection has not been made to Verisure mypages.')
         return False
@@ -49,86 +46,86 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureThermometer(Entity):
-    """ represents a Verisure thermometer within home assistant. """
+    """Represents a Verisure thermometer."""
 
     def __init__(self, climate_status):
         self._id = climate_status.id
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the device."""
         return '{} {}'.format(
             verisure.CLIMATE_STATUS[self._id].location,
             "Temperature")
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         # remove ° character
         return verisure.CLIMATE_STATUS[self._id].temperature[:-1]
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity """
+        """Unit of measurement of this entity."""
         return TEMP_CELCIUS  # can verisure report in fahrenheit?
 
     def update(self):
-        """ update sensor """
+        """Update the sensor."""
         verisure.update_climate()
 
 
 class VerisureHygrometer(Entity):
-    """ represents a Verisure hygrometer within home assistant. """
+    """Represents a Verisure hygrometer."""
 
     def __init__(self, climate_status):
         self._id = climate_status.id
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the sensor."""
         return '{} {}'.format(
             verisure.CLIMATE_STATUS[self._id].location,
             "Humidity")
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         # remove % character
         return verisure.CLIMATE_STATUS[self._id].humidity[:-1]
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity """
+        """Unit of measurement of this sensor."""
         return "%"
 
     def update(self):
-        """ update sensor """
+        """Update sensor the sensor."""
         verisure.update_climate()
 
 
 class VerisureMouseDetection(Entity):
-    """ represents a Verisure mousedetector within home assistant. """
+    """ Represents a Verisure mouse detector."""
 
     def __init__(self, mousedetection_status):
         self._id = mousedetection_status.deviceLabel
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the sensor."""
         return '{} {}'.format(
             verisure.MOUSEDETECTION_STATUS[self._id].location,
             "Mouse")
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return verisure.MOUSEDETECTION_STATUS[self._id].count
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity """
+        """Unit of measurement of this sensor."""
         return "Mice"
 
     def update(self):
-        """ update sensor """
+        """Update the sensor."""
         verisure.update_mousedetection()

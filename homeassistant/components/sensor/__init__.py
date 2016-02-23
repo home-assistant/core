@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various sensors that can be monitored.
 
 For more details about this component, please refer to the documentation at
@@ -31,7 +29,7 @@ DISCOVERY_PLATFORMS = {
 
 
 def setup(hass, config):
-    """ Track states and offer events for sensors. """
+    """Track states and offer events for sensors."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)

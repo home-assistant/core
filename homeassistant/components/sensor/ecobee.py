@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Sensor platform for Ecobee sensors.
+Support for Ecobee sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecobee/
@@ -24,7 +22,7 @@ ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Ecobee sensors. """
+    """Sets up the Ecobee sensors."""
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -42,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EcobeeSensor(Entity):
-    """ An Ecobee sensor. """
+    """An Ecobee sensor."""
 
     def __init__(self, sensor_name, sensor_type, sensor_index):
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
@@ -55,12 +53,12 @@ class EcobeeSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the Ecobee sensor.. """
+        """Returns the name of the Ecobee sensor."""
         return self._name.rstrip()
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
@@ -70,11 +68,11 @@ class EcobeeSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement this sensor expresses itself in. """
+        """Unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
     def update(self):
-        """ Get the latest state of the sensor. """
+        """Get the latest state of the sensor."""
         data = ecobee.NETWORK
         data.update()
         for sensor in data.ecobee.get_remote_sensors(self.index):

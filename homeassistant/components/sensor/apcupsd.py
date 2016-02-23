@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.apcupsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides a sensor to track various status aspects of a UPS.
 
 For more details about this platform, please refer to the documentation at
@@ -59,7 +57,7 @@ def infer_unit(value):
 
 
 class Sensor(Entity):
-    """ Generic sensor entity for APCUPSd status values. """
+    """Generic sensor entity for APCUPSd status values."""
     def __init__(self, config, data, unit=None):
         self._config = config
         self._unit = unit
@@ -69,22 +67,22 @@ class Sensor(Entity):
 
     @property
     def name(self):
-        """ The name of the UPS sensor. """
+        """The name of the UPS sensor."""
         return self._config.get("name", DEFAULT_NAME)
 
     @property
     def state(self):
-        """ True if the UPS is online, else False. """
+        """True if the UPS is online, else False."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         if self._unit is None:
             return self._inferred_unit
         return self._unit
 
     def update(self):
-        """ Get the latest status and use it to update our sensor state. """
+        """Get the latest status and use it to update our sensor state."""
         key = self._config[apcupsd.CONF_TYPE].upper()
         self._state, self._inferred_unit = infer_unit(self._data.status[key])

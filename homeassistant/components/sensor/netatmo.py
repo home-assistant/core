@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.netatmo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-NetAtmo Weather Service service.
+Support for the NetAtmo Weather Service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.netatmo/
@@ -41,8 +39,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the NetAtmo sensor. """
-
+    """Get the NetAtmo sensor."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY,
                                      CONF_USERNAME,
@@ -89,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class NetAtmoSensor(Entity):
-    """ Implements a NetAtmo sensor. """
+    """Implements a NetAtmo sensor."""
 
     def __init__(self, netatmo_data, module_name, sensor_type):
         self._name = "NetAtmo {} {}".format(module_name,
@@ -103,26 +100,27 @@ class NetAtmoSensor(Entity):
 
     @property
     def name(self):
+        """The name of the sensor."""
         return self._name
 
     @property
     def icon(self):
+        """Icon to use in the frontend, if any."""
         return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
-        """ Gets the latest data from NetAtmo API and updates the states. """
-
+        """Gets the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
         data = self.netatmo_data.data[self.module_name]
 
@@ -139,21 +137,20 @@ class NetAtmoSensor(Entity):
 
 
 class NetAtmoData(object):
-    """ Gets the latest data from NetAtmo. """
+    """Gets the latest data from NetAtmo."""
 
     def __init__(self, auth):
         self.auth = auth
         self.data = None
 
     def get_module_names(self):
-        """ Return all module available on the API as a list. """
+        """Return all module available on the API as a list."""
         self.update()
         return self.data.keys()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Call the NetAtmo API to update the data. """
+        """Call the NetAtmo API to update the data."""
         import lnetatmo
-        # Gets the latest data from NetAtmo. """
         dev_list = lnetatmo.DeviceList(self.auth)
         self.data = dev_list.lastData(exclude=3600)

@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.vera
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Vera sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -23,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def get_devices(hass, config):
-    """ Find and return Vera Sensors. """
+    """Find and return Vera Sensors."""
     import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
@@ -40,7 +38,7 @@ def get_devices(hass, config):
 
     if created:
         def stop_subscription(event):
-            """ Shutdown Vera subscriptions and subscription thread on exit"""
+            """Shutdown Vera subscriptions and subscription thread on exit."""
             _LOGGER.info("Shutting down subscriptions.")
             vera_controller.stop()
 
@@ -54,7 +52,7 @@ def get_devices(hass, config):
     try:
         devices = vera_controller.get_devices(categories)
     except RequestException:
-        # There was a network related error connecting to the vera controller
+        # There was a network related error connecting to the vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
@@ -71,12 +69,12 @@ def get_devices(hass, config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Performs setup for Vera controller devices. """
+    """Performs setup for Vera controller devices."""
     add_devices(get_devices(hass, config))
 
 
 class VeraSensor(Entity):
-    """ Represents a Vera Sensor. """
+    """Represents a Vera Sensor."""
 
     def __init__(self, vera_device, controller, extra_data=None):
         self.vera_device = vera_device
@@ -93,7 +91,7 @@ class VeraSensor(Entity):
         self.update()
 
     def _update_callback(self, _device):
-        """ Called by the vera device callback to update state. """
+        """Called by the vera device callback to update state."""
         self.update_ha_state(True)
 
     def __str__(self):
@@ -101,16 +99,17 @@ class VeraSensor(Entity):
 
     @property
     def state(self):
+        """Returns the name of the sensor."""
         return self.current_value
 
     @property
     def name(self):
-        """ Get the mame of the sensor. """
+        """Get the mame of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         if self.vera_device.category == "Temperature Sensor":
             return self._temperature_units
         elif self.vera_device.category == "Light Sensor":
@@ -120,6 +119,7 @@ class VeraSensor(Entity):
 
     @property
     def device_state_attributes(self):
+        """Returns the sensor's attributes."""
         attr = {}
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
@@ -144,10 +144,11 @@ class VeraSensor(Entity):
 
     @property
     def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
+        """No polling needed."""
         return False
 
     def update(self):
+        """Updates the state."""
         if self.vera_device.category == "Temperature Sensor":
             current_temp = self.vera_device.temperature
             vera_temp_units = (

@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.isy994
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for ISY994 sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -29,16 +27,16 @@ DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the ISY994 platform. """
+    """Sets up the ISY994 platform."""
     # pylint: disable=protected-access
     logger = logging.getLogger(__name__)
     devs = []
-    # verify connection
+    # Verify connection
     if ISY is None or not ISY.connected:
         logger.error('A connection has not been made to the ISY controller.')
         return False
 
-    # import weather
+    # Import weather
     if ISY.climate is not None:
         for prop in ISY.climate._id2name:
             if prop is not None:
@@ -49,14 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                          getattr(ISY.climate, prop + '_units'))
                 devs.append(ISYSensorDevice(node))
 
-    # import sensor nodes
+    # Import sensor nodes
     for (path, node) in ISY.nodes:
         if SENSOR_STRING in node.name:
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
             devs.append(ISYSensorDevice(node, [STATE_ON, STATE_OFF]))
 
-    # import sensor programs
+    # Import sensor programs
     for (folder_name, states) in (
             ('HA.locations', [STATE_HOME, STATE_NOT_HOME]),
             ('HA.sensors', [STATE_OPEN, STATE_CLOSED]),
@@ -75,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WeatherPseudoNode(object):
-    """ This class allows weather variable to act as regular nodes. """
+    """This class allows weather variable to act as regular nodes."""
     # pylint: disable=too-few-public-methods
 
     def __init__(self, device_id, name, status, units=None):
@@ -86,8 +84,7 @@ class WeatherPseudoNode(object):
 
 
 class ISYSensorDevice(ISYDeviceABC):
-    """ Represents a ISY sensor. """
-
+    """Represents a ISY sensor."""
     _domain = 'sensor'
 
     def __init__(self, node, states=None):
