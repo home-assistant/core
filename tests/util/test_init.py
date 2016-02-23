@@ -53,6 +53,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(True, util.convert("True", bool))
         self.assertEqual(1, util.convert("NOT A NUMBER", int, 1))
         self.assertEqual(1, util.convert(None, int, 1))
+        self.assertEqual(1, util.convert(object, int, 1))
 
     def test_ensure_unique_string(self):
         """ Test ensure_unique_string. """
