@@ -9,7 +9,7 @@ import logging
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 

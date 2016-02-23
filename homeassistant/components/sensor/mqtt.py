@@ -9,7 +9,7 @@ import logging
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 

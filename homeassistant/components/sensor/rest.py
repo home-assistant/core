@@ -11,7 +11,8 @@ import requests
 
 from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle, template
+from homeassistant.helpers import template
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

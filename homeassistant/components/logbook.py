@@ -1,7 +1,5 @@
 """
-homeassistant.components.logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Parses events and generates a human log.
+Event parser and human readable log generator.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
@@ -19,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -43,7 +41,7 @@ ATTR_ENTITY_ID = 'entity_id'
 
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
-    """ Adds an entry to the logbook. """
+    """Adds an entry to the logbook."""
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -57,10 +55,10 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 
 def setup(hass, config):
-    """ Listens for download events to download files. """
-    # create service handler
+    """Listens for download events to download files."""
+
     def log_message(service):
-        """ Handle sending notification message service calls. """
+        """Handle sending notification message service calls."""
         message = service.data.get(ATTR_MESSAGE)
         name = service.data.get(ATTR_NAME)
         domain = service.data.get(ATTR_DOMAIN, None)
@@ -78,7 +76,7 @@ def setup(hass, config):
 
 
 def _handle_get_logbook(handler, path_match, data):
-    """ Return logbook entries. """
+    """Return logbook entries."""
     date_str = path_match.group('date')
 
     if date_str:
@@ -102,10 +100,9 @@ def _handle_get_logbook(handler, path_match, data):
 
 
 class Entry(object):
-    """ A human readable version of the log. """
+    """A human readable version of the log."""
 
     # pylint: disable=too-many-arguments, too-few-public-methods
-
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
         self.when = when
@@ -115,7 +112,7 @@ class Entry(object):
         self.entity_id = entity_id
 
     def as_dict(self):
-        """ Convert Entry to a dict to be used within JSON. """
+        """Convert entry to a dict to be used within JSON."""
         return {
             'when': dt_util.datetime_to_str(self.when),
             'name': self.name,
@@ -134,7 +131,6 @@ def humanify(events):
      - if home assistant stop and start happen in same minute call it restarted
     """
     # pylint: disable=too-many-branches
-
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -145,7 +141,7 @@ def humanify(events):
         # Keep track of last sensor states
         last_sensor_event = {}
 
-        # group HA start/stop events
+        # Group HA start/stop events
         # Maps minute of event to 1: stop, 2: stop + start
         start_stop_events = {}
 
@@ -182,7 +178,7 @@ def humanify(events):
 
                 to_state = State.from_dict(event.data.get('new_state'))
 
-                # if last_changed != last_updated only attributes have changed
+                # If last_changed != last_updated only attributes have changed
                 # we do not report on that yet. Also filter auto groups.
                 if not to_state or \
                    to_state.last_changed != to_state.last_updated or \
@@ -238,7 +234,7 @@ def humanify(events):
 
 
 def _entry_message_from_state(domain, state):
-    """ Convert a state to a message for the logbook. """
+    """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     # pylint: disable=too-many-return-statements
 
