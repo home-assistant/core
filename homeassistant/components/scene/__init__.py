@@ -68,17 +68,8 @@ class Scene(Entity):
         return False
 
     @property
-    def name(self):
-        raise NotImplementedError
-
-    @property
     def state(self):
         return STATE
-
-    @property
-    def entity_ids(self):
-        """ Entity IDs part of this scene. """
-        return None
 
     def activate(self):
         """ Activates scene. Tries to get entities into requested state. """
