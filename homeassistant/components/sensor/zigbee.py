@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.zigbee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Contains functionality to use a ZigBee device as a sensor.
 
 For more details about this platform, please refer to the documentation at
@@ -38,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ZigBeeTemperatureSensor(Entity):
-    """ Allows usage of an XBee Pro as a temperature sensor. """
+    """Allows usage of an XBee Pro as a temperature sensor."""
     def __init__(self, hass, config):
         self._config = config
         self._temp = None
@@ -48,17 +46,21 @@ class ZigBeeTemperatureSensor(Entity):
 
     @property
     def name(self):
+        """The name of the sensor."""
         return self._config.name
 
     @property
     def state(self):
+        """Returns the state of the sensor."""
         return self._temp
 
     @property
     def unit_of_measurement(self):
+        """Unit the value is expressed in."""
         return TEMP_CELCIUS
 
     def update(self, *args):
+        """Gets the latest data."""
         try:
             self._temp = zigbee.DEVICE.get_temperature(self._config.address)
         except zigbee.ZIGBEE_TX_FAILURE:
