@@ -11,7 +11,7 @@ import logging
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.6.1']
+REQUIREMENTS = ['python-wink==0.6.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -38,11 +38,39 @@ class WinkSensorDevice(Entity):
 
     def __init__(self, wink):
         self.wink = wink
+        self._unit_of_measurement = self.wink.UNIT
 
     @property
     def state(self):
         """ Returns the state. """
-        return STATE_OPEN if self.is_open else STATE_CLOSED
+        capability = self.wink.capability()
+        if capability == "humidity":
+            state = self.wink.humidity_percentage()
+        elif capability == "temperature":
+            state = self.wink.temperature_float()
+        elif capability == "loudness":
+            if self.wink.loudness_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
+        elif capability == "vibration":
+            if self.wink.vibration_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
+        elif capability == "brightness":
+            if self.wink.brightness_boolean():
+                state = STATE_OPEN
+            else:
+                state = STATE_CLOSED
+        else:
+            state = STATE_OPEN if self.is_open else STATE_CLOSED
+        return state
+
+    @property
+    def unit_of_measurement(self):
+        """ Unit of measurement of this entity, if any. """
+        return self._unit_of_measurement
 
     @property
     def unique_id(self):
