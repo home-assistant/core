@@ -1,8 +1,5 @@
 """
-tests.util.test_template
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant template util methods.
+Tests Home Assistant template helper methods.
 """
 # pylint: disable=too-many-public-methods
 import unittest
@@ -10,7 +7,7 @@ from unittest.mock import patch
 
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
-from homeassistant.util import template
+from homeassistant.helpers import template
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant
@@ -22,7 +19,7 @@ class TestUtilTemplate(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down stuff we started."""
         self.hass.stop()
 
     def test_referring_states_by_entity_id(self):
@@ -174,16 +171,16 @@ class TestUtilTemplate(unittest.TestCase):
             template.render(self.hass, '{{ states("test.object2") }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
-    @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
-           return_value=True)
+    @patch('homeassistant.helpers.template.TemplateEnvironment.'
+           'is_safe_callable', return_value=True)
     def test_now(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
             template.render(self.hass, '{{ now.isoformat() }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
-    @patch('homeassistant.util.template.TemplateEnvironment.is_safe_callable',
-           return_value=True)
+    @patch('homeassistant.helpers.template.TemplateEnvironment.'
+           'is_safe_callable', return_value=True)
     def test_utcnow(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
