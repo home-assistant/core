@@ -171,16 +171,16 @@ class TestUtilTemplate(unittest.TestCase):
             template.render(self.hass, '{{ states("test.object2") }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
-    @patch('homeassistant.helpers.template.TemplateEnvironment.is_safe_callable',
-           return_value=True)
+    @patch('homeassistant.helpers.template.TemplateEnvironment.'
+           'is_safe_callable', return_value=True)
     def test_now(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
             template.render(self.hass, '{{ now.isoformat() }}'))
 
     @patch('homeassistant.core.dt_util.utcnow', return_value=dt_util.utcnow())
-    @patch('homeassistant.helpers.template.TemplateEnvironment.is_safe_callable',
-           return_value=True)
+    @patch('homeassistant.helpers.template.TemplateEnvironment.'
+           'is_safe_callable', return_value=True)
     def test_utcnow(self, mock_is_safe, mock_utcnow):
         self.assertEqual(
             dt_util.utcnow().isoformat(),
