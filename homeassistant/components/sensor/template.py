@@ -13,7 +13,8 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.util import slugify, template
+from homeassistant.helpers import template
+from homeassistant.util import slugify
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
