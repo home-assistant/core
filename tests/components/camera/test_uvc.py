@@ -27,10 +27,19 @@ class TestUVCSetup(unittest.TestCase):
         fake_cameras = [
             {'uuid': 'one', 'name': 'Front'},
             {'uuid': 'two', 'name': 'Back'},
+            {'uuid': 'three', 'name': 'Old AirCam'},
         ]
+
+        def fake_get_camera(uuid):
+            if uuid == 'three':
+                return {'model': 'airCam'}
+            else:
+                return {'model': 'UVC'}
+
         hass = mock.MagicMock()
         add_devices = mock.MagicMock()
         mock_remote.return_value.index.return_value = fake_cameras
+        mock_remote.return_value.get_camera.side_effect = fake_get_camera
         self.assertTrue(uvc.setup_platform(hass, config, add_devices))
         mock_remote.assert_called_once_with('foo', 123, 'secret')
         add_devices.assert_called_once_with([
@@ -54,6 +63,7 @@ class TestUVCSetup(unittest.TestCase):
         hass = mock.MagicMock()
         add_devices = mock.MagicMock()
         mock_remote.return_value.index.return_value = fake_cameras
+        mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
         self.assertTrue(uvc.setup_platform(hass, config, add_devices))
         mock_remote.assert_called_once_with('foo', 7080, 'secret')
         add_devices.assert_called_once_with([
