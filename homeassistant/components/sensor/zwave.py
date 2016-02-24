@@ -6,33 +6,22 @@ at https://home-assistant.io/components/sensor.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import datetime
-
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_ALARM, COMMAND_CLASS_METER,
     COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
-    TYPE_DECIMAL, ZWaveDeviceEntity, get_config_value)
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TYPE_DECIMAL, ZWaveDeviceEntity)
+from homeassistant.const import (TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_point_in_time
 
-PHILIO = '0x013c'
-PHILIO_SLIM_SENSOR = '0x0002'
-PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
 
-FIBARO = '0x010f'
-FIBARO_WALL_PLUG = '0x1000'
+FIBARO = 0x010f
+FIBARO_WALL_PLUG = 0x1000
 FIBARO_WALL_PLUG_SENSOR_METER = (FIBARO, FIBARO_WALL_PLUG, 8)
 
-WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
 WORKAROUND_IGNORE = 'ignore'
 
 DEVICE_MAPPINGS = {
-    PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
-
     # For some reason Fibaro Wall Plug reports 2 power consumptions.
     # One value updates as the power consumption changes
     # and the other does not change.
@@ -61,19 +50,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #                     groups[1].associations):
     #     node.groups[1].add_association(NETWORK.controller.node_id)
 
-    specific_sensor_key = (value.node.manufacturer_id,
-                           value.node.product_id,
+    specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                           int(value.node.product_id, 16),
                            value.index)
 
     # Check workaround mappings for specific devices.
     if specific_sensor_key in DEVICE_MAPPINGS:
-        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-            # Default the multiplier to 4
-            re_arm_multiplier = (get_config_value(value.node, 9) or 4)
-            add_devices([
-                ZWaveTriggerSensor(value, hass, re_arm_multiplier * 8)
-            ])
-        elif DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
             return
 
     # Generic Device mappings
@@ -114,41 +97,6 @@ class ZWaveSensor(ZWaveDeviceEntity, Entity):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
             self.update_ha_state()
-
-
-class ZWaveTriggerSensor(ZWaveSensor):
-    """
-    Represents a stateless sensor which triggers events just 'On'
-    within Z-Wave.
-    """
-
-    def __init__(self, sensor_value, hass, re_arm_sec=60):
-        super(ZWaveTriggerSensor, self).__init__(sensor_value)
-        self._hass = hass
-        self.invalidate_after = dt_util.utcnow()
-        self.re_arm_sec = re_arm_sec
-
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            self.update_ha_state()
-            if value.data:
-                # only allow this value to be true for 60 secs
-                self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                    seconds=self.re_arm_sec)
-                track_point_in_time(
-                    self._hass, self.update_ha_state,
-                    self.invalidate_after)
-
-    @property
-    def state(self):
-        """Returns the state of the sensor."""
-        if not self._value.data or \
-                (self.invalidate_after is not None and
-                 self.invalidate_after <= dt_util.utcnow()):
-            return STATE_OFF
-
-        return STATE_ON
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):
