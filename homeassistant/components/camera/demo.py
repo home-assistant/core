@@ -1,7 +1,8 @@
 """
-homeassistant.components.camera.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Demo platform that has a fake camera.
+Demo camera platform that has a fake camera.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
 import os
 
@@ -10,21 +11,21 @@ from homeassistant.components.camera import Camera
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Demo camera. """
+    """Setup the Demo camera platform."""
     add_devices([
         DemoCamera('Demo camera')
     ])
 
 
 class DemoCamera(Camera):
-    """ A Demo camera. """
+    """A Demo camera."""
 
     def __init__(self, name):
         super().__init__()
         self._name = name
 
     def camera_image(self):
-        """ Return a faked still image response. """
+        """Return a faked still image response."""
         now = dt_util.utcnow()
 
         image_path = os.path.join(os.path.dirname(__file__),
@@ -34,5 +35,5 @@ class DemoCamera(Camera):
 
     @property
     def name(self):
-        """ Return the name of this device. """
+        """Return the name of this camera."""
         return self._name

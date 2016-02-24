@@ -1,5 +1,8 @@
 """
 Demo platform that has a couple of fake sensors.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
 from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
@@ -29,22 +32,22 @@ class DemoSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit this state is expressed in."""
+        """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         if self._battery:
             return {
                 ATTR_BATTERY_LEVEL: self._battery,
