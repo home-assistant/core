@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ])
 
     elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
-        add_devices([ZWaveBinarySensor(value, "opening")])
+        add_devices([ZWaveBinarySensor(value, None)])
 
 
 class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
@@ -102,15 +102,21 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
     def __init__(self, sensor_value, sensor_class, hass, re_arm_sec=60):
         super(ZWaveTriggerSensor, self).__init__(sensor_value, sensor_class)
         self._hass = hass
-        self.invalidate_after = dt_util.utcnow()
         self.re_arm_sec = re_arm_sec
+        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+            seconds=self.re_arm_sec)
+        # If it's active make sure that we set the timeout tracker
+        if sensor_value.data:
+            track_point_in_time(
+                self._hass, self.update_ha_state,
+                self.invalidate_after)
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
             self.update_ha_state()
             if value.data:
-                # only allow this value to be true for 60 secs
+                # only allow this value to be true for re_arm secs
                 self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
                     seconds=self.re_arm_sec)
                 track_point_in_time(
@@ -118,16 +124,8 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
                     self.invalidate_after)
 
     @property
-    def state(self):
-        """Returns the state of the sensor."""
-        if not self._value.data or \
-                (self.invalidate_after is not None and
-                 self.invalidate_after <= dt_util.utcnow()):
-            return False
-
-        return True
-
-    @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self.state
+        """Return True if movement has happened within the rearm time."""
+        return self._value.data and \
+            (self.invalidate_after is None or
+             self.invalidate_after > dt_util.utcnow())
