@@ -4,7 +4,6 @@ Support for the Twitch stream status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
 """
-from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import Entity
 
 STATE_STREAMING = 'streaming'
@@ -51,6 +50,11 @@ class TwitchSensor(Entity):
         """State of the sensor."""
         return self._state
 
+    @property
+    def entity_picture(self):
+        """Preview of current game."""
+        return self._preview
+
     # pylint: disable=no-member
     def update(self):
         """Update device state."""
@@ -62,6 +66,7 @@ class TwitchSensor(Entity):
             self._preview = stream.get('preview').get('small')
             self._state = STATE_STREAMING
         else:
+            self._preview = None
             self._state = STATE_OFFLINE
 
     @property
@@ -71,7 +76,6 @@ class TwitchSensor(Entity):
             return {
                 ATTR_GAME: self._game,
                 ATTR_TITLE: self._title,
-                ATTR_ENTITY_PICTURE: self._preview
             }
 
     @property
