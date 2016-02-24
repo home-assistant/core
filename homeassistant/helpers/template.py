@@ -52,6 +52,7 @@ def render(hass, template, variables=None, **kwargs):
         return ENV.from_string(template, {
             'closest': location_methods.closest,
             'distance': location_methods.distance,
+            'float': forgiving_float,
             'is_state': hass.states.is_state,
             'is_state_attr': hass.states.is_state_attr,
             'now': dt_util.as_local(utcnow),
@@ -237,6 +238,14 @@ def multiply(value, amount):
         return float(value) * amount
     except (ValueError, TypeError):
         # If value can't be converted to float
+        return value
+
+
+def forgiving_float(value):
+    """Try to convert value to a float."""
+    try:
+        return float(value)
+    except (ValueError, TypeError):
         return value
 
 
