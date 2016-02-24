@@ -6,10 +6,12 @@ Tests TCP sensor.
 """
 import socket
 from copy import copy
+from uuid import uuid4
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant.components.sensor import tcp
+from homeassistant.helpers.entity import Entity
 from tests.common import get_test_home_assistant
 
 
@@ -34,7 +36,22 @@ KEYS_AND_DEFAULTS = {
 }
 
 
-# class TestTCPSensor(unittest.TestCase):
+def test_setup_platform_valid_config():
+    """ Should check the supplied config and call add_entities with Sensor. """
+    add_entities = Mock()
+    ret = tcp.setup_platform(None, TEST_CONFIG, add_entities)
+    assert ret is None, "setup_platform() should return None if successful."
+    assert add_entities.called
+    assert isinstance(add_entities.call_args[0][0][0], tcp.Sensor)
+
+
+def test_setup_platform_invalid_config():
+    """ Should check the supplied config and return False if it is invalid. """
+    config = copy(TEST_CONFIG)
+    del config[tcp.CONF_HOST]
+    assert tcp.setup_platform(None, config, None) is False
+
+
 class TestTCPSensor():
     """ Test the TCP Sensor. """
 
@@ -43,6 +60,31 @@ class TestTCPSensor():
 
     def teardown_class(cls):
         cls.hass.stop()
+
+    def test_name(self):
+        """ Should return the name if set in the config. """
+        sensor = tcp.Sensor(self.hass, TEST_CONFIG)
+        assert sensor.name == TEST_CONFIG[tcp.CONF_NAME]
+
+    def test_name_not_set(self):
+        """ Should return the superclass name property if not set in config """
+        config = copy(TEST_CONFIG)
+        del config[tcp.CONF_NAME]
+        entity = Entity()
+        sensor = tcp.Sensor(self.hass, config)
+        assert sensor.name == entity.name
+
+    def test_state(self):
+        """ Should return the contents of _state. """
+        sensor = tcp.Sensor(self.hass, TEST_CONFIG)
+        uuid = str(uuid4())
+        sensor._state = uuid
+        assert sensor.state == uuid
+
+    def test_unit_of_measurement(self):
+        """ Should return the configured unit of measurement. """
+        sensor = tcp.Sensor(self.hass, TEST_CONFIG)
+        assert sensor.unit_of_measurement == TEST_CONFIG[tcp.CONF_UNIT]
 
     @patch("homeassistant.components.sensor.tcp.Sensor.update")
     def test_config_valid_keys(self, *args):
@@ -142,10 +184,29 @@ class TestTCPSensor():
             TEST_CONFIG[tcp.CONF_PORT]))
 
     @patch("socket.socket.connect", side_effect=socket.error())
-    def test_update_returns_if_connecting_fails(self, mock_socket):
+    def test_update_returns_if_connecting_fails(self, *args):
         """
         Should return if connecting to host fails.
         """
+        with patch("homeassistant.components.sensor.tcp.Sensor.update"):
+            sensor = tcp.Sensor(self.hass, TEST_CONFIG)
+        assert sensor.update() is None
+
+    @patch("socket.socket.connect")
+    @patch("socket.socket.send", side_effect=socket.error())
+    def test_update_returns_if_sending_fails(self, *args):
+        """
+        Should return if sending fails.
+        """
+        with patch("homeassistant.components.sensor.tcp.Sensor.update"):
+            sensor = tcp.Sensor(self.hass, TEST_CONFIG)
+        assert sensor.update() is None
+
+    @patch("socket.socket.connect")
+    @patch("socket.socket.send")
+    @patch("select.select", return_value=(False, False, False))
+    def test_update_returns_if_select_fails(self, *args):
+        """ Should return if select fails to return a socket. """
         with patch("homeassistant.components.sensor.tcp.Sensor.update"):
             sensor = tcp.Sensor(self.hass, TEST_CONFIG)
         assert sensor.update() is None
@@ -201,3 +262,16 @@ class TestTCPSensor():
         config[tcp.CONF_VALUE_TEMPLATE] = "{{ value }} {{ 1+1 }}"
         sensor = tcp.Sensor(self.hass, config)
         assert sensor._state == "%s 2" % test_value
+
+    @patch("socket.socket")
+    @patch("select.select", return_value=(True, False, False))
+    def test_update_returns_if_template_render_fails(
+            self, mock_select, mock_socket):
+        """ Should return None if rendering the template fails. """
+        test_value = "test_value"
+        mock_socket = mock_socket().__enter__()
+        mock_socket.recv.return_value = test_value.encode()
+        config = copy(TEST_CONFIG)
+        config[tcp.CONF_VALUE_TEMPLATE] = "{{ this won't work"
+        sensor = tcp.Sensor(self.hass, config)
+        assert sensor.update() is None
