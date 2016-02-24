@@ -10,7 +10,8 @@ from collections import defaultdict
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT,
+    ATTR_ENTITY_PICTURE)
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 
@@ -106,6 +107,11 @@ class Entity(object):
         return None
 
     @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        return None
+
+    @property
     def hidden(self):
         """Return True if the entity should be hidden from UIs."""
         return False
@@ -157,25 +163,18 @@ class Entity(object):
         if device_attr is not None:
             attr.update(device_attr)
 
-        if ATTR_UNIT_OF_MEASUREMENT not in attr and \
-           self.unit_of_measurement is not None:
-            attr[ATTR_UNIT_OF_MEASUREMENT] = str(self.unit_of_measurement)
+        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
+                          attr)
 
         if not self.available:
             state = STATE_UNAVAILABLE
             attr = {}
 
-        if self.name is not None:
-            attr[ATTR_FRIENDLY_NAME] = str(self.name)
-
-        if self.icon is not None:
-            attr[ATTR_ICON] = str(self.icon)
-
-        if self.hidden:
-            attr[ATTR_HIDDEN] = bool(self.hidden)
-
-        if self.assumed_state:
-            attr[ATTR_ASSUMED_STATE] = bool(self.assumed_state)
+        self._attr_setter('name', str, ATTR_FRIENDLY_NAME, attr)
+        self._attr_setter('icon', str, ATTR_ICON, attr)
+        self._attr_setter('entity_picture', str, ATTR_ENTITY_PICTURE, attr)
+        self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
+        self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
 
         # overwrite properties that have been set in the config file
         attr.update(_OVERWRITE.get(self.entity_id, {}))
@@ -194,6 +193,21 @@ class Entity(object):
             state = str(state)
 
         return self.hass.states.set(self.entity_id, state, attr)
+
+    def _attr_setter(self, name, typ, attr, attrs):
+        """Helper method to populate attributes based on properties."""
+        if attr in attrs:
+            return
+
+        value = getattr(self, name)
+
+        if not value:
+            return
+
+        try:
+            attrs[attr] = typ(value)
+        except (TypeError, ValueError):
+            pass
 
     def __eq__(self, other):
         return (isinstance(other, Entity) and
