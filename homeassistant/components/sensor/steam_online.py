@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.steam_online
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Sensor for Steam account status.
 
 For more details about this platform, please refer to the documentation at
@@ -16,7 +14,7 @@ REQUIREMENTS = ['steamodd==4.21']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Steam platform. """
+    """Setup the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
     add_devices(
@@ -25,8 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SteamSensor(Entity):
-    """ Steam account. """
-
+    """A class for the Steam account."""
     # pylint: disable=abstract-method
     def __init__(self, account, steamod):
         self._steamod = steamod
@@ -35,22 +32,22 @@ class SteamSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the sensor. """
+        """Return the name of the sensor."""
         return self._profile.persona
 
     @property
     def entity_id(self):
-        """ Entity ID. """
+        """Return the entity ID."""
         return 'sensor.steam_{}'.format(self._account)
 
     @property
     def state(self):
-        """ State of the sensor. """
+        """Return the state of the sensor."""
         return self._state
 
     # pylint: disable=no-member
     def update(self):
-        """ Update device state. """
+        """Update device state."""
         self._profile = self._steamod.user.profile(self._account)
         self._state = {
             1: 'Online',
@@ -63,12 +60,12 @@ class SteamSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """ Returns the state attributes. """
+        """Return the state attributes."""
         return {
             ATTR_ENTITY_PICTURE: self._profile.avatar_medium
         }
 
     @property
     def icon(self):
-        """ Icon to use in the frontend """
+        """Return the icon to use in the frontend."""
         return ICON
