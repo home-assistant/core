@@ -30,20 +30,20 @@ class DemoGarageDoor(GarageDoorDevice):
 
     @property
     def name(self):
-        """Returns the name of the device if any."""
+        """Return the name of the device if any."""
         return self._name
 
     @property
     def is_closed(self):
-        """True if device is closed."""
+        """Return true if garage door is closed."""
         return self._state == STATE_CLOSED
 
     def close_door(self, **kwargs):
-        """Close the device."""
+        """Close the garage door."""
         self._state = STATE_CLOSED
         self.update_ha_state()
 
     def open_door(self, **kwargs):
-        """Open the device."""
+        """Open the garage door."""
         self._state = STATE_OPEN
         self.update_ha_state()
