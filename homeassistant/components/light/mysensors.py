@@ -31,11 +31,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
-            pres.S_LIGHT: [set_req.V_LIGHT],
             pres.S_DIMMER: [set_req.V_DIMMER],
         }
         device_class_map = {
-            pres.S_LIGHT: MySensorsLightPlain,
             pres.S_DIMMER: MySensorsLightDimmer,
         }
         if float(gateway.version) >= 1.5:
@@ -43,7 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             map_sv_types.update({
                 pres.S_RGB_LIGHT: [set_req.V_RGB],
             })
-            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
             map_sv_types[pres.S_DIMMER].append(set_req.V_PERCENTAGE)
             device_class_map.update({
                 pres.S_RGB_LIGHT: MySensorsLightRGB,
@@ -258,25 +255,6 @@ class MySensorsLight(Light):
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)
             self._values[value_type] = value
-
-
-class MySensorsLightPlain(MySensorsLight):
-    """Light child class to MySensorsLight."""
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self._turn_on_light()
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        ret = self._turn_off_light()
-        self._turn_off_main(value_type=ret[
-            ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-
-    def update(self):
-        """Update the controller with the latest value from a sensor."""
-        self._update_main()
-        self._update_light()
 
 
 class MySensorsLightDimmer(MySensorsLight):
