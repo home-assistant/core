@@ -6,10 +6,10 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-import homeassistant.components.mysensors as mysensors
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -21,6 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Otherwise gateway is not setup.
     if discovery_info is None:
         return
+
+    mysensors = get_component('mysensors')
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
@@ -77,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MySensorsSensor(Entity):
     """Represent the value of a MySensors child node."""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
 
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
@@ -99,6 +101,7 @@ class MySensorsSensor(Entity):
         value_type (str): Value type of child. Value is entity state.
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
+        mysensors (module): Mysensors main component module.
         """
         self.gateway = gateway
         self.node_id = node_id
@@ -107,6 +110,7 @@ class MySensorsSensor(Entity):
         self.value_type = value_type
         self.battery_level = 0
         self._values = {}
+        self.mysensors = get_component('mysensors')
 
     @property
     def should_poll(self):
@@ -156,9 +160,9 @@ class MySensorsSensor(Entity):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         attr = {
-            mysensors.ATTR_PORT: self.gateway.port,
-            mysensors.ATTR_NODE_ID: self.node_id,
-            mysensors.ATTR_CHILD_ID: self.child_id,
+            self.mysensors.ATTR_PORT: self.gateway.port,
+            self.mysensors.ATTR_NODE_ID: self.node_id,
+            self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
