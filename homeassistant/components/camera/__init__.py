@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import bloomsky
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
     HTTP_NOT_FOUND,
     ATTR_ENTITY_ID,
     )
@@ -133,6 +132,11 @@ class Camera(Entity):
         return False
 
     @property
+    def entity_picture(self):
+        """Return a link to the camera feed as entity picture."""
+        return ENTITY_IMAGE_URL.format(self.entity_id)
+
+    @property
     # pylint: disable=no-self-use
     def is_recording(self):
         """Return true if the device is recording."""
@@ -195,9 +199,7 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """Camera state attributes."""
-        attr = {
-            ATTR_ENTITY_PICTURE: ENTITY_IMAGE_URL.format(self.entity_id),
-        }
+        attr = {}
 
         if self.model:
             attr['model_name'] = self.model
