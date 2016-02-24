@@ -1,8 +1,8 @@
 """
-homeassistant.components.notify.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Demo notification service.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
 from homeassistant.components.notify import ATTR_TITLE, BaseNotificationService
 
@@ -10,15 +10,13 @@ EVENT_NOTIFY = "notify"
 
 
 def get_service(hass, config):
-    """ Get the demo notification service. """
-
+    """Get the demo notification service."""
     return DemoNotificationService(hass)
 
 
 # pylint: disable=too-few-public-methods
 class DemoNotificationService(BaseNotificationService):
-    """ Implements demo notification service. """
-
+    """Implements demo notification service."""
     def __init__(self, hass):
         self.hass = hass
 
