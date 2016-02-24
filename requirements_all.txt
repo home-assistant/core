@@ -243,6 +243,9 @@ somecomfort==0.2.1
 # homeassistant.components.sensor.speedtest
 speedtest-cli==0.3.4
 
+# homeassistant.components.sensor.steam_online
+steamodd==4.21
+
 # homeassistant.components.light.tellstick
 # homeassistant.components.sensor.tellstick
 # homeassistant.components.switch.tellstick
