@@ -51,6 +51,21 @@ class TestUtilTemplate(unittest.TestCase):
 {% for state in states.sensor %}{{ state.state }}{% endfor %}
                 """))
 
+    def test_float(self):
+        self.hass.states.set('sensor.temperature', '12')
+
+        self.assertEqual(
+            '12.0',
+            template.render(
+                self.hass,
+                '{{ float(states.sensor.temperature.state) }}'))
+
+        self.assertEqual(
+            'True',
+            template.render(
+                self.hass,
+                '{{ float(states.sensor.temperature.state) > 11 }}'))
+
     def test_rounding_value(self):
         self.hass.states.set('sensor.temperature', 12.78)
 

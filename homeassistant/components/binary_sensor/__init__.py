@@ -26,6 +26,9 @@ SENSOR_CLASSES = [
     'light',     # Lightness threshold
     'power',     # Power, over-current, etc
     'safety',    # Generic on=unsafe, off=safe
+    'heat',      # On means hot (or too hot)
+    'cold',      # On means cold (or too cold)
+    'moving',    # On means moving, Off means stopped
 ]
 
 # Maps discovered services to their platforms
