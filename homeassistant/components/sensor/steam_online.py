@@ -49,6 +49,7 @@ class SteamSensor(Entity):
     def update(self):
         """Update device state."""
         self._profile = self._steamod.user.profile(self._account)
+        self._game = self._profile.current_game[2]
         self._state = {
             1: 'Online',
             2: 'Busy',
@@ -57,6 +58,13 @@ class SteamSensor(Entity):
             5: 'Trade',
             6: 'Play',
         }.get(self._profile.status, 'Offline')
+
+    @property
+    def device_state_attributes(self):
+        """Returns the state attributes."""
+        if self._game == None:
+            self._game = 'None'
+        return {'Game': self._game}
 
     @property
     def entity_picture(self):
