@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.steam_online/
 """
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (ATTR_ENTITY_PICTURE, CONF_API_KEY)
+from homeassistant.const import CONF_API_KEY
 
 ICON = 'mdi:steam'
 
@@ -59,11 +59,9 @@ class SteamSensor(Entity):
         }.get(self._profile.status, 'Offline')
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ENTITY_PICTURE: self._profile.avatar_medium
-        }
+    def entity_picture(self):
+        """Avatar of the account."""
+        return self._profile.avatar_medium
 
     @property
     def icon(self):
