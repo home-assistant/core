@@ -33,13 +33,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     sensors = []
     for device_id, entity_info in config.get('devices', {}).items():
-        if device_id not in rfxtrx.RFX_DEVICES:
-            _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
-            event = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
-            new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
-                                      entity_info.get(ATTR_DATA_TYPE, None))
-            rfxtrx.RFX_DEVICES[device_id] = new_sensor
-            sensors.append(new_sensor)
+        if device_id in rfxtrx.RFX_DEVICES:
+            continue
+        _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
+        event = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
+        new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
+                                  entity_info.get(ATTR_DATA_TYPE, None))
+        rfxtrx.RFX_DEVICES[device_id] = new_sensor
+        sensors.append(new_sensor)
 
     add_devices_callback(sensors)
 
