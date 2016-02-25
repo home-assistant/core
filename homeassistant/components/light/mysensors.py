@@ -6,10 +6,10 @@ https://home-assistant.io/components/light.mysensors/
 """
 import logging
 
-import homeassistant.components.mysensors as mysensors
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.loader import get_component
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Otherwise gateway is not setup.
     if discovery_info is None:
         return
+
+    mysensors = get_component('mysensors')
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
@@ -72,6 +74,7 @@ class MySensorsLight(Light):
         self._brightness = None
         self._rgb = None
         self._white = None
+        self.mysensors = get_component('mysensors')
 
     @property
     def should_poll(self):
@@ -102,9 +105,9 @@ class MySensorsLight(Light):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         device_attr = {
-            mysensors.ATTR_PORT: self.gateway.port,
-            mysensors.ATTR_NODE_ID: self.node_id,
-            mysensors.ATTR_CHILD_ID: self.child_id,
+            self.mysensors.ATTR_PORT: self.gateway.port,
+            self.mysensors.ATTR_NODE_ID: self.node_id,
+            self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
         for value_type, value in self._values.items():
