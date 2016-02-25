@@ -29,19 +29,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
 
     for device_id, entity_info in config.get('devices', {}).items():
-        if device_id not in rfxtrx.RFX_DEVICES:
-            _LOGGER.info("Add %s rfxtrx.light", entity_info[ATTR_NAME])
+        if device_id in rfxtrx.RFX_DEVICES:
+            continue
+        _LOGGER.info("Add %s rfxtrx.light", entity_info[ATTR_NAME])
 
-            # Check if i must fire event
-            fire_event = entity_info.get(ATTR_FIREEVENT, False)
-            datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
+        # Check if i must fire event
+        fire_event = entity_info.get(ATTR_FIREEVENT, False)
+        datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
-            rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
-            new_light = RfxtrxLight(
-                entity_info[ATTR_NAME], rfxobject, datas,
-                signal_repetitions)
-            rfxtrx.RFX_DEVICES[device_id] = new_light
-            lights.append(new_light)
+        rfxobject = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
+        new_light = RfxtrxLight(
+            entity_info[ATTR_NAME], rfxobject, datas,
+            signal_repetitions)
+        rfxtrx.RFX_DEVICES[device_id] = new_light
+        lights.append(new_light)
 
     add_devices_callback(lights)
 
