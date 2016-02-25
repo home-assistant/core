@@ -8,8 +8,7 @@ import logging
 
 import requests
 
-from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, CONF_LATITUDE, CONF_LONGITUDE)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location
@@ -98,19 +97,20 @@ class YrSensor(Entity):
         return self._state
 
     @property
+    def entity_picture(self):
+        """Weather symbol if type is symbol."""
+        if self.type != 'symbol':
+            return None
+        return "http://api.met.no/weatherapi/weathericon/1.1/" \
+               "?symbol={0};content_type=image/png".format(self._state)
+
+    @property
     def device_state_attributes(self):
         """Returns state attributes. """
-        data = {
+        return {
             'about': "Weather forecast from yr.no, delivered by the"
                      " Norwegian Meteorological Institute and the NRK"
         }
-        if self.type == 'symbol':
-            symbol_nr = self._state
-            data[ATTR_ENTITY_PICTURE] = \
-                "http://api.met.no/weatherapi/weathericon/1.1/" \
-                "?symbol={0};content_type=image/png".format(symbol_nr)
-
-        return data
 
     @property
     def unit_of_measurement(self):
