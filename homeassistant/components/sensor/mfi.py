@@ -6,6 +6,8 @@ https://home-assistant.io/components/sensor.mfi/
 """
 import logging
 
+import requests
+
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS
 from homeassistant.helpers import validate_config
@@ -48,11 +50,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    from mficlient.client import MFiClient
+    from mficlient.client import FailedToLogin, MFiClient
 
     try:
         client = MFiClient(host, username, password, port=port)
-    except client.FailedToLogin as ex:
+    except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error('Unable to connect to mFi: %s', str(ex))
         return False
 
