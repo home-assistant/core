@@ -32,6 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_DOOR: [set_req.V_ARMED],
             pres.S_MOTION: [set_req.V_ARMED],
             pres.S_SMOKE: [set_req.V_ARMED],
+            pres.S_LIGHT: [set_req.V_LIGHT],
             pres.S_LOCK: [set_req.V_LOCK_STATUS],
         }
         if float(gateway.version) >= 1.5:
@@ -43,6 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_VIBRATION: [set_req.V_ARMED],
                 pres.S_MOISTURE: [set_req.V_ARMED],
             })
+            map_sv_types[pres.S_LIGHT].append(set_req.V_STATUS)
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
