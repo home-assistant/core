@@ -120,8 +120,6 @@ class WemoSwitch(SwitchDevice):
         """Is the device on - or in standby."""
         if self.insight_params:
             standby_state = self.insight_params['state']
-            # Standby  is actually '8' but seems more defensive
-            # to check for the On and Off states
             if standby_state == WEMO_ON:
                 return STATE_OFF
             elif standby_state == WEMO_OFF:
