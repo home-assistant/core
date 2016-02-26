@@ -1,21 +1,18 @@
 """
-homeassistant.components.browser
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to launch a webbrowser on the host machine.
+Provides functionality to launch a web browser on the host machine.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/browser/
 """
 
 DOMAIN = "browser"
-
 SERVICE_BROWSE_URL = "browse_url"
 
 
 def setup(hass, config):
-    """ Listen for browse_url events and open
-        the url in the default webbrowser. """
-
+    """
+    Listen for browse_url events and open the url in the default web browser.
+    """
     import webbrowser
 
     hass.services.register(DOMAIN, SERVICE_BROWSE_URL,

@@ -1,7 +1,5 @@
 """
-homeassistant.components.influxdb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-InfluxDB component which allows you to send data to an Influx database.
+A component which allows you to send data to an Influx database.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
@@ -36,8 +34,7 @@ CONF_VERIFY_SSL = 'verify_ssl'
 
 
 def setup(hass, config):
-    """ Setup the InfluxDB component. """
-
+    """Setup the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
 
     if not validate_config(config, {DOMAIN: ['host',
@@ -63,13 +60,12 @@ def setup(hass, config):
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
-                      "check your entries in the configuration file and that"
-                      " the database exists and is READ/WRITE.", exc)
+                      "check your entries in the configuration file and that "
+                      "the database exists and is READ/WRITE.", exc)
         return False
 
     def influx_event_listener(event):
-        """ Listen for new messages on the bus and sends them to Influx. """
-
+        """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
         if state is None or state.state in (STATE_UNKNOWN, ''):
             return
