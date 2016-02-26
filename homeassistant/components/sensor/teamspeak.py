@@ -20,6 +20,7 @@ ATTR_STATUS = 'Status'
 ICON = 'mdi:microphone'
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Teamspeak sensor. """
     name = config.get('name', DEFAULT_NAME)
@@ -43,6 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class TeamspeakSensor(Entity):
     """ A Teamspeak Server sensor. """
 
@@ -52,13 +54,12 @@ class TeamspeakSensor(Entity):
         self._state = None
         self._unit_of_measurement = 'Users'
         self.info = None
+        self._ts3conn = None
 
         self._host = host
         self._username = username
         self._password = password
         self._virtual_server_id = virtual_server_id
-
-        self._ts3conn = ts3.query.TS3Connection(self._host)
 
         self.connect()
         self.update()
@@ -95,6 +96,9 @@ class TeamspeakSensor(Entity):
         return ICON
 
     def connect(self):
+        """ Attempts to connect to TS3 server. """
+        import ts3
+        self._ts3conn = ts3.query.TS3Connection(self._host)
         try:
             self._ts3conn.login(
                 client_login_name=self._username,
@@ -112,14 +116,14 @@ class TeamspeakSensor(Entity):
             if not self.connect():
                 return
 
-        clientsOnline = int(
+        clients_online = int(
             self._ts3conn.serverlist()
             [self._virtual_server_id]['virtualserver_clientsonline']
         )
-        queryClientsOnline = int(
+        query_clients_online = int(
             self._ts3conn.serverlist()
             [self._virtual_server_id]['virtualserver_queryclientsonline']
         )
-        usersOnline = clientsOnline - queryClientsOnline
-        self._state = usersOnline
+        users_online = clients_online - query_clients_online
+        self._state = users_online
         self.info = self._ts3conn.serverlist()[self._virtual_server_id]
