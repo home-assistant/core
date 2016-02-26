@@ -21,6 +21,7 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_PACKETID = 'packetid'
 ATTR_FIREEVENT = 'fire_event'
+ATTR_DATA_TYPE = 'data_type'
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
