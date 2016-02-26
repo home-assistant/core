@@ -9,7 +9,8 @@ https://home-assistant.io/components/switch.wemo/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
@@ -18,9 +19,17 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
+ATTR_CURRENT_STATE_DETAIL = 'state_detail'
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
+
+MAKER_SWITCH_MOMENTARY = "momentary"
+MAKER_SWITCH_TOGGLE = "toggle"
+
+WEMO_ON = 1
+WEMO_OFF = 0
+WEMO_STANDBY = 8
 
 
 # pylint: disable=unused-argument, too-many-function-args
@@ -43,6 +52,7 @@ class WemoSwitch(SwitchDevice):
         self.wemo = device
         self.insight_params = None
         self.maker_params = None
+        self._state = None
 
         wemo = get_component('wemo')
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
@@ -88,17 +98,10 @@ class WemoSwitch(SwitchDevice):
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
-        return attr
+        if self.insight_params:
+            attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
-    @property
-    def state(self):
-        """Returns the state."""
-        is_on = self.is_on
-        if not is_on:
-            return STATE_OFF
-        elif self.is_standby:
-            return STATE_STANDBY
-        return STATE_ON
+        return attr
 
     @property
     def current_power_mwh(self):
@@ -113,21 +116,23 @@ class WemoSwitch(SwitchDevice):
             return self.insight_params['todaymw']
 
     @property
-    def is_standby(self):
+    def detail_state(self):
         """Is the device on - or in standby."""
         if self.insight_params:
-            standby_state = self.insight_params['state']
-            # Standby  is actually '8' but seems more defensive
-            # to check for the On and Off states
-            if standby_state == '1' or standby_state == '0':
-                return False
+            standby_state = int(self.insight_params['state'])
+            if standby_state == WEMO_ON:
+                return STATE_OFF
+            elif standby_state == WEMO_OFF:
+                return STATE_OFF
+            elif standby_state == WEMO_STANDBY:
+                return STATE_STANDBY
             else:
-                return True
+                return STATE_UNKNOWN
 
     @property
     def is_on(self):
-        """True if switch is on."""
-        return self.wemo.get_state()
+        """True if switch is on. Standby is on!"""
+        return self._state
 
     @property
     def available(self):
@@ -143,16 +148,20 @@ class WemoSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turns the switch on."""
+        self._state = WEMO_ON
+        self.update_ha_state()
         self.wemo.on()
 
     def turn_off(self):
         """Turns the switch off."""
+        self._state = WEMO_OFF
+        self.update_ha_state()
         self.wemo.off()
 
     def update(self):
         """Update WeMo state."""
         try:
-            self.wemo.get_state(True)
+            self._state = self.wemo.get_state(True)
             if self.wemo.model_name == 'Insight':
                 self.insight_params = self.wemo.insight_params
                 self.insight_params['standby_state'] = (
