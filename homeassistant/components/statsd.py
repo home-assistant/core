@@ -1,7 +1,5 @@
 """
-homeassistant.components.statsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-StatsD component which allows you to send data to many backends.
+A component which allows you to send data to StatsD.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/statsd/
@@ -31,8 +29,7 @@ CONF_RATE = 'rate'
 
 
 def setup(hass, config):
-    """ Setup the StatsD component. """
-
+    """Setup the StatsD component."""
     from statsd.compat import NUM_TYPES
     import statsd
 
@@ -53,7 +50,7 @@ def setup(hass, config):
     meter = statsd.Gauge(prefix, statsd_connection)
 
     def statsd_event_listener(event):
-        """ Listen for new messages on the bus and sends them to StatsD. """
+        """Listen for new messages on the bus and sends them to StatsD."""
 
         state = event.data.get('new_state')
 
