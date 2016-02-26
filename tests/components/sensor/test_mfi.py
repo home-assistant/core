@@ -7,6 +7,8 @@ Tests mFi sensor.
 import unittest
 import unittest.mock as mock
 
+import requests
+
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELCIUS
@@ -49,6 +51,15 @@ class TestMfiSensorSetup(unittest.TestCase):
     def test_setup_failed_login(self, mock_client):
         mock_client.FailedToLogin = Exception()
         mock_client.MFiClient.side_effect = mock_client.FailedToLogin
+        self.assertFalse(
+            self.PLATFORM.setup_platform(self.hass,
+                                         dict(self.GOOD_CONFIG),
+                                         None))
+
+    @mock.patch('mficlient.client')
+    def test_setup_failed_connect(self, mock_client):
+        mock_client.FailedToLogin = Exception()
+        mock_client.MFiClient.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
             self.PLATFORM.setup_platform(self.hass,
                                          dict(self.GOOD_CONFIG),
