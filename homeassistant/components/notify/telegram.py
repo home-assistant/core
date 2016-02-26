@@ -58,6 +58,6 @@ class TelegramNotificationService(BaseNotificationService):
 
         try:
             self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=message)
+                                 text=title + "  " + message)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message.")
