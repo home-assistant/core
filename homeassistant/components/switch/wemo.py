@@ -121,7 +121,7 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params:
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
-                return STATE_OFF
+                return STATE_ON
             elif standby_state == WEMO_OFF:
                 return STATE_OFF
             elif standby_state == WEMO_STANDBY:
