@@ -262,6 +262,9 @@ tellive-py==0.5.2
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.sensor.teamspeak
+ts3==0.7.1
+
 # homeassistant.components.device_tracker.unifi
 unifi==1.2.4
 
