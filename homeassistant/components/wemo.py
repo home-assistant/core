@@ -25,6 +25,7 @@ WEMO_MODEL_DISPATCH = {
     'Maker':   DISCOVER_SWITCHES,
     'Motion':  DISCOVER_MOTION,
     'Socket':  DISCOVER_SWITCHES,
+    'LightSwitch': DISCOVER_SWITCHES
 }
 WEMO_SERVICE_DISPATCH = {
     DISCOVER_LIGHTS: 'light',
@@ -64,12 +65,11 @@ def setup(hass, config):
             return
         KNOWN_DEVICES.append(mac)
 
-        service = WEMO_MODEL_DISPATCH.get(model_name)
+        service = WEMO_MODEL_DISPATCH.get(model_name) or DISCOVER_SWITCHES
         component = WEMO_SERVICE_DISPATCH.get(service)
 
-        if service is not None:
-            discovery.discover(hass, service, discovery_info,
-                               component, config)
+        discovery.discover(hass, service, discovery_info,
+                           component, config)
 
     discovery.listen(hass, discovery.SERVICE_WEMO, discovery_dispatch)
 
