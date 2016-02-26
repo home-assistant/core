@@ -49,7 +49,6 @@ class TeamspeakSensor(Entity):
     """ A Teamspeak Server sensor. """
 
     def __init__(self, name, host, username, password, virtual_server_id):
-        import ts3
         self._name = name
         self._state = None
         self._unit_of_measurement = 'Users'
