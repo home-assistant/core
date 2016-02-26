@@ -16,11 +16,12 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.6.1']
+REQUIREMENTS = ['python-wink==0.6.2']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
 DISCOVER_SENSORS = "wink.sensors"
+DISCOVER_BINARY_SENSORS = "wink.binary_sensors"
 DISCOVER_LOCKS = "wink.locks"
 DISCOVER_GARAGE_DOORS = "wink.garage_doors"
 
@@ -41,6 +42,7 @@ def setup(hass, config):
             ('switch', lambda: pywink.get_switches or
              pywink.get_sirens or
              pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
+            ('binary_sensor', pywink.get_sensors, DISCOVER_BINARY_SENSORS),
             ('sensor', lambda: pywink.get_sensors or
              pywink.get_eggtrays, DISCOVER_SENSORS),
             ('lock', pywink.get_locks, DISCOVER_LOCKS),
