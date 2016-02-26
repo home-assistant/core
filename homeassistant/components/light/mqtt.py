@@ -19,6 +19,7 @@ DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
+DEFAULT_BRIGHTNESS_SCALE = 255
 
 DEPENDENCIES = ['mqtt']
 
@@ -44,14 +45,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             'on': config.get('payload_on', DEFAULT_PAYLOAD_ON),
             'off': config.get('payload_off', DEFAULT_PAYLOAD_OFF)
         },
-        config.get('optimistic', DEFAULT_OPTIMISTIC))])
+        config.get('optimistic', DEFAULT_OPTIMISTIC),
+        config.get('brightness_scale', DEFAULT_BRIGHTNESS_SCALE)
+    )])
 
 
 class MqttLight(Light):
     """Provides a MQTT light."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-    def __init__(self, hass, name, topic, templates, qos, payload, optimistic):
+    def __init__(self, hass, name, topic, templates, qos, payload, optimistic,
+                 brightness_scale):
 
         self._hass = hass
         self._name = name
@@ -62,6 +66,7 @@ class MqttLight(Light):
         self._optimistic_rgb = optimistic or topic["rgb_state_topic"] is None
         self._optimistic_brightness = (optimistic or
                                        topic["brightness_state_topic"] is None)
+        self._brightness_scale = brightness_scale
         self._state = False
 
         templates = {key: ((lambda value: value) if tpl is None else
@@ -84,7 +89,9 @@ class MqttLight(Light):
 
         def brightness_received(topic, payload, qos):
             """A new MQTT message for the brightness has been received."""
-            self._brightness = int(templates['brightness'](payload))
+            device_value = float(templates['brightness'](payload))
+            percent_bright = device_value / self._brightness_scale
+            self._brightness = int(percent_bright * 255)
             self.update_ha_state()
 
         if self._topic["brightness_state_topic"] is not None:
@@ -143,6 +150,7 @@ class MqttLight(Light):
 
         if ATTR_RGB_COLOR in kwargs and \
            self._topic["rgb_command_topic"] is not None:
+
             mqtt.publish(self._hass, self._topic["rgb_command_topic"],
                          "{},{},{}".format(*kwargs[ATTR_RGB_COLOR]), self._qos)
 
@@ -152,9 +160,10 @@ class MqttLight(Light):
 
         if ATTR_BRIGHTNESS in kwargs and \
            self._topic["brightness_command_topic"] is not None:
-
+            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+            device_brightness = int(percent_bright * self._brightness_scale)
             mqtt.publish(self._hass, self._topic["brightness_command_topic"],
-                         kwargs[ATTR_BRIGHTNESS], self._qos)
+                         device_brightness, self._qos)
 
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
