@@ -194,7 +194,7 @@ class HueLight(Light):
     @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
-        return self.info['state']['bri']
+        return self.info['state'].get('bri')
 
     @property
     def xy_color(self):
