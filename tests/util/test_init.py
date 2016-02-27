@@ -238,3 +238,20 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(throttled())
         self.assertIsNone(throttled())
+
+    def test_throttle_on_two_method(self):
+        """ Test that throttle works when wrapping two methods. """
+
+        class Tester(object):
+            @util.Throttle(timedelta(seconds=1))
+            def hello(self):
+                return True
+
+            @util.Throttle(timedelta(seconds=1))
+            def goodbye(self):
+                return True
+
+        tester = Tester()
+
+        self.assertTrue(tester.hello())
+        self.assertTrue(tester.goodbye())
