@@ -260,25 +260,28 @@ class Throttle(object):
             else:
                 host = args[0] if args else wrapper
 
-            if not hasattr(host, '_throttle_lock'):
-                host._throttle_lock = threading.Lock()
+            if not hasattr(host, '_throttle'):
+                host._throttle = {}
 
-            if not host._throttle_lock.acquire(False):
+            if id(self) not in host._throttle:
+                host._throttle[id(self)] = [threading.Lock(), None]
+            throttle = host._throttle[id(self)]
+
+            if not throttle[0].acquire(False):
                 return None
 
-            last_call = getattr(host, '_throttle_last_call', None)
             # Check if method is never called or no_throttle is given
-            force = not last_call or kwargs.pop('no_throttle', False)
+            force = not throttle[1] or kwargs.pop('no_throttle', False)
 
             try:
-                if force or utcnow() - last_call > self.min_time:
+                if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
-                    host._throttle_last_call = utcnow()
+                    throttle[1] = utcnow()
                     return result
                 else:
                     return None
             finally:
-                host._throttle_lock.release()
+                throttle[0].release()
 
         return wrapper
 
