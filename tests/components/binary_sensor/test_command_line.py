@@ -1,5 +1,5 @@
 """
-tests.components.binary_sensor.command_sensor
+tests.components.binary_sensor.command_line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command binary sensor.
@@ -7,7 +7,7 @@ Tests command binary sensor.
 import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
-from homeassistant.components.binary_sensor import command_sensor
+from homeassistant.components.binary_sensor import command_line
 
 from tests.common import get_test_home_assistant
 
@@ -35,7 +35,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        command_sensor.setup_platform(
+        command_line.setup_platform(
             self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
@@ -54,25 +54,25 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        self.assertFalse(command_sensor.setup_platform(
+        self.assertFalse(command_line.setup_platform(
             self.hass, config, add_dev_callback))
 
         self.assertEqual(0, len(devices))
 
     def test_template(self):
         """ Test command sensor with template """
-        data = command_sensor.CommandSensorData('echo 10')
+        data = command_line.CommandSensorData('echo 10')
 
-        entity = command_sensor.CommandBinarySensor(
+        entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', '1.0', '0', '{{ value | multiply(0.1) }}')
 
         self.assertEqual(STATE_ON, entity.state)
 
     def test_sensor_off(self):
         """ Test command sensor with template """
-        data = command_sensor.CommandSensorData('echo 0')
+        data = command_line.CommandSensorData('echo 0')
 
-        entity = command_sensor.CommandBinarySensor(
+        entity = command_line.CommandBinarySensor(
             self.hass, data, 'test', '1', '0', None)
 
         self.assertEqual(STATE_OFF, entity.state)
