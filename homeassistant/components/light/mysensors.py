@@ -100,15 +100,23 @@ class MySensorsLight(Light):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        device_attr = {
-            self.mysensors.ATTR_PORT: self.gateway.port,
+        try:
+            ip_address, tcp_port = self.gateway.server_address
+            device = '{}:{}'.format(ip_address, tcp_port)
+        except AttributeError:
+            try:
+                device = self.gateway.port
+            except AttributeError:
+                device = ''
+        attr = {
+            self.mysensors.ATTR_DEVICE: device,
             self.mysensors.ATTR_NODE_ID: self.node_id,
             self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
         for value_type, value in self._values.items():
-            device_attr[self.gateway.const.SetReq(value_type).name] = value
-        return device_attr
+            attr[self.gateway.const.SetReq(value_type).name] = value
+        return attr
 
     @property
     def available(self):
