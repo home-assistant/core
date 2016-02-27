@@ -271,7 +271,7 @@ urllib3
 uvcclient==0.8
 
 # homeassistant.components.verisure
-vsure==0.5.1
+vsure==0.6.1
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.6
