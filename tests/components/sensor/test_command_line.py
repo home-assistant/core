@@ -1,12 +1,12 @@
 """
-tests.components.sensor.test_command_sensor
+tests.components.sensor.test_command_line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests command sensor.
 """
 import unittest
 
-from homeassistant.components.sensor import command_sensor
+from homeassistant.components.sensor import command_line
 
 from tests.common import get_test_home_assistant
 
@@ -33,7 +33,7 @@ class TestCommandSensorSensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        command_sensor.setup_platform(
+        command_line.setup_platform(
             self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
@@ -53,23 +53,23 @@ class TestCommandSensorSensor(unittest.TestCase):
             for dev in devs:
                 devices.append(dev)
 
-        self.assertFalse(command_sensor.setup_platform(
+        self.assertFalse(command_line.setup_platform(
             self.hass, config, add_dev_callback))
 
         self.assertEqual(0, len(devices))
 
     def test_template(self):
         """ Test command sensor with template. """
-        data = command_sensor.CommandSensorData('echo 50')
+        data = command_line.CommandSensorData('echo 50')
 
-        entity = command_sensor.CommandSensor(
+        entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in', '{{ value | multiply(0.1) }}')
 
         self.assertEqual(5, float(entity.state))
 
     def test_bad_command(self):
         """ Test bad command. """
-        data = command_sensor.CommandSensorData('asdfasdf')
+        data = command_line.CommandSensorData('asdfasdf')
         data.update()
 
         self.assertEqual(None, data.value)
