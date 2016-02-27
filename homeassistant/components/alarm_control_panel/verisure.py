@@ -9,7 +9,8 @@ https://home-assistant.io/components/verisure/
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.components.verisure as verisure
+from homeassistant.components.verisure import HUB as hub
+
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN)
@@ -20,18 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Verisure platform. """
 
-    if not verisure.MY_PAGES:
-        _LOGGER.error('A connection has not been made to Verisure mypages.')
-        return False
-
     alarms = []
-
-    alarms.extend([
-        VerisureAlarm(value)
-        for value in verisure.ALARM_STATUS.values()
-        if verisure.SHOW_ALARM
-        ])
-
+    if int(hub.config.get('alarm', '1')):
+        hub.update_alarms()
+        alarms.extend([
+            VerisureAlarm(value.id)
+            for value in hub.alarm_status.values()
+            ])
     add_devices(alarms)
 
 
@@ -39,9 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VerisureAlarm(alarm.AlarmControlPanel):
     """ Represents a Verisure alarm status. """
 
-    def __init__(self, alarm_status):
-        self._id = alarm_status.id
+    def __init__(self, device_id):
+        self._id = device_id
         self._state = STATE_UNKNOWN
+        self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
@@ -55,41 +52,41 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ Four digit code required. """
-        return '^\\d{%s}$' % verisure.CODE_DIGITS
+        """ code format as regex """
+        return '^\\d{%s}$' % self._digits
 
     def update(self):
         """ Update alarm status """
-        verisure.update_alarm()
+        hub.update_alarms()
 
-        if verisure.ALARM_STATUS[self._id].status == 'unarmed':
+        if hub.alarm_status[self._id].status == 'unarmed':
             self._state = STATE_ALARM_DISARMED
-        elif verisure.ALARM_STATUS[self._id].status == 'armedhome':
+        elif hub.alarm_status[self._id].status == 'armedhome':
             self._state = STATE_ALARM_ARMED_HOME
-        elif verisure.ALARM_STATUS[self._id].status == 'armed':
+        elif hub.alarm_status[self._id].status == 'armed':
             self._state = STATE_ALARM_ARMED_AWAY
-        elif verisure.ALARM_STATUS[self._id].status != 'pending':
+        elif hub.alarm_status[self._id].status != 'pending':
             _LOGGER.error(
                 'Unknown alarm state %s',
-                verisure.ALARM_STATUS[self._id].status)
+                hub.alarm_status[self._id].status)
 
     def alarm_disarm(self, code=None):
         """ Send disarm command. """
-        verisure.MY_PAGES.alarm.set(code, 'DISARMED')
+        hub.my_pages.alarm.set(code, 'DISARMED')
         _LOGGER.info('verisure alarm disarming')
-        verisure.MY_PAGES.alarm.wait_while_pending()
-        verisure.update_alarm()
+        hub.my_pages.alarm.wait_while_pending()
+        self.update()
 
     def alarm_arm_home(self, code=None):
         """ Send arm home command. """
-        verisure.MY_PAGES.alarm.set(code, 'ARMED_HOME')
+        hub.my_pages.alarm.set(code, 'ARMED_HOME')
         _LOGGER.info('verisure alarm arming home')
-        verisure.MY_PAGES.alarm.wait_while_pending()
-        verisure.update_alarm()
+        hub.my_pages.alarm.wait_while_pending()
+        self.update()
 
     def alarm_arm_away(self, code=None):
         """ Send arm away command. """
-        verisure.MY_PAGES.alarm.set(code, 'ARMED_AWAY')
+        hub.my_pages.alarm.set(code, 'ARMED_AWAY')
         _LOGGER.info('verisure alarm arming away')
-        verisure.MY_PAGES.alarm.wait_while_pending()
-        verisure.update_alarm()
+        hub.my_pages.alarm.wait_while_pending()
+        self.update()
