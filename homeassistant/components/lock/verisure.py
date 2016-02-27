@@ -8,7 +8,7 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 
-import homeassistant.components.verisure as verisure
+from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 
@@ -19,16 +19,13 @@ ATTR_CODE = 'code'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Verisure platform. """
 
-    if not verisure.MY_PAGES:
-        _LOGGER.error('A connection has not been made to Verisure mypages.')
-        return False
-
     locks = []
-
-    locks.extend([VerisureDoorlock(value)
-                  for value in verisure.LOCK_STATUS.values()
-                  if verisure.SHOW_LOCKS])
-
+    if int(hub.config.get('locks', '1')):
+        hub.update_locks()
+        locks.extend([
+            VerisureDoorlock(device_id)
+            for device_id in hub.lock_status.keys()
+            ])
     add_devices(locks)
 
 
@@ -36,10 +33,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class VerisureDoorlock(LockDevice):
     """ Represents a Verisure doorlock status. """
 
-    def __init__(self, lock_status, code=None):
-        self._id = lock_status.id
+    def __init__(self, device_id):
+        self._id = device_id
         self._state = STATE_UNKNOWN
-        self._code = code
+        self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
@@ -54,36 +51,36 @@ class VerisureDoorlock(LockDevice):
     @property
     def code_format(self):
         """ Six digit code required. """
-        return '^\\d{%s}$' % verisure.CODE_DIGITS
+        return '^\\d{%s}$' % self._digits
 
     def update(self):
         """ Update lock status """
-        verisure.update_lock()
+        hub.update_locks()
 
-        if verisure.LOCK_STATUS[self._id].status == 'unlocked':
+        if hub.lock_status[self._id].status == 'unlocked':
             self._state = STATE_UNLOCKED
-        elif verisure.LOCK_STATUS[self._id].status == 'locked':
+        elif hub.lock_status[self._id].status == 'locked':
             self._state = STATE_LOCKED
-        elif verisure.LOCK_STATUS[self._id].status != 'pending':
+        elif hub.lock_status[self._id].status != 'pending':
             _LOGGER.error(
                 'Unknown lock state %s',
-                verisure.LOCK_STATUS[self._id].status)
+                hub.lock_status[self._id].status)
 
     @property
     def is_locked(self):
         """ True if device is locked. """
-        return verisure.LOCK_STATUS[self._id].status
+        return hub.lock_status[self._id].status
 
     def unlock(self, **kwargs):
         """ Send unlock command. """
-        verisure.MY_PAGES.lock.set(kwargs[ATTR_CODE], self._id, 'UNLOCKED')
+        hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'UNLOCKED')
         _LOGGER.info('verisure doorlock unlocking')
-        verisure.MY_PAGES.lock.wait_while_pending()
-        verisure.update_lock()
+        hub.my_pages.lock.wait_while_pending()
+        self.update()
 
     def lock(self, **kwargs):
         """ Send lock command. """
-        verisure.MY_PAGES.lock.set(kwargs[ATTR_CODE], self._id, 'LOCKED')
+        hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'LOCKED')
         _LOGGER.info('verisure doorlock locking')
-        verisure.MY_PAGES.lock.wait_while_pending()
-        verisure.update_lock()
+        hub.my_pages.lock.wait_while_pending()
+        self.update()
