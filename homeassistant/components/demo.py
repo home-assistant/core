@@ -135,9 +135,9 @@ def setup(hass, config):
                                              'Visitors with kids',
                                              'Home Alone']},
           'who_cooks': {'icon': 'mdi:panda',
-                                'initial': 'Anne Therese',
-                                'name': 'Who cooks today',
-                                'options': ['Paulus', 'Anne Therese']}}})
+                        'initial': 'Anne Therese',
+                        'name': 'Who cooks today',
+                        'options': ['Paulus', 'Anne Therese']}}})
   #Set up input boolean
     bootstrap.setup_component(
         hass, 'input_boolean',
