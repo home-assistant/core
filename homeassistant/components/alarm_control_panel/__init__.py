@@ -21,7 +21,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    verisure.DISCOVER_SENSORS: 'verisure'
+    verisure.DISCOVER_ALARMS: 'verisure'
 }
 
 SERVICE_TO_METHOD = {
