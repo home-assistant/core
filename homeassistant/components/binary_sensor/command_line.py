@@ -9,7 +9,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor.command_sensor import CommandSensorData
+from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers import template
 
