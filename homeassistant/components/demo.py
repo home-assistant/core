@@ -127,7 +127,7 @@ def setup(hass, config):
              }},
             ]})
 
-    #Set up input select
+    # Set up input select
     bootstrap.setup_component(
         hass, 'input_select',
         {'input_select':
@@ -138,7 +138,7 @@ def setup(hass, config):
                         'initial': 'Anne Therese',
                         'name': 'Who cooks today',
                         'options': ['Paulus', 'Anne Therese']}}})
-  #Set up input boolean
+    # Set up input boolean
     bootstrap.setup_component(
         hass, 'input_boolean',
         {'input_boolean': {'notify': {'icon': 'mdi:car',
