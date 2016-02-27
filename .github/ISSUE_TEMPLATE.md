@@ -1,14 +1,31 @@
-Please add a meaningful title and a short description of your issue. It's hard to help you if you only add a trackback with no comments or a one-liner.
+**Home Assistant release (`hass --version`):**
 
-Add the following details to your report. Especially if you are unsure about that to include. 
 
-- [ ] Your Home Assistant release, `hass --version`
-- [ ] Your operating system 
-- [ ] The component/platform involved
-- [ ] The config entry for the component/platform from your `configuration.yml` file
-- [ ] Your traceback
+**Python release (`python3 --version`):**
 
-It helps if you use the formatting options provided by GitHub ;-)
 
-Anyway, make sure that you have **searched** the closed issues first. Thanks!
+**Component/platform:**
+
+
+**Description of problem:**
+
+
+**Expected:**
+
+
+**Problem-relevant `configuration.yaml` entries and steps to reproduce:**
+```yaml
+
+```
+
+1. 
+2. 
+3. 
+
+**Traceback (if applicable):**
+```bash
+
+```
+
+**Additional info:**
 
