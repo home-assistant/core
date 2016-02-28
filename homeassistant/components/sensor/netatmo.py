@@ -26,7 +26,10 @@ SENSOR_TYPES = {
     'co2':         ['CO2', 'ppm', 'mdi:cloud'],
     'pressure':    ['Pressure', 'mbar', 'mdi:gauge'],
     'noise':       ['Noise', 'dB', 'mdi:volume-high'],
-    'humidity':    ['Humidity', '%', 'mdi:water-percent']
+    'humidity':    ['Humidity', '%', 'mdi:water-percent'],
+    'rain':        ['Rain', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_1':  ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
 }
 
 CONF_SECRET_KEY = 'secret_key'
@@ -128,6 +131,12 @@ class NetAtmoSensor(Entity):
             self._state = round(data['Temperature'], 1)
         elif self.type == 'humidity':
             self._state = data['Humidity']
+        elif self.type == 'rain':
+            self._state = data['Rain']
+        elif self.type == 'sum_rain_1':
+            self._state = data['sum_rain_1']
+        elif self.type == 'sum_rain_24':
+            self._state = data['sum_rain_24']
         elif self.type == 'noise':
             self._state = data['Noise']
         elif self.type == 'co2':
