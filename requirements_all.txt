@@ -149,7 +149,7 @@ pushbullet.py==0.9.0
 pushetta==1.0.15
 
 # homeassistant.components.sensor.cpuspeed
-py-cpuinfo==0.1.8
+py-cpuinfo==0.2.3
 
 # homeassistant.components.media_player.cast
 pychromecast==0.7.1
