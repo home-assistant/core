@@ -25,9 +25,13 @@ SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up home assistant scene entries. """
-    scene_config = config.get("config")
+    scene_config = config.get("states")
 
-    add_devices([HomeAssistantScene(hass, _process_config(scene_config))])
+    if not isinstance(scene_config, list):
+        scene_config = [scene_config]
+
+    add_devices(HomeAssistantScene(hass, _process_config(scene))
+                for scene in scene_config)
 
     return True
 
