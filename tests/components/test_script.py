@@ -88,8 +88,8 @@ class TestScript(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         self.assertEqual('world', calls[0].data.get('hello'))
-        self.assertEqual(
-            True, self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
+        self.assertIsNone(
+            self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
     def test_calling_service_old(self):
         calls = []
@@ -174,8 +174,7 @@ class TestScript(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(
-            False,
+        self.assertTrue(
             self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
         self.assertEqual(
