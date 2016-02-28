@@ -77,7 +77,8 @@ def setup(hass, config):
     devices = [(device.host, device) for device in pywemo.discover_devices()]
 
     # Add static devices from the config file
-    devices.extend((address, None) for address in config.get('static', []))
+    devices.extend((address, None)
+                   for address in config['wemo'].get('static', []))
 
     for address, device in devices:
         port = pywemo.ouimeaux_device.probe_wemo(address)
