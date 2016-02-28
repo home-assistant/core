@@ -48,7 +48,7 @@ def setup(hass, config):
             platform_config = [platform_config]
 
         if not any(CONF_PLATFORM in entry for entry in platform_config):
-            platform_config = [{'platform': 'homeassistant', 'config': entry}
+            platform_config = [{'platform': 'homeassistant', 'states': entry}
                                for entry in platform_config]
 
         config[config_key] = platform_config
