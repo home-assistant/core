@@ -131,8 +131,8 @@ class Script(ToggleEntity):
         self._cur = -1
         self._last_action = None
         self._listener = None
-        self._can_cancel = not any(CONF_DELAY in action for action
-                                   in self.sequence)
+        self._can_cancel = any(CONF_DELAY in action for action
+                               in self.sequence)
 
     @property
     def should_poll(self):
@@ -146,13 +146,11 @@ class Script(ToggleEntity):
     @property
     def state_attributes(self):
         """ Returns the state attributes. """
-        attrs = {
-            ATTR_CAN_CANCEL: self._can_cancel
-        }
-
+        attrs = {}
+        if self._can_cancel:
+            attrs[ATTR_CAN_CANCEL] = self._can_cancel
         if self._last_action:
             attrs[ATTR_LAST_ACTION] = self._last_action
-
         return attrs
 
     @property
