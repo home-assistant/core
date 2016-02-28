@@ -11,6 +11,7 @@ from collections import namedtuple
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, CONF_PLATFORM)
+from homeassistant.helpers import extract_domain_configs
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -38,11 +39,19 @@ def setup(hass, config):
 
     logger = logging.getLogger(__name__)
 
-    for entry in config:
-        if DOMAIN in entry:
-            if not any(CONF_PLATFORM in key for key in config[entry]):
-                config[entry] = {'platform': 'homeassistant',
-                                 'config': config[entry]}
+    # You are not allowed to mutate the original config so make a copy
+    config = dict(config)
+
+    for config_key in extract_domain_configs(config, DOMAIN):
+        platform_config = config[config_key]
+        if not isinstance(platform_config, list):
+            platform_config = [platform_config]
+
+        if not any(CONF_PLATFORM in entry for entry in platform_config):
+            platform_config = [{'platform': 'homeassistant', 'config': entry}
+                               for entry in platform_config]
+
+        config[config_key] = platform_config
 
     component = EntityComponent(logger, DOMAIN, hass)
 
