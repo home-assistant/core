@@ -14,8 +14,8 @@ from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
-    STATE_OFF, STATE_OPEN, STATE_CLOSED,
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN,
+    STATE_OPEN, STATE_CLOSED,
+    STATE_LOCKED, STATE_UNLOCKED,
     STATE_ON, STATE_OFF)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
                                           STATE_BELOW_HORIZON)
@@ -24,12 +24,10 @@ from tests.common import get_test_home_assistant, mock_service
 
 
 class TestStateHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant event helpers.
-    """
+    """ Tests the Home Assistant event helpers. """
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """ Things to be run when tests are started. """
         self.hass = get_test_home_assistant()
         core_components.setup(self.hass, {})
 

@@ -6,17 +6,15 @@ Provides an interface to Sonos players (via SoCo)
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
-import logging
 import datetime
+import logging
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    MEDIA_TYPE_MUSIC)
-
+    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -47,10 +45,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     players = None
     hosts = config.get('hosts', None)
     if hosts:
+        # Support retro compatibility with comma separated list of hosts
+        # from config
+        hosts = hosts.split(',') if isinstance(hosts, str) else hosts
         players = []
-        for host in hosts.split(","):
-            host = socket.gethostbyname(host)
-            players.append(soco.SoCo(host))
+        for host in hosts:
+            players.append(soco.SoCo(socket.gethostbyname(host)))
 
     if not players:
         players = soco.discover(interface_addr=config.get('interface_addr',
@@ -64,6 +64,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info('Added %s Sonos speakers', len(players))
 
     return True
+
+
+def only_if_coordinator(func):
+    """
+    If used as decorator, avoid calling the decorated method if
+    player is not a coordinator.
+    If not, a grouped speaker (not in coordinator role)
+    will throw soco.exceptions.SoCoSlaveException
+    """
+
+    def wrapper(*args, **kwargs):
+        """ Decorator wrapper """
+        if args[0].is_coordinator:
+            return func(*args, **kwargs)
+        else:
+            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" '
+                          '(not coordinator)',
+                          func.__name__, args[0].name)
+
+    return wrapper
 
 
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
@@ -106,6 +126,11 @@ class SonosDevice(MediaPlayerDevice):
         if self._status == 'STOPPED':
             return STATE_IDLE
         return STATE_UNKNOWN
+
+    @property
+    def is_coordinator(self):
+        """ Returns true if player is a coordinator """
+        return self._player.is_coordinator
 
     def update(self):
         """ Retrieve latest state. """
@@ -170,46 +195,57 @@ class SonosDevice(MediaPlayerDevice):
         """ Flags of media commands that are supported. """
         return SUPPORT_SONOS
 
+    @only_if_coordinator
     def turn_off(self):
         """ Turn off media player. """
         self._player.pause()
 
+    @only_if_coordinator
     def volume_up(self):
         """ Volume up media player. """
         self._player.volume += 1
 
+    @only_if_coordinator
     def volume_down(self):
         """ Volume down media player. """
         self._player.volume -= 1
 
+    @only_if_coordinator
     def set_volume_level(self, volume):
         """ Set volume level, range 0..1. """
         self._player.volume = str(int(volume * 100))
 
+    @only_if_coordinator
     def mute_volume(self, mute):
         """ Mute (true) or unmute (false) media player. """
         self._player.mute = mute
 
+    @only_if_coordinator
     def media_play(self):
         """ Send paly command. """
         self._player.play()
 
+    @only_if_coordinator
     def media_pause(self):
         """ Send pause command. """
         self._player.pause()
 
+    @only_if_coordinator
     def media_next_track(self):
         """ Send next track command. """
         self._player.next()
 
+    @only_if_coordinator
     def media_previous_track(self):
         """ Send next track command. """
         self._player.previous()
 
+    @only_if_coordinator
     def media_seek(self, position):
         """ Send seek command. """
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
+    @only_if_coordinator
     def turn_on(self):
         """ Turn the media player on. """
         self._player.play()

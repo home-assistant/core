@@ -1,6 +1,6 @@
 """
 tests.helpers.test_event_decorators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests event decorator helpers.
 """
@@ -19,6 +19,8 @@ from homeassistant.helpers.event_decorators import (
     track_sunrise, track_sunset)
 from homeassistant.components import sun
 
+from tests.common import get_test_home_assistant
+
 
 class TestEventDecoratorHelpers(unittest.TestCase):
     """
@@ -27,7 +29,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
 

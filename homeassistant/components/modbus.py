@@ -8,8 +8,8 @@ https://home-assistant.io/components/modbus/
 """
 import logging
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "modbus"
 

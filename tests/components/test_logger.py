@@ -1,6 +1,6 @@
 """
-tests.test_logger
-~~~~~~~~~~~~~~~~~~
+tests.components.test_logger
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests logger component.
 """

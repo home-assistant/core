@@ -1,20 +1,22 @@
 """
 tests.components.notify.test_demo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tests notify demo component
+
+Tests notify demo component.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import demo
+
+from tests.common import get_test_home_assistant
 
 
 class TestNotifyDemo(unittest.TestCase):
     """ Test the demo notify. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.assertTrue(notify.setup(self.hass, {
             'notify': {
                 'platform': 'demo'

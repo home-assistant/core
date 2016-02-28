@@ -1,41 +1,32 @@
 """
-homeassistant.components.mqtt_eventstream
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connect two Home Assistant instances via MQTT..
+Connect two Home Assistant instances via MQTT.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/mqtt_eventstream.html
+https://home-assistant.io/components/mqtt_eventstream/
 """
 import json
-from homeassistant.core import EventOrigin, State
+
+import homeassistant.loader as loader
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt import SERVICE_PUBLISH as MQTT_SVC_PUBLISH
 from homeassistant.const import (
-    ATTR_SERVICE_DATA,
-    MATCH_ALL,
-    EVENT_TIME_CHANGED,
-    EVENT_CALL_SERVICE,
-    EVENT_SERVICE_EXECUTED,
-    EVENT_STATE_CHANGED,
-)
-import homeassistant.loader as loader
+    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
+    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.core import EventOrigin, State
 from homeassistant.remote import JSONEncoder
 
-# The domain of your component. Should be equal to the name of your component
 DOMAIN = "mqtt_eventstream"
-
-# List of component names (string) your component depends upon
 DEPENDENCIES = ['mqtt']
 
 
 def setup(hass, config):
-    """ Setup th MQTT eventstream component. """
+    """Setup th MQTT eventstream component."""
     mqtt = loader.get_component('mqtt')
     pub_topic = config[DOMAIN].get('publish_topic', None)
     sub_topic = config[DOMAIN].get('subscribe_topic', None)
 
     def _event_publisher(event):
-        """ Handle events by publishing them on the MQTT queue. """
+        """Handle events by publishing them on the MQTT queue."""
         if event.origin != EventOrigin.local:
             return
         if event.event_type == EVENT_TIME_CHANGED:
@@ -65,15 +56,15 @@ def setup(hass, config):
         msg = json.dumps(event_info, cls=JSONEncoder)
         mqtt.publish(hass, pub_topic, msg)
 
-    # Only listen for local events if you are going to publish them
+    # Only listen for local events if you are going to publish them.
     if pub_topic:
         hass.bus.listen(MATCH_ALL, _event_publisher)
 
-    # Process events from a remote server that are received on a queue
+    # Process events from a remote server that are received on a queue.
     def _event_receiver(topic, payload, qos):
         """
-        Receive events published by the other HA instance and fire
-        them on this hass instance.
+        Receive events published by the other HA instance and fire them on
+        this hass instance.
         """
         event = json.loads(payload)
         event_type = event.get('event_type')
@@ -96,10 +87,10 @@ def setup(hass, config):
             origin=EventOrigin.remote
         )
 
-    # Only subscribe if you specified a topic
+    # Only subscribe if you specified a topic.
     if sub_topic:
         mqtt.subscribe(hass, sub_topic, _event_receiver)
 
     hass.states.set('{domain}.initialized'.format(domain=DOMAIN), True)
-    # return boolean to indicate that initialization was successful
+
     return True

@@ -6,8 +6,8 @@ Provides functionality to download files.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/downloader/
 """
-import os
 import logging
+import os
 import re
 import threading
 

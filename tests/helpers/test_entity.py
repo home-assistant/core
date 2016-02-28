@@ -1,15 +1,16 @@
 """
-tests.test_helper_entity
-~~~~~~~~~~~~~~~~~~~~~~~~
+tests.helpers.test_entity
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the entity helper.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.helpers.entity as entity
 from homeassistant.const import ATTR_HIDDEN
+
+from tests.common import get_test_home_assistant
 
 
 class TestHelpersEntity(unittest.TestCase):
@@ -19,7 +20,7 @@ class TestHelpersEntity(unittest.TestCase):
         """ Init needed objects. """
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
-        self.hass = self.entity.hass = ha.HomeAssistant()
+        self.hass = self.entity.hass = get_test_home_assistant()
         self.entity.update_ha_state()
 
     def tearDown(self):  # pylint: disable=invalid-name

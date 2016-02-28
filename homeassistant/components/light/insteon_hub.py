@@ -4,7 +4,7 @@ homeassistant.components.light.insteon
 Support for Insteon Hub lights.
 """
 
-from homeassistant.components.insteon_hub import (INSTEON, InsteonToggleDevice)
+from homeassistant.components.insteon_hub import INSTEON, InsteonToggleDevice
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

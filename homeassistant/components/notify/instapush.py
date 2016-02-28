@@ -6,15 +6,15 @@ Instapush notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.instapush/
 """
-import logging
 import json
+import logging
 
 import requests
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.instapush.im/v1/'

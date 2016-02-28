@@ -1,6 +1,4 @@
 """
-homeassistant.components.binary_sensor.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a MQTT binary sensor.
 
 For more details about this platform, please refer to the documentation at
@@ -8,10 +6,10 @@ https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import logging
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.util import template
 import homeassistant.components.mqtt as mqtt
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +23,7 @@ DEPENDENCIES = ['mqtt']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Add MQTT binary sensor. """
+    """Add MQTT binary sensor."""
 
     if config.get('state_topic') is None:
         _LOGGER.error('Missing required variable: state_topic')
@@ -43,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttBinarySensor(BinarySensorDevice):
-    """ Represents a binary sensor that is updated by MQTT. """
+    """Represents a binary sensor that is updated by MQTT."""
     def __init__(self, hass, name, state_topic, qos, payload_on, payload_off,
                  value_template):
         self._hass = hass
@@ -55,7 +53,7 @@ class MqttBinarySensor(BinarySensorDevice):
         self._qos = qos
 
         def message_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
+            """A new MQTT message has been received."""
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
@@ -70,15 +68,15 @@ class MqttBinarySensor(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed. """
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ The name of the binary sensor. """
+        """The name of the binary sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if the binary sensor is on. """
+        """True if the binary sensor is on."""
         return self._state

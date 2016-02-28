@@ -1,16 +1,19 @@
 """
 tests.components.sensor.test_mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mFi sensor.
 """
 import unittest
 import unittest.mock as mock
 
-import homeassistant.core as ha
+import requests
+
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
 from homeassistant.const import TEMP_CELCIUS
+
+from tests.common import get_test_home_assistant
 
 
 class TestMfiSensorSetup(unittest.TestCase):
@@ -28,7 +31,7 @@ class TestMfiSensorSetup(unittest.TestCase):
     }
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
 
@@ -48,6 +51,15 @@ class TestMfiSensorSetup(unittest.TestCase):
     def test_setup_failed_login(self, mock_client):
         mock_client.FailedToLogin = Exception()
         mock_client.MFiClient.side_effect = mock_client.FailedToLogin
+        self.assertFalse(
+            self.PLATFORM.setup_platform(self.hass,
+                                         dict(self.GOOD_CONFIG),
+                                         None))
+
+    @mock.patch('mficlient.client')
+    def test_setup_failed_connect(self, mock_client):
+        mock_client.FailedToLogin = Exception()
+        mock_client.MFiClient.side_effect = requests.exceptions.ConnectionError
         self.assertFalse(
             self.PLATFORM.setup_platform(self.hass,
                                          dict(self.GOOD_CONFIG),
@@ -87,7 +99,7 @@ class TestMfiSensorSetup(unittest.TestCase):
 
 class TestMfiSensor(unittest.TestCase):
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
         self.port = mock.MagicMock()

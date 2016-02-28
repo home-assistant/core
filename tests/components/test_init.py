@@ -1,6 +1,6 @@
 """
-tests.test_component_core
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests core compoments.
 """
