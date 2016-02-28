@@ -117,6 +117,11 @@ class MySensorsLight(Light):
         return self.value_type in self._values
 
     @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return self.gateway.optimistic
+
+    @property
     def is_on(self):
         """True if device is on."""
         return self._state
