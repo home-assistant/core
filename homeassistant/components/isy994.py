@@ -11,13 +11,12 @@ import logging
 from urllib.parse import urlparse
 
 from homeassistant import bootstrap
-from homeassistant.loader import get_component
+from homeassistant.const import (
+    ATTR_DISCOVERED, ATTR_SERVICE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, EVENT_PLATFORM_DISCOVERED,
-    EVENT_HOMEASSISTANT_STOP, ATTR_SERVICE, ATTR_DISCOVERED,
-    ATTR_FRIENDLY_NAME)
+from homeassistant.loader import get_component
 
 DOMAIN = "isy994"
 REQUIREMENTS = ['PyISY==1.0.5']
@@ -147,7 +146,7 @@ class ISYDeviceABC(ToggleEntity):
     @property
     def state_attributes(self):
         """ Returns the state attributes for the node. """
-        attr = {ATTR_FRIENDLY_NAME: self.name}
+        attr = {}
         for name, prop in self._attrs.items():
             attr[name] = getattr(self, prop)
             attr = self._attr_filter(attr)

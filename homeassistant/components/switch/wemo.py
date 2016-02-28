@@ -10,48 +10,32 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_STANDBY, EVENT_HOMEASSISTANT_STOP)
+    STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
+from homeassistant.loader import get_component
 
-REQUIREMENTS = ['pywemo==0.3.10']
+DEPENDENCIES = ['wemo']
+
 _LOGGER = logging.getLogger(__name__)
-
-_WEMO_SUBSCRIPTION_REGISTRY = None
 
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
+ATTR_CURRENT_STATE_DETAIL = 'state_detail'
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
 
+MAKER_SWITCH_MOMENTARY = "momentary"
+MAKER_SWITCH_TOGGLE = "toggle"
 
-def _find_manual_wemos(pywemo, static_config):
-    for address in static_config:
-        port = pywemo.ouimeaux_device.probe_wemo(address)
-        if not port:
-            _LOGGER.warning('Unable to probe wemo at %s', address)
-            continue
-        _LOGGER.info('Adding static wemo at %s:%i', address, port)
-        url = 'http://%s:%i/setup.xml' % (address, port)
-        yield pywemo.discovery.device_from_description(url, None)
+WEMO_ON = 1
+WEMO_OFF = 0
+WEMO_STANDBY = 8
 
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return WeMo switches. """
-    import pywemo
+    """Register discovered WeMo switches."""
     import pywemo.discovery as discovery
-
-    global _WEMO_SUBSCRIPTION_REGISTRY
-    if _WEMO_SUBSCRIPTION_REGISTRY is None:
-        _WEMO_SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
-        _WEMO_SUBSCRIPTION_REGISTRY.start()
-
-        def stop_wemo(event):
-            """ Shutdown Wemo subscriptions and subscription thread on exit"""
-            _LOGGER.info("Shutting down subscriptions.")
-            _WEMO_SUBSCRIPTION_REGISTRY.stop()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
     if discovery_info is not None:
         location = discovery_info[2]
@@ -61,36 +45,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device:
             add_devices_callback([WemoSwitch(device)])
 
-        return
-
-    _LOGGER.info("Scanning for WeMo devices.")
-    switches = pywemo.discover_devices()
-
-    # Filter out the switches and wrap in WemoSwitch object
-    add_devices_callback(
-        [WemoSwitch(switch) for switch in switches
-         if isinstance(switch, pywemo.Switch)])
-
-    # Add manually-defined wemo devices
-    if discovery_info is None and 'static' in config:
-        add_devices_callback(
-            [WemoSwitch(wemo)
-             for wemo in _find_manual_wemos(pywemo, config['static'])])
-
 
 class WemoSwitch(SwitchDevice):
-    """ Represents a WeMo switch. """
-    def __init__(self, wemo):
-        self.wemo = wemo
+    """Represents a WeMo switch."""
+    def __init__(self, device):
+        self.wemo = device
         self.insight_params = None
         self.maker_params = None
+        self._state = None
 
-        _WEMO_SUBSCRIPTION_REGISTRY.register(wemo)
-        _WEMO_SUBSCRIPTION_REGISTRY.on(
-            wemo, None, self._update_callback)
+        wemo = get_component('wemo')
+        wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
+        wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _params):
-        """ Called by the wemo device callback to update state. """
+        """Called by the wemo device callback to update state."""
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
@@ -98,17 +67,17 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed with subscriptions """
+        """No polling needed with subscriptions"""
         return False
 
     @property
     def unique_id(self):
-        """ Returns the id of this WeMo switch """
+        """Returns the id of this WeMo switch"""
         return "{}.{}".format(self.__class__, self.wemo.serialnumber)
 
     @property
     def name(self):
-        """ Returns the name of the switch if any. """
+        """Returns the name of the switch if any."""
         return self.wemo.name
 
     @property
@@ -129,50 +98,45 @@ class WemoSwitch(SwitchDevice):
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
+        if self.insight_params:
+            attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
+
         return attr
 
     @property
-    def state(self):
-        """ Returns the state. """
-        is_on = self.is_on
-        if not is_on:
-            return STATE_OFF
-        elif self.is_standby:
-            return STATE_STANDBY
-        return STATE_ON
-
-    @property
     def current_power_mwh(self):
-        """ Current power usage in mwh. """
+        """Current power usage in mwh."""
         if self.insight_params:
             return self.insight_params['currentpower']
 
     @property
     def today_power_mw(self):
-        """ Today total power usage in mw. """
+        """Today total power usage in mw."""
         if self.insight_params:
             return self.insight_params['todaymw']
 
     @property
-    def is_standby(self):
-        """ Is the device on - or in standby. """
+    def detail_state(self):
+        """Is the device on - or in standby."""
         if self.insight_params:
-            standby_state = self.insight_params['state']
-            # Standby  is actually '8' but seems more defensive
-            # to check for the On and Off states
-            if standby_state == '1' or standby_state == '0':
-                return False
+            standby_state = int(self.insight_params['state'])
+            if standby_state == WEMO_ON:
+                return STATE_ON
+            elif standby_state == WEMO_OFF:
+                return STATE_OFF
+            elif standby_state == WEMO_STANDBY:
+                return STATE_STANDBY
             else:
-                return True
+                return STATE_UNKNOWN
 
     @property
     def is_on(self):
-        """ True if switch is on. """
-        return self.wemo.get_state()
+        """True if switch is on. Standby is on!"""
+        return self._state
 
     @property
     def available(self):
-        """ True if switch is available. """
+        """True if switch is available."""
         if (self.wemo.model_name == 'Insight' and
                 self.insight_params is None):
             return False
@@ -183,17 +147,21 @@ class WemoSwitch(SwitchDevice):
         return True
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turns the switch on."""
+        self._state = WEMO_ON
+        self.update_ha_state()
         self.wemo.on()
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """Turns the switch off."""
+        self._state = WEMO_OFF
+        self.update_ha_state()
         self.wemo.off()
 
     def update(self):
-        """ Update WeMo state. """
+        """Update WeMo state."""
         try:
-            self.wemo.get_state(True)
+            self._state = self.wemo.get_state(True)
             if self.wemo.model_name == 'Insight':
                 self.insight_params = self.wemo.insight_params
                 self.insight_params['standby_state'] = (

@@ -8,10 +8,10 @@ https://home-assistant.io/components/switch.edimax/
 """
 import logging
 
+from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import validate_config
-from homeassistant.components.switch import SwitchDevice, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD,\
-    CONF_NAME
 
 # constants
 DEFAULT_USERNAME = 'admin'

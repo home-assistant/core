@@ -6,10 +6,10 @@ The Proliphix NT10e Thermostat is an ethernet connected thermostat.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.proliphix/
 """
-from homeassistant.components.thermostat import (ThermostatDevice, STATE_COOL,
-                                                 STATE_IDLE, STATE_HEAT)
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_HOST, TEMP_FAHRENHEIT)
+from homeassistant.components.thermostat import (
+    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT)
 
 REQUIREMENTS = ['proliphix==0.1.0']
 

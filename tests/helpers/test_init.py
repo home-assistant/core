@@ -1,6 +1,6 @@
 """
-tests.test_helpers
-~~~~~~~~~~~~~~~~~~~~
+tests.helpers.test_init
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests component helpers.
 """

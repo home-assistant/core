@@ -1,6 +1,4 @@
 """
-homeassistant.components.binary_sensor.rest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The rest binary sensor will consume responses sent by an exposed REST API.
 
 For more details about this platform, please refer to the documentation at
@@ -8,10 +6,10 @@ https://home-assistant.io/components/binary_sensor.rest/
 """
 import logging
 
-from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
-from homeassistant.components.sensor.rest import RestData
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.sensor.rest import RestData
+from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +19,7 @@ DEFAULT_METHOD = 'GET'
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup REST binary sensors. """
+    """Setup REST binary sensors."""
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
@@ -41,10 +39,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class RestBinarySensor(BinarySensorDevice):
-    """ A REST binary sensor. """
+    """A REST binary sensor."""
 
     def __init__(self, hass, rest, name, value_template):
-        """ Initialize a REST binary sensor. """
+        """Initialize a REST binary sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name
@@ -54,12 +52,12 @@ class RestBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """ Name of the binary sensor. """
+        """Name of the binary sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """ Return if the binary sensor is on. """
+        """Return true if the binary sensor is on."""
         if self.rest.data is None:
             return False
 
@@ -69,5 +67,5 @@ class RestBinarySensor(BinarySensorDevice):
         return bool(int(self.rest.data))
 
     def update(self):
-        """ Get the latest data from REST API and updates the state. """
+        """Get the latest data from REST API and updates the state."""
         self.rest.update()

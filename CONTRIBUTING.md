@@ -6,7 +6,7 @@ The process is straight-forward.
 
  - Fork the Home Assistant [git repository](https://github.com/balloob/home-assistant).
  - Write the code for your device, notification service, sensor, or IoT thing.
- - Check it with ``pylint`` and ``flake8``.
+ - Ensure tests work.
  - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
 
 Still interested? Then you should read the next sections and get more details. 
@@ -17,12 +17,13 @@ For help on building your component, please see the [developer documentation](ht
 
 After you finish adding support for your device:
 
+ - Check that all dependencies are included via the `REQUIREMENTS` variable in your platform/component and only imported inside functions that use them.
  - Add any new dependencies to `requirements_all.txt` if needed. Use `script/gen_requirements_all.py`.
- - Update the `.coveragerc` file to exclude your platform if there are no tests available.
+ - Update the `.coveragerc` file to exclude your platform if there are no tests available or your new code uses a 3rd party library for communication with the device/service/sensor.
  - Provide some documentation for [home-assistant.io](https://home-assistant.io/). It's OK to just add a docstring with configuration details (sample entry for `configuration.yaml` file and alike) to the file header as a start. Visit the [website documentation](https://home-assistant.io/developers/website/) for further information on contributing to [home-assistant.io](https://github.com/balloob/home-assistant.io).
- - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `./script/lint`.
+ - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `tox` or `script/lint`.
  - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
- - Check for comments and suggestions on your Pull Request and keep an eye on the [Travis output](https://travis-ci.org/balloob/home-assistant/).
+ - Check for comments and suggestions on your Pull Request and keep an eye on the [CI output](https://travis-ci.org/balloob/home-assistant/).
 
 If you add a platform for an existing component, there is usually no need for updating the frontend. Only if you've added a new component that should show up in the frontend, there are more steps needed:
 
@@ -65,6 +66,21 @@ Remember: The suggestion set by your component's code will always be overwritten
 The frontend is composed of [Polymer](https://www.polymer-project.org) web-components and compiled into the file `frontend.html`. During development you do not want to work with the compiled version but with the seperate files. To have Home Assistant serve the seperate files, set `development=1` for the *http-component* in your config.
 
 When you are done with development and ready to commit your changes, run `build_frontend`, set `development=0` in your config and validate that everything still works.
+
+## Testing your code
+
+To test your code before submission, used the `tox` tool.
+
+    ```shell
+    > pip install -U tox
+    > tox
+    ```
+
+This will run unit tests against python 3.4 and 3.5 (if both are available locally), as well as run a set of tests which validate `pep8` and `pylint` style of the code.
+
+You can optionally run tests on only one tox target using the `-e` option to select an environment.
+
+For instance `tox -e lint` will run the linters only, `tox -e py34` will run unit tests only on python 3.4.
 
 ### Notes on PyLint and PEP8 validation
 

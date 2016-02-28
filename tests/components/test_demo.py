@@ -1,18 +1,18 @@
 """
 tests.test_component_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests demo component.
 """
 import json
+import os
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
-import homeassistant.components.demo as demo
+from homeassistant.components import demo, device_tracker
 from homeassistant.remote import JSONEncoder
 
-from tests.common import mock_http_component
+from tests.common import mock_http_component, get_test_home_assistant
 
 
 @patch('homeassistant.components.sun.setup')
@@ -20,12 +20,17 @@ class TestDemo(unittest.TestCase):
     """ Test the demo module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
+
+        try:
+            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
+        except FileNotFoundError:
+            pass
 
     def test_if_demo_state_shows_by_default(self, mock_sun_setup):
         """ Test if demo state shows if we give no configuration. """

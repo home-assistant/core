@@ -1,22 +1,23 @@
 """
-tests.test_component_configurator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_configurator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Configurator component.
 """
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.configurator as configurator
 from homeassistant.const import EVENT_TIME_CHANGED
+
+from tests.common import get_test_home_assistant
 
 
 class TestConfigurator(unittest.TestCase):
     """ Test the chromecast module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

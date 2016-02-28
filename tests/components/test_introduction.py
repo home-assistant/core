@@ -1,23 +1,21 @@
 """
-tests.components.introduction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_introduction
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test introduction.
-
-This test is primarily to ensure that default components don't crash HASS.
 """
-
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.components import introduction
+
+from tests.common import get_test_home_assistant
 
 
 class TestIntroduction(unittest.TestCase):
     """ Test Introduction. """
 
     def setUp(self):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
         """ Stop down stuff we started. """

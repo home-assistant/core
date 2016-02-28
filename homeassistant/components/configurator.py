@@ -11,8 +11,8 @@ the user has submitted configuration information.
 """
 import logging
 
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.const import EVENT_TIME_CHANGED
+from homeassistant.helpers.entity import generate_entity_id
 
 DOMAIN = "configurator"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

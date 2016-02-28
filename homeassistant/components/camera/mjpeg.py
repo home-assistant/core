@@ -6,15 +6,15 @@ Support for IP Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.mjpeg/
 """
-from contextlib import closing
 import logging
+from contextlib import closing
 
 import requests
 from requests.auth import HTTPBasicAuth
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.const import HTTP_OK
+from homeassistant.helpers import validate_config
 
 CONTENT_TYPE_HEADER = 'Content-Type'
 

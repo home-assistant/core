@@ -1,19 +1,30 @@
 """
 tests.helpers.event_test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests event helpers.
 """
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from astral import Astral
 
 import homeassistant.core as ha
-from homeassistant.helpers.event import *
+from homeassistant.helpers.event import (
+    track_point_in_utc_time,
+    track_point_in_time,
+    track_utc_time_change,
+    track_time_change,
+    track_state_change,
+    track_sunrise,
+    track_sunset,
+)
 from homeassistant.components import sun
+import homeassistant.util.dt as dt_util
+
+from tests.common import get_test_home_assistant
 
 
 class TestEventHelpers(unittest.TestCase):
@@ -23,9 +34,7 @@ class TestEventHelpers(unittest.TestCase):
 
     def setUp(self):     # pylint: disable=invalid-name
         """ things to be run when tests are started. """
-        self.hass = ha.HomeAssistant()
-        self.hass.states.set("light.Bowl", "on")
-        self.hass.states.set("switch.AC", "off")
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
@@ -87,7 +96,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(3, len(wildcard_runs))
 
     def test_track_state_change(self):
-        """ Test track_state_change. """
+        """Test track_state_change."""
         # 2 lists to track how often our callbacks get called
         specific_runs = []
         wildcard_runs = []
@@ -97,32 +106,48 @@ class TestEventHelpers(unittest.TestCase):
             'on', 'off')
 
         track_state_change(
-            self.hass, 'light.Bowl', lambda a, b, c: wildcard_runs.append(1),
+            self.hass, 'light.Bowl',
+            lambda _, old_s, new_s: wildcard_runs.append((old_s, new_s)),
             ha.MATCH_ALL, ha.MATCH_ALL)
+
+        # Adding state to state machine
+        self.hass.states.set("light.Bowl", "on")
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertIsNone(wildcard_runs[-1][0])
+        self.assertIsNotNone(wildcard_runs[-1][1])
 
         # Set same state should not trigger a state change/listener
         self.hass.states.set('light.Bowl', 'on')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(specific_runs))
-        self.assertEqual(0, len(wildcard_runs))
+        self.assertEqual(1, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
-        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(2, len(wildcard_runs))
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
-        self.assertEqual(2, len(wildcard_runs))
+        self.assertEqual(3, len(wildcard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
-        self.assertEqual(3, len(wildcard_runs))
+        self.assertEqual(4, len(wildcard_runs))
+
+        self.hass.states.remove('light.bowl')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(5, len(wildcard_runs))
+        self.assertIsNotNone(wildcard_runs[-1][0])
+        self.assertIsNone(wildcard_runs[-1][1])
 
     def test_track_sunrise(self):
         """ Test track sunrise """

@@ -1,6 +1,6 @@
 """
 tests.components.light.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests mqtt light.
 
@@ -42,20 +42,38 @@ light:
   qos: 0
   payload_on: "on"
   payload_off: "off"
+
+config for RGB Version with brightness and scale:
+
+light:
+  platform: mqtt
+  name: "Office Light RGB"
+  state_topic: "office/rgb1/light/status"
+  command_topic: "office/rgb1/light/switch"
+  brightness_state_topic: "office/rgb1/brightness/status"
+  brightness_command_topic: "office/rgb1/brightness/set"
+  brightness_scale: 99
+  rgb_state_topic: "office/rgb1/rgb/status"
+  rgb_command_topic: "office/rgb1/rgb/set"
+  rgb_scale: 99
+  qos: 0
+  payload_on: "on"
+  payload_off: "off"
+
 """
 import unittest
 
-from homeassistant.const import STATE_ON, STATE_OFF
-import homeassistant.core as ha
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.light as light
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import (
+  get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
 
 
 class TestLightMQTT(unittest.TestCase):
     """ Test the MQTT light. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -115,6 +133,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
         self.hass.pool.block_till_done()
@@ -152,6 +171,51 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual([125, 125, 125],
                          light_state.attributes.get('rgb_color'))
 
+    def test_controlling_scale(self):
+        self.assertTrue(light.setup(self.hass, {
+            'light': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test_scale/status',
+                'command_topic': 'test_scale/set',
+                'brightness_state_topic': 'test_scale/brightness/status',
+                'brightness_command_topic': 'test_scale/brightness/set',
+                'brightness_scale': '99',
+                'qos': 0,
+                'payload_on': 'on',
+                'payload_off': 'off'
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        fire_mqtt_message(self.hass, 'test_scale/status', 'on')
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
+
+        fire_mqtt_message(self.hass, 'test_scale/status', 'off')
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        fire_mqtt_message(self.hass, 'test_scale/status', 'on')
+        self.hass.pool.block_till_done()
+
+        fire_mqtt_message(self.hass, 'test_scale/brightness/status', '99')
+        self.hass.pool.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.hass.pool.block_till_done()
+        self.assertEqual(255,
+                         light_state.attributes['brightness'])
+
     def test_controlling_state_via_topic_with_templates(self):
         self.assertTrue(light.setup(self.hass, {
             'light': {
@@ -172,12 +236,12 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('rgb_color'))
 
+        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
+                          '{"hello": [1, 2, 3]}')
         fire_mqtt_message(self.hass, 'test_light_rgb/status',
                           '{"hello": "ON"}')
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status',
                           '{"hello": "50"}')
-        fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
-                          '{"hello": [1, 2, 3]}')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
@@ -201,6 +265,7 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         light.turn_on(self.hass, 'light.test')
         self.hass.pool.block_till_done()

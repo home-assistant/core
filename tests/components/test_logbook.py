@@ -1,6 +1,6 @@
 """
-tests.test_component_logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_logbook
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the logbook component.
 """
@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
 
-from tests.common import mock_http_component
+from tests.common import mock_http_component, get_test_home_assistant
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def setUp(self):
         """ Test setup method. """
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
         self.assertTrue(logbook.setup(self.hass, {}))
 

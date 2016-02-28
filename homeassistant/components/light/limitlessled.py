@@ -8,12 +8,9 @@ https://home-assistant.io/components/light.limitlessled/
 """
 import logging
 
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
-                                            ATTR_RGB_COLOR, ATTR_EFFECT,
-                                            ATTR_COLOR_TEMP, ATTR_TRANSITION,
-                                            ATTR_FLASH, FLASH_LONG,
-                                            EFFECT_COLORLOOP, EFFECT_WHITE)
-
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG, Light)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['limitlessled==1.0.0']

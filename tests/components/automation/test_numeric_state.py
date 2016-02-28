@@ -6,15 +6,16 @@ Tests numeric state automation.
 """
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
+
+from tests.common import get_test_home_assistant
 
 
 class TestAutomationNumericState(unittest.TestCase):
     """ Test the event automation. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.calls = []
 
         def record_call(service):
@@ -267,7 +268,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 9, { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 9, {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -285,7 +286,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 11, { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 11, {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -304,7 +305,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -323,7 +324,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -342,7 +343,7 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10, entity state value should not be tested
-        self.hass.states.set('test.entity', '9', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', '9', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -365,7 +366,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def test_if_fires_on_attribute_change_with_attribute_below_multiple_attributes(self):
+    def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -380,7 +381,8 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9, 'not_test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': 9, 'not_test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -390,7 +392,8 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ state.attributes.test_attribute[2] }}',
+                    'value_template':
+                    '{{ state.attributes.test_attribute[2] }}',
                     'below': 10,
                 },
                 'action': {
@@ -399,7 +402,8 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 3 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': [11, 15, 3] })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': [11, 15, 3]})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
@@ -409,7 +413,8 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ state.attributes.test_attribute | multiply(10) }}',
+                    'value_template':
+                    '{{ state.attributes.test_attribute | multiply(10) }}',
                     'below': 10,
                 },
                 'action': {
@@ -418,11 +423,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': '0.9' })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': '0.9'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_not_fires_on_attribute_change_with_attribute_not_below_multiple_attributes(self):
+    def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -437,7 +443,8 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11, 'not_test_attribute': 9  })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': 11, 'not_test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
