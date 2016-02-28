@@ -1,7 +1,4 @@
 """
-homeassistant.util.location
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
@@ -22,12 +19,12 @@ LocationInfo = collections.namedtuple(
 
 
 def detect_location_info():
-    """ Detect location information. """
+    """Detect location information."""
     try:
         raw_info = requests.get(
             'https://freegeoip.net/json/', timeout=5).json()
-    except requests.RequestException:
-        return
+    except (requests.RequestException, ValueError):
+        return None
 
     data = {key: raw_info.get(key) for key in LocationInfo._fields}
 
@@ -41,12 +38,12 @@ def detect_location_info():
 
 
 def distance(lat1, lon1, lat2, lon2):
-    """ Calculate the distance in meters between two points. """
+    """Calculate the distance in meters between two points."""
     return vincenty((lat1, lon1), (lat2, lon2)) * 1000
 
 
 def elevation(latitude, longitude):
-    """ Return elevation for given latitude and longitude. """
+    """Return elevation for given latitude and longitude."""
     req = requests.get(ELEVATION_URL, params={
         'locations': '{},{}'.format(latitude, longitude),
         'sensor': 'false',
