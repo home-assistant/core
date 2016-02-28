@@ -69,6 +69,9 @@ https://github.com/Danielhiversen/pyRFXtrx/archive/0.5.zip#pyRFXtrx==0.5
 # homeassistant.components.sensor.netatmo
 https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
 
+# homeassistant.components.nuimo
+https://github.com/IanHarvey/bluepy/archive/master.zip#bluepy==1.0.3
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
@@ -92,6 +95,9 @@ https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc7045
 
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
+
+# homeassistant.components.nuimo
+https://github.com/shaftoe/nuimo-raspberrypi-demo/archive/pip.zip#nuimocore==0.0.1
 
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/f0c928532167fb24823efa793ec21ca646fd37a6.zip#pymysensors==0.5
