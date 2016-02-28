@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.1.8']
+REQUIREMENTS = ['py-cpuinfo==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class CpuSpeedSensor(Entity):
-    """A CPU info sensor."""
+    """Represents a CPU sensor."""
     def __init__(self, name):
         self._name = name
         self._state = None
