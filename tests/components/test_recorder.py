@@ -1,5 +1,5 @@
 """
-tests.test_component_recorder
+tests.components.test_recorder
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Recorder component.

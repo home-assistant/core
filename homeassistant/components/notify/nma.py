@@ -11,10 +11,10 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'

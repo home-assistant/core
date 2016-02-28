@@ -1,14 +1,14 @@
 """
-homeassistant.components.sensor.eliqonline
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Monitors home energy use for the eliq online service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.eliqonline/
 """
 import logging
+from urllib.error import URLError
+
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (STATE_UNKNOWN, CONF_ACCESS_TOKEN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ DEFAULT_NAME = "ELIQ Energy Usage"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up the Eliq sensor. """
+    """Set up the Eliq sensor."""
 
     import eliqonline
 
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EliqSensor(Entity):
-    """ Implements a Eliq sensor. """
+    """Implements a Eliq sensor."""
 
     def __init__(self, api, channel_id, name):
         self._name = name
@@ -50,28 +50,28 @@ class EliqSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name. """
+        """Returns the name of the sensor."""
         return self._name
 
     @property
     def icon(self):
-        """ Returns icon. """
+        """Returns icon."""
         return "mdi:speedometer"
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     def update(self):
-        """ Gets the latest data. """
+        """Gets the latest data."""
         try:
             response = self.api.get_data_now(channelid=self.channel_id)
             self._state = int(response.power)
-        except TypeError:  # raised by eliqonline library on any HTTP error
-            pass
+        except (TypeError, URLError):
+            _LOGGER.error("Could not connect to the eliqonline servers")

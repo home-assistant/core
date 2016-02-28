@@ -1,58 +1,57 @@
 """
-homeassistant.components.switch.command_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure custom shell commands to turn a switch on/off.
+Support for command roller shutters.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.command_switch/
+https://home-assistant.io/components/rollershutter.command_rollershutter/
 """
 import logging
 import subprocess
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
-from homeassistant.util import template
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return switches controlled by shell commands. """
+    """Setup rollershutter controlled by shell commands."""
 
-    switches = config.get('switches', {})
+    rollershutters = config.get('rollershutters', {})
     devices = []
 
-    for dev_name, properties in switches.items():
+    for dev_name, properties in rollershutters.items():
         devices.append(
-            CommandSwitch(
+            CommandRollershutter(
                 hass,
                 properties.get('name', dev_name),
-                properties.get('oncmd', 'true'),
-                properties.get('offcmd', 'true'),
+                properties.get('upcmd', 'true'),
+                properties.get('downcmd', 'true'),
+                properties.get('stopcmd', 'true'),
                 properties.get('statecmd', False),
-                properties.get(CONF_VALUE_TEMPLATE, False)))
-
+                properties.get(CONF_VALUE_TEMPLATE, '{{ value }}')))
     add_devices_callback(devices)
 
 
-class CommandSwitch(SwitchDevice):
-    """ Represents a switch that can be togggled using shell commands. """
+# pylint: disable=too-many-arguments, too-many-instance-attributes
+class CommandRollershutter(RollershutterDevice):
+    """ Represents a rollershutter -  can be controlled using shell cmd. """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, hass, name, command_on, command_off,
+    def __init__(self, hass, name, command_up, command_down, command_stop,
                  command_state, value_template):
 
         self._hass = hass
         self._name = name
-        self._state = False
-        self._command_on = command_on
-        self._command_off = command_off
+        self._state = None  # Unknown
+        self._command_up = command_up
+        self._command_down = command_down
+        self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
 
     @staticmethod
-    def _switch(command):
+    def _move_rollershutter(command):
         """ Execute the actual commands. """
         _LOGGER.info('Running command: %s', command)
 
@@ -74,12 +73,6 @@ class CommandSwitch(SwitchDevice):
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', command)
 
-    @staticmethod
-    def _query_state_code(command):
-        """ Execute state command for return code. """
-        _LOGGER.info('Running state command: %s', command)
-        return subprocess.call(command, shell=True) == 0
-
     @property
     def should_poll(self):
         """ Only poll if we have statecmd. """
@@ -87,12 +80,15 @@ class CommandSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """ The name of the rollershutter. """
         return self._name
 
     @property
-    def is_on(self):
-        """ True if device is on. """
+    def current_position(self):
+        """
+        Return current position of rollershutter.
+        None is unknown, 0 is closed, 100 is fully open.
+        """
         return self._state
 
     def _query_state(self):
@@ -100,9 +96,7 @@ class CommandSwitch(SwitchDevice):
         if not self._command_state:
             _LOGGER.error('No state command specified')
             return
-        if self._value_template:
-            return CommandSwitch._query_state_value(self._command_state)
-        return CommandSwitch._query_state_code(self._command_state)
+        return self._query_state_value(self._command_state)
 
     def update(self):
         """ Update device state. """
@@ -111,18 +105,16 @@ class CommandSwitch(SwitchDevice):
             if self._value_template:
                 payload = template.render_with_possible_json_value(
                     self._hass, self._value_template, payload)
-            self._state = (payload.lower() == "true")
+            self._state = int(payload)
 
-    def turn_on(self, **kwargs):
-        """ Turn the device on. """
-        if (CommandSwitch._switch(self._command_on) and
-                not self._command_state):
-            self._state = True
-            self.update_ha_state()
+    def move_up(self, **kwargs):
+        """ Move the rollershutter up. """
+        self._move_rollershutter(self._command_up)
 
-    def turn_off(self, **kwargs):
-        """ Turn the device off. """
-        if (CommandSwitch._switch(self._command_off) and
-                not self._command_state):
-            self._state = False
-            self.update_ha_state()
+    def move_down(self, **kwargs):
+        """ Move the rollershutter down. """
+        self._move_rollershutter(self._command_down)
+
+    def stop(self, **kwargs):
+        """ Stop the device. """
+        self._move_rollershutter(self._command_stop)

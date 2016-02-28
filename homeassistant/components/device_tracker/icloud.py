@@ -7,9 +7,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.icloud/
 """
 import logging
-
 import re
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)

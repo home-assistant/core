@@ -7,10 +7,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+
 from homeassistant.util import slugify
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.4.zip' +
-                '#RFXtrx==0.4']
+                '#pyRFXtrx==0.4']
 
 DOMAIN = "rfxtrx"
 
@@ -20,6 +21,7 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_PACKETID = 'packetid'
 ATTR_FIREEVENT = 'fire_event'
+ATTR_DATA_TYPE = 'data_type'
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 

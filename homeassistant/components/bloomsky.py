@@ -8,10 +8,13 @@ https://home-assistant.io/components/bloomsky/
 """
 import logging
 from datetime import timedelta
+
 import requests
-from homeassistant.util import Throttle
-from homeassistant.helpers import validate_config
+
+from homeassistant.components import discovery
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
+from homeassistant.util import Throttle
 
 DOMAIN = "bloomsky"
 BLOOMSKY = None
@@ -21,6 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 # The BloomSky only updates every 5-8 minutes as per the API spec so there's
 # no point in polling the API more frequently
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
+
+DISCOVER_SENSORS = 'bloomsky.sensors'
+DISCOVER_BINARY_SENSORS = 'bloomsky.binary_sensor'
+DISCOVER_CAMERAS = 'bloomsky.camera'
 
 
 # pylint: disable=unused-argument,too-few-public-methods
@@ -39,6 +46,12 @@ def setup(hass, config):
         BLOOMSKY = BloomSky(api_key)
     except RuntimeError:
         return False
+
+    for component, discovery_service in (
+            ('camera', DISCOVER_CAMERAS), ('sensor', DISCOVER_SENSORS),
+            ('binary_sensor', DISCOVER_BINARY_SENSORS)):
+        discovery.discover(hass, discovery_service, component=component,
+                           hass_config=config)
 
     return True
 

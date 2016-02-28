@@ -8,9 +8,9 @@ https://home-assistant.io/components/notify.slack/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['slacker==0.6.8']
 _LOGGER = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 """
-tests.test_component_device_tracker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.device_tracker.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests the device tracker compoments.
 """
@@ -123,12 +123,14 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('DEV1')
+
         self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0), 0)[0]
-        self.assertEqual('dev1', config.dev_id)
-        self.assertEqual(True, config.track)
+                                            timedelta(seconds=0), 0)
+        assert len(config) == 1
+        assert config[0].dev_id == 'dev1'
+        assert config[0].track
 
     def test_discovery(self):
         scanner = get_component('device_tracker.test').SCANNER

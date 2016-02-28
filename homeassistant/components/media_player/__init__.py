@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
@@ -526,6 +526,11 @@ class MediaPlayerDevice(Entity):
             self.media_play()
 
     @property
+    def entity_picture(self):
+        """Return image of the media playing."""
+        return None if self.state == STATE_OFF else self.media_image_url
+
+    @property
     def state_attributes(self):
         """ Return the state attributes. """
         if self.state == STATE_OFF:
@@ -537,8 +542,5 @@ class MediaPlayerDevice(Entity):
                 attr: getattr(self, attr) for attr
                 in ATTR_TO_PROPERTY if getattr(self, attr) is not None
             }
-
-            if self.media_image_url:
-                state_attr[ATTR_ENTITY_PICTURE] = self.media_image_url
 
         return state_attr

@@ -1,25 +1,23 @@
 """
-homeassistant.components.binary_sensor.apcupsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides a binary sensor to track online status of a UPS.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.apcupsd/
 """
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components import apcupsd
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = [apcupsd.DOMAIN]
 DEFAULT_NAME = "UPS Online Status"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """ Instantiate an OnlineStatus binary sensor entity and add it to HA. """
+    """Instantiate an OnlineStatus binary sensor entity."""
     add_entities((OnlineStatus(config, apcupsd.DATA),))
 
 
 class OnlineStatus(BinarySensorDevice):
-    """ Binary sensor to represent UPS online status. """
+    """Binary sensor to represent UPS online status."""
     def __init__(self, config, data):
         self._config = config
         self._data = data
@@ -33,7 +31,7 @@ class OnlineStatus(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """ True if the UPS is online, else False. """
+        """True if the UPS is online, else False."""
         return self._state == apcupsd.VALUE_ONLINE
 
     def update(self):

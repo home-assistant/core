@@ -1,19 +1,19 @@
 """
-tests.components.sensor.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.sensor.test_template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests template sensor.
 """
-
-import homeassistant.core as ha
 import homeassistant.components.sensor as sensor
+
+from tests.common import get_test_home_assistant
 
 
 class TestTemplateSensor:
     """ Test the Template sensor. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
         """ Stop down stuff we started. """
@@ -65,7 +65,7 @@ class TestTemplateSensor:
                 'sensors': {
                     'test_template_sensor': {
                         'value_template':
-                            "It {{ states.sensor.test_state.attributes.missing }}."
+                        "It {{ states.sensor.test_state.attributes.missing }}."
                     }
                 }
             }

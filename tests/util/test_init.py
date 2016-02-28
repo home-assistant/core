@@ -1,6 +1,6 @@
 """
-tests.test_util
-~~~~~~~~~~~~~~~~~
+tests.util.test_init
+~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant util methods.
 """
@@ -53,6 +53,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(True, util.convert("True", bool))
         self.assertEqual(1, util.convert("NOT A NUMBER", int, 1))
         self.assertEqual(1, util.convert(None, int, 1))
+        self.assertEqual(1, util.convert(object, int, 1))
 
     def test_ensure_unique_string(self):
         """ Test ensure_unique_string. """
@@ -237,3 +238,20 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(throttled())
         self.assertIsNone(throttled())
+
+    def test_throttle_on_two_method(self):
+        """ Test that throttle works when wrapping two methods. """
+
+        class Tester(object):
+            @util.Throttle(timedelta(seconds=1))
+            def hello(self):
+                return True
+
+            @util.Throttle(timedelta(seconds=1))
+            def goodbye(self):
+                return True
+
+        tester = Tester()
+
+        self.assertTrue(tester.hello())
+        self.assertTrue(tester.goodbye())

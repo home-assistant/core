@@ -1,11 +1,9 @@
 """
 tests.components.switch.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests template switch.
 """
-
-import homeassistant.core as ha
 import homeassistant.components as core
 import homeassistant.components.switch as switch
 
@@ -13,12 +11,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
 
+from tests.common import get_test_home_assistant
+
 
 class TestTemplateSwitch:
     """ Test the Template switch. """
 
     def setup_method(self, method):
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
         self.calls = []
 
@@ -26,7 +26,6 @@ class TestTemplateSwitch:
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
-
 
     def teardown_method(self, method):
         """ Stop down stuff we started. """
@@ -53,7 +52,6 @@ class TestTemplateSwitch:
             }
         })
 
-
         state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.pool.block_till_done()
 
@@ -65,7 +63,6 @@ class TestTemplateSwitch:
 
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
-
 
     def test_template_state_boolean_on(self):
         assert switch.setup(self.hass, {
@@ -277,7 +274,6 @@ class TestTemplateSwitch:
         self.hass.pool.block_till_done()
 
         assert 1 == len(self.calls)
-
 
     def test_off_action(self):
         assert switch.setup(self.hass, {

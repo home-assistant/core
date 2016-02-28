@@ -8,8 +8,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/proximity/
 """
 import logging
-from homeassistant.helpers.event import track_state_change
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util.location import distance
 
 DEPENDENCIES = ['zone', 'device_tracker']
@@ -26,7 +27,6 @@ DEFAULT_PROXIMITY_ZONE = 'home'
 ATTR_DIST_FROM = 'dist_to_zone'
 ATTR_DIR_OF_TRAVEL = 'dir_of_travel'
 ATTR_NEAREST = 'nearest'
-ATTR_FRIENDLY_NAME = 'friendly_name'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +95,11 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         self.proximity_zone = proximity_zone
 
     @property
+    def name(self):
+        """Return the name of the entity."""
+        return self.friendly_name
+
+    @property
     def state(self):
         """ Returns the state. """
         return self.dist_to
@@ -110,7 +115,6 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         return {
             ATTR_DIR_OF_TRAVEL: self.dir_of_travel,
             ATTR_NEAREST: self.nearest,
-            ATTR_FRIENDLY_NAME: self.friendly_name
         }
 
     def check_proximity_state_change(self, entity, old_state, new_state):

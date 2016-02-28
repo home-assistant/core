@@ -8,9 +8,9 @@ https://home-assistant.io/components/notify.syslog/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 

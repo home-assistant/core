@@ -8,14 +8,13 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
-from tests.common import fire_time_changed
+from tests.common import fire_time_changed, get_test_home_assistant
 
 CODE = 'HELLO_CODE'
 
@@ -24,7 +23,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
     """ Test the manual alarm module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

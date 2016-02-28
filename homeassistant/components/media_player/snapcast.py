@@ -10,12 +10,9 @@ https://home-assistant.io/components/media_player.snapcast/
 import logging
 import socket
 
-from homeassistant.const import (
-    STATE_ON, STATE_OFF)
-
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.const import STATE_OFF, STATE_ON
 
 SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
 DOMAIN = 'snapcast'

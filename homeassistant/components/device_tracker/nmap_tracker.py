@@ -7,16 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.nmap_scanner/
 """
 import logging
-from datetime import timedelta
-from collections import namedtuple
-import subprocess
 import re
+import subprocess
+from collections import namedtuple
+from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle, convert
-from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)

@@ -10,6 +10,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.heatmiser/
 """
 import logging
+
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 

@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.nest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Nest Thermostat Sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -8,10 +6,10 @@ https://home-assistant.io/components/sensor.nest/
 """
 import logging
 import socket
-import homeassistant.components.nest as nest
 
-from homeassistant.helpers.entity import Entity
+import homeassistant.components.nest as nest
 from homeassistant.const import TEMP_CELCIUS
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
@@ -21,7 +19,18 @@ SENSOR_TYPES = ['humidity',
                 'last_connection',
                 'battery_level']
 
-SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V'}
+WEATHER_VARIABLES = ['weather_condition', 'weather_temperature',
+                     'weather_humidity',
+                     'wind_speed', 'wind_direction']
+
+JSON_VARIABLE_NAMES = {'weather_humidity': 'humidity',
+                       'weather_temperature': 'temperature',
+                       'weather_condition': 'condition',
+                       'wind_speed': 'kph',
+                       'wind_direction': 'direction'}
+
+SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
+                'kph': 'kph', 'temperature': '°C'}
 
 SENSOR_TEMP_TYPES = ['temperature',
                      'target',
@@ -30,8 +39,7 @@ SENSOR_TEMP_TYPES = ['temperature',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup Nest Sensor. """
-
+    """Setup Nest Sensor."""
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:
@@ -45,6 +53,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         add_devices([NestTempSensor(structure,
                                                     device,
                                                     variable)])
+                    elif variable in WEATHER_VARIABLES:
+                        json_variable = JSON_VARIABLE_NAMES.get(variable, None)
+                        add_devices([NestWeatherSensor(structure,
+                                                       device,
+                                                       json_variable)])
                     else:
                         logger.error('Nest sensor type: "%s" does not exist',
                                      variable)
@@ -55,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NestSensor(Entity):
-    """ Represents a Nest sensor. """
+    """Represents a Nest sensor."""
 
     def __init__(self, structure, device, variable):
         self.structure = structure
@@ -64,8 +77,7 @@ class NestSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the nest, if any. """
-
+        """Returns the name of the nest, if any."""
         location = self.device.where
         name = self.device.name
         if location is None:
@@ -80,32 +92,46 @@ class NestSensor(Entity):
 
 
 class NestBasicSensor(NestSensor):
-    """ Represents a basic Nest sensor with state. """
-
+    """Represents a basic Nest sensor with state."""
     @property
     def state(self):
-        """ Returns the state of the sensor. """
+        """Returns the state of the sensor."""
         return getattr(self.device, self.variable)
 
     @property
     def unit_of_measurement(self):
-        """ Unit the value is expressed in. """
+        """Unit the value is expressed in."""
         return SENSOR_UNITS.get(self.variable, None)
 
 
 class NestTempSensor(NestSensor):
-    """ Represents a Nest Temperature sensor. """
-
+    """Represents a Nest Temperature sensor."""
     @property
     def unit_of_measurement(self):
-        """ Unit the value is expressed in. """
+        """Unit the value is expressed in."""
         return TEMP_CELCIUS
 
     @property
     def state(self):
-        """ Returns the state of the sensor. """
+        """Returns the state of the sensor."""
         temp = getattr(self.device, self.variable)
         if temp is None:
             return None
 
         return round(temp, 1)
+
+
+class NestWeatherSensor(NestSensor):
+    """Represents a basic Nest Weather Conditions sensor."""
+    @property
+    def state(self):
+        """Returns the state of the sensor."""
+        if self.variable == 'kph' or self.variable == 'direction':
+            return getattr(self.structure.weather.current.wind, self.variable)
+        else:
+            return getattr(self.structure.weather.current, self.variable)
+
+    @property
+    def unit_of_measurement(self):
+        """Unit the value is expressed in."""
+        return SENSOR_UNITS.get(self.variable, None)

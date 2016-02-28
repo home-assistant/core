@@ -57,7 +57,7 @@ def convert(value, to_type, default=None):
     """ Converts value to to_type, returns default if fails. """
     try:
         return default if value is None else to_type(value)
-    except ValueError:
+    except (ValueError, TypeError):
         # If value could not be converted
         return default
 
@@ -260,31 +260,34 @@ class Throttle(object):
             else:
                 host = args[0] if args else wrapper
 
-            if not hasattr(host, '_throttle_lock'):
-                host._throttle_lock = threading.Lock()
+            if not hasattr(host, '_throttle'):
+                host._throttle = {}
 
-            if not host._throttle_lock.acquire(False):
+            if id(self) not in host._throttle:
+                host._throttle[id(self)] = [threading.Lock(), None]
+            throttle = host._throttle[id(self)]
+
+            if not throttle[0].acquire(False):
                 return None
 
-            last_call = getattr(host, '_throttle_last_call', None)
             # Check if method is never called or no_throttle is given
-            force = not last_call or kwargs.pop('no_throttle', False)
+            force = not throttle[1] or kwargs.pop('no_throttle', False)
 
             try:
-                if force or utcnow() - last_call > self.min_time:
+                if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
-                    host._throttle_last_call = utcnow()
+                    throttle[1] = utcnow()
                     return result
                 else:
                     return None
             finally:
-                host._throttle_lock.release()
+                throttle[0].release()
 
         return wrapper
 
 
 class ThreadPool(object):
-    """ A priority queue-based thread pool. """
+    """A priority queue-based thread pool."""
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, job_handler, worker_count=0, busy_callback=None):
@@ -311,7 +314,7 @@ class ThreadPool(object):
             self.add_worker()
 
     def add_worker(self):
-        """ Adds a worker to the thread pool. Resets warning limit. """
+        """Add worker to the thread pool and reset warning limit."""
         with self._lock:
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
@@ -324,7 +327,7 @@ class ThreadPool(object):
             self.busy_warning_limit = self.worker_count * 3
 
     def remove_worker(self):
-        """ Removes a worker from the thread pool. Resets warning limit. """
+        """Remove worker from the thread pool and reset warning limit."""
         with self._lock:
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
@@ -354,17 +357,18 @@ class ThreadPool(object):
                     self._work_queue.qsize())
 
     def block_till_done(self):
-        """ Blocks till all work is done. """
+        """Block till current work is done."""
         self._work_queue.join()
+        # import traceback
+        # traceback.print_stack()
 
     def stop(self):
-        """ Stops all the threads. """
+        """Finish all the jobs and stops all the threads."""
+        self.block_till_done()
+
         with self._lock:
             if not self.running:
                 return
-
-            # Ensure all current jobs finish
-            self.block_till_done()
 
             # Tell the workers to quit
             for _ in range(self.worker_count):
@@ -376,7 +380,7 @@ class ThreadPool(object):
             self.block_till_done()
 
     def _worker(self):
-        """ Handles jobs for the thread pool. """
+        """Handle jobs for the thread pool."""
         while True:
             # Get new item from work_queue
             job = self._work_queue.get().item

@@ -1,6 +1,6 @@
 """
 tests.components.test_splunk
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests splunk component.
 """
@@ -39,7 +39,6 @@ class TestSplunk(unittest.TestCase):
         self.assertTrue(hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
                          hass.bus.listen.call_args_list[0][0][0])
-
 
     def _setup(self, mock_requests):
         self.mock_post = mock_requests.post

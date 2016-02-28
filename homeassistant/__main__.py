@@ -1,18 +1,18 @@
 """ Starts home assistant. """
 from __future__ import print_function
 
-from multiprocessing import Process
+import argparse
+import os
 import signal
 import sys
 import threading
-import os
-import argparse
 import time
+from multiprocessing import Process
 
-from homeassistant import bootstrap
 import homeassistant.config as config_util
-from homeassistant.const import (__version__, EVENT_HOMEASSISTANT_START,
-                                 RESTART_EXIT_CODE)
+from homeassistant import bootstrap
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, RESTART_EXIT_CODE, __version__)
 
 
 def validate_python():

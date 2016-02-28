@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.13.1"
+__version__ = "0.14.0"
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -124,6 +124,9 @@ ATTR_LONGITUDE = "longitude"
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY = 'gps_accuracy'
 
+# If state is assumed
+ATTR_ASSUMED_STATE = 'assumed_state'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 SERVICE_HOMEASSISTANT_RESTART = "restart"
@@ -173,7 +176,6 @@ URL_API_SERVICES = "/api/services"
 URL_API_SERVICES_SERVICE = "/api/services/{}/{}"
 URL_API_EVENT_FORWARD = "/api/event_forwarding"
 URL_API_COMPONENTS = "/api/components"
-URL_API_BOOTSTRAP = "/api/bootstrap"
 URL_API_ERROR_LOG = "/api/error_log"
 URL_API_LOG_OUT = "/api/log_out"
 URL_API_TEMPLATE = "/api/template"

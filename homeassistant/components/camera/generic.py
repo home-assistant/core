@@ -11,8 +11,8 @@ import logging
 import requests
 from requests.auth import HTTPBasicAuth
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.camera import DOMAIN, Camera
+from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 

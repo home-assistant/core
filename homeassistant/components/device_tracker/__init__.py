@@ -25,7 +25,7 @@ import homeassistant.util.dt as dt_util
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE, ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
 DOMAIN = "device_tracker"
@@ -298,12 +298,14 @@ class Device(Entity):
         return self._state
 
     @property
+    def entity_picture(self):
+        """Picture of the device."""
+        return self.config_picture
+
+    @property
     def state_attributes(self):
         """ Device state attributes. """
         attr = {}
-
-        if self.config_picture:
-            attr[ATTR_ENTITY_PICTURE] = self.config_picture
 
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
