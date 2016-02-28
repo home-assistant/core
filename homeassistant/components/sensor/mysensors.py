@@ -61,8 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_MULTIMETER: [set_req.V_VOLTAGE,
                                     set_req.V_CURRENT,
                                     set_req.V_IMPEDANCE],
-                pres.S_SPRINKLER: [set_req.V_TRIPPED],
-                pres.S_WATER_LEAK: [set_req.V_TRIPPED],
                 pres.S_SOUND: [set_req.V_LEVEL],
                 pres.S_VIBRATION: [set_req.V_LEVEL],
                 pres.S_MOISTURE: [set_req.V_LEVEL],
