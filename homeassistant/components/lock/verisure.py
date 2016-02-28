@@ -1,6 +1,4 @@
 """
-homeassistant.components.lock.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure locks.
 
 For more details about this platform, please refer to the documentation at
@@ -17,8 +15,7 @@ ATTR_CODE = 'code'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Verisure platform. """
-
+    """Sets up the Verisure platform."""
     locks = []
     if int(hub.config.get('locks', '1')):
         hub.update_locks()
@@ -31,8 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=abstract-method
 class VerisureDoorlock(LockDevice):
-    """ Represents a Verisure doorlock status. """
-
+    """Represents a Verisure doorlock."""
     def __init__(self, device_id):
         self._id = device_id
         self._state = STATE_UNKNOWN
@@ -40,21 +36,21 @@ class VerisureDoorlock(LockDevice):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the lock."""
         return 'Lock {}'.format(self._id)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the lock."""
         return self._state
 
     @property
     def code_format(self):
-        """ Six digit code required. """
+        """Six digit code required."""
         return '^\\d{%s}$' % self._digits
 
     def update(self):
-        """ Update lock status """
+        """Update lock status."""
         hub.update_locks()
 
         if hub.lock_status[self._id].status == 'unlocked':
@@ -68,18 +64,18 @@ class VerisureDoorlock(LockDevice):
 
     @property
     def is_locked(self):
-        """ True if device is locked. """
+        """Return true if lock is locked."""
         return hub.lock_status[self._id].status
 
     def unlock(self, **kwargs):
-        """ Send unlock command. """
+        """Send unlock command."""
         hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'UNLOCKED')
         _LOGGER.info('verisure doorlock unlocking')
         hub.my_pages.lock.wait_while_pending()
         self.update()
 
     def lock(self, **kwargs):
-        """ Send lock command. """
+        """Send lock command."""
         hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'LOCKED')
         _LOGGER.info('verisure doorlock locking')
         hub.my_pages.lock.wait_while_pending()
