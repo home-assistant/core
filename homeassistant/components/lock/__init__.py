@@ -1,6 +1,4 @@
 """
-homeassistant.components.lock
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various locks that can be controlled remotely.
 
 For more details about this component, please refer to the documentation
@@ -43,13 +41,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_locked(hass, entity_id=None):
-    """ Returns if the lock is locked based on the statemachine. """
+    """Returns if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 def lock(hass, entity_id=None, code=None):
-    """ Locks all or specified locks. """
+    """Locks all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -60,7 +58,7 @@ def lock(hass, entity_id=None, code=None):
 
 
 def unlock(hass, entity_id=None, code=None):
-    """ Unlocks all or specified locks. """
+    """Unlocks all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -71,14 +69,14 @@ def unlock(hass, entity_id=None, code=None):
 
 
 def setup(hass, config):
-    """ Track states and offer events for locks. """
+    """Track states and offer events for locks."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_LOCKS)
     component.setup(config)
 
     def handle_lock_service(service):
-        """ Handles calls to the lock services. """
+        """Handles calls to the lock services."""
         target_locks = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -106,30 +104,29 @@ def setup(hass, config):
 
 
 class LockDevice(Entity):
-    """ Represents a lock within Home Assistant. """
+    """Represents a lock."""
     # pylint: disable=no-self-use
-
     @property
     def code_format(self):
-        """ regex for code format or None if no code is required. """
+        """Regex for code format or None if no code is required."""
         return None
 
     @property
     def is_locked(self):
-        """ Is the lock locked or unlocked. """
+        """Is the lock locked or unlocked."""
         return None
 
     def lock(self, **kwargs):
-        """ Locks the lock. """
+        """Locks the lock."""
         raise NotImplementedError()
 
     def unlock(self, **kwargs):
-        """ Unlocks the lock. """
+        """Unlocks the lock."""
         raise NotImplementedError()
 
     @property
     def state_attributes(self):
-        """ Return the state attributes. """
+        """Return the state attributes."""
         if self.code_format is None:
             return None
         state_attr = {
@@ -139,6 +136,7 @@ class LockDevice(Entity):
 
     @property
     def state(self):
+        """Return the state."""
         locked = self.is_locked
         if locked is None:
             return STATE_UNKNOWN
