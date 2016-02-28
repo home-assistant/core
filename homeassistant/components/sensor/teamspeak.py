@@ -8,15 +8,12 @@ https://home-assistant.io/components/sensor.teamspeak/
 """
 import logging
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import convert
 
 REQUIREMENTS = ['ts3==0.7.1']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Teamspeak Server'
-ATTR_SERVER_NAME = 'Name'
-ATTR_MAX_USERS = 'Max. Users'
-ATTR_UPTIME = 'Uptime (s)'
-ATTR_STATUS = 'Status'
 ICON = 'mdi:microphone'
 
 
@@ -24,10 +21,10 @@ ICON = 'mdi:microphone'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Teamspeak sensor. """
     name = config.get('name', DEFAULT_NAME)
-    host = config.get('host', None)
-    username = config.get('username', None)
-    password = config.get('password', None)
-    virtualserver_id = config.get('virtualserver_id', 0)
+    host = config.get('host')
+    username = config.get('username')
+    password = config.get('password')
+    virtualserver_id = convert(config.get('virtualserver_id'), int, 0)
 
     if host is None:
         _LOGGER.error('No teamspeak host specified')
@@ -52,7 +49,6 @@ class TeamspeakSensor(Entity):
         self._name = name
         self._state = None
         self._unit_of_measurement = 'Users'
-        self.info = None
         self._ts3conn = None
 
         self._host = host
@@ -77,17 +73,6 @@ class TeamspeakSensor(Entity):
     def unit_of_measurement(self):
         """ Unit the value is expressed in. """
         return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """ Returns the state attributes. """
-        if self.info is not None:
-            return {
-                ATTR_SERVER_NAME: self.info['virtualserver_name'],
-                ATTR_MAX_USERS: self.info['virtualserver_maxclients'],
-                ATTR_UPTIME: self.info['virtualserver_uptime'],
-                ATTR_STATUS: self.info['virtualserver_status']
-            }
 
     @property
     def icon(self):
@@ -125,4 +110,3 @@ class TeamspeakSensor(Entity):
         )
         users_online = clients_online - query_clients_online
         self._state = users_online
-        self.info = self._ts3conn.serverlist()[self._virtual_server_id]
