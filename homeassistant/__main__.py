@@ -12,15 +12,21 @@ from multiprocessing import Process
 import homeassistant.config as config_util
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, RESTART_EXIT_CODE, __version__)
+    __version__,
+    EVENT_HOMEASSISTANT_START,
+    REQUIRED_PYTHON_VER,
+    RESTART_EXIT_CODE,
+)
 
 
 def validate_python():
     """ Validate we're running the right Python version. """
     major, minor = sys.version_info[:2]
+    req_major, req_minor = REQUIRED_PYTHON_VER
 
-    if major < 3 or (major == 3 and minor < 4):
-        print("Home Assistant requires atleast Python 3.4")
+    if major < req_major or (major == req_major and minor < req_minor):
+        print("Home Assistant requires at least Python {}.{}".format(
+            req_major, req_minor))
         sys.exit(1)
 
 
