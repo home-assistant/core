@@ -25,19 +25,13 @@ SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up scenes. """
+    """ Sets up home assistant scene entries. """
 
     logger = logging.getLogger(__name__)
 
-    scene_configs = config.get("config")
+    scene_config = config.get("config")
 
-    if not isinstance(scene_configs, list) or \
-            any(not isinstance(item, dict) for item in scene_configs):
-        logger.error('Scene config should be a list of dictionaries')
-        return False
-
-    add_devices(HomeAssistantScene(hass, _process_config(scene_config))
-                for scene_config in scene_configs)
+    add_devices([HomeAssistantScene(hass, _process_config(scene_config))])
 
     return True
 
