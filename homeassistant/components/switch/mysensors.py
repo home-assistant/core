@@ -149,6 +149,11 @@ class MySensorsSwitch(SwitchDevice):
         """Return True if entity is available."""
         return self.value_type in self._values
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return self.gateway.optimistic
+
     def update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
