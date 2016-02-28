@@ -1,7 +1,7 @@
 """
-tests.components.rollershutter.command_rollershutter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tests the command_rollershutter component
+tests.components.rollershutter.command_line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tests the command_line component
 """
 
 import os
@@ -12,7 +12,7 @@ from unittest import mock
 import homeassistant.core as ha
 import homeassistant.components.rollershutter as rollershutter
 from homeassistant.components.rollershutter import (
-    command_rollershutter as cmd_rs)
+    command_line as cmd_rs)
 
 
 class TestCommandRollerShutter(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestCommandRollerShutter(unittest.TestCase):
             }
             self.assertTrue(rollershutter.setup(self.hass, {
                 'rollershutter': {
-                    'platform': 'command_rollershutter',
+                    'platform': 'command_line',
                     'rollershutters': {
                         'test': test_rollershutter
                     }
