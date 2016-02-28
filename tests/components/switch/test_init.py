@@ -1,6 +1,6 @@
 """
-tests.test_component_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.switch.test_init
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests switch component.
 """

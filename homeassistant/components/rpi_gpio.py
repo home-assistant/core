@@ -8,8 +8,10 @@ https://home-assistant.io/components/rpi_gpio/
 """
 # pylint: disable=import-error
 import logging
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+
 REQUIREMENTS = ['RPi.GPIO==0.6.1']
 DOMAIN = "rpi_gpio"
 _LOGGER = logging.getLogger(__name__)

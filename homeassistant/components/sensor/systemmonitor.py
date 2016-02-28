@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.systemmonitor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Shows system monitor values such as: disk, memory, and processor use.
+Support for monitoring the local system..
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.systemmonitor/
@@ -9,8 +7,8 @@ https://home-assistant.io/components/sensor.systemmonitor/
 import logging
 
 import homeassistant.util.dt as dt_util
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import STATE_ON, STATE_OFF
 
 REQUIREMENTS = ['psutil==3.4.2']
 SENSOR_TYPES = {
@@ -40,8 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the sensors. """
-
+    """Sets up the sensors."""
     dev = []
     for resource in config['resources']:
         if 'arg' not in resource:
@@ -55,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SystemMonitorSensor(Entity):
-    """ A system monitor sensor. """
+    """A system monitor sensor."""
 
     def __init__(self, sensor_type, argument=''):
         self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
@@ -67,27 +64,27 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the sensor. """
+        """Returns the name of the sensor."""
         return self._name.rstrip()
 
     @property
     def icon(self):
-        """ Icon to use in the frontend, if any. """
+        """Icon to use in the frontend, if any."""
         return SENSOR_TYPES[self.type][2]
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
-        """ Get the latest system informations. """
+        """Get the latest system information."""
         import psutil
         if self.type == 'disk_use_percent':
             self._state = psutil.disk_usage(self.argument).percent

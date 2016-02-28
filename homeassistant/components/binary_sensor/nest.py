@@ -1,6 +1,4 @@
 """
-homeassistant.components.binary_sensor.nest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Nest Thermostat Binary Sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -8,10 +6,10 @@ https://home-assistant.io/components/binary_sensor.nest/
 """
 import logging
 import socket
-import homeassistant.components.nest as nest
 
-from homeassistant.components.sensor.nest import NestSensor
+import homeassistant.components.nest as nest
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.sensor.nest import NestSensor
 
 DEPENDENCIES = ['nest']
 BINARY_TYPES = ['fan',
@@ -27,7 +25,7 @@ BINARY_TYPES = ['fan',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup Nest binary sensors. """
+    """Setup Nest binary sensors."""
 
     logger = logging.getLogger(__name__)
     try:
@@ -48,9 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NestBinarySensor(NestSensor, BinarySensorDevice):
-    """ Represents a Nest binary sensor. """
+    """Represents a Nest binary sensor."""
 
     @property
     def is_on(self):
-        """ True if the binary sensor is on. """
+        """True if the binary sensor is on."""
         return bool(getattr(self.device, self.variable))

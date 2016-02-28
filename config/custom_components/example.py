@@ -1,6 +1,5 @@
 """
-custom_components.example
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Example of a custom component.
 
 Example component to target an entity_id to:
  - turn it on at 7AM in the morning
@@ -37,21 +36,21 @@ import homeassistant.components as core
 from homeassistant.components import device_tracker
 from homeassistant.components import light
 
-# The domain of your component. Should be equal to the name of your component
+# The domain of your component. Should be equal to the name of your component.
 DOMAIN = "example"
 
-# List of component names (string) your component depends upon
+# List of component names (string) your component depends upon.
 # We depend on group because group will be loaded after all the components that
 # initialize devices have been setup.
 DEPENDENCIES = ['group', 'device_tracker', 'light']
 
-# Configuration key for the entity id we are targetting
+# Configuration key for the entity id we are targeting.
 CONF_TARGET = 'target'
 
-# Variable for storing configuration parameters
+# Variable for storing configuration parameters.
 TARGET_ID = None
 
-# Name of the service that we expose
+# Name of the service that we expose.
 SERVICE_FLASH = 'flash'
 
 # Shortcut for the logger
@@ -59,16 +58,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """ Setup example component. """
+    """Setup example component."""
     global TARGET_ID
 
-    # Validate that all required config options are given
+    # Validate that all required config options are given.
     if not validate_config(config, {DOMAIN: [CONF_TARGET]}, _LOGGER):
         return False
 
     TARGET_ID = config[DOMAIN][CONF_TARGET]
 
-    # Validate that the target entity id exists
+    # Validate that the target entity id exists.
     if hass.states.get(TARGET_ID) is None:
         _LOGGER.error("Target entity id %s does not exist",
                       TARGET_ID)
@@ -78,13 +77,13 @@ def setup(hass, config):
         TARGET_ID = None
         return False
 
-    # Tell the bootstrapper that we initialized successfully
+    # Tell the bootstrapper that we initialized successfully.
     return True
 
 
 @track_state_change(device_tracker.ENTITY_ID_ALL_DEVICES)
 def track_devices(hass, entity_id, old_state, new_state):
-    """ Called when the group.all devices change state. """
+    """Called when the group.all devices change state."""
     # If the target id is not set, return
     if not TARGET_ID:
         return
@@ -94,7 +93,7 @@ def track_devices(hass, entity_id, old_state, new_state):
 
         core.turn_on(hass, TARGET_ID)
 
-    # If all people leave the house and the entity is on, turn it off
+    # If all people leave the house and the entity is on, turn it off.
     elif new_state.state == STATE_NOT_HOME and core.is_on(hass, TARGET_ID):
 
         core.turn_off(hass, TARGET_ID)
@@ -116,7 +115,7 @@ def wake_up(hass, now):
 
 @track_state_change(light.ENTITY_ID_ALL_LIGHTS, STATE_ON, STATE_OFF)
 def all_lights_off(hass, entity_id, old_state, new_state):
-    """ If all lights turn off, turn off. """
+    """If all lights turn off, turn off."""
     if not TARGET_ID:
         return
 

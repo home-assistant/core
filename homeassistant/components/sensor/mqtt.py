@@ -1,16 +1,15 @@
 """
-homeassistant.components.sensor.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a MQTT sensor.
+Support for MQTT sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
+
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import template
-import homeassistant.components.mqtt as mqtt
+from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ DEPENDENCIES = ['mqtt']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add MQTT Sensor. """
+    """Add MQTT Sensor."""
 
     if config.get('state_topic') is None:
         _LOGGER.error("Missing required variable: state_topic")
@@ -39,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSensor(Entity):
-    """ Represents a sensor that can be updated using MQTT. """
+    """Represents a sensor that can be updated using MQTT."""
     def __init__(self, hass, name, state_topic, qos, unit_of_measurement,
                  value_template):
         self._state = STATE_UNKNOWN
@@ -50,7 +49,7 @@ class MqttSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
 
         def message_received(topic, payload, qos):
-            """ A new MQTT message has been received. """
+            """A new MQTT message has been received."""
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
@@ -61,20 +60,20 @@ class MqttSensor(Entity):
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ The name of the sensor """
+        """The name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit this state is expressed in. """
+        """Unit this state is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """ Returns the state of the entity. """
+        """Returns the state of the entity."""
         return self._state

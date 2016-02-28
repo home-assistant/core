@@ -9,12 +9,12 @@ https://home-assistant.io/components/scene/
 import logging
 from collections import namedtuple
 
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON)
 from homeassistant.core import State
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
-from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, SERVICE_TURN_ON)
 
 DOMAIN = 'scene'
 DEPENDENCIES = ['group']

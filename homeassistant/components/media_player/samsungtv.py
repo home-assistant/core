@@ -10,14 +10,11 @@ import logging
 import socket
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_VOLUME_STEP,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK, SUPPORT_TURN_OFF,
-    DOMAIN)
+    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
-
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.helpers import validate_config
 
 CONF_PORT = "port"

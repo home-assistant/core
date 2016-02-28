@@ -5,31 +5,31 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
-import os
-import time
-import logging
-import signal
-import threading
-from types import MappingProxyType
 import enum
 import functools as ft
+import logging
+import os
+import signal
+import threading
+import time
+from types import MappingProxyType
 
-from homeassistant.const import (
-    __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
-    EVENT_TIME_CHANGED, EVENT_STATE_CHANGED,
-    EVENT_CALL_SERVICE, ATTR_NOW, ATTR_DOMAIN, ATTR_SERVICE, MATCH_ALL,
-    EVENT_SERVICE_EXECUTED, ATTR_SERVICE_CALL_ID, EVENT_SERVICE_REGISTERED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, ATTR_FRIENDLY_NAME, ATTR_SERVICE_DATA,
-    RESTART_EXIT_CODE)
-from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError)
+import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
-from homeassistant.helpers.entity import valid_entity_id, split_entity_id
-import homeassistant.helpers.temperature as temp_helper
 from homeassistant.config import get_default_config_dir
+from homeassistant.const import (
+    ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
+    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELCIUS,
+    TEMP_FAHRENHEIT, __version__)
+from homeassistant.exceptions import (
+    HomeAssistantError, InvalidEntityFormatError)
+from homeassistant.helpers.entity import split_entity_id, valid_entity_id
 
 DOMAIN = "homeassistant"
 
@@ -103,12 +103,7 @@ class HomeAssistant(object):
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
-
         self.bus.fire(EVENT_HOMEASSISTANT_STOP)
-
-        # Wait till all responses to homeassistant_stop are done
-        self.pool.block_till_done()
-
         self.pool.stop()
 
 
@@ -404,8 +399,9 @@ class StateMachine(object):
 
         domain_filter = domain_filter.lower()
 
-        return [state.entity_id for state in self._states.values()
-                if state.domain == domain_filter]
+        with self._lock:
+            return [state.entity_id for state in self._states.values()
+                    if state.domain == domain_filter]
 
     def all(self):
         """Create a list of all states."""
@@ -438,7 +434,20 @@ class StateMachine(object):
         entity_id = entity_id.lower()
 
         with self._lock:
-            return self._states.pop(entity_id, None) is not None
+            old_state = self._states.pop(entity_id, None)
+
+            if old_state is None:
+                return False
+
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': None,
+            }
+
+            self._bus.fire(EVENT_STATE_CHANGED, event_data)
+
+            return True
 
     def set(self, entity_id, new_state, attributes=None):
         """Set the state of an entity, add entity if it does not exist.
@@ -468,10 +477,11 @@ class StateMachine(object):
             state = State(entity_id, new_state, attributes, last_changed)
             self._states[entity_id] = state
 
-            event_data = {'entity_id': entity_id, 'new_state': state}
-
-            if old_state:
-                event_data['old_state'] = old_state
+            event_data = {
+                'entity_id': entity_id,
+                'old_state': old_state,
+                'new_state': state,
+            }
 
             self._bus.fire(EVENT_STATE_CHANGED, event_data)
 

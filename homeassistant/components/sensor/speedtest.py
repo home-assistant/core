@@ -1,21 +1,20 @@
 """
-homeassistant.components.sensor.speedtest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Speedtest.net sensor based on speedtest-cli.
+Support for Speedtest.net based on speedtest-cli.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
 import logging
-import sys
 import re
+import sys
 from datetime import timedelta
 from subprocess import check_output
-from homeassistant.util import Throttle
+
+import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.components.sensor import DOMAIN
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +38,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Speedtest sensor. """
+    """Setup the Speedtest sensor."""
 
     data = SpeedtestData(hass, config)
     dev = []
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
     def update(call=None):
-        """ Update service for manual updates. """
+        """Update service for manual updates."""
         data.update(dt_util.now())
         for sensor in dev:
             sensor.update()
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class SpeedtestSensor(Entity):
-    """ Implements a speedtest.net sensor. """
+    """Implements a speedtest.net sensor."""
 
     def __init__(self, speedtest_data, sensor_type):
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -73,20 +72,21 @@ class SpeedtestSensor(Entity):
 
     @property
     def name(self):
+        """The name of the sensor."""
         return '{} {}'.format('Speedtest', self._name)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """ Gets the latest data from Forecast.io and updates the states. """
+        """Gets the latest data and updates the states."""
         data = self.speedtest_client.data
         if data is not None:
             if self.type == 'ping':
@@ -98,7 +98,7 @@ class SpeedtestSensor(Entity):
 
 
 class SpeedtestData(object):
-    """ Gets the latest data from speedtest.net. """
+    """Gets the latest data from speedtest.net."""
 
     def __init__(self, hass, config):
         self.data = None
@@ -111,7 +111,7 @@ class SpeedtestData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, now):
-        """ Gets the latest data from speedtest.net. """
+        """Gets the latest data from speedtest.net."""
         _LOGGER.info('Executing speedtest')
         re_output = _SPEEDTEST_REGEX.split(
             check_output([sys.executable, self.path(

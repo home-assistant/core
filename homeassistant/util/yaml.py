@@ -1,14 +1,13 @@
 """
 YAML utility functions.
 """
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
-
 
 _LOGGER = logging.getLogger(__name__)
 

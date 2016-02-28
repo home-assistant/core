@@ -1,6 +1,4 @@
 """
-homeassistant.components.garage_door
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with garage doors that can be controlled remotely.
 
 For more details about this component, please refer to the documentation
@@ -35,32 +33,32 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_closed(hass, entity_id=None):
-    """ Returns if the garage door is closed based on the statemachine. """
+    """Returns if the garage door is closed based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_GARAGE_DOORS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
 def close_door(hass, entity_id=None):
-    """ Closes all or specified garage door. """
+    """Closes all or specified garage door."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE, data)
 
 
 def open_door(hass, entity_id=None):
-    """ Open all or specified garage door. """
+    """Open all or specified garage door."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN, data)
 
 
 def setup(hass, config):
-    """ Track states and offer events for garage door. """
+    """Track states and offer events for garage door."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_GARAGE_DOORS)
     component.setup(config)
 
     def handle_garage_door_service(service):
-        """ Handles calls to the garage door services. """
+        """Handles calls to the garage door services."""
         target_locks = component.extract_from_service(service)
 
         for item in target_locks:
@@ -83,25 +81,24 @@ def setup(hass, config):
 
 
 class GarageDoorDevice(Entity):
-    """ Represents a garage door. """
+    """Represents a garage door."""
     # pylint: disable=no-self-use
-
     @property
     def is_closed(self):
-        """ Is the garage door closed or opened. """
+        """Return true if door is closed."""
         return None
 
     def close_door(self):
-        """ Closes the garage door. """
+        """Close the garage door."""
         raise NotImplementedError()
 
     def open_door(self):
-        """ Opens the garage door. """
+        """Open the garage door."""
         raise NotImplementedError()
 
     @property
     def state(self):
-        """ State of the garage door. """
+        """Returns the state of the garage door."""
         closed = self.is_closed
         if closed is None:
             return STATE_UNKNOWN

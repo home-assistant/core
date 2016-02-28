@@ -2,21 +2,21 @@
 tests.components.switch.test_mqtt
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Tests mqtt switch.
+Tests MQTT switch.
 """
 import unittest
 
-from homeassistant.const import STATE_ON, STATE_OFF
-import homeassistant.core as ha
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.switch as switch
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import (
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
 class TestSensorMQTT(unittest.TestCase):
     """ Test the MQTT switch. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -37,6 +37,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', 'beer on')
         self.hass.pool.block_till_done()
@@ -64,6 +65,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         switch.turn_on(self.hass, 'switch.test')
         self.hass.pool.block_till_done()

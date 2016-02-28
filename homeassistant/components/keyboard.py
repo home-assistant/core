@@ -7,10 +7,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/keyboard/
 """
 from homeassistant.const import (
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE)
-
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_UP)
 
 DOMAIN = "keyboard"
 REQUIREMENTS = ['pyuserinput==0.1.9']

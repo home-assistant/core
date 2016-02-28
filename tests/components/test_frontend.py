@@ -1,30 +1,24 @@
 """
 tests.test_component_http
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Home Assistant HTTP component does what it should do.
 """
 # pylint: disable=protected-access,too-many-public-methods
 import re
 import unittest
-from unittest.mock import patch
 
 import requests
 
-import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
+from tests.common import get_test_instance_port, get_test_home_assistant
+
 API_PASSWORD = "test1234"
-
-# Somehow the socket that holds the default port does not get released
-# when we close down HA in a different test case. Until I have figured
-# out what is going on, let's run this test on a different port.
-SERVER_PORT = 8121
-
+SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
@@ -35,13 +29,11 @@ def _url(path=""):
     return HTTP_BASE_URL + path
 
 
-@patch('homeassistant.components.http.util.get_local_ip',
-       return_value='127.0.0.1')
-def setUpModule(mock_get_local_ip):   # pylint: disable=invalid-name
+def setUpModule():   # pylint: disable=invalid-name
     """ Initalizes a Home Assistant server. """
     global hass
 
-    hass = ha.HomeAssistant()
+    hass = get_test_home_assistant()
 
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
@@ -63,6 +55,9 @@ def tearDownModule():   # pylint: disable=invalid-name
 
 class TestFrontend(unittest.TestCase):
     """ Test the frontend. """
+
+    def tearDown(self):
+        hass.pool.block_till_done()
 
     def test_frontend_and_static(self):
         """ Tests if we can get the frontend. """

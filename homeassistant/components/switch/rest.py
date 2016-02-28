@@ -7,6 +7,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rest/
 """
 import logging
+
 import requests
 
 from homeassistant.components.switch import SwitchDevice

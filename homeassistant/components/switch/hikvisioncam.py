@@ -8,9 +8,9 @@ https://home-assistant.io/components/switch.hikvision/
 """
 import logging
 
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (STATE_ON, STATE_OFF,
-                                 CONF_HOST, CONF_USERNAME, CONF_PASSWORD)
 
 _LOGGING = logging.getLogger(__name__)
 REQUIREMENTS = ['hikvision==0.4']

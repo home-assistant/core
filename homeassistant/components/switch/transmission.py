@@ -8,8 +8,8 @@ https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
-from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 STATE_ON, STATE_OFF)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGING = logging.getLogger(__name__)

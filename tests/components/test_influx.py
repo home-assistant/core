@@ -1,6 +1,6 @@
 """
 tests.components.test_influxdb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests influxdb component.
 """

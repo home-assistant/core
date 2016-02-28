@@ -1,6 +1,6 @@
 """
-tests.test_component_sun
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.components.test_sun
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tests Sun component.
 """
@@ -14,12 +14,14 @@ import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun
 
+from tests.common import get_test_home_assistant
+
 
 class TestSun(unittest.TestCase):
     """ Test the sun module. """
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """

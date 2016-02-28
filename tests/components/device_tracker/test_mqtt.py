@@ -1,3 +1,9 @@
+"""
+tests.components.device_tracker.test_mqtt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tests the MQTT device tracker component.
+"""
 import unittest
 import os
 

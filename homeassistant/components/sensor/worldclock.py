@@ -1,8 +1,5 @@
 """
-homeassistant.components.sensor.worldclock
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The Worldclock sensor let you display the current time of a different time
-zone.
+Support for showing the time in a different time zone.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.worldclock/
@@ -18,8 +15,7 @@ ICON = 'mdi:clock'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the Worldclock sensor. """
-
+    """Get the Worldclock sensor."""
     try:
         time_zone = dt_util.get_time_zone(config.get('time_zone'))
     except AttributeError:
@@ -37,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WorldClockSensor(Entity):
-    """ Implements a Worldclock sensor. """
+    """Implements a Worldclock sensor."""
 
     def __init__(self, time_zone, name):
         self._name = name
@@ -47,20 +43,20 @@ class WorldClockSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the device."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the device."""
         return self._state
 
     @property
     def icon(self):
-        """ Icon to use in the frontend, if any. """
+        """Icon to use in the frontend, if any."""
         return ICON
 
     def update(self):
-        """ Gets the time and updates the states. """
+        """Gets the time and updates the states."""
         self._state = dt_util.datetime_to_time_str(
             dt_util.now(time_zone=self._time_zone))

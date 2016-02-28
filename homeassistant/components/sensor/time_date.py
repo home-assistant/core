@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.time_date
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Date and Time service.
+Support for showing the date and the time.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.time_date/
@@ -23,7 +21,7 @@ OPTION_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the Time and Date sensor. """
+    """Get the Time and Date sensor."""
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant config")
@@ -41,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class TimeDateSensor(Entity):
-    """ Implements a Time and Date sensor. """
+    """Implements a Time and Date sensor."""
 
     def __init__(self, option_type):
         self._name = OPTION_TYPES[option_type]
@@ -51,16 +49,17 @@ class TimeDateSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Returns the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Returns the state of the sensor."""
         return self._state
 
     @property
     def icon(self):
+        """Icon to use in the frontend, if any."""
         if "date" in self.type and "time" in self.type:
             return "mdi:calendar-clock"
         elif "date" in self.type:
@@ -69,8 +68,7 @@ class TimeDateSensor(Entity):
             return "mdi:clock"
 
     def update(self):
-        """ Gets the latest data and updates the states. """
-
+        """Gets the latest data and updates the states."""
         time_date = dt_util.utcnow()
         time = dt_util.datetime_to_time_str(dt_util.as_local(time_date))
         time_utc = dt_util.datetime_to_time_str(time_date)
