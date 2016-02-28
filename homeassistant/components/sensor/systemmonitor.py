@@ -10,7 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['psutil==3.4.2']
+REQUIREMENTS = ['psutil==4.0.0']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -53,7 +53,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class SystemMonitorSensor(Entity):
     """A system monitor sensor."""
-
     def __init__(self, sensor_type, argument=''):
         self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
         self.argument = argument
