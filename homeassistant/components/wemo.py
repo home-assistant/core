@@ -58,12 +58,12 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
         # name, model, location, mac
-        _, model_name, _, mac = discovery_info
+        _, model_name, url, _ = discovery_info
 
         # Only register a device once
-        if mac in KNOWN_DEVICES:
+        if url in KNOWN_DEVICES:
             return
-        KNOWN_DEVICES.append(mac)
+        KNOWN_DEVICES.append(url)
 
         service = WEMO_MODEL_DISPATCH.get(model_name) or DISCOVER_SWITCHES
         component = WEMO_SERVICE_DISPATCH.get(service)
