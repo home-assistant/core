@@ -50,17 +50,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #                     groups[1].associations):
     #     node.groups[1].add_association(NETWORK.controller.node_id)
 
-    specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                           int(value.node.product_id, 16),
-                           value.index)
+    # Make sure that we have values for the key before converting to int
+    if (value.node.manufacturer_id.strip() and
+            value.node.product_id.strip()):
+        specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                               int(value.node.product_id, 16),
+                               value.index)
 
-    # Check workaround mappings for specific devices.
-    if specific_sensor_key in DEVICE_MAPPINGS:
-        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
-            return
+        # Check workaround mappings for specific devices.
+        if specific_sensor_key in DEVICE_MAPPINGS:
+            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+                return
 
     # Generic Device mappings
-    elif value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
+    if value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
     elif (value.command_class == COMMAND_CLASS_METER and
