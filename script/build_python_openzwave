@@ -21,4 +21,4 @@ fi
 
 git checkout python3
 PYTHON_EXEC=`which python3` make build
-sudo PYTHON_EXEC=`which python3` make install
+PYTHON_EXEC=`which python3` make install
