@@ -39,22 +39,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
     value = node.values[discovery_info[ATTR_VALUE_ID]]
-
-    specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                           int(value.node.product_id, 16),
-                           value.index)
-
     value.set_change_verified(False)
-    if specific_sensor_key in DEVICE_MAPPINGS:
-        if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-            # Default the multiplier to 4
-            re_arm_multiplier = (get_config_value(value.node, 9) or 4)
-            add_devices([
-                ZWaveTriggerSensor(value, "motion",
-                                   hass, re_arm_multiplier * 8)
-            ])
 
-    elif value.command_class == COMMAND_CLASS_SENSOR_BINARY:
+    # Make sure that we have values for the key before converting to int
+    if (value.node.manufacturer_id.strip() and
+            value.node.product_id.strip()):
+        specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                               int(value.node.product_id, 16),
+                               value.index)
+
+        if specific_sensor_key in DEVICE_MAPPINGS:
+            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
+                # Default the multiplier to 4
+                re_arm_multiplier = (get_config_value(value.node, 9) or 4)
+                add_devices([
+                    ZWaveTriggerSensor(value, "motion",
+                                       hass, re_arm_multiplier * 8)
+                ])
+                return
+
+    if value.command_class == COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value, None)])
 
 
