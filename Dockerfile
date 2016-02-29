@@ -10,7 +10,7 @@ RUN pip3 install --no-cache-dir colorlog cython
 
 # For the nmap tracker
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev && \
+    apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY script/build_python_openzwave script/build_python_openzwave
