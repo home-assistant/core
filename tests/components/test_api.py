@@ -6,7 +6,9 @@ Tests Home Assistant HTTP component does what it should do.
 """
 # pylint: disable=protected-access,too-many-public-methods
 from contextlib import closing
+import datetime
 import json
+import pytz
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -235,6 +237,30 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(422, req.status_code)
         self.assertEqual(0, len(test_value))
+
+    def test_api_fire_event_time_changed_with_now(self):
+        """ Test that the API converts now to a datetime. """
+        test_value = []
+
+        def listener(event):
+            """ Helper method that will verify that our event got called and
+                that test if our data came through. """
+            if "now" in event.data:
+                test_value.append(event.data['now'])
+
+        hass.bus.listen_once(const.EVENT_TIME_CHANGED, listener)
+
+        requests.post(
+            _url(const.URL_API_EVENTS_EVENT.format(const.EVENT_TIME_CHANGED)),
+            data=json.dumps({"now": '18:04:00 12-11-1955'}),
+            headers=HA_HEADERS)
+
+        hass.pool.block_till_done()
+
+        self.assertEqual(1, len(test_value))
+        self.assertEqual(datetime.datetime(1955, 11, 12, 18, 4,
+                                           tzinfo=pytz.utc),
+                         test_value[0])
 
     def test_api_get_config(self):
         req = requests.get(_url(const.URL_API_CONFIG),

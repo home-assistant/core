@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import TrackStates
 from homeassistant.helpers import template
+from homeassistant.util import dt as dt_util
 
 DOMAIN = 'api'
 DEPENDENCIES = ['http']
@@ -269,6 +270,9 @@ def _handle_api_post_events_event(handler, path_match, event_data):
 
             if state:
                 event_data[key] = state
+    elif event_type == ha.EVENT_TIME_CHANGED and event_data:
+        if 'now' in event_data:
+            event_data['now'] = dt_util.str_to_datetime(event_data['now'])
 
     handler.server.hass.bus.fire(event_type, event_data, event_origin)
 
