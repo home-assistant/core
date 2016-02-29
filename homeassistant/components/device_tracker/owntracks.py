@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+DEFAULT_MAX_GPS_ACCURACY = 500
 
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
@@ -47,6 +49,16 @@ def setup_scanner(hass, config, see):
 
         if not isinstance(data, dict) or data.get('_type') != 'location':
             return
+
+        #Check for GPS accuracy
+        if CONF_MAX_GPS_ACCURACY in config:
+            max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
+        else:
+            max_gps_accuracy = DEFAULT_MAX_GPS_ACCURACY
+        if 'acc' in data:
+            if data['acc'] > max_gps_accuracy:
+                _LOGGER.info("Inaccurate GPS reported")
+                return
 
         dev_id, kwargs = _parse_see_args(topic, data)
 
@@ -77,6 +89,16 @@ def setup_scanner(hass, config, see):
 
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
+
+        #Check for GPS accuracy
+        if CONF_MAX_GPS_ACCURACY in config:
+            max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
+        else:
+            max_gps_accuracy = DEFAULT_MAX_GPS_ACCURACY
+        if 'acc' in data:
+            if data['acc'] > max_gps_accuracy:
+                _LOGGER.info("Inaccurate GPS reported")
+                return
 
         # OwnTracks uses - at the start of a beacon zone
         # to switch on 'hold mode' - ignore this
