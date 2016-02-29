@@ -31,6 +31,7 @@ LOCK = threading.Lock()
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 DEFAULT_MAX_GPS_ACCURACY = 500
 
+
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
 
