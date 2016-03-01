@@ -29,16 +29,12 @@ _LOGGER = logging.getLogger(__name__)
 LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-DEFAULT_MAX_GPS_ACCURACY = 500
 
 
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
 
-    if CONF_MAX_GPS_ACCURACY in config:
-        max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
-    else:
-        max_gps_accuracy = DEFAULT_MAX_GPS_ACCURACY
+    max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
 
     def owntracks_location_update(topic, payload, qos):
         """ MQTT message received. """
@@ -57,7 +53,7 @@ def setup_scanner(hass, config, see):
             return
 
         # Check for GPS accuracy
-        if 'acc' in data:
+        if ('acc' in data) and (max_gps_accuracy is not None):
             if data['acc'] > max_gps_accuracy:
                 _LOGGER.info("Inaccurate GPS reported")
                 return
