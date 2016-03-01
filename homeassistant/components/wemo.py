@@ -58,12 +58,13 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
         # name, model, location, mac
-        _, model_name, url, _ = discovery_info
+        _, model_name, _, _, serial = discovery_info
 
         # Only register a device once
-        if url in KNOWN_DEVICES:
+        if serial in KNOWN_DEVICES:
             return
-        KNOWN_DEVICES.append(url)
+        _LOGGER.debug('Discovered unique device %s', serial)
+        KNOWN_DEVICES.append(serial)
 
         service = WEMO_MODEL_DISPATCH.get(model_name) or DISCOVER_SWITCHES
         component = WEMO_SERVICE_DISPATCH.get(service)
@@ -91,6 +92,7 @@ def setup(hass, config):
         if device is None:
             device = pywemo.discovery.device_from_description(url, None)
 
-        discovery_info = (device.name, device.model_name, url, device.mac)
+        discovery_info = (device.name, device.model_name, url, device.mac,
+                          device.serialnumber)
         discovery.discover(hass, discovery.SERVICE_WEMO, discovery_info)
     return True
