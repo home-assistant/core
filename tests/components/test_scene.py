@@ -22,16 +22,6 @@ class TestScene(unittest.TestCase):
         """ Stop down stuff we started. """
         self.hass.stop()
 
-    def test_config_not_list(self):
-        self.assertFalse(scene.setup(self.hass, {
-            'scene': {'some': 'dict'}
-        }))
-
-    def test_config_no_dict_in_list(self):
-        self.assertFalse(scene.setup(self.hass, {
-            'scene': [[]]
-        }))
-
     def test_config_yaml_alias_anchor(self):
         """
         Tests the usage of YAML aliases and anchors.  The following test scene
