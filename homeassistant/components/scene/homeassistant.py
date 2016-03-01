@@ -6,17 +6,14 @@ Allows users to set and activate scenes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
-import logging
 from collections import namedtuple
 
+from homeassistant.components.scene import Scene
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON)
 from homeassistant.core import State
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import reproduce_state
 
-DOMAIN = 'scene'
 DEPENDENCIES = ['group']
 STATE = 'scening'
 
@@ -25,41 +22,16 @@ CONF_ENTITIES = "entities"
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
-def activate(hass, entity_id=None):
-    """ Activate a scene. """
-    data = {}
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """ Sets up home assistant scene entries. """
+    scene_config = config.get("states")
 
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
+    if not isinstance(scene_config, list):
+        scene_config = [scene_config]
 
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-def setup(hass, config):
-    """ Sets up scenes. """
-
-    logger = logging.getLogger(__name__)
-
-    scene_configs = config.get(DOMAIN)
-
-    if not isinstance(scene_configs, list) or \
-       any(not isinstance(item, dict) for item in scene_configs):
-        logger.error('Scene config should be a list of dictionaries')
-        return False
-
-    component = EntityComponent(logger, DOMAIN, hass)
-
-    component.add_entities(Scene(hass, _process_config(scene_config))
-                           for scene_config in scene_configs)
-
-    def handle_scene_service(service):
-        """ Handles calls to the switch services. """
-        target_scenes = component.extract_from_service(service)
-
-        for scene in target_scenes:
-            scene.activate()
-
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service)
+    add_devices(HomeAssistantScene(hass, _process_config(scene))
+                for scene in scene_config)
 
     return True
 
@@ -92,37 +64,22 @@ def _process_config(scene_config):
     return SceneConfig(name, states)
 
 
-class Scene(Entity):
+class HomeAssistantScene(Scene):
     """ A scene is a group of entities and the states we want them to be. """
 
     def __init__(self, hass, scene_config):
         self.hass = hass
         self.scene_config = scene_config
 
-        self.update()
-
-    @property
-    def should_poll(self):
-        return False
-
     @property
     def name(self):
         return self.scene_config.name
 
     @property
-    def state(self):
-        return STATE
-
-    @property
-    def entity_ids(self):
-        """ Entity IDs part of this scene. """
-        return self.scene_config.states.keys()
-
-    @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """ Scene state attributes. """
         return {
-            ATTR_ENTITY_ID: list(self.entity_ids),
+            ATTR_ENTITY_ID: list(self.scene_config.states.keys()),
         }
 
     def activate(self):
