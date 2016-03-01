@@ -14,7 +14,9 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY script/build_python_openzwave script/build_python_openzwave
-RUN script/build_python_openzwave
+RUN script/build_python_openzwave && \
+  mkdir -p /usr/local/share/python-openzwave && \
+  ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
 
 COPY requirements_all.txt requirements_all.txt
 RUN pip3 install --no-cache-dir -r requirements_all.txt
