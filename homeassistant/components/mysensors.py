@@ -1,9 +1,5 @@
 """
-homeassistant.components.mysensors.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-MySensors component that connects to a MySensors gateway via pymysensors
-API.
+Connect to a MySensors gateway via pymysensors API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
