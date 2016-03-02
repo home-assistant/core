@@ -49,14 +49,10 @@ def setup_scanner(hass, config, see):
                 'Unable to parse payload as JSON: %s', payload)
             return
 
-        if not isinstance(data, dict) or data.get('_type') != 'location':
+        if (not isinstance(data, dict) or data.get('_type') != 'location') or (
+                'acc' in data and max_gps_accuracy is not None and data[
+                    'acc'] > max_gps_accuracy):
             return
-
-        # Check for GPS accuracy
-        if ('acc' in data) and (max_gps_accuracy is not None):
-            if data['acc'] > max_gps_accuracy:
-                _LOGGER.info("Inaccurate GPS reported")
-                return
 
         dev_id, kwargs = _parse_see_args(topic, data)
 
