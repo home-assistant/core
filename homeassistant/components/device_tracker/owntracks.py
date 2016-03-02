@@ -130,12 +130,20 @@ def setup_scanner(hass, config, see):
                         kwargs['location_name'] = new_region
                     _set_gps_from_zone(kwargs, zone)
                     _LOGGER.info("Exit to %s", new_region)
+                    see(**kwargs)
+                    see_beacons(dev_id, kwargs)
 
                 else:
                     _LOGGER.info("Exit to GPS")
+                    # Check for GPS accuracy
+                    if not ('acc' in data and
+                            max_gps_accuracy is not None and
+                            data['acc'] > max_gps_accuracy):
 
-                see(**kwargs)
-                see_beacons(dev_id, kwargs)
+                        see(**kwargs)
+                        see_beacons(dev_id, kwargs)
+                    else:
+                        _LOGGER.info("Inaccurate GPS reported")
 
                 beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                 if location in beacons:
