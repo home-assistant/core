@@ -66,7 +66,8 @@ class SnmpScanner(object):
         """
 
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return [client['mac'] for client in self.last_results
+                if client.get('mac')]
 
     # Supressing no-self-use warning
     # pylint: disable=R0201
@@ -111,6 +112,7 @@ class SnmpScanner(object):
         for resrow in restable:
             for _, val in resrow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                _LOGGER.debug('Found mac %s', mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices
