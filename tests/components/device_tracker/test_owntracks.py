@@ -30,6 +30,8 @@ DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
 IBEACON_DEVICE = 'keys'
 REGION_TRACKER_STATE = "device_tracker.beacon_{}".format(IBEACON_DEVICE)
 
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+
 LOCATION_MESSAGE = {
     'batt': 92,
     'cog': 248,
@@ -41,6 +43,21 @@ LOCATION_MESSAGE = {
     'p': 101.3977584838867,
     'vac': 4,
     'lat': 2.0,
+    '_type': 'location',
+    'tst': 1,
+    'vel': 0}
+
+LOCATION_MESSAGE_INACCURATE = {
+    'batt': 92,
+    'cog': 248,
+    'tid': 'user',
+    'lon': 2.0,
+    't': 'u',
+    'alt': 27,
+    'acc': 2000,
+    'p': 101.3977584838867,
+    'vac': 4,
+    'lat': 6.0,
     '_type': 'location',
     'tst': 1,
     'vel': 0}
@@ -146,6 +163,10 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('latitude'), latitude)
 
+    def assert_location_longitude(self, longitude):
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('longitude'), longitude)
+
     def assert_location_accuracy(self, accuracy):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
@@ -168,6 +189,15 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_latitude(2.0)
         self.assert_location_accuracy(60.0)
         self.assert_location_state('outer')
+
+    def test_location_inaccurate_gps(self):
+        self.hass.config.CONF_MAX_GPS_ACCURACY = 200
+
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_INACCURATE)
+
+        self.assert_location_latitude(2.0)
+        self.assert_location_longitude(0.0)
 
     def test_event_entry_exit(self):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
