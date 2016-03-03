@@ -87,6 +87,18 @@ REGION_LEAVE_MESSAGE = {
     'lat': 2.0,
     '_type': 'transition'}
 
+REGION_LEAVE_INACCURATE_MESSAGE = {
+    'lon': 10.0,
+    'event': 'leave',
+    'tid': 'user',
+    'desc': 'inner',
+    'wtst': 1,
+    't': 'b',
+    'acc': 2000,
+    'tst': 2,
+    'lat': 20.0,
+    '_type': 'transition'}
+
 
 class TestDeviceTrackerOwnTracks(unittest.TestCase):
     """ Test the Template sensor. """
@@ -221,6 +233,24 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_state('outer')
 
         # Left clean zone state
+        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+
+    def test_event_entry_exit_inaccurate(self):
+        self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
+
+        # Enter uses the zone's gps co-ords
+        self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
+        self.assert_location_state('inner')
+
+        self.send_message(EVENT_TOPIC, REGION_LEAVE_INACCURATE_MESSAGE)
+
+        # Exit doesn't use inaccurate gps
+        self.assert_location_latitude(2.0)
+        self.assert_location_accuracy(60.0)
+        self.assert_location_state('inner')
+
+        # But does exit region correctly
         self.assertFalse(owntracks.REGIONS_ENTERED[USER])
 
     def test_event_exit_outside_zone_sets_away(self):
