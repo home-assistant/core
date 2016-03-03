@@ -197,7 +197,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_INACCURATE)
 
         self.assert_location_latitude(2.0)
-        self.assert_location_longitude(0.0)
+        self.assert_location_longitude(1.0)
 
     def test_event_entry_exit(self):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
