@@ -25,6 +25,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
     def test_setup(self):
         """ Test sensor setup """
         config = {'name': 'Test',
+                  'sensor_class': 'None',
                   'command': 'echo 1',
                   'payload_on': '1',
                   'payload_off': '0'}
@@ -64,7 +65,8 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         data = command_line.CommandSensorData('echo 10')
 
         entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', '1.0', '0', '{{ value | multiply(0.1) }}')
+            self.hass, data, 'test', 'None', '1.0', '0',
+            '{{ value | multiply(0.1) }}')
 
         self.assertEqual(STATE_ON, entity.state)
 
@@ -73,6 +75,6 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         data = command_line.CommandSensorData('echo 0')
 
         entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', '1', '0', None)
+            self.hass, data, 'test', 'None', '1', '0', None)
 
         self.assertEqual(STATE_OFF, entity.state)
