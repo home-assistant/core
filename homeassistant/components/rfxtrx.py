@@ -11,8 +11,7 @@ import logging
 from homeassistant.util import slugify
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/' +
-                'archive/master.zip' +
-                '#pyRFXtrx==0.5']
+                'archive/0.5.zip#pyRFXtrx==0.5']
 
 DOMAIN = "rfxtrx"
 
