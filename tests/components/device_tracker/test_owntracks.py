@@ -97,7 +97,8 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         mock_mqtt_component(self.hass)
         self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {
-                CONF_PLATFORM: 'owntracks'
+                CONF_PLATFORM: 'owntracks',
+                CONF_MAX_GPS_ACCURACY: 200
             }}))
 
         self.hass.states.set(
@@ -191,8 +192,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_state('outer')
 
     def test_location_inaccurate_gps(self):
-        self.hass.config.CONF_MAX_GPS_ACCURACY = 200
-
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_INACCURATE)
 
