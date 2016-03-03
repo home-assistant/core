@@ -25,7 +25,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
     def test_setup(self):
         """ Test sensor setup """
         config = {'name': 'Test',
-                  'sensor_class': 'None',
+                  'sensor_class': 'motion',
                   'command': 'echo 1',
                   'payload_on': '1',
                   'payload_off': '0'}

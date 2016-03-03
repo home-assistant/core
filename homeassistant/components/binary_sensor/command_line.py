@@ -17,7 +17,7 @@ from homeassistant.helpers import template
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Binary Command Sensor"
-DEFAULT_SENSOR_CLASS = "None"
+DEFAULT_SENSOR_CLASS = None
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
