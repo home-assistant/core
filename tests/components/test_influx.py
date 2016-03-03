@@ -86,6 +86,7 @@ class TestInfluxDB(unittest.TestCase):
                 'host': 'host',
                 'username': 'user',
                 'password': 'pass',
+                'blacklist': ['fake.blacklisted']
             }
         }
         self.hass = mock.MagicMock()
@@ -169,3 +170,33 @@ class TestInfluxDB(unittest.TestCase):
         self.mock_client.write_points.side_effect = \
             influx_client.exceptions.InfluxDBClientError('foo')
         self.handler_method(event)
+
+    @mock.patch('influxdb.InfluxDBClient')
+    def test_event_listener_blacklist(self, mock_influx):
+        self._setup(mock_influx)
+
+        for entity_id in ('ok', 'blacklisted'):
+            state = mock.MagicMock(state=1,
+                                   domain='fake',
+                                   entity_id='fake.{}'.format(entity_id),
+                                   object_id=entity_id,
+                                   attributes={})
+            event = mock.MagicMock(data={'new_state': state},
+                                   time_fired=12345)
+            body = [{
+                'measurement': 'fake.{}'.format(entity_id),
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': entity_id,
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if entity_id == 'ok':
+                self.mock_client.write_points.assert_called_once_with(body)
+            else:
+                self.assertFalse(self.mock_client.write_points.called)
+            self.mock_client.write_points.reset_mock()

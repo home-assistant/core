@@ -33,6 +33,7 @@ CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
@@ -52,6 +53,7 @@ def setup(hass, config):
     ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
+    blacklist = conf.get('blacklist', [])
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
@@ -68,6 +70,8 @@ def setup(hass, config):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
         if state is None or state.state in (STATE_UNKNOWN, ''):
+            return
+        if state.entity_id in blacklist:
             return
 
         try:
