@@ -23,7 +23,8 @@ DATA_TYPES = OrderedDict([
     ('Wind direction', ''),
     ('Rain rate', ''),
     ('Energy usage', 'W'),
-    ('Total usage', 'W')])
+    ('Total usage', 'W'),
+    ('Sensor Status', '')])
 _LOGGER = logging.getLogger(__name__)
 
 
