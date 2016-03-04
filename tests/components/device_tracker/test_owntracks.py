@@ -239,15 +239,15 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
 
         # Enter uses the zone's gps co-ords
-        self.assert_location_latitude(2.0)
-        self.assert_location_accuracy(60.0)
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
         self.assert_location_state('inner')
 
         self.send_message(EVENT_TOPIC, REGION_LEAVE_INACCURATE_MESSAGE)
 
         # Exit doesn't use inaccurate gps
-        self.assert_location_latitude(2.0)
-        self.assert_location_accuracy(60.0)
+        self.assert_location_latitude(2.1)
+        self.assert_location_accuracy(10.0)
         self.assert_location_state('inner')
 
         # But does exit region correctly
