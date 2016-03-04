@@ -28,9 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+
 
 def setup_scanner(hass, config, see):
     """ Set up an OwnTracks tracker. """
+
+    max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
 
     def owntracks_location_update(topic, payload, qos):
         """ MQTT message received. """
@@ -45,7 +49,9 @@ def setup_scanner(hass, config, see):
                 'Unable to parse payload as JSON: %s', payload)
             return
 
-        if not isinstance(data, dict) or data.get('_type') != 'location':
+        if (not isinstance(data, dict) or data.get('_type') != 'location') or (
+                'acc' in data and max_gps_accuracy is not None and data[
+                    'acc'] > max_gps_accuracy):
             return
 
         dev_id, kwargs = _parse_see_args(topic, data)
@@ -124,12 +130,20 @@ def setup_scanner(hass, config, see):
                         kwargs['location_name'] = new_region
                     _set_gps_from_zone(kwargs, zone)
                     _LOGGER.info("Exit to %s", new_region)
+                    see(**kwargs)
+                    see_beacons(dev_id, kwargs)
 
                 else:
                     _LOGGER.info("Exit to GPS")
+                    # Check for GPS accuracy
+                    if not ('acc' in data and
+                            max_gps_accuracy is not None and
+                            data['acc'] > max_gps_accuracy):
 
-                see(**kwargs)
-                see_beacons(dev_id, kwargs)
+                        see(**kwargs)
+                        see_beacons(dev_id, kwargs)
+                    else:
+                        _LOGGER.info("Inaccurate GPS reported")
 
                 beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                 if location in beacons:
