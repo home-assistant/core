@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 
-REQUIREMENTS = ['pychromecast==0.7.1']
+REQUIREMENTS = ['pychromecast==0.7.2']
 CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
