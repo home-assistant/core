@@ -139,6 +139,9 @@ plexapi==1.1.0
 # homeassistant.components.thermostat.proliphix
 proliphix==0.1.0
 
+# homeassistant.components.media_player.cast
+protobuf==3.0.0b2
+
 # homeassistant.components.sensor.systemmonitor
 psutil==4.0.0
 
