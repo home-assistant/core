@@ -11,10 +11,13 @@ import time
 from homeassistant.components import rfxtrx as rfxtrx
 from homeassistant.components.sensor import rfxtrx as rfxtrx_sensor
 
+import pytest
+
 from tests.common import get_test_home_assistant
 
 
-class TestSun(unittest.TestCase):
+@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
+class TestRFXTRX(unittest.TestCase):
     """ Test the sun module. """
 
     def setUp(self):
