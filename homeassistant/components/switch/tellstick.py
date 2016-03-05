@@ -8,10 +8,14 @@ https://home-assistant.io/components/switch.tellstick/
 """
 import logging
 
+from datetime import timedelta
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util import Throttle
+
 
 SIGNAL_REPETITIONS = 1
+MIN_TIME_BETWEEN_CALLS = timedelta(seconds=0.5)
 REQUIREMENTS = ['tellcore-py==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,12 +96,14 @@ class TellstickSwitchDevice(ToggleEntity):
 
         return last_command == tellcore_constants.TELLSTICK_TURNON
 
+    @Throttle(MIN_TIME_BETWEEN_CALLS)
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         for _ in range(self.signal_repetitions):
             self.tellstick_device.turn_on()
         self.update_ha_state()
 
+    @Throttle(MIN_TIME_BETWEEN_CALLS)
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         for _ in range(self.signal_repetitions):

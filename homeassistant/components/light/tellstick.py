@@ -6,11 +6,14 @@ Support for Tellstick lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tellstick/
 """
+from datetime import timedelta
 from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['tellcore-py==1.1.2']
 SIGNAL_REPETITIONS = 1
+MIN_TIME_BETWEEN_CALLS = timedelta(seconds=0.5)
 
 
 # pylint: disable=unused-argument
@@ -83,6 +86,7 @@ class TellstickLight(Light):
         """ Brightness of this light between 0..255. """
         return self._brightness
 
+    @Throttle(MIN_TIME_BETWEEN_CALLS)
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
         for _ in range(self.signal_repetitions):
@@ -90,6 +94,7 @@ class TellstickLight(Light):
         self._brightness = 0
         self.update_ha_state()
 
+    @Throttle(MIN_TIME_BETWEEN_CALLS)
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
         brightness = kwargs.get(ATTR_BRIGHTNESS)
