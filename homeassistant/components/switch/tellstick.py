@@ -73,6 +73,11 @@ class TellstickSwitchDevice(ToggleEntity):
         return False
 
     @property
+    def assumed_state(self):
+        """  Tellstick devices are always assumed state """
+        return True
+
+    @property
     def name(self):
         """ Returns the name of the switch if any. """
         return self.tellstick_device.name
