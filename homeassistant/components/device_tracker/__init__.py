@@ -8,7 +8,6 @@ https://home-assistant.io/components/device_tracker/
 """
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 # pylint: disable=too-many-locals
-import csv
 from datetime import timedelta
 import logging
 import os
@@ -36,7 +35,6 @@ ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-CSV_DEVICES = "known_devices.csv"
 YAML_DEVICES = 'known_devices.yaml'
 
 CONF_TRACK_NEW = "track_new_devices"
@@ -93,10 +91,6 @@ def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
 def setup(hass, config):
     """ Setup device tracker """
     yaml_path = hass.config.path(YAML_DEVICES)
-    csv_path = hass.config.path(CSV_DEVICES)
-    if os.path.isfile(csv_path) and not os.path.isfile(yaml_path) and \
-       convert_csv_config(csv_path, yaml_path):
-        os.remove(csv_path)
 
     conf = config.get(DOMAIN, {})
     if isinstance(conf, list):
@@ -368,21 +362,6 @@ class Device(Entity):
         else:
             self._state = STATE_HOME
             self.last_update_home = True
-
-
-def convert_csv_config(csv_path, yaml_path):
-    """ Convert CSV config file format to YAML. """
-    used_ids = set()
-    with open(csv_path) as inp:
-        for row in csv.DictReader(inp):
-            dev_id = util.ensure_unique_string(
-                (util.slugify(row['name']) or DEVICE_DEFAULT_NAME).lower(),
-                used_ids)
-            used_ids.add(dev_id)
-            device = Device(None, None, None, row['track'] == '1', dev_id,
-                            row['device'], row['name'], row['picture'])
-            update_config(yaml_path, dev_id, device)
-    return True
 
 
 def load_config(path, hass, consider_home, home_range):
