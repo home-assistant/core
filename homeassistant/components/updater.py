@@ -7,7 +7,7 @@ For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/updater/
 """
 import logging
-
+import re
 import requests
 
 from homeassistant.const import __version__ as CURRENT_VERSION
@@ -27,9 +27,11 @@ def setup(hass, config):
         """ Check if a new version is available and report if one is. """
         newest = get_newest_version()
 
-        if newest != CURRENT_VERSION and newest is not None:
-            hass.states.set(
-                ENTITY_ID, newest, {ATTR_FRIENDLY_NAME: 'Update Available'})
+        if re.search(r'dev', CURRENT_VERSION) is None:
+            if newest != CURRENT_VERSION and newest is not None:
+                hass.states.set(
+                    ENTITY_ID, newest,
+                    {ATTR_FRIENDLY_NAME: 'Update available'})
 
     event.track_time_change(hass, check_newest_version,
                             hour=[0, 12], minute=0, second=0)
