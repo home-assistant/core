@@ -5,8 +5,7 @@ tests.components.sensor.tcp
 Tests TCP sensor.
 """
 from copy import copy
-
-from unittest.mock import Mock
+from unittest.mock import patch, Mock
 
 from homeassistant.components.sensor import tcp
 from homeassistant.components.binary_sensor import tcp as bin_tcp
@@ -14,7 +13,8 @@ from tests.common import get_test_home_assistant
 from tests.components.sensor import test_tcp
 
 
-def test_setup_platform_valid_config():
+@patch('homeassistant.components.sensor.tcp.Sensor.update')
+def test_setup_platform_valid_config(mock_update):
     """ Should check the supplied config and call add_entities with Sensor. """
     add_entities = Mock()
     ret = bin_tcp.setup_platform(None, test_tcp.TEST_CONFIG, add_entities)
@@ -47,13 +47,15 @@ class TestTCPBinarySensor():
         assert len(config) != len(test_tcp.TEST_CONFIG)
         assert not bin_tcp.BinarySensor.validate_config(config)
 
-    def test_is_on_true(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_is_on_true(self, mock_update):
         """ Should return True if _state is the same as value_on. """
         sensor = bin_tcp.BinarySensor(self.hass, test_tcp.TEST_CONFIG)
         sensor._state = test_tcp.TEST_CONFIG[tcp.CONF_VALUE_ON]
         assert sensor.is_on
 
-    def test_is_on_false(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_is_on_false(self, mock_update):
         """ Should return False if _state is not the same as value_on. """
         sensor = bin_tcp.BinarySensor(self.hass, test_tcp.TEST_CONFIG)
         sensor._state = "%s abc" % test_tcp.TEST_CONFIG[tcp.CONF_VALUE_ON]
