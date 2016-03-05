@@ -125,3 +125,8 @@ class TellstickLight(Light):
     def should_poll(self):
         """ Tells Home Assistant not to poll this entity. """
         return False
+
+    @property
+    def assumed_state(self):
+        """  Tellstick devices are always assumed state """
+        return True
