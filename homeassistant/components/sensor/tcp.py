@@ -90,6 +90,7 @@ class Sensor(Entity):
     def update(self):
         """Get the latest value for this sensor."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect(
                     (self._config[CONF_HOST], self._config[CONF_PORT]))
