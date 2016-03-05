@@ -158,6 +158,8 @@ class TestComponentHistory(unittest.TestCase):
         mp = 'media_player.test'
         therm = 'thermostat.test'
         zone = 'zone.home'
+        script_nc = 'script.cannot_cancel_this_one'
+        script_c = 'script.can_cancel_this_one'
 
         def set_state(entity_id, state, **kwargs):
             self.hass.states.set(entity_id, state, **kwargs)
@@ -170,7 +172,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], mp: []}
+        states = {therm: [], mp: [], script_c: []}
         with patch('homeassistant.components.recorder.dt_util.utcnow',
                    return_value=one):
             states[mp].append(
@@ -189,6 +191,9 @@ class TestComponentHistory(unittest.TestCase):
                       attributes={'media_title': str(sentinel.mt3)})
             # this state will be skipped because domain blacklisted
             set_state(zone, 'zoning')
+            set_state(script_nc, 'off')
+            states[script_c].append(
+                set_state(script_c, 'off', attributes={'can_cancel': True}))
             states[therm].append(
                 set_state(therm, 21, attributes={'current_temperature': 19.8}))
 
