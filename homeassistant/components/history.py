@@ -19,6 +19,7 @@ DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
 SIGNIFICANT_DOMAINS = ('thermostat',)
+IGNORE_DOMAINS = ('zone', 'scene',)
 
 URL_HISTORY_PERIOD = re.compile(
     r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
@@ -46,9 +47,10 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
 
     """
     where = """
-        (domain in ({}) or last_changed=last_updated)
-        AND last_updated > ?
-    """.format(",".join(["'%s'" % x for x in SIGNIFICANT_DOMAINS]))
+        (domain IN ({}) OR last_changed=last_updated)
+        AND domain NOT IN ({}) AND last_updated > ?
+    """.format(",".join("'%s'" % x for x in SIGNIFICANT_DOMAINS),
+               ",".join("'%s'" % x for x in IGNORE_DOMAINS))
 
     data = [start_time]
 
