@@ -1,9 +1,4 @@
-"""
-tests.test_component_device_sun_light_trigger
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests device sun light trigger component.
-"""
+"""Tests device sun light trigger component."""
 # pylint: disable=too-many-public-methods,protected-access
 import os
 import unittest
@@ -19,25 +14,26 @@ from tests.common import (
     ensure_sun_set)
 
 
-KNOWN_DEV_CSV_PATH = os.path.join(get_test_config_dir(),
-                                  device_tracker.CSV_DEVICES)
 KNOWN_DEV_YAML_PATH = os.path.join(get_test_config_dir(),
                                    device_tracker.YAML_DEVICES)
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server. """
-    with open(KNOWN_DEV_CSV_PATH, 'w') as fil:
-        fil.write('device,name,track,picture\n')
-        fil.write('DEV1,device 1,1,http://example.com/dev1.jpg\n')
-        fil.write('DEV2,device 2,1,http://example.com/dev2.jpg\n')
+    """Write a device tracker known devices file to be used."""
+    device_tracker.update_config(
+        KNOWN_DEV_YAML_PATH, 'device_1', device_tracker.Device(
+            None, None, None, True, 'device_1', 'DEV1',
+            picture='http://example.com/dev1.jpg'))
+
+    device_tracker.update_config(
+        KNOWN_DEV_YAML_PATH, 'device_2', device_tracker.Device(
+            None, None, None, True, 'device_2', 'DEV2',
+            picture='http://example.com/dev2.jpg'))
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server. """
-    for fil in (KNOWN_DEV_CSV_PATH, KNOWN_DEV_YAML_PATH):
-        if os.path.isfile(fil):
-            os.remove(fil)
+    """Remove device tracker known devices file."""
+    os.remove(KNOWN_DEV_YAML_PATH)
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
