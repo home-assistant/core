@@ -11,9 +11,12 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.components.switch import rfxtrx
 from unittest.mock import patch
 
+import pytest
+
 from tests.common import get_test_home_assistant
 
 
+@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestSwitchRfxtrx(unittest.TestCase):
     """ Test the Rfxtrx switch. """
 
