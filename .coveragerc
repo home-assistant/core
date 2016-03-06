@@ -149,6 +149,7 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
+    homeassistant/components/scene/powerview.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/dlink.py
@@ -161,6 +162,7 @@ omit =
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
+
 
 [report]
 # Regexes for lines to exclude from consideration
