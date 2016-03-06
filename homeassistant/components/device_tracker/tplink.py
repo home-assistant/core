@@ -8,6 +8,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tplink/
 """
 import base64
+import hashlib
 import logging
 import re
 import threading
@@ -33,13 +34,16 @@ def get_scanner(hass, config):
                            _LOGGER):
         return None
 
-    scanner = Tplink3DeviceScanner(config[DOMAIN])
+    scanner = Tplink4DeviceScanner(config[DOMAIN])
+
+    if not scanner.success_init:
+        scanner = Tplink3DeviceScanner(config[DOMAIN])
 
     if not scanner.success_init:
         scanner = Tplink2DeviceScanner(config[DOMAIN])
 
-        if not scanner.success_init:
-            scanner = TplinkDeviceScanner(config[DOMAIN])
+    if not scanner.success_init:
+        scanner = TplinkDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -278,6 +282,96 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                     device['mac'].replace('-', ':'): device['mac']
                     for device in result
                     }
+                return True
+
+            return False
+
+
+class Tplink4DeviceScanner(TplinkDeviceScanner):
+    """
+    This class queries an Archer C7 router running TP-Link firmware 150427
+    or newer.
+    """
+
+    def __init__(self, config):
+        self.credentials = ''
+        self.token = ''
+        super(Tplink4DeviceScanner, self).__init__(config)
+
+    def scan_devices(self):
+        """
+        Scans for new devices and return a list containing found device ids.
+        """
+
+        self._update_info()
+
+        return self.last_results
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """
+        The TP-Link firmware doesn't save the name of the wireless device.
+        """
+
+        return None
+
+    def _get_auth_tokens(self):
+        """
+        Retrieves auth tokens from the router.
+        """
+
+        _LOGGER.info("Retrieving auth tokens...")
+
+        url = 'http://{}/userRpm/LoginRpm.htm?Save=Save'.format(self.host)
+
+        # Generate md5 hash of password
+        password = hashlib.md5(self.password.encode('utf')).hexdigest()
+        credentials = '{}:{}'.format(self.username, password).encode('utf')
+
+        # Encode the credentials to be sent as a cookie
+        self.credentials = base64.b64encode(credentials).decode('utf')
+
+        # Create the authorization cookie
+        cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+        response = requests.get(url, headers={'cookie': cookie})
+
+        try:
+            result = re.search('window.parent.location.href = ' +
+                               r'"https?:\/\/.*\/(.*)\/userRpm\/Index.htm";',
+                               response.text)
+            self.token = result.group(1)
+            return True
+        except ValueError:
+            _LOGGER.error("Couldn't fetch auth tokens!")
+            return False
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """
+        Ensures the information from the TP-Link router is up to date.
+        Returns boolean if scanning successful.
+        """
+
+        with self.lock:
+            if (self.credentials == '') or (self.token == ''):
+                self._get_auth_tokens()
+
+            _LOGGER.info("Loading wireless clients...")
+
+            url = 'http://{}/{}/userRpm/WlanStationRpm.htm' \
+                .format(self.host, self.token)
+            referer = 'http://{}'.format(self.host)
+            cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+            page = requests.get(url, headers={
+                'cookie': cookie,
+                'referer': referer
+            })
+            result = self.parse_macs.findall(page.text)
+
+            if result:
+                self.last_results = [mac.replace("-", ":") for mac in result]
                 return True
 
             return False
