@@ -1,21 +1,15 @@
-"""
-tests.components.device_tracker.test_init
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the device tracker compoments.
-"""
+"""Tests for the device tracker compoment."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
+    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
 
 from tests.common import (
