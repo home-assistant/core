@@ -108,9 +108,10 @@ ATTR_TO_PROPERTY = [
 
 
 def is_on(hass, entity_id=None):
-    """Return true if specified media player entity_id is on.
+    """
+    Return true if specified media player entity_id is on.
 
-    Will check all media player if no entity_id specified.
+    Check all media player if no entity_id specified.
     """
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(not hass.states.is_state(entity_id, STATE_OFF)
@@ -118,19 +119,19 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None):
-    """Will turn on specified media player or all."""
+    """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
-    """Will turn off specified media player or all."""
+    """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 def toggle(hass, entity_id=None):
-    """Will toggle specified media player or all."""
+    """Toggle specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
@@ -148,7 +149,7 @@ def volume_down(hass, entity_id=None):
 
 
 def mute_volume(hass, mute, entity_id=None):
-    """Send the media player the command for volume down."""
+    """Send the media player the command for muting the volume."""
     data = {ATTR_MEDIA_VOLUME_MUTED: mute}
 
     if entity_id:
@@ -158,7 +159,7 @@ def mute_volume(hass, mute, entity_id=None):
 
 
 def set_volume_level(hass, volume, entity_id=None):
-    """Send the media player the command for volume down."""
+    """Send the media player the command for setting the volume."""
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
 
     if entity_id:
@@ -180,7 +181,7 @@ def media_play(hass, entity_id=None):
 
 
 def media_pause(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
+    """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
@@ -206,7 +207,8 @@ def media_seek(hass, position, entity_id=None):
 
 def play_media(hass, media_type, media_id, entity_id=None):
     """Send the media player the command for playing media."""
-    data = {"media_type": media_type, "media_id": media_id}
+    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
+            ATTR_MEDIA_CONTENT_ID: media_id}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -297,8 +299,8 @@ def setup(hass, config):
 
     def play_media_service(service):
         """Play specified media_id on the media player."""
-        media_type = service.data.get('media_type')
-        media_id = service.data.get('media_id')
+        media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
+        media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
 
         if media_type is None:
             return
@@ -320,10 +322,12 @@ def setup(hass, config):
 
 
 class MediaPlayerDevice(Entity):
-    """An abstract class for media player devices."""
+    """ABC for media player devices."""
 
     # pylint: disable=too-many-public-methods,no-self-use
+
     # Implement these for your media player
+
     @property
     def state(self):
         """State of the player."""
@@ -366,37 +370,37 @@ class MediaPlayerDevice(Entity):
 
     @property
     def media_artist(self):
-        """Artist of current playing media (Music track only)."""
+        """Artist of current playing media, music track only."""
         return None
 
     @property
     def media_album_name(self):
-        """Album name of current playing media (Music track only)."""
+        """Album name of current playing media, music track only."""
         return None
 
     @property
     def media_album_artist(self):
-        """Album artist of current playing media (Music track only)."""
+        """Album artist of current playing media, music track only."""
         return None
 
     @property
     def media_track(self):
-        """Track number of current playing media (Music track only)."""
+        """Track number of current playing media, music track only."""
         return None
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Title of series of current playing media, TV show only."""
         return None
 
     @property
     def media_season(self):
-        """Season of current playing media (TV Show only)."""
+        """Season of current playing media, TV show only."""
         return None
 
     @property
     def media_episode(self):
-        """Episode of current playing media (TV Show only)."""
+        """Episode of current playing media, TV show only."""
         return None
 
     @property
@@ -421,7 +425,7 @@ class MediaPlayerDevice(Entity):
 
     @property
     def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+        """Flag media commands that are supported."""
         return 0
 
     def turn_on(self):
@@ -508,17 +512,17 @@ class MediaPlayerDevice(Entity):
             self.turn_off()
 
     def volume_up(self):
-        """volume_up media player."""
+        """Turn volume up for media player."""
         if self.volume_level < 1:
             self.set_volume_level(min(1, self.volume_level + .1))
 
     def volume_down(self):
-        """volume_down media player."""
+        """Turn volume down for media player."""
         if self.volume_level > 0:
             self.set_volume_level(max(0, self.volume_level - .1))
 
     def media_play_pause(self):
-        """media_play_pause media player."""
+        """Play or pause the media player."""
         if self.state == STATE_PLAYING:
             self.media_pause()
         else:
@@ -526,7 +530,7 @@ class MediaPlayerDevice(Entity):
 
     @property
     def entity_picture(self):
-        """Return the image of the media playing."""
+        """Return image of the media playing."""
         return None if self.state == STATE_OFF else self.media_image_url
 
     @property
