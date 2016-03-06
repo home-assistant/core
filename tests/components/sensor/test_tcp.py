@@ -7,7 +7,6 @@ Tests TCP sensor.
 import socket
 from copy import copy
 from uuid import uuid4
-
 from unittest.mock import patch, Mock
 
 from homeassistant.components.sensor import tcp
@@ -36,7 +35,8 @@ KEYS_AND_DEFAULTS = {
 }
 
 
-def test_setup_platform_valid_config():
+@patch('homeassistant.components.sensor.tcp.Sensor.update')
+def test_setup_platform_valid_config(mock_update):
     """ Should check the supplied config and call add_entities with Sensor. """
     add_entities = Mock()
     ret = tcp.setup_platform(None, TEST_CONFIG, add_entities)
@@ -61,12 +61,14 @@ class TestTCPSensor():
     def teardown_class(cls):
         cls.hass.stop()
 
-    def test_name(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_name(self, mock_update):
         """ Should return the name if set in the config. """
         sensor = tcp.Sensor(self.hass, TEST_CONFIG)
         assert sensor.name == TEST_CONFIG[tcp.CONF_NAME]
 
-    def test_name_not_set(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_name_not_set(self, mock_update):
         """ Should return the superclass name property if not set in config """
         config = copy(TEST_CONFIG)
         del config[tcp.CONF_NAME]
@@ -74,14 +76,16 @@ class TestTCPSensor():
         sensor = tcp.Sensor(self.hass, config)
         assert sensor.name == entity.name
 
-    def test_state(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_state(self, mock_update):
         """ Should return the contents of _state. """
         sensor = tcp.Sensor(self.hass, TEST_CONFIG)
         uuid = str(uuid4())
         sensor._state = uuid
         assert sensor.state == uuid
 
-    def test_unit_of_measurement(self):
+    @patch('homeassistant.components.sensor.tcp.Sensor.update')
+    def test_unit_of_measurement(self, mock_update):
         """ Should return the configured unit of measurement. """
         sensor = tcp.Sensor(self.hass, TEST_CONFIG)
         assert sensor.unit_of_measurement == TEST_CONFIG[tcp.CONF_UNIT]
@@ -102,7 +106,7 @@ class TestTCPSensor():
         assert tcp.Sensor.validate_config(TEST_CONFIG)
 
     @patch("homeassistant.components.sensor.tcp.Sensor.update")
-    def test_config_invalid_keys(self, *args):
+    def test_config_invalid_keys(self, mock_update):
         """
         Shouldn't store invalid keys in _config.
         """
@@ -113,11 +117,10 @@ class TestTCPSensor():
             "c": "test_c"
         })
         sensor = tcp.Sensor(self.hass, config)
-        for invalid_key in tuple("abc"):
+        for invalid_key in "abc":
             assert invalid_key not in sensor._config
 
-    @patch("homeassistant.components.sensor.tcp.Sensor.update")
-    def test_validate_config_invalid_keys(self, *args):
+    def test_validate_config_invalid_keys(self):
         """
         Should return True when provided with the correct keys plus some extra.
         """
@@ -130,7 +133,7 @@ class TestTCPSensor():
         assert tcp.Sensor.validate_config(config)
 
     @patch("homeassistant.components.sensor.tcp.Sensor.update")
-    def test_config_uses_defaults(self, *args):
+    def test_config_uses_defaults(self, mock_update):
         """
         Should use defaults where appropriate.
         """
@@ -179,9 +182,9 @@ class TestTCPSensor():
         """
         tcp.Sensor(self.hass, TEST_CONFIG)
         mock_socket = mock_socket().__enter__()
-        mock_socket.connect.assert_called_with((
+        assert mock_socket.connect.mock_calls[0][1] == ((
             TEST_CONFIG[tcp.CONF_HOST],
-            TEST_CONFIG[tcp.CONF_PORT]))
+            TEST_CONFIG[tcp.CONF_PORT]),)
 
     @patch("socket.socket.connect", side_effect=socket.error())
     def test_update_returns_if_connecting_fails(self, *args):
