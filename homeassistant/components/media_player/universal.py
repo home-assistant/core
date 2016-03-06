@@ -43,7 +43,6 @@ REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the universal media players."""
     if not validate_config(config):
@@ -200,7 +199,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def master_state(self):
-        """Get the master state from entity or none."""
+        """Return the master state for entity or None."""
         if CONF_STATE in self._attrs:
             master_state = self._entity_lkp(self._attrs[CONF_STATE][0],
                                             self._attrs[CONF_STATE][1])
@@ -324,7 +323,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+        """Flag media commands that are supported."""
         flags = self._child_attr(ATTR_SUPPORTED_MEDIA_COMMANDS) or 0
 
         if SERVICE_TURN_ON in self._cmds:
@@ -345,7 +344,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def device_state_attributes(self):
-        """Extra attributes a device wants to expose."""
+        """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} \
             if active_child else {}
@@ -391,23 +390,24 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id):
         """Play a piece of media."""
-        data = {'media_type': media_type, 'media_id': media_id}
+        data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
+                ATTR_MEDIA_CONTENT_ID: media_id}
         self._call_service(SERVICE_PLAY_MEDIA, data)
 
     def volume_up(self):
-        """Volume up media player."""
+        """Turn volume up for media player."""
         self._call_service(SERVICE_VOLUME_UP, allow_override=True)
 
     def volume_down(self):
-        """Volume down media player."""
+        """Turn volume down for media player."""
         self._call_service(SERVICE_VOLUME_DOWN, allow_override=True)
 
     def media_play_pause(self):
-        """Send play/pause command media player."""
+        """Play or pause the media player."""
         self._call_service(SERVICE_MEDIA_PLAY_PAUSE)
 
     def update(self):
-        """Event to trigger a state update."""
+        """Update state in HA."""
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
             if child_state and child_state.state not in OFF_STATES:
