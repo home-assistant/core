@@ -38,6 +38,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """ Stop down stuff we started. """
         self.hass.stop()
+        event_decorators.HASS = None
 
     def test_track_sunrise(self):
         """ Test track sunrise decorator """
