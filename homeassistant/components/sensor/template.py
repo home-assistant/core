@@ -86,12 +86,13 @@ class SensorTemplate(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self.update()
+        self.hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
-        def _update_callback(_event):
-            """ Called when the target device changes state. """
-            self.update_ha_state(True)
-
-        self.hass.bus.listen(EVENT_STATE_CHANGED, _update_callback)
+    def _event_listener(self, event):
+        """ Called when the target device changes state. """
+        if not hasattr(self, 'hass'):
+            return
+        self.update_ha_state(True)
 
     @property
     def name(self):
