@@ -13,8 +13,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK,
-    ATTR_ENTITY_ID)
+    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
+    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import (group, verisure, wink)
 
 DOMAIN = 'lock'
@@ -24,10 +24,6 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-ATTR_LOCKED = "locked"
-ATTR_CODE = 'code'
-ATTR_CODE_FORMAT = 'code_format'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
