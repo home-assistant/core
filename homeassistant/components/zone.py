@@ -13,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers import extract_domain_configs
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util.location import distance
+from homeassistant.util import convert
 
 DOMAIN = "zone"
 ENTITY_ID_FORMAT = 'zone.{}'
@@ -80,9 +81,9 @@ def setup(hass, config):
 
         for entry in entries:
             name = entry.get(CONF_NAME, DEFAULT_NAME)
-            latitude = entry.get(ATTR_LATITUDE)
-            longitude = entry.get(ATTR_LONGITUDE)
-            radius = entry.get(ATTR_RADIUS, DEFAULT_RADIUS)
+            latitude = convert(entry.get(ATTR_LATITUDE), float)
+            longitude = convert(entry.get(ATTR_LONGITUDE), float)
+            radius = convert(entry.get(ATTR_RADIUS, DEFAULT_RADIUS), float)
             icon = entry.get(ATTR_ICON)
             passive = entry.get(ATTR_PASSIVE, DEFAULT_PASSIVE)
 
