@@ -64,9 +64,6 @@ def setup(hass, config):
 class VerisureHub(object):
     """ Verisure wrapper class """
 
-    MAX_PASSWORD_RETRIES = 2
-    MIN_TIME_BETWEEN_REQUESTS = 1
-
     def __init__(self, domain_config, verisure):
         self.alarm_status = {}
         self.lock_status = {}
@@ -79,7 +76,10 @@ class VerisureHub(object):
 
         self._lock = threading.Lock()
 
-        self._password_retries = VerisureHub.MAX_PASSWORD_RETRIES
+        # When MyPages is brought up from maintenance it sometimes give us a
+        # "wrong password" message. We will continue to retry after maintenance
+        # regardless of that error.
+        self._disable_wrong_password_error = False
         self._wrong_password_given = False
         self._reconnect_timeout = time.time()
 
@@ -154,15 +154,15 @@ class VerisureHub(object):
             return
         try:
             self.my_pages.login()
-            self._password_retries = VerisureHub.MAX_PASSWORD_RETRIES
+            self._disable_wrong_password_error = False
         except self._verisure.LoginError as ex:
             _LOGGER.error("Wrong user name or password for Verisure MyPages")
-            if self._password_retries > 0:
-                self._password_retries -= 1
-                self._reconnect_timeout = time.time() + 15 * 60
+            if self._disable_wrong_password_error:
+                self._reconnect_timeout = time.time() + 60
             else:
                 self._wrong_password_given = True
         except self._verisure.MaintenanceError:
+            self._disable_wrong_password_error = True
             self._reconnect_timeout = time.time() + 60
             _LOGGER.error("Verisure MyPages down for maintenance")
         except self._verisure.Error as ex:
