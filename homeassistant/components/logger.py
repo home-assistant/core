@@ -1,6 +1,4 @@
 """
-homeassistant.components.logger
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component that will help set the level of logging for components.
 
 For more details about this component, please refer to the documentation at
@@ -27,16 +25,15 @@ LOGGER_LOGS = 'logs'
 
 
 class HomeAssistantLogFilter(logging.Filter):
-    """ A log filter. """
+    """A log filter."""
     # pylint: disable=no-init,too-few-public-methods
-
     def __init__(self, logfilter):
         super().__init__()
 
         self.logfilter = logfilter
 
     def filter(self, record):
-
+        """A filter to use."""
         # Log with filtered severity
         if LOGGER_LOGS in self.logfilter:
             for filtername in self.logfilter[LOGGER_LOGS]:
@@ -50,8 +47,7 @@ class HomeAssistantLogFilter(logging.Filter):
 
 
 def setup(hass, config=None):
-    """ Setup the logger component. """
-
+    """Setup the logger component."""
     logfilter = dict()
 
     # Set default log severity

@@ -1,8 +1,5 @@
 """
-homeassistant.components.zigbee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Sets up and provides access to a ZigBee device and contains generic entity
-classes.
+Support for ZigBee devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zigbee/

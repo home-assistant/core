@@ -1,7 +1,5 @@
 """
-homeassistant.components.wemo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-WeMo device discovery.
+Support for WeMo device discovery.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wemo/
@@ -18,7 +16,7 @@ DISCOVER_LIGHTS = 'wemo.light'
 DISCOVER_MOTION = 'wemo.motion'
 DISCOVER_SWITCHES = 'wemo.switch'
 
-# mapping from Wemo model_name to service
+# Mapping from Wemo model_name to service.
 WEMO_MODEL_DISPATCH = {
     'Bridge':  DISCOVER_LIGHTS,
     'Insight': DISCOVER_SWITCHES,
@@ -41,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
-    """Common set up for WeMo devices."""
+    """Common setup for WeMo devices."""
     import pywemo
 
     global SUBSCRIPTION_REGISTRY
@@ -77,7 +75,7 @@ def setup(hass, config):
     _LOGGER.info("Scanning for WeMo devices.")
     devices = [(device.host, device) for device in pywemo.discover_devices()]
 
-    # Add static devices from the config file
+    # Add static devices from the config file.
     devices.extend((address, None)
                    for address in config.get(DOMAIN, {}).get('static', []))
 
