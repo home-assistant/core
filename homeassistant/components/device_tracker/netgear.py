@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.netgear
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Netgear router for device
-presence.
+Support for Netgear routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.netgear/
@@ -15,7 +12,7 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +20,7 @@ REQUIREMENTS = ['pynetgear==0.3.2']
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Netgear scanner. """
+    """Validates configuration and returns a Netgear scanner."""
     info = config[DOMAIN]
     host = info.get(CONF_HOST)
     username = info.get(CONF_USERNAME)
@@ -39,8 +36,7 @@ def get_scanner(hass, config):
 
 
 class NetgearDeviceScanner(object):
-    """ This class queries a Netgear wireless router using the SOAP-API. """
-
+    """Queries a Netgear wireless router using the SOAP-API."""
     def __init__(self, host, username, password):
         import pynetgear
 
@@ -74,7 +70,7 @@ class NetgearDeviceScanner(object):
         return (device.mac for device in self.last_results)
 
     def get_device_name(self, mac):
-        """ Returns the name of the given device or None if we don't know. """
+        """Returns the name of the given device or None if we don't know."""
         try:
             return next(device.name for device in self.last_results
                         if device.mac == mac)

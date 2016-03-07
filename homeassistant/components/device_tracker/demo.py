@@ -1,10 +1,5 @@
 """
-homeassistant.components.device_tracker.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Demo platform for the device tracker.
-
-device_tracker:
-  platform: demo
 """
 import random
 
@@ -12,14 +7,13 @@ from homeassistant.components.device_tracker import DOMAIN
 
 
 def setup_scanner(hass, config, see):
-    """ Set up a demo tracker. """
-
+    """Setup the demo tracker."""
     def offset():
-        """ Return random offset. """
+        """Return random offset."""
         return (random.randrange(500, 2000)) / 2e5 * random.choice((-1, 1))
 
     def random_see(dev_id, name):
-        """ Randomize a sighting. """
+        """Randomize a sighting."""
         see(
             dev_id=dev_id,
             host_name=name,
@@ -30,7 +24,7 @@ def setup_scanner(hass, config, see):
         )
 
     def observe(call=None):
-        """ Observe three entities. """
+        """Observe three entities."""
         random_see('demo_paulus', 'Paulus')
         random_see('demo_anne_therese', 'Anne Therese')
 
