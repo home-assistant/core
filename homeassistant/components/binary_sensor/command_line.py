@@ -8,7 +8,8 @@ https://home-assistant.io/components/binary_sensor.command/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    SENSOR_CLASSES)
 from homeassistant.components.sensor.command_line import CommandSensorData
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers import template
@@ -16,6 +17,7 @@ from homeassistant.helpers import template
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Binary Command Sensor"
+DEFAULT_SENSOR_CLASS = None
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
@@ -31,11 +33,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     data = CommandSensorData(config.get('command'))
+    sensor_class = config.get('sensor_class')
+    if sensor_class not in SENSOR_CLASSES:
+        _LOGGER.warning('Unknown sensor class: %s', sensor_class)
+        sensor_class = DEFAULT_SENSOR_CLASS
 
     add_devices([CommandBinarySensor(
         hass,
         data,
         config.get('name', DEFAULT_NAME),
+        sensor_class,
         config.get('payload_on', DEFAULT_PAYLOAD_ON),
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
         config.get(CONF_VALUE_TEMPLATE)
@@ -43,15 +50,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-instance-attributes
 class CommandBinarySensor(BinarySensorDevice):
     """
     Represents a binary sensor that is returning a value of a shell commands.
     """
-    def __init__(self, hass, data, name, payload_on,
+    def __init__(self, hass, data, name, sensor_class, payload_on,
                  payload_off, value_template):
         self._hass = hass
         self.data = data
         self._name = name
+        self._sensor_class = sensor_class
         self._state = False
         self._payload_on = payload_on
         self._payload_off = payload_off
@@ -67,6 +76,11 @@ class CommandBinarySensor(BinarySensorDevice):
     def is_on(self):
         """True if the binary sensor is on."""
         return self._state
+
+    @property
+    def sensor_class(self):
+        """Return the class of this sensor."""
+        return self._sensor_class
 
     def update(self):
         """Gets the latest data and updates the state."""
