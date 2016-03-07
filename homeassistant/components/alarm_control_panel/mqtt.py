@@ -24,7 +24,7 @@ DEPENDENCIES = ['mqtt']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the MQTT platform."""
+    """Setup the MQTT platform."""
     if config.get('state_topic') is None:
         _LOGGER.error("Missing required variable: state_topic")
         return False
@@ -48,9 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 # pylint: disable=abstract-method
 class MqttAlarm(alarm.AlarmControlPanel):
-    """Represents a MQTT alarm status."""
+    """Represent a MQTT alarm status."""
+
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_disarm, payload_arm_home, payload_arm_away, code):
+        """Initalize the MQTT alarm panel."""
         self._state = STATE_UNKNOWN
         self._hass = hass
         self._name = name
@@ -81,12 +83,12 @@ class MqttAlarm(alarm.AlarmControlPanel):
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the device."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         return self._state
 
     @property
