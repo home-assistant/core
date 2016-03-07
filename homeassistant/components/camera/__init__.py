@@ -121,7 +121,6 @@ def setup(hass, config):
 
 class Camera(Entity):
     """The base class for camera entities."""
-
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
