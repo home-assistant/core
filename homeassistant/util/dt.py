@@ -1,10 +1,4 @@
-"""
-homeassistant.util.dt
-~~~~~~~~~~~~~~~~~~~~~
-
-Provides helper methods to handle the time in HA.
-
-"""
+"""Provides helper methods to handle the time in HA."""
 import datetime as dt
 
 import pytz
@@ -16,7 +10,7 @@ UTC = DEFAULT_TIME_ZONE = pytz.utc
 
 
 def set_default_time_zone(time_zone):
-    """ Sets a default time zone to be used when none is specified. """
+    """Set a default time zone to be used when none is specified."""
     global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
 
     assert isinstance(time_zone, dt.tzinfo)
@@ -25,7 +19,7 @@ def set_default_time_zone(time_zone):
 
 
 def get_time_zone(time_zone_str):
-    """ Get time zone from string. Return None if unable to determine. """
+    """Get time zone from string. Return None if unable to determine."""
     try:
         return pytz.timezone(time_zone_str)
     except pytz.exceptions.UnknownTimeZoneError:
@@ -33,18 +27,20 @@ def get_time_zone(time_zone_str):
 
 
 def utcnow():
-    """ Get now in UTC time. """
+    """Get now in UTC time."""
     return dt.datetime.now(UTC)
 
 
 def now(time_zone=None):
-    """ Get now in specified time zone. """
+    """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
 def as_utc(dattim):
-    """ Return a datetime as UTC time.
-        Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE. """
+    """Return a datetime as UTC time.
+
+    Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE.
+    """
     if dattim.tzinfo == UTC:
         return dattim
     elif dattim.tzinfo is None:
@@ -54,7 +50,7 @@ def as_utc(dattim):
 
 
 def as_local(dattim):
-    """ Converts a UTC datetime object to local time_zone. """
+    """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
     elif dattim.tzinfo is None:
@@ -64,12 +60,12 @@ def as_local(dattim):
 
 
 def utc_from_timestamp(timestamp):
-    """ Returns a UTC time from a timestamp. """
+    """Return a UTC time from a timestamp."""
     return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
 def start_of_local_day(dt_or_d=None):
-    """ Return local datetime object of start of day from date or datetime. """
+    """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         dt_or_d = now().date()
     elif isinstance(dt_or_d, dt.datetime):
@@ -80,12 +76,12 @@ def start_of_local_day(dt_or_d=None):
 
 
 def datetime_to_local_str(dattim):
-    """ Converts datetime to specified time_zone and returns a string. """
+    """Convert datetime to specified time_zone and returns a string."""
     return datetime_to_str(as_local(dattim))
 
 
 def datetime_to_str(dattim):
-    """ Converts datetime to a string format.
+    """Convert datetime to a string format.
 
     @rtype : str
     """
@@ -93,7 +89,7 @@ def datetime_to_str(dattim):
 
 
 def datetime_to_time_str(dattim):
-    """ Converts datetime to a string containing only the time.
+    """Convert datetime to a string containing only the time.
 
     @rtype : str
     """
@@ -101,7 +97,7 @@ def datetime_to_time_str(dattim):
 
 
 def datetime_to_date_str(dattim):
-    """ Converts datetime to a string containing only the date.
+    """Convert datetime to a string containing only the date.
 
     @rtype : str
     """
@@ -109,7 +105,7 @@ def datetime_to_date_str(dattim):
 
 
 def str_to_datetime(dt_str, dt_format=DATETIME_STR_FORMAT):
-    """ Converts a string to a UTC datetime object.
+    """Convert a string to a UTC datetime object.
 
     @rtype: datetime
     """
@@ -121,7 +117,7 @@ def str_to_datetime(dt_str, dt_format=DATETIME_STR_FORMAT):
 
 
 def date_str_to_date(dt_str):
-    """ Converts a date string to a date object. """
+    """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
     except ValueError:  # If dt_str did not match our format
@@ -129,13 +125,14 @@ def date_str_to_date(dt_str):
 
 
 def strip_microseconds(dattim):
-    """ Returns a copy of dattime object but with microsecond set to 0. """
+    """Return a copy of dattime object but with microsecond set to 0."""
     return dattim.replace(microsecond=0)
 
 
 def parse_time_str(time_str):
-    """ Parse a time string (00:20:00) into Time object.
-        Return None if invalid.
+    """Parse a time string (00:20:00) into Time object.
+
+    Return None if invalid.
     """
     parts = str(time_str).split(':')
     if len(parts) < 2:
