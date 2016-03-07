@@ -50,6 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments
+# pylint: disable=too-many-instance-attributes
 class CommandBinarySensor(BinarySensorDevice):
     """
     Represents a binary sensor that is returning a value of a shell commands.
