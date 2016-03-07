@@ -1,8 +1,5 @@
 """
-homeassistant.components.apcupsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Sets up and provides access to the status output of APCUPSd via its Network
-Information Server (NIS).
+Support for status output of APCUPSd via its Network Information Server (NIS).
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/apcupsd/
@@ -34,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """ Use config values to set up a function enabling status retrieval. """
+    """Use config values to set up a function enabling status retrieval."""
     global DATA
 
     host = config[DOMAIN].get(CONF_HOST, DEFAULT_HOST)
@@ -68,12 +65,12 @@ class APCUPSdData(object):
 
     @property
     def status(self):
-        """ Get latest update if throttle allows. Return status. """
+        """Get latest update if throttle allows. Return status."""
         self.update()
         return self._status
 
     def _get_status(self):
-        """ Get the status from APCUPSd and parse it into a dict. """
+        """Get the status from APCUPSd and parse it into a dict."""
         return self._parse(self._get(host=self._host, port=self._port))
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

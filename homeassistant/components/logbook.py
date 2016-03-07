@@ -56,7 +56,6 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 def setup(hass, config):
     """Listens for download events to download files."""
-
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data.get(ATTR_MESSAGE)
@@ -101,7 +100,6 @@ def _handle_get_logbook(handler, path_match, data):
 
 class Entry(object):
     """A human readable version of the log."""
-
     # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
@@ -237,7 +235,6 @@ def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     # pylint: disable=too-many-return-statements
-
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'
