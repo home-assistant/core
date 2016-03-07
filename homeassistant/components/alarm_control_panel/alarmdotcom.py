@@ -1,5 +1,5 @@
 """
-Interfaces with Verisure alarm control panel.
+Interfaces with Alarm.com alarm control panels.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
@@ -39,8 +39,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 # pylint: disable=abstract-method
 class AlarmDotCom(alarm.AlarmControlPanel):
-    """Represents a Alarm.com status."""
+    """Represent an Alarm.com status."""
+
     def __init__(self, hass, name, code, username, password):
+        """Initialize the Alarm.com status."""
         from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
         self._alarm = Alarmdotcom(username, password, timeout=10)
         self._hass = hass
@@ -56,7 +58,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the alarm."""
         return self._name
 
     @property
@@ -66,7 +68,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         if self._alarm.state == 'Disarmed':
             return STATE_ALARM_DISARMED
         elif self._alarm.state == 'Armed Stay':
