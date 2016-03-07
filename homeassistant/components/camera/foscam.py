@@ -27,7 +27,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 # pylint: disable=too-many-instance-attributes
 class FoscamCamera(Camera):
     """An implementation of a Foscam IP camera."""
+
     def __init__(self, device_info):
+        """Initialize a Foscam camera."""
         super(FoscamCamera, self).__init__()
 
         ip_address = device_info.get('ip')

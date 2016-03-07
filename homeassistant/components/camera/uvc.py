@@ -59,7 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
+
     def __init__(self, nvr, uuid, name):
+        """Initialize an Unifi camera."""
         super(UnifiVideoCamera, self).__init__()
         self._nvr = nvr
         self._uuid = uuid
