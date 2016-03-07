@@ -337,9 +337,11 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         response = requests.get(url, headers={'cookie': cookie})
 
         try:
-            result = re.search('window.parent.location.href = ' +
+            result = re.search(r'window.parent.location.href = '
                                r'"https?:\/\/.*\/(.*)\/userRpm\/Index.htm";',
                                response.text)
+            if not result:
+                return False
             self.token = result.group(1)
             return True
         except ValueError:
@@ -370,8 +372,8 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
             })
             result = self.parse_macs.findall(page.text)
 
-            if result:
-                self.last_results = [mac.replace("-", ":") for mac in result]
-                return True
+            if not result:
+                return False
 
-            return False
+            self.last_results = [mac.replace("-", ":") for mac in result]
+            return True
