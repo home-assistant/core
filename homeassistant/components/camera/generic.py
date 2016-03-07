@@ -27,10 +27,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class GenericCamera(Camera):
-    """
-    A generic implementation of an IP camera that is reachable over a URL.
-    """
+    """A generic implementation of an IP camera."""
+
     def __init__(self, device_info):
+        """Initialize a generic camera."""
         super().__init__()
         self._name = device_info.get('name', 'Generic Camera')
         self._username = device_info.get('username')
