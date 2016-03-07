@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.scsgate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for SCSGate lights.
 
 For more details about this platform, please refer to the documentation at
@@ -16,8 +14,7 @@ DEPENDENCIES = ['scsgate']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add the SCSGate swiches defined inside of the configuration file. """
-
+    """Add the SCSGate swiches defined inside of the configuration file."""
     devices = config.get('devices')
     lights = []
     logger = logging.getLogger(__name__)
@@ -42,8 +39,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SCSGateLight(Light):
-    """ Provides a SCSGate light. """
+    """representation of a SCSGate light."""
+
     def __init__(self, scs_id, name, logger):
+        """Initialize the light."""
         self._name = name
         self._scs_id = scs_id
         self._toggled = False
@@ -51,26 +50,26 @@ class SCSGateLight(Light):
 
     @property
     def scs_id(self):
-        """ SCS ID """
+        """Return the SCS ID."""
         return self._scs_id
 
     @property
     def should_poll(self):
-        """ No polling needed for a SCSGate light. """
+        """No polling needed for a SCSGate light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
+        """Return the name of the device if any."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if light is on. """
+        """Return true if light is on."""
         return self._toggled
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
@@ -82,7 +81,7 @@ class SCSGateLight(Light):
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
@@ -94,7 +93,7 @@ class SCSGateLight(Light):
         self.update_ha_state()
 
     def process_event(self, message):
-        """ Handle a SCSGate message related with this light """
+        """Handle a SCSGate message related with this light."""
         if self._toggled == message.toggled:
             self._logger.info(
                 "Light %s, ignoring message %s because state already active",
