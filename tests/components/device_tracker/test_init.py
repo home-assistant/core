@@ -1,21 +1,15 @@
-"""
-tests.components.device_tracker.test_init
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the device tracker compoments.
-"""
+"""Tests for the device tracker compoment."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
-    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, DEVICE_DEFAULT_NAME)
+    STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
 
 from tests.common import (
@@ -50,55 +44,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_NOT_HOME)
 
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
-
-    def test_migrating_config(self):
-        csv_devices = self.hass.config.path(device_tracker.CSV_DEVICES)
-
-        self.assertFalse(os.path.isfile(csv_devices))
-        self.assertFalse(os.path.isfile(self.yaml_devices))
-
-        person1 = {
-            'mac': 'AB:CD:EF:GH:IJ:KL',
-            'name': 'Paulus',
-            'track': True,
-            'picture': 'http://placehold.it/200x200',
-        }
-        person2 = {
-            'mac': 'MN:OP:QR:ST:UV:WX:YZ',
-            'name': '',
-            'track': False,
-            'picture': None,
-        }
-
-        try:
-            with open(csv_devices, 'w') as fil:
-                fil.write('device,name,track,picture\n')
-                for pers in (person1, person2):
-                    fil.write('{},{},{},{}\n'.format(
-                        pers['mac'], pers['name'],
-                        '1' if pers['track'] else '0', pers['picture'] or ''))
-
-            self.assertTrue(device_tracker.setup(self.hass, {}))
-            self.assertFalse(os.path.isfile(csv_devices))
-            self.assertTrue(os.path.isfile(self.yaml_devices))
-
-            yaml_config = load_yaml_config_file(self.yaml_devices)
-
-            self.assertEqual(2, len(yaml_config))
-
-            for pers, yaml_pers in zip(
-                (person1, person2), sorted(yaml_config.values(),
-                                           key=lambda pers: pers['mac'])):
-                for key, value in pers.items():
-                    if key == 'name' and value == '':
-                        value = DEVICE_DEFAULT_NAME
-                    self.assertEqual(value, yaml_pers.get(key))
-
-        finally:
-            try:
-                os.remove(csv_devices)
-            except FileNotFoundError:
-                pass
 
     def test_reading_yaml_config(self):
         dev_id = 'test'
