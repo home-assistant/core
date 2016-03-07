@@ -19,7 +19,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 class DemoGarageDoor(GarageDoorDevice):
     """Provides a demo garage door."""
+
     def __init__(self, name, state):
+        """Initialize the garage door."""
         self._name = name
         self._state = state
 
