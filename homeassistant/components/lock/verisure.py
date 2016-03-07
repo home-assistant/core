@@ -15,7 +15,7 @@ ATTR_CODE = 'code'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Verisure platform."""
+    """Setup the Verisure platform."""
     locks = []
     if int(hub.config.get('locks', '1')):
         hub.update_locks()
@@ -28,25 +28,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=abstract-method
 class VerisureDoorlock(LockDevice):
-    """Represents a Verisure doorlock."""
+    """Representation of a Verisure doorlock."""
+
     def __init__(self, device_id):
+        """Initialize the lock."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
-        """Returns the name of the lock."""
+        """Return the name of the lock."""
         return 'Lock {}'.format(self._id)
 
     @property
     def state(self):
-        """Returns the state of the lock."""
+        """Return the state of the lock."""
         return self._state
 
     @property
     def code_format(self):
-        """Six digit code required."""
+        """Return the required six digit code."""
         return '^\\d{%s}$' % self._digits
 
     def update(self):
