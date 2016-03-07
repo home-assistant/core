@@ -203,7 +203,7 @@ class TelldusLiveData(object):
 
 def setup(hass, config):
     """Setup the Telldus Live component."""
-    # FIXME: aquire app key and provide authentication using username+password
+    # fixme: aquire app key and provide authentication using username+password
     if not validate_config(config,
                            {DOMAIN: [CONF_PUBLIC_KEY,
                                      CONF_PRIVATE_KEY,
