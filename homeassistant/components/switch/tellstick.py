@@ -8,10 +8,13 @@ https://home-assistant.io/components/switch.tellstick/
 """
 import logging
 
+from datetime import timedelta
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.util import Synchronized
 
 SIGNAL_REPETITIONS = 1
+MIN_TIME_BETWEEN_CALLS = timedelta(seconds=0.5)
 REQUIREMENTS = ['tellcore-py==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,9 +41,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     def _device_event_callback(id_, method, data, cid):
         """ Called from the TelldusCore library to update one device """
+
         for switch_device in switches:
             if switch_device.tellstick_device.id == id_:
-                switch_device.update_ha_state()
+                # Set state directly,
+                # Don't want to call update to prevent deadlocks
+                switch_device.set_switch_state(
+                    method == tellcore_constants.TELLSTICK_TURNON
+                )
                 break
 
     callback_id = core.register_device_event(_device_event_callback)
@@ -63,9 +71,12 @@ class TellstickSwitchDevice(ToggleEntity):
 
         self.tellstick_device = tellstick_device
         self.signal_repetitions = signal_repetitions
-
         self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
                                        tellcore_constants.TELLSTICK_TURNOFF)
+
+        self._state = False
+        # Query tellcore for the current state
+        self.update()
 
     @property
     def should_poll(self):
@@ -84,22 +95,42 @@ class TellstickSwitchDevice(ToggleEntity):
 
     @property
     def is_on(self):
-        """ True if switch is on. """
-        import tellcore.constants as tellcore_constants
-
-        last_command = self.tellstick_device.last_sent_command(
-            self.last_sent_command_mask)
-
-        return last_command == tellcore_constants.TELLSTICK_TURNON
+        return self._state
 
     def turn_on(self, **kwargs):
         """ Turns the switch on. """
-        for _ in range(self.signal_repetitions):
-            self.tellstick_device.turn_on()
-        self.update_ha_state()
+        self._call_switch(True)
 
     def turn_off(self, **kwargs):
         """ Turns the switch off. """
-        for _ in range(self.signal_repetitions):
-            self.tellstick_device.turn_off()
+        self._call_switch(False)
+
+    def set_switch_state(self, is_on):
+        """ Sets the private switch state """
+        self._state = is_on
         self.update_ha_state()
+
+    @Synchronized(True)
+    def _call_switch(self, turn_on):
+        from tellcore.library import TelldusError
+        try:
+            for _ in range(self.signal_repetitions):
+                if turn_on:
+                    self.tellstick_device.turn_on()
+                else:
+                    self.tellstick_device.turn_off()
+            self.set_switch_state(turn_on)
+        except TelldusError:
+            _LOGGER.error(TelldusError)
+
+    @Synchronized(True)
+    def update(self):
+        """ Update state of the switch. """
+        import tellcore.constants as tellcore_constants
+        from tellcore.library import TelldusError
+        try:
+            last_command = self.tellstick_device.last_sent_command(
+                self.last_sent_command_mask)
+            self._state = last_command == tellcore_constants.TELLSTICK_TURNON
+        except TelldusError:
+            _LOGGER.error(TelldusError)

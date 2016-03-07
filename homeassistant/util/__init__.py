@@ -286,6 +286,62 @@ class Throttle(object):
         return wrapper
 
 
+class Synchronized(object):
+    """
+    A method decorator to add locking to a method to prevent it from being
+    called in parallel.
+
+    Decorator takes in one 'shared_lock' parameter that creates a lock that is
+    shared between all other decorated functions with the parameter set.
+
+    """
+    # pylint: disable=too-few-public-methods
+
+    decorator_lock = threading.Lock()
+
+    def __init__(self, shared_lock=False):
+        self.shared_lock = shared_lock
+
+    def __call__(self, method):
+        # Different methods that can be passed in:
+        #  - a function
+        #  - an unbound function on a class
+        #  - a method (bound function on a class)
+
+        # We want to be able to differentiate between function and unbound
+        # methods (which are considered functions).
+        # All methods have the classname in their qualname seperated by a '.'
+        # Functions have a '.' in their qualname if defined inline, but will
+        # be prefixed by '.<locals>.' so we strip that out.
+        is_func = (not hasattr(method, '__self__') and
+                   '.' not in method.__qualname__.split('.<locals>.')[-1])
+
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+            """
+            Wrapper wraps the method being with a lock
+            """
+            # pylint: disable=protected-access
+            if hasattr(method, '__self__'):
+                host = method.__self__
+            elif is_func:
+                host = wrapper
+            else:
+                host = args[0] if args else wrapper
+
+            if self.shared_lock:
+                lock = Synchronized.decorator_lock
+            else:
+                if not hasattr(host, '_synchronized_lock'):
+                    host._synchronized_lock = threading.Lock()
+                lock = host._synchronized_lock
+
+            with lock:
+                return method(*args, **kwargs)
+
+        return wrapper
+
+
 class ThreadPool(object):
     """A priority queue-based thread pool."""
     # pylint: disable=too-many-instance-attributes
