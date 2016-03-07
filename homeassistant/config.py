@@ -1,9 +1,4 @@
-"""
-homeassistant.config
-~~~~~~~~~~~~~~~~~~~~
-
-Module to help with parsing and generating configuration files.
-"""
+"""Module to help with parsing and generating configuration files."""
 import logging
 import os
 
@@ -43,16 +38,18 @@ DEFAULT_COMPONENTS = {
 
 
 def get_default_config_dir():
-    """ Put together the default configuration directory based on OS. """
+    """Put together the default configuration directory based on OS."""
     data_dir = os.getenv('APPDATA') if os.name == "nt" \
         else os.path.expanduser('~')
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
 def ensure_config_exists(config_dir, detect_location=True):
-    """ Ensures a config file exists in given config dir.
-        Creating a default one if needed.
-        Returns path to the config file. """
+    """Ensure a config file exists in given configuration directory.
+
+    Creating a default one if needed.
+    Return path to the config file.
+    """
     config_path = find_config_file(config_dir)
 
     if config_path is None:
@@ -64,8 +61,10 @@ def ensure_config_exists(config_dir, detect_location=True):
 
 
 def create_default_config(config_dir, detect_location=True):
-    """ Creates a default configuration file in given config dir.
-        Returns path to new config file if success, None if failed. """
+    """Create a default configuration file in given configuration directory.
+
+    Return path to new config file if success, None if failed.
+    """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CONFIG}
@@ -108,14 +107,14 @@ def create_default_config(config_dir, detect_location=True):
 
 
 def find_config_file(config_dir):
-    """ Looks in given directory for supported config files. """
+    """Look in given directory for supported configuration files."""
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
     return config_path if os.path.isfile(config_path) else None
 
 
 def load_yaml_config_file(config_path):
-    """ Parse a YAML configuration file. """
+    """Parse a YAML configuration file."""
     conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
