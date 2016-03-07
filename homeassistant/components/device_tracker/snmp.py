@@ -26,7 +26,7 @@ CONF_BASEOID = "baseoid"
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Validates configuration and returns an snmp scanner."""
+    """Validate the configuration and return an snmp scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
                            _LOGGER):
@@ -38,8 +38,10 @@ def get_scanner(hass, config):
 
 
 class SnmpScanner(object):
-    """Queries any SNMP capable Acces Point for connected devices."""
+    """Queries any SNMP capable Access Point for connected devices."""
+
     def __init__(self, config):
+        """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
         self.snmp = cmdgen.CommandGenerator()
 
@@ -56,9 +58,7 @@ class SnmpScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device IDs.
-        """
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client['mac'] for client in self.last_results
                 if client.get('mac')]
@@ -66,15 +66,15 @@ class SnmpScanner(object):
     # Supressing no-self-use warning
     # pylint: disable=R0201
     def get_device_name(self, device):
-        """Returns the name of the given device or None if we don't know."""
+        """Return the name of the given device or None if we don't know."""
         # We have no names
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the WAP is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the WAP is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
