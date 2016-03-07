@@ -28,7 +28,7 @@ _DEVICES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Validates configuration and returns a Aruba scanner."""
+    """Validate the configuration and return a Aruba scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -41,7 +41,9 @@ def get_scanner(hass, config):
 
 class ArubaDeviceScanner(object):
     """This class queries a Aruba Access Point for connected devices."""
+
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -50,19 +52,17 @@ class ArubaDeviceScanner(object):
 
         self.last_results = {}
 
-        # Test the router is accessible
+        # Test the router is accessible.
         data = self.get_aruba_data()
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device IDs.
-        """
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """Returns the name of the given device or None if we don't know."""
+        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -72,9 +72,9 @@ class ArubaDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the Aruba Access Point is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the Aruba Access Point is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
