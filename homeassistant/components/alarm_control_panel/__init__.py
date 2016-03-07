@@ -1,7 +1,8 @@
 """
-homeassistant.components.alarm_control_panel
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with a alarm control panel.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/alarm_control_panel/
 """
 import logging
 import os
@@ -41,7 +42,7 @@ ATTR_TO_PROPERTY = [
 
 
 def setup(hass, config):
-    """ Track states and offer events for sensors. """
+    """Track states and offer events for sensors."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
@@ -49,7 +50,7 @@ def setup(hass, config):
     component.setup(config)
 
     def alarm_service_handler(service):
-        """ Maps services to methods on Alarm. """
+        """Maps services to methods on Alarm."""
         target_alarms = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -75,7 +76,7 @@ def setup(hass, config):
 
 
 def alarm_disarm(hass, code=None, entity_id=None):
-    """ Send the alarm the command for disarm. """
+    """Send the alarm the command for disarm."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -86,7 +87,7 @@ def alarm_disarm(hass, code=None, entity_id=None):
 
 
 def alarm_arm_home(hass, code=None, entity_id=None):
-    """ Send the alarm the command for arm home. """
+    """Send the alarm the command for arm home."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -97,7 +98,7 @@ def alarm_arm_home(hass, code=None, entity_id=None):
 
 
 def alarm_arm_away(hass, code=None, entity_id=None):
-    """ Send the alarm the command for arm away. """
+    """Send the alarm the command for arm away."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -108,7 +109,7 @@ def alarm_arm_away(hass, code=None, entity_id=None):
 
 
 def alarm_trigger(hass, code=None, entity_id=None):
-    """ Send the alarm the command for trigger. """
+    """Send the alarm the command for trigger."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -120,32 +121,31 @@ def alarm_trigger(hass, code=None, entity_id=None):
 
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
-    """ ABC for alarm control devices. """
-
+    """An ABC for alarm control devices."""
     @property
     def code_format(self):
-        """ regex for code format or None if no code is required. """
+        """Regex for code format or None if no code is required."""
         return None
 
     def alarm_disarm(self, code=None):
-        """ Send disarm command. """
+        """Send disarm command."""
         raise NotImplementedError()
 
     def alarm_arm_home(self, code=None):
-        """ Send arm home command. """
+        """Send arm home command."""
         raise NotImplementedError()
 
     def alarm_arm_away(self, code=None):
-        """ Send arm away command. """
+        """Send arm away command."""
         raise NotImplementedError()
 
     def alarm_trigger(self, code=None):
-        """ Send alarm trigger command. """
+        """Send alarm trigger command."""
         raise NotImplementedError()
 
     @property
     def state_attributes(self):
-        """ Return the state attributes. """
+        """Return the state attributes."""
         state_attr = {
             ATTR_CODE_FORMAT: self.code_format,
             }
