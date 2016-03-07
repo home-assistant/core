@@ -26,7 +26,6 @@ DEPENDENCIES = ['mqtt']
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Light."""
-
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
@@ -51,12 +50,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class MqttLight(Light):
-    """Provides a MQTT light."""
+    """MQTT light."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, hass, name, topic, templates, qos, payload, optimistic,
                  brightness_scale):
-
+        """Initialize MQTT light."""
         self._hass = hass
         self._name = name
         self._topic = topic
@@ -98,6 +97,8 @@ class MqttLight(Light):
             mqtt.subscribe(self._hass, self._topic["brightness_state_topic"],
                            brightness_received, self._qos)
             self._brightness = 255
+        elif self._topic["brightness_command_topic"] is not None:
+            self._brightness = 255
         else:
             self._brightness = None
 
@@ -110,6 +111,8 @@ class MqttLight(Light):
         if self._topic["rgb_state_topic"] is not None:
             mqtt.subscribe(self._hass, self._topic["rgb_state_topic"],
                            rgb_received, self._qos)
+            self._rgb = [255, 255, 255]
+        if self._topic["rgb_command_topic"] is not None:
             self._rgb = [255, 255, 255]
         else:
             self._rgb = None
@@ -131,7 +134,7 @@ class MqttLight(Light):
 
     @property
     def name(self):
-        """Returns the name of the device if any."""
+        """Name of the device if any."""
         return self._name
 
     @property
