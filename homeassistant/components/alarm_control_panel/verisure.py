@@ -30,25 +30,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=abstract-method
 class VerisureAlarm(alarm.AlarmControlPanel):
-    """Represents a Verisure alarm status."""
+    """Represent a Verisure alarm status."""
+
     def __init__(self, device_id):
+        """Initalize the Verisure alarm panel."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the device."""
         return 'Alarm {}'.format(self._id)
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
     def code_format(self):
-        """Code format as regex."""
+        """The code format as regex."""
         return '^\\d{%s}$' % self._digits
 
     def update(self):
