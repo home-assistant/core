@@ -23,9 +23,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class BloomSkyCamera(Camera):
-    """Represents the images published from the BloomSky's camera."""
+    """Representation of the images published from the BloomSky's camera."""
+
     def __init__(self, bs, device):
-        """ set up for access to the BloomSky camera images """
+        """Setup for access to the BloomSky camera images."""
         super(BloomSkyCamera, self).__init__()
         self._name = device["DeviceName"]
         self._id = device["DeviceID"]
@@ -56,5 +57,5 @@ class BloomSkyCamera(Camera):
 
     @property
     def name(self):
-        """The name of this BloomSky device."""
+        """Return the name of this BloomSky device."""
         return self._name
