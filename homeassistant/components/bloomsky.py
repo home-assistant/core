@@ -1,6 +1,4 @@
 """
-homeassistant.components.bloomsky
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for BloomSky weather station.
 
 For more details about this component, please refer to the documentation at

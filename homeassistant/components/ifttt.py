@@ -1,7 +1,5 @@
 """
-homeassistant.components.ifttt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This component enable you to trigger Maker IFTTT recipes.
+Support to trigger Maker IFTTT recipes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ifttt/
@@ -27,7 +25,7 @@ REQUIREMENTS = ['pyfttt==0.3']
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
-    """ Trigger a Maker IFTTT recipe. """
+    """Trigger a Maker IFTTT recipe."""
     data = {
         ATTR_EVENT: event,
         ATTR_VALUE1: value1,
@@ -38,15 +36,14 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 
 def setup(hass, config):
-    """ Setup the ifttt service component. """
-
+    """Setup the IFTTT service component."""
     if not validate_config(config, {DOMAIN: ['key']}, _LOGGER):
         return False
 
     key = config[DOMAIN]['key']
 
     def trigger_service(call):
-        """ Handle ifttt trigger service calls. """
+        """Handle IFTTT trigger service calls."""
         event = call.data.get(ATTR_EVENT)
         value1 = call.data.get(ATTR_VALUE1)
         value2 = call.data.get(ATTR_VALUE2)

@@ -1,6 +1,4 @@
 """
-homeassistant.components.introduction
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component that will help guide the user taking its first steps.
 
 For more details about this component, please refer to the documentation at
@@ -12,7 +10,7 @@ DOMAIN = 'introduction'
 
 
 def setup(hass, config=None):
-    """ Setup the introduction component. """
+    """Setup the introduction component."""
     log = logging.getLogger(__name__)
     log.info("""
 

@@ -1,6 +1,4 @@
 """
-homeassistant.components.sun
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides functionality to keep track of the sun.
 
 For more details about this component, please refer to the documentation at
