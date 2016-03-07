@@ -1,6 +1,4 @@
 """
-homeassistant.components.thermostat.heat_control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Adds support for heat control units.
 
 For more details about this platform, please refer to the documentation at
@@ -33,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the heat control thermostat. """
+    """Setup the heat control thermostat."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
@@ -52,10 +50,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class HeatControl(ThermostatDevice):
-    """ Represents a HeatControl device. """
+    """Representation of a HeatControl device."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp):
+        """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
@@ -75,42 +75,43 @@ class HeatControl(ThermostatDevice):
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ Returns the name. """
+        """Return the name of the thermostat."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """Return the unit of measurement."""
         return self._unit
 
     @property
     def current_temperature(self):
-        """ Returns the sensor temperature. """
+        """Return the sensor temperature."""
         return self._cur_temp
 
     @property
     def operation(self):
-        """ Returns current operation ie. heat, cool, idle """
+        """Return current operation ie. heat, cool, idle."""
         return STATE_HEAT if self._active and self._is_heating else STATE_IDLE
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         return self._target_temp
 
     def set_temperature(self, temperature):
-        """ Set new target temperature. """
+        """Set new target temperature."""
         self._target_temp = temperature
         self._control_heating()
         self.update_ha_state()
 
     @property
     def min_temp(self):
-        """ Return minimum temperature. """
+        """Return the minimum temperature."""
         # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
@@ -120,16 +121,16 @@ class HeatControl(ThermostatDevice):
 
     @property
     def max_temp(self):
-        """ Return maximum temperature. """
+        """Return the maximum temperature."""
         # pylint: disable=no-member
         if self._min_temp:
             return self._max_temp
         else:
-            # get default temp from super class
+            # Get default temp from super class
             return ThermostatDevice.max_temp.fget(self)
 
     def _sensor_changed(self, entity_id, old_state, new_state):
-        """ Called when temperature changes. """
+        """Called when temperature changes."""
         if new_state is None:
             return
 
@@ -138,7 +139,7 @@ class HeatControl(ThermostatDevice):
         self.update_ha_state()
 
     def _update_temp(self, state):
-        """ Update thermostat with latest state from sensor. """
+        """Update thermostat with latest state from sensor."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if unit not in (TEMP_CELCIUS, TEMP_FAHRENHEIT):
@@ -161,7 +162,7 @@ class HeatControl(ThermostatDevice):
         self._unit = unit
 
     def _control_heating(self):
-        """ Check if we need to turn heating on or off. """
+        """Check if we need to turn heating on or off."""
         if not self._active and None not in (self._cur_temp,
                                              self._target_temp):
             self._active = True
@@ -183,5 +184,5 @@ class HeatControl(ThermostatDevice):
 
     @property
     def _is_heating(self):
-        """ If the heater is currently heating. """
+        """If the heater is currently heating."""
         return switch.is_on(self.hass, self.heater_entity_id)
