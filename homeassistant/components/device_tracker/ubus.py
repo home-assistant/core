@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.ubus
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a OpenWRT router for device
-presence.
+Support for OpenWRT (ubus) routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ubus/
@@ -20,14 +17,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Luci scanner. """
+    """Validates configuration and returns a Luci scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -74,16 +71,13 @@ class UbusDeviceScanner(object):
 
     def scan_devices(self):
         """
-        Scans for new devices and return a list containing found device ids.
+        Scans for new devices and return a list containing found device IDs.
         """
-
         self._update_info()
-
         return self.last_results
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Returns the name of the given device or None if we don't know."""
         with self.lock:
             if self.leasefile is None:
                 result = _req_json_rpc(self.url, self.session_id,
@@ -141,8 +135,7 @@ class UbusDeviceScanner(object):
 
 
 def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
-    """ Perform one JSON RPC operation. """
-
+    """Perform one JSON RPC operation."""
     data = json.dumps({"jsonrpc": "2.0",
                        "id": 1,
                        "method": rpcmethod,
@@ -167,7 +160,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
 
 
 def _get_session_id(url, username, password):
-    """ Get authentication token for the given host+username+password. """
+    """Get the authentication token for the given host+username+password."""
     res = _req_json_rpc(url, "00000000000000000000000000000000", 'call',
                         'session', 'login', username=username,
                         password=password)

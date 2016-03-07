@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.tomato
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Tomato router for device
-presence.
+Support for Tomato routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tomato/
@@ -20,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 CONF_HTTP_ID = "http_id"
@@ -29,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Tomato scanner. """
+    """Validates configuration and returns a Tomato scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME,
                                      CONF_PASSWORD, CONF_HTTP_ID]},
@@ -40,13 +37,12 @@ def get_scanner(hass, config):
 
 
 class TomatoDeviceScanner(object):
-    """ This class queries a wireless router running Tomato firmware
+    """This class queries a wireless router running Tomato firmware
     for connected devices.
 
     A description of the Tomato API can be found on
     http://paulusschoutsen.nl/blog/2013/10/tomato-api-documentation/
     """
-
     def __init__(self, config):
         host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
@@ -68,16 +64,15 @@ class TomatoDeviceScanner(object):
         self.success_init = self._update_tomato_info()
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
-
+        """
+        Scans for new devices and return a list containing found device IDs.
+        """
         self._update_tomato_info()
 
         return [item[1] for item in self.last_results['wldev']]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Returns the name of the given device or None if we don't know."""
         filter_named = [item[0] for item in self.last_results['dhcpd_lease']
                         if item[2] == device]
 
@@ -88,19 +83,16 @@ class TomatoDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_tomato_info(self):
-        """ Ensures the information from the Tomato router is up to date.
-            Returns boolean if scanning successful. """
-
+        """Ensures the information from the Tomato router is up to date.
+        Returns boolean if scanning successful.
+        """
         with self.lock:
             self.logger.info("Scanning")
 
             try:
                 response = requests.Session().send(self.req, timeout=3)
-
                 # Calling and parsing the Tomato api here. We only need the
-                # wldev and dhcpd_lease values. For API description see:
-                # http://paulusschoutsen.nl/
-                #   blog/2013/10/tomato-api-documentation/
+                # wldev and dhcpd_lease values.
                 if response.status_code == 200:
 
                     for param, value in \
@@ -109,7 +101,6 @@ class TomatoDeviceScanner(object):
                         if param == 'wldev' or param == 'dhcpd_lease':
                             self.last_results[param] = \
                                 json.loads(value.replace("'", '"'))
-
                     return True
 
                 elif response.status_code == 401:
@@ -117,29 +108,25 @@ class TomatoDeviceScanner(object):
                     self.logger.exception((
                         "Failed to authenticate, "
                         "please check your username and password"))
-
                     return False
 
             except requests.exceptions.ConnectionError:
                 # We get this if we could not connect to the router or
-                # an invalid http_id was supplied
+                # an invalid http_id was supplied.
                 self.logger.exception((
                     "Failed to connect to the router"
                     " or invalid http_id supplied"))
-
                 return False
 
             except requests.exceptions.Timeout:
                 # We get this if we could not connect to the router or
-                # an invalid http_id was supplied
+                # an invalid http_id was supplied.
                 self.logger.exception(
                     "Connection to the router timed out")
-
                 return False
 
             except ValueError:
-                # If json decoder could not parse the response
+                # If JSON decoder could not parse the response.
                 self.logger.exception(
                     "Failed to parse response from router")
-
                 return False

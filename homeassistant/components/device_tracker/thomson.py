@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.thomson
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a THOMSON router for device
-presence.
+Support for THOMSON routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.thomson/
@@ -18,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +32,7 @@ _DEVICES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a THOMSON scanner. """
+    """Validates configuration and returns a THOMSON scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -48,10 +45,9 @@ def get_scanner(hass, config):
 
 class ThomsonDeviceScanner(object):
     """
-    This class queries a router running THOMSON firmware
-    for connected devices. Adapted from ASUSWRT scanner.
+    This class queries a router running THOMSON firmware for connected devices.
+    Adapted from ASUSWRT scanner.
     """
-
     def __init__(self, config):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
@@ -66,15 +62,14 @@ class ThomsonDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
-
+        """
+        Scans for new devices and return a list containing found device IDs.
+        """
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device
-            or None if we don't know. """
+        """Returns the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -104,7 +99,7 @@ class ThomsonDeviceScanner(object):
             return True
 
     def get_thomson_data(self):
-        """ Retrieve data from THOMSON and return parsed result. """
+        """Retrieve data from THOMSON and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'Username : ')
