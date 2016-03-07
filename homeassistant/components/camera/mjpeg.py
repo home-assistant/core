@@ -31,11 +31,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
-    """
-    A generic implementation of an IP camera that is reachable over a URL.
-    """
+    """An implementation of an IP camera that is reachable over a URL."""
 
     def __init__(self, device_info):
+        """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get('name', 'Mjpeg Camera')
         self._username = device_info.get('username')
