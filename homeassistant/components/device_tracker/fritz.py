@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.fritz
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a FRITZ!Box router for device
-presence.
+Support for FRITZ!Box routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.fritz/
@@ -17,15 +14,14 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = ['fritzconnection==0.4.6']
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# noinspection PyUnusedLocal
 def get_scanner(hass, config):
-    """ Validates config and returns FritzBoxScanner. """
+    """Validates configuration and returns FritzBoxScanner."""
     if not validate_config(config,
                            {DOMAIN: []},
                            _LOGGER):
@@ -52,7 +48,7 @@ class FritzBoxScanner(object):
     """
     def __init__(self, config):
         self.last_results = []
-        self.host = '169.254.1.1'  # This IP is valid for all fritzboxes
+        self.host = '169.254.1.1'  # This IP is valid for all FRITZ!Box router.
         self.username = 'admin'
         self.password = ''
         self.success_init = True
@@ -68,7 +64,7 @@ class FritzBoxScanner(object):
         if CONF_PASSWORD in config.keys():
             self.password = config[CONF_PASSWORD]
 
-        # Establish a connection to the FRITZ!Box
+        # Establish a connection to the FRITZ!Box.
         try:
             self.fritz_box = fc.FritzHosts(address=self.host,
                                            user=self.username,
@@ -77,7 +73,7 @@ class FritzBoxScanner(object):
             self.fritz_box = None
 
         # At this point it is difficult to tell if a connection is established.
-        # So just check for null objects ...
+        # So just check for null objects.
         if self.fritz_box is None or not self.fritz_box.modelname:
             self.success_init = False
 
@@ -90,7 +86,7 @@ class FritzBoxScanner(object):
                           "with IP: %s", self.host)
 
     def scan_devices(self):
-        """ Scan for new devices and return a list of found device ids. """
+        """Scan for new devices and return a list of found device ids."""
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
@@ -99,7 +95,7 @@ class FritzBoxScanner(object):
         return active_hosts
 
     def get_device_name(self, mac):
-        """ Returns the name of the given device or None if is not known. """
+        """Returns the name of the given device or None if is not known."""
         ret = self.fritz_box.get_specific_host_entry(mac)["NewHostName"]
         if ret == {}:
             return None
@@ -107,7 +103,7 @@ class FritzBoxScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Retrieves latest information from the FRITZ!Box. """
+        """Retrieves latest information from the FRITZ!Box."""
         if not self.success_init:
             return False
 
