@@ -1,7 +1,5 @@
 """
-homeassistant.components.conversation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to have conversations with Home Assistant.
+Support for functionality to have conversations with Home Assistant.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
@@ -25,13 +23,13 @@ REQUIREMENTS = ['fuzzywuzzy==0.8.0']
 
 
 def setup(hass, config):
-    """ Registers the process service. """
+    """Registers the process service."""
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
 
     def process(service):
-        """ Parses text into commands for Home Assistant. """
+        """Parses text into commands."""
         if ATTR_TEXT not in service.data:
             logger.error("Received process service call without a text")
             return

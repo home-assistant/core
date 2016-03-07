@@ -1,7 +1,5 @@
 """
-homeassistant.components.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides support for RFXtrx components.
+Support for RFXtrx components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
@@ -33,11 +31,10 @@ RFXOBJECT = None
 
 
 def setup(hass, config):
-    """ Setup the RFXtrx component. """
-
+    """Setup the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """ Callback all subscribers for RFXtrx gateway. """
+        """Callback all subscribers for RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
@@ -47,14 +44,14 @@ def setup(hass, config):
         _LOGGER.info("Receive RFXCOM event from %s => %s",
                      event.device, entity_name)
 
-        # Callback to HA registered components
+        # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
             subscriber(event)
 
-    # Try to load the RFXtrx module
+    # Try to load the RFXtrx module.
     import RFXtrx as rfxtrxmod
 
-    # Init the rfxtrx module
+    # Init the rfxtrx module.
     global RFXOBJECT
 
     if ATTR_DEVICE not in config[DOMAIN]:
@@ -79,7 +76,7 @@ def setup(hass, config):
 
 
 def get_rfx_object(packetid):
-    """ Return the RFXObject with the packetid. """
+    """Return the RFXObject with the packetid."""
     import RFXtrx as rfxtrxmod
 
     binarypacket = bytearray.fromhex(packetid)

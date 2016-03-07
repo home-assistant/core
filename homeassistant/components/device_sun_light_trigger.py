@@ -29,7 +29,7 @@ CONF_DEVICE_GROUP = 'device_group'
 
 # pylint: disable=too-many-locals
 def setup(hass, config):
-    """ Triggers to turn lights on or off based on device precense. """
+    """Triggers to turn lights on or off based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = get_component('device_tracker')
     group = get_component('group')
@@ -78,26 +78,29 @@ def setup(hass, config):
     @track_state_change(sun.ENTITY_ID, sun.STATE_BELOW_HORIZON,
                         sun.STATE_ABOVE_HORIZON)
     def schedule_lights_at_sun_set(hass, entity, old_state, new_state):
-        """The moment sun sets we want to have all the lights on.
-           We will schedule to have each light start after one another
-           and slowly transition in."""
-
+        """
+        The moment sun sets we want to have all the lights on.
+        We will schedule to have each light start after one another
+        and slowly transition in.
+        """
         start_point = calc_time_for_light_when_sunset()
         if not start_point:
             return
 
         def turn_on(light_id):
-            """ Lambda can keep track of function parameters but not local
+            """
+            Lambda can keep track of function parameters but not local
             parameters. If we put the lambda directly in the below statement
-            only the last light will be turned on.. """
+            only the last light will be turned on.
+            """
             return lambda now: turn_light_on_before_sunset(light_id)
 
         for index, light_id in enumerate(light_ids):
             track_point_in_time(hass, turn_on(light_id),
                                 start_point + index * LIGHT_TRANSITION_TIME)
 
-    # If the sun is already above horizon
-    # schedule the time-based pre-sun set event
+    # If the sun is already above horizon schedule the time-based pre-sun set
+    # event.
     if sun.is_on(hass):
         schedule_lights_at_sun_set(hass, None, None, None)
 
