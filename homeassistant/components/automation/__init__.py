@@ -1,6 +1,5 @@
 """
-homeassistant.components.automation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Allows to setup simple automation rules via the config file.
 
 For more details about this component, please refer to the documentation at
@@ -35,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """ Sets up automation. """
+    """Setup the automation."""
     config_key = DOMAIN
     found = 1
 
@@ -64,8 +63,7 @@ def setup(hass, config):
 
 
 def _setup_automation(hass, config_block, name, config):
-    """ Setup one instance of automation """
-
+    """Setup one instance of automation."""
     action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
     if action is None:
@@ -83,14 +81,13 @@ def _setup_automation(hass, config_block, name, config):
 
 
 def _get_action(hass, config, name):
-    """ Return an action based on a config. """
-
+    """Return an action based on a configuration."""
     if CONF_SERVICE not in config:
         _LOGGER.error('Error setting up %s, no action specified.', name)
         return None
 
     def action():
-        """ Action to be executed. """
+        """Action to be executed."""
         _LOGGER.info('Executing %s', name)
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
 
@@ -100,7 +97,7 @@ def _get_action(hass, config, name):
 
 
 def _migrate_old_config(config):
-    """ Migrate old config to new. """
+    """Migrate old configuration to new."""
     if CONF_PLATFORM not in config:
         return config
 
@@ -134,8 +131,7 @@ def _migrate_old_config(config):
 
 
 def _process_if(hass, config, p_config, action):
-    """ Processes if checks. """
-
+    """Processes if checks."""
     cond_type = p_config.get(CONF_CONDITION_TYPE,
                              DEFAULT_CONDITION_TYPE).lower()
 
@@ -165,12 +161,12 @@ def _process_if(hass, config, p_config, action):
 
     if cond_type == CONDITION_TYPE_AND:
         def if_action():
-            """ AND all conditions. """
+            """AND all conditions."""
             if all(check() for check in checks):
                 action()
     else:
         def if_action():
-            """ OR all conditions. """
+            """OR all conditions."""
             if any(check() for check in checks):
                 action()
 
@@ -178,7 +174,7 @@ def _process_if(hass, config, p_config, action):
 
 
 def _process_trigger(hass, config, trigger_configs, name, action):
-    """ Setup triggers. """
+    """Setup the triggers."""
     if isinstance(trigger_configs, dict):
         trigger_configs = [trigger_configs]
 
@@ -195,7 +191,7 @@ def _process_trigger(hass, config, trigger_configs, name, action):
 
 
 def _resolve_platform(method, hass, config, platform):
-    """ Find automation platform. """
+    """Find the automation platform."""
     if platform is None:
         return None
     platform = prepare_setup_platform(hass, config, DOMAIN, platform)
