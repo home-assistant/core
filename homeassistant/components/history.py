@@ -11,7 +11,7 @@ from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
 
-import homeassistant.components.recorder as recorder
+from homeassistant.components import recorder, script
 import homeassistant.util.dt as dt_util
 from homeassistant.const import HTTP_BAD_REQUEST
 
@@ -19,6 +19,7 @@ DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
 SIGNIFICANT_DOMAINS = ('thermostat',)
+IGNORE_DOMAINS = ('zone', 'scene',)
 
 URL_HISTORY_PERIOD = re.compile(
     r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
@@ -46,9 +47,10 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
 
     """
     where = """
-        (domain in ({}) or last_changed=last_updated)
-        AND last_updated > ?
-    """.format(",".join(["'%s'" % x for x in SIGNIFICANT_DOMAINS]))
+        (domain IN ({}) OR last_changed=last_updated)
+        AND domain NOT IN ({}) AND last_updated > ?
+    """.format(",".join("'%s'" % x for x in SIGNIFICANT_DOMAINS),
+               ",".join("'%s'" % x for x in IGNORE_DOMAINS))
 
     data = [start_time]
 
@@ -63,7 +65,8 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
     query = ("SELECT * FROM states WHERE {} "
              "ORDER BY entity_id, last_updated ASC").format(where)
 
-    states = recorder.query_states(query, data)
+    states = (state for state in recorder.query_states(query, data)
+              if _is_significant(state))
 
     return states_to_json(states, start_time, entity_id)
 
@@ -200,3 +203,13 @@ def _api_history_period(handler, path_match, data):
 
     handler.write_json(
         get_significant_states(start_time, end_time, entity_id).values())
+
+
+def _is_significant(state):
+    """Test if state is significant for history charts.
+
+    Will only test for things that are not filtered out in SQL.
+    """
+    # scripts that are not cancellable will never change state
+    return (state.domain != 'script' or
+            state.attributes.get(script.ATTR_CAN_CANCEL))

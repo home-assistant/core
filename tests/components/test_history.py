@@ -148,7 +148,7 @@ class TestComponentHistory(unittest.TestCase):
         """test that only significant states are returned with
         get_significant_states.
 
-        We inject a bunch of state updates from media player and
+        We inject a bunch of state updates from media player, zone and
         thermostat. We should get back every thermostat change that
         includes an attribute change, but only the state updates for
         media player (attribute changes are not significant and not returned).
@@ -157,6 +157,9 @@ class TestComponentHistory(unittest.TestCase):
         self.init_recorder()
         mp = 'media_player.test'
         therm = 'thermostat.test'
+        zone = 'zone.home'
+        script_nc = 'script.cannot_cancel_this_one'
+        script_c = 'script.can_cancel_this_one'
 
         def set_state(entity_id, state, **kwargs):
             self.hass.states.set(entity_id, state, **kwargs)
@@ -169,7 +172,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], mp: []}
+        states = {therm: [], mp: [], script_c: []}
         with patch('homeassistant.components.recorder.dt_util.utcnow',
                    return_value=one):
             states[mp].append(
@@ -186,6 +189,11 @@ class TestComponentHistory(unittest.TestCase):
             # this state will be skipped only different in time
             set_state(mp, 'YouTube',
                       attributes={'media_title': str(sentinel.mt3)})
+            # this state will be skipped because domain blacklisted
+            set_state(zone, 'zoning')
+            set_state(script_nc, 'off')
+            states[script_c].append(
+                set_state(script_c, 'off', attributes={'can_cancel': True}))
             states[therm].append(
                 set_state(therm, 21, attributes={'current_temperature': 19.8}))
 
@@ -199,4 +207,4 @@ class TestComponentHistory(unittest.TestCase):
                 set_state(therm, 21, attributes={'current_temperature': 20}))
 
         hist = history.get_significant_states(zero, four)
-        self.assertEqual(states, hist)
+        assert states == hist
