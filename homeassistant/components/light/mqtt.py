@@ -119,12 +119,12 @@ class MqttLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def rgb_color(self):
-        """RGB color value."""
+        """Return the RGB color value."""
         return self._rgb
 
     @property
@@ -134,17 +134,17 @@ class MqttLight(Light):
 
     @property
     def name(self):
-        """Name of the device if any."""
+        """Return the name of the device if any."""
         return self._name
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
 
     @property
     def assumed_state(self):
-        """Return True if we do optimistic updates."""
+        """Return true if we do optimistic updates."""
         return self._optimistic
 
     def turn_on(self, **kwargs):

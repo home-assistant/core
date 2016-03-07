@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.wemo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Belkin WeMo lights.
 
 For more details about this component, please refer to the documentation at
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Probe WeMo bridges and register connected lights."""
+    """Setup WeMo bridges and register connected lights."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
@@ -40,8 +38,7 @@ def setup_bridge(bridge, add_devices_callback):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
-        """Updates the WeMo led objects with latest info from the bridge."""
-
+        """Update the WeMo led objects with latest info from the bridge."""
         bridge.bridge_get_lights()
 
         new_lights = []
@@ -61,9 +58,10 @@ def setup_bridge(bridge, add_devices_callback):
 
 
 class WemoLight(Light):
-    """Represents a WeMo light"""
+    """Representation of a WeMo light."""
 
     def __init__(self, bridge, light_id, info, update_lights):
+        """Initialize the light."""
         self.bridge = bridge
         self.light_id = light_id
         self.info = info
@@ -71,18 +69,18 @@ class WemoLight(Light):
 
     @property
     def unique_id(self):
-        """Returns the id of this light"""
+        """Return the ID of this light."""
         deviceid = self.bridge.light_get_id(self.info)
         return "{}.{}".format(self.__class__, deviceid)
 
     @property
     def name(self):
-        """Get the name of the light."""
+        """Return the name of the light."""
         return self.bridge.light_name(self.info)
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
+        """Return the brightness of this light between 0..255."""
         state = self.bridge.light_get_state(self.info)
         return int(state['dim'])
 
