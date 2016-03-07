@@ -1,6 +1,4 @@
-"""
-YAML utility functions.
-"""
+"""YAML utility functions."""
 import logging
 import os
 from collections import OrderedDict
@@ -26,8 +24,7 @@ def load_yaml(fname):
 
 
 def _include_yaml(loader, node):
-    """
-    Loads another YAML file and embeds it using the !include tag.
+    """Load another YAML file and embeds it using the !include tag.
 
     Example:
         device_tracker: !include device_tracker.yaml
@@ -37,9 +34,7 @@ def _include_yaml(loader, node):
 
 
 def _ordered_dict(loader, node):
-    """
-    Loads YAML mappings into an ordered dict to preserve key order.
-    """
+    """Load YAML mappings into an ordered dict to preserve key order."""
     loader.flatten_mapping(node)
     return OrderedDict(loader.construct_pairs(node))
 
