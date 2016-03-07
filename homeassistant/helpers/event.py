@@ -1,6 +1,4 @@
-"""
-Helpers for listening to events
-"""
+"""Helpers for listening to events."""
 import functools as ft
 from datetime import timedelta
 
@@ -11,8 +9,8 @@ from ..util import dt as dt_util
 
 def track_state_change(hass, entity_ids, action, from_state=None,
                        to_state=None):
-    """
-    Track specific state changes.
+    """Track specific state changes.
+
     entity_ids, from_state and to_state can be string or list.
     Use list to match multiple.
 
@@ -30,7 +28,7 @@ def track_state_change(hass, entity_ids, action, from_state=None,
 
     @ft.wraps(action)
     def state_change_listener(event):
-        """ The listener that listens for specific state changes. """
+        """The listener that listens for specific state changes."""
         if event.data['entity_id'] not in entity_ids:
             return
 
@@ -55,29 +53,25 @@ def track_state_change(hass, entity_ids, action, from_state=None,
 
 
 def track_point_in_time(hass, action, point_in_time):
-    """
-    Adds a listener that fires once after a spefic point in time.
-    """
+    """Add a listener that fires once after a spefic point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
     def utc_converter(utc_now):
-        """ Converts passed in UTC now to local now. """
+        """Convert passed in UTC now to local now."""
         action(dt_util.as_local(utc_now))
 
     return track_point_in_utc_time(hass, utc_converter, utc_point_in_time)
 
 
 def track_point_in_utc_time(hass, action, point_in_time):
-    """
-    Adds a listener that fires once after a specific point in UTC time.
-    """
+    """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
 
     @ft.wraps(action)
     def point_in_time_listener(event):
-        """ Listens for matching time_changed events. """
+        """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
 
         if now >= point_in_time and \
@@ -100,14 +94,12 @@ def track_point_in_utc_time(hass, action, point_in_time):
 
 
 def track_sunrise(hass, action, offset=None):
-    """
-    Adds a listener that will fire a specified offset from sunrise daily.
-    """
+    """Add a listener that will fire a specified offset from sunrise daily."""
     from homeassistant.components import sun
     offset = offset or timedelta()
 
     def next_rise():
-        """ Returns next sunrise. """
+        """Return the next sunrise."""
         next_time = sun.next_rising_utc(hass) + offset
 
         while next_time < dt_util.utcnow():
@@ -116,7 +108,7 @@ def track_sunrise(hass, action, offset=None):
         return next_time
 
     def sunrise_automation_listener(now):
-        """ Called when it's time for action. """
+        """Called when it's time for action."""
         track_point_in_utc_time(hass, sunrise_automation_listener, next_rise())
         action()
 
@@ -124,14 +116,12 @@ def track_sunrise(hass, action, offset=None):
 
 
 def track_sunset(hass, action, offset=None):
-    """
-    Adds a listener that will fire a specified offset from sunset daily.
-    """
+    """Add a listener that will fire a specified offset from sunset daily."""
     from homeassistant.components import sun
     offset = offset or timedelta()
 
     def next_set():
-        """ Returns next sunrise. """
+        """Return next sunrise."""
         next_time = sun.next_setting_utc(hass) + offset
 
         while next_time < dt_util.utcnow():
@@ -140,7 +130,7 @@ def track_sunset(hass, action, offset=None):
         return next_time
 
     def sunset_automation_listener(now):
-        """ Called when it's time for action. """
+        """Called when it's time for action."""
         track_point_in_utc_time(hass, sunset_automation_listener, next_set())
         action()
 
@@ -150,13 +140,13 @@ def track_sunset(hass, action, offset=None):
 # pylint: disable=too-many-arguments
 def track_utc_time_change(hass, action, year=None, month=None, day=None,
                           hour=None, minute=None, second=None, local=False):
-    """ Adds a listener that will fire if time matches a pattern. """
+    """Add a listener that will fire if time matches a pattern."""
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None for val in (year, month, day, hour, minute, second)):
         @ft.wraps(action)
         def time_change_listener(event):
-            """ Fires every time event that comes in. """
+            """Fire every time event that comes in."""
             action(event.data[ATTR_NOW])
 
         hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
@@ -168,7 +158,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 
     @ft.wraps(action)
     def pattern_time_change_listener(event):
-        """ Listens for matching time_changed events. """
+        """Listen for matching time_changed events."""
         now = event.data[ATTR_NOW]
 
         if local:
@@ -192,13 +182,13 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 # pylint: disable=too-many-arguments
 def track_time_change(hass, action, year=None, month=None, day=None,
                       hour=None, minute=None, second=None):
-    """ Adds a listener that will fire if UTC time matches a pattern. """
+    """Add a listener that will fire if UTC time matches a pattern."""
     track_utc_time_change(hass, action, year, month, day, hour, minute, second,
                           local=True)
 
 
 def _process_match_param(parameter):
-    """ Wraps parameter in a tuple if it is not one and returns it. """
+    """Wrap parameter in a tuple if it is not one and returns it."""
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL
     elif isinstance(parameter, str) and parameter.startswith('/'):
@@ -210,7 +200,7 @@ def _process_match_param(parameter):
 
 
 def _matcher(subject, pattern):
-    """ Returns True if subject matches the pattern.
+    """Return True if subject matches the pattern.
 
     Pattern is either a tuple of allowed subjects or a `MATCH_ALL`.
     """
