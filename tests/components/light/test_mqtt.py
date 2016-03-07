@@ -305,3 +305,25 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual([75, 75, 75], state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
+
+    def test_show_brightness_if_only_command_topic(self):
+        self.assertTrue(light.setup(self.hass, {
+            'light': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'brightness_command_topic': 'test_light_rgb/brightness/set',
+                'command_topic': 'test_light_rgb/set',
+                'state_topic': 'test_light_rgb/status',
+            }
+        }))
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('brightness'))
+
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'ON')
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
