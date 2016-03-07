@@ -32,9 +32,10 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
     def __init__(self, value):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
+        from homeassistant.helpers.temperature import convert
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
-        self._target_temperature = 71
+        self._target_temperature = round(convert(71, TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
         self._current_temperature = 90
         self._current_operation = "Idle"
         self._current_operation_state = "Idle"
