@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.luci
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a OpenWRT router for device
-presence.
+Support for OpenWRT routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.luci/
@@ -20,14 +17,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Luci scanner. """
+    """Validates configuration and returns a Luci scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -52,7 +49,6 @@ class LuciDeviceScanner(object):
 
     (Currently, we do only wifi iwscan, and no DHCP lease access.)
     """
-
     def __init__(self, config):
         host = config[CONF_HOST]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
@@ -73,14 +69,12 @@ class LuciDeviceScanner(object):
         """
         Scans for new devices and return a list containing found device ids.
         """
-
         self._update_info()
 
         return self.last_results
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Returns the name of the given device or None if we don't know."""
         with self.lock:
             if self.mac2name is None:
                 url = 'http://{}/cgi-bin/luci/rpc/uci'.format(self.host)
@@ -127,7 +121,7 @@ class LuciDeviceScanner(object):
 
 
 def _req_json_rpc(url, method, *args, **kwargs):
-    """ Perform one JSON RPC operation. """
+    """Perform one JSON RPC operation."""
     data = json.dumps({'method': method, 'params': args})
     try:
         res = requests.post(url, data=data, timeout=5, **kwargs)
@@ -157,6 +151,6 @@ def _req_json_rpc(url, method, *args, **kwargs):
 
 
 def _get_token(host, username, password):
-    """ Get authentication token for the given host+username+password. """
+    """Get authentication token for the given host+username+password."""
     url = 'http://{}/cgi-bin/luci/rpc/auth'.format(host)
     return _req_json_rpc(url, 'login', username, password)

@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.aruba
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Aruba Access Point for device
-presence.
+Support for Aruba Access Points.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.aruba/
@@ -31,7 +28,7 @@ _DEVICES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a Aruba scanner. """
+    """Validates configuration and returns a Aruba scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -43,8 +40,7 @@ def get_scanner(hass, config):
 
 
 class ArubaDeviceScanner(object):
-    """ This class queries a Aruba Acces Point for connected devices. """
-
+    """This class queries a Aruba Access Point for connected devices."""
     def __init__(self, config):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
@@ -62,12 +58,11 @@ class ArubaDeviceScanner(object):
         """
         Scans for new devices and return a list containing found device IDs.
         """
-
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
+        """Returns the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -93,8 +88,7 @@ class ArubaDeviceScanner(object):
             return True
 
     def get_aruba_data(self):
-        """ Retrieve data from Aruba Access Point and return parsed result. """
-
+        """Retrieve data from Aruba Access Point and return parsed result."""
         import pexpect
         connect = "ssh {}@{}"
         ssh = pexpect.spawn(connect.format(self.username, self.host))
