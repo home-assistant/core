@@ -1,7 +1,5 @@
 """
-homeassistant.components.scene
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows users to set and activate scenes.
+Allow users to set and activate scenes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
@@ -25,7 +23,7 @@ SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
 def activate(hass, entity_id=None):
-    """ Activate a scene. """
+    """Activate a scene."""
     data = {}
 
     if entity_id:
@@ -35,8 +33,7 @@ def activate(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """ Sets up scenes. """
-
+    """Setup the scenes."""
     logger = logging.getLogger(__name__)
 
     # You are not allowed to mutate the original config so make a copy
@@ -58,7 +55,7 @@ def setup(hass, config):
     component.setup(config)
 
     def handle_scene_service(service):
-        """ Handles calls to the switch services. """
+        """Handle calls to the switch services."""
         target_scenes = component.extract_from_service(service)
 
         for scene in target_scenes:
@@ -70,16 +67,18 @@ def setup(hass, config):
 
 
 class Scene(Entity):
-    """ A scene is a group of entities and the states we want them to be. """
+    """A scene is a group of entities and the states we want them to be."""
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def state(self):
+        """Return the state."""
         return STATE
 
     def activate(self):
-        """ Activates scene. Tries to get entities into requested state. """
+        """Activate scene. Tries to get entities into requested state."""
         raise NotImplementedError
