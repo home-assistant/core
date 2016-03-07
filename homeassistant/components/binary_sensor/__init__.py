@@ -1,6 +1,5 @@
 """
-Component to interface with binary sensors (sensors which only know two states)
-that can be monitored.
+Component to interface with binary sensors.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor/
