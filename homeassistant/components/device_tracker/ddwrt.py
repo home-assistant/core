@@ -27,7 +27,7 @@ _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Validates config and returns a DD-WRT scanner."""
+    """Validate the configuration and return a DD-WRT scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -40,11 +40,10 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
-    """
-    This class queries a wireless router running DD-WRT firmware
-    for connected devices. Adapted from Tomato scanner.
-    """
+    """This class queries a wireless router running DD-WRT firmware."""
+
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -61,15 +60,13 @@ class DdWrtDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return self.last_results
 
     def get_device_name(self, device):
-        """Returns the name of the given device or None if we don't know."""
+        """Return the name of the given device or None if we don't know."""
         with self.lock:
             # If not initialised and not already scanned and not found.
             if device not in self.mac2name:
@@ -102,9 +99,9 @@ class DdWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the DD-WRT router is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the DD-WRT router is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
