@@ -42,7 +42,7 @@ MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """Initialize camera component."""
+    """Setup the camera component."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
@@ -121,6 +121,7 @@ def setup(hass, config):
 
 class Camera(Entity):
     """The base class for camera entities."""
+
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
