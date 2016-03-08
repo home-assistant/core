@@ -37,9 +37,11 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
         self._target_temperature = round(convert(71,
-            TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
+                                                 TEMP_FAHRENHEIT,
+                                                 self.hass.config.temperature_unit))
         self._current_temperature = round(convert(90,
-            TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
+                                                  TEMP_FAHRENHEIT,
+                                                  self.hass.config.temperature_unit))
         self._current_operation = STATE_IDLE
         self._current_operation_state = STATE_IDLE
         self.update_properties()
