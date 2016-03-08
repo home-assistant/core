@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Demo sensors."""
+    """Setup the Demo sensors."""
     add_devices([
         DemoSensor('Outside Temperature', 15.6, TEMP_CELCIUS, 12),
         DemoSensor('Outside Humidity', 54, '%', None),
@@ -18,8 +18,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoSensor(Entity):
-    """A Demo sensor."""
+    """Representation of a Demo sensor."""
+
     def __init__(self, name, state, unit_of_measurement, battery):
+        """Initialize the sensor."""
         self._name = name
         self._state = state
         self._unit_of_measurement = unit_of_measurement

@@ -18,16 +18,17 @@ DOMAIN = 'twitch'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Twitch platform."""
+    """Setup the Twitch platform."""
     add_devices(
         [TwitchSensor(channel) for channel in config.get('channels', [])])
 
 
 class TwitchSensor(Entity):
-    """Represents an Twitch channel."""
+    """Representation of an Twitch channel."""
 
     # pylint: disable=abstract-method
     def __init__(self, channel):
+        """Initialize the sensor."""
         self._channel = channel
         self._state = STATE_OFFLINE
         self._preview = None
@@ -42,17 +43,17 @@ class TwitchSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._channel
 
     @property
     def state(self):
-        """State of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def entity_picture(self):
-        """Preview of current game."""
+        """Return preview of current game."""
         return self._preview
 
     # pylint: disable=no-member
@@ -71,7 +72,7 @@ class TwitchSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         if self._state == STATE_STREAMING:
             return {
                 ATTR_GAME: self._game,
