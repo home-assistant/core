@@ -51,11 +51,14 @@ def setup(hass, config):
 
 
 class APCUPSdData(object):
+    """Stores the data retrieved from APCUPSd.
+
+    For each entity to use, acts as the single point responsible for fetching
+    updates from the server.
     """
-    Stores the data retrieved from APCUPSd for each entity to use, acts as the
-    single point responsible for fetching updates from the server.
-    """
+
     def __init__(self, host, port):
+        """Initialize the data oject."""
         from apcaccess import status
         self._host = host
         self._port = port
@@ -75,7 +78,5 @@ class APCUPSdData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
-        """
-        Fetch the latest status from APCUPSd and store it in self._status.
-        """
+        """Fetch the latest status from APCUPSd."""
         self._status = self._get_status()

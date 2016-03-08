@@ -70,9 +70,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
 
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
-    """
-    Return states changes during UTC period start_time - end_time.
-    """
+    """Return states changes during UTC period start_time - end_time."""
     where = "last_changed=last_updated AND last_changed > ? "
     data = [start_time]
 
@@ -93,7 +91,7 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
 
 def get_states(utc_point_in_time, entity_ids=None, run=None):
-    """Returns the states at a specific point in time."""
+    """Return the states at a specific point in time."""
     if run is None:
         run = recorder.run_information(utc_point_in_time)
 
@@ -122,8 +120,7 @@ def get_states(utc_point_in_time, entity_ids=None, run=None):
 
 
 def states_to_json(states, start_time, entity_id):
-    """
-    Converts SQL results into JSON friendly data structure.
+    """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
     structure {'entity_id': [list of states], 'entity_id2': [list of states]}
@@ -157,7 +154,7 @@ def get_state(utc_point_in_time, entity_id, run=None):
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup history hooks."""
+    """Setup the history hooks."""
     hass.http.register_path(
         'GET',
         re.compile(
@@ -204,8 +201,7 @@ def _api_history_period(handler, path_match, data):
 
 
 def _is_significant(state):
-    """
-    Test if state is significant for history charts.
+    """Test if state is significant for history charts.
 
     Will only test for things that are not filtered out in SQL.
     """

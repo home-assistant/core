@@ -23,19 +23,18 @@ REQUIREMENTS = ['fuzzywuzzy==0.8.0']
 
 
 def setup(hass, config):
-    """Registers the process service."""
+    """Register the process service."""
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
 
     def process(service):
-        """Parses text into commands."""
+        """Parse text into commands."""
         if ATTR_TEXT not in service.data:
             logger.error("Received process service call without a text")
             return
 
         text = service.data[ATTR_TEXT].lower()
-
         match = REGEX_TURN_COMMAND.match(text)
 
         if not match:
@@ -43,11 +42,8 @@ def setup(hass, config):
             return
 
         name, command = match.groups()
-
         entities = {state.entity_id: state.name for state in hass.states.all()}
-
-        entity_ids = fuzzyExtract.extractOne(name,
-                                             entities,
+        entity_ids = fuzzyExtract.extractOne(name, entities,
                                              score_cutoff=65)[2]
 
         if not entity_ids:

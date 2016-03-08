@@ -61,8 +61,10 @@ def request_sensors():
 
 
 class TelldusLiveData(object):
-    """Gets the latest data and update the states."""
+    """Get the latest data and update the states."""
+
     def __init__(self, hass, config):
+        """Initialize the Tellus data object."""
         public_key = config[DOMAIN].get(CONF_PUBLIC_KEY)
         private_key = config[DOMAIN].get(CONF_PRIVATE_KEY)
         token = config[DOMAIN].get(CONF_TOKEN)
@@ -111,7 +113,7 @@ class TelldusLiveData(object):
                              ATTR_DISCOVERED: found_devices})
 
     def request(self, what, **params):
-        """Sends a request to the Tellstick Live API."""
+        """Send a request to the Tellstick Live API."""
         from tellive.live import const
 
         supported_methods = const.TELLSTICK_TURNON \

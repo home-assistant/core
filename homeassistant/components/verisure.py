@@ -58,8 +58,10 @@ def setup(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class VerisureHub(object):
-    """A Verisure wrapper class."""
+    """A Verisure hub wrapper class."""
+
     def __init__(self, domain_config, verisure):
+        """Initialize the Verisure hub."""
         self.alarm_status = {}
         self.lock_status = {}
         self.climate_status = {}
@@ -93,41 +95,41 @@ class VerisureHub(object):
 
     @Throttle(timedelta(seconds=1))
     def update_alarms(self):
-        """Updates the status of the alarm."""
+        """Update the status of the alarm."""
         self.update_component(
             self.my_pages.alarm.get,
             self.alarm_status)
 
     @Throttle(timedelta(seconds=1))
     def update_locks(self):
-        """Updates the status of the locks."""
+        """Update the status of the locks."""
         self.update_component(
             self.my_pages.lock.get,
             self.lock_status)
 
     @Throttle(timedelta(seconds=60))
     def update_climate(self):
-        """Updates the status of the climate units."""
+        """Update the status of the climate units."""
         self.update_component(
             self.my_pages.climate.get,
             self.climate_status)
 
     @Throttle(timedelta(seconds=60))
     def update_mousedetection(self):
-        """Updates the status of the mouse detectors."""
+        """Update the status of the mouse detectors."""
         self.update_component(
             self.my_pages.mousedetection.get,
             self.mouse_status)
 
     @Throttle(timedelta(seconds=1))
     def update_smartplugs(self):
-        """Updates the status of the smartplugs."""
+        """Update the status of the smartplugs."""
         self.update_component(
             self.my_pages.smartplug.get,
             self.smartplug_status)
 
     def update_component(self, get_function, status):
-        """Updates the status of Verisure components."""
+        """Update the status of Verisure components."""
         if self._wrong_password_given:
             _LOGGER.error('Wrong password for Verisure, update config')
             return

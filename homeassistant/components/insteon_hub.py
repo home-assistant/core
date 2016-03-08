@@ -22,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """
-    Setup Insteon Hub component.
+    """Setup Insteon Hub component.
+
     This will automatically import associated lights.
     """
     if not validate_config(
@@ -56,8 +56,10 @@ def setup(hass, config):
 
 
 class InsteonToggleDevice(ToggleEntity):
-    """ An abstract Class for an Insteon node."""
+    """An abstract Class for an Insteon node."""
+
     def __init__(self, node):
+        """Initialize the device."""
         self.node = node
         self._value = 0
 
@@ -85,7 +87,9 @@ class InsteonToggleDevice(ToggleEntity):
         return self._value != 0
 
     def turn_on(self, **kwargs):
+        """Turn device on."""
         self.node.send_command('on')
 
     def turn_off(self, **kwargs):
+        """Turn device off."""
         self.node.send_command('off')
