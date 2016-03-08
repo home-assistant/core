@@ -1,4 +1,6 @@
 """
+Support for recording details.
+
 Component that records all events and state changes. Allows other components
 to query this database.
 
@@ -80,8 +82,9 @@ def row_to_event(row):
 
 
 def run_information(point_in_time=None):
-    """
-    Returns information about current run or the run that covers point_in_time.
+    """Return information about current run.
+
+    There is also the run that covers point_in_time.
     """
     _verify_instance()
 
@@ -106,8 +109,10 @@ def setup(hass, config):
 
 
 class RecorderRun(object):
-    """Represents a recorder run."""
+    """Representation of arecorder run."""
+
     def __init__(self, row=None):
+        """Initialize the recorder run."""
         self.end = None
 
         if row is None:
@@ -122,8 +127,8 @@ class RecorderRun(object):
             self.closed_incorrect = bool(row[3])
 
     def entity_ids(self, point_in_time=None):
-        """
-        Return the entity ids that existed in this run.
+        """Return the entity ids that existed in this run.
+
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
@@ -140,15 +145,18 @@ class RecorderRun(object):
 
     @property
     def where_after_start_run(self):
-        """
-        Returns SQL WHERE clause to select rows created after the start of the
-        run.
+        """Return SQL WHERE clause.
+
+        Selection of the rows created after the start of the run.
         """
         return "created >= {} ".format(_adapt_datetime(self.start))
 
     @property
     def where_limit_to_run(self):
-        """ Return a SQL WHERE clause to limit results to this run. """
+        """Return a SQL WHERE clause.
+
+        For limiting the results to this run.
+        """
         where = self.where_after_start_run
 
         if self.end is not None:
@@ -159,7 +167,9 @@ class RecorderRun(object):
 
 class Recorder(threading.Thread):
     """A threaded recorder class."""
+
     def __init__(self, hass):
+        """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
@@ -206,14 +216,11 @@ class Recorder(threading.Thread):
             self.queue.task_done()
 
     def event_listener(self, event):
-        """
-        Listens for new events on the EventBus and puts them in the process
-        queue.
-        """
+        """Listen for new events and put them in the process queue."""
         self.queue.put(event)
 
     def shutdown(self, event):
-        """Tells the recorder to shut down."""
+        """Tell the recorder to shut down."""
         self.queue.put(self.quit_object)
         self.block_till_done()
 
@@ -262,7 +269,7 @@ class Recorder(threading.Thread):
             ") VALUES (?, ?, ?, ?, ?, ?)", info, RETURN_LASTROWID)
 
     def query(self, sql_query, data=None, return_value=None):
-        """ Query the database. """
+        """Query the database."""
         try:
             with self.conn, self.lock:
                 _LOGGER.debug("Running query %s", sql_query)
@@ -290,7 +297,7 @@ class Recorder(threading.Thread):
             return []
 
     def block_till_done(self):
-        """Blocks till all events processed."""
+        """Block till all events processed."""
         self.queue.join()
 
     def _setup_connection(self):
@@ -474,6 +481,6 @@ def _adapt_datetime(datetimestamp):
 
 
 def _verify_instance():
-    """Throws error if recorder not initialized."""
+    """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")

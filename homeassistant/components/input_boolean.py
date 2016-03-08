@@ -84,9 +84,10 @@ def setup(hass, config):
 
 
 class InputBoolean(ToggleEntity):
-    """Represent a boolean input."""
+    """Representation of a boolean input."""
+
     def __init__(self, object_id, name, state, icon):
-        """ Initialize a boolean input. """
+        """Initialize a boolean input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = state

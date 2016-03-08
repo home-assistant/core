@@ -157,6 +157,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
 
 class GatewayWrapper(object):
     """Gateway wrapper class."""
+
     def __init__(self, gateway, version, optimistic):
         """Setup class attributes on instantiation.
 

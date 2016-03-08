@@ -1,6 +1,5 @@
 """
-Component that records all events and state changes and feeds the data to
-a Graphite installation.
+Component that sends data to aGraphite installation.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/graphite/
@@ -35,8 +34,10 @@ def setup(hass, config):
 
 
 class GraphiteFeeder(threading.Thread):
-    """Feeds data to Graphite."""
+    """Feed data to Graphite."""
+
     def __init__(self, hass, host, port, prefix):
+        """Initialize the feeder."""
         super(GraphiteFeeder, self).__init__(daemon=True)
         self._hass = hass
         self._host = host

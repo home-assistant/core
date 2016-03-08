@@ -91,25 +91,26 @@ NETWORK = None
 
 
 def _obj_to_dict(obj):
-    """Converts an obj into a hash for debug."""
+    """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
 def _node_name(node):
-    """Returns the name of the node."""
+    """Return the name of the node."""
     return node.name or "{} {}".format(
         node.manufacturer_name, node.product_name)
 
 
 def _value_name(value):
-    """Returns the name of the value."""
+    """Return the name of the value."""
     return "{} {}".format(_node_name(value.node), value.label)
 
 
 def _object_id(value):
-    """Returns the object_id of the device value.
+    """Return the object_id of the device value.
+
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
@@ -124,7 +125,7 @@ def _object_id(value):
 
 
 def nice_print_node(node):
-    """Prints a nice formatted node to the output (debug method)."""
+    """Print a nice formatted node to the output (debug method)."""
     node_dict = _obj_to_dict(node)
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
@@ -136,7 +137,7 @@ def nice_print_node(node):
 
 
 def get_config_value(node, value_index):
-    """Returns the current configuration value for a specific index."""
+    """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
             # 112 == config command class
@@ -149,8 +150,8 @@ def get_config_value(node, value_index):
 
 
 def setup(hass, config):
-    """
-    Setup Z-wave.
+    """Setup Z-Wave.
+
     Will automatically load components to support devices found on the network.
     """
     # pylint: disable=global-statement, import-error
@@ -178,7 +179,7 @@ def setup(hass, config):
 
     if use_debug:
         def log_all(signal, value=None):
-            """ Log all the signals. """
+            """Log all the signals."""
             print("")
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
@@ -249,11 +250,11 @@ def setup(hass, config):
         NETWORK.controller.begin_command_remove_device()
 
     def stop_zwave(event):
-        """Stop Z-wave."""
+        """Stop Z-Wave."""
         NETWORK.stop()
 
     def start_zwave(event):
-        """Startup """
+        """Startup Z-Wave."""
         NETWORK.start()
 
         polling_interval = convert(
@@ -274,8 +275,10 @@ def setup(hass, config):
 
 
 class ZWaveDeviceEntity:
-    """Represents a Z-Wave node entity."""
+    """Representation of a Z-Wave node entity."""
+
     def __init__(self, value, domain):
+        """Initialize the z-Wave device."""
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
 
@@ -286,25 +289,26 @@ class ZWaveDeviceEntity:
 
     @property
     def unique_id(self):
-        """Returns a unique id."""
+        """Return an unique ID."""
         return "ZWAVE-{}-{}".format(self._value.node.node_id,
                                     self._value.object_id)
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the device."""
         return _value_name(self._value)
 
     def _object_id(self):
-        """
-        Returns the object_id of the device value. The object_id contains
-        node_id and value instance id to not collide with other entity_ids.
+        """Return the object_id of the device value.
+
+        The object_id contains node_id and value instance id to not collide
+        with other entity_ids.
         """
         return _object_id(self._value)
 
     @property
     def device_state_attributes(self):
-        """Return device specific state attributes."""
+        """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self._value.node.node_id,
         }

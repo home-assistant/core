@@ -37,8 +37,8 @@ SERVICE_HANDLERS = {
 
 
 def listen(hass, service, callback):
-    """
-    Setup listener for discovery of specific service.
+    """Setup listener for discovery of specific service.
+
     Service can be a string or a list/tuple.
     """
     if isinstance(service, str):
@@ -70,7 +70,7 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
 
 
 def setup(hass, config):
-    """Starts a discovery service."""
+    """Start a discovery service."""
     logger = logging.getLogger(__name__)
 
     from netdisco.service import DiscoveryService

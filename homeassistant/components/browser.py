@@ -10,9 +10,7 @@ SERVICE_BROWSE_URL = "browse_url"
 
 
 def setup(hass, config):
-    """
-    Listen for browse_url events and open the url in the default web browser.
-    """
+    """Listen for browse_url events."""
     import webbrowser
 
     hass.services.register(DOMAIN, SERVICE_BROWSE_URL,

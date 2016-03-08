@@ -1,6 +1,5 @@
 """
-Provides functionality to turn on lights based on the state of the sun and
-devices home.
+Provides functionality to turn on lights based on the states.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_sun_light_trigger/
@@ -29,7 +28,7 @@ CONF_DEVICE_GROUP = 'device_group'
 
 # pylint: disable=too-many-locals
 def setup(hass, config):
-    """Triggers to turn lights on or off based on device presence."""
+    """The triggers to turn lights on or off based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = get_component('device_tracker')
     group = get_component('group')
@@ -57,16 +56,20 @@ def setup(hass, config):
         return False
 
     def calc_time_for_light_when_sunset():
-        """ Calculates the time when to start fading lights in when sun sets.
-        Returns None if no next_setting data available. """
+        """Calculate the time when to start fading lights in when sun sets.
+
+        Returns None if no next_setting data available.
+        """
         next_setting = sun.next_setting(hass)
         if not next_setting:
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
     def turn_light_on_before_sunset(light_id):
-        """ Helper function to turn on lights slowly if there
-            are devices home and the light is not on yet. """
+        """Helper function to turn on lights.
+
+        Speed is slow if there are devices home and the light is not on yet.
+        """
         if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
             return
         light.turn_on(hass, light_id,
@@ -78,8 +81,8 @@ def setup(hass, config):
     @track_state_change(sun.ENTITY_ID, sun.STATE_BELOW_HORIZON,
                         sun.STATE_ABOVE_HORIZON)
     def schedule_lights_at_sun_set(hass, entity, old_state, new_state):
-        """
-        The moment sun sets we want to have all the lights on.
+        """The moment sun sets we want to have all the lights on.
+
         We will schedule to have each light start after one another
         and slowly transition in.
         """
@@ -88,10 +91,10 @@ def setup(hass, config):
             return
 
         def turn_on(light_id):
-            """
-            Lambda can keep track of function parameters but not local
-            parameters. If we put the lambda directly in the below statement
-            only the last light will be turned on.
+            """Lambda can keep track of function parameters.
+
+            No local parameters. If we put the lambda directly in the below
+            statement only the last light will be turned on.
             """
             return lambda now: turn_light_on_before_sunset(light_id)
 

@@ -29,8 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """
-    Setup ISY994 component.
+    """Setup ISY994 component.
+
     This will automatically import associated lights, switches, and sensors.
     """
     import PyISY
@@ -97,6 +97,7 @@ def stop(event):
 
 class ISYDeviceABC(ToggleEntity):
     """An abstract Class for an ISY device."""
+
     _attrs = {}
     _onattrs = []
     _states = []
@@ -105,6 +106,7 @@ class ISYDeviceABC(ToggleEntity):
     _name = None
 
     def __init__(self, node):
+        """Initialize the device."""
         # setup properties
         self.node = node
 
@@ -182,7 +184,7 @@ class ISYDeviceABC(ToggleEntity):
         pass
 
     def on_update(self, event):
-        """Handles the update received event."""
+        """Handle the update received event."""
         self.update_ha_state()
 
     @property
@@ -203,7 +205,7 @@ class ISYDeviceABC(ToggleEntity):
         return self.value
 
     def turn_on(self, **kwargs):
-        """Turns the device on."""
+        """Turn the device on."""
         if self.domain is not 'sensor':
             attrs = [kwargs.get(name) for name in self._onattrs]
             self.node.on(*attrs)
@@ -211,7 +213,7 @@ class ISYDeviceABC(ToggleEntity):
             _LOGGER.error('ISY cannot turn on sensors.')
 
     def turn_off(self, **kwargs):
-        """Turns the device off."""
+        """Turn the device off."""
         if self.domain is not 'sensor':
             self.node.off()
         else:

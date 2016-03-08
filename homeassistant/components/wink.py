@@ -64,7 +64,9 @@ def setup(hass, config):
 
 class WinkToggleDevice(ToggleEntity):
     """Represents a Wink toggle (switch) device."""
+
     def __init__(self, wink):
+        """Initialize the Wink device."""
         self.wink = wink
 
     @property
@@ -79,15 +81,15 @@ class WinkToggleDevice(ToggleEntity):
 
     @property
     def is_on(self):
-        """True if decive is on."""
+        """Return true if device is on."""
         return self.wink.state()
 
     def turn_on(self, **kwargs):
-        """Turns the device on."""
+        """Turn the device on."""
         self.wink.set_state(True)
 
     def turn_off(self):
-        """Turns the device off."""
+        """Turn the device off."""
         self.wink.set_state(False)
 
     def update(self):
