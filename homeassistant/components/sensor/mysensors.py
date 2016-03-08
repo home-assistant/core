@@ -117,7 +117,7 @@ class MySensorsSensor(Entity):
 
     @property
     def name(self):
-        """The name of this entity."""
+        """Return the name of this entity."""
         return self._name
 
     @property
@@ -129,7 +129,7 @@ class MySensorsSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
+        """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         unit_map = {
             set_req.V_TEMP: (TEMP_CELCIUS

@@ -22,7 +22,7 @@ ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Ecobee sensors."""
+    """Setup the Ecobee sensors."""
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -40,9 +40,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EcobeeSensor(Entity):
-    """An Ecobee sensor."""
+    """Representation of an Ecobee sensor."""
 
     def __init__(self, sensor_name, sensor_type, sensor_index):
+        """Initialize the sensor."""
         self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
         self.sensor_name = sensor_name
         self.type = sensor_type
@@ -53,22 +54,22 @@ class EcobeeSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the Ecobee sensor."""
+        """Return the name of the Ecobee sensor."""
         return self._name.rstrip()
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unique_id(self):
-        """Unique id of this sensor."""
+        """Return the unique ID of this sensor."""
         return "sensor_ecobee_{}_{}".format(self._name, self.index)
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement this sensor expresses itself in."""
+        """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
     def update(self):
