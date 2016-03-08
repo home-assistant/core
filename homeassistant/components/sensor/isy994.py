@@ -27,7 +27,7 @@ DEFAULT_HIDDEN_WEATHER = ['Temperature_High', 'Temperature_Low', 'Feels_Like',
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the ISY994 platform."""
+    """Setup the ISY994 platform."""
     # pylint: disable=protected-access
     logger = logging.getLogger(__name__)
     devs = []
@@ -74,9 +74,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class WeatherPseudoNode(object):
     """This class allows weather variable to act as regular nodes."""
-    # pylint: disable=too-few-public-methods
 
+    # pylint: disable=too-few-public-methods
     def __init__(self, device_id, name, status, units=None):
+        """Initialize the sensor."""
         self._id = device_id
         self.name = name
         self.status = status
@@ -84,9 +85,11 @@ class WeatherPseudoNode(object):
 
 
 class ISYSensorDevice(ISYDeviceABC):
-    """Represents a ISY sensor."""
+    """Representation of an ISY sensor."""
+
     _domain = 'sensor'
 
     def __init__(self, node, states=None):
+        """Initialize the device."""
         super().__init__(node)
         self._states = states or []

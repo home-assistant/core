@@ -24,8 +24,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class SteamSensor(Entity):
     """A class for the Steam account."""
+
     # pylint: disable=abstract-method
     def __init__(self, account, steamod):
+        """Initialize the sensor."""
         self._steamod = steamod
         self._account = account
         self.update()
@@ -64,7 +66,7 @@ class SteamSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         return {'Game': self._game}
 
     @property
