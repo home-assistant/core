@@ -106,7 +106,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 
 def setup(hass, config):
-    """Set up all groups found definded in the configuration."""
+    """Setup all groups found definded in the configuration."""
     for object_id, conf in config.get(DOMAIN, {}).items():
         if not isinstance(conf, dict):
             conf = {CONF_ENTITIES: conf}
@@ -129,7 +129,6 @@ class Group(Entity):
     """Track a group of entity ids."""
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
                  icon=None, view=False, object_id=None):
         """Initialize a group."""
@@ -160,30 +159,27 @@ class Group(Entity):
 
     @property
     def name(self):
-        """Name of the group."""
+        """Return the name of the group."""
         return self._name
 
     @property
     def state(self):
-        """State of the group."""
+        """Return the state of the group."""
         return self._state
 
     @property
     def icon(self):
-        """Icon of the group."""
+        """Return the icon of the group."""
         return self._icon
 
     @property
     def hidden(self):
-        """If group should be hidden or not.
-
-        true if group is a view or not user defined.
-        """
+        """If group should be hidden or not."""
         return not self._user_defined or self._view
 
     @property
     def state_attributes(self):
-        """State attributes for the group."""
+        """Return the state attributes for the group."""
         data = {
             ATTR_ENTITY_ID: self.tracking,
             ATTR_ORDER: self._order,
@@ -215,7 +211,7 @@ class Group(Entity):
             self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
-        """Unregisters the group from Home Assistant."""
+        """Unregister the group from Home Assistant."""
         self.hass.states.remove(self.entity_id)
 
         self.hass.bus.remove_listener(
@@ -233,7 +229,7 @@ class Group(Entity):
 
     @property
     def _tracking_states(self):
-        """States that the group is tracking."""
+        """The states that the group is tracking."""
         states = []
 
         for entity_id in self.tracking:

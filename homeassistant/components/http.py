@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Sets up the HTTP API and debug interface."""
+    """Set up the HTTP API and debug interface."""
     conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
@@ -86,6 +86,7 @@ def setup(hass, config):
 # pylint: disable=too-many-instance-attributes
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle HTTP requests in a threaded fashion."""
+
     # pylint: disable=too-few-public-methods
     allow_reuse_address = True
     daemon_threads = True
@@ -93,6 +94,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, ssl_certificate, ssl_key):
+        """Initialize the server."""
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
@@ -116,9 +118,9 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
-        """Starts the HTTP server."""
+        """Start the HTTP server."""
         def stop_http(event):
-            """Stops the HTTP server."""
+            """Stop the HTTP server."""
             self.shutdown()
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
@@ -137,7 +139,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """Registers a path with the server."""
+        """Register a path with the server."""
         self.paths.append((method, url, callback, require_auth))
 
     def log_message(self, fmt, *args):
@@ -148,16 +150,16 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
 # pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
-    """
-    Handles incoming HTTP requests
+    """Handle incoming HTTP requests.
 
     We extend from SimpleHTTPRequestHandler instead of Base so we
     can use the guess content type methods.
     """
+
     server_version = "HomeAssistant/1.0"
 
     def __init__(self, req, client_addr, server):
-        """Contructor, call the base constructor and set up session."""
+        """Constructor, call the base constructor and set up session."""
         # Track if this was an authenticated request
         self.authenticated = False
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
@@ -172,7 +174,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                        if isinstance(arg, str) else arg for arg in arguments))
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
-        """Does some common checks and calls appropriate method."""
+        """Perform some common checks and call appropriate method."""
         url = urlparse(self.path)
 
         # Read query input. parse_qs gives a list for each value, we want last
@@ -302,7 +304,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(message.encode("UTF-8"))
 
     def write_file(self, path, cache_headers=True):
-        """Returns a file to the user."""
+        """Return a file to the user."""
         try:
             with open(path, 'rb') as inp:
                 self.write_file_pointer(self.guess_type(path), inp,
@@ -314,10 +316,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             _LOGGER.exception("Unable to serve %s", path)
 
     def write_file_pointer(self, content_type, inp, cache_headers=True):
-        """
-        Helper function to write a file pointer to the user.
-        Does not do error handling.
-        """
+        """Helper function to write a file pointer to the user."""
         do_gzip = 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, '')
 
         self.send_response(HTTP_OK)
@@ -387,9 +386,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return self.get_cookie_session_id() is not None
 
     def get_cookie_session_id(self):
-        """
-        Extracts the current session id from the cookie or returns None if not
-        set or invalid.
+        """Extract the current session ID from the cookie.
+
+        Return None if not set or invalid.
         """
         if 'Cookie' not in self.headers:
             return None
@@ -413,7 +412,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return None
 
     def destroy_session(self):
-        """Destroys session."""
+        """Destroy the session."""
         session_id = self.get_cookie_session_id()
 
         if session_id is None:
@@ -430,6 +429,7 @@ def session_valid_time():
 
 class SessionStore(object):
     """Responsible for storing and retrieving HTTP sessions."""
+
     def __init__(self):
         """Setup the session store."""
         self._sessions = {}
@@ -464,7 +464,7 @@ class SessionStore(object):
             self._sessions.pop(key, None)
 
     def create(self):
-        """Creates a new session."""
+        """Create a new session."""
         with self._lock:
             session_id = util.get_random_string(20)
 

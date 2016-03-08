@@ -41,7 +41,7 @@ ATTR_ENTITY_ID = 'entity_id'
 
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
-    """Adds an entry to the logbook."""
+    """Add an entry to the logbook."""
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -55,7 +55,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 
 def setup(hass, config):
-    """Listens for download events to download files."""
+    """Listen for download events to download files."""
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data.get(ATTR_MESSAGE)
@@ -100,9 +100,11 @@ def _handle_get_logbook(handler, path_match, data):
 
 class Entry(object):
     """A human readable version of the log."""
+
     # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
+        """Initialize the entry."""
         self.when = when
         self.name = name
         self.message = message
@@ -121,8 +123,7 @@ class Entry(object):
 
 
 def humanify(events):
-    """
-    Generator that converts a list of events into Entry objects.
+    """Generator that converts a list of events into Entry objects.
 
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last

@@ -106,9 +106,11 @@ def setup(hass, config):
 
 
 class Zone(Entity):
-    """Represents a Zone."""
+    """Representation of a Zone."""
+
     # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
+        """Initialize the zone."""
         self.hass = hass
         self._name = name
         self._latitude = latitude
@@ -119,7 +121,7 @@ class Zone(Entity):
 
     @property
     def name(self):
-        """ Return the name of the zone."""
+        """Return the name of the zone."""
         return self._name
 
     @property
@@ -134,7 +136,7 @@ class Zone(Entity):
 
     @property
     def state_attributes(self):
-        """ Return the state attributes of the zone."""
+        """Return the state attributes of the zone."""
         data = {
             ATTR_HIDDEN: True,
             ATTR_LATITUDE: self._latitude,

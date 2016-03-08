@@ -1,4 +1,6 @@
 """
+Support for tracking the proximity of a device.
+
 Component to monitor the proximity of devices to a particular zone and the
 direction of travel.
 
@@ -77,11 +79,13 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
 
 class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
-    """Represents a Proximity."""
+    """Representation of a Proximity."""
+
+    # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
                  nearest, ignored_zones, proximity_devices, tolerance,
                  proximity_zone):
-        # pylint: disable=too-many-arguments
+        """Initialize the proximity."""
         self.hass = hass
         self.friendly_name = zone_friendly_name
         self.dist_to = dist_to
@@ -115,8 +119,8 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
             ATTR_NEAREST: self.nearest,
         }
 
+    # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     def check_proximity_state_change(self, entity, old_state, new_state):
-        # pylint: disable=too-many-branches,too-many-statements,too-many-locals
         """Function to perform the proximity checking."""
         entity_name = new_state.name
         devices_to_calculate = False

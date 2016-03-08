@@ -26,8 +26,10 @@ LOGGER_LOGS = 'logs'
 
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
+
     # pylint: disable=no-init,too-few-public-methods
     def __init__(self, logfilter):
+        """Initialize the filter."""
         super().__init__()
 
         self.logfilter = logfilter

@@ -49,8 +49,10 @@ def setup(hass, config):
 
 
 class ArduinoBoard(object):
-    """Represents an Arduino board."""
+    """Representation of an Arduino board."""
+
     def __init__(self, port):
+        """Initialize the board."""
         from PyMata.pymata import PyMata
         self._port = port
         self._board = PyMata(self._port, verbose=False)
@@ -104,6 +106,6 @@ class ArduinoBoard(object):
         return self._board.get_firmata_version()
 
     def disconnect(self):
-        """Disconnects the board and closes the serial connection."""
+        """Disconnect the board and close the serial connection."""
         self._board.reset()
         self._board.close()

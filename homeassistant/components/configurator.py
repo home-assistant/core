@@ -36,6 +36,7 @@ def request_config(
         hass, name, callback, description=None, description_image=None,
         submit_caption=None, fields=None):
     """Create a new request for configuration.
+
     Will return an ID to be used for sequent calls.
     """
     instance = _get_instance(hass)
@@ -86,8 +87,10 @@ def _get_instance(hass):
 
 
 class Configurator(object):
-    """Class to keep track of current configuration requests."""
+    """The class to keep track of current configuration requests."""
+
     def __init__(self, hass):
+        """Initialize the configurator."""
         self.hass = hass
         self._cur_id = 0
         self._requests = {}
@@ -173,7 +176,7 @@ class Configurator(object):
         callback(call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
-        """Generates a unique configurator ID."""
+        """Generate a unique configurator ID."""
         self._cur_id += 1
         return "{}-{}".format(id(self), self._cur_id)
 
