@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
 
-    if int(hub.config.get('temperature', '1')):
+    if int(hub.config.get('thermometers', '1')):
         hub.update_climate()
         sensors.extend([
             VerisureThermometer(value.id)
