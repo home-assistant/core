@@ -50,7 +50,7 @@ def setup(hass, config):
     component.setup(config)
 
     def alarm_service_handler(service):
-        """Maps services to methods on Alarm."""
+        """Map services to methods on Alarm."""
         target_alarms = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -121,7 +121,8 @@ def alarm_trigger(hass, code=None, entity_id=None):
 
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
-    """An ABC for alarm control devices."""
+    """An abstract class for alarm control devices."""
+
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
