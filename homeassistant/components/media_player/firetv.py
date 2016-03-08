@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.firetv
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to interact with FireTV devices.
+Support for functionality to interact with FireTV devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.firetv/
@@ -31,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the FireTV platform. """
+    """Setup the FireTV platform."""
     host = config.get('host', 'localhost:5556')
     device_id = config.get('device', 'default')
     try:
@@ -54,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class FireTV(object):
-    """ firetv-server client.
+    """The firetv-server client.
 
     Should a native Python 3 ADB module become available, python-firetv can
     support Python 3, it can be added as a dependency, and this class can be
@@ -65,12 +63,13 @@ class FireTV(object):
     """
 
     def __init__(self, host, device_id):
+        """Initialize the FireTV server."""
         self.host = host
         self.device_id = device_id
 
     @property
     def state(self):
-        """ Get the device state. An exception means UNKNOWN state. """
+        """Get the device state. An exception means UNKNOWN state."""
         try:
             response = requests.get(
                 DEVICE_STATE_URL.format(
@@ -85,7 +84,7 @@ class FireTV(object):
             return STATE_UNKNOWN
 
     def action(self, action_id):
-        """ Perform an action on the device. """
+        """Perform an action on the device."""
         try:
             requests.get(
                 DEVICE_ACTION_URL.format(
@@ -101,37 +100,37 @@ class FireTV(object):
 
 
 class FireTVDevice(MediaPlayerDevice):
-    """ Represents an Amazon Fire TV device on the network. """
+    """Representation of an Amazon Fire TV device on the network."""
 
     # pylint: disable=abstract-method
-
     def __init__(self, host, device, name):
+        """Initialize the FireTV device."""
         self._firetv = FireTV(host, device)
         self._name = name
         self._state = STATE_UNKNOWN
 
     @property
     def name(self):
-        """ Get the device name. """
+        """Return the device name."""
         return self._name
 
     @property
     def should_poll(self):
-        """ Device should be polled. """
+        """Device should be polled."""
         return True
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_FIRETV
 
     @property
     def state(self):
-        """ State of the player. """
+        """Return the state of the player."""
         return self._state
 
     def update(self):
-        """ Update device state. """
+        """Get the latest date and update device state."""
         self._state = {
             'idle': STATE_IDLE,
             'off': STATE_OFF,
@@ -142,37 +141,37 @@ class FireTVDevice(MediaPlayerDevice):
         }.get(self._firetv.state, STATE_UNKNOWN)
 
     def turn_on(self):
-        """ Turns on the device. """
+        """Turn on the device."""
         self._firetv.action('turn_on')
 
     def turn_off(self):
-        """ Turns off the device. """
+        """Turn off the device."""
         self._firetv.action('turn_off')
 
     def media_play(self):
-        """ Send play command. """
+        """Send play command."""
         self._firetv.action('media_play')
 
     def media_pause(self):
-        """ Send pause command. """
+        """Send pause command."""
         self._firetv.action('media_pause')
 
     def media_play_pause(self):
-        """ Send play/pause command. """
+        """Send play/pause command."""
         self._firetv.action('media_play_pause')
 
     def volume_up(self):
-        """ Send volume up command. """
+        """Send volume up command."""
         self._firetv.action('volume_up')
 
     def volume_down(self):
-        """ Send volume down command. """
+        """Send volume down command."""
         self._firetv.action('volume_down')
 
     def media_previous_track(self):
-        """ Send previous track command (results in rewind). """
+        """Send previous track command (results in rewind)."""
         self._firetv.action('media_previous')
 
     def media_next_track(self):
-        """ Send next track command (results in fast-forward). """
+        """Send next track command (results in fast-forward)."""
         self._firetv.action('media_next')
