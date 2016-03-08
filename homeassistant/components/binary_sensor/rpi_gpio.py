@@ -1,5 +1,5 @@
 """
-Allows to configure a binary sensor using RPi GPIO.
+Support for binary sensor using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
@@ -20,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Raspberry PI GPIO devices."""
-
+    """Setup the Raspberry PI GPIO devices."""
     pull_mode = config.get('pull_mode', DEFAULT_PULL_MODE)
     bouncetime = config.get('bouncetime', DEFAULT_BOUNCETIME)
     invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
@@ -36,10 +35,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class RPiGPIOBinarySensor(BinarySensorDevice):
-    """Represents a binary sensor that uses Raspberry Pi GPIO."""
-    def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
-        # pylint: disable=no-member
+    """Represent a binary sensor that uses Raspberry Pi GPIO."""
 
+    def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
+        """Initialize the RPi binary sensor."""
+        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._pull_mode = pull_mode
@@ -50,9 +50,10 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._state = rpi_gpio.read_input(self._port)
 
         def read_gpio(port):
-            """Reads state from GPIO."""
+            """Read state from GPIO."""
             self._state = rpi_gpio.read_input(self._port)
             self.update_ha_state()
+
         rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
 
     @property
@@ -62,10 +63,10 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """Returns the state of the entity."""
+        """Return the state of the entity."""
         return self._state != self._invert_logic
