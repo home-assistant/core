@@ -26,7 +26,7 @@ CONF_MONITORED_VARIABLES = 'monitored_variables'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the aREST sensor."""
+    """Setup the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)
     pins = config.get('pins', None)
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     arest = ArestData(resource)
 
     def make_renderer(value_template):
-        """Creates renderer based on variable_template value."""
+        """Create a renderer based on variable_template value."""
         if value_template is None:
             return lambda value: value
 
@@ -100,10 +100,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestSensor(Entity):
-    """Implements an aREST sensor for exposed variables."""
+    """Implementation of an aREST sensor for exposed variables."""
 
     def __init__(self, arest, resource, location, name, variable=None,
                  pin=None, unit_of_measurement=None, renderer=None):
+        """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
         self._name = '{} {}'.format(location.title(), name.title()) \
@@ -123,17 +124,17 @@ class ArestSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         values = self.arest.data
 
         if 'error' in values:
@@ -145,22 +146,23 @@ class ArestSensor(Entity):
         return value
 
     def update(self):
-        """Gets the latest data from aREST API."""
+        """Get the latest data from aREST API."""
         self.arest.update()
 
 
 # pylint: disable=too-few-public-methods
 class ArestData(object):
-    """Class for handling the data retrieval for variables."""
+    """The Class for handling the data retrieval for variables."""
 
     def __init__(self, resource, pin=None):
+        """Initialize the data object."""
         self._resource = resource
         self._pin = pin
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from aREST device."""
+        """Get the latest data from aREST device."""
         try:
             if self._pin is None:
                 response = requests.get(self._resource, timeout=10)

@@ -44,7 +44,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Glances sensor."""
-
     host = config.get(CONF_HOST)
     port = config.get('port', CONF_PORT)
     url = 'http://{}:{}{}'.format(host, port, _RESOURCE)
@@ -83,9 +82,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class GlancesSensor(Entity):
-    """Implements a Glances sensor."""
+    """Implementation of a Glances sensor."""
 
     def __init__(self, rest, name, sensor_type):
+        """Initialize the sensor."""
         self.rest = rest
         self._name = name
         self.type = sensor_type
@@ -103,13 +103,13 @@ class GlancesSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches, too-many-return-statements
     @property
     def state(self):
-        """Returns the state of the resources."""
+        """Return the state of the resources."""
         value = self.rest.data
 
         if value is not None:
@@ -147,20 +147,22 @@ class GlancesSensor(Entity):
                 return value['processcount']['sleeping']
 
     def update(self):
-        """Gets the latest data from REST API."""
+        """Get the latest data from REST API."""
         self.rest.update()
 
 
 # pylint: disable=too-few-public-methods
 class GlancesData(object):
-    """Class for handling the data retrieval."""
+    """The class for handling the data retrieval."""
+
     def __init__(self, resource):
+        """Initialize the data object."""
         self._resource = resource
         self.data = dict()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from the Glances REST API."""
+        """Get the latest data from the Glances REST API."""
         try:
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()

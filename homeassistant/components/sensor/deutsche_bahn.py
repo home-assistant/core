@@ -37,8 +37,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class DeutscheBahnSensor(Entity):
-    """Implement a Deutsche Bahn sensor."""
+    """Implementation of a Deutsche Bahn sensor."""
+
     def __init__(self, start, goal):
+        """Initialize the sensor."""
         self._name = start + ' to ' + goal
         self.data = SchieneData(start, goal)
         self.update()
@@ -64,7 +66,7 @@ class DeutscheBahnSensor(Entity):
         return self.data.connections[0]
 
     def update(self):
-        """Gets the latest delay from bahn.de and updates the state."""
+        """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
         self._state = self.data.connections[0].get('departure', 'Unknown')
         delay = self.data.connections[0].get('delay',
@@ -76,8 +78,10 @@ class DeutscheBahnSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class SchieneData(object):
-    """Pulls data from the bahn.de web page."""
+    """Pull data from the bahn.de web page."""
+
     def __init__(self, start, goal):
+        """Initialize the sensor."""
         import schiene
         self.start = start
         self.goal = goal
