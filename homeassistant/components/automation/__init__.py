@@ -1,6 +1,5 @@
 """
-
-Allows to setup simple automation rules via the config file.
+Allow to setup simple automation rules via the config file.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/automation/
@@ -39,20 +38,20 @@ def setup(hass, config):
     found = 1
 
     while config_key in config:
-        # check for one block syntax
+        # Check for one block syntax
         if isinstance(config[config_key], dict):
             config_block = _migrate_old_config(config[config_key])
             name = config_block.get(CONF_ALIAS, config_key)
             _setup_automation(hass, config_block, name, config)
 
-        # check for multiple block syntax
+        # Check for multiple block syntax
         elif isinstance(config[config_key], list):
             for list_no, config_block in enumerate(config[config_key]):
                 name = config_block.get(CONF_ALIAS,
                                         "{}, {}".format(config_key, list_no))
                 _setup_automation(hass, config_block, name, config)
 
-        # any scalar value is incorrect
+        # Any scalar value is incorrect
         else:
             _LOGGER.error('Error in config in section %s.', config_key)
 
@@ -131,7 +130,7 @@ def _migrate_old_config(config):
 
 
 def _process_if(hass, config, p_config, action):
-    """Processes if checks."""
+    """Process if checks."""
     cond_type = p_config.get(CONF_CONDITION_TYPE,
                              DEFAULT_CONDITION_TYPE).lower()
 
