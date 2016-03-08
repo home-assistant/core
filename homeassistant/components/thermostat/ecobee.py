@@ -1,6 +1,4 @@
 """
-homeassistant.components.thermostat.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Platform for Ecobee Thermostats.
 
 For more details about this platform, please refer to the documentation at
@@ -20,7 +18,7 @@ _CONFIGURING = {}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Ecobee Thermostat Platform. """
+    """Setup the Ecobee Thermostat Platform."""
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -33,9 +31,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Thermostat(ThermostatDevice):
-    """ Thermostat class for Ecobee. """
+    """A thermostat class for Ecobee."""
 
     def __init__(self, data, thermostat_index, hold_temp):
+        """Initialize the thermostat."""
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(
@@ -45,29 +44,29 @@ class Thermostat(ThermostatDevice):
         self.hold_temp = hold_temp
 
     def update(self):
-        """ Get the latest state from the thermostat. """
+        """Get the latest state from the thermostat."""
         self.data.update()
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
 
     @property
     def name(self):
-        """ Returns the name of the Ecobee Thermostat. """
+        """Return the name of the Ecobee Thermostat."""
         return self.thermostat['name']
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement this thermostat expresses itself in. """
+        """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
-        """ Returns the current temperature. """
+        """Return the current temperature."""
         return self.thermostat['runtime']['actualTemperature'] / 10
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         if self.hvac_mode == 'heat' or self.hvac_mode == 'auxHeatOnly':
             return self.target_temperature_low
         elif self.hvac_mode == 'cool':
@@ -78,27 +77,27 @@ class Thermostat(ThermostatDevice):
 
     @property
     def target_temperature_low(self):
-        """ Returns the lower bound temperature we try to reach. """
+        """Return the lower bound temperature we try to reach."""
         return int(self.thermostat['runtime']['desiredHeat'] / 10)
 
     @property
     def target_temperature_high(self):
-        """ Returns the upper bound temperature we try to reach. """
+        """Return the upper bound temperature we try to reach."""
         return int(self.thermostat['runtime']['desiredCool'] / 10)
 
     @property
     def humidity(self):
-        """ Returns the current humidity. """
+        """Return the current humidity."""
         return self.thermostat['runtime']['actualHumidity']
 
     @property
     def desired_fan_mode(self):
-        """ Returns the desired fan mode of operation. """
+        """Return the desired fan mode of operation."""
         return self.thermostat['runtime']['desiredFanMode']
 
     @property
     def fan(self):
-        """ Returns the current fan state. """
+        """Return the current fan state."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
         else:
@@ -106,7 +105,7 @@ class Thermostat(ThermostatDevice):
 
     @property
     def operation(self):
-        """ Returns current operation ie. heat, cool, idle """
+        """Return current operation ie. heat, cool, idle."""
         status = self.thermostat['equipmentStatus']
         if status == '':
             return STATE_IDLE
@@ -121,19 +120,19 @@ class Thermostat(ThermostatDevice):
 
     @property
     def mode(self):
-        """ Returns current mode ie. home, away, sleep """
+        """Return current mode ie. home, away, sleep."""
         mode = self.thermostat['program']['currentClimateRef']
         self._away = 'away' in mode
         return mode
 
     @property
     def hvac_mode(self):
-        """ Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off """
+        """Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off."""
         return self.thermostat['settings']['hvacMode']
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
         return {
             "humidity": self.humidity,
@@ -144,11 +143,11 @@ class Thermostat(ThermostatDevice):
 
     @property
     def is_away_mode_on(self):
-        """ Returns if away mode is on. """
+        """Return true if away mode is on."""
         return self._away
 
     def turn_away_mode_on(self):
-        """ Turns away on. """
+        """Turn away on."""
         self._away = True
         if self.hold_temp:
             self.data.ecobee.set_climate_hold(self.thermostat_index,
@@ -157,12 +156,12 @@ class Thermostat(ThermostatDevice):
             self.data.ecobee.set_climate_hold(self.thermostat_index, "away")
 
     def turn_away_mode_off(self):
-        """ Turns away off. """
+        """Turn away off."""
         self._away = False
         self.data.ecobee.resume_program(self.thermostat_index)
 
     def set_temperature(self, temperature):
-        """ Set new target temperature """
+        """Set new target temperature."""
         temperature = int(temperature)
         low_temp = temperature - 1
         high_temp = temperature + 1
@@ -174,7 +173,7 @@ class Thermostat(ThermostatDevice):
                                            high_temp)
 
     def set_hvac_mode(self, mode):
-        """ Set HVAC mode (auto, auxHeatOnly, cool, heat, off) """
+        """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
 
     # Home and Sleep mode aren't used in UI yet:
