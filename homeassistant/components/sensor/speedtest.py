@@ -39,7 +39,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Speedtest sensor."""
-
     data = SpeedtestData(hass, config)
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
@@ -61,9 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class SpeedtestSensor(Entity):
-    """Implements a speedtest.net sensor."""
+    """Implementation of a speedtest.net sensor."""
 
     def __init__(self, speedtest_data, sensor_type):
+        """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.speedtest_client = speedtest_data
         self.type = sensor_type
@@ -72,21 +72,21 @@ class SpeedtestSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return '{} {}'.format('Speedtest', self._name)
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """Gets the latest data and updates the states."""
+        """Get the latest data and update the states."""
         data = self.speedtest_client.data
         if data is not None:
             if self.type == 'ping':
@@ -98,9 +98,10 @@ class SpeedtestSensor(Entity):
 
 
 class SpeedtestData(object):
-    """Gets the latest data from speedtest.net."""
+    """Get the latest data from speedtest.net."""
 
     def __init__(self, hass, config):
+        """Initialize the data object."""
         self.data = None
         self.hass = hass
         self.path = hass.config.path
@@ -111,7 +112,7 @@ class SpeedtestData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, now):
-        """Gets the latest data from speedtest.net."""
+        """Get the latest data from speedtest.net."""
         _LOGGER.info('Executing speedtest')
         re_output = _SPEEDTEST_REGEX.split(
             check_output([sys.executable, self.path(

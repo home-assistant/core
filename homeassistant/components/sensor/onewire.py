@@ -25,8 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the one wire Sensors."""
-
+    """Setup the one wire Sensors."""
     if DEVICE_FILES == []:
         _LOGGER.error('No onewire sensor found.')
         _LOGGER.error('Check if dtoverlay=w1-gpio,gpiopin=4.')
@@ -56,9 +55,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OneWire(Entity):
-    """An One wire Sensor."""
+    """Implementation of an One wire Sensor."""
 
     def __init__(self, name, device_file):
+        """Initialize the sensor."""
         self._name = name
         self._device_file = device_file
         self._state = STATE_UNKNOWN
@@ -73,21 +73,21 @@ class OneWire(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return TEMP_CELCIUS
 
     def update(self):
-        """Gets the latest data from the device."""
+        """Get the latest data from the device."""
         lines = self._read_temp_raw()
         while lines[0].strip()[-3:] != 'YES':
             time.sleep(0.2)
