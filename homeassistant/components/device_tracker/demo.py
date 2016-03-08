@@ -1,6 +1,4 @@
-"""
-Demo platform for the device tracker.
-"""
+"""Demo platform for the device tracker."""
 import random
 
 from homeassistant.components.device_tracker import DOMAIN
