@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.xmpp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Jabber (XMPP) notification service.
 
 For more details about this platform, please refer to the documentation at
@@ -18,8 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """ Get the Jabber (XMPP) notification service. """
-
+    """Get the Jabber (XMPP) notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['sender', 'password', 'recipient']},
                            _LOGGER):
@@ -32,16 +29,16 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class XmppNotificationService(BaseNotificationService):
-    """ Implements notification service for Jabber (XMPP). """
+    """Implement the notification service for Jabber (XMPP)."""
 
     def __init__(self, sender, password, recipient):
+        """Initialize the service."""
         self._sender = sender
         self._password = password
         self._recipient = recipient
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
-
+        """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
         data = "{}: {}".format(title, message) if title else message
 
@@ -50,13 +47,14 @@ class XmppNotificationService(BaseNotificationService):
 
 
 def send_message(sender, password, recipient, message):
-    """ Send a message over XMPP. """
+    """Send a message over XMPP."""
     import sleekxmpp
 
     class SendNotificationBot(sleekxmpp.ClientXMPP):
-        """ Service for sending Jabber (XMPP) messages. """
+        """Service for sending Jabber (XMPP) messages."""
 
         def __init__(self):
+            """Initialize the Jabber Bot."""
             super(SendNotificationBot, self).__init__(sender, password)
 
             logging.basicConfig(level=logging.ERROR)
@@ -69,14 +67,14 @@ def send_message(sender, password, recipient, message):
             self.process()
 
         def start(self, event):
-            """ Starts the communication and sends the message. """
+            """Start the communication and sends the message."""
             self.send_presence()
             self.get_roster()
             self.send_message(mto=recipient, mbody=message, mtype='chat')
             self.disconnect(wait=True)
 
         def check_credentials(self, event):
-            """" Disconnect from the server if credentials are invalid. """
+            """"Disconnect from the server if credentials are invalid."""
             self.disconnect()
 
     SendNotificationBot()

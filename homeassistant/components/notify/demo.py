@@ -16,13 +16,13 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class DemoNotificationService(BaseNotificationService):
-    """Implements demo notification service."""
+    """Implement demo notification service."""
+
     def __init__(self, hass):
+        """Initialize the service."""
         self.hass = hass
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
-
+        """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
-
         self.hass.bus.fire(EVENT_NOTIFY, {"title": title, "message": message})

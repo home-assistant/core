@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.pushbullet
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PushBullet platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -18,7 +16,7 @@ REQUIREMENTS = ['pushbullet.py==0.9.0']
 
 # pylint: disable=unused-argument
 def get_service(hass, config):
-    """ Get the PushBullet notification service. """
+    """Get the PushBullet notification service."""
     from pushbullet import PushBullet
     from pushbullet import InvalidKeyError
 
@@ -39,16 +37,16 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class PushBulletNotificationService(BaseNotificationService):
-    """ Implements notification service for Pushbullet. """
+    """Implement the notification service for Pushbullet."""
 
     def __init__(self, pb):
+        """Initialize the service."""
         self.pushbullet = pb
         self.pbtargets = {}
         self.refresh()
 
     def refresh(self):
-        """
-        Refresh devices, contacts, etc
+        """Refresh devices, contacts, etc.
 
         pbtargets stores all targets available from this pushbullet instance
         into a dict. These are PB objects!. It sacrifices a bit of memory
@@ -67,8 +65,8 @@ class PushBulletNotificationService(BaseNotificationService):
         }
 
     def send_message(self, message=None, **kwargs):
-        """
-        Send a message to a specified target.
+        """Send a message to a specified target.
+
         If no target specified, a 'normal' push will be sent to all devices
         linked to the PB account.
         Email is special, these are assumed to always exist. We use a special
