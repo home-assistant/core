@@ -54,6 +54,9 @@ freesms==0.1.0
 # homeassistant.components.conversation
 fuzzywuzzy==0.8.0
 
+# homeassistant.components.mqtt.server
+hbmqtt==0.6.3
+
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
 
