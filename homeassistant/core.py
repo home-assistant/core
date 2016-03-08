@@ -775,7 +775,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
     def start_timer(event):
         """Start the timer."""
-        thread = threading.Thread(target=timer)
+        thread = threading.Thread(target=timer, name='Timer')
         thread.daemon = True
         thread.start()
 
