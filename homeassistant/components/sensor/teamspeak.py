@@ -12,15 +12,13 @@ from homeassistant.util import convert
 
 REQUIREMENTS = ['ts3==0.7.1']
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = 'Teamspeak Server'
 ICON = 'mdi:microphone'
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Teamspeak sensor. """
-    name = config.get('name', DEFAULT_NAME)
+    name = config.get('name')
     host = config.get('host')
     username = config.get('username')
     password = config.get('password')
@@ -57,6 +55,9 @@ class TeamspeakSensor(Entity):
         self._virtual_server_id = virtual_server_id
 
         self.connect()
+        if self._name is None:
+            self._name = (self._ts3conn.serverlist()[self._virtual_server_id]
+                          ['virtualserver_name'])
         self.update()
 
     @property
