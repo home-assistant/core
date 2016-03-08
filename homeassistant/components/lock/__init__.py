@@ -41,13 +41,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_locked(hass, entity_id=None):
-    """Returns if the lock is locked based on the statemachine."""
+    """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 def lock(hass, entity_id=None, code=None):
-    """Locks all or specified locks."""
+    """Lock all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -58,7 +58,7 @@ def lock(hass, entity_id=None, code=None):
 
 
 def unlock(hass, entity_id=None, code=None):
-    """Unlocks all or specified locks."""
+    """Unlock all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -76,7 +76,7 @@ def setup(hass, config):
     component.setup(config)
 
     def handle_lock_service(service):
-        """Handles calls to the lock services."""
+        """Handle calls to the lock services."""
         target_locks = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -104,7 +104,8 @@ def setup(hass, config):
 
 
 class LockDevice(Entity):
-    """Represents a lock."""
+    """Representation of a lock."""
+
     # pylint: disable=no-self-use
     @property
     def code_format(self):
@@ -113,15 +114,15 @@ class LockDevice(Entity):
 
     @property
     def is_locked(self):
-        """Is the lock locked or unlocked."""
+        """Return true if the lock is locked."""
         return None
 
     def lock(self, **kwargs):
-        """Locks the lock."""
+        """Lock the lock."""
         raise NotImplementedError()
 
     def unlock(self, **kwargs):
-        """Unlocks the lock."""
+        """Unlock the lock."""
         raise NotImplementedError()
 
     @property

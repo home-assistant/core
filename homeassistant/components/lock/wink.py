@@ -31,8 +31,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkLockDevice(LockDevice):
-    """Represents a Wink lock."""
+    """Representation of a Wink lock."""
+
     def __init__(self, wink):
+        """Initialize the lock."""
         self.wink = wink
 
     @property
