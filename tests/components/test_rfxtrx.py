@@ -11,12 +11,9 @@ import time
 from homeassistant.components import rfxtrx as rfxtrx
 from homeassistant.components.sensor import rfxtrx as rfxtrx_sensor
 
-import pytest
-
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestRFXTRX(unittest.TestCase):
     """ Test the sun module. """
 
@@ -28,7 +25,8 @@ class TestRFXTRX(unittest.TestCase):
         """ Stop down stuff we started. """
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}
-        rfxtrx.RFXOBJECT = None
+        if rfxtrx.RFXOBJECT:
+            rfxtrx.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
@@ -55,6 +53,7 @@ class TestRFXTRX(unittest.TestCase):
 
         self.assertEquals(len(rfxtrx.RFXOBJECT.sensors()), 2)
         self.assertEquals(len(devices), 2)
+        rfxtrx.RFXOBJECT.close_connection()
 
     def test_config_failing(self):
         """ Test config """

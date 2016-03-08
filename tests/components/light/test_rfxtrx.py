@@ -11,12 +11,9 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.components.light import rfxtrx
 from unittest.mock import patch
 
-import pytest
-
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestLightRfxtrx(unittest.TestCase):
     """ Test the Rfxtrx light. """
 
@@ -28,6 +25,8 @@ class TestLightRfxtrx(unittest.TestCase):
         """ Stop down stuff we started. """
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):

@@ -7,9 +7,9 @@ https://home-assistant.io/components/rfxtrx/
 import logging
 
 from homeassistant.util import slugify
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/' +
-                'archive/0.5.zip#pyRFXtrx==0.5']
+REQUIREMENTS = ['pyRFXtrx==0.6.5']
 
 DOMAIN = "rfxtrx"
 
@@ -71,6 +71,10 @@ def setup(hass, config):
                            transport_protocol=rfxtrxmod.DummyTransport2)
     else:
         RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
+
+    def _shutdown_rfxtrx(event):
+        RFXOBJECT.close_connection()
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
 
     return True
 
