@@ -40,8 +40,8 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
             TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
         self._current_temperature = round(convert(90,
             TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
-        self._current_operation = "Idle"
-        self._current_operation_state = "Idle"
+        self._current_operation = STATE_IDLE
+        self._current_operation_state = STATE_IDLE
         self.update_properties()
         # register listener
         dispatcher.connect(
