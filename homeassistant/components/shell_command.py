@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Sets up the shell_command component."""
+    """Setup the shell_command component."""
     conf = config.get(DOMAIN)
 
     if not isinstance(conf, dict):

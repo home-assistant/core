@@ -35,8 +35,10 @@ def setup(hass, config):
 
 
 class Link(Entity):
-    """Represent a link."""
+    """Representation of a link."""
+
     def __init__(self, hass, name, url, icon):
+        """Initialize the link."""
         self.hass = hass
         self._name = name
         self._url = url

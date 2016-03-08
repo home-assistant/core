@@ -44,7 +44,7 @@ def request_configuration(network, hass, config):
 
     # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
-        """Actions to do when our configuration callback is called."""
+        """The actions to do when our configuration callback is called."""
         network.request_tokens()
         network.update()
         setup_ecobee(hass, network, config)
@@ -91,8 +91,10 @@ def setup_ecobee(hass, network, config):
 
 # pylint: disable=too-few-public-methods
 class EcobeeData(object):
-    """Gets the latest data and update the states."""
+    """Get the latest data and update the states."""
+
     def __init__(self, config_file):
+        """Initialize the Ecobee data object."""
         from pyecobee import Ecobee
         self.ecobee = Ecobee(config_file)
 
@@ -104,8 +106,8 @@ class EcobeeData(object):
 
 
 def setup(hass, config):
-    """
-    Setup Ecobee.
+    """Setup Ecobee.
+
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """
