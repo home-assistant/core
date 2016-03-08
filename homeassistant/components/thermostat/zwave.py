@@ -10,6 +10,7 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, NETWORK,
     ZWaveDeviceEntity)
+from homeassistant.const import TEMP_FAHRENHEIT
 
 CONF_NAME = 'name'
 DEFAULT_NAME = 'ZWave Thermostat'
@@ -35,8 +36,10 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
         from homeassistant.helpers.temperature import convert
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
-        self._target_temperature = round(convert(71, TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
-        self._current_temperature = 90
+        self._target_temperature = round(convert(71,
+            TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
+        self._current_temperature = round(convert(90,
+            TEMP_FAHRENHEIT, self.hass.config.temperature_unit))
         self._current_operation = "Idle"
         self._current_operation_state = "Idle"
         self.update_properties()
