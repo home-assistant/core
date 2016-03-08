@@ -1,8 +1,5 @@
 """
-homeassistant.components.switch.arest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The arest switch can control the digital pins of a device running with the
-aREST RESTful framework for Arduino, the ESP8266, and the Raspberry Pi.
+Support for device running with the aREST RESTful framework.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.arest/
@@ -18,8 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the aREST switches. """
-
+    """Setup the aREST switches."""
     resource = config.get('resource', None)
 
     try:
@@ -54,9 +50,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ArestSwitchBase(SwitchDevice):
-    """ Implements an aREST switch. """
+    """representation of an aREST switch."""
 
     def __init__(self, resource, location, name):
+        """Initialize the switch."""
         self._resource = resource
         self._name = '{} {}'.format(location.title(), name.title()) \
                      or DEVICE_DEFAULT_NAME
@@ -64,19 +61,20 @@ class ArestSwitchBase(SwitchDevice):
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state
 
 
 class ArestSwitchFunction(ArestSwitchBase):
-    """ Implements an aREST switch. Based on functions. """
+    """Representation of an aREST switch."""
 
     def __init__(self, resource, location, name, func):
+        """Initialize the switch."""
         super().__init__(resource, location, name)
         self._func = func
 
@@ -96,7 +94,7 @@ class ArestSwitchFunction(ArestSwitchBase):
             _LOGGER.error("Response invalid. Is the function name correct.")
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         request = requests.get('{}/{}'.format(self._resource, self._func),
                                timeout=10, params={"params": "1"})
 
@@ -108,7 +106,7 @@ class ArestSwitchFunction(ArestSwitchBase):
                           self._func, self._resource)
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         request = requests.get('{}/{}'.format(self._resource, self._func),
                                timeout=10, params={"params": "0"})
 
@@ -120,16 +118,17 @@ class ArestSwitchFunction(ArestSwitchBase):
                           self._func, self._resource)
 
     def update(self):
-        """ Gets the latest data from aREST API and updates the state. """
+        """Get the latest data from aREST API and update the state."""
         request = requests.get('{}/{}'.format(self._resource,
                                               self._func), timeout=10)
         self._state = request.json()['return_value'] != 0
 
 
 class ArestSwitchPin(ArestSwitchBase):
-    """ Implements an aREST switch. Based on digital I/O """
+    """Representation of an aREST switch. Based on digital I/O."""
 
     def __init__(self, resource, location, name, pin):
+        """Initialize the switch."""
         super().__init__(resource, location, name)
         self._pin = pin
 
@@ -139,7 +138,7 @@ class ArestSwitchPin(ArestSwitchBase):
             _LOGGER.error("Can't set mode. Is device offline?")
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         request = requests.get('{}/digital/{}/1'.format(self._resource,
                                                         self._pin), timeout=10)
         if request.status_code == 200:
@@ -149,7 +148,7 @@ class ArestSwitchPin(ArestSwitchBase):
                           self._pin, self._resource)
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         request = requests.get('{}/digital/{}/0'.format(self._resource,
                                                         self._pin), timeout=10)
         if request.status_code == 200:
@@ -159,7 +158,7 @@ class ArestSwitchPin(ArestSwitchBase):
                           self._pin, self._resource)
 
     def update(self):
-        """ Gets the latest data from aREST API and updates the state. """
+        """Get the latest data from aREST API and update the state."""
         request = requests.get('{}/digital/{}'.format(self._resource,
                                                       self._pin), timeout=10)
         self._state = request.json()['return_value'] != 0

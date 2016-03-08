@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Wink switches.
 
 For more details about this platform, please refer to the documentation at
@@ -15,7 +13,7 @@ REQUIREMENTS = ['python-wink==0.6.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Wink platform. """
+    """Setup the Wink platform."""
     import pywink
 
     if discovery_info is None:

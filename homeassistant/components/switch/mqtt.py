@@ -26,7 +26,6 @@ DEPENDENCIES = ['mqtt']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT switch."""
-
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
@@ -46,9 +45,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttSwitch(SwitchDevice):
-    """Represents a switch that can be toggled using MQTT."""
+    """Representation of a switch that can be toggled using MQTT."""
+
     def __init__(self, hass, name, state_topic, command_topic, qos, retain,
                  payload_on, payload_off, optimistic, value_template):
+        """Initialize the MQTT switch."""
         self._state = False
         self._hass = hass
         self._name = name
@@ -86,17 +87,17 @@ class MqttSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
 
     @property
     def assumed_state(self):
-        """Return True if we do optimistic updates."""
+        """Return true if we do optimistic updates."""
         return self._optimistic
 
     def turn_on(self, **kwargs):

@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.vera
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Vera switches.
 
 For more details about this platform, please refer to the documentation at
@@ -23,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def get_devices(hass, config):
-    """ Find and return Vera switches. """
+    """Find and return Vera switches."""
     import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
@@ -40,7 +38,7 @@ def get_devices(hass, config):
 
     if created:
         def stop_subscription(event):
-            """ Shutdown Vera subscriptions and subscription thread on exit"""
+            """Shutdown Vera subscriptions and subscription thread on exit."""
             _LOGGER.info("Shutting down subscriptions.")
             vera_controller.stop()
 
@@ -68,14 +66,15 @@ def get_devices(hass, config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Find and return Vera lights. """
+    """Find and return Vera lights."""
     add_devices(get_devices(hass, config))
 
 
 class VeraSwitch(SwitchDevice):
-    """ Represents a Vera Switch. """
+    """Representation of a Vera Switch."""
 
     def __init__(self, vera_device, controller, extra_data=None):
+        """Initialize the Vera device."""
         self.vera_device = vera_device
         self.extra_data = extra_data
         self.controller = controller
@@ -93,11 +92,12 @@ class VeraSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """ Get the mame of the switch. """
+        """Return the mame of the switch."""
         return self._name
 
     @property
     def device_state_attributes(self):
+        """Return the state attributes of the device."""
         attr = {}
 
         if self.vera_device.has_battery:
@@ -123,27 +123,29 @@ class VeraSwitch(SwitchDevice):
         return attr
 
     def turn_on(self, **kwargs):
+        """Turn device on."""
         self.vera_device.switch_on()
         self._state = STATE_ON
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
+        """Turn device off."""
         self.vera_device.switch_off()
         self._state = STATE_OFF
         self.update_ha_state()
 
     @property
     def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
+        """No polling needed."""
         return False
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state == STATE_ON
 
     def update(self):
-        """ Called by the vera device callback to update state. """
+        """Called by the vera device callback to update state."""
         if self.vera_device.is_switched_on():
             self._state = STATE_ON
         else:
