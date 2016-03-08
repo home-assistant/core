@@ -1,7 +1,4 @@
 """
-homeassistant.loader
-~~~~~~~~~~~~~~~~~~~~
-
 Provides methods for loading Home Assistant components.
 
 This module has quite some complex parts. I have tried to add as much
@@ -33,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def prepare(hass):
-    """ Prepares the loading of components. """
+    """Prepare the loading of components."""
     global PREPARED  # pylint: disable=global-statement
 
     # Load the built-in components
@@ -74,17 +71,18 @@ def prepare(hass):
 
 
 def set_component(comp_name, component):
-    """ Sets a component in the cache. """
+    """Set a component in the cache."""
     _check_prepared()
 
     _COMPONENT_CACHE[comp_name] = component
 
 
 def get_component(comp_name):
-    """ Tries to load specified component.
-        Looks in config dir first, then built-in components.
-        Only returns it if also found to be valid. """
+    """Try to load specified component.
 
+    Looks in config dir first, then built-in components.
+    Only returns it if also found to be valid.
+    """
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
 
@@ -145,14 +143,14 @@ def get_component(comp_name):
 
 
 def load_order_components(components):
-    """
-    Takes in a list of components we want to load:
-     - filters out components we cannot load
-     - filters out components that have invalid/circular dependencies
-     - Will make sure the recorder component is loaded first
-     - Will ensure that all components that do not directly depend on
-       the group component will be loaded before the group component.
-     - returns an OrderedSet load order.
+    """Take in a list of components we want to load.
+
+    - filters out components we cannot load
+    - filters out components that have invalid/circular dependencies
+    - Will make sure the recorder component is loaded first
+    - Will ensure that all components that do not directly depend on
+      the group component will be loaded before the group component.
+    - returns an OrderedSet load order.
     """
     _check_prepared()
 
@@ -175,8 +173,8 @@ def load_order_components(components):
 
 
 def load_order_component(comp_name):
-    """
-    Returns an OrderedSet of components in the correct order of loading.
+    """Return an OrderedSet of components in the correct order of loading.
+
     Raises HomeAssistantError if a circular dependency is detected.
     Returns an empty list if component could not be loaded.
     """
@@ -184,10 +182,10 @@ def load_order_component(comp_name):
 
 
 def _load_order_component(comp_name, load_order, loading):
-    """ Recursive function to get load order of components. """
+    """Recursive function to get load order of components."""
     component = get_component(comp_name)
 
-    # if None it does not exist, error already thrown by get_component
+    # If None it does not exist, error already thrown by get_component.
     if component is None:
         return OrderedSet()
 
@@ -198,7 +196,7 @@ def _load_order_component(comp_name, load_order, loading):
         if dependency in load_order:
             continue
 
-        # If we are already loading it, we have a circular dependency
+        # If we are already loading it, we have a circular dependency.
         if dependency in loading:
             _LOGGER.error('Circular dependency detected: %s -> %s',
                           comp_name, dependency)
@@ -221,7 +219,7 @@ def _load_order_component(comp_name, load_order, loading):
 
 
 def _check_prepared():
-    """ Issues a warning if loader.prepare() has never been called. """
+    """Issue a warning if loader.prepare() has never been called."""
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "
