@@ -138,10 +138,9 @@ class WemoSwitch(SwitchDevice):
     @property
     def available(self):
         """True if switch is available."""
-        if (self.wemo.model_name == 'Insight' and self.insight_params is None):
+        if self.wemo.model_name == 'Insight' and self.insight_params is None:
             return False
-
-        if (self.wemo.model_name == 'Maker' and self.maker_params is None):
+        if self.wemo.model_name == 'Maker' and self.maker_params is None:
             return False
         return True
 
