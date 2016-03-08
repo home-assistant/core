@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.twitter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Twitter platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -21,8 +19,7 @@ CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
 
 
 def get_service(hass, config):
-    """ Get the Twitter notification service. """
-
+    """Get the Twitter notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_CONSUMER_KEY, CONF_CONSUMER_SECRET,
                                      CONF_ACCESS_TOKEN,
@@ -38,16 +35,17 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class TwitterNotificationService(BaseNotificationService):
-    """ Implements notification service for the Twitter service. """
+    """Implement notification service for the Twitter service."""
 
     def __init__(self, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):
+        """Initialize the service."""
         from TwitterAPI import TwitterAPI
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
     def send_message(self, message="", **kwargs):
-        """ Tweet some message. """
+        """Tweet some message."""
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:
             import json
