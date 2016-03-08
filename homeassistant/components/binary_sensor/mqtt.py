@@ -1,5 +1,5 @@
 """
-Allows to configure a MQTT binary sensor.
+Support for MQTT binary sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
@@ -24,7 +24,6 @@ DEPENDENCIES = ['mqtt']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add MQTT binary sensor."""
-
     if config.get('state_topic') is None:
         _LOGGER.error('Missing required variable: state_topic')
         return False
@@ -41,9 +40,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttBinarySensor(BinarySensorDevice):
-    """Represents a binary sensor that is updated by MQTT."""
+    """Represent a binary sensor that is updated by MQTT."""
+
     def __init__(self, hass, name, state_topic, qos, payload_on, payload_off,
                  value_template):
+        """Initialize the MQTT binary sensor."""
         self._hass = hass
         self._name = name
         self._state = False
@@ -73,10 +74,10 @@ class MqttBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the binary sensor."""
+        """Return the name of the binary sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state

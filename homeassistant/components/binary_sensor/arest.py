@@ -1,5 +1,5 @@
 """
-The arest sensor will consume an exposed aREST API of a device.
+Support for exposed aREST RESTful API of a device.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.arest/
@@ -22,7 +22,7 @@ CONF_PIN = 'pin'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the aREST binary sensor."""
+    """Setup the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
 
@@ -53,9 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestBinarySensor(BinarySensorDevice):
-    """Implements an aREST binary sensor for a pin."""
+    """Implement an aREST binary sensor for a pin."""
 
     def __init__(self, arest, resource, name, pin):
+        """Initialize the aREST device."""
         self.arest = arest
         self._resource = resource
         self._name = name
@@ -70,30 +71,32 @@ class ArestBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the binary sensor."""
+        """Return the name of the binary sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return bool(self.arest.data.get('state'))
 
     def update(self):
-        """Gets the latest data from aREST API."""
+        """Get the latest data from aREST API."""
         self.arest.update()
 
 
 # pylint: disable=too-few-public-methods
 class ArestData(object):
     """Class for handling the data retrieval for pins."""
+
     def __init__(self, resource, pin):
+        """Initialize the aREST data object."""
         self._resource = resource
         self._pin = pin
         self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from aREST device."""
+        """Get the latest data from aREST device."""
         try:
             response = requests.get('{}/digital/{}'.format(
                 self._resource, self._pin), timeout=10)

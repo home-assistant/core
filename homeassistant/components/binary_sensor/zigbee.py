@@ -19,8 +19,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorDevice):
-    """
-    Use multiple inheritance to turn a ZigBeeDigitalIn into a
-    BinarySensorDevice.
-    """
+    """Use ZigBeeDigitalIn as binary sensor."""
+
     pass
