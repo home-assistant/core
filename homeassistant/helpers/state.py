@@ -18,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=too-few-public-methods, attribute-defined-outside-init
 class TrackStates(object):
-    """
-    Records the time when the with-block is entered. Will add all states
-    that have changed since the start time to the return list when with-block
-    is exited.
+    """Record the time when the with-block is entered.
+
+    Will add all states that have changed since the start time to the return
+    list when with-block is exited.
     """
 
     def __init__(self, hass):
@@ -100,7 +100,6 @@ def state_as_number(state):
 
     Raises ValueError if this is not possible.
     """
-
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
                        STATE_OPEN):
         return 1
