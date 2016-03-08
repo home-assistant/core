@@ -1,5 +1,5 @@
 """
-Offers zone automation rules.
+Offer zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#zone-trigger
@@ -33,7 +33,7 @@ def trigger(hass, config, action):
     event = config.get(CONF_EVENT, DEFAULT_EVENT)
 
     def zone_automation_listener(entity, from_s, to_s):
-        """Listens for state changes and calls action."""
+        """Listen for state changes and calls action."""
         if from_s and None in (from_s.attributes.get(ATTR_LATITUDE),
                                from_s.attributes.get(ATTR_LONGITUDE)) or \
             None in (to_s.attributes.get(ATTR_LATITUDE),
@@ -55,7 +55,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """Wraps action method with zone based condition."""
+    """Wrap action method with zone based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
 

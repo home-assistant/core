@@ -1,5 +1,5 @@
 """
-Offers sun based automation rules.
+Offer sun based automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#sun-trigger
@@ -53,7 +53,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """Wraps action method with sun based condition."""
+    """Wrap action method with sun based condition."""
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
 

@@ -1,5 +1,5 @@
 """
-Offers time listening automation rules.
+Offer time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#time-trigger
@@ -40,7 +40,7 @@ def trigger(hass, config, action):
         return False
 
     def time_automation_listener(now):
-        """Listens for time changes and calls action."""
+        """Listen for time changes and calls action."""
         action()
 
     track_time_change(hass, time_automation_listener,
@@ -50,7 +50,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """Wraps action method with time based condition."""
+    """Wrap action method with time based condition."""
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
