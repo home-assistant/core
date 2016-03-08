@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """Validates configuration and returns FritzBoxScanner."""
+    """Validate the configuration and return FritzBoxScanner."""
     if not validate_config(config,
                            {DOMAIN: []},
                            _LOGGER):
@@ -33,20 +33,10 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class FritzBoxScanner(object):
-    """
-    This class queries a FRITZ!Box router. It is using the
-    fritzconnection library for communication with the router.
+    """This class queries a FRITZ!Box router."""
 
-    The API description can be found under:
-    https://pypi.python.org/pypi/fritzconnection/0.4.6
-
-    This scanner retrieves the list of known hosts and checks their
-    corresponding states (on, or off).
-
-    Due to a bug of the fritzbox api (router side) it is not possible
-    to track more than 16 hosts.
-    """
     def __init__(self, config):
+        """Initialize the scanner."""
         self.last_results = []
         self.host = '169.254.1.1'  # This IP is valid for all FRITZ!Box router.
         self.username = 'admin'
@@ -95,7 +85,7 @@ class FritzBoxScanner(object):
         return active_hosts
 
     def get_device_name(self, mac):
-        """Returns the name of the given device or None if is not known."""
+        """Return the name of the given device or None if is not known."""
         ret = self.fritz_box.get_specific_host_entry(mac)["NewHostName"]
         if ret == {}:
             return None
@@ -103,7 +93,7 @@ class FritzBoxScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Retrieves latest information from the FRITZ!Box."""
+        """Retrieve latest information from the FRITZ!Box."""
         if not self.success_init:
             return False
 

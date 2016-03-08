@@ -1,5 +1,5 @@
 """
-Provides functionality to keep track of devices.
+Provide functionality to keep track of devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_tracker/
@@ -68,7 +68,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """Returns if any or specified device is home."""
+    """Return the state if any or a specified device is home."""
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
     return hass.states.is_state(entity, STATE_HOME)
@@ -139,7 +139,7 @@ def setup(hass, config):
                      device_tracker_discovered)
 
     def update_stale(now):
-        """ Clean up stale devices. """
+        """Clean up stale devices."""
         tracker.update_stale(now)
     track_utc_time_change(hass, update_stale, second=range(0, 60, 5))
 
@@ -161,8 +161,10 @@ def setup(hass, config):
 
 
 class DeviceTracker(object):
-    """Represents a device tracker."""
+    """Representation of a device tracker."""
+
     def __init__(self, hass, consider_home, track_new, home_range, devices):
+        """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
@@ -179,7 +181,7 @@ class DeviceTracker(object):
 
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
             gps=None, gps_accuracy=None, battery=None):
-        """Notify device tracker that you see a device."""
+        """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
                 raise HomeAssistantError('Neither mac or device id passed in')
@@ -218,7 +220,7 @@ class DeviceTracker(object):
             update_config(self.hass.config.path(YAML_DEVICES), dev_id, device)
 
     def setup_group(self):
-        """Initializes group for all tracked devices."""
+        """Initialize group for all tracked devices."""
         entity_ids = (dev.entity_id for dev in self.devices.values()
                       if dev.track)
         self.group = group.Group(
@@ -234,7 +236,8 @@ class DeviceTracker(object):
 
 
 class Device(Entity):
-    """Represents a tracked device."""
+    """Represent a tracked device."""
+
     host_name = None
     location_name = None
     gps = None
@@ -248,6 +251,7 @@ class Device(Entity):
 
     def __init__(self, hass, consider_home, home_range, track, dev_id, mac,
                  name=None, picture=None, away_hide=False):
+        """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
 
@@ -280,7 +284,7 @@ class Device(Entity):
 
     @property
     def name(self):
-        """Returns the name of the entity."""
+        """Return the name of the entity."""
         return self.config_name or self.host_name or DEVICE_DEFAULT_NAME
 
     @property
