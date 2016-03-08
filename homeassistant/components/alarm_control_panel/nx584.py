@@ -29,8 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NX584Alarm(alarm.AlarmControlPanel):
-    """Represents the NX584-based alarm panel. """
+    """Represents the NX584-based alarm panel."""
+
     def __init__(self, hass, host, name):
+        """Initalize the nx584 alarm panel."""
         from nx584 import client
         self._hass = hass
         self._host = host
@@ -48,17 +50,17 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the device."""
         return self._name
 
     @property
     def code_format(self):
-        """Characters if code is defined."""
+        """The characters if code is defined."""
         return '[0-9]{4}([0-9]{2})?'
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
