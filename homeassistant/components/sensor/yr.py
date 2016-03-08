@@ -38,7 +38,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the Yr.no sensor."""
+    """Setup the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get('elevation')
@@ -73,9 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class YrSensor(Entity):
-    """Implements an Yr.no sensor."""
+    """Representation of an Yr.no sensor."""
 
     def __init__(self, sensor_type, weather):
+        """Initialize the sensor."""
         self.client_name = 'yr'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -88,12 +89,12 @@ class YrSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
@@ -106,7 +107,7 @@ class YrSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Returns state attributes. """
+        """Return the state attributes."""
         return {
             'about': "Weather forecast from yr.no, delivered by the"
                      " Norwegian Meteorological Institute and the NRK"
@@ -114,11 +115,11 @@ class YrSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """Gets the latest data from yr.no and updates the states."""
+        """Get the latest data from yr.no and updates the states."""
         now = dt_util.utcnow()
         # Check if data should be updated
         if self._update is not None and now <= self._update:
@@ -164,9 +165,10 @@ class YrSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class YrData(object):
-    """Gets the latest data and updates the states."""
+    """Get the latest data and updates the states."""
 
     def __init__(self, coordinates):
+        """Initialize the data object."""
         self._url = 'http://api.yr.no/weatherapi/locationforecast/1.9/?' \
             'lat={lat};lon={lon};msl={msl}'.format(**coordinates)
 
@@ -175,7 +177,7 @@ class YrData(object):
         self.update()
 
     def update(self):
-        """Gets the latest data from yr.no."""
+        """Get the latest data from yr.no."""
         # Check if new will be available
         if self._nextrun is not None and dt_util.utcnow() <= self._nextrun:
             return

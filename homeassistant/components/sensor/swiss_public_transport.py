@@ -1,5 +1,5 @@
 """
-Support for transport.opendata.ch
+Support for transport.opendata.ch.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.swiss_public_transport/
@@ -29,7 +29,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Swiss public transport sensor."""
-
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination
     journey = [config.get('from'), config.get('to')]
@@ -53,9 +52,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class SwissPublicTransportSensor(Entity):
-    """Implements an Swiss public transport sensor."""
+    """Implementation of an Swiss public transport sensor."""
 
     def __init__(self, data, journey):
+        """Initialize the sensor."""
         self.data = data
         self._name = 'Next Departure'
         self._from = journey[2]
@@ -64,17 +64,17 @@ class SwissPublicTransportSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         if self._times is not None:
             return {
                 ATTR_DEPARTURE_TIME1: self._times[0],
@@ -92,7 +92,7 @@ class SwissPublicTransportSensor(Entity):
 
     # pylint: disable=too-many-branches
     def update(self):
-        """Gets the latest data from opendata.ch and updates the states."""
+        """Get the latest data from opendata.ch and update the states."""
         self.data.update()
         self._times = self.data.times
         try:
@@ -103,16 +103,17 @@ class SwissPublicTransportSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class PublicTransportData(object):
-    """Class for handling the data retrieval."""
+    """The Class for handling the data retrieval."""
 
     def __init__(self, journey):
+        """Initialize the data object."""
         self.start = journey[0]
         self.destination = journey[1]
         self.times = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from opendata.ch."""
+        """Get the latest data from opendata.ch."""
         response = requests.get(
             _RESOURCE +
             'connections?' +
