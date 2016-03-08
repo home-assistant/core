@@ -15,8 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup rollershutter controlled by shell commands."""
-
+    """Setup roller shutter controlled by shell commands."""
     rollershutters = config.get('rollershutters', {})
     devices = []
 
@@ -35,15 +34,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class CommandRollershutter(RollershutterDevice):
-    """ Represents a rollershutter -  can be controlled using shell cmd. """
+    """Representation a command line roller shutter."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, command_up, command_down, command_stop,
                  command_state, value_template):
-
+        """Initialize the roller shutter."""
         self._hass = hass
         self._name = name
-        self._state = None  # Unknown
+        self._state = None
         self._command_up = command_up
         self._command_down = command_down
         self._command_stop = command_stop
@@ -52,7 +51,7 @@ class CommandRollershutter(RollershutterDevice):
 
     @staticmethod
     def _move_rollershutter(command):
-        """ Execute the actual commands. """
+        """Execute the actual commands."""
         _LOGGER.info('Running command: %s', command)
 
         success = (subprocess.call(command, shell=True) == 0)
@@ -64,7 +63,7 @@ class CommandRollershutter(RollershutterDevice):
 
     @staticmethod
     def _query_state_value(command):
-        """ Execute state command for return value. """
+        """Execute state command for return value."""
         _LOGGER.info('Running state command: %s', command)
 
         try:
@@ -75,31 +74,31 @@ class CommandRollershutter(RollershutterDevice):
 
     @property
     def should_poll(self):
-        """ Only poll if we have statecmd. """
+        """Only poll if we have state command."""
         return self._command_state is not None
 
     @property
     def name(self):
-        """ The name of the rollershutter. """
+        """Return the name of the roller shutter."""
         return self._name
 
     @property
     def current_position(self):
-        """
-        Return current position of rollershutter.
+        """Return current position of roller shutter.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._state
 
     def _query_state(self):
-        """ Query for state. """
+        """Query for the state."""
         if not self._command_state:
             _LOGGER.error('No state command specified')
             return
         return self._query_state_value(self._command_state)
 
     def update(self):
-        """ Update device state. """
+        """Update device state."""
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
@@ -108,13 +107,13 @@ class CommandRollershutter(RollershutterDevice):
             self._state = int(payload)
 
     def move_up(self, **kwargs):
-        """ Move the rollershutter up. """
+        """Move the roller shutter up."""
         self._move_rollershutter(self._command_up)
 
     def move_down(self, **kwargs):
-        """ Move the rollershutter down. """
+        """Move the roller shutter down."""
         self._move_rollershutter(self._command_down)
 
     def stop(self, **kwargs):
-        """ Stop the device. """
+        """Stop the device."""
         self._move_rollershutter(self._command_stop)

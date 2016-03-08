@@ -1,7 +1,5 @@
 """
-homeassistant.components.rollershutter.scsgate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a SCSGate rollershutter.
+Allow to configure a SCSGate roller shutter.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter.scsgate/
@@ -15,8 +13,7 @@ DEPENDENCIES = ['scsgate']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Add the SCSGate swiches defined inside of the configuration file. """
-
+    """Setup the SCSGate roller shutter."""
     devices = config.get('devices')
     rollershutters = []
     logger = logging.getLogger(__name__)
@@ -42,57 +39,59 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class SCSGateRollerShutter(RollershutterDevice):
-    """ Represents a rollershutter that can be controlled using SCSGate. """
+    """Representation of SCSGate rollershutter."""
+
     def __init__(self, scs_id, name, logger):
+        """Initialize the roller shutter."""
         self._scs_id = scs_id
         self._name = name
         self._logger = logger
 
     @property
     def scs_id(self):
-        """ SCSGate ID """
+        """Return the SCSGate ID."""
         return self._scs_id
 
     @property
     def should_poll(self):
-        """ No polling needed """
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """ The name of the rollershutter. """
+        """Return the name of the roller shutter."""
         return self._name
 
     @property
     def current_position(self):
-        """
-        Return current position of rollershutter.
+        """Return current position of roller shutter.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         return None
 
     def move_up(self, **kwargs):
-        """ Move the rollershutter up. """
+        """Move the roller shutter up."""
         from scsgate.tasks import RaiseRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             RaiseRollerShutterTask(target=self._scs_id))
 
     def move_down(self, **kwargs):
-        """ Move the rollershutter down. """
+        """Move the rollers hutter down."""
         from scsgate.tasks import LowerRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             LowerRollerShutterTask(target=self._scs_id))
 
     def stop(self, **kwargs):
-        """ Stop the device. """
+        """Stop the device."""
         from scsgate.tasks import HaltRollerShutterTask
 
         scsgate.SCSGATE.append_task(HaltRollerShutterTask(target=self._scs_id))
 
     def process_event(self, message):
-        """ Handle a SCSGate message related with this rollershutter """
+        """Handle a SCSGate message related with this roller shutter."""
         self._logger.debug(
             "Rollershutter %s, got message %s",
             self._scs_id, message.toggled)

@@ -18,9 +18,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoRollershutter(RollershutterDevice):
-    """Represents a roller shutter."""
+    """Representation of a demo roller shutter."""
+
     # pylint: disable=no-self-use
     def __init__(self, hass, name, position):
+        """Initialize the roller shutter."""
         self.hass = hass
         self._name = name
         self._position = position
@@ -29,7 +31,7 @@ class DemoRollershutter(RollershutterDevice):
 
     @property
     def name(self):
-        """Returns the name of the roller shutter."""
+        """Return the name of the roller shutter."""
         return self._name
 
     @property
@@ -59,7 +61,7 @@ class DemoRollershutter(RollershutterDevice):
         self._moving_up = False
 
     def stop(self, **kwargs):
-        """Stops the roller shutter."""
+        """Stop the roller shutter."""
         if self._listener is not None:
             self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self._listener)
             self._listener = None
