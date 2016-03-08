@@ -25,7 +25,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Transmission sensors."""
+    """Setup the Transmission sensors."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
 
@@ -64,9 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TransmissionSensor(Entity):
-    """A Transmission sensor."""
+    """representation of a Transmission sensor."""
 
     def __init__(self, sensor_type, transmission_client, client_name):
+        """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.transmission_client = transmission_client
         self.type = sensor_type
@@ -76,21 +77,21 @@ class TransmissionSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self.client_name + ' ' + self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def refresh_transmission_data(self):
-        """ Calls the throttled Transmission refresh method. """
+        """Call the throttled Transmission refresh method."""
         from transmissionrpc.error import TransmissionError
 
         if _THROTTLED_REFRESH is not None:
@@ -102,7 +103,7 @@ class TransmissionSensor(Entity):
                 )
 
     def update(self):
-        """Gets the latest data from Transmission and updates the state."""
+        """Get the latest data from Transmission and updates the state."""
         self.refresh_transmission_data()
         if self.type == 'current_status':
             if self.transmission_client.session:

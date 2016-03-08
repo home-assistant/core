@@ -25,7 +25,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the REST sensor."""
+    """Setup the REST sensor."""
     resource = config.get('resource', None)
     method = config.get('method', DEFAULT_METHOD)
     payload = config.get('payload', None)
@@ -45,9 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class RestSensor(Entity):
-    """Implements a REST sensor."""
+    """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement, value_template):
+        """Initialize the sensor."""
         self._hass = hass
         self.rest = rest
         self._name = name
@@ -58,21 +59,21 @@ class RestSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     def update(self):
-        """Gets the latest data from REST API and updates the state."""
+        """Get the latest data from REST API and update the state."""
         self.rest.update()
         value = self.rest.data
 
@@ -90,13 +91,14 @@ class RestData(object):
     """Class for handling the data retrieval."""
 
     def __init__(self, method, resource, data, verify_ssl):
+        """Initialize the data object."""
         self._request = requests.Request(method, resource, data=data).prepare()
         self._verify_ssl = verify_ssl
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from REST service with GET method."""
+        """Get the latest data from REST service with GET method."""
         try:
             with requests.Session() as sess:
                 response = sess.send(self._request, timeout=10,

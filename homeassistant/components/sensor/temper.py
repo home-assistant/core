@@ -18,7 +18,7 @@ REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return Temper sensors."""
+    """Setup the Temper sensors."""
     from temperusb.temper import TemperHandler
 
     temp_unit = hass.config.temperature_unit
@@ -29,9 +29,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TemperSensor(Entity):
-    """Represents an Temper temperature sensor."""
+    """Representation of a Temper temperature sensor."""
 
     def __init__(self, temper_device, temp_unit, name):
+        """Initialize the sensor."""
         self.temper_device = temper_device
         self.temp_unit = temp_unit
         self.current_value = None
@@ -39,17 +40,17 @@ class TemperSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the temperature sensor."""
+        """Return the name of the temperature sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the entity."""
+        """Return the state of the entity."""
         return self.current_value
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self.temp_unit
 
     def update(self):
