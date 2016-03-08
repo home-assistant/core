@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.rest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REST platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -23,8 +21,7 @@ DEFAULT_TARGET_PARAM_NAME = None
 
 
 def get_service(hass, config):
-    """ Get the REST notification service. """
-
+    """Get the REST notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['resource', ]},
                            _LOGGER):
@@ -45,10 +42,11 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods, too-many-arguments
 class RestNotificationService(BaseNotificationService):
-    """ Implements notification service for REST. """
+    """Implement the notification service for REST."""
 
     def __init__(self, resource, method, message_param_name,
                  title_param_name, target_param_name):
+        """Initialize the service."""
         self._resource = resource
         self._method = method.upper()
         self._message_param_name = message_param_name
@@ -56,8 +54,7 @@ class RestNotificationService(BaseNotificationService):
         self._target_param_name = target_param_name
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
-
+        """Send a message to a user."""
         data = {
             self._message_param_name: message
         }
