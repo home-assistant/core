@@ -43,7 +43,7 @@ def setup_scanner(hass, config, see):
         return False
 
     def keep_alive(now):
-        """Keeps authenticating iCloud connection."""
+        """Keep authenticating iCloud connection."""
         api.authenticate()
         _LOGGER.info("Authenticate against iCloud")
 
