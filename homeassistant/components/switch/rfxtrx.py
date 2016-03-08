@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for RFXtrx switches.
 
 For more details about this platform, please refer to the documentation at
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Setup the RFXtrx platform. """
+    """Setup the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     # Add switch from config file
@@ -47,7 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(switchs)
 
     def switch_update(event):
-        """ Callback for sensor updates from the RFXtrx gateway. """
+        """Callback for sensor updates from the RFXtrx gateway."""
         if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
                 event.device.known_to_be_dimmable:
             return
@@ -107,8 +105,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxSwitch(SwitchDevice):
-    """ Provides a RFXtrx switch. """
+    """Representation of a RFXtrx switch."""
+
     def __init__(self, name, event, datas, signal_repetitions):
+        """Initialize the switch."""
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
@@ -117,31 +117,31 @@ class RfxtrxSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ No polling needed for a RFXtrx switch. """
+        """No polling needed for a RFXtrx switch."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
+        """Return the name of the device if any."""
         return self._name
 
     @property
     def should_fire_event(self):
-        """ Returns is the device must fire event"""
+        """Return is the device must fire event."""
         return self._should_fire_event
 
     @property
     def is_on(self):
-        """ True if light is on. """
+        """Return true if light is on."""
         return self._state
 
     @property
     def assumed_state(self):
-        """Return True if unable to access real state of entity."""
+        """Return true if unable to access real state of entity."""
         return True
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         if not self._event:
             return
 
@@ -152,7 +152,7 @@ class RfxtrxSwitch(SwitchDevice):
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         if not self._event:
             return
 
