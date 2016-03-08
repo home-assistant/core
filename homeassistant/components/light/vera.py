@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.vera
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Vera lights.
 
 For more details about this platform, please refer to the documentation at
@@ -23,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return Vera lights. """
+    """Setup Vera lights."""
     import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
@@ -40,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if created:
         def stop_subscription(event):
-            """ Shutdown Vera subscriptions and subscription thread on exit"""
+            """Shutdown Vera subscriptions and subscription thread on exit."""
             _LOGGER.info("Shutting down subscriptions.")
             vera_controller.stop()
 
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             'On/Off Switch',
             'Dimmable Switch'])
     except RequestException:
-        # There was a network related error connecting to the vera controller
+        # There was a network related error connecting to the vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
@@ -69,9 +67,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class VeraLight(Light):
-    """ Represents a Vera Light, including dimmable. """
+    """Representation of a Vera Light, including dimmable."""
 
     def __init__(self, vera_device, controller, extra_data=None):
+        """Initialize the light."""
         self.vera_device = vera_device
         self.extra_data = extra_data
         self.controller = controller
@@ -89,16 +88,17 @@ class VeraLight(Light):
 
     @property
     def name(self):
-        """ Get the mame of the switch. """
+        """Return the name of the light."""
         return self._name
 
     @property
     def brightness(self):
-        """Brightness of the light."""
+        """Return the brightness of the light."""
         if self.vera_device.is_dimmable:
             return self.vera_device.get_brightness()
 
     def turn_on(self, **kwargs):
+        """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
         else:
@@ -108,12 +108,14 @@ class VeraLight(Light):
         self.update_ha_state(True)
 
     def turn_off(self, **kwargs):
+        """Turn the light off."""
         self.vera_device.switch_off()
         self._state = STATE_OFF
         self.update_ha_state()
 
     @property
     def device_state_attributes(self):
+        """Return the state attributes."""
         attr = {}
 
         if self.vera_device.has_battery:
@@ -138,16 +140,16 @@ class VeraLight(Light):
 
     @property
     def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
+        """No polling needed."""
         return False
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state == STATE_ON
 
     def update(self):
-        """ Called by the vera device callback to update state. """
+        """Called by the vera device callback to update state."""
         if self.vera_device.is_switched_on():
             self._state = STATE_ON
         else:
