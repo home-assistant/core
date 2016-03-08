@@ -1,5 +1,5 @@
 """
-Offers state listening automation rules.
+Offer state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#state-trigger
@@ -70,18 +70,15 @@ def trigger(hass, config, action):
         return None
 
     def state_automation_listener(entity, from_s, to_s):
-        """Listens for state changes and calls action."""
-
+        """Listen for state changes and calls action."""
         def state_for_listener(now):
-            """Fires on state changes after a delay and calls action."""
+            """Fire on state changes after a delay and calls action."""
             hass.bus.remove_listener(
                 EVENT_STATE_CHANGED, for_state_listener)
             action()
 
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
-            """
-            Fires on state changes and cancels for listener if state changed.
-            """
+            """Fire on changes and cancel for listener if changed."""
             if inner_to_s == to_s:
                 return
             hass.bus.remove_listener(EVENT_TIME_CHANGED, for_time_listener)
@@ -105,7 +102,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """Wraps action method with state based condition."""
+    """Wrap action method with state based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
 
