@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.rpi_gpio
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Allows to configure a switch using RPi GPIO.
 
 For more details about this platform, please refer to the documentation at
@@ -21,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Raspberry PI GPIO devices. """
-
+    """Setup the Raspberry PI GPIO devices."""
     invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
 
     switches = []
@@ -33,8 +30,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RPiGPIOSwitch(ToggleEntity):
-    """ Represents a switch that can be toggled using Raspberry Pi GPIO. """
+    """Representation of a  Raspberry Pi GPIO."""
+
     def __init__(self, name, port, invert_logic):
+        """Initialize the pin."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._invert_logic = invert_logic
@@ -43,27 +42,27 @@ class RPiGPIOSwitch(ToggleEntity):
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """Return the name of the switch."""
         return self._name
 
     @property
     def should_poll(self):
-        """ No polling needed. """
+        """No polling needed."""
         return False
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state
 
     def turn_on(self):
-        """ Turn the device on. """
+        """Turn the device on."""
         rpi_gpio.write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.update_ha_state()
 
     def turn_off(self):
-        """ Turn the device off. """
+        """Turn the device off."""
         rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False
         self.update_ha_state()
