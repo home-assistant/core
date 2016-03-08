@@ -11,12 +11,9 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.components.switch import rfxtrx
 from unittest.mock import patch
 
-import pytest
-
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestSwitchRfxtrx(unittest.TestCase):
     """ Test the Rfxtrx switch. """
 
@@ -82,6 +79,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                    return_value=None):
             entity.turn_off()
         self.assertFalse(entity.is_on)
+        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_several_switchs(self):
         """ Test with 3 switchs """
@@ -123,6 +121,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                 self.assertEqual('<Entity Test: off>', entity.__str__())
 
         self.assertEqual(3, device_num)
+        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_discover_switch(self):
         """ Test with discover of switch """

@@ -11,12 +11,9 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.components.light import rfxtrx
 from unittest.mock import patch
 
-import pytest
-
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestLightRfxtrx(unittest.TestCase):
     """ Test the Rfxtrx light. """
 
@@ -102,6 +99,7 @@ class TestLightRfxtrx(unittest.TestCase):
             entity.turn_on(brightness=255)
         self.assertTrue(entity.is_on)
         self.assertEqual(entity.brightness, 255)
+        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_several_lights(self):
         """ Test with 3 lights """
@@ -143,6 +141,7 @@ class TestLightRfxtrx(unittest.TestCase):
                 self.assertEqual('<Entity Test: off>', entity.__str__())
 
         self.assertEqual(3, device_num)
+        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_discover_light(self):
         """ Test with discover of light """
