@@ -16,10 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def service(domain, service_name):
-    """ Decorator factory to register a service """
-
+    """Decorator factory to register a service."""
     def register_service_decorator(action):
-        """ Decorator to register a service """
+        """Decorator to register a service."""
         HASS.services.register(domain, service_name,
                                functools.partial(action, HASS))
         return action
@@ -60,8 +59,8 @@ def call_from_config(hass, config, blocking=False):
 
 
 def extract_entity_ids(hass, service_call):
-    """
-    Helper method to extract a list of entity ids from a service call.
+    """Helper method to extract a list of entity ids from a service call.
+
     Will convert group entity ids to the entity ids it represents.
     """
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
