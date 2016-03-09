@@ -1,9 +1,4 @@
-"""
-tests.components.sensor.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests MQTT sensor.
-"""
+"""The tests for the MQTT sensor platform."""
 import unittest
 
 import homeassistant.components.sensor as sensor
@@ -13,17 +8,19 @@ from tests.common import get_test_home_assistant
 
 
 class TestSensorMQTT(unittest.TestCase):
-    """ Test the MQTT sensor. """
+    """Test the MQTT sensor."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_setting_sensor_value_via_mqtt_message(self):
+        """Test the setting of the value via MQTT."""
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'mqtt',
@@ -42,6 +39,7 @@ class TestSensorMQTT(unittest.TestCase):
                          state.attributes.get('unit_of_measurement'))
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
+        """Test the setting of the value via MQTT with JSON playload."""
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'mqtt',

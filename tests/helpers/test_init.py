@@ -1,9 +1,4 @@
-"""
-tests.helpers.test_init
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests component helpers.
-"""
+"""Test component helpers."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
@@ -13,17 +8,18 @@ from tests.common import get_test_home_assistant
 
 
 class TestHelpers(unittest.TestCase):
-    """ Tests homeassistant.helpers module. """
+    """Tests homeassistant.helpers module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """ Init needed objects. """
+        """Init needed objects."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_extract_domain_configs(self):
+        """Test the extraction of domain configuration."""
         config = {
             'zone': None,
             'zoner': None,
