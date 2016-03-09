@@ -1,5 +1,5 @@
 """
-Allows users to set and activate scenes.
+Allow users to set and activate scenes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
@@ -20,7 +20,6 @@ CONF_ENTITIES = "entities"
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup home assistant scene entries."""
     scene_config = config.get("states")
@@ -83,5 +82,5 @@ class HomeAssistantScene(Scene):
         }
 
     def activate(self):
-        """Activate scene. Tries to get entities into requested state."""
+        """Activate scene. Try to get entities into requested state."""
         reproduce_state(self.hass, self.scene_config.states.values(), True)
