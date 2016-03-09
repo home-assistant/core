@@ -1,9 +1,4 @@
-"""
-tests.components.test_init
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests core compoments.
-"""
+"""The testd for Core components."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from unittest.mock import patch
@@ -17,10 +12,10 @@ from tests.common import get_test_home_assistant
 
 
 class TestComponentsCore(unittest.TestCase):
-    """ Tests homeassistant.components module. """
+    """Test homeassistant.components module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """ Init needed objects. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(comps.setup(self.hass, {}))
 
@@ -28,17 +23,17 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_is_on(self):
-        """ Test is_on method. """
+        """Test is_on method."""
         self.assertTrue(comps.is_on(self.hass, 'light.Bowl'))
         self.assertFalse(comps.is_on(self.hass, 'light.Ceiling'))
         self.assertTrue(comps.is_on(self.hass))
 
     def test_turn_on(self):
-        """ Test turn_on method. """
+        """Test turn_on method."""
         runs = []
         self.hass.services.register(
             'light', SERVICE_TURN_ON, lambda x: runs.append(1))
@@ -50,7 +45,7 @@ class TestComponentsCore(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_turn_off(self):
-        """ Test turn_off method. """
+        """Test turn_off method."""
         runs = []
         self.hass.services.register(
             'light', SERVICE_TURN_OFF, lambda x: runs.append(1))
@@ -62,7 +57,7 @@ class TestComponentsCore(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_toggle(self):
-        """ Test toggle method. """
+        """Test toggle method."""
         runs = []
         self.hass.services.register(
             'light', SERVICE_TOGGLE, lambda x: runs.append(1))
@@ -75,6 +70,7 @@ class TestComponentsCore(unittest.TestCase):
 
     @patch('homeassistant.core.ServiceRegistry.call')
     def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
+        """Test if turn_on is blocking domain with no service."""
         self.hass.services.register('light', SERVICE_TURN_ON, lambda x: x)
 
         # We can't test if our service call results in services being called

@@ -1,6 +1,4 @@
-"""
-Tests MQTT lock.
-"""
+"""The tests for the MQTT lock platform."""
 import unittest
 
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
@@ -12,15 +10,18 @@ from tests.common import (
 
 class TestLockMQTT(unittest.TestCase):
     """Test the MQTT lock."""
+
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down stuff we started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_controlling_state_via_topic(self):
+        """Test the controlling state via topic."""
         self.assertTrue(lock.setup(self.hass, {
             'lock': {
                 'platform': 'mqtt',
@@ -49,6 +50,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNLOCKED, state.state)
 
     def test_sending_mqtt_commands_and_optimistic(self):
+        """Test the sending MQTT commands in optimistic mode."""
         self.assertTrue(lock.setup(self.hass, {
             'lock': {
                 'platform': 'mqtt',
@@ -81,6 +83,7 @@ class TestLockMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNLOCKED, state.state)
 
     def test_controlling_state_via_topic_and_json_message(self):
+        """Test the controlling state via topic and JSON message."""
         self.assertTrue(lock.setup(self.hass, {
             'lock': {
                 'platform': 'mqtt',

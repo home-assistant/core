@@ -1,8 +1,4 @@
-"""
-tests.components.binary_sensor.test_binary_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Test the binary_sensor base class
-"""
+"""The tests for the Binary sensor component."""
 import unittest
 from unittest import mock
 

@@ -1,9 +1,4 @@
-"""
-tests.helpers.event_test
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests event helpers.
-"""
+"""Test event helpers."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import unittest
@@ -28,20 +23,18 @@ from tests.common import get_test_home_assistant
 
 
 class TestEventHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant event helpers.
-    """
+    """Test the Home Assistant event helpers."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_track_point_in_time(self):
-        """ Test track point in time. """
+        """Test track point in time."""
         before_birthday = datetime(1985, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
         birthday_paulus = datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
         after_birthday = datetime(1987, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -72,7 +65,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(runs))
 
     def test_track_time_change(self):
-        """ Test tracking time change. """
+        """Test tracking time change."""
         wildcard_runs = []
         specific_runs = []
 
@@ -150,16 +143,16 @@ class TestEventHelpers(unittest.TestCase):
         self.assertIsNone(wildcard_runs[-1][1])
 
     def test_track_sunrise(self):
-        """ Test track sunrise """
+        """Test track the sunrise."""
         latitude = 32.87336
         longitude = 117.22743
 
-        # setup sun component
+        # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
-        # get next sunrise/sunset
+        # Get next sunrise/sunset
         astral = Astral()
         utc_now = dt_util.utcnow()
 
@@ -171,7 +164,7 @@ class TestEventHelpers(unittest.TestCase):
                 break
             mod += 1
 
-        # track sunrise
+        # Track sunrise
         runs = []
         track_sunrise(self.hass, lambda: runs.append(1))
 
@@ -196,16 +189,16 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(offset_runs))
 
     def test_track_sunset(self):
-        """ Test track sunset """
+        """Test track the sunset."""
         latitude = 32.87336
         longitude = 117.22743
 
-        # setup sun component
+        # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
-        # get next sunrise/sunset
+        # Get next sunrise/sunset
         astral = Astral()
         utc_now = dt_util.utcnow()
 
@@ -217,7 +210,7 @@ class TestEventHelpers(unittest.TestCase):
                 break
             mod += 1
 
-        # track sunset
+        # Track sunset
         runs = []
         track_sunset(self.hass, lambda: runs.append(1))
 
@@ -225,7 +218,7 @@ class TestEventHelpers(unittest.TestCase):
         offset = timedelta(minutes=30)
         track_sunset(self.hass, lambda: offset_runs.append(1), offset)
 
-        # run tests
+        # Run tests
         self._send_time_changed(next_setting - offset)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(runs))
@@ -242,10 +235,11 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(offset_runs))
 
     def _send_time_changed(self, now):
-        """ Send a time changed event. """
+        """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
     def test_periodic_task_minute(self):
+        """Test periodic tasks per minute."""
         specific_runs = []
 
         track_utc_time_change(
@@ -264,6 +258,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_hour(self):
+        """Test periodic tasks per hour."""
         specific_runs = []
 
         track_utc_time_change(
@@ -290,6 +285,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(3, len(specific_runs))
 
     def test_periodic_task_day(self):
+        """Test periodic tasks per day."""
         specific_runs = []
 
         track_utc_time_change(
@@ -308,6 +304,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_year(self):
+        """Test periodic tasks per year."""
         specific_runs = []
 
         track_utc_time_change(
@@ -326,6 +323,7 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(2, len(specific_runs))
 
     def test_periodic_task_wrong_input(self):
+        """Test periodic tasks with wrong input."""
         specific_runs = []
 
         track_utc_time_change(

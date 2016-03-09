@@ -1,9 +1,4 @@
-"""
-tests.helpers.test_entity_component
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the entity component helper.
-"""
+"""Test the entity component helper."""
 # pylint: disable=protected-access,too-many-public-methods
 from collections import OrderedDict
 import logging

@@ -1,9 +1,4 @@
-"""
-tests.helpers.test_state
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test state helpers.
-"""
+"""Test state helpers."""
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
@@ -24,18 +19,19 @@ from tests.common import get_test_home_assistant, mock_service
 
 
 class TestStateHelpers(unittest.TestCase):
-    """ Tests the Home Assistant event helpers. """
+    """Test the Home Assistant event helpers."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ Things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         core_components.setup(self.hass, {})
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_get_changed_since(self):
+        """Test for changes since."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=5)
         point3 = point2 + timedelta(seconds=5)
@@ -57,6 +53,7 @@ class TestStateHelpers(unittest.TestCase):
             state.get_changed_since([state1, state2, state3], point2))
 
     def test_track_states(self):
+        """Test tracking of states."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=5)
         point3 = point2 + timedelta(seconds=5)
@@ -81,6 +78,7 @@ class TestStateHelpers(unittest.TestCase):
             sorted(states, key=lambda state: state.entity_id))
 
     def test_reproduce_state_with_turn_on(self):
+        """Test reproduction of state with turn_on."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         self.hass.states.set('light.test', 'off')
@@ -96,6 +94,7 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(['light.test'], last_call.data.get('entity_id'))
 
     def test_reproduce_state_with_complex_service_data(self):
+        """Test reproduction of state with complex service data."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         self.hass.states.set('light.test', 'off')
@@ -115,6 +114,7 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(complex_data, last_call.data.get('complex'))
 
     def test_reproduce_state_with_group(self):
+        """Test reproduction of state with group."""
         light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         self.hass.states.set('group.test', 'off', {
@@ -132,6 +132,7 @@ class TestStateHelpers(unittest.TestCase):
                          last_call.data.get('entity_id'))
 
     def test_reproduce_state_group_states_with_same_domain_and_data(self):
+        """Test reproduction of state with the dame domain."""
         light_calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         self.hass.states.set('light.test1', 'off')
@@ -152,6 +153,7 @@ class TestStateHelpers(unittest.TestCase):
         self.assertEqual(95, last_call.data.get('brightness'))
 
     def test_as_number_states(self):
+        """Test number as states."""
         zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
                        STATE_BELOW_HORIZON)
         one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON)
@@ -163,6 +165,7 @@ class TestStateHelpers(unittest.TestCase):
                 ha.State('domain.test', _state, {})))
 
     def test_as_number_coercion(self):
+        """Test numbers."""
         for _state in ('0', '0.0', 0, 0.0):
             self.assertEqual(
                 0.0, state.state_as_number(
@@ -173,6 +176,7 @@ class TestStateHelpers(unittest.TestCase):
                     ha.State('domain.test', _state, {})))
 
     def test_as_number_invalid_cases(self):
+        """."""
         for _state in ('', 'foo', 'foo.bar', None, False, True, object,
                        object()):
             self.assertRaises(ValueError,

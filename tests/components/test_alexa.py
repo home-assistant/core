@@ -1,9 +1,4 @@
-"""
-tests.components.test_alexa
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant Alexa component does what it should do.
-"""
+"""The tests for the Alexa component."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 import json
@@ -29,7 +24,7 @@ calls = []
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initalize a Home Assistant server for testing this module. """
+    """Initialize a Home Assistant server for testing this module."""
     global hass
 
     hass = get_test_home_assistant()
@@ -90,7 +85,7 @@ def setUpModule():   # pylint: disable=invalid-name
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server. """
+    """Stop the Home Assistant server."""
     hass.stop()
 
 
@@ -100,12 +95,14 @@ def _req(data={}):
 
 
 class TestAlexa(unittest.TestCase):
-    """ Test Alexa. """
+    """Test Alexa."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         hass.pool.block_till_done()
 
     def test_launch_request(self):
+        """Test the launch of a request."""
         data = {
             'version': '1.0',
             'session': {
@@ -131,6 +128,7 @@ class TestAlexa(unittest.TestCase):
         self.assertIn('outputSpeech', resp['response'])
 
     def test_intent_request_with_slots(self):
+        """Test a request with slots."""
         data = {
             'version': '1.0',
             'session': {
@@ -172,6 +170,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You told us your sign is virgo.', text)
 
     def test_intent_request_with_slots_but_no_value(self):
+        """Test a request with slots but no value."""
         data = {
             'version': '1.0',
             'session': {
@@ -212,6 +211,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You told us your sign is .', text)
 
     def test_intent_request_without_slots(self):
+        """Test a request without slots."""
         data = {
             'version': '1.0',
             'session': {
@@ -258,6 +258,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('You are both home, you silly', text)
 
     def test_intent_request_calling_service(self):
+        """Test a request for calling a service."""
         data = {
             'version': '1.0',
             'session': {
@@ -291,6 +292,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual(1, call.data.get('hello'))
 
     def test_session_ended_request(self):
+        """Test the request for ending the session."""
         data = {
             'version': '1.0',
             'session': {
