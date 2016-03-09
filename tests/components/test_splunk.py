@@ -1,9 +1,4 @@
-"""
-tests.components.test_splunk
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests splunk component.
-"""
+"""The tests for the Splunk component."""
 import unittest
 from unittest import mock
 
@@ -12,7 +7,10 @@ from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
 
 class TestSplunk(unittest.TestCase):
+    """Test the Splunk component."""
+
     def test_setup_config_full(self):
+        """Test setup with all data."""
         config = {
             'splunk': {
                 'host': 'host',
@@ -28,6 +26,7 @@ class TestSplunk(unittest.TestCase):
                          hass.bus.listen.call_args_list[0][0][0])
 
     def test_setup_config_defaults(self):
+        """Test setup with defaults."""
         config = {
             'splunk': {
                 'host': 'host',
@@ -41,6 +40,7 @@ class TestSplunk(unittest.TestCase):
                          hass.bus.listen.call_args_list[0][0][0])
 
     def _setup(self, mock_requests):
+        """Test the setup."""
         self.mock_post = mock_requests.post
         self.mock_request_exception = Exception
         mock_requests.exceptions.RequestException = self.mock_request_exception
@@ -57,6 +57,7 @@ class TestSplunk(unittest.TestCase):
     @mock.patch.object(splunk, 'requests')
     @mock.patch('json.dumps')
     def test_event_listener(self, mock_dump, mock_requests):
+        """Test event listener."""
         mock_dump.side_effect = lambda x: x
         self._setup(mock_requests)
 

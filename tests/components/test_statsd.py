@@ -1,9 +1,4 @@
-"""
-tests.components.test_statsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests StatsD feeder.
-"""
+"""The tests for the StatsD feeder."""
 import unittest
 from unittest import mock
 
@@ -13,9 +8,12 @@ from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
 
 class TestStatsd(unittest.TestCase):
+    """Test the StatsD component."""
+
     @mock.patch('statsd.Connection')
     @mock.patch('statsd.Gauge')
     def test_statsd_setup_full(self, mock_gauge, mock_connection):
+        """Test setup with all data."""
         config = {
             'statsd': {
                 'host': 'host',
@@ -38,6 +36,7 @@ class TestStatsd(unittest.TestCase):
     @mock.patch('statsd.Connection')
     @mock.patch('statsd.Gauge')
     def test_statsd_setup_defaults(self, mock_gauge, mock_connection):
+        """Test setup with defaults."""
         config = {
             'statsd': {
                 'host': 'host',
@@ -57,6 +56,7 @@ class TestStatsd(unittest.TestCase):
     @mock.patch('statsd.Connection')
     @mock.patch('statsd.Gauge')
     def test_event_listener(self, mock_gauge, mock_connection):
+        """Test event listener."""
         config = {
             'statsd': {
                 'host': 'host',
