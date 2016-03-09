@@ -33,7 +33,7 @@ def activate(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """Setup the scenes."""
+    """Setup scenes."""
     logger = logging.getLogger(__name__)
 
     # You are not allowed to mutate the original config so make a copy
@@ -76,9 +76,9 @@ class Scene(Entity):
 
     @property
     def state(self):
-        """Return the state."""
+        """Return the state of the scene."""
         return STATE
 
     def activate(self):
-        """Activate scene. Tries to get entities into requested state."""
+        """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError

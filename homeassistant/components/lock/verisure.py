@@ -8,10 +8,10 @@ import logging
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
+from homeassistant.const import (
+    ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_CODE = 'code'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         locks.extend([
             VerisureDoorlock(device_id)
             for device_id in hub.lock_status.keys()
-            ])
+        ])
     add_devices(locks)
 
 
