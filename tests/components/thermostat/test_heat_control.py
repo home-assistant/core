@@ -1,9 +1,4 @@
-"""
-tests.components.thermostat.test_heat_control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests heat control thermostat.
-"""
+"""The tests for the heat control thermostat."""
 import unittest
 
 from homeassistant.const import (
@@ -28,9 +23,10 @@ target_temp = 42.0
 
 
 class TestThermostatHeatControl(unittest.TestCase):
-    """ Test the Heat Control thermostat. """
+    """Test the Heat Control thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELCIUS
         thermostat.setup(self.hass, {'thermostat': {
@@ -41,19 +37,22 @@ class TestThermostatHeatControl(unittest.TestCase):
         }})
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_setup_defaults_to_unknown(self):
+        """Test the setting of defaults to unknown."""
         self.assertEqual('unknown', self.hass.states.get(entity).state)
 
     def test_default_setup_params(self):
+        """Test the setup with default parameters."""
         state = self.hass.states.get(entity)
         self.assertEqual(7, state.attributes.get('min_temp'))
         self.assertEqual(35, state.attributes.get('max_temp'))
         self.assertEqual(None, state.attributes.get('temperature'))
 
     def test_custom_setup_params(self):
+        """Test the setup with custom parameters."""
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
             'name': 'test',
@@ -70,11 +69,13 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(str(target_temp), self.hass.states.get(entity).state)
 
     def test_set_target_temp(self):
+        """Test the setting of the target temperature."""
         thermostat.set_temperature(self.hass, 30)
         self.hass.pool.block_till_done()
         self.assertEqual('30.0', self.hass.states.get(entity).state)
 
     def test_set_target_temp_turns_on_heater(self):
+        """Test if target temperature turn heater on."""
         self._setup_switch(False)
         self._setup_sensor(25)
         self.hass.pool.block_till_done()
@@ -87,6 +88,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(ent_switch, call.data['entity_id'])
 
     def test_set_target_temp_turns_off_heater(self):
+        """Test if target temperature turn heater off."""
         self._setup_switch(True)
         self._setup_sensor(30)
         self.hass.pool.block_till_done()
@@ -99,6 +101,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(ent_switch, call.data['entity_id'])
 
     def test_set_temp_change_turns_on_heater(self):
+        """Test if temperature change turn heater on."""
         self._setup_switch(False)
         thermostat.set_temperature(self.hass, 30)
         self.hass.pool.block_till_done()
@@ -111,6 +114,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(ent_switch, call.data['entity_id'])
 
     def test_temp_change_turns_off_heater(self):
+        """Test if temperature change turn heater off."""
         self._setup_switch(True)
         thermostat.set_temperature(self.hass, 25)
         self.hass.pool.block_till_done()
@@ -123,18 +127,18 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(ent_switch, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELCIUS):
-        """ Setup the test sensor. """
+        """Setup the test sensor."""
         self.hass.states.set(ent_sensor, temp, {
             ATTR_UNIT_OF_MEASUREMENT: unit
         })
 
     def _setup_switch(self, is_on):
-        """ Setup the test switch. """
+        """Setup the test switch."""
         self.hass.states.set(ent_switch, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
         def log_call(call):
-            """ Log service calls. """
+            """Log service calls."""
             self.calls.append(call)
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)

@@ -1,9 +1,4 @@
-"""
-tests.components.binary_sensor.test_template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tests for template binary_sensor.
-"""
-
+"""The tests for the Template Binary sensor platform."""
 import unittest
 from unittest import mock
 
@@ -12,8 +7,11 @@ from homeassistant.exceptions import TemplateError
 
 
 class TestBinarySensorTemplate(unittest.TestCase):
+    """Test for Binary sensor template platform."""
+
     @mock.patch.object(template, 'BinarySensorTemplate')
     def test_setup(self, mock_template):
+        """"Test the setup."""
         config = {
             'sensors': {
                 'test': {
@@ -32,11 +30,13 @@ class TestBinarySensorTemplate(unittest.TestCase):
         add_devices.assert_called_once_with([mock_template.return_value])
 
     def test_setup_no_sensors(self):
+        """"Test setup with no sensors."""
         config = {}
         result = template.setup_platform(None, config, None)
         self.assertFalse(result)
 
     def test_setup_invalid_device(self):
+        """"Test the setup with invalid devices."""
         config = {
             'sensors': {
                 'foo bar': {},
@@ -46,6 +46,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertFalse(result)
 
     def test_setup_invalid_sensor_class(self):
+        """"Test setup with invalid sensor class."""
         config = {
             'sensors': {
                 'test': {
@@ -58,6 +59,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertFalse(result)
 
     def test_setup_invalid_missing_template(self):
+        """"Test setup with invalid and missing template."""
         config = {
             'sensors': {
                 'test': {
@@ -69,6 +71,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertFalse(result)
 
     def test_attributes(self):
+        """"Test the attributes."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}')
@@ -84,6 +87,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertTrue(vs.is_on)
 
     def test_event(self):
+        """"Test the event."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}')
@@ -92,6 +96,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             mock_update.assert_called_once_with(True)
 
     def test_update(self):
+        """"Test the update."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 2 > 1 }}')
@@ -101,6 +106,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     @mock.patch('homeassistant.helpers.template.render')
     def test_update_template_error(self, mock_render):
+        """"Test the template update error."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}')

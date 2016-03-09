@@ -1,9 +1,4 @@
-"""
-tests.components.alarm_control_panel.test_manual
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests manual alarm control panel component.
-"""
+"""The tests the MQTT alarm control panel component."""
 import unittest
 from unittest.mock import patch
 
@@ -19,18 +14,20 @@ CODE = 'HELLO_CODE'
 
 
 class TestAlarmControlPanelMQTT(unittest.TestCase):
-    """ Test the manual alarm module. """
+    """Test the manual alarm module."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down stuff we started."""
         self.hass.stop()
 
     @patch('homeassistant.components.alarm_control_panel.mqtt._LOGGER.error')
     def test_fail_setup_without_state_topic(self, mock_error):
+        """Test for failing with no state topic."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -41,6 +38,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     @patch('homeassistant.components.alarm_control_panel.mqtt._LOGGER.error')
     def test_fail_setup_without_command_topic(self, mock_error):
+        """Test failing with no command topic."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -50,7 +48,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(1, mock_error.call_count)
 
     def test_update_state_via_state_topic(self):
-        """ Test arm home method. """
+        """Test updating with via state topic."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -72,7 +70,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
             self.assertEqual(state, self.hass.states.get(entity_id).state)
 
     def test_ignore_update_state_if_unknown_via_state_topic(self):
-        """ Test arm home method. """
+        """Test ignoring updates via state topic."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -91,6 +89,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, self.hass.states.get(entity_id).state)
 
     def test_arm_home_publishes_mqtt(self):
+        """Test publishing of MQTT messages while armed."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -105,6 +104,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-1][1])
 
     def test_arm_home_not_publishes_mqtt_with_invalid_code(self):
+        """Test not publishing of MQTT messages with invalid code."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -120,6 +120,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(call_count, self.mock_publish.call_count)
 
     def test_arm_away_publishes_mqtt(self):
+        """Test publishing of MQTT messages while armed."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -134,6 +135,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-1][1])
 
     def test_arm_away_not_publishes_mqtt_with_invalid_code(self):
+        """Test not publishing of MQTT messages with invalid code."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -149,6 +151,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(call_count, self.mock_publish.call_count)
 
     def test_disarm_publishes_mqtt(self):
+        """Test publishing of MQTT messages while disarmed."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
@@ -163,6 +166,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-1][1])
 
     def test_disarm_not_publishes_mqtt_with_invalid_code(self):
+        """Test not publishing of MQTT messages with invalid code."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'mqtt',
