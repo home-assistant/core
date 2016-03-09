@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """Validate the configuration and return a TP-Link scanner. """
+    """Validate the configuration and return a TP-Link scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
