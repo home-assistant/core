@@ -102,6 +102,10 @@ ATTR_LOCATION = "location"
 
 ATTR_BATTERY_LEVEL = "battery_level"
 
+# For devices which support a code attribute
+ATTR_CODE = 'code'
+ATTR_CODE_FORMAT = 'code_format'
+
 # For devices which support an armed state
 ATTR_ARMED = "device_armed"
 
