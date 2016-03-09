@@ -21,7 +21,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """Setup things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
@@ -29,7 +29,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         event_decorators.HASS = self.hass
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
         event_decorators.HASS = None
 

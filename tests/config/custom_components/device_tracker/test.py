@@ -2,7 +2,7 @@
 
 
 def get_scanner(hass, config):
-    """Returns a mock scanner."""
+    """Return a mock scanner."""
     return SCANNER
 
 

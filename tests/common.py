@@ -102,6 +102,7 @@ def ensure_sun_set(hass):
 
 
 def mock_state_change_event(hass, new_state, old_state=None):
+    """Mock state change envent."""
     event_data = {
         'entity_id': new_state.entity_id,
         'new_state': new_state,
@@ -133,14 +134,17 @@ def mock_mqtt_component(hass, mock_mqtt):
 
 class MockHTTP(object):
     """Mock the HTTP module."""
+
     def register_path(self, method, url, callback, require_auth=True):
+        """Register a path."""
         pass
 
 
 class MockModule(object):
-    """ Provides a fake module. """
+    """Representation of a fake module."""
 
     def __init__(self, domain=None, dependencies=[], setup=None):
+        """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
         # Setup a mock setup if none given.
@@ -166,7 +170,9 @@ class MockPlatform(object):
 
 class MockToggleDevice(ToggleEntity):
     """Provide a mock toggle device."""
+
     def __init__(self, name, state):
+        """Initialize the mock device."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self.calls = []
@@ -179,7 +185,7 @@ class MockToggleDevice(ToggleEntity):
 
     @property
     def state(self):
-        """Returns the name of the device if any."""
+        """Return the name of the device if any."""
         self.calls.append(('state', {}))
         return self._state
 
