@@ -1,9 +1,4 @@
-"""
-tests.components.switch.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests MQTT switch.
-"""
+"""The tests for the MQTT switch platform."""
 import unittest
 
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
@@ -13,17 +8,19 @@ from tests.common import (
 
 
 class TestSensorMQTT(unittest.TestCase):
-    """ Test the MQTT switch. """
+    """Test the MQTT switch."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """"Stop everything that was started."""
         self.hass.stop()
 
     def test_controlling_state_via_topic(self):
+        """Test the controlling state via topic."""
         self.assertTrue(switch.setup(self.hass, {
             'switch': {
                 'platform': 'mqtt',
@@ -52,6 +49,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
     def test_sending_mqtt_commands_and_optimistic(self):
+        """Test the sending MQTT commands in optimistic mode."""
         self.assertTrue(switch.setup(self.hass, {
             'switch': {
                 'platform': 'mqtt',
@@ -84,6 +82,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
     def test_controlling_state_via_topic_and_json_message(self):
+        """Test the controlling state via topic and JSON message."""
         self.assertTrue(switch.setup(self.hass, {
             'switch': {
                 'platform': 'mqtt',

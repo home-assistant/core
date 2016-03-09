@@ -1,9 +1,4 @@
-"""
-tests.components.test_rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Rfxtrx component.
-"""
+"""Th tests for the Rfxtrx component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 import time
@@ -18,21 +13,21 @@ from tests.common import get_test_home_assistant
 
 @pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestRFXTRX(unittest.TestCase):
-    """ Test the sun module. """
+    """Test the Rfxtrx component."""
 
     def setUp(self):
-        """ setup hass """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(0)
 
     def tearDown(self):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}
         rfxtrx.RFXOBJECT = None
         self.hass.stop()
 
     def test_default_config(self):
-        """ Test config """
+        """Test configuration."""
         self.assertTrue(rfxtrx.setup(self.hass, {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
@@ -44,7 +39,7 @@ class TestRFXTRX(unittest.TestCase):
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -57,7 +52,7 @@ class TestRFXTRX(unittest.TestCase):
         self.assertEquals(len(devices), 2)
 
     def test_config_failing(self):
-        """ Test config """
+        """Test configuration."""
         self.assertFalse(rfxtrx.setup(self.hass, {
             'rfxtrx': {}
         }))
