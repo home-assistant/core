@@ -1,9 +1,4 @@
-"""
-tests.util.test_packages
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant package util methods.
-"""
+"""Test Home Assistant package util methods."""
 import os
 import tempfile
 import unittest
@@ -21,26 +16,26 @@ TEST_ZIP_REQ = 'file://{}#{}' \
 
 
 class TestPackageUtil(unittest.TestCase):
-    """ Tests for homeassistant.util.package module. """
+    """Test for homeassistant.util.package module."""
 
     def setUp(self):
-        """ Create local library for testing. """
+        """Create local library for testing."""
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.lib_dir = os.path.join(self.tmp_dir.name, 'lib')
 
     def tearDown(self):
-        """ Remove local library. """
+        """Stop everything that was started."""
         self.tmp_dir.cleanup()
 
     def test_install_existing_package(self):
-        """ Test an install attempt on an existing package. """
+        """Test an install attempt on an existing package."""
         self.assertTrue(package.check_package_exists(
             TEST_EXIST_REQ, self.lib_dir))
 
         self.assertTrue(package.install_package(TEST_EXIST_REQ))
 
     def test_install_package_zip(self):
-        """ Test an install attempt from a zip path. """
+        """Test an install attempt from a zip path."""
         self.assertFalse(package.check_package_exists(
             TEST_ZIP_REQ, self.lib_dir))
         self.assertFalse(package.check_package_exists(

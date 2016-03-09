@@ -1,9 +1,4 @@
-"""
-tests.components.test_influxdb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests influxdb component.
-"""
+"""The tests for the InfluxDB component."""
 import copy
 import unittest
 from unittest import mock
@@ -15,8 +10,11 @@ from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
 
 class TestInfluxDB(unittest.TestCase):
+    """Test the InfluxDB component."""
+
     @mock.patch('influxdb.InfluxDBClient')
     def test_setup_config_full(self, mock_client):
+        """Test the setup with full configuration."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -37,6 +35,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_setup_config_defaults(self, mock_client):
+        """Test the setup with default configuration."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -52,6 +51,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_setup_missing_keys(self, mock_client):
+        """Test the setup with missing keys."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -67,6 +67,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_setup_query_fail(self, mock_client):
+        """Test the setup for query failures."""
         config = {
             'influxdb': {
                 'host': 'host',
@@ -80,6 +81,7 @@ class TestInfluxDB(unittest.TestCase):
         self.assertFalse(influxdb.setup(hass, config))
 
     def _setup(self, mock_influx):
+        """Setup the client."""
         self.mock_client = mock_influx.return_value
         config = {
             'influxdb': {
@@ -95,6 +97,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_event_listener(self, mock_influx):
+        """Test the event listener."""
         self._setup(mock_influx)
 
         valid = {'1': 1,
@@ -127,6 +130,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_event_listener_no_units(self, mock_influx):
+        """Test the event listener for missing units."""
         self._setup(mock_influx)
 
         for unit in (None, ''):
@@ -158,6 +162,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_event_listener_fail_write(self, mock_influx):
+        """Test the event listener for write failures."""
         self._setup(mock_influx)
 
         state = mock.MagicMock(state=1,
@@ -173,6 +178,7 @@ class TestInfluxDB(unittest.TestCase):
 
     @mock.patch('influxdb.InfluxDBClient')
     def test_event_listener_blacklist(self, mock_influx):
+        """Test the event listener against a blacklist."""
         self._setup(mock_influx)
 
         for entity_id in ('ok', 'blacklisted'):

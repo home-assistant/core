@@ -1,4 +1,4 @@
-"""Tests for the device tracker compoment."""
+"""The tests for the device tracker component."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from unittest.mock import patch
@@ -17,15 +17,15 @@ from tests.common import (
 
 
 class TestComponentsDeviceTracker(unittest.TestCase):
-    """ Tests homeassistant.components.device_tracker module. """
+    """Test the Device tracker."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """ Init needed objects. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         try:
             os.remove(self.yaml_devices)
         except FileNotFoundError:
@@ -34,7 +34,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.hass.stop()
 
     def test_is_on(self):
-        """ Test is_on method. """
+        """Test is_on method."""
         entity_id = device_tracker.ENTITY_ID_FORMAT.format('test')
 
         self.hass.states.set(entity_id, STATE_HOME)
@@ -46,6 +46,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
 
     def test_reading_yaml_config(self):
+        """Test the rendering of the YAML configuration."""
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), 0, True, dev_id,
@@ -62,9 +63,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.consider_home, config.consider_home)
 
     def test_setup_without_yaml_file(self):
+        """Test with no YAML file."""
         self.assertTrue(device_tracker.setup(self.hass, {}))
 
     def test_adding_unknown_device_to_config(self):
+        """Test the adding of unknown devices to configuration file."""
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('DEV1')
@@ -78,6 +81,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert config[0].track
 
     def test_discovery(self):
+        """Test discovery."""
         scanner = get_component('device_tracker.test').SCANNER
 
         with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
@@ -88,6 +92,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 self.assertTrue(mock_scan.called)
 
     def test_update_stale(self):
+        """Test stalled update."""
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('DEV1')
@@ -117,6 +122,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                          self.hass.states.get('device_tracker.dev1').state)
 
     def test_entity_attributes(self):
+        """Test the entity attributes."""
         dev_id = 'test_entity'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         friendly_name = 'Paulus'
@@ -135,6 +141,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(picture, attrs.get(ATTR_ENTITY_PICTURE))
 
     def test_device_hidden(self):
+        """Test hidden devices."""
         dev_id = 'test_entity'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
@@ -152,6 +159,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                             .attributes.get(ATTR_HIDDEN))
 
     def test_group_all_devices(self):
+        """Test grouping of devices."""
         dev_id = 'test_entity'
         entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         device = device_tracker.Device(
@@ -173,6 +181,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     @patch('homeassistant.components.device_tracker.DeviceTracker.see')
     def test_see_service(self, mock_see):
+        """Test the see service."""
         self.assertTrue(device_tracker.setup(self.hass, {}))
         mac = 'AB:CD:EF:GH'
         dev_id = 'some_device'

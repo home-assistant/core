@@ -1,9 +1,4 @@
-"""
-tests.__init__
-~~~~~~~~~~~~~~
-
-Tests initialization.
-"""
+"""Test the initialization."""
 import betamax
 
 from homeassistant import util
