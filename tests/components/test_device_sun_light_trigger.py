@@ -1,4 +1,4 @@
-"""Tests device sun light trigger component."""
+"""The tests device sun light trigger component."""
 # pylint: disable=too-many-public-methods,protected-access
 import os
 import unittest
@@ -37,9 +37,10 @@ def tearDownModule():   # pylint: disable=invalid-name
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
-    """ Test the device sun light trigger module. """
+    """Test the device sun light trigger module."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         event_decorators.HASS = self.hass
 
@@ -63,30 +64,27 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
             self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}}))
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
         event_decorators.HASS = None
 
     def test_lights_on_when_sun_sets(self):
-        """ Test lights go on when there is someone home and the sun sets. """
-
+        """Test lights go on when there is someone home and the sun sets."""
         self.assertTrue(device_sun_light_trigger.setup(
             self.hass, {device_sun_light_trigger.DOMAIN: {}}))
 
         ensure_sun_risen(self.hass)
-
         light.turn_off(self.hass)
 
         self.hass.pool.block_till_done()
 
         ensure_sun_set(self.hass)
-
         self.hass.pool.block_till_done()
 
         self.assertTrue(light.is_on(self.hass))
 
     def test_lights_turn_off_when_everyone_leaves(self):
-        """ Test lights turn off when everyone leaves the house. """
+        """Test lights turn off when everyone leaves the house."""
         light.turn_on(self.hass)
 
         self.hass.pool.block_till_done()
@@ -102,9 +100,8 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         self.assertFalse(light.is_on(self.hass))
 
     def test_lights_turn_on_when_coming_home_after_sun_set(self):
-        """ Test lights turn on when coming home after sun set. """
+        """Test lights turn on when coming home after sun set."""
         light.turn_off(self.hass)
-
         ensure_sun_set(self.hass)
 
         self.hass.pool.block_till_done()
@@ -116,5 +113,4 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
             device_tracker.ENTITY_ID_FORMAT.format('device_2'), STATE_HOME)
 
         self.hass.pool.block_till_done()
-
         self.assertTrue(light.is_on(self.hass))

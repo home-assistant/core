@@ -1,9 +1,4 @@
-"""
-tests.components.switch.test_command_line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests command switch.
-"""
+"""the tests for the Command line switch platform."""
 import json
 import os
 import tempfile
@@ -16,16 +11,18 @@ from tests.common import get_test_home_assistant
 
 
 class TestCommandSwitch(unittest.TestCase):
-    """ Test the command switch. """
+    """Test the command switch."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_state_none(self):
+        """Test with none state."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
@@ -57,6 +54,7 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
     def test_state_value(self):
+        """Test with state value."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {
@@ -90,6 +88,7 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
     def test_state_json_value(self):
+        """Test with state JSON value."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             oncmd = json.dumps({'status': 'ok'})
@@ -125,6 +124,7 @@ class TestCommandSwitch(unittest.TestCase):
             self.assertEqual(STATE_OFF, state.state)
 
     def test_state_code(self):
+        """Test with state code."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'switch_status')
             test_switch = {

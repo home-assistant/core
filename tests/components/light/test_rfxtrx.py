@@ -1,10 +1,4 @@
-"""
-tests.components.light.test_rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Rfxtrx light.
-"""
-
+"""The tests for the Rfxtrx light platform."""
 import unittest
 
 from homeassistant.components import rfxtrx as rfxtrx_core
@@ -18,25 +12,25 @@ from tests.common import get_test_home_assistant
 
 @pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestLightRfxtrx(unittest.TestCase):
-    """ Test the Rfxtrx light. """
+    """Test the Rfxtrx light platform."""
 
     def setUp(self):
-        """ setup hass """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(0)
 
     def tearDown(self):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
         self.hass.stop()
 
     def test_default_config(self):
-        """ Test with 0 lights """
+        """Test with 0 lights."""
         config = {'devices': {}}
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -44,7 +38,7 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertEqual(0, len(devices))
 
     def test_one_sensor(self):
-        """ Test with 1 light """
+        """Test with 1 light."""
         config = {'devices':
                   {'123efab1': {
                       'name': 'Test',
@@ -56,7 +50,7 @@ class TestLightRfxtrx(unittest.TestCase):
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -104,7 +98,7 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertEqual(entity.brightness, 255)
 
     def test_several_lights(self):
-        """ Test with 3 lights """
+        """Test with 3 lights."""
         config = {'signal_repetitions': 3,
                   'devices':
                   {'123efab1': {
@@ -119,7 +113,7 @@ class TestLightRfxtrx(unittest.TestCase):
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -145,12 +139,12 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertEqual(3, device_num)
 
     def test_discover_light(self):
-        """ Test with discover of light """
+        """Test with discovery of lights."""
         config = {'automatic_add': True, 'devices': {}}
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -209,12 +203,12 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertEqual(2, len(devices))
 
     def test_discover_light_noautoadd(self):
-        """ Test with discover of light when auto add is False """
+        """Test with discover of light when auto add is False."""
         config = {'automatic_add': False, 'devices': {}}
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -250,14 +244,14 @@ class TestLightRfxtrx(unittest.TestCase):
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
         self.assertEqual(0, len(devices))
 
-        # trying to add a sensor
+        # Trying to add a sensor
         event = rfxtrx_core.get_rfx_object('0a52085e070100b31b0279')
         event.data = bytearray(b'\nR\x08^\x07\x01\x00\xb3\x1b\x02y')
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
         self.assertEqual(0, len(devices))
 
-        # trying to add a switch
+        # Trying to add a switch
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])

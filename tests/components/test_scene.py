@@ -1,9 +1,4 @@
-"""
-tests.components.test_scene
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests scene component.
-"""
+"""The tests for the Scene component."""
 import unittest
 
 from homeassistant import loader
@@ -13,19 +8,20 @@ from tests.common import get_test_home_assistant
 
 
 class TestScene(unittest.TestCase):
-    """ Test scene component. """
+    """Test the scene component."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_config_yaml_alias_anchor(self):
-        """
-        Tests the usage of YAML aliases and anchors.  The following test scene
-        configuration is equivalent to:
+        """Test the usage of YAML aliases and anchors.
+
+        The following test scene configuration is equivalent to:
 
         scene:
           - name: test
@@ -77,6 +73,7 @@ class TestScene(unittest.TestCase):
                          light_2.last_call('turn_on')[1].get('brightness'))
 
     def test_activate_scene(self):
+        """Test active scene."""
         test_light = loader.get_component('light.test')
         test_light.init()
 
