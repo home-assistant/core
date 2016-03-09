@@ -31,7 +31,10 @@ def get_scanner(hass, config):
                            _LOGGER):
         return None
 
-    scanner = Tplink4DeviceScanner(config[DOMAIN])
+    scanner = Tplink5DeviceScanner(config[DOMAIN])
+
+    if not scanner.success_init:
+        scanner = Tplink4DeviceScanner(config[DOMAIN])
 
     if not scanner.success_init:
         scanner = Tplink3DeviceScanner(config[DOMAIN])
@@ -315,6 +318,39 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
             url = 'http://{}/{}/userRpm/WlanStationRpm.htm' \
                 .format(self.host, self.token)
+            referer = 'http://{}'.format(self.host)
+            cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+            page = requests.get(url, headers={
+                'cookie': cookie,
+                'referer': referer
+            })
+            result = self.parse_macs.findall(page.text)
+
+            if not result:
+                return False
+
+            self.last_results = [mac.replace("-", ":") for mac in result]
+            return True
+
+
+class Tplink5DeviceScanner(Tplink4DeviceScanner):
+    """This one works with a tp-link TL-WR841N"""
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        with self.lock:
+            if (self.credentials == '') or (self.token == ''):
+                self._get_auth_tokens()
+
+            _LOGGER.info("Loading wireless clients...")
+
+            url = 'http://{}/{}/userRpm/AssignedIpAddrListRpm.htm?' \
+                  'Refresh=Refresh'.format(self.host, self.token)
             referer = 'http://{}'.format(self.host)
             cookie = 'Authorization=Basic {}'.format(self.credentials)
 
