@@ -23,7 +23,7 @@ def create_file(path):
 
 
 class TestConfig(unittest.TestCase):
-    """Test the configutils. """
+    """Test the configutils."""
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up."""
@@ -65,7 +65,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual('', content)
 
     def test_load_yaml_config_converts_empty_files_to_dict(self):
-        """ Test that loading an empty file returns an empty dict. """
+        """Test that loading an empty file returns an empty dict."""
         create_file(YAML_PATH)
 
         self.assertIsInstance(

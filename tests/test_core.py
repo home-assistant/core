@@ -35,7 +35,7 @@ class TestHomeAssistant(unittest.TestCase):
         self.hass.states.set("switch.AC", "off")
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """Stop down stuff we started."""
+        """Stop everything that was started."""
         try:
             self.hass.stop()
         except HomeAssistantError:
@@ -106,7 +106,7 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(event1, event2)
 
     def test_repr(self):
-        """Test that repr method works. #MoreCoverage"""
+        """Test that repr method works."""
         self.assertEqual(
             "<Event TestEvent[L]>",
             str(ha.Event("TestEvent")))
@@ -237,7 +237,7 @@ class TestState(unittest.TestCase):
 
 
 class TestStateMachine(unittest.TestCase):
-    """Test State machine methods. """
+    """Test State machine methods."""
 
     def setUp(self):    # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
@@ -349,7 +349,7 @@ class TestServiceCall(unittest.TestCase):
 
 
 class TestServiceRegistry(unittest.TestCase):
-    """ Test ServicerRegistry methods. """
+    """Test ServicerRegistry methods."""
 
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
@@ -419,7 +419,7 @@ class TestConfig(unittest.TestCase):
     """Test configuration methods."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """Setup things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.config = ha.Config()
 
     def test_config_dir_set_correct(self):
