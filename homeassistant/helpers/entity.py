@@ -1,5 +1,4 @@
-"""An abstract class for entities in HA."""
-
+"""An abstract class for entities."""
 import re
 from collections import defaultdict
 
