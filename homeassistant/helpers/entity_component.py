@@ -1,4 +1,4 @@
-"""Provides helpers for components that manage entities."""
+"""Helpers for components that manage entities."""
 from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
