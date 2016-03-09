@@ -216,7 +216,7 @@ class TestRemoteClasses(unittest.TestCase):
             remote.API('127.0.0.1', API_PASSWORD, BROKEN_PORT))
 
     def test_statemachine_init(self):
-        """ Tests if remote.StateMachine copies all states on init. """
+        """Test if remote.StateMachine copies all states on init."""
         self.assertEqual(sorted(hass.states.all()),
                          sorted(slave.states.all()))
 

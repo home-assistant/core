@@ -33,7 +33,6 @@ DEVICE_MAPPINGS = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Z-Wave platform for sensors."""
-
     if discovery_info is None or NETWORK is None:
         return
 
@@ -63,9 +62,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
-    """Represents a binary sensor within Z-Wave."""
+    """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, value, sensor_class):
+        """Initialize the sensor."""
         self._sensor_type = sensor_class
         # pylint: disable=import-error
         from openzwave.network import ZWaveNetwork
@@ -98,12 +98,10 @@ class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
 
 
 class ZWaveTriggerSensor(ZWaveBinarySensor):
-    """
-    Represents a stateless sensor which triggers events just 'On'
-    within Z-Wave.
-    """
+    """Representation of a stateless sensor within Z-Wave."""
 
     def __init__(self, sensor_value, sensor_class, hass, re_arm_sec=60):
+        """Initialize the sensor."""
         super(ZWaveTriggerSensor, self).__init__(sensor_value, sensor_class)
         self._hass = hass
         self.re_arm_sec = re_arm_sec

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Generate an updated requirements_all.txt
-"""
-
+"""Generate an updated requirements_all.txt."""
 import importlib
 import os
 import pkgutil
@@ -17,7 +14,7 @@ COMMENT_REQUIREMENTS = [
 
 
 def explore_module(package, explore_children):
-    """ Explore the modules. """
+    """Explore the modules."""
     module = importlib.import_module(package)
 
     found = []
@@ -35,7 +32,7 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """ Gather core requirements out of setup.py. """
+    """Gather core requirements out of setup.py."""
     with open('setup.py') as inp:
         reqs_raw = re.search(
             r'REQUIRES = \[(.*?)\]', inp.read(), re.S).group(1)
@@ -43,12 +40,12 @@ def core_requirements():
 
 
 def comment_requirement(req):
-    """ Some requirements don't install on all systems. """
+    """Some requirements don't install on all systems."""
     return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
 def gather_modules():
-    """ Collect the information and construct the output. """
+    """Collect the information and construct the output."""
     reqs = {}
 
     errors = []
@@ -95,19 +92,19 @@ def gather_modules():
 
 
 def write_file(data):
-    """ Writes the modules to the requirements_all.txt. """
+    """Write the modules to the requirements_all.txt."""
     with open('requirements_all.txt', 'w+') as req_file:
         req_file.write(data)
 
 
 def validate_file(data):
-    """ Validates if requirements_all.txt is up to date. """
+    """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
         return data == ''.join(req_file)
 
 
 def main():
-    """ Main """
+    """Main section of the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return

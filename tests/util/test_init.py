@@ -62,9 +62,9 @@ class TestUtil(unittest.TestCase):
 
     def test_ordered_enum(self):
         """Test the ordered enum class."""
-
         class TestEnum(util.OrderedEnum):
             """Test enum that can be ordered."""
+
             FIRST = 1
             SECOND = 2
             THIRD = 3
@@ -214,7 +214,6 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_per_instance(self):
         """Test that the throttle method is done per instance of a class."""
-
         class Tester(object):
             """A tester class for the throttle."""
 
@@ -228,7 +227,6 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_method(self):
         """Test that throttle works when wrapping a method."""
-
         class Tester(object):
             """A tester class for the throttle."""
 
@@ -244,7 +242,6 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_two_method(self):
         """Test that throttle works when wrapping two methods."""
-
         class Tester(object):
             """A test class for the throttle."""
 

@@ -1,7 +1,8 @@
 #! /usr/bin/python
 """
-Query the Home Assistant API for available entities then print them and any
-desired attributes to the screen.
+Query the Home Assistant API for available entities.
+
+Output is printed to stdout.
 """
 
 import sys
@@ -17,19 +18,19 @@ import json
 
 
 def main(password, askpass, attrs, address, port):
-    """ fetch Home Assistant api json page and post process """
-    # ask for password
+    """Fetch Home Assistant API JSON page and post process."""
+    # Ask for password
     if askpass:
         password = getpass.getpass('Home Assistant API Password: ')
 
-    # fetch API result
+    # Fetch API result
     url = mk_url(address, port, password)
     response = urlopen(url).read()
     if PYTHON == 3:
         response = response.decode('utf-8')
     data = json.loads(response)
 
-    # parse data
+    # Parse data
     output = {'entity_id': []}
     output.update([(attr, []) for attr in attrs])
     for item in data:
@@ -37,18 +38,18 @@ def main(password, askpass, attrs, address, port):
         for attr in attrs:
             output[attr].append(item['attributes'].get(attr, ''))
 
-    # output data
+    # Output data
     print_table(output, ['entity_id'] + attrs)
 
 
 def print_table(data, columns):
-    """ format and print a table of data from a dictionary """
-    # get column lengths
+    """Format and print a table of data from a dictionary."""
+    # Get column lengths
     lengths = {}
     for key, value in data.items():
         lengths[key] = max([len(str(val)) for val in value] + [len(key)])
 
-    # print header
+    # Print header
     for item in columns:
         itemup = item.upper()
         sys.stdout.write(itemup + ' ' * (lengths[item] - len(item) + 4))
@@ -63,7 +64,7 @@ def print_table(data, columns):
 
 
 def mk_url(address, port, password):
-    """ construct the url call for the api states page """
+    """Construct the URL call for the API states page."""
     url = ''
     if address.startswith('http://'):
         url += address
