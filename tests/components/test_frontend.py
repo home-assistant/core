@@ -1,9 +1,4 @@
-"""
-tests.test_component_http
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant HTTP component does what it should do.
-"""
+"""The tests for Home Assistant frontend."""
 # pylint: disable=protected-access,too-many-public-methods
 import re
 import unittest
@@ -25,12 +20,12 @@ hass = None
 
 
 def _url(path=""):
-    """ Helper method to generate urls. """
+    """Helper method to generate URLs."""
     return HTTP_BASE_URL + path
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server. """
+    """Initialize a Home Assistant server."""
     global hass
 
     hass = get_test_home_assistant()
@@ -49,18 +44,19 @@ def setUpModule():   # pylint: disable=invalid-name
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server. """
+    """Stop everything that was started."""
     hass.stop()
 
 
 class TestFrontend(unittest.TestCase):
-    """ Test the frontend. """
+    """Test the frontend."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         hass.pool.block_till_done()
 
     def test_frontend_and_static(self):
-        """ Tests if we can get the frontend. """
+        """Test if we can get the frontend."""
         req = requests.get(_url(""))
 
         self.assertEqual(200, req.status_code)
@@ -77,6 +73,7 @@ class TestFrontend(unittest.TestCase):
         self.assertEqual(200, req.status_code)
 
     def test_auto_filling_in_api_password(self):
+        """Test for auto filling of API password."""
         req = requests.get(
             _url("?{}={}".format(http.DATA_API_PASSWORD, API_PASSWORD)))
 
@@ -87,7 +84,9 @@ class TestFrontend(unittest.TestCase):
         self.assertIsNotNone(auth_text)
 
     def test_404(self):
+        """Test for HTTP 404 error."""
         self.assertEqual(404, requests.get(_url("/not-existing")).status_code)
 
     def test_we_cannot_POST_to_root(self):
+        """Test that POST is not allow to root."""
         self.assertEqual(405, requests.post(_url("")).status_code)

@@ -1,9 +1,4 @@
-"""
-tests.components.notify.test_command_line
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests command line notification.
-"""
+"""The tests for the command line notification platform."""
 import os
 import tempfile
 import unittest
@@ -14,16 +9,18 @@ from unittest.mock import patch
 
 
 class TestCommandLine(unittest.TestCase):
-    """ Test the command line. """
+    """Test the command line notifications."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = core.HomeAssistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_command_line_output(self):
+        """Test the command line output."""
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'message.txt')
             message = 'one, two, testing, testing'
@@ -44,7 +41,7 @@ class TestCommandLine(unittest.TestCase):
 
     @patch('homeassistant.components.notify.command_line._LOGGER.error')
     def test_error_for_none_zero_exit_code(self, mock_error):
-        """ Test if an error if logged for non zero exit codes. """
+        """Test if an error if logged for non zero exit codes."""
         self.assertTrue(notify.setup(self.hass, {
             'notify': {
                 'name': 'test',

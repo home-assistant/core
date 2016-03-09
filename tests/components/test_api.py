@@ -1,9 +1,4 @@
-"""
-tests.components.test_api
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant HTTP component does what it should do.
-"""
+"""The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access,too-many-public-methods
 from contextlib import closing
 import json
@@ -28,12 +23,12 @@ hass = None
 
 
 def _url(path=""):
-    """ Helper method to generate urls. """
+    """Helper method to generate URLs."""
     return HTTP_BASE_URL + path
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initializes a Home Assistant server. """
+    """Initialize a Home Assistant server."""
     global hass
 
     hass = get_test_home_assistant()
@@ -52,23 +47,26 @@ def setUpModule():   # pylint: disable=invalid-name
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server. """
+    """Stop the Home Assistant server."""
     hass.stop()
 
 
 class TestAPI(unittest.TestCase):
-    """ Test the API. """
+    """Test the API."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         hass.pool.block_till_done()
 
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):
+        """Test access without password."""
         req = requests.get(_url(const.URL_API))
 
         self.assertEqual(401, req.status_code)
 
     def test_access_denied_with_wrong_password(self):
+        """Test ascces with wrong password."""
         req = requests.get(
             _url(const.URL_API),
             headers={const.HTTP_HEADER_HA_AUTH: 'wrongpassword'})
@@ -76,12 +74,14 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(401, req.status_code)
 
     def test_access_with_password_in_url(self):
+        """Test access with password in URL."""
         req = requests.get(
             "{}?api_password={}".format(_url(const.URL_API), API_PASSWORD))
 
         self.assertEqual(200, req.status_code)
 
     def test_access_via_session(self):
+        """Test access wia session."""
         session = requests.Session()
         req = session.get(_url(const.URL_API), headers=HA_HEADERS)
         self.assertEqual(200, req.status_code)
@@ -90,7 +90,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(200, req.status_code)
 
     def test_api_list_state_entities(self):
-        """ Test if the debug interface allows us to list state entities. """
+        """Test if the debug interface allows us to list state entities."""
         req = requests.get(_url(const.URL_API_STATES),
                            headers=HA_HEADERS)
 
@@ -99,7 +99,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(hass.states.all(), remote_data)
 
     def test_api_get_state(self):
-        """ Test if the debug interface allows us to get a state. """
+        """Test if the debug interface allows us to get a state."""
         req = requests.get(
             _url(const.URL_API_STATES_ENTITY.format("test.test")),
             headers=HA_HEADERS)
@@ -113,7 +113,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(state.attributes, data.attributes)
 
     def test_api_get_non_existing_state(self):
-        """ Test if the debug interface allows us to get a state. """
+        """Test if the debug interface allows us to get a state."""
         req = requests.get(
             _url(const.URL_API_STATES_ENTITY.format("does_not_exist")),
             headers=HA_HEADERS)
@@ -121,8 +121,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(404, req.status_code)
 
     def test_api_state_change(self):
-        """ Test if we can change the state of an entity that exists. """
-
+        """Test if we can change the state of an entity that exists."""
         hass.states.set("test.test", "not_to_be_set")
 
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
@@ -134,9 +133,7 @@ class TestAPI(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_api_state_change_of_non_existing_entity(self):
-        """ Test if the API allows us to change a state of
-            a non existing entity. """
-
+        """Test if changing a state of a non existing entity is possible."""
         new_state = "debug_state_change"
 
         req = requests.post(
@@ -153,8 +150,7 @@ class TestAPI(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_api_state_change_with_bad_data(self):
-        """ Test if API sends appropriate error if we omit state. """
-
+        """Test if API sends appropriate error if we omit state."""
         req = requests.post(
             _url(const.URL_API_STATES_ENTITY.format(
                 "test_entity.that_does_not_exist")),
@@ -165,11 +161,11 @@ class TestAPI(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_no_data(self):
-        """ Test if the API allows us to fire an event. """
+        """Test if the API allows us to fire an event."""
         test_value = []
 
         def listener(event):
-            """ Helper method that will verify our event got called. """
+            """Helper method that will verify our event got called."""
             test_value.append(1)
 
         hass.bus.listen_once("test.event_no_data", listener)
@@ -184,12 +180,14 @@ class TestAPI(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_data(self):
-        """ Test if the API allows us to fire an event. """
+        """Test if the API allows us to fire an event."""
         test_value = []
 
         def listener(event):
-            """ Helper method that will verify that our event got called and
-                that test if our data came through. """
+            """Helper method that will verify that our event got called.
+
+            Also test if our data came through.
+            """
             if "test" in event.data:
                 test_value.append(1)
 
@@ -206,11 +204,11 @@ class TestAPI(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_invalid_json(self):
-        """ Test if the API allows us to fire an event. """
+        """Test if the API allows us to fire an event."""
         test_value = []
 
         def listener(event):
-            """ Helper method that will verify our event got called. """
+            """Helper method that will verify our event got called."""
             test_value.append(1)
 
         hass.bus.listen_once("test_event_bad_data", listener)
@@ -237,16 +235,19 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(0, len(test_value))
 
     def test_api_get_config(self):
+        """Test the return of the configuration."""
         req = requests.get(_url(const.URL_API_CONFIG),
                            headers=HA_HEADERS)
         self.assertEqual(hass.config.as_dict(), req.json())
 
     def test_api_get_components(self):
+        """Test the return of the components."""
         req = requests.get(_url(const.URL_API_COMPONENTS),
                            headers=HA_HEADERS)
         self.assertEqual(hass.config.components, req.json())
 
     def test_api_get_error_log(self):
+        """Test the return of the error log."""
         test_content = 'Test String'
         with tempfile.NamedTemporaryFile() as log:
             log.write(test_content.encode('utf-8'))
@@ -259,7 +260,7 @@ class TestAPI(unittest.TestCase):
             self.assertIsNone(req.headers.get('expires'))
 
     def test_api_get_event_listeners(self):
-        """ Test if we can get the list of events being listened for. """
+        """Test if we can get the list of events being listened for."""
         req = requests.get(_url(const.URL_API_EVENTS),
                            headers=HA_HEADERS)
 
@@ -272,7 +273,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(0, len(local))
 
     def test_api_get_services(self):
-        """ Test if we can get a dict describing current services. """
+        """Test if we can get a dict describing current services."""
         req = requests.get(_url(const.URL_API_SERVICES),
                            headers=HA_HEADERS)
 
@@ -284,11 +285,11 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(local, serv_domain["services"])
 
     def test_api_call_service_no_data(self):
-        """ Test if the API allows us to call a service. """
+        """Test if the API allows us to call a service."""
         test_value = []
 
         def listener(service_call):
-            """ Helper method that will verify that our service got called. """
+            """Helper method that will verify that our service got called."""
             test_value.append(1)
 
         hass.services.register("test_domain", "test_service", listener)
@@ -303,12 +304,14 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(1, len(test_value))
 
     def test_api_call_service_with_data(self):
-        """ Test if the API allows us to call a service. """
+        """Test if the API allows us to call a service."""
         test_value = []
 
         def listener(service_call):
-            """ Helper method that will verify that our service got called and
-                that test if our data came through. """
+            """Helper method that will verify that our service got called.
+
+            Also test if our data came through.
+            """
             if "test" in service_call.data:
                 test_value.append(1)
 
@@ -325,7 +328,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(1, len(test_value))
 
     def test_api_template(self):
-        """ Test template API. """
+        """Test the template API."""
         hass.states.set('sensor.temperature', 10)
 
         req = requests.post(
@@ -337,7 +340,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual('10', req.text)
 
     def test_api_template_error(self):
-        """ Test template API. """
+        """Test the template API."""
         hass.states.set('sensor.temperature', 10)
 
         req = requests.post(
@@ -349,8 +352,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(422, req.status_code)
 
     def test_api_event_forward(self):
-        """ Test setting up event forwarding. """
-
+        """Test setting up event forwarding."""
         req = requests.post(
             _url(const.URL_API_EVENT_FORWARD),
             headers=HA_HEADERS)
@@ -425,6 +427,7 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(200, req.status_code)
 
     def test_stream(self):
+        """Test the stream."""
         listen_count = self._listen_count()
         with closing(requests.get(_url(const.URL_API_STREAM),
                                   stream=True, headers=HA_HEADERS)) as req:
@@ -442,6 +445,7 @@ class TestAPI(unittest.TestCase):
             self.assertEqual('test_event', data['event_type'])
 
     def test_stream_with_restricted(self):
+        """Test the stream with restrictions."""
         listen_count = self._listen_count()
         with closing(requests.get(_url(const.URL_API_STREAM),
                                   data=json.dumps({
@@ -466,6 +470,7 @@ class TestAPI(unittest.TestCase):
             self.assertEqual('test_event3', data['event_type'])
 
     def _stream_next_event(self, stream):
+        """Test the stream for next event."""
         data = b''
         last_new_line = False
         for dat in stream.iter_content(1):
@@ -479,5 +484,5 @@ class TestAPI(unittest.TestCase):
         return conv if conv == 'ping' else json.loads(conv)
 
     def _listen_count(self):
-        """ Return number of event listeners. """
+        """Return number of event listeners."""
         return sum(hass.bus.listeners.values())

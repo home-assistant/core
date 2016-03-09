@@ -1,9 +1,4 @@
-"""
-tests.components.rollershutter.test_mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests MQTT rollershutter.
-"""
+"""The tests for the MQTT roller shutter platform."""
 import unittest
 
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
@@ -14,17 +9,19 @@ from tests.common import get_test_home_assistant
 
 
 class TestRollershutterMQTT(unittest.TestCase):
-    """ Test the MQTT rollershutter. """
+    """Test the MQTT roller shutter."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_controlling_state_via_topic(self):
+        """Test the controlling state via topic."""
         self.assertTrue(rollershutter.setup(self.hass, {
             'rollershutter': {
                 'platform': 'mqtt',
@@ -60,6 +57,7 @@ class TestRollershutterMQTT(unittest.TestCase):
         self.assertEqual(STATE_OPEN, state.state)
 
     def test_send_move_up_command(self):
+        """Test the sending of move_up."""
         self.assertTrue(rollershutter.setup(self.hass, {
             'rollershutter': {
                 'platform': 'mqtt',
@@ -82,6 +80,7 @@ class TestRollershutterMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
     def test_send_move_down_command(self):
+        """Test the sending of move_down."""
         self.assertTrue(rollershutter.setup(self.hass, {
             'rollershutter': {
                 'platform': 'mqtt',
@@ -104,6 +103,7 @@ class TestRollershutterMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
     def test_send_stop_command(self):
+        """Test the sending of stop."""
         self.assertTrue(rollershutter.setup(self.hass, {
             'rollershutter': {
                 'platform': 'mqtt',
@@ -126,6 +126,7 @@ class TestRollershutterMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
 
     def test_state_attributes_current_position(self):
+        """Test the current position."""
         self.assertTrue(rollershutter.setup(self.hass, {
             'rollershutter': {
                 'platform': 'mqtt',

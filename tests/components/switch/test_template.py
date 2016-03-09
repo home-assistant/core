@@ -1,9 +1,4 @@
-"""
-tests.components.switch.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests template switch.
-"""
+"""The tests for the  Template switch platform."""
 import homeassistant.components as core
 import homeassistant.components.switch as switch
 
@@ -15,11 +10,11 @@ from tests.common import get_test_home_assistant
 
 
 class TestTemplateSwitch:
-    """ Test the Template switch. """
+    """Test the Template switch."""
 
     def setup_method(self, method):
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
         self.calls = []
 
         def record_call(service):
@@ -28,10 +23,11 @@ class TestTemplateSwitch:
         self.hass.services.register('test', 'automation', record_call)
 
     def teardown_method(self, method):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_template_state_text(self):
+        """"Test the state text of a template."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -65,6 +61,7 @@ class TestTemplateSwitch:
         assert state.state == STATE_OFF
 
     def test_template_state_boolean_on(self):
+        """Test the setting of the state with boolean on."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -89,6 +86,7 @@ class TestTemplateSwitch:
         assert state.state == STATE_ON
 
     def test_template_state_boolean_off(self):
+        """Test the setting of the state with off."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -113,6 +111,7 @@ class TestTemplateSwitch:
         assert state.state == STATE_OFF
 
     def test_template_syntax_error(self):
+        """Test templating syntax error."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -139,6 +138,7 @@ class TestTemplateSwitch:
         assert state.state == 'unavailable'
 
     def test_invalid_name_does_not_create(self):
+        """Test invalid name."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -161,6 +161,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_invalid_switch_does_not_create(self):
+        """Test invalid name."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -172,6 +173,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_no_switches_does_not_create(self):
+        """Test if there are no switches no creation."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template'
@@ -180,6 +182,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_missing_template_does_not_create(self):
+        """Test missing template."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -202,6 +205,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_missing_on_does_not_create(self):
+        """Test missing on."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -224,6 +228,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_missing_off_does_not_create(self):
+        """Test missing off."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -246,6 +251,7 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_on_action(self):
+        """Test on action."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
@@ -276,6 +282,7 @@ class TestTemplateSwitch:
         assert 1 == len(self.calls)
 
     def test_off_action(self):
+        """Test off action."""
         assert switch.setup(self.hass, {
             'switch': {
                 'platform': 'template',
