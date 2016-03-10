@@ -44,3 +44,31 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_OFF, state.state)
+
+    def test_valid_sensor_class(self):
+        """Test the setting of a valid sensor class."""
+        self.assertTrue(binary_sensor.setup(self.hass, {
+            'binary_sensor': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'sensor_class': 'motion',
+                'state_topic': 'test-topic',
+            }
+        }))
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual('motion', state.attributes.get('sensor_class'))
+
+    def test_invalid_sensor_class(self):
+        """Test the setting of an invalid sensor class."""
+        self.assertTrue(binary_sensor.setup(self.hass, {
+            'binary_sensor': {
+                'platform': 'mqtt',
+                'name': 'test',
+                'sensor_class': 'abc123',
+                'state_topic': 'test-topic',
+            }
+        }))
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertIsNone(state.attributes.get('sensor_class'))
