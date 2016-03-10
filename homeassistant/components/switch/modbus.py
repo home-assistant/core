@@ -56,6 +56,7 @@ class ModbusSwitch(ToggleEntity):
         self.register_value = None
 
     def __str__(self):
+        """String representation of Modbus switch."""
         return "%s: %s" % (self.name, self.state)
 
     @property

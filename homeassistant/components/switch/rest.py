@@ -64,7 +64,7 @@ class RestSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """return true if device is on."""
+        """Return true if device is on."""
         return self._state
 
     def turn_on(self, **kwargs):

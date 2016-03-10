@@ -47,7 +47,7 @@ class CpuSpeedSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """return the unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
