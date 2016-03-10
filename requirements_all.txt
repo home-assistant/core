@@ -91,7 +91,7 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
 
 # homeassistant.components.scene.hunterdouglas_powerview
-https://github.com/sander76/powerviewApi/archive/master.zip#powerview_api==0.2
+https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
 
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/f0c928532167fb24823efa793ec21ca646fd37a6.zip#pymysensors==0.5
