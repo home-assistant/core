@@ -179,7 +179,7 @@ class OrderedSet(collections.MutableSet):
             curr = curr[2]
 
     def __reversed__(self):
-        """reverse the ordering."""
+        """Reverse the ordering."""
         end = self.end
         curr = end[1]
         while curr is not end:

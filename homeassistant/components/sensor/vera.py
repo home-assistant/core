@@ -96,6 +96,7 @@ class VeraSensor(Entity):
         self.update_ha_state(True)
 
     def __str__(self):
+        """String representation of sensor."""
         return "%s %s %s" % (self.name, self.vera_device.device_id, self.state)
 
     @property
