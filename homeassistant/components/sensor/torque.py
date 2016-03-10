@@ -101,7 +101,7 @@ class TorqueSensor(Entity):
 
     @property
     def state(self):
-        """return the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
