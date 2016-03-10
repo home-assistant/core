@@ -13,7 +13,7 @@ REQUIREMENTS = ['pywemo==0.3.12']
 
 DOMAIN = 'wemo'
 DISCOVER_LIGHTS = 'wemo.light'
-DISCOVER_MOTION = 'wemo.motion'
+DISCOVER_BINARY_SENSORS = 'wemo.binary_sensor'
 DISCOVER_SWITCHES = 'wemo.switch'
 
 # Mapping from Wemo model_name to service.
@@ -21,13 +21,13 @@ WEMO_MODEL_DISPATCH = {
     'Bridge':  DISCOVER_LIGHTS,
     'Insight': DISCOVER_SWITCHES,
     'Maker':   DISCOVER_SWITCHES,
-    'Motion':  DISCOVER_MOTION,
+    'Sensor':  DISCOVER_BINARY_SENSORS,
     'Socket':  DISCOVER_SWITCHES,
     'LightSwitch': DISCOVER_SWITCHES
 }
 WEMO_SERVICE_DISPATCH = {
     DISCOVER_LIGHTS: 'light',
-    DISCOVER_MOTION: 'binary_sensor',
+    DISCOVER_BINARY_SENSORS: 'binary_sensor',
     DISCOVER_SWITCHES: 'switch',
 }
 
