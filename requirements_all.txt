@@ -112,7 +112,7 @@ jsonrpc-requests==0.1
 liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.1.0
+limitlessled==1.0.0
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
