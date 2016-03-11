@@ -57,7 +57,6 @@ ATTR_DEV_ID = 'dev_id'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
-ATTR_GPS_ACCURACY = 'gps_accuracy'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
