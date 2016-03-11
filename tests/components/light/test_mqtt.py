@@ -122,9 +122,9 @@ class TestLightMQTT(unittest.TestCase):
                 'brightness_command_topic': 'test_light_rgb/brightness/set',
                 'rgb_state_topic': 'test_light_rgb/rgb/status',
                 'rgb_command_topic': 'test_light_rgb/rgb/set',
-                'qos': 0,
-                'payload_on': 'on',
-                'payload_off': 'off'
+                'qos': '0',
+                'payload_on': 1,
+                'payload_off': 0
             }
         }))
 
@@ -134,7 +134,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', '1')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
@@ -142,13 +142,13 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
 
-        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'off')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', '0')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', '1')
         self.hass.pool.block_till_done()
 
         fire_mqtt_message(self.hass, 'test_light_rgb/brightness/status', '100')
@@ -159,7 +159,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(100,
                          light_state.attributes['brightness'])
 
-        fire_mqtt_message(self.hass, 'test_light_rgb/status', 'on')
+        fire_mqtt_message(self.hass, 'test_light_rgb/status', '1')
         self.hass.pool.block_till_done()
 
         fire_mqtt_message(self.hass, 'test_light_rgb/rgb/status',
