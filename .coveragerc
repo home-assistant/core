@@ -26,6 +26,7 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
+    homeassistant/components/tellstick.py
     homeassistant/components/*/tellstick.py
 
     homeassistant/components/tellduslive.py
