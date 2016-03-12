@@ -13,7 +13,6 @@ matrix:
 cache:
   directories:
     - $HOME/.cache/pip
-install: pip install -U tox coveralls
+install: pip install -U tox
 language: python
 script: tox
-after_success: coveralls
