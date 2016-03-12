@@ -123,6 +123,7 @@ omit =
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
+    homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/cpuspeed.py
@@ -139,8 +140,8 @@ omit =
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
-    homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/speedtest.py
+    homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
@@ -149,10 +150,9 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/worldclock.py
-    homeassistant/components/scene/powerview.py
     homeassistant/components/switch/arest.py
-    homeassistant/components/switch/edimax.py
     homeassistant/components/switch/dlink.py
+    homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
