@@ -59,8 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class DweetSensor(Entity):
-    """Implements a Dweet sensor."""
+    """Representation of a Dweet sensor."""
+
     def __init__(self, hass, dweet, name, value_template, unit_of_measurement):
+        """Initialize the sensor."""
         self.hass = hass
         self.dweet = dweet
         self._name = name
@@ -71,17 +73,17 @@ class DweetSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """Returns the state."""
+        """Return the state."""
         if self.dweet.data is None:
             return STATE_UNKNOWN
         else:
@@ -91,20 +93,22 @@ class DweetSensor(Entity):
             return value
 
     def update(self):
-        """Gets the latest data from REST API."""
+        """Get the latest data from REST API."""
         self.dweet.update()
 
 
 # pylint: disable=too-few-public-methods
 class DweetData(object):
-    """Class for handling the data retrieval."""
+    """The class for handling the data retrieval."""
+
     def __init__(self, device):
+        """Initialize the sensor."""
         self._device = device
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data from Dweet.io."""
+        """Get the latest data from Dweet.io."""
         import dweepy
 
         try:

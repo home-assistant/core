@@ -1,7 +1,5 @@
 """
-components.verisure
-~~~~~~~~~~~~~~~~~~~
-Provides support for verisure components.
+Support for Verisure components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/verisure/
@@ -33,8 +31,7 @@ HUB = None
 
 
 def setup(hass, config):
-    """ Setup the Verisure component. """
-
+    """Setup the Verisure component."""
     if not validate_config(config,
                            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -46,7 +43,6 @@ def setup(hass, config):
     if not HUB.login():
         return False
 
-    # Load components for the devices in the ISY controller that we support
     for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
                                   ('switch', DISCOVER_SWITCHES),
                                   ('alarm_control_panel', DISCOVER_ALARMS),
@@ -62,12 +58,10 @@ def setup(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class VerisureHub(object):
-    """ Verisure wrapper class """
-
-    MAX_PASSWORD_RETRIES = 2
-    MIN_TIME_BETWEEN_REQUESTS = 1
+    """A Verisure hub wrapper class."""
 
     def __init__(self, domain_config, verisure):
+        """Initialize the Verisure hub."""
         self.alarm_status = {}
         self.lock_status = {}
         self.climate_status = {}
@@ -79,7 +73,10 @@ class VerisureHub(object):
 
         self._lock = threading.Lock()
 
-        self._password_retries = VerisureHub.MAX_PASSWORD_RETRIES
+        # When MyPages is brought up from maintenance it sometimes give us a
+        # "wrong password" message. We will continue to retry after maintenance
+        # regardless of that error.
+        self._disable_wrong_password_error = False
         self._wrong_password_given = False
         self._reconnect_timeout = time.time()
 
@@ -88,7 +85,7 @@ class VerisureHub(object):
             domain_config[CONF_PASSWORD])
 
     def login(self):
-        """ Login to MyPages """
+        """Login to Verisure MyPages."""
         try:
             self.my_pages.login()
         except self._verisure.Error as ex:
@@ -98,41 +95,41 @@ class VerisureHub(object):
 
     @Throttle(timedelta(seconds=1))
     def update_alarms(self):
-        """ Updates the status of the alarm. """
+        """Update the status of the alarm."""
         self.update_component(
             self.my_pages.alarm.get,
             self.alarm_status)
 
     @Throttle(timedelta(seconds=1))
     def update_locks(self):
-        """ Updates the status of the alarm. """
+        """Update the status of the locks."""
         self.update_component(
             self.my_pages.lock.get,
             self.lock_status)
 
     @Throttle(timedelta(seconds=60))
     def update_climate(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the climate units."""
         self.update_component(
             self.my_pages.climate.get,
             self.climate_status)
 
     @Throttle(timedelta(seconds=60))
     def update_mousedetection(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the mouse detectors."""
         self.update_component(
             self.my_pages.mousedetection.get,
             self.mouse_status)
 
     @Throttle(timedelta(seconds=1))
     def update_smartplugs(self):
-        """ Updates the status of the smartplugs. """
+        """Update the status of the smartplugs."""
         self.update_component(
             self.my_pages.smartplug.get,
             self.smartplug_status)
 
     def update_component(self, get_function, status):
-        """ Updates the status of verisure components. """
+        """Update the status of Verisure components."""
         if self._wrong_password_given:
             _LOGGER.error('Wrong password for Verisure, update config')
             return
@@ -147,22 +144,22 @@ class VerisureHub(object):
             self.reconnect()
 
     def reconnect(self):
-        """ Reconnect to verisure mypages. """
+        """Reconnect to Verisure MyPages."""
         if self._reconnect_timeout > time.time():
             return
         if not self._lock.acquire(blocking=False):
             return
         try:
             self.my_pages.login()
-            self._password_retries = VerisureHub.MAX_PASSWORD_RETRIES
+            self._disable_wrong_password_error = False
         except self._verisure.LoginError as ex:
             _LOGGER.error("Wrong user name or password for Verisure MyPages")
-            if self._password_retries > 0:
-                self._password_retries -= 1
-                self._reconnect_timeout = time.time() + 15 * 60
+            if self._disable_wrong_password_error:
+                self._reconnect_timeout = time.time() + 60
             else:
                 self._wrong_password_given = True
         except self._verisure.MaintenanceError:
+            self._disable_wrong_password_error = True
             self._reconnect_timeout = time.time() + 60
             _LOGGER.error("Verisure MyPages down for maintenance")
         except self._verisure.Error as ex:

@@ -19,7 +19,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the available BloomSky weather binary sensors."""
+    """Setup the available BloomSky weather binary sensors."""
     logger = logging.getLogger(__name__)
     bloomsky = get_component('bloomsky')
     sensors = config.get('monitored_conditions', SENSOR_TYPES)
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BloomSkySensor(BinarySensorDevice):
-    """ Represents a single binary sensor in a BloomSky device. """
+    """Represent a single binary sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
@@ -53,7 +53,7 @@ class BloomSkySensor(BinarySensorDevice):
 
     @property
     def unique_id(self):
-        """Unique ID for this sensor."""
+        """Return the unique ID for this sensor."""
         return self._unique_id
 
     @property
@@ -63,7 +63,7 @@ class BloomSkySensor(BinarySensorDevice):
 
     @property
     def is_on(self):
-        """If binary sensor is on."""
+        """Return true if binary sensor is on."""
         return self._state
 
     def update(self):

@@ -18,8 +18,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoSwitch(SwitchDevice):
-    """Provide a demo switch."""
+    """represenation of a demo switch."""
+
     def __init__(self, name, state, icon, assumed):
+        """Initialize the Deom switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self._icon = icon
@@ -47,13 +49,13 @@ class DemoSwitch(SwitchDevice):
 
     @property
     def current_power_mwh(self):
-        """Returns the current power usage in mwh."""
+        """Return the current power usage in mWh."""
         if self._state:
             return 100
 
     @property
     def today_power_mw(self):
-        """Return the today total power usage in mw."""
+        """Return the today total power usage in mW."""
         return 1500
 
     @property

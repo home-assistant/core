@@ -1,7 +1,5 @@
 """
-homeassistant.components.downloader
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to download files.
+Support for functionality to download files.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/downloader/
@@ -28,8 +26,7 @@ CONF_DOWNLOAD_DIR = 'download_dir'
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Listens for download events to download files. """
-
+    """Listen for download events to download files."""
     logger = logging.getLogger(__name__)
 
     if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
@@ -50,14 +47,13 @@ def setup(hass, config):
         return False
 
     def download_file(service):
-        """ Starts thread to download file specified in the url. """
-
+        """Start thread to download file specified in the URL."""
         if ATTR_URL not in service.data:
             logger.error("Service called but 'url' parameter not specified.")
             return
 
         def do_download():
-            """ Downloads the file. """
+            """Download the file."""
             try:
                 url = service.data[ATTR_URL]
 

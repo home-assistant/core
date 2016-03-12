@@ -1,5 +1,5 @@
 """
-Provides a sensor which gets its values from a TCP socket.
+Support for TCP socket based sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tcp/
@@ -30,14 +30,15 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the TCP Sensor."""
+    """Setup the TCP Sensor."""
     if not Sensor.validate_config(config):
         return False
     add_entities((Sensor(hass, config),))
 
 
 class Sensor(Entity):
-    """Sensor entity which gets its value from a TCP socket."""
+    """Implementation of a TCP socket based sensor."""
+
     required = tuple()
 
     def __init__(self, hass, config):
@@ -71,7 +72,7 @@ class Sensor(Entity):
 
     @property
     def name(self):
-        """The name of this sensor."""
+        """Return the name of this sensor."""
         name = self._config[CONF_NAME]
         if name is not None:
             return name
@@ -84,12 +85,13 @@ class Sensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
+        """Return the unit of measurement of this entity."""
         return self._config[CONF_UNIT]
 
     def update(self):
         """Get the latest value for this sensor."""
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(self._config[CONF_TIMEOUT])
             try:
                 sock.connect(
                     (self._config[CONF_HOST], self._config[CONF_PORT]))

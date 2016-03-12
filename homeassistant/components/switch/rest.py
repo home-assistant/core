@@ -1,7 +1,5 @@
 """
-homeassistant.components.switch.rest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to configure a REST switch.
+Support for RESTful switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rest/
@@ -21,8 +19,7 @@ DEFAULT_BODY_OFF = "OFF"
 
 # pylint: disable=unused-argument,
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Get REST switch. """
-
+    """Setup the REST switch."""
     resource = config.get('resource')
 
     if resource is None:
@@ -49,8 +46,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
-    """ Represents a switch that can be toggled using REST. """
+    """Representation of a switch that can be toggled using REST."""
+
     def __init__(self, hass, name, resource, body_on, body_off):
+        """Initialize the REST switch."""
         self._state = None
         self._hass = hass
         self._name = name
@@ -60,16 +59,16 @@ class RestSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """The name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         request = requests.post(self._resource,
                                 data=self._body_on,
                                 timeout=10)
@@ -80,7 +79,7 @@ class RestSwitch(SwitchDevice):
                           self._resource)
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         request = requests.post(self._resource,
                                 data=self._body_off,
                                 timeout=10)
@@ -91,7 +90,7 @@ class RestSwitch(SwitchDevice):
                           self._resource)
 
     def update(self):
-        """ Gets the latest data from REST API and updates the state. """
+        """Get the latest data from REST API and update the state."""
         request = requests.get(self._resource, timeout=10)
         if request.text == self._body_on:
             self._state = True

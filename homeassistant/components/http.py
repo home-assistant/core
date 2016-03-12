@@ -1,6 +1,4 @@
 """
-homeassistant.components.http
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This module provides an API and a HTTP interface for debug purposes.
 
 For more details about the RESTful API, please refer to the documentation at
@@ -52,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """ Sets up the HTTP API and debug interface. """
+    """Set up the HTTP API and debug interface."""
     conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
@@ -87,15 +85,16 @@ def setup(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
-    """ Handle HTTP requests in a threaded fashion. """
-    # pylint: disable=too-few-public-methods
+    """Handle HTTP requests in a threaded fashion."""
 
+    # pylint: disable=too-few-public-methods
     allow_reuse_address = True
     daemon_threads = True
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, ssl_certificate, ssl_key):
+        """Initialize the server."""
         super().__init__(server_address, request_handler_class)
 
         self.server_address = server_address
@@ -119,9 +118,9 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
             self.socket = context.wrap_socket(self.socket, server_side=True)
 
     def start(self):
-        """ Starts the HTTP server. """
+        """Start the HTTP server."""
         def stop_http(event):
-            """ Stops the HTTP server. """
+            """Stop the HTTP server."""
             self.shutdown()
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
@@ -140,19 +139,18 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.serve_forever()
 
     def register_path(self, method, url, callback, require_auth=True):
-        """ Registers a path with the server. """
+        """Register a path with the server."""
         self.paths.append((method, url, callback, require_auth))
 
     def log_message(self, fmt, *args):
-        """ Redirect built-in log to HA logging """
+        """Redirect built-in log to HA logging."""
         # pylint: disable=no-self-use
         _LOGGER.info(fmt, *args)
 
 
 # pylint: disable=too-many-public-methods,too-many-locals
 class RequestHandler(SimpleHTTPRequestHandler):
-    """
-    Handles incoming HTTP requests
+    """Handle incoming HTTP requests.
 
     We extend from SimpleHTTPRequestHandler instead of Base so we
     can use the guess content type methods.
@@ -161,13 +159,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
     server_version = "HomeAssistant/1.0"
 
     def __init__(self, req, client_addr, server):
-        """ Contructor, call the base constructor and set up session """
+        """Constructor, call the base constructor and set up session."""
         # Track if this was an authenticated request
         self.authenticated = False
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
 
     def log_message(self, fmt, *arguments):
-        """ Redirect built-in log to HA logging """
+        """Redirect built-in log to HA logging."""
         if self.server.api_password is None:
             _LOGGER.info(fmt, *arguments)
         else:
@@ -176,7 +174,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                        if isinstance(arg, str) else arg for arg in arguments))
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
-        """ Does some common checks and calls appropriate method. """
+        """Perform some common checks and call appropriate method."""
         url = urlparse(self.path)
 
         # Read query input. parse_qs gives a list for each value, we want last
@@ -254,31 +252,31 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_HEAD(self):  # pylint: disable=invalid-name
-        """ HEAD request handler. """
+        """HEAD request handler."""
         self._handle_request('HEAD')
 
     def do_GET(self):  # pylint: disable=invalid-name
-        """ GET request handler. """
+        """GET request handler."""
         self._handle_request('GET')
 
     def do_POST(self):  # pylint: disable=invalid-name
-        """ POST request handler. """
+        """POST request handler."""
         self._handle_request('POST')
 
     def do_PUT(self):  # pylint: disable=invalid-name
-        """ PUT request handler. """
+        """PUT request handler."""
         self._handle_request('PUT')
 
     def do_DELETE(self):  # pylint: disable=invalid-name
-        """ DELETE request handler. """
+        """DELETE request handler."""
         self._handle_request('DELETE')
 
     def write_json_message(self, message, status_code=HTTP_OK):
-        """ Helper method to return a message to the caller. """
+        """Helper method to return a message to the caller."""
         self.write_json({'message': message}, status_code=status_code)
 
     def write_json(self, data=None, status_code=HTTP_OK, location=None):
-        """ Helper method to return JSON to the caller. """
+        """Helper method to return JSON to the caller."""
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 
@@ -295,7 +293,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
                            cls=rem.JSONEncoder).encode("UTF-8"))
 
     def write_text(self, message, status_code=HTTP_OK):
-        """ Helper method to return a text message to the caller. """
+        """Helper method to return a text message to the caller."""
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
 
@@ -306,7 +304,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write(message.encode("UTF-8"))
 
     def write_file(self, path, cache_headers=True):
-        """ Returns a file to the user. """
+        """Return a file to the user."""
         try:
             with open(path, 'rb') as inp:
                 self.write_file_pointer(self.guess_type(path), inp,
@@ -318,10 +316,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             _LOGGER.exception("Unable to serve %s", path)
 
     def write_file_pointer(self, content_type, inp, cache_headers=True):
-        """
-        Helper function to write a file pointer to the user.
-        Does not do error handling.
-        """
+        """Helper function to write a file pointer to the user."""
         do_gzip = 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, '')
 
         self.send_response(HTTP_OK)
@@ -354,7 +349,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.copyfile(inp, self.wfile)
 
     def set_cache_header(self):
-        """ Add cache headers if not in development """
+        """Add cache headers if not in development."""
         if self.server.development:
             return
 
@@ -369,7 +364,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.date_time_string(time.time()+cache_time))
 
     def set_session_cookie_header(self):
-        """ Add the header for the session cookie and return session id. """
+        """Add the header for the session cookie and return session ID."""
         if not self.authenticated:
             return None
 
@@ -387,13 +382,13 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return session_id
 
     def verify_session(self):
-        """ Verify that we are in a valid session. """
+        """Verify that we are in a valid session."""
         return self.get_cookie_session_id() is not None
 
     def get_cookie_session_id(self):
-        """
-            Extracts the current session id from the
-            cookie or returns None if not set or invalid
+        """Extract the current session ID from the cookie.
+
+        Return None if not set or invalid.
         """
         if 'Cookie' not in self.headers:
             return None
@@ -417,7 +412,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         return None
 
     def destroy_session(self):
-        """ Destroys session. """
+        """Destroy the session."""
         session_id = self.get_cookie_session_id()
 
         if session_id is None:
@@ -428,27 +423,28 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
 
 def session_valid_time():
-    """ Time till when a session will be valid. """
+    """Time till when a session will be valid."""
     return date_util.utcnow() + timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
 
 class SessionStore(object):
-    """ Responsible for storing and retrieving http sessions """
+    """Responsible for storing and retrieving HTTP sessions."""
+
     def __init__(self):
-        """ Set up the session store """
+        """Setup the session store."""
         self._sessions = {}
         self._lock = threading.RLock()
 
     @util.Throttle(SESSION_CLEAR_INTERVAL)
     def _remove_expired(self):
-        """ Remove any expired sessions. """
+        """Remove any expired sessions."""
         now = date_util.utcnow()
         for key in [key for key, valid_time in self._sessions.items()
                     if valid_time < now]:
             self._sessions.pop(key)
 
     def is_valid(self, key):
-        """ Return True if a valid session is given. """
+        """Return True if a valid session is given."""
         with self._lock:
             self._remove_expired()
 
@@ -456,19 +452,19 @@ class SessionStore(object):
                     self._sessions[key] > date_util.utcnow())
 
     def extend_validation(self, key):
-        """ Extend a session validation time. """
+        """Extend a session validation time."""
         with self._lock:
             if key not in self._sessions:
                 return
             self._sessions[key] = session_valid_time()
 
     def destroy(self, key):
-        """ Destroy a session by key. """
+        """Destroy a session by key."""
         with self._lock:
             self._sessions.pop(key, None)
 
     def create(self):
-        """ Creates a new session. """
+        """Create a new session."""
         with self._lock:
             session_id = util.get_random_string(20)
 

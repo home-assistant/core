@@ -33,13 +33,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_closed(hass, entity_id=None):
-    """Returns if the garage door is closed based on the statemachine."""
+    """Return if the garage door is closed based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_GARAGE_DOORS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
 def close_door(hass, entity_id=None):
-    """Closes all or specified garage door."""
+    """Close all or a specified garage door."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_CLOSE, data)
 
@@ -58,7 +58,7 @@ def setup(hass, config):
     component.setup(config)
 
     def handle_garage_door_service(service):
-        """Handles calls to the garage door services."""
+        """Handle calls to the garage door services."""
         target_locks = component.extract_from_service(service)
 
         for item in target_locks:
@@ -81,7 +81,8 @@ def setup(hass, config):
 
 
 class GarageDoorDevice(Entity):
-    """Represents a garage door."""
+    """Representation of a garage door."""
+
     # pylint: disable=no-self-use
     @property
     def is_closed(self):
@@ -98,7 +99,7 @@ class GarageDoorDevice(Entity):
 
     @property
     def state(self):
-        """Returns the state of the garage door."""
+        """Return the state of the garage door."""
         closed = self.is_closed
         if closed is None:
             return STATE_UNKNOWN

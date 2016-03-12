@@ -1,6 +1,4 @@
 """
-homeassistant.components.lock
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various locks that can be controlled remotely.
 
 For more details about this component, please refer to the documentation
@@ -15,8 +13,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 
 from homeassistant.const import (
-    STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK,
-    ATTR_ENTITY_ID)
+    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
+    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import (group, verisure, wink)
 
 DOMAIN = 'lock'
@@ -26,10 +24,6 @@ GROUP_NAME_ALL_LOCKS = 'all locks'
 ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-ATTR_LOCKED = "locked"
-ATTR_CODE = 'code'
-ATTR_CODE_FORMAT = 'code_format'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -43,13 +37,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_locked(hass, entity_id=None):
-    """ Returns if the lock is locked based on the statemachine. """
+    """Return if the lock is locked based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 def lock(hass, entity_id=None, code=None):
-    """ Locks all or specified locks. """
+    """Lock all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -60,7 +54,7 @@ def lock(hass, entity_id=None, code=None):
 
 
 def unlock(hass, entity_id=None, code=None):
-    """ Unlocks all or specified locks. """
+    """Unlock all or specified locks."""
     data = {}
     if code:
         data[ATTR_CODE] = code
@@ -71,14 +65,14 @@ def unlock(hass, entity_id=None, code=None):
 
 
 def setup(hass, config):
-    """ Track states and offer events for locks. """
+    """Track states and offer events for locks."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_LOCKS)
     component.setup(config)
 
     def handle_lock_service(service):
-        """ Handles calls to the lock services. """
+        """Handle calls to the lock services."""
         target_locks = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -106,30 +100,30 @@ def setup(hass, config):
 
 
 class LockDevice(Entity):
-    """ Represents a lock within Home Assistant. """
-    # pylint: disable=no-self-use
+    """Representation of a lock."""
 
+    # pylint: disable=no-self-use
     @property
     def code_format(self):
-        """ regex for code format or None if no code is required. """
+        """Regex for code format or None if no code is required."""
         return None
 
     @property
     def is_locked(self):
-        """ Is the lock locked or unlocked. """
+        """Return true if the lock is locked."""
         return None
 
     def lock(self, **kwargs):
-        """ Locks the lock. """
+        """Lock the lock."""
         raise NotImplementedError()
 
     def unlock(self, **kwargs):
-        """ Unlocks the lock. """
+        """Unlock the lock."""
         raise NotImplementedError()
 
     @property
     def state_attributes(self):
-        """ Return the state attributes. """
+        """Return the state attributes."""
         if self.code_format is None:
             return None
         state_attr = {
@@ -139,6 +133,7 @@ class LockDevice(Entity):
 
     @property
     def state(self):
+        """Return the state."""
         locked = self.is_locked
         if locked is None:
             return STATE_UNKNOWN

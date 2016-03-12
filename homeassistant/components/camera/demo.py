@@ -21,6 +21,7 @@ class DemoCamera(Camera):
     """A Demo camera."""
 
     def __init__(self, name):
+        """Initialize demo camera component."""
         super().__init__()
         self._name = name
 

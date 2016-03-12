@@ -1,8 +1,5 @@
 """
-homeassistant.components.configurator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A component to allow pieces of code to request configuration from the user.
+Support to allow pieces of code to request configuration from the user.
 
 Initiate a request by calling the `request_config` method with a callback.
 This will return a request id that has to be used for future calls.
@@ -38,9 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 def request_config(
         hass, name, callback, description=None, description_image=None,
         submit_caption=None, fields=None):
-    """ Create a new request for config.
-    Will return an ID to be used for sequent calls. """
+    """Create a new request for configuration.
 
+    Will return an ID to be used for sequent calls.
+    """
     instance = _get_instance(hass)
 
     request_id = instance.request_config(
@@ -53,7 +51,7 @@ def request_config(
 
 
 def notify_errors(request_id, error):
-    """ Add errors to a config request. """
+    """Add errors to a config request."""
     try:
         _REQUESTS[request_id].notify_errors(request_id, error)
     except KeyError:
@@ -62,7 +60,7 @@ def notify_errors(request_id, error):
 
 
 def request_done(request_id):
-    """ Mark a config request as done. """
+    """Mark a configuration request as done."""
     try:
         _REQUESTS.pop(request_id).request_done(request_id)
     except KeyError:
@@ -71,12 +69,12 @@ def request_done(request_id):
 
 
 def setup(hass, config):
-    """ Set up Configurator. """
+    """Setup the configurator component."""
     return True
 
 
 def _get_instance(hass):
-    """ Get an instance per hass object. """
+    """Get an instance per hass object."""
     try:
         return _INSTANCES[hass]
     except KeyError:
@@ -89,11 +87,10 @@ def _get_instance(hass):
 
 
 class Configurator(object):
-    """
-    Class to keep track of current configuration requests.
-    """
+    """The class to keep track of current configuration requests."""
 
     def __init__(self, hass):
+        """Initialize the configurator."""
         self.hass = hass
         self._cur_id = 0
         self._requests = {}
@@ -104,8 +101,7 @@ class Configurator(object):
     def request_config(
             self, name, callback,
             description, description_image, submit_caption, fields):
-        """ Setup a request for configuration. """
-
+        """Setup a request for configuration."""
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
@@ -133,7 +129,7 @@ class Configurator(object):
         return request_id
 
     def notify_errors(self, request_id, error):
-        """ Update the state with errors. """
+        """Update the state with errors."""
         if not self._validate_request_id(request_id):
             return
 
@@ -147,7 +143,7 @@ class Configurator(object):
         self.hass.states.set(entity_id, STATE_CONFIGURE, new_data)
 
     def request_done(self, request_id):
-        """ Remove the config request. """
+        """Remove the configuration request."""
         if not self._validate_request_id(request_id):
             return
 
@@ -160,13 +156,13 @@ class Configurator(object):
         self.hass.states.set(entity_id, STATE_CONFIGURED)
 
         def deferred_remove(event):
-            """ Remove the request state. """
+            """Remove the request state."""
             self.hass.states.remove(entity_id)
 
         self.hass.bus.listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
     def handle_service_call(self, call):
-        """ Handle a configure service call. """
+        """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 
         if not self._validate_request_id(request_id):
@@ -180,10 +176,10 @@ class Configurator(object):
         callback(call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
-        """ Generates a unique configurator id. """
+        """Generate a unique configurator ID."""
         self._cur_id += 1
         return "{}-{}".format(id(self), self._cur_id)
 
     def _validate_request_id(self, request_id):
-        """ Validate that the request belongs to this instance. """
+        """Validate that the request belongs to this instance."""
         return request_id in self._requests

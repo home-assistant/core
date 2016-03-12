@@ -1,7 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.14.2"
+__version__ = "0.15.0"
+REQUIRED_PYTHON_VER = (3, 4)
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -100,6 +101,10 @@ ATTR_DISCOVERED = "discovered"
 ATTR_LOCATION = "location"
 
 ATTR_BATTERY_LEVEL = "battery_level"
+
+# For devices which support a code attribute
+ATTR_CODE = 'code'
+ATTR_CODE_FORMAT = 'code_format'
 
 # For devices which support an armed state
 ATTR_ARMED = "device_armed"

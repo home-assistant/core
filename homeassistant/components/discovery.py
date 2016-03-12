@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.5.2']
+REQUIREMENTS = ['netdisco==0.5.4']
 
 SCAN_INTERVAL = 300  # seconds
 
@@ -55,10 +55,7 @@ def listen(hass, service, callback):
 
 
 def discover(hass, service, discovered=None, component=None, hass_config=None):
-    """Fire discovery event.
-
-    Can ensure a component is loaded.
-    """
+    """Fire discovery event. Can ensure a component is loaded."""
     if component is not None:
         bootstrap.setup_component(hass, component, hass_config)
 
@@ -73,7 +70,7 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
 
 
 def setup(hass, config):
-    """ Starts a discovery service. """
+    """Start a discovery service."""
     logger = logging.getLogger(__name__)
 
     from netdisco.service import DiscoveryService
@@ -84,13 +81,13 @@ def setup(hass, config):
     lock = threading.Lock()
 
     def new_service_listener(service, info):
-        """ Called when a new service is found. """
+        """Called when a new service is found."""
         with lock:
             logger.info("Found new service: %s %s", service, info)
 
             component = SERVICE_HANDLERS.get(service)
 
-            # We do not know how to handle this service
+            # We do not know how to handle this service.
             if not component:
                 return
 
@@ -105,7 +102,7 @@ def setup(hass, config):
 
     # pylint: disable=unused-argument
     def start_discovery(event):
-        """ Start discovering. """
+        """Start discovering."""
         netdisco = DiscoveryService(SCAN_INTERVAL)
         netdisco.add_listener(new_service_listener)
         netdisco.start()

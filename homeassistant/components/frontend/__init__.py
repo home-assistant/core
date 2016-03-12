@@ -1,9 +1,4 @@
-"""
-homeassistant.components.frontend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Provides a frontend for Home Assistant.
-"""
+"""Handle the frontend for Home Assistant."""
 import re
 import os
 import logging
@@ -32,7 +27,7 @@ _FINGERPRINT = re.compile(r'^(\w+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
 def setup(hass, config):
-    """ Setup serving the frontend. """
+    """Setup serving the frontend."""
     for url in FRONTEND_URLS:
         hass.http.register_path('GET', url, _handle_get_root, False)
 
@@ -58,7 +53,7 @@ def setup(hass, config):
 
 
 def _handle_get_api_bootstrap(handler, path_match, data):
-    """ Returns all data needed to bootstrap Home Assistant. """
+    """Return all data needed to bootstrap Home Assistant."""
     hass = handler.server.hass
 
     handler.write_json({
@@ -70,7 +65,7 @@ def _handle_get_api_bootstrap(handler, path_match, data):
 
 
 def _handle_get_root(handler, path_match, data):
-    """ Renders the frontend. """
+    """Render the frontend."""
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')
     handler.end_headers()
@@ -95,7 +90,7 @@ def _handle_get_root(handler, path_match, data):
 
 
 def _handle_get_service_worker(handler, path_match, data):
-    """ Returns service worker for the frontend. """
+    """Return service worker for the frontend."""
     if handler.server.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
     else:
@@ -106,7 +101,7 @@ def _handle_get_service_worker(handler, path_match, data):
 
 
 def _handle_get_static(handler, path_match, data):
-    """ Returns a static file for the frontend. """
+    """Return a static file for the frontend."""
     req_file = util.sanitize_path(path_match.group('file'))
 
     # Strip md5 hash out
@@ -120,9 +115,7 @@ def _handle_get_static(handler, path_match, data):
 
 
 def _handle_get_local(handler, path_match, data):
-    """
-    Returns a static file from the hass.config.path/www for the frontend.
-    """
+    """Return a static file from the hass.config.path/www for the frontend."""
     req_file = util.sanitize_path(path_match.group('file'))
 
     path = handler.server.hass.config.path('www', req_file)

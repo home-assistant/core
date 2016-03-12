@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.sendgrid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SendGrid notification service.
 
 For more details about this platform, please refer to the documentation at
@@ -17,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """ Get the SendGrid notification service """
+    """Get the SendGrid notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['api_key', 'sender', 'recipient']},
                            _LOGGER):
@@ -31,9 +29,10 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class SendgridNotificationService(BaseNotificationService):
-    """ Implements the notification service for email via Sendgrid. """
+    """Implement the notification service for email via Sendgrid."""
 
     def __init__(self, api_key, sender, recipient):
+        """Initialize the service."""
         self.api_key = api_key
         self.sender = sender
         self.recipient = recipient
@@ -42,7 +41,7 @@ class SendgridNotificationService(BaseNotificationService):
         self._sg = SendGridClient(self.api_key)
 
     def send_message(self, message='', **kwargs):
-        """ Send an email to a user via SendGrid. """
+        """Send an email to a user via SendGrid."""
         subject = kwargs.get(ATTR_TITLE)
 
         from sendgrid import Mail

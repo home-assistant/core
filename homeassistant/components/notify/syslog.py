@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.syslog
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Syslog notification service.
 
 For more details about this platform, please refer to the documentation at
@@ -69,16 +67,17 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class SyslogNotificationService(BaseNotificationService):
-    """ Implements syslog notification service. """
+    """Implement the syslog notification service."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, facility, option, priority):
+        """Initialize the service."""
         self._facility = facility
         self._option = option
         self._priority = priority
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
+        """Send a message to a user."""
         import syslog
 
         title = kwargs.get(ATTR_TITLE)

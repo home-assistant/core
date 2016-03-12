@@ -1,9 +1,4 @@
-"""
-tests.components.binary_sensor.command_line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests command binary sensor.
-"""
+"""The tests fr the Command line Binary sensor platform."""
 import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
@@ -13,17 +8,18 @@ from tests.common import get_test_home_assistant
 
 
 class TestCommandSensorBinarySensor(unittest.TestCase):
-    """ Test the Template sensor. """
+    """Test the Command line Binary sensor."""
 
     def setUp(self):
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_setup(self):
-        """ Test sensor setup """
+        """Test sensor setup."""
         config = {'name': 'Test',
                   'command': 'echo 1',
                   'payload_on': '1',
@@ -31,7 +27,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -44,13 +40,13 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         self.assertEqual(STATE_ON, entity.state)
 
     def test_setup_bad_config(self):
-        """ Test setup with a bad config """
+        """Test the setup with a bad configuration."""
         config = {}
 
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
@@ -60,7 +56,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         self.assertEqual(0, len(devices))
 
     def test_template(self):
-        """ Test command sensor with template """
+        """Test setting the state with a template."""
         data = command_line.CommandSensorData('echo 10')
 
         entity = command_line.CommandBinarySensor(
@@ -69,7 +65,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         self.assertEqual(STATE_ON, entity.state)
 
     def test_sensor_off(self):
-        """ Test command sensor with template """
+        """Test setting the state with a template."""
         data = command_line.CommandSensorData('echo 0')
 
         entity = command_line.CommandBinarySensor(

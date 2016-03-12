@@ -11,6 +11,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
 from homeassistant.helpers.template import render_with_possible_json_value
+from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,37 +27,36 @@ DEPENDENCIES = ['mqtt']
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Light."""
-
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
 
     add_devices_callback([MqttLight(
         hass,
-        config.get('name', DEFAULT_NAME),
-        {key: config.get(key) for key in
+        convert(config.get('name'), str, DEFAULT_NAME),
+        {key: convert(config.get(key), str) for key in
          (typ + topic
           for typ in ('', 'brightness_', 'rgb_')
           for topic in ('state_topic', 'command_topic'))},
-        {key: config.get(key + '_value_template')
+        {key: convert(config.get(key + '_value_template'), str)
          for key in ('state', 'brightness', 'rgb')},
-        config.get('qos', DEFAULT_QOS),
+        convert(config.get('qos'), int, DEFAULT_QOS),
         {
-            'on': config.get('payload_on', DEFAULT_PAYLOAD_ON),
-            'off': config.get('payload_off', DEFAULT_PAYLOAD_OFF)
+            'on': convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
+            'off': convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF)
         },
-        config.get('optimistic', DEFAULT_OPTIMISTIC),
-        config.get('brightness_scale', DEFAULT_BRIGHTNESS_SCALE)
+        convert(config.get('optimistic'), bool, DEFAULT_OPTIMISTIC),
+        convert(config.get('brightness_scale'), int, DEFAULT_BRIGHTNESS_SCALE)
     )])
 
 
 class MqttLight(Light):
-    """Provides a MQTT light."""
+    """MQTT light."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, hass, name, topic, templates, qos, payload, optimistic,
                  brightness_scale):
-
+        """Initialize MQTT light."""
         self._hass = hass
         self._name = name
         self._topic = topic
@@ -98,6 +98,8 @@ class MqttLight(Light):
             mqtt.subscribe(self._hass, self._topic["brightness_state_topic"],
                            brightness_received, self._qos)
             self._brightness = 255
+        elif self._topic["brightness_command_topic"] is not None:
+            self._brightness = 255
         else:
             self._brightness = None
 
@@ -111,17 +113,19 @@ class MqttLight(Light):
             mqtt.subscribe(self._hass, self._topic["rgb_state_topic"],
                            rgb_received, self._qos)
             self._rgb = [255, 255, 255]
+        if self._topic["rgb_command_topic"] is not None:
+            self._rgb = [255, 255, 255]
         else:
             self._rgb = None
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def rgb_color(self):
-        """RGB color value."""
+        """Return the RGB color value."""
         return self._rgb
 
     @property
@@ -131,17 +135,17 @@ class MqttLight(Light):
 
     @property
     def name(self):
-        """Returns the name of the device if any."""
+        """Return the name of the device if any."""
         return self._name
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
 
     @property
     def assumed_state(self):
-        """Return True if we do optimistic updates."""
+        """Return true if we do optimistic updates."""
         return self._optimistic
 
     def turn_on(self, **kwargs):

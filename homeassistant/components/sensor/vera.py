@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def get_devices(hass, config):
-    """Find and return Vera Sensors."""
+    """Setup the Vera Sensors."""
     import pyvera as veraApi
 
     base_url = config.get('vera_controller_url')
@@ -69,14 +69,15 @@ def get_devices(hass, config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Performs setup for Vera controller devices."""
+    """Perform the setup for Vera controller devices."""
     add_devices(get_devices(hass, config))
 
 
 class VeraSensor(Entity):
-    """Represents a Vera Sensor."""
+    """Representation of a Vera Sensor."""
 
     def __init__(self, vera_device, controller, extra_data=None):
+        """Initialize the sensor."""
         self.vera_device = vera_device
         self.controller = controller
         self.extra_data = extra_data
@@ -95,21 +96,22 @@ class VeraSensor(Entity):
         self.update_ha_state(True)
 
     def __str__(self):
+        """String representation of sensor."""
         return "%s %s %s" % (self.name, self.vera_device.device_id, self.state)
 
     @property
     def state(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self.current_value
 
     @property
     def name(self):
-        """Get the mame of the sensor."""
+        """Return the mame of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         if self.vera_device.category == "Temperature Sensor":
             return self._temperature_units
         elif self.vera_device.category == "Light Sensor":
@@ -119,7 +121,7 @@ class VeraSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Returns the sensor's attributes."""
+        """Return the state attributes."""
         attr = {}
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
@@ -148,7 +150,7 @@ class VeraSensor(Entity):
         return False
 
     def update(self):
-        """Updates the state."""
+        """Update the state."""
         if self.vera_device.category == "Temperature Sensor":
             current_temp = self.vera_device.temperature
             vera_temp_units = (

@@ -41,7 +41,7 @@ ATTR_ENTITY_ID = 'entity_id'
 
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
-    """Adds an entry to the logbook."""
+    """Add an entry to the logbook."""
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -55,8 +55,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 
 def setup(hass, config):
-    """Listens for download events to download files."""
-
+    """Listen for download events to download files."""
     def log_message(service):
         """Handle sending notification message service calls."""
         message = service.data.get(ATTR_MESSAGE)
@@ -105,6 +104,7 @@ class Entry(object):
     # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
+        """Initialize the entry."""
         self.when = when
         self.name = name
         self.message = message
@@ -123,8 +123,7 @@ class Entry(object):
 
 
 def humanify(events):
-    """
-    Generator that converts a list of events into Entry objects.
+    """Generator that converts a list of events into Entry objects.
 
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
@@ -237,7 +236,6 @@ def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     # pylint: disable=too-many-return-statements
-
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'

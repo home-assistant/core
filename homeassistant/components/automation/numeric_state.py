@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.numeric_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers numeric state listening automation rules.
+Offer numeric state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#numeric-state-trigger
@@ -21,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _renderer(hass, value_template, state):
-    """Render state value."""
+    """Render the state value."""
     if value_template is None:
         return state.state
 
@@ -29,7 +27,7 @@ def _renderer(hass, value_template, state):
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
@@ -50,8 +48,7 @@ def trigger(hass, config, action):
 
     # pylint: disable=unused-argument
     def state_automation_listener(entity, from_s, to_s):
-        """ Listens for state changes and calls action. """
-
+        """Listen for state changes and calls action."""
         # Fire action if we go from outside range into range
         if _in_range(above, below, renderer(to_s)) and \
            (from_s is None or not _in_range(above, below, renderer(from_s))):
@@ -64,8 +61,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """ Wraps action method with state based condition. """
-
+    """Wrap action method with state based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
@@ -85,7 +81,7 @@ def if_action(hass, config):
     renderer = partial(_renderer, hass, value_template)
 
     def if_numeric_state():
-        """ Test numeric state condition. """
+        """Test numeric state condition."""
         state = hass.states.get(entity_id)
         return state is not None and _in_range(above, below, renderer(state))
 
@@ -93,7 +89,7 @@ def if_action(hass, config):
 
 
 def _in_range(range_start, range_end, value):
-    """ Checks if value is inside the range """
+    """Check if value is inside the range."""
     try:
         value = float(value)
     except ValueError:
