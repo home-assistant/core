@@ -1,7 +1,5 @@
 """
-homeassistant.components.scsgate
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides support for SCSGate components.
+Support for SCSGate components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scsgate/
@@ -18,9 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SCSGate:
-    """ Class dealing with the SCSGate device via scsgate.Reactor. """
+    """The class  for dealing with the SCSGate device via scsgate.Reactor."""
 
     def __init__(self, device, logger):
+        """Initialize the SCSGate."""
         self._logger = logger
         self._devices = {}
         self._devices_to_register = {}
@@ -38,7 +37,7 @@ class SCSGate:
             handle_message=self.handle_message)
 
     def handle_message(self, message):
-        """ Method called whenever a message is seen on the bus. """
+        """Method called whenever a message is seen on the bus."""
         from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         self._logger.debug("Received message {}".format(message))
@@ -72,30 +71,30 @@ class SCSGate:
 
     @property
     def devices(self):
-        """
-        Dictionary with known devices. Key is device ID, value is the device
-        itself.
+        """Dictionary with known devices.
+
+        Key is device ID, value is the device itself.
         """
         return self._devices
 
     def add_device(self, device):
-        """
-        Adds the specified device to the list of the already registered ones.
+        """Add the specified device.
 
+        The list contain already registered ones.
         Beware: this is not what you usually want to do, take a look at
         `add_devices_to_register`
         """
         self._devices[device.scs_id] = device
 
     def add_devices_to_register(self, devices):
-        """ List of devices to be registered. """
+        """List of devices to be registered."""
         with self._devices_to_register_lock:
             for device in devices:
                 self._devices_to_register[device.scs_id] = device
         self._activate_next_device()
 
     def _activate_next_device(self):
-        """ Starts the activation of the first device. """
+        """Start the activation of the first device."""
         from scsgate.tasks import GetStatusTask
 
         with self._devices_to_register_lock:
@@ -107,7 +106,7 @@ class SCSGate:
             self._reactor.append_task(GetStatusTask(target=device.scs_id))
 
     def is_device_registered(self, device_id):
-        """ Checks whether a device is already registered or not. """
+        """Check whether a device is already registered or not."""
         with self._devices_to_register_lock:
             if device_id in self._devices_to_register.keys():
                 return False
@@ -119,20 +118,20 @@ class SCSGate:
         return True
 
     def start(self):
-        """ Start the scsgate.Reactor. """
+        """Start the scsgate.Reactor."""
         self._reactor.start()
 
     def stop(self):
-        """ Stop the scsgate.Reactor. """
+        """Stop the scsgate.Reactor."""
         self._reactor.stop()
 
     def append_task(self, task):
-        """ Registers a new task to be executed. """
+        """Register a new task to be executed."""
         self._reactor.append_task(task)
 
 
 def setup(hass, config):
-    """ Setup the SCSGate component. """
+    """Setup the SCSGate component."""
     device = config['scsgate']['device']
     global SCSGATE
 
@@ -145,10 +144,7 @@ def setup(hass, config):
         return False
 
     def stop_monitor(event):
-        """
-        Invoked when home-assistant is exiting. Performs the necessary
-        cleanups.
-        """
+        """Stop the SCSGate."""
         _LOGGER.info("Stopping SCSGate monitor thread")
         SCSGATE.stop()
 

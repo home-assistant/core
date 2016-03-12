@@ -4,24 +4,73 @@ import logging
 from collections import defaultdict
 
 import homeassistant.util.dt as dt_util
-from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, SERVICE_PLAY_MEDIA)
+from homeassistant.components.notify import (
+    ATTR_MESSAGE, SERVICE_NOTIFY)
 from homeassistant.components.sun import (
     STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
+from homeassistant.components.thermostat import (
+    ATTR_AWAY_MODE, ATTR_FAN, SERVICE_SET_AWAY_MODE, SERVICE_SET_FAN_MODE,
+    SERVICE_SET_TEMPERATURE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_CLOSED, STATE_LOCKED, STATE_OFF, STATE_ON,
-    STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_UNLOCKED)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
+    SERVICE_CLOSE, SERVICE_LOCK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_SEEK, SERVICE_MOVE_DOWN, SERVICE_MOVE_UP, SERVICE_OPEN,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_UNLOCK, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_CLOSED, STATE_LOCKED,
+    STATE_OFF, STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING,
+    STATE_UNKNOWN, STATE_UNLOCKED)
 from homeassistant.core import State
 
 _LOGGER = logging.getLogger(__name__)
+
+GROUP_DOMAIN = 'group'
+HASS_DOMAIN = 'homeassistant'
+
+# Update this dict of lists when new services are added to HA.
+# Each item is a service with a list of required attributes.
+SERVICE_ATTRIBUTES = {
+    SERVICE_PLAY_MEDIA: [ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_CONTENT_ID],
+    SERVICE_MEDIA_SEEK: [ATTR_MEDIA_SEEK_POSITION],
+    SERVICE_VOLUME_MUTE: [ATTR_MEDIA_VOLUME_MUTED],
+    SERVICE_VOLUME_SET: [ATTR_MEDIA_VOLUME_LEVEL],
+    SERVICE_NOTIFY: [ATTR_MESSAGE],
+    SERVICE_SET_AWAY_MODE: [ATTR_AWAY_MODE],
+    SERVICE_SET_FAN_MODE: [ATTR_FAN],
+    SERVICE_SET_TEMPERATURE: [ATTR_TEMPERATURE],
+}
+
+# Update this dict when new services are added to HA.
+# Each item is a service with a corresponding state.
+SERVICE_TO_STATE = {
+    SERVICE_TURN_ON: STATE_ON,
+    SERVICE_TURN_OFF: STATE_OFF,
+    SERVICE_MEDIA_PLAY: STATE_PLAYING,
+    SERVICE_MEDIA_PAUSE: STATE_PAUSED,
+    SERVICE_ALARM_ARM_AWAY: STATE_ALARM_ARMED_AWAY,
+    SERVICE_ALARM_ARM_HOME: STATE_ALARM_ARMED_HOME,
+    SERVICE_ALARM_DISARM: STATE_ALARM_DISARMED,
+    SERVICE_ALARM_TRIGGER: STATE_ALARM_TRIGGERED,
+    SERVICE_LOCK: STATE_LOCKED,
+    SERVICE_UNLOCK: STATE_UNLOCKED,
+    SERVICE_CLOSE: STATE_CLOSED,
+    SERVICE_OPEN: STATE_OPEN,
+    SERVICE_MOVE_UP: STATE_OPEN,
+    SERVICE_MOVE_DOWN: STATE_CLOSED,
+}
 
 
 # pylint: disable=too-few-public-methods, attribute-defined-outside-init
 class TrackStates(object):
     """
-    Records the time when the with-block is entered. Will add all states
-    that have changed since the start time to the return list when with-block
-    is exited.
+    Record the time when the with-block is entered.
+
+    Add all states that have changed since the start time to the return list
+    when with-block is exited.
     """
 
     def __init__(self, hass):
@@ -40,7 +89,7 @@ class TrackStates(object):
 
 
 def get_changed_since(states, utc_point_in_time):
-    """List of states that have been changed since utc_point_in_time."""
+    """Return list of states that have been changed since utc_point_in_time."""
     point_in_time = dt_util.strip_microseconds(utc_point_in_time)
 
     return [state for state in states if state.last_updated >= point_in_time]
@@ -54,34 +103,35 @@ def reproduce_state(hass, states, blocking=False):
     to_call = defaultdict(list)
 
     for state in states:
-        current_state = hass.states.get(state.entity_id)
 
-        if current_state is None:
+        if hass.states.get(state.entity_id) is None:
             _LOGGER.warning('reproduce_state: Unable to find entity %s',
                             state.entity_id)
             continue
 
-        if state.domain == 'media_player' and state.attributes and \
-            'media_type' in state.attributes and \
-                'media_id' in state.attributes:
-            service = SERVICE_PLAY_MEDIA
-        elif state.domain == 'media_player' and state.state == STATE_PAUSED:
-            service = SERVICE_MEDIA_PAUSE
-        elif state.domain == 'media_player' and state.state == STATE_PLAYING:
-            service = SERVICE_MEDIA_PLAY
-        elif state.state == STATE_ON:
-            service = SERVICE_TURN_ON
-        elif state.state == STATE_OFF:
-            service = SERVICE_TURN_OFF
+        if state.domain == GROUP_DOMAIN:
+            service_domain = HASS_DOMAIN
         else:
+            service_domain = state.domain
+
+        domain_services = hass.services.services[service_domain]
+
+        service = None
+        for _service in domain_services.keys():
+            if (_service in SERVICE_ATTRIBUTES and
+                    all(attr in state.attributes
+                        for attr in SERVICE_ATTRIBUTES[_service]) or
+                    _service in SERVICE_TO_STATE and
+                    SERVICE_TO_STATE[_service] == state.state):
+                service = _service
+            if (_service in SERVICE_TO_STATE and
+                    SERVICE_TO_STATE[_service] == state.state):
+                break
+
+        if not service:
             _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
                             state)
             continue
-
-        if state.domain == 'group':
-            service_domain = 'homeassistant'
-        else:
-            service_domain = state.domain
 
         # We group service calls for entities by service call
         # json used to create a hashable version of dict with maybe lists in it
@@ -96,11 +146,11 @@ def reproduce_state(hass, states, blocking=False):
 
 
 def state_as_number(state):
-    """Try to coerce our state to a number.
+    """
+    Try to coerce our state to a number.
 
     Raises ValueError if this is not possible.
     """
-
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
                        STATE_OPEN):
         return 1

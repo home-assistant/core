@@ -1,6 +1,7 @@
 """
-Support for getting information from Arduino pins. Only analog pins are
-supported.
+Support for getting information from Arduino pins.
+
+Only analog pins are supported.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arduino/
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Arduino platform."""
+    """Setup the Arduino platform."""
     # Verify that the Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error('A connection has not been made to the Arduino board.')
@@ -33,8 +34,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ArduinoSensor(Entity):
-    """Represents an Arduino Sensor."""
+    """Representation of an Arduino Sensor."""
+
     def __init__(self, name, pin, pin_type):
+        """Initialize the sensor."""
         self._pin = pin
         self._name = name or DEVICE_DEFAULT_NAME
         self.pin_type = pin_type
@@ -45,7 +48,7 @@ class ArduinoSensor(Entity):
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._value
 
     @property

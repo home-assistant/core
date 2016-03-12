@@ -1,9 +1,4 @@
-"""
-tests.common
-~~~~~~~~~~~~
-
-Helper method for writing tests.
-"""
+"""Test the helper method for writing tests."""
 import os
 from datetime import timedelta
 from unittest import mock
@@ -20,12 +15,12 @@ _TEST_INSTANCE_PORT = SERVER_PORT
 
 
 def get_test_config_dir():
-    """ Returns a path to a test config dir. """
+    """Return a path to a test config dir."""
     return os.path.join(os.path.dirname(__file__), "config")
 
 
 def get_test_home_assistant(num_threads=None):
-    """ Returns a Home Assistant object pointing at test config dir. """
+    """Return a Home Assistant object pointing at test config dir."""
     if num_threads:
         orig_num_threads = ha.MIN_WORKER_THREAD
         ha.MIN_WORKER_THREAD = num_threads
@@ -58,9 +53,9 @@ def get_test_instance_port():
 
 
 def mock_service(hass, domain, service):
-    """
-    Sets up a fake service.
-    Returns a list that logs all calls to fake service.
+    """Setup a fake service.
+
+    Return a list that logs all calls to fake service.
     """
     calls = []
 
@@ -71,6 +66,7 @@ def mock_service(hass, domain, service):
 
 
 def fire_mqtt_message(hass, topic, payload, qos=0):
+    """Fire the MQTT message."""
     hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
         mqtt.ATTR_TOPIC: topic,
         mqtt.ATTR_PAYLOAD: payload,
@@ -79,10 +75,12 @@ def fire_mqtt_message(hass, topic, payload, qos=0):
 
 
 def fire_time_changed(hass, time):
+    """Fire a time changes event."""
     hass.bus.fire(EVENT_TIME_CHANGED, {'now': time})
 
 
 def fire_service_discovered(hass, service, info):
+    """Fire the MQTT message."""
     hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
         ATTR_SERVICE: service,
         ATTR_DISCOVERED: info
@@ -90,20 +88,21 @@ def fire_service_discovered(hass, service, info):
 
 
 def ensure_sun_risen(hass):
-    """ Trigger sun to rise if below horizon. """
+    """Trigger sun to rise if below horizon."""
     if sun.is_on(hass):
         return
     fire_time_changed(hass, sun.next_rising_utc(hass) + timedelta(seconds=10))
 
 
 def ensure_sun_set(hass):
-    """ Trigger sun to set if above horizon. """
+    """Trigger sun to set if above horizon."""
     if not sun.is_on(hass):
         return
     fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
 def mock_state_change_event(hass, new_state, old_state=None):
+    """Mock state change envent."""
     event_data = {
         'entity_id': new_state.entity_id,
         'new_state': new_state,
@@ -116,12 +115,14 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 
 def mock_http_component(hass):
+    """Mock the HTTP component."""
     hass.http = MockHTTP()
     hass.config.components.append('http')
 
 
 @mock.patch('homeassistant.components.mqtt.MQTT')
 def mock_mqtt_component(hass, mock_mqtt):
+    """Mock the MQTT component."""
     mqtt.setup(hass, {
         mqtt.DOMAIN: {
             mqtt.CONF_BROKER: 'mock-broker',
@@ -132,16 +133,18 @@ def mock_mqtt_component(hass, mock_mqtt):
 
 
 class MockHTTP(object):
-    """ Mocks the HTTP module. """
+    """Mock the HTTP module."""
 
     def register_path(self, method, url, callback, require_auth=True):
+        """Register a path."""
         pass
 
 
 class MockModule(object):
-    """ Provides a fake module. """
+    """Representation of a fake module."""
 
     def __init__(self, domain=None, dependencies=[], setup=None):
+        """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
         # Setup a mock setup if none given.
@@ -152,53 +155,58 @@ class MockModule(object):
 
 
 class MockPlatform(object):
-    """ Provides a fake platform. """
+    """Provide a fake platform."""
 
     def __init__(self, setup_platform=None, dependencies=[]):
+        """Initialize the platform."""
         self.DEPENDENCIES = dependencies
         self._setup_platform = setup_platform
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
+        """Setup the platform."""
         if self._setup_platform is not None:
             self._setup_platform(hass, config, add_devices, discovery_info)
 
 
 class MockToggleDevice(ToggleEntity):
-    """ Provides a mock toggle device. """
+    """Provide a mock toggle device."""
+
     def __init__(self, name, state):
+        """Initialize the mock device."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._state = state
         self.calls = []
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
+        """Return the name of the device if any."""
         self.calls.append(('name', {}))
         return self._name
 
     @property
     def state(self):
-        """ Returns the name of the device if any. """
+        """Return the name of the device if any."""
         self.calls.append(('state', {}))
         return self._state
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         self.calls.append(('is_on', {}))
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         self.calls.append(('turn_on', kwargs))
         self._state = STATE_ON
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         self.calls.append(('turn_off', kwargs))
         self._state = STATE_OFF
 
     def last_call(self, method=None):
+        """Return the last call."""
         if not self.calls:
             return None
         elif method is None:

@@ -1,13 +1,11 @@
 """
-homeassistant.components.device_tracker.tplink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a TP-Link router for device
-presence.
+Support for TP-Link routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tplink/
 """
 import base64
+import hashlib
 import logging
 import re
 import threading
@@ -27,30 +25,31 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a TP-Link scanner. """
+    """Validate the configuration and return a TP-Link scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
         return None
 
-    scanner = Tplink3DeviceScanner(config[DOMAIN])
+    scanner = Tplink4DeviceScanner(config[DOMAIN])
+
+    if not scanner.success_init:
+        scanner = Tplink3DeviceScanner(config[DOMAIN])
 
     if not scanner.success_init:
         scanner = Tplink2DeviceScanner(config[DOMAIN])
 
-        if not scanner.success_init:
-            scanner = TplinkDeviceScanner(config[DOMAIN])
+    if not scanner.success_init:
+        scanner = TplinkDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class TplinkDeviceScanner(object):
-    """
-    This class queries a wireless router running TP-Link firmware
-    for connected devices.
-    """
+    """This class queries a wireless router running TP-Link firmware."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         host = config[CONF_HOST]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
@@ -66,29 +65,21 @@ class TplinkDeviceScanner(object):
         self.success_init = self._update_info()
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-
         return self.last_results
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """
-        The TP-Link firmware doesn't save the name of the wireless device.
-        """
-
+        """The firmware doesn't save the name of the wireless device."""
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the TP-Link router is up to date.
-        Returns boolean if scanning successful.
-        """
+        """Ensure the information from the TP-Link router is up to date.
 
+        Return boolean if scanning successful.
+        """
         with self.lock:
             _LOGGER.info("Loading wireless clients...")
 
@@ -107,34 +98,24 @@ class TplinkDeviceScanner(object):
 
 
 class Tplink2DeviceScanner(TplinkDeviceScanner):
-    """
-    This class queries a wireless router running newer version of TP-Link
-    firmware for connected devices.
-    """
+    """This class queries a router with newer version of TP-Link firmware."""
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return self.last_results.keys()
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """
-        The TP-Link firmware doesn't save the name of the wireless device.
-        """
-
+        """The firmware doesn't save the name of the wireless device."""
         return self.last_results.get(device)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the TP-Link router is up to date.
-        Returns boolean if scanning successful.
-        """
+        """Ensure the information from the TP-Link router is up to date.
 
+        Return boolean if scanning successful.
+        """
         with self.lock:
             _LOGGER.info("Loading wireless clients...")
 
@@ -172,46 +153,36 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
 
 
 class Tplink3DeviceScanner(TplinkDeviceScanner):
-    """
-    This class queries the Archer C9 router running version 150811 or higher
-    of TP-Link firmware for connected devices.
-    """
+    """This class queries the Archer C9 router with version 150811 or high."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.stok = ''
         self.sysauth = ''
         super(Tplink3DeviceScanner, self).__init__(config)
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return self.last_results.keys()
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """
-        The TP-Link firmware doesn't save the name of the wireless device.
+        """The firmware doesn't save the name of the wireless device.
+
         We are forced to use the MAC address as name here.
         """
-
         return self.last_results.get(device)
 
     def _get_auth_tokens(self):
-        """
-        Retrieves auth tokens from the router.
-        """
-
+        """Retrieve auth tokens from the router."""
         _LOGGER.info("Retrieving auth tokens...")
 
         url = 'http://{}/cgi-bin/luci/;stok=/login?form=login' \
             .format(self.host)
         referer = 'http://{}/webpages/login.html'.format(self.host)
 
-        # if possible implement rsa encryption of password here
-
+        # If possible implement rsa encryption of password here.
         response = requests.post(url,
                                  params={'operation': 'login',
                                          'username': self.username,
@@ -232,11 +203,10 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the TP-Link router is up to date.
-        Returns boolean if scanning successful.
-        """
+        """Ensure the information from the TP-Link router is up to date.
 
+        Return boolean if scanning successful.
+        """
         with self.lock:
             if (self.stok == '') or (self.sysauth == ''):
                 self._get_auth_tokens()
@@ -281,3 +251,81 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                 return True
 
             return False
+
+
+class Tplink4DeviceScanner(TplinkDeviceScanner):
+    """This class queries an Archer C7 router with TP-Link firmware 150427."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        self.credentials = ''
+        self.token = ''
+        super(Tplink4DeviceScanner, self).__init__(config)
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """The firmware doesn't save the name of the wireless device."""
+        return None
+
+    def _get_auth_tokens(self):
+        """Retrieve auth tokens from the router."""
+        _LOGGER.info("Retrieving auth tokens...")
+        url = 'http://{}/userRpm/LoginRpm.htm?Save=Save'.format(self.host)
+
+        # Generate md5 hash of password
+        password = hashlib.md5(self.password.encode('utf')).hexdigest()
+        credentials = '{}:{}'.format(self.username, password).encode('utf')
+
+        # Encode the credentials to be sent as a cookie.
+        self.credentials = base64.b64encode(credentials).decode('utf')
+
+        # Create the authorization cookie.
+        cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+        response = requests.get(url, headers={'cookie': cookie})
+
+        try:
+            result = re.search(r'window.parent.location.href = '
+                               r'"https?:\/\/.*\/(.*)\/userRpm\/Index.htm";',
+                               response.text)
+            if not result:
+                return False
+            self.token = result.group(1)
+            return True
+        except ValueError:
+            _LOGGER.error("Couldn't fetch auth tokens!")
+            return False
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        with self.lock:
+            if (self.credentials == '') or (self.token == ''):
+                self._get_auth_tokens()
+
+            _LOGGER.info("Loading wireless clients...")
+
+            url = 'http://{}/{}/userRpm/WlanStationRpm.htm' \
+                .format(self.host, self.token)
+            referer = 'http://{}'.format(self.host)
+            cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+            page = requests.get(url, headers={
+                'cookie': cookie,
+                'referer': referer
+            })
+            result = self.parse_macs.findall(page.text)
+
+            if not result:
+                return False
+
+            self.last_results = [mac.replace("-", ":") for mac in result]
+            return True

@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.rfxtrx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for RFXtrx lights.
 
 For more details about this platform, please refer to the documentation at
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Setup the RFXtrx platform. """
+    """Setup the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     lights = []
@@ -47,7 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(lights)
 
     def light_update(event):
-        """ Callback for light updates from the RFXtrx gateway. """
+        """Callback for light updates from the RFXtrx gateway."""
         if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
                 not event.device.known_to_be_dimmable:
             return
@@ -120,8 +118,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxLight(Light):
-    """ Provides a RFXtrx light. """
+    """Represenation of a RFXtrx light."""
+
     def __init__(self, name, event, datas, signal_repetitions):
+        """Initialize the light."""
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
@@ -131,27 +131,27 @@ class RfxtrxLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a light. """
+        """No polling needed for a light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the light if any. """
+        """Return the name of the light if any."""
         return self._name
 
     @property
     def should_fire_event(self):
-        """ Returns is the device must fire event"""
+        """Return true if the device must fire event."""
         return self._should_fire_event
 
     @property
     def is_on(self):
-        """ True if light is on. """
+        """Return true if light is on."""
         return self._state
 
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
@@ -160,28 +160,25 @@ class RfxtrxLight(Light):
         return True
 
     def turn_on(self, **kwargs):
-        """ Turn the light on. """
+        """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if not self._event:
             return
-
         if brightness is None:
-            self._brightness = 100
+            self._brightness = 255
             for _ in range(self.signal_repetitions):
                 self._event.device.send_on(rfxtrx.RFXOBJECT.transport)
         else:
-            self._brightness = ((brightness + 4) * 100 // 255 - 1)
+            self._brightness = brightness
+            _brightness = (brightness * 100 // 255)
             for _ in range(self.signal_repetitions):
                 self._event.device.send_dim(rfxtrx.RFXOBJECT.transport,
-                                            self._brightness)
-
-        self._brightness = (self._brightness * 255 // 100)
+                                            _brightness)
         self._state = True
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        """ Turn the light off. """
-
+        """Turn the light off."""
         if not self._event:
             return
 

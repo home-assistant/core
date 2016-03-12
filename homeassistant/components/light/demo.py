@@ -27,9 +27,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoLight(Light):
-    """Provides a demo light."""
+    """Provide a demo light."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, name, state, rgb=None, ct=None, brightness=180):
+        """Initialize the light."""
         self._name = name
         self._state = state
         self._rgb = rgb or random.choice(LIGHT_COLORS)

@@ -1,10 +1,8 @@
 """
-homeassistant.components.alarm_control_panel.verisure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Interfaces with Verisure alarm control panel.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/verisure/
+https://home-assistant.io/components/alarm_control_panel.verisure/
 """
 import logging
 
@@ -19,8 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Verisure platform. """
-
+    """Setup the Verisure platform."""
     alarms = []
     if int(hub.config.get('alarm', '1')):
         hub.update_alarms()
@@ -33,30 +30,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=abstract-method
 class VerisureAlarm(alarm.AlarmControlPanel):
-    """ Represents a Verisure alarm status. """
+    """Represent a Verisure alarm status."""
 
     def __init__(self, device_id):
+        """Initalize the Verisure alarm panel."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return 'Alarm {}'.format(self._id)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         return self._state
 
     @property
     def code_format(self):
-        """ code format as regex """
+        """The code format as regex."""
         return '^\\d{%s}$' % self._digits
 
     def update(self):
-        """ Update alarm status """
+        """Update alarm status."""
         hub.update_alarms()
 
         if hub.alarm_status[self._id].status == 'unarmed':
@@ -71,21 +69,21 @@ class VerisureAlarm(alarm.AlarmControlPanel):
                 hub.alarm_status[self._id].status)
 
     def alarm_disarm(self, code=None):
-        """ Send disarm command. """
+        """Send disarm command."""
         hub.my_pages.alarm.set(code, 'DISARMED')
         _LOGGER.info('verisure alarm disarming')
         hub.my_pages.alarm.wait_while_pending()
         self.update()
 
     def alarm_arm_home(self, code=None):
-        """ Send arm home command. """
+        """Send arm home command."""
         hub.my_pages.alarm.set(code, 'ARMED_HOME')
         _LOGGER.info('verisure alarm arming home')
         hub.my_pages.alarm.wait_while_pending()
         self.update()
 
     def alarm_arm_away(self, code=None):
-        """ Send arm away command. """
+        """Send arm away command."""
         hub.my_pages.alarm.set(code, 'ARMED_AWAY')
         _LOGGER.info('verisure alarm arming away')
         hub.my_pages.alarm.wait_while_pending()

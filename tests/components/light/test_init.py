@@ -1,9 +1,4 @@
-"""
-tests.components.test_init
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests light component.
-"""
+"""The tests for the Light component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 import os
@@ -18,13 +13,14 @@ from tests.common import mock_service, get_test_home_assistant
 
 
 class TestLight(unittest.TestCase):
-    """ Test the light module. """
+    """Test the light module."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -33,7 +29,7 @@ class TestLight(unittest.TestCase):
             os.remove(user_light_file)
 
     def test_methods(self):
-        """ Test if methods call the services as expected. """
+        """Test if methods call the services as expected."""
         # Test is_on
         self.hass.states.set('light.test', STATE_ON)
         self.assertTrue(light.is_on(self.hass, 'light.test'))
@@ -111,7 +107,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
 
     def test_services(self):
-        """ Test the provided services. """
+        """Test the provided services."""
         platform = loader.get_component('light.test')
 
         platform.init()
@@ -245,7 +241,7 @@ class TestLight(unittest.TestCase):
             data)
 
     def test_broken_light_profiles(self):
-        """ Test light profiles. """
+        """Test light profiles."""
         platform = loader.get_component('light.test')
         platform.init()
 
@@ -261,7 +257,7 @@ class TestLight(unittest.TestCase):
         ))
 
     def test_light_profiles(self):
-        """ Test light profiles. """
+        """Test light profiles."""
         platform = loader.get_component('light.test')
         platform.init()
 

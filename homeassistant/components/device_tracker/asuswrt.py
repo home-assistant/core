@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.asuswrt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a ASUSWRT router for device
-presence.
+Support for ASUSWRT routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.asuswrt/
@@ -18,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +36,7 @@ _IP_NEIGH_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns an ASUS-WRT scanner. """
+    """Validate the configuration and return an ASUS-WRT scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -51,12 +48,10 @@ def get_scanner(hass, config):
 
 
 class AsusWrtDeviceScanner(object):
-    """
-    This class queries a router running ASUSWRT firmware
-    for connected devices. Adapted from DD-WRT scanner.
-    """
+    """This class queries a router running ASUSWRT firmware."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
         self.password = str(config[CONF_PASSWORD])
@@ -65,20 +60,17 @@ class AsusWrtDeviceScanner(object):
 
         self.last_results = {}
 
-        # Test the router is accessible
+        # Test the router is accessible.
         data = self.get_asuswrt_data()
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device IDs.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
+        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -88,9 +80,9 @@ class AsusWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the ASUSWRT router is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the ASUSWRT router is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
@@ -109,7 +101,7 @@ class AsusWrtDeviceScanner(object):
             return True
 
     def get_asuswrt_data(self):
-        """ Retrieve data from ASUSWRT and return parsed result. """
+        """Retrieve data from ASUSWRT and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'login: ')
@@ -138,9 +130,8 @@ class AsusWrtDeviceScanner(object):
                 _LOGGER.warning("Could not parse lease row: %s", lease)
                 continue
 
-            # For leases where the client doesn't set a hostname, ensure
-            # it is blank and not '*', which breaks the entity_id down
-            # the line
+            # For leases where the client doesn't set a hostname, ensure it is
+            # blank and not '*', which breaks the entity_id down the line.
             host = match.group('host')
             if host == '*':
                 host = ''

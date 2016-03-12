@@ -18,9 +18,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class DemoThermostat(ThermostatDevice):
-    """Represents a HeatControl thermostat."""
+    """Representation of a demo thermostat."""
+
     def __init__(self, name, target_temperature, unit_of_measurement,
                  away, current_temperature):
+        """Initialize the thermostat."""
         self._name = name
         self._target_temperature = target_temperature
         self._unit_of_measurement = unit_of_measurement
@@ -34,7 +36,7 @@ class DemoThermostat(ThermostatDevice):
 
     @property
     def name(self):
-        """Return the thermostat."""
+        """Return the name of the thermostat."""
         return self._name
 
     @property

@@ -1,7 +1,6 @@
 # Sets up and builds python open zwave to be used with Home Assistant
 # Dependencies that need to be installed:
-# apt-get install cython3 libudev-dev python-sphinx python3-setuptools
-# pip3 install "cython<0.23"
+# apt-get install cython3 libudev-dev python3-sphinx python3-setuptools
 
 cd "$(dirname "$0")/.."
 
@@ -16,12 +15,10 @@ if [ -d python-openzwave ]; then
   git pull --recurse-submodules=yes
   git submodule update --init --recursive
 else
-  git clone --recursive https://github.com/balloob/python-openzwave.git
+  git clone --recursive https://github.com/OpenZWave/python-openzwave.git
   cd python-openzwave
 fi
 
-# Fix an issue with openzwave
-sed -i '253s/.*//' openzwave/cpp/src/value_classes/ValueID.h
-
-./compile.sh --python3
-./install.sh --python3
+git checkout python3
+PYTHON_EXEC=`which python3` make build
+PYTHON_EXEC=`which python3` make install

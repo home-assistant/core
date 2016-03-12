@@ -1,6 +1,4 @@
-"""
-Template helper methods for rendering strings with HA data.
-"""
+"""Template helper methods for rendering strings with HA data."""
 # pylint: disable=too-few-public-methods
 import json
 import logging
@@ -21,8 +19,8 @@ _SENTINEL = object()
 
 def render_with_possible_json_value(hass, template, value,
                                     error_value=_SENTINEL):
-    """
-    Renders template with value exposed.
+    """Render template with value exposed.
+
     If valid JSON will expose value_json too.
     """
     variables = {
@@ -65,17 +63,22 @@ def render(hass, template, variables=None, **kwargs):
 
 class AllStates(object):
     """Class to expose all HA states as attributes."""
+
     def __init__(self, hass):
+        """Initialize all states."""
         self._hass = hass
 
     def __getattr__(self, name):
+        """Return the domain state."""
         return DomainStates(self._hass, name)
 
     def __iter__(self):
+        """Return all states."""
         return iter(sorted(self._hass.states.all(),
                            key=lambda state: state.entity_id))
 
     def __call__(self, entity_id):
+        """Return the states."""
         state = self._hass.states.get(entity_id)
         return STATE_UNKNOWN if state is None else state.state
 
@@ -84,13 +87,16 @@ class DomainStates(object):
     """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
+        """Initialize the domain states."""
         self._hass = hass
         self._domain = domain
 
     def __getattr__(self, name):
+        """Return the states."""
         return self._hass.states.get('{}.{}'.format(self._domain, name))
 
     def __iter__(self):
+        """Return the iteration over all the states."""
         return iter(sorted(
             (state for state in self._hass.states.all()
              if state.domain == self._domain),
@@ -101,7 +107,7 @@ class LocationMethods(object):
     """Class to expose distance helpers to templates."""
 
     def __init__(self, hass):
-        """Initialize distance helpers."""
+        """Initialize the distance helpers."""
         self._hass = hass
 
     def closest(self, *args):
@@ -118,7 +124,6 @@ class LocationMethods(object):
           closest('zone.school', 'group.children')
           closest(states.zone.school, 'group.children')
         """
-
         if len(args) == 1:
             latitude = self._hass.config.latitude
             longitude = self._hass.config.longitude
@@ -250,7 +255,7 @@ def forgiving_float(value):
 
 
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
-    """Home Assistant template environment."""
+    """The Home Assistant template environment."""
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""

@@ -1,9 +1,4 @@
-"""
-tests.components.test_zone
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests zone component.
-"""
+"""Test zone component."""
 import unittest
 
 from homeassistant.components import zone
@@ -12,16 +7,18 @@ from tests.common import get_test_home_assistant
 
 
 class TestComponentZone(unittest.TestCase):
-    """ Test the zone component. """
+    """Test the zone component."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_setup(self):
+        """Test setup."""
         info = {
             'name': 'Test Zone',
             'latitude': 32.880837,
@@ -41,6 +38,7 @@ class TestComponentZone(unittest.TestCase):
         assert info['passive'] == state.attributes['passive']
 
     def test_active_zone_skips_passive_zones(self):
+        """Test active and passive zones."""
         assert zone.setup(self.hass, {
             'zone': [
                 {
@@ -71,6 +69,7 @@ class TestComponentZone(unittest.TestCase):
         assert 'zone.active_zone' == active.entity_id
 
     def test_active_zone_prefers_smaller_zone_if_same_distance(self):
+        """Test zone size preferences."""
         latitude = 32.880600
         longitude = -117.237561
         assert zone.setup(self.hass, {
@@ -108,6 +107,7 @@ class TestComponentZone(unittest.TestCase):
         assert 'zone.smallest_zone' == active.entity_id
 
     def test_in_zone_works_for_passive_zones(self):
+        """Test working in passive zones."""
         latitude = 32.880600
         longitude = -117.237561
         assert zone.setup(self.hass, {

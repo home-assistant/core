@@ -1,4 +1,4 @@
-""" Starts home assistant. """
+"""Starts home assistant."""
 from __future__ import print_function
 
 import argparse
@@ -12,21 +12,26 @@ from multiprocessing import Process
 import homeassistant.config as config_util
 from homeassistant import bootstrap
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, RESTART_EXIT_CODE, __version__)
+    __version__,
+    EVENT_HOMEASSISTANT_START,
+    REQUIRED_PYTHON_VER,
+    RESTART_EXIT_CODE,
+)
 
 
 def validate_python():
-    """ Validate we're running the right Python version. """
+    """Validate we're running the right Python version."""
     major, minor = sys.version_info[:2]
+    req_major, req_minor = REQUIRED_PYTHON_VER
 
-    if major < 3 or (major == 3 and minor < 4):
-        print("Home Assistant requires atleast Python 3.4")
+    if major < req_major or (major == req_major and minor < req_minor):
+        print("Home Assistant requires at least Python {}.{}".format(
+            req_major, req_minor))
         sys.exit(1)
 
 
 def ensure_config_path(config_dir):
-    """ Validates configuration directory. """
-
+    """Validate the configuration directory."""
     lib_dir = os.path.join(config_dir, 'lib')
 
     # Test if configuration directory exists
@@ -54,7 +59,7 @@ def ensure_config_path(config_dir):
 
 
 def ensure_config_file(config_dir):
-    """ Ensure configuration file exists. """
+    """Ensure configuration file exists."""
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
@@ -65,7 +70,7 @@ def ensure_config_file(config_dir):
 
 
 def get_arguments():
-    """ Get parsed passed in arguments. """
+    """Get parsed passed in arguments."""
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.")
     parser.add_argument('--version', action='version', version=__version__)
@@ -130,25 +135,25 @@ def get_arguments():
 
 
 def daemonize():
-    """ Move current process to daemon process """
-    # create first fork
+    """Move current process to daemon process."""
+    # Create first fork
     pid = os.fork()
     if pid > 0:
         sys.exit(0)
 
-    # decouple fork
+    # Decouple fork
     os.setsid()
     os.umask(0)
 
-    # create second fork
+    # Create second fork
     pid = os.fork()
     if pid > 0:
         sys.exit(0)
 
 
 def check_pid(pid_file):
-    """ Check that HA is not already running """
-    # check pid file
+    """Check that HA is not already running."""
+    # Check pid file
     try:
         pid = int(open(pid_file, 'r').readline())
     except IOError:
@@ -165,7 +170,7 @@ def check_pid(pid_file):
 
 
 def write_pid(pid_file):
-    """ Create PID File """
+    """Create a PID File."""
     pid = os.getpid()
     try:
         open(pid_file, 'w').write(str(pid))
@@ -175,7 +180,7 @@ def write_pid(pid_file):
 
 
 def install_osx():
-    """ Setup to run via launchd on OS X """
+    """Setup to run via launchd on OS X."""
     with os.popen('which hass') as inp:
         hass_path = inp.read().strip()
 
@@ -207,7 +212,7 @@ def install_osx():
 
 
 def uninstall_osx():
-    """ Unload from launchd on OS X """
+    """Unload from launchd on OS X."""
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
     os.popen('launchctl unload ' + path)
 
@@ -215,9 +220,10 @@ def uninstall_osx():
 
 
 def setup_and_run_hass(config_dir, args, top_process=False):
-    """
-    Setup HASS and run. Block until stopped. Will assume it is running in a
-    subprocess unless top_process is set to true.
+    """Setup HASS and run.
+
+    Block until stopped. Will assume it is running in a subprocess unless
+    top_process is set to true.
     """
     if args.demo_mode:
         config = {
@@ -237,7 +243,7 @@ def setup_and_run_hass(config_dir, args, top_process=False):
 
     if args.open_ui:
         def open_browser(event):
-            """ Open the webinterface in a browser. """
+            """Open the webinterface in a browser."""
             if hass.config.api is not None:
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)
@@ -253,12 +259,12 @@ def setup_and_run_hass(config_dir, args, top_process=False):
 
 
 def run_hass_process(hass_proc):
-    """ Runs a child hass process. Returns True if it should be restarted.  """
+    """Run a child hass process. Returns True if it should be restarted."""
     requested_stop = threading.Event()
     hass_proc.daemon = True
 
     def request_stop(*args):
-        """ request hass stop, *args is for signal handler callback """
+        """Request hass stop, *args is for signal handler callback."""
         requested_stop.set()
         hass_proc.terminate()
 
@@ -283,7 +289,7 @@ def run_hass_process(hass_proc):
 
 
 def main():
-    """ Starts Home Assistant. """
+    """Start Home Assistant."""
     validate_python()
 
     args = get_arguments()
@@ -291,7 +297,7 @@ def main():
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
 
-    # os x launchd functions
+    # OS X launchd functions
     if args.install_osx:
         install_osx()
         return 0
@@ -305,7 +311,7 @@ def main():
         install_osx()
         return 0
 
-    # daemon functions
+    # Daemon functions
     if args.pid_file:
         check_pid(args.pid_file)
     if args.daemon:

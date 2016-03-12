@@ -66,6 +66,7 @@ class NX584ZoneSensor(BinarySensorDevice):
     """Represents a NX584 zone as a sensor."""
 
     def __init__(self, zone, zone_type):
+        """Initialize the nx594 binary sensor."""
         self._zone = zone
         self._zone_type = zone_type
 
@@ -81,7 +82,7 @@ class NX584ZoneSensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Name of the binary sensor."""
+        """Return the name of the binary sensor."""
         return self._zone['name']
 
     @property
@@ -95,6 +96,7 @@ class NX584Watcher(threading.Thread):
     """Event listener thread to process NX584 events."""
 
     def __init__(self, client, zone_sensors):
+        """Initialize nx584 watcher thread."""
         super(NX584Watcher, self).__init__()
         self.daemon = True
         self._client = client
@@ -115,7 +117,7 @@ class NX584Watcher(threading.Thread):
                 self._process_zone_event(event)
 
     def _run(self):
-        # Throw away any existing events so we don't replay history
+        """Throw away any existing events so we don't replay history."""
         self._client.get_events()
         while True:
             events = self._client.get_events()
@@ -123,6 +125,7 @@ class NX584Watcher(threading.Thread):
                 self._process_events(events)
 
     def run(self):
+        """Run the watcher."""
         while True:
             try:
                 self._run()

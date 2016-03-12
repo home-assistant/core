@@ -1,16 +1,11 @@
 """
-homeassistant.components
-~~~~~~~~~~~~~~~~~~~~~~~~
 This package contains components that can be plugged into Home Assistant.
 
 Component design guidelines:
-
-Each component defines a constant DOMAIN that is equal to its filename.
-
-Each component that tracks states should create state entity names in the
-format "<DOMAIN>.<OBJECT_ID>".
-
-Each component should publish services only under its own domain.
+- Each component defines a constant DOMAIN that is equal to its filename.
+- Each component that tracks states should create state entity names in the
+  format "<DOMAIN>.<OBJECT_ID>".
+- Each component should publish services only under its own domain.
 """
 import itertools as it
 import logging
@@ -26,8 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """ Loads up the module to call the is_on method.
-    If there is no entity id given we will check all. """
+    """Load up the module to call the is_on method.
+
+    If there is no entity id given we will check all.
+    """
     if entity_id:
         group = get_component('group')
 
@@ -53,7 +50,7 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None, **service_data):
-    """ Turns specified entity on if possible. """
+    """Turn specified entity on if possible."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
@@ -61,7 +58,7 @@ def turn_on(hass, entity_id=None, **service_data):
 
 
 def turn_off(hass, entity_id=None, **service_data):
-    """ Turns specified entity off. """
+    """Turn specified entity off."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
@@ -69,7 +66,7 @@ def turn_off(hass, entity_id=None, **service_data):
 
 
 def toggle(hass, entity_id=None, **service_data):
-    """ Toggles specified entity. """
+    """Toggle specified entity."""
     if entity_id is not None:
         service_data[ATTR_ENTITY_ID] = entity_id
 
@@ -77,10 +74,9 @@ def toggle(hass, entity_id=None, **service_data):
 
 
 def setup(hass, config):
-    """ Setup general services related to homeassistant. """
-
+    """Setup general services related to Home Assistant."""
     def handle_turn_service(service):
-        """ Method to handle calls to homeassistant.turn_on/off. """
+        """Method to handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id

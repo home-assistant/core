@@ -1,6 +1,4 @@
 """
-homeassistant.components.bloomsky
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for BloomSky weather station.
 
 For more details about this component, please refer to the documentation at
@@ -32,7 +30,7 @@ DISCOVER_CAMERAS = 'bloomsky.camera'
 
 # pylint: disable=unused-argument,too-few-public-methods
 def setup(hass, config):
-    """ Setup BloomSky component. """
+    """Setup BloomSky component."""
     if not validate_config(
             config,
             {DOMAIN: [CONF_API_KEY]},
@@ -57,13 +55,13 @@ def setup(hass, config):
 
 
 class BloomSky(object):
-    """ Handle all communication with the BloomSky API. """
+    """Handle all communication with the BloomSky API."""
 
     # API documentation at http://weatherlution.com/bloomsky-api/
-
     API_URL = "https://api.bloomsky.com/api/skydata"
 
     def __init__(self, api_key):
+        """Initialize the BookSky."""
         self._api_key = api_key
         self.devices = {}
         _LOGGER.debug("Initial bloomsky device load...")
@@ -71,10 +69,7 @@ class BloomSky(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def refresh_devices(self):
-        """
-        Uses the API to retreive a list of devices associated with an
-        account along with all the sensors on the device.
-        """
+        """Use the API to retreive a list of devices."""
         _LOGGER.debug("Fetching bloomsky update")
         response = requests.get(self.API_URL,
                                 headers={"Authorization": self._api_key},
@@ -84,7 +79,7 @@ class BloomSky(object):
         elif response.status_code != 200:
             _LOGGER.error("Invalid HTTP response: %s", response.status_code)
             return
-        # create dictionary keyed off of the device unique id
+        # Create dictionary keyed off of the device unique id
         self.devices.update({
             device["DeviceID"]: device for device in response.json()
         })
