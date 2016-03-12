@@ -10,6 +10,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
 from homeassistant.helpers import template
+from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,14 +33,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     add_devices_callback([MqttSwitch(
         hass,
-        config.get('name', DEFAULT_NAME),
+        convert(config.get('name'), str, DEFAULT_NAME),
         config.get('state_topic'),
         config.get('command_topic'),
-        config.get('qos', DEFAULT_QOS),
-        config.get('retain', DEFAULT_RETAIN),
-        config.get('payload_on', DEFAULT_PAYLOAD_ON),
-        config.get('payload_off', DEFAULT_PAYLOAD_OFF),
-        config.get('optimistic', DEFAULT_OPTIMISTIC),
+        convert(config.get('qos'), int, DEFAULT_QOS),
+        convert(config.get('retain'), bool, DEFAULT_RETAIN),
+        convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
+        convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF),
+        convert(config.get('optimistic'), bool, DEFAULT_OPTIMISTIC),
         config.get(CONF_VALUE_TEMPLATE))])
 
 
