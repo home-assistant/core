@@ -24,7 +24,8 @@ class TestComponentZone(unittest.TestCase):
             'latitude': 32.880837,
             'longitude': -117.237561,
             'radius': 250,
-            'passive': True
+            'passive': True,
+            'explicit': True
         }
         assert zone.setup(self.hass, {
             'zone': info
@@ -35,7 +36,7 @@ class TestComponentZone(unittest.TestCase):
         assert info['latitude'] == state.attributes['latitude']
         assert info['longitude'] == state.attributes['longitude']
         assert info['radius'] == state.attributes['radius']
-        assert info['passive'] == state.attributes['passive']
+        assert info['explicit'] == state.attributes['explicit']
 
     def test_active_zone_skips_passive_zones(self):
         """Test active and passive zones."""
@@ -47,6 +48,37 @@ class TestComponentZone(unittest.TestCase):
                     'longitude': -117.237561,
                     'radius': 250,
                     'passive': True
+                },
+            ]
+        })
+
+        active = zone.active_zone(self.hass, 32.880600, -117.237561)
+        assert active is None
+
+        assert zone.setup(self.hass, {
+            'zone': [
+                {
+                    'name': 'Active Zone',
+                    'latitude': 32.880800,
+                    'longitude': -117.237561,
+                    'radius': 500,
+                },
+            ]
+        })
+
+        active = zone.active_zone(self.hass, 32.880700, -117.237561)
+        assert 'zone.active_zone' == active.entity_id
+
+    def test_active_zone_skips_explicit_zones(self):
+        """Test active and passive zones."""
+        assert zone.setup(self.hass, {
+            'zone': [
+                {
+                    'name': 'Explicit Zone',
+                    'latitude': 32.880600,
+                    'longitude': -117.237561,
+                    'radius': 250,
+                    'explicit': True
                 },
             ]
         })
