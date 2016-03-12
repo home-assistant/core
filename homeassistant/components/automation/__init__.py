@@ -10,13 +10,14 @@ from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components import logbook
 from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers.service import validate_service_call
+
 
 DOMAIN = 'automation'
 
 DEPENDENCIES = ['group']
 
 CONF_ALIAS = 'alias'
-CONF_SERVICE = 'service'
 
 CONF_CONDITION = 'condition'
 CONF_ACTION = 'action'
@@ -81,8 +82,9 @@ def _setup_automation(hass, config_block, name, config):
 
 def _get_action(hass, config, name):
     """Return an action based on a configuration."""
-    if CONF_SERVICE not in config:
-        _LOGGER.error('Error setting up %s, no action specified.', name)
+    validation_error = validate_service_call(config)
+    if validation_error:
+        _LOGGER.error(validation_error)
         return None
 
     def action():

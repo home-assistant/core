@@ -34,6 +34,25 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(runs))
 
+    def test_template_service_call(self):
+        """ Test service call with tempating. """
+        config = {
+            'service_template': '{{ \'test_domain.test_service\' }}',
+            'entity_id': 'hello.world',
+            'data_template': {
+                'hello': '{{ \'goodbye\' }}',
+            },
+        }
+        runs = []
+
+        decor = service.service('test_domain', 'test_service')
+        decor(lambda x, y: runs.append(y))
+
+        service.call_from_config(self.hass, config)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('goodbye', runs[0].data['hello'])
+
     def test_split_entity_string(self):
         """Test splitting of entity string."""
         service.call_from_config(self.hass, {
@@ -97,3 +116,21 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
                          service.extract_entity_ids(self.hass, call))
+
+    def test_validate_service_call(self):
+        """Test is_valid_service_call method"""
+        self.assertNotEqual(
+            service.validate_service_call(
+                {}),
+            None
+            )
+        self.assertEqual(
+            service.validate_service_call(
+                {'service': 'test_domain.test_service'}),
+            None
+            )
+        self.assertEqual(
+            service.validate_service_call(
+                {'service_template': 'test_domain.{{ \'test_service\' }}'}),
+            None
+            )
