@@ -1,9 +1,4 @@
-"""
-tests.components.test_history
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the history component.
-"""
+"""The tests the History component."""
 # pylint: disable=protected-access,too-many-public-methods
 from datetime import timedelta
 import os
@@ -19,14 +14,14 @@ from tests.common import (
 
 
 class TestComponentHistory(unittest.TestCase):
-    """ Tests homeassistant.components.history module. """
+    """Test History component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """ Init needed objects. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant(1)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
         db_path = self.hass.config.path(recorder.DB_FILE)
@@ -34,22 +29,23 @@ class TestComponentHistory(unittest.TestCase):
             os.remove(db_path)
 
     def init_recorder(self):
+        """Initialize the recorder."""
         recorder.setup(self.hass, {})
         self.hass.start()
         self.wait_recording_done()
 
     def wait_recording_done(self):
-        """ Block till recording is done. """
+        """Block till recording is done."""
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
     def test_setup(self):
-        """ Test setup method of history. """
+        """Test setup method of history."""
         mock_http_component(self.hass)
         self.assertTrue(history.setup(self.hass, {}))
 
     def test_last_5_states(self):
-        """ Test retrieving the last 5 states. """
+        """Test retrieving the last 5 states."""
         self.init_recorder()
         states = []
 
@@ -67,7 +63,7 @@ class TestComponentHistory(unittest.TestCase):
             list(reversed(states)), history.last_5_states(entity_id))
 
     def test_get_states(self):
-        """ Test getting states at a specific point in time. """
+        """Test getting states at a specific point in time."""
         self.init_recorder()
         states = []
 
@@ -109,6 +105,7 @@ class TestComponentHistory(unittest.TestCase):
             states[0], history.get_state(future, states[0].entity_id))
 
     def test_state_changes_during_period(self):
+        """Test state change during period."""
         self.init_recorder()
         entity_id = 'media_player.test'
 
@@ -145,18 +142,19 @@ class TestComponentHistory(unittest.TestCase):
         self.assertEqual(states, hist[entity_id])
 
     def test_get_significant_states(self):
-        """test that only significant states are returned with
-        get_significant_states.
+        """Test that only significant states are returned.
 
-        We inject a bunch of state updates from media player and
+        We inject a bunch of state updates from media player, zone and
         thermostat. We should get back every thermostat change that
         includes an attribute change, but only the state updates for
         media player (attribute changes are not significant and not returned).
-
         """
         self.init_recorder()
         mp = 'media_player.test'
         therm = 'thermostat.test'
+        zone = 'zone.home'
+        script_nc = 'script.cannot_cancel_this_one'
+        script_c = 'script.can_cancel_this_one'
 
         def set_state(entity_id, state, **kwargs):
             self.hass.states.set(entity_id, state, **kwargs)
@@ -169,7 +167,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], mp: []}
+        states = {therm: [], mp: [], script_c: []}
         with patch('homeassistant.components.recorder.dt_util.utcnow',
                    return_value=one):
             states[mp].append(
@@ -183,9 +181,14 @@ class TestComponentHistory(unittest.TestCase):
 
         with patch('homeassistant.components.recorder.dt_util.utcnow',
                    return_value=two):
-            # this state will be skipped only different in time
+            # This state will be skipped only different in time
             set_state(mp, 'YouTube',
                       attributes={'media_title': str(sentinel.mt3)})
+            # This state will be skipped because domain blacklisted
+            set_state(zone, 'zoning')
+            set_state(script_nc, 'off')
+            states[script_c].append(
+                set_state(script_c, 'off', attributes={'can_cancel': True}))
             states[therm].append(
                 set_state(therm, 21, attributes={'current_temperature': 19.8}))
 
@@ -194,9 +197,9 @@ class TestComponentHistory(unittest.TestCase):
             states[mp].append(
                 set_state(mp, 'Netflix',
                           attributes={'media_title': str(sentinel.mt4)}))
-            # attributes changed even though state is the same
+            # Attributes changed even though state is the same
             states[therm].append(
                 set_state(therm, 21, attributes={'current_temperature': 20}))
 
         hist = history.get_significant_states(zero, four)
-        self.assertEqual(states, hist)
+        assert states == hist

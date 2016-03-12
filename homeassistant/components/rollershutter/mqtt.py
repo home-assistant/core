@@ -24,7 +24,6 @@ DEFAULT_PAYLOAD_STOP = "STOP"
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Rollershutter."""
-
     if config.get('command_topic') is None:
         _LOGGER.error("Missing required variable: command_topic")
         return False
@@ -43,9 +42,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttRollershutter(RollershutterDevice):
-    """Represents a rollershutter that can be controlled using MQTT."""
+    """Representation of a roller shutter that can be controlled using MQTT."""
+
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  payload_up, payload_down, payload_stop, value_template):
+        """Initialize the roller shutter."""
         self._state = None
         self._hass = hass
         self._name = name
@@ -80,24 +81,24 @@ class MqttRollershutter(RollershutterDevice):
 
     @property
     def name(self):
-        """The name of the rollershutter."""
+        """Return the name of the roller shutter."""
         return self._name
 
     @property
     def current_position(self):
-        """
-        Return current position of rollershutter.
+        """Return current position of roller shutter.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._state
 
     def move_up(self, **kwargs):
-        """Move the rollershutter up."""
+        """Move the roller shutter up."""
         mqtt.publish(self.hass, self._command_topic, self._payload_up,
                      self._qos)
 
     def move_down(self, **kwargs):
-        """Move the rollershutter down."""
+        """Move the roller shutter down."""
         mqtt.publish(self.hass, self._command_topic, self._payload_down,
                      self._qos)
 

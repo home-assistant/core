@@ -1,6 +1,4 @@
 """
-homeassistant.components.input_boolean
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to keep track of user controlled booleans for within automation.
 
 For more details about this component, please refer to the documentation
@@ -41,7 +39,7 @@ def turn_off(hass, entity_id):
 
 
 def setup(hass, config):
-    """ Set up input boolean. """
+    """Set up input boolean."""
     if not isinstance(config.get(DOMAIN), dict):
         _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
         return False
@@ -68,7 +66,7 @@ def setup(hass, config):
         return False
 
     def toggle_service(service):
-        """ Handle a calls to the input boolean services. """
+        """Handle a calls to the input boolean services."""
         target_inputs = component.extract_from_service(service)
 
         for input_b in target_inputs:
@@ -86,10 +84,10 @@ def setup(hass, config):
 
 
 class InputBoolean(ToggleEntity):
-    """ Represent a boolean input. """
+    """Representation of a boolean input."""
 
     def __init__(self, object_id, name, state, icon):
-        """ Initialize a boolean input. """
+        """Initialize a boolean input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = state
@@ -97,22 +95,22 @@ class InputBoolean(ToggleEntity):
 
     @property
     def should_poll(self):
-        """If entitiy should be polled."""
+        """If entity should be polled."""
         return False
 
     @property
     def name(self):
-        """Name of the boolean input."""
+        """Return name of the boolean input."""
         return self._name
 
     @property
     def icon(self):
-        """Icon to be used for this entity."""
+        """Returh the icon to be used for this entity."""
         return self._icon
 
     @property
     def is_on(self):
-        """True if entity is on."""
+        """Return true if entity is on."""
         return self._state
 
     def turn_on(self, **kwargs):

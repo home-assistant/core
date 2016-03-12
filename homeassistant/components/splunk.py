@@ -1,6 +1,7 @@
 """
-A component which allows you to send data to an Splunk instance utilizing the
-HTTP Event Collector.
+Support to send data to an Splunk instance.
+
+Uses the HTTP Event Collector.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/splunk/

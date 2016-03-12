@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.googlevoice
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Google Voice SMS platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -20,8 +18,7 @@ REQUIREMENTS = ['https://github.com/w1ll1am23/pygooglevoice-sms/archive/'
 
 
 def get_service(hass, config):
-    """ Get the Google Voice SMS notification service. """
-
+    """Get the Google Voice SMS notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_USERNAME,
                                      CONF_PASSWORD]},
@@ -34,17 +31,17 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class GoogleVoiceSMSNotificationService(BaseNotificationService):
-    """ Implements notification service for the Google Voice SMS service. """
+    """Implement the notification service for the Google Voice SMS service."""
 
     def __init__(self, username, password):
+        """Initialize the service."""
         from googlevoicesms import Voice
         self.voice = Voice()
         self.username = username
         self.password = password
 
     def send_message(self, message="", **kwargs):
-        """ Send SMS to specified target user cell. """
-
+        """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)
 
         if not targets:

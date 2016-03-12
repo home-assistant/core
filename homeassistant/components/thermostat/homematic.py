@@ -1,8 +1,5 @@
 """
-homeassistant.components.thermostat.homematic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN) thermostats using
-Homegear or Homematic central (CCU1/CCU2).
+Support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN) thermostats.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.homematic/
@@ -29,8 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Homematic thermostat. """
-
+    """Setup the Homematic thermostat."""
     devices = []
     try:
         homegear = ServerProxy(config[CONF_ADDRESS])
@@ -62,9 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class HomematicThermostat(ThermostatDevice):
-    """ Represents a Homematic thermostat. """
+    """Representation of a Homematic thermostat."""
 
     def __init__(self, device, _id, name, channel):
+        """Initialize the thermostat."""
         self.device = device
         self._id = _id
         self._channel = channel
@@ -80,39 +77,39 @@ class HomematicThermostat(ThermostatDevice):
 
     @property
     def name(self):
-        """ Returns the name of the Homematic device. """
+        """Return the name of the Homematic device."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement this thermostat expresses itself in. """
+        """Return the unit of measurement that is used."""
         return TEMP_CELCIUS
 
     @property
     def current_temperature(self):
-        """ Returns the current temperature. """
+        """Return the current temperature."""
         return self._current_temperature
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         return self._target_temperature
 
     def set_temperature(self, temperature):
-        """ Set new target temperature. """
+        """Set new target temperature."""
         self.device.setValue(self._full_device_name,
                              PROPERTY_SET_TEMPERATURE,
                              temperature)
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return the device specific state attributes."""
         return {"valve": self._valve,
                 "battery": self._battery,
                 "mode": self._mode}
 
     def update(self):
-        """ Update the data from the thermostat. """
+        """Update the data from the thermostat."""
         try:
             self._current_temperature = self.device.getValue(
                 self._full_device_name,

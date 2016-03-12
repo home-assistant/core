@@ -23,6 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class BinarySensor(BinarySensorDevice, Sensor):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
+
     required = (CONF_VALUE_ON,)
 
     @property

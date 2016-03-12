@@ -73,9 +73,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class RfxtrxSensor(Entity):
-    """Represents a RFXtrx sensor."""
+    """Representation of a RFXtrx sensor."""
 
     def __init__(self, event, name, data_type=None):
+        """Initialize the sensor."""
         self.event = event
         self._unit_of_measurement = None
         self._data_type = None
@@ -91,12 +92,12 @@ class RfxtrxSensor(Entity):
                 break
 
     def __str__(self):
-        """Returns the name."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         if self._data_type:
             return self.event.values[self._data_type]
         return None
@@ -108,10 +109,10 @@ class RfxtrxSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         return self.event.values
 
     @property
     def unit_of_measurement(self):
-        """Unit this state is expressed in."""
+        """Return the unit this state is expressed in."""
         return self._unit_of_measurement

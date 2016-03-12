@@ -1,9 +1,4 @@
-"""
-tests.components.test_input_select
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests input_select component.
-"""
+"""The tests for the Input select component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
@@ -15,13 +10,14 @@ from tests.common import get_test_home_assistant
 
 
 class TestInputSelect(unittest.TestCase):
-    """ Test the input select module. """
+    """Test the input select component."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_config(self):
@@ -56,7 +52,7 @@ class TestInputSelect(unittest.TestCase):
         }))
 
     def test_select_option(self):
-        """ Test select_option methods. """
+        """Test select_option methods."""
         self.assertTrue(input_select.setup(self.hass, {
             'input_select': {
                 'test_1': {
@@ -85,6 +81,7 @@ class TestInputSelect(unittest.TestCase):
         self.assertEqual('another option', state.state)
 
     def test_config_options(self):
+        """Test configuration options."""
         count_start = len(self.hass.states.entity_ids())
 
         test_2_options = [

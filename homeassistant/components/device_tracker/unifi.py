@@ -1,7 +1,8 @@
 """
-homeassistant.components.device_tracker.unifi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Unifi WAP controller
+Support for Unifi WAP controllers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
 import urllib
@@ -17,7 +18,7 @@ CONF_PORT = 'port'
 
 
 def get_scanner(hass, config):
-    """ Sets up unifi device_tracker """
+    """Setup Unifi device_tracker."""
     from unifi.controller import Controller
 
     if not validate_config(config, {DOMAIN: [CONF_USERNAME,
@@ -50,10 +51,12 @@ class UnifiScanner(object):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller):
+        """Initialize the scanner."""
         self._controller = controller
         self._update()
 
     def _update(self):
+        """Get the clients from the device."""
         try:
             clients = self._controller.get_clients()
         except urllib.error.HTTPError as ex:
@@ -63,12 +66,12 @@ class UnifiScanner(object):
         self._clients = {client['mac']: client for client in clients}
 
     def scan_devices(self):
-        """ Scans for devices. """
+        """Scan for devices."""
         self._update()
         return self._clients.keys()
 
     def get_device_name(self, mac):
-        """ Returns the name (if known) of the device.
+        """Return the name (if known) of the device.
 
         If a name has been set in Unifi, then return that, else
         return the hostname if it has been detected.

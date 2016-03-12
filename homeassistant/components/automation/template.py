@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers template automation rules.
+Offer template automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#template-trigger
@@ -16,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is None:
@@ -27,7 +25,7 @@ def trigger(hass, config, action):
     already_triggered = False
 
     def event_listener(event):
-        """ Listens for state changes and calls action. """
+        """Listen for state changes and calls action."""
         nonlocal already_triggered
         template_result = _check_template(hass, value_template)
 
@@ -43,8 +41,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """ Wraps action method with state based condition. """
-
+    """Wrap action method with state based condition."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
     if value_template is None:
@@ -55,7 +52,7 @@ def if_action(hass, config):
 
 
 def _check_template(hass, value_template):
-    """ Checks if result of template is true """
+    """Check if result of template is true."""
     try:
         value = template.render(hass, value_template, {})
     except TemplateError:

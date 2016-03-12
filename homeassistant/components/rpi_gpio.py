@@ -1,7 +1,5 @@
 """
-homeassistant.components.rpi_gpio
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows to control the GPIO pins of a Raspberry Pi.
+Support for controlling GPIO pins of a Raspberry Pi.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rpi_gpio/
@@ -19,15 +17,15 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=no-member
 def setup(hass, config):
-    """ Sets up the Raspberry PI GPIO component. """
+    """Setup the Raspberry PI GPIO component."""
     import RPi.GPIO as GPIO
 
     def cleanup_gpio(event):
-        """ Stuff to do before stop home assistant. """
+        """Stuff to do before stopping."""
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """ Stuff to do when home assistant starts. """
+        """Stuff to do when home assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)
@@ -36,32 +34,32 @@ def setup(hass, config):
 
 
 def setup_output(port):
-    """ Setup a GPIO as output. """
+    """Setup a GPIO as output."""
     import RPi.GPIO as GPIO
     GPIO.setup(port, GPIO.OUT)
 
 
 def setup_input(port, pull_mode):
-    """ Setup a GPIO as input. """
+    """Setup a GPIO as input."""
     import RPi.GPIO as GPIO
     GPIO.setup(port, GPIO.IN,
                GPIO.PUD_DOWN if pull_mode == 'DOWN' else GPIO.PUD_UP)
 
 
 def write_output(port, value):
-    """ Write a value to a GPIO. """
+    """Write a value to a GPIO."""
     import RPi.GPIO as GPIO
     GPIO.output(port, value)
 
 
 def read_input(port):
-    """ Read a value from a GPIO. """
+    """Read a value from a GPIO."""
     import RPi.GPIO as GPIO
     return GPIO.input(port)
 
 
 def edge_detect(port, event_callback, bounce):
-    """ Adds detection for RISING and FALLING events. """
+    """Add detection for RISING and FALLING events."""
     import RPi.GPIO as GPIO
     GPIO.add_event_detect(
         port,

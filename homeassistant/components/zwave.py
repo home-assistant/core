@@ -1,7 +1,5 @@
 """
-homeassistant.components.zwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects Home Assistant to a Z-Wave network.
+Support for Z-Wave.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
@@ -56,8 +54,8 @@ TYPE_BOOL = "Bool"
 TYPE_DECIMAL = "Decimal"
 
 
-# list of tuple (DOMAIN, discovered service, supported command
-# classes, value type)
+# List of tuple (DOMAIN, discovered service, supported command classes,
+# value type).
 DISCOVERY_COMPONENTS = [
     ('sensor',
      DISCOVER_SENSORS,
@@ -93,28 +91,29 @@ NETWORK = None
 
 
 def _obj_to_dict(obj):
-    """ Converts an obj into a hash for debug. """
+    """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
 def _node_name(node):
-    """ Returns the name of the node. """
+    """Return the name of the node."""
     return node.name or "{} {}".format(
         node.manufacturer_name, node.product_name)
 
 
 def _value_name(value):
-    """ Returns the name of the value. """
+    """Return the name of the value."""
     return "{} {}".format(_node_name(value.node), value.label)
 
 
 def _object_id(value):
-    """ Returns the object_id of the device value.
-    The object_id contains node_id and value instance id
-    to not collide with other entity_ids"""
+    """Return the object_id of the device value.
 
+    The object_id contains node_id and value instance id
+    to not collide with other entity_ids.
+    """
     object_id = "{}_{}".format(slugify(_value_name(value)),
                                value.node.node_id)
 
@@ -126,7 +125,7 @@ def _object_id(value):
 
 
 def nice_print_node(node):
-    """ Prints a nice formatted node to the output (debug method). """
+    """Print a nice formatted node to the output (debug method)."""
     node_dict = _obj_to_dict(node)
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
@@ -138,8 +137,7 @@ def nice_print_node(node):
 
 
 def get_config_value(node, value_index):
-    """ Returns the current config value for a specific index. """
-
+    """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
             # 112 == config command class
@@ -152,8 +150,8 @@ def get_config_value(node, value_index):
 
 
 def setup(hass, config):
-    """
-    Setup Z-wave.
+    """Setup Z-Wave.
+
     Will automatically load components to support devices found on the network.
     """
     # pylint: disable=global-statement, import-error
@@ -181,7 +179,7 @@ def setup(hass, config):
 
     if use_debug:
         def log_all(signal, value=None):
-            """ Log all the signals. """
+            """Log all the signals."""
             print("")
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
@@ -193,8 +191,7 @@ def setup(hass, config):
         dispatcher.connect(log_all, weak=False)
 
     def value_added(node, value):
-        """ Called when a value is added to a node on the network. """
-
+        """Called when a value is added to a node on the network."""
         for (component,
              discovery_service,
              command_ids,
@@ -230,7 +227,7 @@ def setup(hass, config):
             })
 
     def scene_activated(node, scene_id):
-        """ Called when a scene is activated on any node in the network. """
+        """Called when a scene is activated on any node in the network."""
         name = _node_name(node)
         object_id = "{}_{}".format(slugify(name), node.node_id)
 
@@ -245,19 +242,19 @@ def setup(hass, config):
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
 
     def add_node(event):
-        """ Switch into inclusion mode """
+        """Switch into inclusion mode."""
         NETWORK.controller.begin_command_add_device()
 
     def remove_node(event):
-        """ Switch into exclusion mode"""
+        """Switch into exclusion mode."""
         NETWORK.controller.begin_command_remove_device()
 
     def stop_zwave(event):
-        """ Stop Z-wave. """
+        """Stop Z-Wave."""
         NETWORK.stop()
 
     def start_zwave(event):
-        """ Called when Home Assistant starts up. """
+        """Startup Z-Wave."""
         NETWORK.start()
 
         polling_interval = convert(
@@ -267,7 +264,7 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # register add / remove node services for zwave sticks without
+        # Register add / remove node services for Z-Wave sticks without
         # hardware inclusion button
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
@@ -278,37 +275,40 @@ def setup(hass, config):
 
 
 class ZWaveDeviceEntity:
-    """ Represents a ZWave node entity within Home Assistant. """
+    """Representation of a Z-Wave node entity."""
+
     def __init__(self, value, domain):
+        """Initialize the z-Wave device."""
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
 
     @property
     def should_poll(self):
-        """ False because we will push our own state to HA when changed. """
+        """No polling needed."""
         return False
 
     @property
     def unique_id(self):
-        """ Returns a unique id. """
+        """Return an unique ID."""
         return "ZWAVE-{}-{}".format(self._value.node.node_id,
                                     self._value.object_id)
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return _value_name(self._value)
 
     def _object_id(self):
-        """ Returns the object_id of the device value.
-        The object_id contains node_id and value instance id
-        to not collide with other entity_ids"""
+        """Return the object_id of the device value.
 
+        The object_id contains node_id and value instance id to not collide
+        with other entity_ids.
+        """
         return _object_id(self._value)
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self._value.node.node_id,
         }

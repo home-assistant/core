@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.snmp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports fetching WiFi associations
-through SNMP.
+Support for fetching WiFi associations through SNMP.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.snmp/
@@ -17,7 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +26,7 @@ CONF_BASEOID = "baseoid"
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns an snmp scanner """
+    """Validate the configuration and return an snmp scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_COMMUNITY, CONF_BASEOID]},
                            _LOGGER):
@@ -41,10 +38,10 @@ def get_scanner(hass, config):
 
 
 class SnmpScanner(object):
-    """
-    This class queries any SNMP capable Acces Point for connected devices.
-    """
+    """Queries any SNMP capable Access Point for connected devices."""
+
     def __init__(self, config):
+        """Initialize the scanner."""
         from pysnmp.entity.rfc3413.oneliner import cmdgen
         self.snmp = cmdgen.CommandGenerator()
 
@@ -61,25 +58,23 @@ class SnmpScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device IDs.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return [client['mac'] for client in self.last_results
+                if client.get('mac')]
 
     # Supressing no-self-use warning
     # pylint: disable=R0201
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
+        """Return the name of the given device or None if we don't know."""
         # We have no names
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the WAP is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the WAP is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
@@ -93,8 +88,7 @@ class SnmpScanner(object):
             return True
 
     def get_snmp_data(self):
-        """ Fetch mac addresses from WAP via SNMP. """
-
+        """Fetch MAC addresses from WAP via SNMP."""
         devices = []
 
         errindication, errstatus, errindex, restable = self.snmp.nextCmd(
@@ -111,6 +105,7 @@ class SnmpScanner(object):
         for resrow in restable:
             for _, val in resrow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                _LOGGER.debug('Found mac %s', mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices

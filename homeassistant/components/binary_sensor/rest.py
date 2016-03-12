@@ -1,5 +1,5 @@
 """
-The rest binary sensor will consume responses sent by an exposed REST API.
+Support for RESTful binary sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rest/
@@ -52,7 +52,7 @@ class RestBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Name of the binary sensor."""
+        """Return the name of the binary sensor."""
         return self._name
 
     @property

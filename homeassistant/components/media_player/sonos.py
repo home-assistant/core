@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.sonos
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides an interface to Sonos players (via SoCo)
+Support to interface with Sonos players (via SoCo).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
@@ -34,7 +32,7 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Sonos platform. """
+    """Setup the Sonos platform."""
     import soco
     import socket
 
@@ -67,15 +65,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def only_if_coordinator(func):
-    """
-    If used as decorator, avoid calling the decorated method if
-    player is not a coordinator.
-    If not, a grouped speaker (not in coordinator role)
-    will throw soco.exceptions.SoCoSlaveException
-    """
+    """Decorator for coordinator.
 
+    If used as decorator, avoid calling the decorated method if player is not
+    a coordinator. If not, a grouped speaker (not in coordinator role) will
+    throw soco.exceptions.SoCoSlaveException
+    """
     def wrapper(*args, **kwargs):
-        """ Decorator wrapper """
+        """Decorator wrapper."""
         if args[0].is_coordinator:
             return func(*args, **kwargs)
         else:
@@ -89,10 +86,11 @@ def only_if_coordinator(func):
 # pylint: disable=too-many-instance-attributes, too-many-public-methods
 # pylint: disable=abstract-method
 class SonosDevice(MediaPlayerDevice):
-    """ Represents a Sonos device. """
+    """Representation of a Sonos device."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, player):
+        """Initialize the Sonos device."""
         self.hass = hass
         super(SonosDevice, self).__init__()
         self._player = player
@@ -100,25 +98,26 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return True
 
     def update_sonos(self, now):
-        """ Updates state, called by track_utc_time_change. """
+        """Update state, called by track_utc_time_change."""
         self.update_ha_state(True)
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     @property
     def unique_id(self):
-        """ Returns a unique id. """
+        """Return a unique ID."""
         return "{}.{}".format(self.__class__, self._player.uid)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         if self._status == 'PAUSED_PLAYBACK':
             return STATE_PAUSED
         if self._status == 'PLAYING':
@@ -129,11 +128,11 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def is_coordinator(self):
-        """ Returns true if player is a coordinator """
+        """Return true if player is a coordinator."""
         return self._player.is_coordinator
 
     def update(self):
-        """ Retrieve latest state. """
+        """Retrieve latest state."""
         self._name = self._player.get_speaker_info()['zone_name'].replace(
             ' (R)', '').replace(' (L)', '')
         self._status = self._player.get_current_transport_info().get(
@@ -142,26 +141,27 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """ Volume level of the media player (0..1). """
+        """Volume level of the media player (0..1)."""
         return self._player.volume / 100.0
 
     @property
     def is_volume_muted(self):
+        """Return true if volume is muted."""
         return self._player.mute
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         return self._trackinfo.get('title', None)
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         dur = self._trackinfo.get('duration', '0:00')
 
         # If the speaker is playing from the "line-in" source, getting
@@ -175,13 +175,13 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """ Image url of current playing media. """
+        """Image url of current playing media."""
         if 'album_art' in self._trackinfo:
             return self._trackinfo['album_art']
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         if 'artist' in self._trackinfo and 'title' in self._trackinfo:
             return '{artist} - {title}'.format(
                 artist=self._trackinfo['artist'],
@@ -192,60 +192,60 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_SONOS
 
     @only_if_coordinator
     def turn_off(self):
-        """ Turn off media player. """
+        """Turn off media player."""
         self._player.pause()
 
     @only_if_coordinator
     def volume_up(self):
-        """ Volume up media player. """
+        """Volume up media player."""
         self._player.volume += 1
 
     @only_if_coordinator
     def volume_down(self):
-        """ Volume down media player. """
+        """Volume down media player."""
         self._player.volume -= 1
 
     @only_if_coordinator
     def set_volume_level(self, volume):
-        """ Set volume level, range 0..1. """
+        """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
 
     @only_if_coordinator
     def mute_volume(self, mute):
-        """ Mute (true) or unmute (false) media player. """
+        """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
 
     @only_if_coordinator
     def media_play(self):
-        """ Send paly command. """
+        """Send paly command."""
         self._player.play()
 
     @only_if_coordinator
     def media_pause(self):
-        """ Send pause command. """
+        """Send pause command."""
         self._player.pause()
 
     @only_if_coordinator
     def media_next_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self._player.next()
 
     @only_if_coordinator
     def media_previous_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self._player.previous()
 
     @only_if_coordinator
     def media_seek(self, position):
-        """ Send seek command. """
+        """Send seek command."""
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
     @only_if_coordinator
     def turn_on(self):
-        """ Turn the media player on. """
+        """Turn the media player on."""
         self._player.play()

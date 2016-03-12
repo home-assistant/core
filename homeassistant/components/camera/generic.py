@@ -1,6 +1,4 @@
 """
-homeassistant.components.camera.generic
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for IP Cameras.
 
 For more details about this platform, please refer to the documentation at
@@ -19,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Adds a generic IP Camera. """
+    """Setup a generic IP Camera."""
     if not validate_config({DOMAIN: config}, {DOMAIN: ['still_image_url']},
                            _LOGGER):
         return None
@@ -29,11 +27,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class GenericCamera(Camera):
-    """
-    A generic implementation of an IP camera that is reachable over a URL.
-    """
+    """A generic implementation of an IP camera."""
 
     def __init__(self, device_info):
+        """Initialize a generic camera."""
         super().__init__()
         self._name = device_info.get('name', 'Generic Camera')
         self._username = device_info.get('username')
@@ -41,7 +38,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info['still_image_url']
 
     def camera_image(self):
-        """ Return a still image response from the camera. """
+        """Return a still image response from the camera."""
         if self._username and self._password:
             try:
                 response = requests.get(
@@ -61,5 +58,5 @@ class GenericCamera(Camera):
 
     @property
     def name(self):
-        """ Return the name of this device. """
+        """Return the name of this device."""
         return self._name

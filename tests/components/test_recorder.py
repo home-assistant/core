@@ -1,9 +1,4 @@
-"""
-tests.components.test_recorder
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests Recorder component.
-"""
+"""The tests for the Recorder component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 import os
@@ -15,22 +10,23 @@ from tests.common import get_test_home_assistant
 
 
 class TestRecorder(unittest.TestCase):
-    """ Test the chromecast module. """
+    """Test the chromecast module."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         recorder.setup(self.hass, {})
         self.hass.start()
         recorder._INSTANCE.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
         recorder._INSTANCE.block_till_done()
         os.remove(self.hass.config.path(recorder.DB_FILE))
 
     def test_saving_state(self):
-        """ Tests saving and restoring a state. """
+        """Test saving and restoring a state."""
         entity_id = 'test.recorder'
         state = 'restoring_from_db'
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
@@ -46,14 +42,14 @@ class TestRecorder(unittest.TestCase):
         self.assertEqual(self.hass.states.get(entity_id), states[0])
 
     def test_saving_event(self):
-        """ Tests saving and restoring an event. """
+        """Test saving and restoring an event."""
         event_type = 'EVENT_TEST'
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
 
         events = []
 
         def event_listener(event):
-            """ Records events from eventbus. """
+            """Record events from eventbus."""
             if event.event_type == event_type:
                 events.append(event)
 

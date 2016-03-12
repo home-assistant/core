@@ -1,9 +1,4 @@
-"""
-tests.components.test_script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests script component.
-"""
+"""The tests for the Script component."""
 # pylint: disable=too-many-public-methods,protected-access
 from datetime import timedelta
 import unittest
@@ -18,16 +13,18 @@ ENTITY_ID = 'script.test'
 
 
 class TestScript(unittest.TestCase):
-    """ Test the switch module. """
+    """Test the Script component."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_setup_with_missing_sequence(self):
+        """Test setup with missing sequence."""
         self.assertTrue(script.setup(self.hass, {
             'script': {
                 'test': {}
@@ -37,6 +34,7 @@ class TestScript(unittest.TestCase):
         self.assertEqual(0, len(self.hass.states.entity_ids('script')))
 
     def test_setup_with_invalid_object_id(self):
+        """Test setup with invalid objects."""
         self.assertTrue(script.setup(self.hass, {
             'script': {
                 'test hello world': {
@@ -48,6 +46,7 @@ class TestScript(unittest.TestCase):
         self.assertEqual(0, len(self.hass.states.entity_ids('script')))
 
     def test_setup_with_dict_as_sequence(self):
+        """Test setup with dict as sequence."""
         self.assertTrue(script.setup(self.hass, {
             'script': {
                 'test': {
@@ -61,10 +60,12 @@ class TestScript(unittest.TestCase):
         self.assertEqual(0, len(self.hass.states.entity_ids('script')))
 
     def test_firing_event(self):
+        """Test the firing of events."""
         event = 'test_event'
         calls = []
 
         def record_event(event):
+            """Add recorded event to set."""
             calls.append(event)
 
         self.hass.bus.listen(event, record_event)
@@ -88,13 +89,15 @@ class TestScript(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         self.assertEqual('world', calls[0].data.get('hello'))
-        self.assertEqual(
-            True, self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
+        self.assertIsNone(
+            self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
     def test_calling_service_old(self):
+        """Test the calling of an old service."""
         calls = []
 
         def record_call(service):
+            """Add recorded event to set."""
             calls.append(service)
 
         self.hass.services.register('test', 'script', record_call)
@@ -119,9 +122,11 @@ class TestScript(unittest.TestCase):
         self.assertEqual('world', calls[0].data.get('hello'))
 
     def test_calling_service(self):
+        """Test the calling of a service."""
         calls = []
 
         def record_call(service):
+            """Add recorded event to set."""
             calls.append(service)
 
         self.hass.services.register('test', 'script', record_call)
@@ -146,10 +151,12 @@ class TestScript(unittest.TestCase):
         self.assertEqual('world', calls[0].data.get('hello'))
 
     def test_delay(self):
+        """Test the delay."""
         event = 'test_event'
         calls = []
 
         def record_event(event):
+            """Add recorded event to set."""
             calls.append(event)
 
         self.hass.bus.listen(event, record_event)
@@ -174,8 +181,7 @@ class TestScript(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(
-            False,
+        self.assertTrue(
             self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
         self.assertEqual(
@@ -192,10 +198,12 @@ class TestScript(unittest.TestCase):
         self.assertEqual(2, len(calls))
 
     def test_cancel_while_delay(self):
+        """Test the cancelling while the delay is present."""
         event = 'test_event'
         calls = []
 
         def record_event(event):
+            """Add recorded event to set."""
             calls.append(event)
 
         self.hass.bus.listen(event, record_event)
@@ -234,14 +242,12 @@ class TestScript(unittest.TestCase):
         self.assertEqual(0, len(calls))
 
     def test_turn_on_service(self):
-        """
-        Verifies that the turn_on service for a script only turns on scripts
-        that are not currently running.
-        """
+        """Verify that the turn_on service."""
         event = 'test_event'
         calls = []
 
         def record_event(event):
+            """Add recorded event to set."""
             calls.append(event)
 
         self.hass.bus.listen(event, record_event)
@@ -265,16 +271,18 @@ class TestScript(unittest.TestCase):
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(calls))
 
-        # calling turn_on a second time should not advance the script
+        # Calling turn_on a second time should not advance the script
         script.turn_on(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(calls))
 
     def test_toggle_service(self):
+        """Test the toggling of a service."""
         event = 'test_event'
         calls = []
 
         def record_event(event):
+            """Add recorded event to set."""
             calls.append(event)
 
         self.hass.bus.listen(event, record_event)

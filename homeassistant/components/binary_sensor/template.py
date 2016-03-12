@@ -1,7 +1,8 @@
 """
-homeassistant.components.binary_sensor.template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for exposing a templated binary_sensor
+Support for exposing a templated binary sensor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.template/
 """
 import logging
 
@@ -22,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup template binary sensors."""
-
     sensors = []
     if config.get(CONF_SENSORS) is None:
         _LOGGER.error('Missing configuration data for binary_sensor platform')
@@ -70,11 +70,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BinarySensorTemplate(BinarySensorDevice):
-    """A virtual binary_sensor that triggers from another sensor."""
+    """A virtual binary sensor that triggers from another sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device, friendly_name, sensor_class,
                  value_template):
+        """Initialize the Template binary sensor."""
         self._hass = hass
         self._device = device
         self._name = friendly_name
@@ -90,25 +91,32 @@ class BinarySensorTemplate(BinarySensorDevice):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     def _event_listener(self, event):
+        if not hasattr(self, 'hass'):
+            return
         self.update_ha_state(True)
 
     @property
     def should_poll(self):
+        """No polling needed."""
         return False
 
     @property
     def sensor_class(self):
+        """Return the sensor class of the sensor."""
         return self._sensor_class
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def is_on(self):
+        """Return true if sensor is on."""
         return self._state
 
     def update(self):
+        """Get the latest data and update the state."""
         try:
             value = template.render(self._hass, self._template)
         except TemplateError as ex:
