@@ -11,7 +11,7 @@ from homeassistant.components.scene import Scene
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = [
     'https://github.com/sander76/powerviewApi/'
-    'archive/master.zip#powerview_api==0.2']
+    'archive/master.zip#powerviewApi==0.2']
 
 HUB_ADDRESS = 'address'
 
