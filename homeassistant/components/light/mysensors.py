@@ -56,7 +56,6 @@ class MySensorsLight(Light):
     """Represent the value of a MySensors child node."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup instance attributes."""
@@ -75,27 +74,27 @@ class MySensorsLight(Light):
 
     @property
     def should_poll(self):
-        """MySensor gateway pushes its state to HA."""
+        """No polling needed."""
         return False
 
     @property
     def name(self):
-        """The name of this entity."""
+        """Return the name of this entity."""
         return self._name
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def rgb_color(self):
-        """RGB color value [int, int, int]."""
+        """Return the RGB color value [int, int, int]."""
         return self._rgb
 
     @property
     def rgb_white(self):  # not implemented in the frontend yet
-        """White value in RGBW, value between 0..255."""
+        """Return the white value in RGBW, value between 0..255."""
         return self._white
 
     @property
@@ -113,12 +112,17 @@ class MySensorsLight(Light):
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return true if entity is available."""
         return self.value_type in self._values
 
     @property
+    def assumed_state(self):
+        """Return true if unable to access real state of entity."""
+        return self.gateway.optimistic
+
+    @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
 
     def _turn_on_light(self):

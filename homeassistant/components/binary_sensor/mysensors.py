@@ -90,7 +90,7 @@ class MySensorsBinarySensor(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """MySensor gateway pushes its state to HA."""
+        """Mysensor gateway pushes its state to HA."""
         return False
 
     @property

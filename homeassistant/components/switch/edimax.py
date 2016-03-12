@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.edimax
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Edimax switches.
 
 For more details about this platform, please refer to the documentation at
@@ -20,13 +18,12 @@ DEVICE_DEFAULT_NAME = 'Edimax Smart Plug'
 REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
                 '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
 
-# setup logger
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return Edimax Smart Plugs. """
+    """Find and return Edimax Smart Plugs."""
     from pyedimax.smartplug import SmartPlug
 
     # pylint: disable=global-statement
@@ -45,19 +42,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SmartPlugSwitch(SwitchDevice):
-    """ Represents an Edimax Smart Plug switch. """
+    """Representation an Edimax Smart Plug switch."""
+
     def __init__(self, smartplug, name):
+        """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
 
     @property
     def name(self):
-        """ Returns the name of the Smart Plug, if any. """
+        """Return the name of the Smart Plug, if any."""
         return self._name
 
     @property
     def current_power_mwh(self):
-        """ Current power usage in mWh. """
+        """Return the current power usage in mWh."""
         try:
             return float(self.smartplug.now_power) / 1000000.0
         except ValueError:
@@ -65,7 +64,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def today_power_mw(self):
-        """ Today total power usage in mW. """
+        """Return the today total power usage in mW."""
         try:
             return float(self.smartplug.now_energy_day) / 1000.0
         except ValueError:
@@ -73,13 +72,13 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """ True if switch is on. """
+        """Return true if switch is on."""
         return self.smartplug.state == 'ON'
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turn the switch on."""
         self.smartplug.state = 'ON'
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """Turn the switch off."""
         self.smartplug.state = 'OFF'

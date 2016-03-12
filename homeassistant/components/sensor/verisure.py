@@ -14,11 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Verisure platform."""
-
+    """Setup the Verisure platform."""
     sensors = []
 
-    if int(hub.config.get('temperature', '1')):
+    if int(hub.config.get('thermometers', '1')):
         hub.update_climate()
         sensors.extend([
             VerisureThermometer(value.id)
@@ -47,28 +46,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureThermometer(Entity):
-    """Represents a Verisure thermometer."""
+    """Representation of a Verisure thermometer."""
 
     def __init__(self, device_id):
+        """Initialize the sensor."""
         self._id = device_id
 
     @property
     def name(self):
-        """Returns the name of the device."""
+        """Return the name of the device."""
         return '{} {}'.format(
             hub.climate_status[self._id].location,
             "Temperature")
 
     @property
     def state(self):
-        """Returns the state of the device."""
-        # remove ° character
+        """Return the state of the device."""
+        # Remove ° character
         return hub.climate_status[self._id].temperature[:-1]
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
-        return TEMP_CELCIUS  # can verisure report in fahrenheit?
+        """Return the unit of measurement of this entity."""
+        return TEMP_CELCIUS
 
     def update(self):
         """Update the sensor."""
@@ -76,27 +76,28 @@ class VerisureThermometer(Entity):
 
 
 class VerisureHygrometer(Entity):
-    """Represents a Verisure hygrometer."""
+    """Representation of a Verisure hygrometer."""
 
     def __init__(self, device_id):
+        """Initialize the sensor."""
         self._id = device_id
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return '{} {}'.format(
             hub.climate_status[self._id].location,
             "Humidity")
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         # remove % character
         return hub.climate_status[self._id].humidity[:-1]
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this sensor."""
+        """Return the unit of measurement of this sensor."""
         return "%"
 
     def update(self):
@@ -105,26 +106,27 @@ class VerisureHygrometer(Entity):
 
 
 class VerisureMouseDetection(Entity):
-    """ Represents a Verisure mouse detector."""
+    """Representation of a Verisure mouse detector."""
 
     def __init__(self, device_id):
+        """Initialize the sensor."""
         self._id = device_id
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return '{} {}'.format(
             hub.mouse_status[self._id].location,
             "Mouse")
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return hub.mouse_status[self._id].count
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this sensor."""
+        """Return the unit of measurement of this sensor."""
         return "Mice"
 
     def update(self):

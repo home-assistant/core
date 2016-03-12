@@ -1,7 +1,5 @@
 """
-homeassistant.components.ecobee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Ecobee component
+Support for Ecobee.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ecobee/
@@ -31,12 +29,12 @@ _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 
 def request_configuration(network, hass, config):
-    """ Request configuration steps from the user. """
+    """Request configuration steps from the user."""
     configurator = get_component('configurator')
     if 'ecobee' in _CONFIGURING:
         configurator.notify_errors(
@@ -46,7 +44,7 @@ def request_configuration(network, hass, config):
 
     # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
-        """ Actions to do when our configuration callback is called. """
+        """The actions to do when our configuration callback is called."""
         network.request_tokens()
         network.update()
         setup_ecobee(hass, network, config)
@@ -62,7 +60,7 @@ def request_configuration(network, hass, config):
 
 
 def setup_ecobee(hass, network, config):
-    """ Setup Ecobee thermostat. """
+    """Setup Ecobee thermostat."""
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
         request_configuration(network, hass, config)
@@ -93,22 +91,23 @@ def setup_ecobee(hass, network, config):
 
 # pylint: disable=too-few-public-methods
 class EcobeeData(object):
-    """ Gets the latest data and update the states. """
+    """Get the latest data and update the states."""
 
     def __init__(self, config_file):
+        """Initialize the Ecobee data object."""
         from pyecobee import Ecobee
         self.ecobee = Ecobee(config_file)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Get the latest data from pyecobee. """
+        """Get the latest data from pyecobee."""
         self.ecobee.update()
         _LOGGER.info("ecobee data updated successfully.")
 
 
 def setup(hass, config):
-    """
-    Setup Ecobee.
+    """Setup Ecobee.
+
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """

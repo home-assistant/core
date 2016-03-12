@@ -1,7 +1,5 @@
 """
-homeassistant.components.sun
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to keep track of the sun.
+Support for functionality to keep track of the sun.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sun/
@@ -125,11 +123,12 @@ def setup(hass, config):
 
 
 class Sun(Entity):
-    """Represents the Sun."""
+    """Representation of the Sun."""
 
     entity_id = ENTITY_ID
 
     def __init__(self, hass, location):
+        """Initialize the Sun."""
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
@@ -137,10 +136,12 @@ class Sun(Entity):
 
     @property
     def name(self):
+        """Return the name."""
         return "Sun"
 
     @property
     def state(self):
+        """Return the state of the sun."""
         if self.next_rising > self.next_setting:
             return STATE_ABOVE_HORIZON
 
@@ -148,6 +149,7 @@ class Sun(Entity):
 
     @property
     def state_attributes(self):
+        """Return the state attributes of the sun."""
         return {
             STATE_ATTR_NEXT_RISING:
                 dt_util.datetime_to_str(self.next_rising),
@@ -171,7 +173,7 @@ class Sun(Entity):
             self.location.longitude)
 
     def update_as_of(self, utc_point_in_time):
-        """ Calculate sun state at a point in UTC time. """
+        """Calculate sun state at a point in UTC time."""
         mod = -1
         while True:
             next_rising_dt = self.location.sunrise(
@@ -192,7 +194,7 @@ class Sun(Entity):
         self.next_setting = next_setting_dt
 
     def point_in_time_listener(self, now):
-        """ Called when the state of the sun has changed. """
+        """Called when the state of the sun has changed."""
         self.update_as_of(now)
         self.update_ha_state()
 
@@ -202,5 +204,5 @@ class Sun(Entity):
             self.next_change + timedelta(seconds=1))
 
     def timer_update(self, time):
-        """ Needed to update solar elevation. """
+        """Needed to update solar elevation."""
         self.update_ha_state()

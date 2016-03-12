@@ -71,10 +71,10 @@ When you are done with development and ready to commit your changes, run `build_
 
 To test your code before submission, used the `tox` tool.
 
-    ```shell
-    > pip install -U tox
-    > tox
-    ```
+```bash
+> pip install -U tox
+> tox
+```
 
 This will run unit tests against python 3.4 and 3.5 (if both are available locally), as well as run a set of tests which validate `pep8` and `pylint` style of the code.
 

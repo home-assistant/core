@@ -1,9 +1,4 @@
-"""
-tests.components.test_logbook
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests the logbook component.
-"""
+"""The tests for the logbook component."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 from datetime import timedelta
@@ -18,18 +13,20 @@ from tests.common import mock_http_component, get_test_home_assistant
 
 
 class TestComponentHistory(unittest.TestCase):
-    """ Tests homeassistant.components.history module. """
+    """Test the History component."""
 
     def setUp(self):
-        """ Test setup method. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
         self.assertTrue(logbook.setup(self.hass, {}))
 
     def tearDown(self):
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_service_call_create_logbook_entry(self):
+        """Test if service call create log book entry."""
         calls = []
 
         def event_listener(event):
@@ -55,6 +52,7 @@ class TestComponentHistory(unittest.TestCase):
             logbook.ATTR_ENTITY_ID))
 
     def test_service_call_create_log_book_entry_no_message(self):
+        """Test if service call create log book entry without message."""
         calls = []
 
         def event_listener(event):
@@ -67,7 +65,7 @@ class TestComponentHistory(unittest.TestCase):
         self.assertEqual(0, len(calls))
 
     def test_humanify_filter_sensor(self):
-        """ Test humanify filter too frequent sensor values. """
+        """Test humanify filter too frequent sensor values."""
         entity_id = 'sensor.bla'
 
         pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
@@ -88,6 +86,7 @@ class TestComponentHistory(unittest.TestCase):
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
 
     def test_entry_to_dict(self):
+        """Test conversion of entry to dict."""
         entry = logbook.Entry(
             dt_util.utcnow(), 'Alarm', 'is triggered', 'switch', 'test_switch'
         )
@@ -98,8 +97,10 @@ class TestComponentHistory(unittest.TestCase):
         self.assertEqual('test_switch', data.get(logbook.ATTR_ENTITY_ID))
 
     def test_home_assistant_start_stop_grouped(self):
-        """ Tests if home assistant start and stop events are grouped if
-            occuring in the same minute. """
+        """Test if HA start and stop events are grouped.
+
+        Events that are occuring in the same minute.
+        """
         entries = list(logbook.humanify((
             ha.Event(EVENT_HOMEASSISTANT_STOP),
             ha.Event(EVENT_HOMEASSISTANT_START),
@@ -111,7 +112,7 @@ class TestComponentHistory(unittest.TestCase):
             domain=ha.DOMAIN)
 
     def test_process_custom_logbook_entries(self):
-        """ Tests if custom log book entries get added as an entry. """
+        """Test if custom log book entries get added as an entry."""
         name = 'Nice name'
         message = 'has a custom entry'
         entity_id = 'sun.sun'
@@ -131,7 +132,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def assert_entry(self, entry, when=None, name=None, message=None,
                      domain=None, entity_id=None):
-        """ Asserts an entry is what is expected """
+        """Assert an entry is what is expected."""
         if when:
             self.assertEqual(when, entry.when)
 
@@ -148,8 +149,7 @@ class TestComponentHistory(unittest.TestCase):
             self.assertEqual(entity_id, entry.entity_id)
 
     def create_state_changed_event(self, event_time_fired, entity_id, state):
-        """ Create state changed event. """
-
+        """Create state changed event."""
         # Logbook only cares about state change events that
         # contain an old state but will not actually act on it.
         state = ha.State(entity_id, state).as_dict()

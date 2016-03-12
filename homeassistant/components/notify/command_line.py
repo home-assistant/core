@@ -1,7 +1,5 @@
 """
-homeassistant.components.notify.command_line
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-command_line notification service.
+Support for command line notification services.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.command_line/
@@ -16,8 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """ Get the Command Line notification service. """
-
+    """Get the Command Line notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['command']},
                            _LOGGER):
@@ -30,14 +27,14 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class CommandLineNotificationService(BaseNotificationService):
-    """ Implements notification service for the Command Line service. """
+    """Implement the notification service for the Command Line service."""
 
     def __init__(self, command):
+        """Initialize the service."""
         self.command = command
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a command_line. """
-
+        """Send a message to a command line."""
         try:
             proc = subprocess.Popen(self.command, universal_newlines=True,
                                     stdin=subprocess.PIPE, shell=True)

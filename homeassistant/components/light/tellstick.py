@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.tellstick
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Tellstick lights.
 
 For more details about this platform, please refer to the documentation at
@@ -15,8 +13,7 @@ SIGNAL_REPETITIONS = 1
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return Tellstick lights. """
-
+    """Setup Tellstick lights."""
     import tellcore.telldus as telldus
     from tellcore.library import DirectCallbackDispatcher
     import tellcore.constants as tellcore_constants
@@ -32,7 +29,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             lights.append(TellstickLight(switch, signal_repetitions))
 
     def _device_event_callback(id_, method, data, cid):
-        """ Called from the TelldusCore library to update one device """
+        """Called from the TelldusCore library to update one device."""
         for light_device in lights:
             if light_device.tellstick_device.id == id_:
                 # Execute the update in another thread
@@ -42,7 +39,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     callback_id = core.register_device_event(_device_event_callback)
 
     def unload_telldus_lib(event):
-        """ Un-register the callback bindings """
+        """Un-register the callback bindings."""
         if callback_id is not None:
             core.unregister_callback(callback_id)
 
@@ -52,9 +49,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TellstickLight(Light):
-    """ Represents a Tellstick light. """
+    """Representation of a Tellstick light."""
 
     def __init__(self, tellstick_device, signal_repetitions):
+        """Initialize the light."""
         import tellcore.constants as tellcore_constants
 
         self.tellstick_device = tellstick_device
@@ -70,28 +68,28 @@ class TellstickLight(Light):
 
     @property
     def name(self):
-        """ Returns the name of the switch if any. """
+        """Return the name of the switch if any."""
         return self.tellstick_device.name
 
     @property
     def is_on(self):
-        """ True if switch is on. """
+        """Return true if switch is on."""
         return self._brightness > 0
 
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     def turn_off(self, **kwargs):
-        """ Turns the switch off. """
+        """Turn the switch off."""
         for _ in range(self.signal_repetitions):
             self.tellstick_device.turn_off()
         self._brightness = 0
         self.update_ha_state()
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         if brightness is None:
@@ -104,7 +102,7 @@ class TellstickLight(Light):
         self.update_ha_state()
 
     def update(self):
-        """ Update state of the light. """
+        """Update state of the light."""
         import tellcore.constants as tellcore_constants
 
         last_command = self.tellstick_device.last_sent_command(
@@ -123,5 +121,10 @@ class TellstickLight(Light):
 
     @property
     def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
+        """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Tellstick devices are always assumed state."""
+        return True

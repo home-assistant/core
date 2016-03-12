@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.smtp
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Mail (SMTP) notification service.
 
 For more details about this platform, please refer to the documentation at
@@ -18,8 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """ Get the mail notification service. """
-
+    """Get the mail notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['recipient']},
                            _LOGGER):
@@ -74,11 +71,12 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 class MailNotificationService(BaseNotificationService):
-    """ Implements notification service for E-Mail messages. """
+    """Implement the notification service for E-Mail messages."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, server, port, sender, starttls, username,
                  password, recipient, debug):
+        """Initialize the service."""
         self._server = server
         self._port = port
         self._sender = sender
@@ -90,8 +88,7 @@ class MailNotificationService(BaseNotificationService):
         self.tries = 2
 
     def connect(self):
-        """ Connect/Authenticate to SMTP Server """
-
+        """Connect/authenticate to SMTP Server."""
         mail = smtplib.SMTP(self._server, self._port, timeout=5)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
@@ -103,8 +100,7 @@ class MailNotificationService(BaseNotificationService):
         return mail
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
-
+        """Send a message to a user."""
         mail = self.connect()
         subject = kwargs.get(ATTR_TITLE)
 

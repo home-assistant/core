@@ -23,8 +23,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add the Command Sensor."""
-
+    """Setup the Command Sensor."""
     if config.get('command') is None:
         _LOGGER.error('Missing required variable: "command"')
         return False
@@ -42,8 +41,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments
 class CommandSensor(Entity):
-    """Represents a sensor that is returning a value of a shell commands."""
+    """Representation of a sensor that is using shell commands."""
+
     def __init__(self, hass, data, name, unit_of_measurement, value_template):
+        """Initialize the sensor."""
         self._hass = hass
         self.data = data
         self._name = name
@@ -54,21 +55,21 @@ class CommandSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     def update(self):
-        """Gets the latest data and updates the state."""
+        """Get the latest data and updates the state."""
         self.data.update()
         value = self.data.value
 
@@ -81,15 +82,16 @@ class CommandSensor(Entity):
 
 # pylint: disable=too-few-public-methods
 class CommandSensorData(object):
-    """Class for handling the data retrieval."""
+    """The class for handling the data retrieval."""
 
     def __init__(self, command):
+        """Initialize the data object."""
         self.command = command
         self.value = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Gets the latest data with a shell command."""
+        """Get the latest data with a shell command."""
         _LOGGER.info('Running command: %s', self.command)
 
         try:

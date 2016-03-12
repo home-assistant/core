@@ -1,7 +1,5 @@
 """
-homeassistant.components.light.lifx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-LIFX platform that implements lights
+Support for the LIFX platform that implements lights.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
@@ -31,8 +29,11 @@ TEMP_MAX_HASS = 500           # home assistant maximum temperature
 
 
 class LIFX():
+    """Representation of a LIFX light."""
+
     def __init__(self, add_devices_callback,
                  server_addr=None, broadcast_addr=None):
+        """Initialize the light."""
         import liffylights
 
         self._devices = []
@@ -47,6 +48,7 @@ class LIFX():
             broadcast_addr)
 
     def find_bulb(self, ipaddr):
+        """Search for bulbs."""
         bulb = None
         for device in self._devices:
             if device.ipaddr == ipaddr:
@@ -56,6 +58,7 @@ class LIFX():
 
     # pylint: disable=too-many-arguments
     def on_device(self, ipaddr, name, power, hue, sat, bri, kel):
+        """Initialize the light."""
         bulb = self.find_bulb(ipaddr)
 
         if bulb is None:
@@ -74,6 +77,7 @@ class LIFX():
 
     # pylint: disable=too-many-arguments
     def on_color(self, ipaddr, hue, sat, bri, kel):
+        """Initialize the light."""
         bulb = self.find_bulb(ipaddr)
 
         if bulb is not None:
@@ -81,6 +85,7 @@ class LIFX():
             bulb.update_ha_state()
 
     def on_power(self, ipaddr, power):
+        """Initialize the light."""
         bulb = self.find_bulb(ipaddr)
 
         if bulb is not None:
@@ -89,28 +94,30 @@ class LIFX():
 
     # pylint: disable=unused-argument
     def poll(self, now):
+        """Initialize the light."""
         self.probe()
 
     def probe(self, address=None):
+        """Initialize the light."""
         self._liffylights.probe(address)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Set up platform. """
+    """Setup the LIFX platform."""
     server_addr = config.get(CONF_SERVER, None)
     broadcast_addr = config.get(CONF_BROADCAST, None)
 
     lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
 
-    # register our poll service
+    # Register our poll service
     track_time_change(hass, lifx_library.poll, second=[10, 40])
 
     lifx_library.probe()
 
 
 def convert_rgb_to_hsv(rgb):
-    """ Convert HASS RGB values to HSV values. """
+    """Convert Home Assistant RGB values to HSV values."""
     red, green, blue = [_ / BYTE_MAX for _ in rgb]
 
     hue, saturation, brightness = colorsys.rgb_to_hsv(red, green, blue)
@@ -122,10 +129,12 @@ def convert_rgb_to_hsv(rgb):
 
 # pylint: disable=too-many-instance-attributes
 class LIFXLight(Light):
-    """ Provides LIFX light. """
+    """Representation of a LIFX light."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, liffy, ipaddr, name, power, hue,
                  saturation, brightness, kelvin):
+        """Initialize the light."""
         _LOGGER.debug("LIFXLight: %s %s",
                       ipaddr, name)
 
@@ -137,58 +146,50 @@ class LIFXLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for LIFX light. """
+        """No polling needed for LIFX light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     @property
     def ipaddr(self):
-        """ Returns the ip of the device. """
+        """Return the IP address of the device."""
         return self._ip
 
     @property
     def rgb_color(self):
-        """ Returns RGB value. """
+        """Return the RGB value."""
         _LOGGER.debug("rgb_color: [%d %d %d]",
                       self._rgb[0], self._rgb[1], self._rgb[2])
-
         return self._rgb
 
     @property
     def brightness(self):
-        """ Returns brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         brightness = int(self._bri / (BYTE_MAX + 1))
-
-        _LOGGER.debug("brightness: %d",
-                      brightness)
-
+        _LOGGER.debug("brightness: %d", brightness)
         return brightness
 
     @property
     def color_temp(self):
-        """ Returns color temperature. """
+        """Return the color temperature."""
         temperature = int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS) *
                           (self._kel - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
 
-        _LOGGER.debug("color_temp: %d",
-                      temperature)
-
+        _LOGGER.debug("color_temp: %d", temperature)
         return temperature
 
     @property
     def is_on(self):
-        """ True if device is on. """
-        _LOGGER.debug("is_on: %d",
-                      self._power)
-
+        """Return true if device is on."""
+        _LOGGER.debug("is_on: %d", self._power)
         return self._power != 0
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         if ATTR_TRANSITION in kwargs:
             fade = kwargs[ATTR_TRANSITION] * 1000
         else:
@@ -225,30 +226,26 @@ class LIFXLight(Light):
                                     brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         if ATTR_TRANSITION in kwargs:
             fade = kwargs[ATTR_TRANSITION] * 1000
         else:
             fade = 0
 
-        _LOGGER.debug("turn_off: %s %d",
-                      self._ip, fade)
-
+        _LOGGER.debug("turn_off: %s %d", self._ip, fade)
         self._liffylights.set_power(self._ip, 0, fade)
 
     def set_name(self, name):
-        """ Set name. """
+        """Set name of the light."""
         self._name = name
 
     def set_power(self, power):
-        """ Set power state value. """
-        _LOGGER.debug("set_power: %d",
-                      power)
-
+        """Set power state value."""
+        _LOGGER.debug("set_power: %d", power)
         self._power = (power != 0)
 
     def set_color(self, hue, sat, bri, kel):
-        """ Set color state values. """
+        """Set color state values."""
         self._hue = hue
         self._sat = sat
         self._bri = bri

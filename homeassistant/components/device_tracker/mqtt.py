@@ -1,7 +1,5 @@
 """
-homeassistant.components.device_tracker.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-MQTT platform for the device tracker.
+Support for tracking MQTT enabled devices.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.mqtt/
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_scanner(hass, config, see):
-    """ Set up a MQTT tracker. """
+    """Setup the MQTT tracker."""
     devices = config.get(CONF_DEVICES)
     qos = util.convert(config.get(CONF_QOS), int, DEFAULT_QOS)
 
@@ -34,7 +32,7 @@ def setup_scanner(hass, config, see):
     dev_id_lookup = {}
 
     def device_tracker_message_received(topic, payload, qos):
-        """ MQTT message received. """
+        """MQTT message received."""
         see(dev_id=dev_id_lookup[topic], location_name=payload)
 
     for dev_id, topic in devices.items():

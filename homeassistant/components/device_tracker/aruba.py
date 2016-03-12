@@ -1,8 +1,5 @@
 """
-homeassistant.components.device_tracker.aruba
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a Aruba Access Point for device
-presence.
+Support for Aruba Access Points.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.aruba/
@@ -31,7 +28,7 @@ _DEVICES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a Aruba scanner. """
+    """Validate the configuration and return a Aruba scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -43,9 +40,10 @@ def get_scanner(hass, config):
 
 
 class ArubaDeviceScanner(object):
-    """ This class queries a Aruba Acces Point for connected devices. """
+    """This class queries a Aruba Access Point for connected devices."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -54,20 +52,17 @@ class ArubaDeviceScanner(object):
 
         self.last_results = {}
 
-        # Test the router is accessible
+        # Test the router is accessible.
         data = self.get_aruba_data()
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device IDs.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client['mac'] for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
+        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -77,9 +72,9 @@ class ArubaDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the Aruba Access Point is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the Aruba Access Point is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
@@ -93,8 +88,7 @@ class ArubaDeviceScanner(object):
             return True
 
     def get_aruba_data(self):
-        """ Retrieve data from Aruba Access Point and return parsed result. """
-
+        """Retrieve data from Aruba Access Point and return parsed result."""
         import pexpect
         connect = "ssh {}@{}"
         ssh = pexpect.spawn(connect.format(self.username, self.host))

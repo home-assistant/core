@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.modbus
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus switches.
 
 For more details about this platform, please refer to the documentation at
@@ -16,7 +14,7 @@ DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Read configuration and create Modbus devices. """
+    """Read configuration and create Modbus devices."""
     switches = []
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
@@ -44,10 +42,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusSwitch(ToggleEntity):
-    # pylint: disable=too-many-arguments
-    """ Represents a Modbus switch. """
+    """Representation of a Modbus switch."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, name, slave, register, bit, coil=False):
+        """Initialize the switch."""
         self._name = name
         self.slave = int(slave) if slave else 1
         self.register = int(register)
@@ -57,35 +56,36 @@ class ModbusSwitch(ToggleEntity):
         self.register_value = None
 
     def __str__(self):
+        """String representation of Modbus switch."""
         return "%s: %s" % (self.name, self.state)
 
     @property
     def should_poll(self):
-        """
-        We should poll, because slaves are not allowed to initiate
-        communication on Modbus networks.
+        """Poling needed.
+
+        Slaves are not allowed to initiate communication on Modbus networks.
         """
         return True
 
     @property
     def unique_id(self):
-        """ Returns a unique id. """
+        """Return a unique ID."""
         return "MODBUS-SWITCH-{}-{}-{}".format(self.slave,
                                                self.register,
                                                self.bit)
 
     @property
     def is_on(self):
-        """ Returns True if switch is on. """
+        """Return true if switch is on."""
         return self._is_on
 
     @property
     def name(self):
-        """ Get the name of the switch. """
+        """Return the name of the switch."""
         return self._name
 
     def turn_on(self, **kwargs):
-        """ Set switch on. """
+        """Set switch on."""
         if self.register_value is None:
             self.update()
 
@@ -98,7 +98,7 @@ class ModbusSwitch(ToggleEntity):
                                           value=val)
 
     def turn_off(self, **kwargs):
-        """ Set switch off. """
+        """Set switch off."""
         if self.register_value is None:
             self.update()
 
@@ -111,7 +111,7 @@ class ModbusSwitch(ToggleEntity):
                                           value=val)
 
     def update(self):
-        """ Update the state of the switch. """
+        """Update the state of the switch."""
         if self._coil:
             result = modbus.NETWORK.read_coils(self.register, 1)
             self.register_value = result.bits[0]

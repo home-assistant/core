@@ -20,10 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """
-    Ensure that the 'type' config value has been set and use a specific unit
-    of measurement if required.
-    """
+    """Setup the APCUPSd sensor."""
     typ = config.get(apcupsd.CONF_TYPE)
     if typ is None:
         _LOGGER.error(
@@ -44,10 +41,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def infer_unit(value):
-    """
-    If the value ends with any of the units from ALL_UNITS, split the unit
-    off the end of the value and return the value, unit tuple pair. Else return
-    the original value and None as the unit.
+    """If the value ends with any of the units from ALL_UNITS.
+
+    Split the unit off the end of the value and return the value, unit tuple
+    pair. Else return the original value and None as the unit.
     """
     from apcaccess.status import ALL_UNITS
     for unit in ALL_UNITS:
@@ -57,8 +54,10 @@ def infer_unit(value):
 
 
 class Sensor(Entity):
-    """Generic sensor entity for APCUPSd status values."""
+    """Representation of a sensor entity for APCUPSd status values."""
+
     def __init__(self, config, data, unit=None):
+        """Initialize the sensor."""
         self._config = config
         self._unit = unit
         self._data = data
@@ -67,17 +66,17 @@ class Sensor(Entity):
 
     @property
     def name(self):
-        """The name of the UPS sensor."""
+        """Return the name of the UPS sensor."""
         return self._config.get("name", DEFAULT_NAME)
 
     @property
     def state(self):
-        """True if the UPS is online, else False."""
+        """Return true if the UPS is online, else False."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         if self._unit is None:
             return self._inferred_unit
         return self._unit

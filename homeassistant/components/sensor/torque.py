@@ -38,7 +38,7 @@ def convert_pid(value):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Torque platform."""
+    """Setup Torque platform."""
     vehicle = config.get('name', DEFAULT_NAME)
     email = config.get('email', None)
     sensors = {}
@@ -81,31 +81,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TorqueSensor(Entity):
-    """Represents a Torque sensor."""
+    """Representation of a Torque sensor."""
 
     def __init__(self, name, unit):
+        """Initialize the sensor."""
         self._name = name
         self._unit = unit
         self._state = None
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """Returns the unit of measurement."""
+        """Return the unit of measurement."""
         return self._unit
 
     @property
     def state(self):
-        """State of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def icon(self):
-        """Sensor default icon."""
+        """Return the default icon of the sensor."""
         return 'mdi:car'
 
     def on_update(self, value):

@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.instapush
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Instapush notification service.
 
 For more details about this platform, please refer to the documentation at
@@ -21,8 +19,7 @@ _RESOURCE = 'https://api.instapush.im/v1/'
 
 
 def get_service(hass, config):
-    """ Get the instapush notification service. """
-
+    """Get the instapush notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY,
                                      'app_secret',
@@ -58,9 +55,10 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class InstapushNotificationService(BaseNotificationService):
-    """ Implements notification service for Instapush. """
+    """Implement the notification service for Instapush."""
 
     def __init__(self, api_key, app_secret, event, tracker):
+        """Initialize the service."""
         self._api_key = api_key
         self._app_secret = app_secret
         self._event = event
@@ -71,10 +69,8 @@ class InstapushNotificationService(BaseNotificationService):
             'Content-Type': 'application/json'}
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
-
+        """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
-
         data = {"event": self._event,
                 "trackers": {self._tracker: title + " : " + message}}
 

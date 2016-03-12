@@ -1,9 +1,4 @@
-"""
-tests.test_bootstrap
-~~~~~~~~~~~~~~~~~~~~
-
-Tests bootstrap.
-"""
+"""Test the bootstrapping."""
 # pylint: disable=too-many-public-methods,protected-access
 import os
 import tempfile
@@ -19,15 +14,18 @@ from tests.common import get_test_home_assistant, MockModule
 
 
 class TestBootstrap(unittest.TestCase):
-    """ Test the bootstrap utils. """
+    """Test the bootstrap utils."""
 
     def setUp(self):
+        """Setup the test."""
         self.orig_timezone = dt_util.DEFAULT_TIME_ZONE
 
     def tearDown(self):
+        """Clean up."""
         dt_util.DEFAULT_TIME_ZONE = self.orig_timezone
 
     def test_from_config_file(self):
+        """Test with configuration file."""
         components = ['browser', 'conversation', 'script']
         with tempfile.NamedTemporaryFile() as fp:
             for comp in components:
@@ -42,6 +40,7 @@ class TestBootstrap(unittest.TestCase):
                              sorted(hass.config.components))
 
     def test_remove_lib_on_upgrade(self):
+        """Test removal of library on upgrade."""
         with tempfile.TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
             lib_dir = os.path.join(config_dir, 'lib')
@@ -64,6 +63,7 @@ class TestBootstrap(unittest.TestCase):
             hass.stop()
 
     def test_not_remove_lib_if_not_upgrade(self):
+        """Test removal of library with no upgrade."""
         with tempfile.TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
             lib_dir = os.path.join(config_dir, 'lib')
@@ -86,7 +86,7 @@ class TestBootstrap(unittest.TestCase):
             hass.stop()
 
     def test_entity_customization(self):
-        """ Test entity customization through config """
+        """Test entity customization through configuration."""
         config = {CONF_LATITUDE: 50,
                   CONF_LONGITUDE: 50,
                   CONF_NAME: 'Test',
@@ -107,11 +107,12 @@ class TestBootstrap(unittest.TestCase):
         hass.stop()
 
     def test_handle_setup_circular_dependency(self):
+        """Test the setup of circular dependencies."""
         hass = get_test_home_assistant()
-
         loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
 
         def setup_a(hass, config):
+            """Setup the another component."""
             bootstrap.setup_component(hass, 'comp_b')
             return True
 

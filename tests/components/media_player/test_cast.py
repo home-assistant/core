@@ -1,9 +1,4 @@
-"""
-tests.component.media_player.test_cast
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests cast media_player component.
-"""
+"""The tests for the Cast Media player platform."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 from unittest.mock import patch
@@ -12,10 +7,11 @@ from homeassistant.components.media_player import cast
 
 
 class TestCastMediaPlayer(unittest.TestCase):
-    """ Test the media_player module. """
+    """Test the media_player module."""
 
     @patch('homeassistant.components.media_player.cast.CastDevice')
     def test_filter_duplicates(self, mock_device):
+        """Test filtering of duplicates."""
         cast.setup_platform(None, {
             'host': 'some_host'
         }, lambda _: _)
