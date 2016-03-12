@@ -11,6 +11,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
 from homeassistant.helpers.template import render_with_possible_json_value
+from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,20 +33,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     add_devices_callback([MqttLight(
         hass,
-        config.get('name', DEFAULT_NAME),
-        {key: config.get(key) for key in
+        convert(config.get('name'), str, DEFAULT_NAME),
+        {key: convert(config.get(key), str) for key in
          (typ + topic
           for typ in ('', 'brightness_', 'rgb_')
           for topic in ('state_topic', 'command_topic'))},
-        {key: config.get(key + '_value_template')
+        {key: convert(config.get(key + '_value_template'), str)
          for key in ('state', 'brightness', 'rgb')},
-        config.get('qos', DEFAULT_QOS),
+        convert(config.get('qos'), int, DEFAULT_QOS),
         {
-            'on': config.get('payload_on', DEFAULT_PAYLOAD_ON),
-            'off': config.get('payload_off', DEFAULT_PAYLOAD_OFF)
+            'on': convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
+            'off': convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF)
         },
-        config.get('optimistic', DEFAULT_OPTIMISTIC),
-        config.get('brightness_scale', DEFAULT_BRIGHTNESS_SCALE)
+        convert(config.get('optimistic'), bool, DEFAULT_OPTIMISTIC),
+        convert(config.get('brightness_scale'), int, DEFAULT_BRIGHTNESS_SCALE)
     )])
 
 

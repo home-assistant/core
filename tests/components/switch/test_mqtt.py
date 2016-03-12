@@ -27,8 +27,8 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
-                'payload_on': 'beer on',
-                'payload_off': 'beer off'
+                'payload_on': 1,
+                'payload_off': 0
             }
         }))
 
@@ -36,13 +36,13 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        fire_mqtt_message(self.hass, 'state-topic', 'beer on')
+        fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
-        fire_mqtt_message(self.hass, 'state-topic', 'beer off')
+        fire_mqtt_message(self.hass, 'state-topic', '0')
         self.hass.pool.block_till_done()
 
         state = self.hass.states.get('switch.test')
@@ -57,7 +57,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'command_topic': 'command-topic',
                 'payload_on': 'beer on',
                 'payload_off': 'beer off',
-                'qos': 2
+                'qos': '2'
             }
         }))
 
