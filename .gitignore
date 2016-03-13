@@ -15,6 +15,9 @@ tests/config/home-assistant.log
 *.sublime-project
 *.sublime-workspace
 
+# Hide eclipse settings
+*.settings
+
 # Hide some OS X stuff
 .DS_Store
 .AppleDouble

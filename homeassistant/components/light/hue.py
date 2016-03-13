@@ -54,6 +54,10 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Gets the Hue lights. """
+    if config.get('ignore_unreachable', False):
+        _CONFIGURING['ignore_unreachable'] = True
+    else:
+        _CONFIGURING['ignore_unreachable'] = False
     filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
@@ -130,9 +134,18 @@ def setup_bridge(host, hass, add_devices_callback, filename):
 
         for light_id, info in api_states.items():
             if light_id not in lights:
-                lights[light_id] = HueLight(int(light_id), info,
-                                            bridge, update_lights,
-                                            bridge_type=bridge_type)
+
+                if _CONFIGURING['ignore_unreachable']:
+                    lights[light_id] = HueLight(int(light_id), info,
+                                                bridge, update_lights,
+                                                bridge_type=bridge_type,
+                                                unreachable=True)
+                else:
+                    lights[light_id] = HueLight(int(light_id), info,
+                                                bridge, update_lights,
+                                                bridge_type=bridge_type,
+                                                unreachable=False)
+
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
@@ -173,12 +186,13 @@ class HueLight(Light):
 
     # pylint: disable=too-many-arguments
     def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type='hue'):
+                 bridge_type='hue', unreachable=False):
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights
         self.bridge_type = bridge_type
+        self.unreachable = unreachable
 
     @property
     def unique_id(self):
@@ -211,7 +225,10 @@ class HueLight(Light):
         """ True if device is on. """
         self.update_lights()
 
-        return self.info['state']['reachable'] and self.info['state']['on']
+        if self.unreachable:
+            return self.info['state']['on']
+        else:
+            return self.info['state']['reachable'] and self.info['state']['on']
 
     def turn_on(self, **kwargs):
         """ Turn the specified or all lights on. """
