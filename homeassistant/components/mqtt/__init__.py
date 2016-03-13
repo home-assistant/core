@@ -10,11 +10,11 @@ import socket
 import time
 
 
+from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util as util
 from homeassistant.helpers import template
-from homeassistant.helpers import validate_config
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
@@ -29,6 +29,7 @@ EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
 REQUIREMENTS = ['paho-mqtt==1.1']
 
+CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
 CONF_PORT = 'port'
 CONF_CLIENT_ID = 'client_id'
@@ -92,21 +93,50 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
     MQTT_CLIENT.subscribe(topic, qos)
 
 
+def _setup_server(hass, config):
+    """Try to start embedded MQTT broker."""
+    conf = config.get(DOMAIN, {})
+
+    # Only setup if embedded config passed in or no broker specified
+    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
+        return None
+
+    server = prepare_setup_platform(hass, config, DOMAIN, 'server')
+
+    if server is None:
+        _LOGGER.error('Unable to load embedded server.')
+        return None
+
+    success, broker_config = server.start(hass, conf.get(CONF_EMBEDDED))
+
+    return success and broker_config
+
+
 def setup(hass, config):
     """Start the MQTT protocol service."""
-    if not validate_config(config, {DOMAIN: ['broker']}, _LOGGER):
-        return False
+    # pylint: disable=too-many-locals
+    conf = config.get(DOMAIN, {})
 
-    conf = config[DOMAIN]
-
-    broker = conf[CONF_BROKER]
-    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
     client_id = util.convert(conf.get(CONF_CLIENT_ID), str)
     keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
-    username = util.convert(conf.get(CONF_USERNAME), str)
-    password = util.convert(conf.get(CONF_PASSWORD), str)
-    certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
-    protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
+
+    broker_config = _setup_server(hass, config)
+
+    # Only auto config if no server config was passed in
+    if broker_config and CONF_EMBEDDED not in conf:
+        broker, port, username, password, certificate, protocol = broker_config
+    elif not broker_config and (CONF_EMBEDDED in conf or
+                                CONF_BROKER not in conf):
+        _LOGGER.error('Unable to start broker and auto-configure MQTT.')
+        return False
+
+    if CONF_BROKER in conf:
+        broker = conf[CONF_BROKER]
+        port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
+        username = util.convert(conf.get(CONF_USERNAME), str)
+        password = util.convert(conf.get(CONF_PASSWORD), str)
+        certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
+        protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
 
     if protocol not in (PROTOCOL_31, PROTOCOL_311):
         _LOGGER.error('Invalid protocol specified: %s. Allowed values: %s, %s',

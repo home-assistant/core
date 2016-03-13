@@ -74,7 +74,8 @@ def setup(hass, config):
     hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
         lambda event:
-        threading.Thread(target=server.start, daemon=True).start())
+        threading.Thread(target=server.start, daemon=True,
+                         name='HTTP-server').start())
 
     hass.http = server
     hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
