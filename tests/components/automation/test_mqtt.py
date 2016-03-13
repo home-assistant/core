@@ -24,50 +24,6 @@ class TestAutomationMQTT(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_old_config_if_fires_on_topic_match(self):
-        """Test if message is fired on topic match."""
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'mqtt',
-                'mqtt_topic': 'test-topic',
-                'execute_service': 'test.automation'
-            }
-        }))
-
-        fire_mqtt_message(self.hass, 'test-topic', '')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-    def test_old_config_if_fires_on_topic_and_payload_match(self):
-        """Test if message is fired on topic and payload match."""
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'mqtt',
-                'mqtt_topic': 'test-topic',
-                'mqtt_payload': 'hello',
-                'execute_service': 'test.automation'
-            }
-        }))
-
-        fire_mqtt_message(self.hass, 'test-topic', 'hello')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-    def test_old_config_if_not_fires_on_topic_but_no_payload_match(self):
-        """Test if message is not fired on topic but no payload."""
-        self.assertTrue(automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'mqtt',
-                'mqtt_topic': 'test-topic',
-                'mqtt_payload': 'hello',
-                'execute_service': 'test.automation'
-            }
-        }))
-
-        fire_mqtt_message(self.hass, 'test-topic', 'no-hello')
-        self.hass.pool.block_till_done()
-        self.assertEqual(0, len(self.calls))
-
     def test_if_fires_on_topic_match(self):
         """Test if message is fired on topic match."""
         self.assertTrue(automation.setup(self.hass, {
