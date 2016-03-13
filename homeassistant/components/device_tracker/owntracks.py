@@ -99,14 +99,11 @@ def setup_scanner(hass, config, see):
                         _LOGGER.info("Added beacon %s", location)
                 else:
                     # Normal region
-                    if not zone.attributes.get('passive'):
-                        kwargs['location_name'] = location
-
                     regions = REGIONS_ENTERED[dev_id]
                     if location not in regions:
                         regions.append(location)
                     _LOGGER.info("Enter region %s", location)
-                    _set_gps_from_zone(kwargs, zone)
+                    _set_gps_from_zone(kwargs, location, zone)
 
                 see(**kwargs)
                 see_beacons(dev_id, kwargs)
@@ -121,9 +118,7 @@ def setup_scanner(hass, config, see):
                 if new_region:
                     # Exit to previous region
                     zone = hass.states.get("zone.{}".format(new_region))
-                    if not zone.attributes.get('passive'):
-                        kwargs['location_name'] = new_region
-                    _set_gps_from_zone(kwargs, zone)
+                    _set_gps_from_zone(kwargs, new_region, zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
                     see_beacons(dev_id, kwargs)
@@ -184,11 +179,12 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-def _set_gps_from_zone(kwargs, zone):
+def _set_gps_from_zone(kwargs, location, zone):
     """Set the see parameters from the zone parameters."""
     if zone is not None:
         kwargs['gps'] = (
             zone.attributes['latitude'],
             zone.attributes['longitude'])
         kwargs['gps_accuracy'] = zone.attributes['radius']
+        kwargs['location_name'] = location
     return kwargs
