@@ -26,6 +26,9 @@ DEFAULT_RADIUS = 100
 ATTR_PASSIVE = 'passive'
 DEFAULT_PASSIVE = False
 
+ATTR_EXPLICIT = 'explicit'
+DEFAULT_EXPLICIT = False
+
 ICON_HOME = 'mdi:home'
 
 
@@ -39,7 +42,8 @@ def active_zone(hass, latitude, longitude, radius=0):
     closest = None
 
     for zone in zones:
-        if zone.attributes.get(ATTR_PASSIVE):
+        if (zone.attributes.get(ATTR_PASSIVE) or
+                zone.attributes.get(ATTR_EXPLICIT)):
             continue
 
         zone_dist = distance(
@@ -84,13 +88,15 @@ def setup(hass, config):
             radius = convert(entry.get(ATTR_RADIUS, DEFAULT_RADIUS), float)
             icon = entry.get(ATTR_ICON)
             passive = entry.get(ATTR_PASSIVE, DEFAULT_PASSIVE)
+            explicit = entry.get(ATTR_EXPLICIT, DEFAULT_EXPLICIT)
 
             if None in (latitude, longitude):
                 logging.getLogger(__name__).error(
                     'Each zone needs a latitude and longitude.')
                 continue
 
-            zone = Zone(hass, name, latitude, longitude, radius, icon, passive)
+            zone = Zone(hass, name, latitude, longitude, radius, icon,
+                        passive, explicit)
             zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
                                                 entities)
             zone.update_ha_state()
@@ -98,7 +104,8 @@ def setup(hass, config):
 
     if ENTITY_ID_HOME not in entities:
         zone = Zone(hass, hass.config.location_name, hass.config.latitude,
-                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False)
+                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME,
+                    False, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 
@@ -109,7 +116,8 @@ class Zone(Entity):
     """Representation of a Zone."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
+    def __init__(self, hass, name, latitude, longitude, radius, icon,
+                 passive, explicit):
         """Initialize the zone."""
         self.hass = hass
         self._name = name
@@ -118,6 +126,7 @@ class Zone(Entity):
         self._radius = radius
         self._icon = icon
         self._passive = passive
+        self._explicit = explicit
 
     @property
     def name(self):
@@ -145,4 +154,6 @@ class Zone(Entity):
         }
         if self._passive:
             data[ATTR_PASSIVE] = self._passive
+        if self._explicit:
+            data[ATTR_EXPLICIT] = self._explicit
         return data

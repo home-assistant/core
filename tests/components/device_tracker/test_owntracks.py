@@ -112,7 +112,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
                 'name': 'zone',
                 'latitude': 2.1,
                 'longitude': 1.1,
-                'radius': 10
+                'radius': 15
             })
 
         self.hass.states.set(
@@ -141,6 +141,16 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
                 'longitude': 1.0,
                 'radius': 10,
                 'passive': True
+            })
+
+        self.hass.states.set(
+            'zone.explicit', 'zoning',
+            {
+                'name': 'zone',
+                'latitude': 2.1,
+                'longitude': 1.1,
+                'radius': 5,
+                'explicit': True
             })
         # Clear state between teste
         self.hass.states.set(DEVICE_TRACKER_STATE, None)
@@ -205,6 +215,18 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_accuracy(60.0)
         self.assert_location_state('outer')
 
+    def test_location_update_explicit_zone(self):
+        """Test the update of a location doesn't enter an explicit zone."""
+        message = LOCATION_MESSAGE.copy()
+        message['lon'] = 1.1
+        message['lat'] = 2.1
+        self.send_message(LOCATION_TOPIC, message)
+
+        self.assert_location_longitude(1.1)
+        self.assert_location_latitude(2.1)
+        # Should enter the inner_2 zone - not the smaller explicit one
+        self.assert_location_state('inner 2')
+
     def test_location_inaccurate_gps(self):
         """Test the location for inaccurate GPS information."""
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -219,14 +241,14 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
         # Enter uses the zone's gps co-ords
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
         self.assert_location_state('inner')
 
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
 
         #  Updates ignored when in a zone
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
         self.assert_location_state('inner')
 
         self.send_message(EVENT_TOPIC, REGION_LEAVE_MESSAGE)
@@ -245,14 +267,14 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
         # Enter uses the zone's gps co-ords
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
         self.assert_location_state('inner')
 
         self.send_message(EVENT_TOPIC, REGION_LEAVE_INACCURATE_MESSAGE)
 
         # Exit doesn't use inaccurate gps
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
         self.assert_location_state('inner')
 
         # But does exit region correctly
@@ -279,7 +301,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
 
         self.assert_location_state('inner')
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
 
         # Enter inner2 zone
         message = REGION_ENTER_MESSAGE.copy()
@@ -295,7 +317,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, message)
         self.assert_location_state('inner')
         self.assert_location_latitude(2.1)
-        self.assert_location_accuracy(10.0)
+        self.assert_location_accuracy(15.0)
 
         # Exit inner - should be in 'outer'
         self.send_message(EVENT_TOPIC, REGION_LEAVE_MESSAGE)
@@ -361,6 +383,13 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_state('outer')
         self.assert_location_latitude(2.0)
         self.assert_location_accuracy(60.0)
+
+    def test_event_entry_explicit_zone(self):
+        """Test the event for explicit zone entry."""
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "explicit"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('explicit')
 
     def test_event_entry_unknown_zone(self):
         """Test the event for unknown zone."""
