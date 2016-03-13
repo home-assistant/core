@@ -278,8 +278,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def write_json(self, data=None, status_code=HTTP_OK, location=None):
         """Helper method to return JSON to the caller."""
+        json_data = json.dumps(data, indent=4, sort_keys=True,
+                               cls=rem.JSONEncoder).encode('UTF-8')
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(json_data)))
 
         if location:
             self.send_header('Location', location)
@@ -289,20 +292,20 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
         if data is not None:
-            self.wfile.write(
-                json.dumps(data, indent=4, sort_keys=True,
-                           cls=rem.JSONEncoder).encode("UTF-8"))
+            self.wfile.write(json_data)
 
     def write_text(self, message, status_code=HTTP_OK):
         """Helper method to return a text message to the caller."""
+        msg_data = message.encode('UTF-8')
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(msg_data)))
 
         self.set_session_cookie_header()
 
         self.end_headers()
 
-        self.wfile.write(message.encode("UTF-8"))
+        self.wfile.write(msg_data)
 
     def write_file(self, path, cache_headers=True):
         """Return a file to the user."""
