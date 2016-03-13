@@ -9,7 +9,8 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wemo, wink, isy994, zwave, insteon_hub, mysensors)
+    group, discovery, wemo, wink, isy994,
+    zwave, insteon_hub, mysensors, tellstick)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -64,6 +65,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
     mysensors.DISCOVER_LIGHTS: 'mysensors',
+    tellstick.DISCOVER_LIGHTS: 'tellstick',
 }
 
 PROP_TO_ATTR = {

@@ -259,9 +259,8 @@ speedtest-cli==0.3.4
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
 
-# homeassistant.components.light.tellstick
+# homeassistant.components.tellstick
 # homeassistant.components.sensor.tellstick
-# homeassistant.components.switch.tellstick
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
