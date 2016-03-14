@@ -25,6 +25,8 @@ class TestLightRfxtrx(unittest.TestCase):
         """ Stop down stuff we started. """
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
@@ -99,7 +101,6 @@ class TestLightRfxtrx(unittest.TestCase):
             entity.turn_on(brightness=255)
         self.assertTrue(entity.is_on)
         self.assertEqual(entity.brightness, 255)
-        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_several_lights(self):
         """ Test with 3 lights """
@@ -141,7 +142,6 @@ class TestLightRfxtrx(unittest.TestCase):
                 self.assertEqual('<Entity Test: off>', entity.__str__())
 
         self.assertEqual(3, device_num)
-        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_discover_light(self):
         """ Test with discover of light """

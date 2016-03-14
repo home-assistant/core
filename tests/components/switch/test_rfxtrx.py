@@ -25,6 +25,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
         """ Stop down stuff we started. """
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
@@ -79,7 +81,6 @@ class TestSwitchRfxtrx(unittest.TestCase):
                    return_value=None):
             entity.turn_off()
         self.assertFalse(entity.is_on)
-        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_several_switchs(self):
         """ Test with 3 switchs """
@@ -121,7 +122,6 @@ class TestSwitchRfxtrx(unittest.TestCase):
                 self.assertEqual('<Entity Test: off>', entity.__str__())
 
         self.assertEqual(3, device_num)
-        rfxtrx_core.RFXOBJECT.close_connection()
 
     def test_discover_switch(self):
         """ Test with discover of switch """

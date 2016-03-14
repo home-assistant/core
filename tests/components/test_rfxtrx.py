@@ -25,6 +25,8 @@ class TestRFXTRX(unittest.TestCase):
         """ Stop down stuff we started. """
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):
