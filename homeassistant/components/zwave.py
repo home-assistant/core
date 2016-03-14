@@ -28,6 +28,8 @@ DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
 
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_HEAL_NETWORK = "heal_network"
+SERVICE_SOFT_RESET = "soft_reset"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -149,6 +151,7 @@ def get_config_value(node, value_index):
         return get_config_value(node, value_index)
 
 
+# pylint: disable=R0914
 def setup(hass, config):
     """Setup Z-Wave.
 
@@ -249,6 +252,14 @@ def setup(hass, config):
         """Switch into exclusion mode."""
         NETWORK.controller.begin_command_remove_device()
 
+    def heal_network(event):
+        """Heal the network."""
+        NETWORK.heal()
+
+    def soft_reset(event):
+        """Soft reset the controller."""
+        NETWORK.controller.soft_reset()
+
     def stop_zwave(event):
         """Stop Z-Wave."""
         NETWORK.stop()
@@ -268,6 +279,8 @@ def setup(hass, config):
         # hardware inclusion button
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
+        hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
