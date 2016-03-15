@@ -74,7 +74,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable)
 
 
-def setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable):
+def setup_bridge(host, hass, add_devices_callback, filename,
+                 allow_unreachable):
     """Setup a phue bridge based on host parameter."""
     import phue
 
