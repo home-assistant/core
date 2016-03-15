@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.6.3']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -57,6 +57,11 @@ class WinkLight(Light):
     def brightness(self):
         """Return the brightness of the light."""
         return int(self.wink.brightness() * 255)
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):

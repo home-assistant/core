@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.6.3']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -83,6 +83,11 @@ class WinkToggleDevice(ToggleEntity):
     def is_on(self):
         """Return true if device is on."""
         return self.wink.state()
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
