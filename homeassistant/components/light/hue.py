@@ -91,7 +91,8 @@ def setup_bridge(host, hass, add_devices_callback, filename,
     except phue.PhueRegistrationException:
         _LOGGER.warning("Connected to Hue at %s but not registered.", host)
 
-        request_configuration(host, hass, add_devices_callback, filename)
+        request_configuration(host, hass, add_devices_callback, filename,
+                              allow_unreachable)
 
         return
 
@@ -144,7 +145,8 @@ def setup_bridge(host, hass, add_devices_callback, filename,
     update_lights()
 
 
-def request_configuration(host, hass, add_devices_callback, filename):
+def request_configuration(host, hass, add_devices_callback, filename,
+                          allow_unreachable):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -158,7 +160,8 @@ def request_configuration(host, hass, add_devices_callback, filename):
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_bridge(host, hass, add_devices_callback, filename)
+        setup_bridge(host, hass, add_devices_callback, filename,
+                     allow_unreachable)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Philips Hue", hue_configuration_callback,
