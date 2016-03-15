@@ -174,7 +174,7 @@ class HueLight(Light):
 
     # pylint: disable=too-many-arguments
     def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type='hue', allow_unreachable=False):
+                 bridge_type, allow_unreachable):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
