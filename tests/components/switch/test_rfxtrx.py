@@ -5,12 +5,9 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.components.switch import rfxtrx
 from unittest.mock import patch
 
-import pytest
-
 from tests.common import get_test_home_assistant
 
 
-@pytest.mark.skipif(True, reason='Does not clean up properly, takes 100% CPU')
 class TestSwitchRfxtrx(unittest.TestCase):
     """Test the Rfxtrx switch platform."""
 
@@ -22,6 +19,8 @@ class TestSwitchRfxtrx(unittest.TestCase):
         """Stop everything that was started."""
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS = []
         rfxtrx_core.RFX_DEVICES = {}
+        if rfxtrx_core.RFXOBJECT:
+            rfxtrx_core.RFXOBJECT.close_connection()
         self.hass.stop()
 
     def test_default_config(self):

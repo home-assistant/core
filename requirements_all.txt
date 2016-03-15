@@ -66,9 +66,6 @@ hikvision==0.4
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
-# homeassistant.components.rfxtrx
-https://github.com/Danielhiversen/pyRFXtrx/archive/0.5.zip#pyRFXtrx==0.5
-
 # homeassistant.components.sensor.netatmo
 https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
 
@@ -156,6 +153,9 @@ pushetta==1.0.15
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
+
+# homeassistant.components.rfxtrx
+pyRFXtrx==0.6.5
 
 # homeassistant.components.media_player.cast
 pychromecast==0.7.2
