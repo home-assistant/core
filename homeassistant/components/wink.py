@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.3']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
