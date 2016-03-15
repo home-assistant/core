@@ -61,12 +61,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return False
     except requests.exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
-                      "Please check the details in the configuration file.")
+                      "Please check the details in the configuration file")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: '%s'. "
-                      "Please check the details in the configuration file.",
-                      url)
+        _LOGGER.error("No route to resource/endpoint: %s", url)
         return False
 
     rest = GlancesData(url)
@@ -167,6 +165,5 @@ class GlancesData(object):
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to host/endpoint '%s'. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to host/endpoint: %s", self._resource)
             self.data = None
