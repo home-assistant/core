@@ -71,10 +71,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    setup_bridge(host, hass, add_devices_callback, filename)
+    setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable)
 
 
-def setup_bridge(host, hass, add_devices_callback, filename):
+def setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable):
     """Setup a phue bridge based on host parameter."""
     import phue
 
@@ -132,7 +132,7 @@ def setup_bridge(host, hass, add_devices_callback, filename):
             if light_id not in lights:
                 lights[light_id] = HueLight(int(light_id), info,
                                             bridge, update_lights,
-                                            bridge_type=bridge_type)
+                                            bridge_type, allow_unreachable)
                 new_lights.append(lights[light_id])
             else:
                 lights[light_id].info = info
@@ -173,13 +173,15 @@ class HueLight(Light):
 
     # pylint: disable=too-many-arguments
     def __init__(self, light_id, info, bridge, update_lights,
-                 bridge_type='hue'):
+                 bridge_type='hue', allow_unreachable=False):
         """Initialize the light."""
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
         self.update_lights = update_lights
         self.bridge_type = bridge_type
+
+        self.allow_unreachable = allow_unreachable
 
     @property
     def unique_id(self):
