@@ -213,7 +213,11 @@ class HueLight(Light):
     def is_on(self):
         """Return true if device is on."""
         self.update_lights()
-        return self.info['state']['reachable'] and self.info['state']['on']
+
+        if self.allow_unreachable:
+            return self.info['state']['on']
+        else:
+            return self.info['state']['reachable'] and self.info['state']['on']
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
