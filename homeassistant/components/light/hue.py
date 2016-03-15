@@ -53,6 +53,8 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Hue lights."""
     filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
+    allow_unreachable = config.get('allow_unreachable', False)
+
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
