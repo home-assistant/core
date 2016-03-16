@@ -7,8 +7,9 @@ https://home-assistant.io/components/notify.message_bird/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService)
+    ATTR_TARGET, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 CONF_SENDER = 'sender'
 
@@ -30,19 +31,28 @@ def is_valid_sender(sender):
 # pylint: disable=unused-argument
 def get_service(hass, config):
     """Get the MessageBird notification service."""
-    from messagebird import Client
+    import messagebird
 
-    if CONF_API_KEY not in config:
-        _LOGGER.error("Unable to find config key '%s'", CONF_API_KEY)
+    if not validate_config({DOMAIN: config},
+                           {DOMAIN: [CONF_API_KEY]},
+                           _LOGGER):
         return None
 
     sender = config.get(CONF_SENDER, 'HA')
     if not is_valid_sender(sender):
-        _LOGGER.error('Sender is invalid: It must be a phone number or ' +
+        _LOGGER.error('Sender is invalid: It must be a phone number or '
                       'a string not longer than 11 characters.')
         return None
 
-    return MessageBirdNotificationService(sender, Client(config[CONF_API_KEY]))
+    client = messagebird.Client(config[CONF_API_KEY])
+    try:
+        # validates the api key
+        client.balance()
+    except messagebird.client.ErrorException:
+        _LOGGER.error('The specified MessageBird API key is invalid.')
+        return None
+
+    return MessageBirdNotificationService(sender, client)
 
 
 # pylint: disable=too-few-public-methods
