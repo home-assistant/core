@@ -218,9 +218,7 @@ python-wink==0.6.3
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
 
-# homeassistant.components.light.vera
-# homeassistant.components.sensor.vera
-# homeassistant.components.switch.vera
+# homeassistant.components.vera
 pyvera==0.2.8
 
 # homeassistant.components.wemo
