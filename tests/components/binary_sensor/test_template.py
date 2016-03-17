@@ -91,9 +91,9 @@ class TestBinarySensorTemplate(unittest.TestCase):
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}')
-        with mock.patch.object(vs, 'update_ha_state') as mock_update:
+        with mock.patch.object(vs, '_event_listener') as mock_update:
             vs._event_listener(None)
-            mock_update.assert_called_once_with(True)
+            assert mock_update.call_count == 1
 
     def test_update(self):
         """"Test the update."""
