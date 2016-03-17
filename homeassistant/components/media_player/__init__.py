@@ -28,6 +28,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_CAST: 'cast',
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
+    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
