@@ -7,6 +7,9 @@ https://home-assistant.io/components/media_player.squeezebox/
 import logging
 import telnetlib
 import urllib.parse
+from datetime import timedelta
+import socket
+
 
 from homeassistant.components.media_player import (
     DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
@@ -23,9 +26,33 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
+DISCOVERY_PORT = 3483
+DEFAULT_DISCOVERY_TIMEOUT = timedelta(seconds=10)
+
+
+def discover_host(timeout=DEFAULT_DISCOVERY_TIMEOUT):
+    """Broadcast discovery request and wait for reply."""
+    _LOGGER.info("Sending discovery request for Logitech media server")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.settimeout(timeout.seconds)
+    sock.bind(('', 0))
+    discovery = b"d................."
+    sock.sendto(discovery, ('<broadcast>', DISCOVERY_PORT))
+    try:
+        dummy_response, (address, dummy_port) = sock.recvfrom(1024)
+        _LOGGER.info("Found Logitech media server at %s", address)
+        return address
+    except socket.timeout:
+        _LOGGER.warning("No Logitech media server discovered")
+        return None
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
-    if not config.get(CONF_HOST):
+    host = config.get(CONF_HOST) or discover_host()
+
+    if host is None:
         _LOGGER.error(
             "Missing required configuration items in %s: %s",
             DOMAIN,
@@ -33,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     lms = LogitechMediaServer(
-        config.get(CONF_HOST),
+        host,
         config.get('port', '9090'),
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD))
