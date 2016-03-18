@@ -1,17 +1,14 @@
 """
-homeassistant.components.statsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-StatsD component which allows you to send data to many backends.
+A component which allows you to send data to StatsD.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/statsd/
 """
 import logging
+
 import homeassistant.util as util
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
-                                 STATE_UNLOCKED, STATE_LOCKED, STATE_UNKNOWN)
-from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
-                                          STATE_BELOW_HORIZON)
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.helpers import state as state_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +29,7 @@ CONF_RATE = 'rate'
 
 
 def setup(hass, config):
-    """ Setup the StatsD component. """
-
+    """Setup the StatsD component."""
     from statsd.compat import NUM_TYPES
     import statsd
 
@@ -54,26 +50,16 @@ def setup(hass, config):
     meter = statsd.Gauge(prefix, statsd_connection)
 
     def statsd_event_listener(event):
-        """ Listen for new messages on the bus and sends them to StatsD. """
-
+        """Listen for new messages on the bus and sends them to StatsD."""
         state = event.data.get('new_state')
 
         if state is None:
             return
 
-        if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):
-            _state = 1
-        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                             STATE_BELOW_HORIZON):
-            _state = 0
-        else:
-            _state = state.state
-            if _state == '':
-                return
-            try:
-                _state = float(_state)
-            except ValueError:
-                pass
+        try:
+            _state = state_helper.state_as_number(state)
+        except ValueError:
+            return
 
         if not isinstance(_state, NUM_TYPES):
             return

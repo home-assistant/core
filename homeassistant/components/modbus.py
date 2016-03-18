@@ -1,15 +1,13 @@
 """
-homeassistant.components.modbus
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Modbus component, using pymodbus (python3 branch).
+Support for Modbus.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/modbus/
 """
 import logging
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 DOMAIN = "modbus"
 
@@ -38,8 +36,7 @@ TYPE = None
 
 
 def setup(hass, config):
-    """ Setup Modbus component. """
-
+    """Setup Modbus component."""
     # Modbus connection type
     # pylint: disable=global-statement, import-error
     global TYPE
@@ -69,15 +66,14 @@ def setup(hass, config):
         return False
 
     def stop_modbus(event):
-        """ Stop Modbus service. """
+        """Stop Modbus service."""
         NETWORK.close()
 
     def start_modbus(event):
-        """ Start Modbus service. """
+        """Start Modbus service."""
         NETWORK.connect()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
-    # Tells the bootstrapper that the component was successfully initialized
     return True

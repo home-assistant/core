@@ -1,26 +1,23 @@
 """
-homeassistant.components.device_tracker.actiontec
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning an Actiontec MI424WR
-(Verizon FIOS) router for device presence.
+Support for Actiontec MI424WR (Verizon FIOS) routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.actiontec/
 """
 import logging
-from datetime import timedelta
-from collections import namedtuple
 import re
-import threading
 import telnetlib
+import threading
+from collections import namedtuple
+from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +31,7 @@ _LEASES_REGEX = re.compile(
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns an Actiontec scanner. """
+    """Validate the configuration and return an Actiontec scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -46,12 +43,10 @@ Device = namedtuple("Device", ["mac", "ip", "last_update"])
 
 
 class ActiontecDeviceScanner(object):
-    """
-    This class queries a an actiontec router for connected devices.
-    Adapted from DD-WRT scanner.
-    """
+    """This class queries a an actiontec router for connected devices."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -62,15 +57,12 @@ class ActiontecDeviceScanner(object):
         _LOGGER.info("actiontec scanner initialized")
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client.mac for client in self.last_results]
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
+        """Return the name of the given device or None if we don't know."""
         if not self.last_results:
             return None
         for client in self.last_results:
@@ -80,9 +72,9 @@ class ActiontecDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the Actiontec MI424WR router is up
-        to date. Returns boolean if scanning successful.
+        """Ensure the information from the router is up to date.
+
+        Return boolean if scanning successful.
         """
         _LOGGER.info("Scanning")
         if not self.success_init:
@@ -100,7 +92,7 @@ class ActiontecDeviceScanner(object):
             return True
 
     def get_actiontec_data(self):
-        """ Retrieve data from Actiontec MI424WR and return parsed result. """
+        """Retrieve data from Actiontec MI424WR and return parsed result."""
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b'Username: ')

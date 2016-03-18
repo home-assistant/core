@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.bitcoin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Bitcoin information service that uses blockchain.info and its online wallet.
 
 For more details about this platform, please refer to the documentation at
@@ -9,9 +7,8 @@ https://home-assistant.io/components/sensor.bitcoin/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blockchain==1.2.1']
 _LOGGER = logging.getLogger(__name__)
@@ -41,13 +38,12 @@ OPTION_TYPES = {
 }
 ICON = 'mdi:currency-btc'
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the Bitcoin sensor. """
-
+    """Setup the Bitcoin sensor."""
     from blockchain.wallet import Wallet
     from blockchain import exchangerates, exceptions
 
@@ -59,12 +55,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Currency "%s" is not available. Using "USD".', currency)
         currency = 'USD'
 
-    wallet = Wallet(wallet_id, password)
-
-    try:
-        wallet.get_balance()
-    except exceptions.APIException as error:
-        _LOGGER.error(error)
+    if wallet_id is not None and password is not None:
+        wallet = Wallet(wallet_id, password)
+        try:
+            wallet.get_balance()
+        except exceptions.APIException as error:
+            _LOGGER.error(error)
+            wallet = None
+    else:
         wallet = None
 
     data = BitcoinData()
@@ -83,9 +81,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class BitcoinSensor(Entity):
-    """ Implements a Bitcoin sensor. """
+    """Representation of a Bitcoin sensor."""
 
     def __init__(self, data, option_type, currency, wallet=''):
+        """Initialize the sensor."""
         self.data = data
         self._name = OPTION_TYPES[option_type][0]
         self._unit_of_measurement = OPTION_TYPES[option_type][1]
@@ -97,27 +96,27 @@ class BitcoinSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def icon(self):
-        """ Icon to use in the frontend, if any. """
+        """Return the icon to use in the frontend, if any."""
         return ICON
 
     # pylint: disable=too-many-branches
     def update(self):
-        """ Gets the latest data and updates the states. """
-
+        """Get the latest data and updates the states."""
         self.data.update()
         stats = self.data.stats
         ticker = self.data.ticker
@@ -175,16 +174,16 @@ class BitcoinSensor(Entity):
 
 
 class BitcoinData(object):
-    """ Gets the latest data and updates the states. """
+    """Get the latest data and update the states."""
 
     def __init__(self):
+        """Initialize the data object."""
         self.stats = None
         self.ticker = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from blockchain.info. """
-
+        """Get the latest data from blockchain.info."""
         from blockchain import statistics, exchangerates
 
         self.stats = statistics.get()

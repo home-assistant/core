@@ -1,12 +1,11 @@
 """
-homeassistant.components.switch.mystrom
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for myStrom switches.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.mystrom/
 """
 import logging
+
 import requests
 
 from homeassistant.components.switch import SwitchDevice
@@ -17,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Find and return myStrom switches. """
+    """Find and return myStrom switch."""
     host = config.get('host')
 
     if host is None:
@@ -40,8 +39,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MyStromSwitch(SwitchDevice):
-    """ Represents a myStrom switch. """
+    """Representation of a myStrom switch."""
+
     def __init__(self, name, resource):
+        """Initialize the myStrom switch."""
         self._state = False
         self._name = name
         self._resource = resource
@@ -49,21 +50,21 @@ class MyStromSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if switch is on. """
+        """Return true if switch is on."""
         return self._state
 
     @property
     def current_power_mwh(self):
-        """ Current power consumption in mwh. """
+        """Return the urrent power consumption in mWh."""
         return self.consumption
 
     def turn_on(self, **kwargs):
-        """ Turn the switch on. """
+        """Turn the switch on."""
         try:
             request = requests.get('{}/relay'.format(self._resource),
                                    params={'state': '1'},
@@ -75,7 +76,7 @@ class MyStromSwitch(SwitchDevice):
                           self._resource)
 
     def turn_off(self, **kwargs):
-        """ Turn the switch off. """
+        """Turn the switch off."""
         try:
             request = requests.get('{}/relay'.format(self._resource),
                                    params={'state': '0'},
@@ -87,7 +88,7 @@ class MyStromSwitch(SwitchDevice):
                           self._resource)
 
     def update(self):
-        """ Gets the latest data from REST API and updates the state. """
+        """Get the latest data from REST API and update the state."""
         try:
             request = requests.get('{}/report'.format(self._resource),
                                    timeout=10)

@@ -1,19 +1,17 @@
 """
-homeassistant.components.sensor.apcupsd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides a sensor to track various status aspects of a UPS.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.apcupsd/
 """
 import logging
 
+from homeassistant.components import apcupsd
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components import apcupsd
-
 
 DEPENDENCIES = [apcupsd.DOMAIN]
-
 DEFAULT_NAME = "UPS Status"
-
 SPECIFIC_UNITS = {
     "ITEMP": TEMP_CELCIUS
 }
@@ -22,10 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """
-    Ensure that the 'type' config value has been set and use a specific unit
-    of measurement if required.
-    """
+    """Setup the APCUPSd sensor."""
     typ = config.get(apcupsd.CONF_TYPE)
     if typ is None:
         _LOGGER.error(
@@ -46,10 +41,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def infer_unit(value):
-    """
-    If the value ends with any of the units from ALL_UNITS, split the unit
-    off the end of the value and return the value, unit tuple pair. Else return
-    the original value and None as the unit.
+    """If the value ends with any of the units from ALL_UNITS.
+
+    Split the unit off the end of the value and return the value, unit tuple
+    pair. Else return the original value and None as the unit.
     """
     from apcaccess.status import ALL_UNITS
     for unit in ALL_UNITS:
@@ -59,8 +54,10 @@ def infer_unit(value):
 
 
 class Sensor(Entity):
-    """ Generic sensor entity for APCUPSd status values. """
+    """Representation of a sensor entity for APCUPSd status values."""
+
     def __init__(self, config, data, unit=None):
+        """Initialize the sensor."""
         self._config = config
         self._unit = unit
         self._data = data
@@ -69,19 +66,22 @@ class Sensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the UPS sensor."""
         return self._config.get("name", DEFAULT_NAME)
 
     @property
     def state(self):
+        """Return true if the UPS is online, else False."""
         return self._state
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
         if self._unit is None:
             return self._inferred_unit
         return self._unit
 
     def update(self):
-        """ Get the latest status and use it to update our sensor state. """
+        """Get the latest status and use it to update our sensor state."""
         key = self._config[apcupsd.CONF_TYPE].upper()
         self._state, self._inferred_unit = infer_unit(self._data.status[key])

@@ -1,14 +1,13 @@
 """
-homeassistant.components.light.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Demo platform that implements lights.
+Demo light platform that implements lights.
 
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
 import random
 
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP)
-
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, Light)
 
 LIGHT_COLORS = [
     [237, 224, 33],
@@ -19,7 +18,7 @@ LIGHT_TEMPS = [240, 380]
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return demo lights. """
+    """Setup demo light platform."""
     add_devices_callback([
         DemoLight("Bed Light", False),
         DemoLight("Ceiling Lights", True, LIGHT_COLORS[0], LIGHT_TEMPS[1]),
@@ -28,9 +27,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoLight(Light):
-    """ Provides a demo switch. """
+    """Provide a demo light."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, name, state, rgb=None, ct=None, brightness=180):
+        """Initialize the light."""
         self._name = name
         self._state = state
         self._rgb = rgb or random.choice(LIGHT_COLORS)
@@ -39,36 +40,36 @@ class DemoLight(Light):
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo light. """
+        """No polling needed for a demo light."""
         return False
 
     @property
     def name(self):
-        """ Returns the name of the device if any. """
+        """Return the name of the light if any."""
         return self._name
 
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def rgb_color(self):
-        """ rgb color value. """
+        """Return the RBG color value."""
         return self._rgb
 
     @property
     def color_temp(self):
-        """ CT color temperature. """
+        """Return the CT color temperature."""
         return self._ct
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if light is on."""
         return self._state
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the light on."""
         self._state = True
 
         if ATTR_RGB_COLOR in kwargs:
@@ -83,6 +84,6 @@ class DemoLight(Light):
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the light off."""
         self._state = False
         self.update_ha_state()

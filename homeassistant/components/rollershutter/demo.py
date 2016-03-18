@@ -1,15 +1,16 @@
 """
-homeassistant.components.rollershutter.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Demo platform for the rollorshutter component.
+Demo platform for the rollor shutter component.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
+from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.components.rollershutter import RollershutterDevice
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Demo rollershutters. """
+    """Setup the Demo roller shutters."""
     add_devices([
         DemoRollershutter(hass, 'Kitchen Window', 0),
         DemoRollershutter(hass, 'Living Room Window', 100),
@@ -17,10 +18,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoRollershutter(RollershutterDevice):
-    """ Represents a rollershutter.. """
-    # pylint: disable=no-self-use
+    """Representation of a demo roller shutter."""
 
+    # pylint: disable=no-self-use
     def __init__(self, hass, name, position):
+        """Initialize the roller shutter."""
         self.hass = hass
         self._name = name
         self._position = position
@@ -29,21 +31,21 @@ class DemoRollershutter(RollershutterDevice):
 
     @property
     def name(self):
-        """ Returns the name of the rollershutter. """
+        """Return the name of the roller shutter."""
         return self._name
 
     @property
     def should_poll(self):
-        """ No polling needed for a demo rollershutter. """
+        """No polling needed for a demo roller shutter."""
         return False
 
     @property
     def current_position(self):
-        """ Returns the current position of the rollershutter. """
+        """Return the current position of the roller shutter."""
         return self._position
 
     def move_up(self, **kwargs):
-        """ Move the rollershutter down. """
+        """Move the roller shutter down."""
         if self._position == 0:
             return
 
@@ -51,7 +53,7 @@ class DemoRollershutter(RollershutterDevice):
         self._moving_up = True
 
     def move_down(self, **kwargs):
-        """ Move the rollershutter up. """
+        """Move the roller shutter up."""
         if self._position == 100:
             return
 
@@ -59,19 +61,19 @@ class DemoRollershutter(RollershutterDevice):
         self._moving_up = False
 
     def stop(self, **kwargs):
-        """ Stop the rollershutter. """
+        """Stop the roller shutter."""
         if self._listener is not None:
             self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self._listener)
             self._listener = None
 
     def _listen(self):
-        """ Listens for changes. """
+        """Listen for changes."""
         if self._listener is None:
             self._listener = track_utc_time_change(self.hass,
                                                    self._time_changed)
 
     def _time_changed(self, now):
-        """ Track time changes. """
+        """Track time changes."""
         if self._moving_up:
             self._position -= 10
         else:

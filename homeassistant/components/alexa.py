@@ -1,7 +1,5 @@
 """
-components.alexa
-~~~~~~~~~~~~~~~~
-Component to offer a service end point for an Alexa skill.
+Support for Alexa skill service end point.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
@@ -10,8 +8,8 @@ import enum
 import logging
 
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.util import template
 from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers import template
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
@@ -28,7 +26,7 @@ CONF_ACTION = 'action'
 
 
 def setup(hass, config):
-    """ Activate Alexa component. """
+    """Activate Alexa component."""
     _CONFIG.update(config[DOMAIN].get(CONF_INTENTS, {}))
 
     hass.http.register_path('POST', API_ENDPOINT, _handle_alexa, True)
@@ -37,7 +35,7 @@ def setup(hass, config):
 
 
 def _handle_alexa(handler, path_match, data):
-    """ Handle Alexa. """
+    """Handle Alexa."""
     _LOGGER.debug('Received Alexa request: %s', data)
 
     req = data.get('request')
@@ -99,21 +97,24 @@ def _handle_alexa(handler, path_match, data):
 
 
 class SpeechType(enum.Enum):
-    """ Alexa speech types. """
+    """The Alexa speech types."""
+
     plaintext = "PlainText"
     ssml = "SSML"
 
 
 class CardType(enum.Enum):
-    """ Alexa card types. """
+    """The Alexa card types."""
+
     simple = "Simple"
     link_account = "LinkAccount"
 
 
 class AlexaResponse(object):
-    """ Helps generating the response for Alexa. """
+    """Help generating the response for Alexa."""
 
     def __init__(self, hass, intent=None):
+        """Initialize the response."""
         self.hass = hass
         self.speech = None
         self.card = None
@@ -127,7 +128,7 @@ class AlexaResponse(object):
             self.variables = {}
 
     def add_card(self, card_type, title, content):
-        """ Add a card to the response. """
+        """Add a card to the response."""
         assert self.card is None
 
         card = {
@@ -143,7 +144,7 @@ class AlexaResponse(object):
         self.card = card
 
     def add_speech(self, speech_type, text):
-        """ Add speech to the response. """
+        """Add speech to the response."""
         assert self.speech is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
@@ -154,7 +155,7 @@ class AlexaResponse(object):
         }
 
     def add_reprompt(self, speech_type, text):
-        """ Add repromopt if user does not answer. """
+        """Add reprompt if user does not answer."""
         assert self.reprompt is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
@@ -165,7 +166,7 @@ class AlexaResponse(object):
         }
 
     def as_dict(self):
-        """ Returns response in an Alexa valid dict. """
+        """Return response in an Alexa valid dict."""
         response = {
             'shouldEndSession': self.should_end_session
         }
@@ -188,5 +189,5 @@ class AlexaResponse(object):
         }
 
     def _render(self, template_string):
-        """ Render a response, adding data from intent if available. """
+        """Render a response, adding data from intent if available."""
         return template.render(self.hass, template_string, self.variables)

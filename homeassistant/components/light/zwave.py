@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.zwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Z-Wave lights.
 
 For more details about this platform, please refer to the documentation at
@@ -10,16 +8,16 @@ https://home-assistant.io/components/light.zwave/
 # pylint: disable=import-error
 from threading import Timer
 
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS, DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN, Light
 from homeassistant.components.zwave import (
-    COMMAND_CLASS_SWITCH_MULTILEVEL, TYPE_BYTE, GENRE_USER, NETWORK,
-    ATTR_NODE_ID, ATTR_VALUE_ID, ZWaveDeviceEntity)
+    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_SWITCH_MULTILEVEL, GENRE_USER,
+    NETWORK, TYPE_BYTE, ZWaveDeviceEntity)
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Find and add Z-Wave lights. """
-    if discovery_info is None:
+    """Find and add Z-Wave lights."""
+    if discovery_info is None or NETWORK is None:
         return
 
     node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
@@ -37,10 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def brightness_state(value):
-    """
-    Returns the brightness and state according to the current data of given
-    value.
-    """
+    """Return the brightness and state."""
     if value.data > 0:
         return (value.data / 99) * 255, STATE_ON
     else:
@@ -48,9 +43,11 @@ def brightness_state(value):
 
 
 class ZwaveDimmer(ZWaveDeviceEntity, Light):
-    """ Provides a Z-Wave dimmer. """
+    """Representation of a Z-Wave dimmer."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, value):
+        """Initialize the light."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
@@ -66,7 +63,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
             self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     def _value_changed(self, value):
-        """ Called when a value has changed on the network. """
+        """Called when a value has changed on the network."""
         if self._value.value_id != value.value_id:
             return
 
@@ -89,17 +86,16 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
 
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
-
+        """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
@@ -111,6 +107,6 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         if self._value.node.set_dimmer(self._value.value_id, 0):
             self._state = STATE_OFF

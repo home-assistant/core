@@ -1,20 +1,18 @@
 """
-homeassistant.components.tellduslive
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tellduslive Component.
+Support for Telldus Live.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tellduslive/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-from homeassistant.loader import get_component
 from homeassistant import bootstrap
-from homeassistant.util import Throttle
-from homeassistant.helpers import validate_config
 from homeassistant.const import (
-    EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE, ATTR_DISCOVERED)
+    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers import validate_config
+from homeassistant.loader import get_component
+from homeassistant.util import Throttle
 
 DOMAIN = "tellduslive"
 
@@ -41,10 +39,10 @@ NETWORK = None
 
 @Throttle(MIN_TIME_BETWEEN_SWITCH_UPDATES)
 def request_switches():
-    """ make request to online service """
+    """Make request to online service."""
     _LOGGER.debug("Updating switches from Telldus Live")
     switches = NETWORK.request("devices/list")["device"]
-    # filter out any group of switches
+    # Filter out any group of switches.
     switches = {switch["id"]: switch for switch in switches
                 if switch["type"] == "device"}
     return switches
@@ -52,10 +50,10 @@ def request_switches():
 
 @Throttle(MIN_TIME_BETWEEN_SENSOR_UPDATES)
 def request_sensors():
-    """ make request to online service """
+    """Make request to online service."""
     _LOGGER.debug("Updating sensors from Telldus Live")
     units = NETWORK.request("sensors/list")["sensor"]
-    # one unit can contain many sensors
+    # One unit can contain many sensors.
     sensors = {unit["id"]+sensor["name"]: dict(unit, data=sensor)
                for unit in units
                for sensor in unit["data"]}
@@ -63,9 +61,10 @@ def request_sensors():
 
 
 class TelldusLiveData(object):
-    """ Gets the latest data and update the states. """
+    """Get the latest data and update the states."""
 
     def __init__(self, hass, config):
+        """Initialize the Tellus data object."""
         public_key = config[DOMAIN].get(CONF_PUBLIC_KEY)
         private_key = config[DOMAIN].get(CONF_PRIVATE_KEY)
         token = config[DOMAIN].get(CONF_TOKEN)
@@ -85,20 +84,17 @@ class TelldusLiveData(object):
                                   access_secret=token_secret)
 
     def validate_session(self):
-        """ Make a dummy request to see if the session is valid """
-        try:
-            return 'email' in self.request("user/profile")
-        except RuntimeError:
-            return False
+        """Make a dummy request to see if the session is valid."""
+        response = self.request("user/profile")
+        return response and 'email' in response
 
     def discover(self):
-        """ Update states, will trigger discover """
+        """Update states, will trigger discover."""
         self.update_sensors()
         self.update_switches()
 
     def _discover(self, found_devices, component_name):
-        """ Send discovery event if component not yet discovered """
-
+        """Send discovery event if component not yet discovered."""
         if not len(found_devices):
             return
 
@@ -117,7 +113,7 @@ class TelldusLiveData(object):
                              ATTR_DISCOVERED: found_devices})
 
     def request(self, what, **params):
-        """ Sends a request to the tellstick live API """
+        """Send a request to the Tellstick Live API."""
         from tellive.live import const
 
         supported_methods = const.TELLSTICK_TURNON \
@@ -143,17 +139,16 @@ class TelldusLiveData(object):
         # re-use sessions, instead it opens a new session for each request
         # this needs to be fixed
 
-        response = self._client.request(what, params)
+        try:
+            response = self._client.request(what, params)
+            _LOGGER.debug("got response %s", response)
+            return response
+        except (ConnectionError, TimeoutError):
+            _LOGGER.error("failed to make request to Tellduslive servers")
+            return None
 
-        _LOGGER.debug("got response %s", response)
-        return response
-
-    def update_devices(self,
-                       local_devices,
-                       remote_devices,
-                       component_name):
-        """ update local device list and discover new devices """
-
+    def update_devices(self, local_devices, remote_devices, component_name):
+        """Update local device list and discover new devices."""
         if remote_devices is None:
             return local_devices
 
@@ -171,54 +166,46 @@ class TelldusLiveData(object):
         return remote_devices
 
     def update_sensors(self):
-        """ update local list of sensors """
-        try:
-            self._sensors = self.update_devices(self._sensors,
-                                                request_sensors(),
-                                                "sensor")
-        except OSError:
-            _LOGGER.warning("could not update sensors")
+        """Update local list of sensors."""
+        self._sensors = self.update_devices(self._sensors,
+                                            request_sensors(),
+                                            "sensor")
 
     def update_switches(self):
-        """ update local list of switches """
-        try:
-            self._switches = self.update_devices(self._switches,
-                                                 request_switches(),
-                                                 "switch")
-        except OSError:
-            _LOGGER.warning("could not update switches")
+        """Update local list of switches."""
+        self._switches = self.update_devices(self._switches,
+                                             request_switches(),
+                                             "switch")
 
     def _check_request(self, what, **params):
-        """ Make request, check result if successful """
+        """Make request, check result if successful."""
         response = self.request(what, **params)
         return response and response.get('status') == 'success'
 
     def get_switch(self, switch_id):
-        """ return switch representation """
+        """Return the switch representation."""
         return self._switches[switch_id]
 
     def get_sensor(self, sensor_id):
-        """ return sensor representation """
+        """Return the sensor representation."""
         return self._sensors[sensor_id]
 
     def turn_switch_on(self, switch_id):
-        """ Turn switch off. """
+        """Turn switch off."""
         if self._check_request("device/turnOn", id=switch_id):
             from tellive.live import const
             self.get_switch(switch_id)["state"] = const.TELLSTICK_TURNON
 
     def turn_switch_off(self, switch_id):
-        """ Turn switch on. """
+        """Turn switch on."""
         if self._check_request("device/turnOff", id=switch_id):
             from tellive.live import const
             self.get_switch(switch_id)["state"] = const.TELLSTICK_TURNOFF
 
 
 def setup(hass, config):
-    """ Setup the Telldus Live component. """
-
-    # fixme: aquire app key and provide authentication
-    # using username + password
+    """Setup the Telldus Live component."""
+    # fixme: aquire app key and provide authentication using username+password
     if not validate_config(config,
                            {DOMAIN: [CONF_PUBLIC_KEY,
                                      CONF_PRIVATE_KEY,

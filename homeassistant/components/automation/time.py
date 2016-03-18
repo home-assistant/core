@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.time
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers time listening automation rules.
+Offer time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#time-trigger
@@ -24,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     if CONF_AFTER in config:
         after = dt_util.parse_time_str(config[CONF_AFTER])
         if after is None:
@@ -42,7 +40,7 @@ def trigger(hass, config, action):
         return False
 
     def time_automation_listener(now):
-        """ Listens for time changes and calls action. """
+        """Listen for time changes and calls action."""
         action()
 
     track_time_change(hass, time_automation_listener,
@@ -52,7 +50,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """ Wraps action method with time based condition. """
+    """Wrap action method with time based condition."""
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
@@ -76,7 +74,7 @@ def if_action(hass, config):
             return None
 
     def time_if():
-        """ Validate time based if-condition """
+        """Validate time based if-condition."""
         now = dt_util.now()
         if before is not None and now > now.replace(hour=before.hour,
                                                     minute=before.minute):
@@ -99,7 +97,7 @@ def if_action(hass, config):
 
 
 def _error_time(value, key):
-    """ Helper method to print error. """
+    """Helper method to print error."""
     _LOGGER.error(
         "Received invalid value for '%s': %s", key, value)
     if isinstance(value, int):

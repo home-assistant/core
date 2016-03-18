@@ -1,24 +1,22 @@
 """
-homeassistant.components.device_tracker.ddwrt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a DD-WRT router for device
-presence.
+Support for DD-WRT routers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ddwrt/
 """
 import logging
-from datetime import timedelta
 import re
 import threading
+from datetime import timedelta
+
 import requests
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a DD-WRT scanner. """
+    """Validate the configuration and return a DD-WRT scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -42,12 +40,10 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class DdWrtDeviceScanner(object):
-    """
-    This class queries a wireless router running DD-WRT firmware
-    for connected devices. Adapted from Tomato scanner.
-    """
+    """This class queries a wireless router running DD-WRT firmware."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -64,19 +60,15 @@ class DdWrtDeviceScanner(object):
         self.success_init = data is not None
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return self.last_results
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Return the name of the given device or None if we don't know."""
         with self.lock:
-            # if not initialised and not already scanned and not found
+            # If not initialised and not already scanned and not found.
             if device not in self.mac2name:
                 url = 'http://{}/Status_Lan.live.asp'.format(self.host)
                 data = self.get_ddwrt_data(url)
@@ -89,15 +81,15 @@ class DdWrtDeviceScanner(object):
                 if not dhcp_leases:
                     return None
 
-                # remove leading and trailing single quotes
+                # Remove leading and trailing single quotes.
                 cleaned_str = dhcp_leases.strip().strip('"')
                 elements = cleaned_str.split('","')
                 num_clients = int(len(elements)/5)
                 self.mac2name = {}
                 for idx in range(0, num_clients):
-                    # this is stupid but the data is a single array
+                    # This is stupid but the data is a single array
                     # every 5 elements represents one hosts, the MAC
-                    # is the third element and the name is the first
+                    # is the third element and the name is the first.
                     mac_index = (idx * 5) + 2
                     if mac_index < len(elements):
                         mac = elements[mac_index]
@@ -107,9 +99,9 @@ class DdWrtDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Ensures the information from the DD-WRT router is up to date.
-        Returns boolean if scanning successful.
+        """Ensure the information from the DD-WRT router is up to date.
+
+        Return boolean if scanning successful.
         """
         if not self.success_init:
             return False
@@ -134,7 +126,7 @@ class DdWrtDeviceScanner(object):
             # regex's out values so I guess I have to do the same,
             # LAME!!!
 
-            # remove leading and trailing single quotes
+            # Remove leading and trailing single quotes.
             clean_str = active_clients.strip().strip("'")
             elements = clean_str.split("','")
 
@@ -144,7 +136,7 @@ class DdWrtDeviceScanner(object):
             return True
 
     def get_ddwrt_data(self, url):
-        """ Retrieve data from DD-WRT and return parsed result. """
+        """Retrieve data from DD-WRT and return parsed result."""
         try:
             response = requests.get(
                 url,
@@ -166,7 +158,7 @@ class DdWrtDeviceScanner(object):
 
 
 def _parse_ddwrt_response(data_str):
-    """ Parse the DD-WRT data format. """
+    """Parse the DD-WRT data format."""
     return {
         key: val for key, val in _DDWRT_DATA_REGEX
         .findall(data_str)}

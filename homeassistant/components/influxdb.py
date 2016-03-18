@@ -1,18 +1,15 @@
 """
-homeassistant.components.influxdb
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-InfluxDB component which allows you to send data to an Influx database.
+A component which allows you to send data to an Influx database.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
+
 import homeassistant.util as util
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN
+from homeassistant.helpers import state as state_helper
 from homeassistant.helpers import validate_config
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_ON, STATE_OFF,
-                                 STATE_UNLOCKED, STATE_LOCKED, STATE_UNKNOWN)
-from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
-                                          STATE_BELOW_HORIZON)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +31,17 @@ CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
+CONF_BLACKLIST = 'blacklist'
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
-    """ Setup the InfluxDB component. """
-
+    """Setup the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
 
-    if not validate_config(config, {DOMAIN: ['host']}, _LOGGER):
+    if not validate_config(config, {DOMAIN: ['host',
+                                             CONF_USERNAME,
+                                             CONF_PASSWORD]}, _LOGGER):
         return False
 
     conf = config[DOMAIN]
@@ -54,6 +54,7 @@ def setup(hass, config):
     ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
+    blacklist = conf.get(CONF_BLACKLIST, [])
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
@@ -62,26 +63,21 @@ def setup(hass, config):
         influx.query("select * from /.*/ LIMIT 1;")
     except exceptions.InfluxDBClientError as exc:
         _LOGGER.error("Database host is not accessible due to '%s', please "
-                      "check your entries in the configuration file and that"
-                      " the database exists and is READ/WRITE.", exc)
+                      "check your entries in the configuration file and that "
+                      "the database exists and is READ/WRITE.", exc)
         return False
 
     def influx_event_listener(event):
-        """ Listen for new messages on the bus and sends them to Influx. """
-
+        """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
-        if state is None or state.state in (STATE_UNKNOWN, ''):
+        if state is None or state.state in (STATE_UNKNOWN, '') \
+           or state.entity_id in blacklist:
             return
 
-        if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON):
-            _state = 1
-        elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_BELOW_HORIZON):
-            _state = 0
-        else:
-            try:
-                _state = float(state.state)
-            except ValueError:
-                _state = state.state
+        try:
+            _state = state_helper.state_as_number(state)
+        except ValueError:
+            _state = state.state
 
         measurement = state.attributes.get('unit_of_measurement')
         if measurement in (None, ''):

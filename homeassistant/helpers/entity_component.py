@@ -1,14 +1,13 @@
-"""Provides helpers for components that manage entities."""
+"""Helpers for components that manage entities."""
 from threading import Lock
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.components import discovery, group
+from homeassistant.const import ATTR_ENTITY_ID, CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.service import extract_entity_ids
-from homeassistant.components import group, discovery
-from homeassistant.const import ATTR_ENTITY_ID
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -42,8 +41,7 @@ class EntityComponent(object):
                                            self.scan_interval).add_entities
 
     def setup(self, config):
-        """
-        Set up a full entity component.
+        """Set up a full entity component.
 
         Loads the platforms from the config and will listen for supported
         discovered platforms.
@@ -64,8 +62,7 @@ class EntityComponent(object):
                                      info))
 
     def extract_from_service(self, service):
-        """
-        Extract all known entities from a service call.
+        """Extract all known entities from a service call.
 
         Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
@@ -135,6 +132,7 @@ class EntityPlatform(object):
 
     # pylint: disable=too-few-public-methods
     def __init__(self, component, scan_interval):
+        """Initalize the entity platform."""
         self.component = component
         self.scan_interval = scan_interval
         self.platform_entities = []

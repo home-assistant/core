@@ -1,37 +1,31 @@
-"""
-homeassistant.bootstrap
-~~~~~~~~~~~~~~~~~~~~~~~
-Provides methods to bootstrap a home assistant instance.
+"""Provides methods to bootstrap a home assistant instance."""
 
-Each method will return a tuple (bus, statemachine).
-
-After bootstrapping you can add your own components or
-start by calling homeassistant.start_home_assistant(bus)
-"""
-
-from collections import defaultdict
 import logging
 import logging.handlers
 import os
 import shutil
 import sys
+from collections import defaultdict
+from threading import RLock
 
-import homeassistant.core as core
-import homeassistant.util.dt as date_util
-import homeassistant.util.package as pkg_util
-import homeassistant.util.location as loc_util
-import homeassistant.config as config_util
-import homeassistant.loader as loader
 import homeassistant.components as core_components
 import homeassistant.components.group as group
+import homeassistant.config as config_util
+import homeassistant.core as core
+import homeassistant.loader as loader
+import homeassistant.util.dt as date_util
+import homeassistant.util.location as loc_util
+import homeassistant.util.package as pkg_util
+from homeassistant.const import (
+    CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+    CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
 from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    __version__, EVENT_COMPONENT_LOADED, CONF_LATITUDE, CONF_LONGITUDE,
-    CONF_TEMPERATURE_UNIT, CONF_NAME, CONF_TIME_ZONE, CONF_CUSTOMIZE,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
+_SETUP_LOCK = RLock()
+_CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
@@ -40,8 +34,7 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
 def setup_component(hass, domain, config=None):
-    """ Setup a component and all its dependencies. """
-
+    """Setup a component and all its dependencies."""
     if domain in hass.config.components:
         return True
 
@@ -64,7 +57,7 @@ def setup_component(hass, domain, config=None):
 
 
 def _handle_requirements(hass, component, name):
-    """ Installs requirements for component. """
+    """Install the requirements for a component."""
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
 
@@ -78,46 +71,61 @@ def _handle_requirements(hass, component, name):
 
 
 def _setup_component(hass, domain, config):
-    """ Setup a component for Home Assistant. """
+    """Setup a component for Home Assistant."""
+    # pylint: disable=too-many-return-statements
     if domain in hass.config.components:
         return True
-    component = loader.get_component(domain)
 
-    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                    if dep not in hass.config.components]
+    with _SETUP_LOCK:
+        # It might have been loaded while waiting for lock
+        if domain in hass.config.components:
+            return True
 
-    if missing_deps:
-        _LOGGER.error(
-            'Not initializing %s because not all dependencies loaded: %s',
-            domain, ", ".join(missing_deps))
-        return False
-
-    if not _handle_requirements(hass, component, domain):
-        return False
-
-    try:
-        if not component.setup(hass, config):
-            _LOGGER.error('component %s failed to initialize', domain)
+        if domain in _CURRENT_SETUP:
+            _LOGGER.error('Attempt made to setup %s during setup of %s',
+                          domain, domain)
             return False
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception('Error during setup of component %s', domain)
-        return False
 
-    hass.config.components.append(component.DOMAIN)
+        component = loader.get_component(domain)
+        missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
+                        if dep not in hass.config.components]
 
-    # Assumption: if a component does not depend on groups
-    # it communicates with devices
-    if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
-        hass.pool.add_worker()
+        if missing_deps:
+            _LOGGER.error(
+                'Not initializing %s because not all dependencies loaded: %s',
+                domain, ", ".join(missing_deps))
+            return False
 
-    hass.bus.fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+        if not _handle_requirements(hass, component, domain):
+            return False
 
-    return True
+        _CURRENT_SETUP.append(domain)
+
+        try:
+            if not component.setup(hass, config):
+                _LOGGER.error('component %s failed to initialize', domain)
+                return False
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception('Error during setup of component %s', domain)
+            return False
+        finally:
+            _CURRENT_SETUP.remove(domain)
+
+        hass.config.components.append(component.DOMAIN)
+
+        # Assumption: if a component does not depend on groups
+        # it communicates with devices
+        if group.DOMAIN not in getattr(component, 'DEPENDENCIES', []):
+            hass.pool.add_worker()
+
+        hass.bus.fire(
+            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN})
+
+        return True
 
 
 def prepare_setup_platform(hass, config, domain, platform_name):
-    """ Loads a platform and makes sure dependencies are setup. """
+    """Load a platform and makes sure dependencies are setup."""
     _ensure_loader_prepared(hass)
 
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
@@ -149,7 +157,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 
 def mount_local_lib_path(config_dir):
-    """ Add local library to Python Path """
+    """Add local library to Python Path."""
     sys.path.insert(0, os.path.join(config_dir, 'lib'))
 
 
@@ -157,8 +165,7 @@ def mount_local_lib_path(config_dir):
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
                      verbose=False, daemon=False, skip_pip=False,
                      log_rotate_days=None):
-    """
-    Tries to configure Home Assistant from a config dict.
+    """Try to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
     """
@@ -200,7 +207,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     _LOGGER.info('Home Assistant core initialized')
 
-    # give event decorators access to HASS
+    # Give event decorators access to HASS
     event_decorators.HASS = hass
     service.HASS = hass
 
@@ -213,9 +220,9 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
 def from_config_file(config_path, hass=None, verbose=False, daemon=False,
                      skip_pip=True, log_rotate_days=None):
-    """
-    Reads the configuration file and tries to start all the required
-    functionality. Will add functionality to 'hass' parameter if given,
+    """Read the configuration file and try to start all the functionality.
+
+    Will add functionality to 'hass' parameter if given,
     instantiates a new Home Assistant object if 'hass' is not given.
     """
     if hass is None:
@@ -235,7 +242,7 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
 
 def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
-    """ Setup the logging for home assistant. """
+    """Setup the logging."""
     if not daemon:
         logging.basicConfig(level=logging.INFO)
         fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -288,7 +295,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
 
 
 def process_ha_config_upgrade(hass):
-    """ Upgrade config if necessary. """
+    """Upgrade config if necessary."""
     version_path = hass.config.path('.HA_VERSION')
 
     try:
@@ -313,11 +320,11 @@ def process_ha_config_upgrade(hass):
 
 
 def process_ha_core_config(hass, config):
-    """ Processes the [homeassistant] section from the config. """
+    """Process the [homeassistant] section from the config."""
     hac = hass.config
 
     def set_time_zone(time_zone_str):
-        """ Helper method to set time zone in HA. """
+        """Helper method to set time zone."""
         if time_zone_str is None:
             return
 
@@ -388,6 +395,6 @@ def process_ha_core_config(hass, config):
 
 
 def _ensure_loader_prepared(hass):
-    """ Ensure Home Assistant loader is prepared. """
+    """Ensure Home Assistant loader is prepared."""
     if not loader.PREPARED:
         loader.prepare(hass)

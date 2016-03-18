@@ -1,16 +1,14 @@
 """
-homeassistant.components.sensor.torque
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Get data from the Torque OBD application.
+Support for the Torque OBD application.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.torque/
 """
 
 import re
+
 from homeassistant.const import HTTP_OK
 from homeassistant.helpers.entity import Entity
-
 
 DOMAIN = 'torque'
 DEPENDENCIES = ['http']
@@ -29,25 +27,24 @@ VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
 
 
 def decode(value):
-    """ Double-decode required. """
+    """Double-decode required."""
     return value.encode('raw_unicode_escape').decode('utf-8')
 
 
 def convert_pid(value):
-    """ Convert pid from hex string to integer. """
+    """Convert pid from hex string to integer."""
     return int(value, 16)
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Set up Torque platform. """
-
+    """Setup Torque platform."""
     vehicle = config.get('name', DEFAULT_NAME)
     email = config.get('email', None)
     sensors = {}
 
     def _receive_data(handler, path_match, data):
-        """ Received data from Torque. """
+        """Received data from Torque."""
         handler.send_response(HTTP_OK)
         handler.end_headers()
 
@@ -84,34 +81,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TorqueSensor(Entity):
-    """ Represents a Torque sensor. """
+    """Representation of a Torque sensor."""
 
     def __init__(self, name, unit):
+        """Initialize the sensor."""
         self._name = name
         self._unit = unit
         self._state = None
 
     @property
     def name(self):
-        """ Returns the name of the sensor. """
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """Return the unit of measurement."""
         return self._unit
 
     @property
     def state(self):
-        """ State of the sensor. """
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def icon(self):
-        """ Sensor default icon. """
+        """Return the default icon of the sensor."""
         return 'mdi:car'
 
     def on_update(self, value):
-        """ Receive an update. """
+        """Receive an update."""
         self._state = value
         self.update_ha_state()

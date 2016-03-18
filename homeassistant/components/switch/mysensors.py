@@ -1,20 +1,14 @@
 """
-homeassistant.components.switch.mysensors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for MySensors switches.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors.html
+https://home-assistant.io/components/switch.mysensors/
 """
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    STATE_ON, STATE_OFF)
-
-import homeassistant.components.mysensors as mysensors
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -27,9 +21,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
+    mysensors = get_component('mysensors')
+
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
-        # states. Map them in a defaultdict(list).
+        # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
@@ -56,11 +52,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsSwitch(SwitchDevice):
-    """Represent the value of a MySensors child node."""
+    """Representation of the value of a MySensors child node."""
 
-    # pylint: disable=too-many-arguments
-
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup class attributes on instantiation.
 
         Args:
@@ -69,6 +65,7 @@ class MySensorsSwitch(SwitchDevice):
         child_id (str): Id of child.
         name (str): Entity name.
         value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
 
         Attributes:
         gateway (GatewayWrapper): Gateway object
@@ -78,6 +75,7 @@ class MySensorsSwitch(SwitchDevice):
         value_type (str): Value type of child. Value is entity state.
         battery_level (int): Node battery level.
         _values (dict): Child values. Non state values set as state attributes.
+        mysensors (module): Mysensors main component module.
         """
         self.gateway = gateway
         self.node_id = node_id
@@ -86,10 +84,11 @@ class MySensorsSwitch(SwitchDevice):
         self.value_type = value_type
         self.battery_level = 0
         self._values = {}
+        self.mysensors = get_component('mysensors')
 
     @property
     def should_poll(self):
-        """MySensor gateway pushes its state to HA."""
+        """Mysensor gateway pushes its state to HA."""
         return False
 
     @property
@@ -101,9 +100,9 @@ class MySensorsSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         attr = {
-            mysensors.ATTR_PORT: self.gateway.port,
-            mysensors.ATTR_NODE_ID: self.node_id,
-            mysensors.ATTR_CHILD_ID: self.child_id,
+            self.mysensors.ATTR_PORT: self.gateway.port,
+            self.mysensors.ATTR_NODE_ID: self.node_id,
+            self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,
         }
 
@@ -130,30 +129,38 @@ class MySensorsSwitch(SwitchDevice):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
-        self._values[self.value_type] = STATE_ON
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_ON
+            self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
-        self._values[self.value_type] = STATE_OFF
-        self.update_ha_state()
+        if self.gateway.optimistic:
+            # optimistically assume that switch has changed state
+            self._values[self.value_type] = STATE_OFF
+            self.update_ha_state()
 
     @property
     def available(self):
         """Return True if entity is available."""
         return self.value_type in self._values
 
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return self.gateway.optimistic
+
     def update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
-            _LOGGER.info(
+            _LOGGER.debug(
                 "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == self.gateway.const.SetReq.V_ARMED or \
-               value_type == self.gateway.const.SetReq.V_STATUS or \
                value_type == self.gateway.const.SetReq.V_LIGHT or \
                value_type == self.gateway.const.SetReq.V_LOCK_STATUS:
                 self._values[value_type] = (

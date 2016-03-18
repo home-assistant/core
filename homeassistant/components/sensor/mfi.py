@@ -1,6 +1,4 @@
 """
-homeassistant.components.sensor.mfi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Ubiquiti mFi sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -8,13 +6,14 @@ https://home-assistant.io/components/sensor.mfi/
 """
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 TEMP_CELCIUS)
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import validate_config
+import requests
 
-REQUIREMENTS = ['mficlient==0.2.2']
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS
+from homeassistant.helpers import validate_config
+from homeassistant.helpers.entity import Entity
+
+REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +32,13 @@ SENSOR_MODELS = [
     'Input Analog',
     'Input Digital',
 ]
+CONF_TLS = 'use_tls'
+CONF_VERIFY_TLS = 'verify_tls'
 
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up mFi sensors. """
-
+    """Setup mFi sensors."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['host',
                                      CONF_USERNAME,
@@ -48,15 +48,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     host = config.get('host')
-    port = int(config.get('port', 6443))
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    use_tls = bool(config.get(CONF_TLS, True))
+    verify_tls = bool(config.get(CONF_VERIFY_TLS, True))
+    default_port = use_tls and 6443 or 6080
+    port = int(config.get('port', default_port))
 
-    from mficlient.client import MFiClient
+    from mficlient.client import FailedToLogin, MFiClient
 
     try:
-        client = MFiClient(host, username, password, port=port)
-    except client.FailedToLogin as ex:
+        client = MFiClient(host, username, password, port=port,
+                           use_tls=use_tls, verify=verify_tls)
+    except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
         _LOGGER.error('Unable to connect to mFi: %s', str(ex))
         return False
 
@@ -67,18 +71,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MfiSensor(Entity):
-    """ An mFi sensor that exposes tag=value. """
+    """Representation of a mFi sensor."""
 
     def __init__(self, port, hass):
+        """Initialize the sensor."""
         self._port = port
         self._hass = hass
 
     @property
     def name(self):
+        """Return the name of th sensor."""
         return self._port.label
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         if self._port.model == 'Input Digital':
             return self._port.value > 0 and STATE_ON or STATE_OFF
         else:
@@ -87,6 +94,7 @@ class MfiSensor(Entity):
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
         if self._port.tag == 'temperature':
             return TEMP_CELCIUS
         elif self._port.tag == 'active_pwr':
@@ -96,4 +104,5 @@ class MfiSensor(Entity):
         return self._port.tag
 
     def update(self):
+        """Get the latest data."""
         self._port.refresh()

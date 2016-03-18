@@ -1,32 +1,26 @@
-"""
-tests.component.media_player.test_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests demo media_player component.
-"""
+"""The tests for the Demo Media player platform."""
 import unittest
 from unittest.mock import patch
-from pprint import pprint
-import homeassistant.core as ha
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, STATE_UNKNOWN, STATE_PLAYING, STATE_PAUSED)
 import homeassistant.components.media_player as mp
 
+from tests.common import get_test_home_assistant
 
 entity_id = 'media_player.walkman'
 
 
 class TestDemoMediaPlayer(unittest.TestCase):
-    """ Test the media_player module. """
+    """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_volume_services(self):
+        """Test the volume service."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 1.0 == state.attributes.get('volume_level')
@@ -53,6 +47,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert True is state.attributes.get('is_volume_muted')
 
     def test_turning_off_and_on(self):
+        """Test turn_on and turn_off."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
@@ -71,6 +66,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert not mp.is_on(self.hass, entity_id)
 
     def test_playing_pausing(self):
+        """Test media_pause."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         assert self.hass.states.is_state(entity_id, 'playing')
 
@@ -91,6 +87,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert self.hass.states.is_state(entity_id, 'playing')
 
     def test_prev_next_track(self):
+        """Test media_next_track and media_prevoius_track ."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 1 == state.attributes.get('media_track')
@@ -118,8 +115,10 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
                     state.attributes.get('supported_media_commands'))
 
-    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.media_seek')
+    @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
+           'media_seek')
     def test_play_media(self, mock_seek):
+        """Test play_media ."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         ent_id = 'media_player.living_room'
         state = self.hass.states.get(ent_id)
@@ -138,4 +137,3 @@ class TestDemoMediaPlayer(unittest.TestCase):
         mp.media_seek(self.hass, 100, ent_id)
         self.hass.pool.block_till_done()
         assert mock_seek.called
-

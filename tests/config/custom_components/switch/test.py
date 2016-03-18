@@ -1,8 +1,5 @@
 """
-custom_components.switch.test
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Provides a mock switch platform.
+Provide a mock switch platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -14,7 +11,7 @@ DEVICES = []
 
 
 def init(empty=False):
-    """ (re-)initalizes the platform with devices. """
+    """Initalize the platform with devices."""
     global DEVICES
 
     DEVICES = [] if empty else [
@@ -25,5 +22,5 @@ def init(empty=False):
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return test switches. """
+    """Find and return test switches."""
     add_devices_callback(DEVICES)

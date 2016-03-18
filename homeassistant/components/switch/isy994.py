@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.isy994
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for ISY994 switches.
 
 For more details about this platform, please refer to the documentation at
@@ -8,16 +6,18 @@ https://home-assistant.io/components/isy994/
 """
 import logging
 
-from homeassistant.components.isy994 import (ISY, ISYDeviceABC, SENSOR_STRING,
-                                             HIDDEN_STRING)
-from homeassistant.const import STATE_ON, STATE_OFF  # STATE_OPEN, STATE_CLOSED
+from homeassistant.components.isy994 import (
+    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
+from homeassistant.const import STATE_OFF, STATE_ON  # STATE_OPEN, STATE_CLOSED
+
+
 # The frontend doesn't seem to fully support the open and closed states yet.
 # Once it does, the HA.doors programs should report open and closed instead of
 # off and on. It appears that on should be open and off should be closed.
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the ISY994 platform. """
+    """Setup the ISY994 platform."""
     # pylint: disable=too-many-locals
     logger = logging.getLogger(__name__)
     devs = []
@@ -26,14 +26,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         logger.error('A connection has not been made to the ISY controller.')
         return False
 
-    # import not dimmable nodes and groups
+    # Import not dimmable nodes and groups
     for (path, node) in ISY.nodes:
         if not node.dimmable and SENSOR_STRING not in node.name:
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
             devs.append(ISYSwitchDevice(node))
 
-    # import ISY doors programs
+    # Import ISY doors programs
     for folder_name, states in (('HA.doors', [STATE_ON, STATE_OFF]),
                                 ('HA.switches', [STATE_ON, STATE_OFF])):
         try:
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ISYSwitchDevice(ISYDeviceABC):
-    """ Represents as ISY light. """
+    """Representation of an ISY switch."""
 
     _domain = 'switch'
     _dtype = 'binary'
@@ -67,21 +67,22 @@ class ISYSwitchDevice(ISYDeviceABC):
 
 
 class ISYProgramDevice(ISYSwitchDevice):
-    """ Represents a door that can be manipulated. """
+    """Representation of an ISY door."""
 
     _domain = 'switch'
     _dtype = 'binary'
 
     def __init__(self, name, node, actions, states):
+        """Initialize the switch."""
         super().__init__(node)
         self._states = states
         self._name = name
         self.action_node = actions
 
     def turn_on(self, **kwargs):
-        """ Turns the device on/closes the device. """
+        """Turn the device on/close the device."""
         self.action_node.runThen()
 
     def turn_off(self, **kwargs):
-        """ Turns the device off/opens the device. """
+        """Turn the device off/open the device."""
         self.action_node.runElse()

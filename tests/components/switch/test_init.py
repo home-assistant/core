@@ -1,9 +1,4 @@
-"""
-tests.test_component_switch
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests switch component.
-"""
+"""The tests for the Switch component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
 
@@ -15,13 +10,12 @@ from tests.common import get_test_home_assistant
 
 
 class TestSwitch(unittest.TestCase):
-    """ Test the switch module. """
+    """Test the switch module."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-
         platform = loader.get_component('switch.test')
-
         platform.init()
         self.assertTrue(switch.setup(
             self.hass, {switch.DOMAIN: {CONF_PLATFORM: 'test'}}
@@ -32,11 +26,11 @@ class TestSwitch(unittest.TestCase):
             platform.DEVICES
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_methods(self):
-        """ Test is_on, turn_on, turn_off methods. """
+        """Test is_on, turn_on, turn_off methods."""
         self.assertTrue(switch.is_on(self.hass))
         self.assertEqual(
             STATE_ON,
@@ -81,7 +75,7 @@ class TestSwitch(unittest.TestCase):
         self.assertTrue(switch.is_on(self.hass, self.switch_3.entity_id))
 
     def test_setup_two_platforms(self):
-        """ Test with bad config. """
+        """Test with bad configuration."""
         # Test if switch component returns 0 switches
         test_platform = loader.get_component('switch.test')
         test_platform.init(True)

@@ -1,6 +1,4 @@
 """
-homeassistant.components.shell_command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Exposes regular shell commands as services.
 
 For more details about this platform, please refer to the documentation at
@@ -17,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """ Sets up the shell_command component. """
+    """Setup the shell_command component."""
     conf = config.get(DOMAIN)
 
     if not isinstance(conf, dict):
@@ -31,7 +29,7 @@ def setup(hass, config):
             return False
 
     def service_handler(call):
-        """ Execute a shell command service. """
+        """Execute a shell command service."""
         try:
             subprocess.call(conf[call.service], shell=True,
                             stdout=subprocess.DEVNULL,

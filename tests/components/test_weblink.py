@@ -1,21 +1,24 @@
-# -*- coding: utf-8 -*-
+"""The tests for the weblink component."""
 import unittest
 
-import homeassistant.core as ha
 from homeassistant.components import weblink
 
+from tests.common import get_test_home_assistant
 
-class TestComponentHistory(unittest.TestCase):
-    """ Tests homeassistant.components.history module. """
+
+class TestComponentWeblink(unittest.TestCase):
+    """Test the Weblink component."""
 
     def setUp(self):
-        """ Test setup method. """
-        self.hass = ha.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):
+        """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup(self):
+    def test_entities_get_created(self):
+        """Test if new entity is created."""
         self.assertTrue(weblink.setup(self.hass, {
             weblink.DOMAIN: {
                 'entities': [
@@ -27,3 +30,8 @@ class TestComponentHistory(unittest.TestCase):
                 ]
             }
         }))
+
+        state = self.hass.states.get('weblink.my_router')
+
+        assert state is not None
+        assert state.state == 'http://127.0.0.1/'

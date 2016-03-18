@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.zone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers zone automation rules.
+Offer zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#zone-trigger
@@ -9,10 +7,9 @@ at https://home-assistant.io/components/automation/#zone-trigger
 import logging
 
 from homeassistant.components import zone
-from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
-
+from homeassistant.helpers.event import track_state_change
 
 CONF_ENTITY_ID = "entity_id"
 CONF_ZONE = "zone"
@@ -23,7 +20,7 @@ DEFAULT_EVENT = EVENT_ENTER
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
 
@@ -36,7 +33,7 @@ def trigger(hass, config, action):
     event = config.get(CONF_EVENT, DEFAULT_EVENT)
 
     def zone_automation_listener(entity, from_s, to_s):
-        """ Listens for state changes and calls action. """
+        """Listen for state changes and calls action."""
         if from_s and None in (from_s.attributes.get(ATTR_LATITUDE),
                                from_s.attributes.get(ATTR_LONGITUDE)) or \
             None in (to_s.attributes.get(ATTR_LATITUDE),
@@ -58,7 +55,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """ Wraps action method with zone based condition. """
+    """Wrap action method with zone based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
 
@@ -69,14 +66,14 @@ def if_action(hass, config):
         return False
 
     def if_in_zone():
-        """ Test if condition. """
+        """Test if condition."""
         return _in_zone(hass, zone_entity_id, hass.states.get(entity_id))
 
     return if_in_zone
 
 
 def _in_zone(hass, zone_entity_id, state):
-    """ Check if state is in zone. """
+    """Check if state is in zone."""
     if not state or None in (state.attributes.get(ATTR_LATITUDE),
                              state.attributes.get(ATTR_LONGITUDE)):
         return False

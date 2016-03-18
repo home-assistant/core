@@ -1,14 +1,12 @@
 """
-homeassistant.components.thermostat.nest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Adds support for Nest thermostats.
+Support for Nest thermostats.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
 """
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 REQUIREMENTS = ['python-nest==2.6.0']
 DOMAIN = 'nest'
@@ -18,7 +16,7 @@ NEST = None
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """ Sets up the nest thermostat. """
+    """Setup the Nest thermostat component."""
     global NEST
 
     logger = logging.getLogger(__name__)

@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.forecast
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Forecast.io weather service.
+Support for Forecast.io weather service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.forecast/
@@ -9,9 +7,9 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS)
+from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-forecastio==1.3.3']
 _LOGGER = logging.getLogger(__name__)
@@ -41,12 +39,12 @@ SENSOR_TYPES = {
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
 }
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the Forecast.io sensor. """
+    """Setup the Forecast.io sensor."""
     import forecastio
 
     if None in (hass.config.latitude, hass.config.longitude):
@@ -88,9 +86,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class ForeCastSensor(Entity):
-    """ Implements an Forecast.io sensor. """
+    """Implementation of a Forecast.io sensor."""
 
     def __init__(self, weather_data, sensor_type):
+        """Initialize the sensor."""
         self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_client = weather_data
@@ -111,26 +110,27 @@ class ForeCastSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def unit_system(self):
-        """ Unit system of this entity. """
+        """Return the unit system of this entity."""
         return self._unit_system
 
     # pylint: disable=too-many-branches
     def update(self):
-        """ Gets the latest data from Forecast.io and updates the states. """
+        """Get the latest data from Forecast.io and updates the states."""
         import forecastio
 
         self.forecast_client.update()
@@ -177,9 +177,10 @@ class ForeCastSensor(Entity):
 
 
 class ForeCastData(object):
-    """ Gets the latest data from Forecast.io. """
+    """Gets the latest data from Forecast.io."""
 
     def __init__(self, api_key, latitude, longitude, units):
+        """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
@@ -190,7 +191,7 @@ class ForeCastData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from Forecast.io. """
+        """Get the latest data from Forecast.io."""
         import forecastio
 
         forecast = forecastio.load_forecast(self._api_key,

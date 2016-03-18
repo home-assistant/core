@@ -1,7 +1,5 @@
 """
-homeassistant.components.device_tracker.locative
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Locative platform for the device tracker.
+Support for the Locative platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.locative/
@@ -9,9 +7,8 @@ https://home-assistant.io/components/device_tracker.locative/
 import logging
 from functools import partial
 
-from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME)
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, STATE_NOT_HOME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,12 +18,10 @@ URL_API_LOCATIVE_ENDPOINT = "/api/locative"
 
 
 def setup_scanner(hass, config, see):
-    """ Set up an endpoint for the Locative app. """
-
+    """Setup an endpoint for the Locative application."""
     # POST would be semantically better, but that currently does not work
     # since Locative sends the data as key1=value1&key2=value2
     # in the request body, while Home Assistant expects json there.
-
     hass.http.register_path(
         'GET', URL_API_LOCATIVE_ENDPOINT,
         partial(_handle_get_api_locative, hass, see))
@@ -35,8 +30,7 @@ def setup_scanner(hass, config, see):
 
 
 def _handle_get_api_locative(hass, see, handler, path_match, data):
-    """ Locative message received. """
-
+    """Locative message received."""
     if not _check_data(handler, data):
         return
 
@@ -77,6 +71,7 @@ def _handle_get_api_locative(hass, see, handler, path_match, data):
 
 
 def _check_data(handler, data):
+    """Check the data."""
     if 'latitude' not in data or 'longitude' not in data:
         handler.write_text("Latitude and longitude not specified.",
                            HTTP_UNPROCESSABLE_ENTITY)

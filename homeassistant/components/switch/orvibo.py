@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.orvibo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Orvibo S20 Wifi Smart Switches.
 
 For more details about this platform, please refer to the documentation at
@@ -17,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return S20 switches. """
+    """Find and return S20 switches."""
     from orvibo.s20 import S20, S20Exception
 
     switches = []
@@ -40,8 +38,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class S20Switch(SwitchDevice):
-    """ Represents an S20 switch. """
+    """Representsation of an S20 switch."""
+
     def __init__(self, name, s20):
+        """Initialize the S20 device."""
         from orvibo.s20 import S20Exception
 
         self._name = name
@@ -51,35 +51,35 @@ class S20Switch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """ Poll. """
+        """Polling is needed."""
         return True
 
     @property
     def name(self):
-        """ The name of the switch. """
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state
 
     def update(self):
-        """ Update device state. """
+        """Update device state."""
         try:
             self._state = self._s20.on
         except self._exc:
             _LOGGER.exception("Error while fetching S20 state")
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
+        """Turn the device on."""
         try:
             self._s20.on = True
         except self._exc:
             _LOGGER.exception("Error while turning on S20")
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
+        """Turn the device off."""
         try:
             self._s20.on = False
         except self._exc:

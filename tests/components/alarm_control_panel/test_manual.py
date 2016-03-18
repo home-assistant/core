@@ -1,37 +1,32 @@
-"""
-tests.components.alarm_control_panel.test_manual
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests manual alarm control panel component.
-"""
+"""The tests for the manual Alarm Control Panel component."""
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
 from homeassistant.components import alarm_control_panel
 import homeassistant.util.dt as dt_util
 
-from tests.common import fire_time_changed
+from tests.common import fire_time_changed, get_test_home_assistant
 
 CODE = 'HELLO_CODE'
 
 
 class TestAlarmControlPanelManual(unittest.TestCase):
-    """ Test the manual alarm module. """
+    """Test the manual alarm module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_arm_home_no_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -52,7 +47,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_arm_home_with_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -82,7 +77,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_arm_home_with_invalid_code(self):
-        """ Attempt to arm home without a valid code. """
+        """Attempt to arm home without a valid code."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -103,7 +98,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_arm_away_no_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -124,7 +119,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_arm_away_with_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -154,7 +149,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_arm_away_with_invalid_code(self):
-        """ Attempt to arm away without a valid code. """
+        """Attempt to arm away without a valid code."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -175,7 +170,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_trigger_no_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -195,7 +190,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_trigger_with_pending(self):
-        """ Test arm home method. """
+        """Test arm home method."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -234,6 +229,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_disarm_while_pending_trigger(self):
+        """Test disarming while pending state."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
@@ -268,6 +264,7 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
     def test_disarm_during_trigger_with_invalid_code(self):
+        """Test disarming while code is invalid."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',

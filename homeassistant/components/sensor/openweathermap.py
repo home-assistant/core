@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.openweathermap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OpenWeatherMap (OWM) service.
+Support for the OpenWeatherMap (OWM) service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.openweathermap/
@@ -9,9 +7,9 @@ https://home-assistant.io/components/sensor.openweathermap/
 import logging
 from datetime import timedelta
 
-from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyowm==2.3.0']
 _LOGGER = logging.getLogger(__name__)
@@ -26,13 +24,12 @@ SENSOR_TYPES = {
     'snow': ['Snow', 'mm']
 }
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Get the OpenWeatherMap sensor. """
-
+    """Setup the OpenWeatherMap sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -71,9 +68,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class OpenWeatherMapSensor(Entity):
-    """ Implements an OpenWeatherMap sensor. """
+    """Implementation of an OpenWeatherMap sensor."""
 
     def __init__(self, weather_data, sensor_type, temp_unit):
+        """Initialize the sensor."""
         self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
@@ -85,22 +83,22 @@ class OpenWeatherMapSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
-        """ Gets the latest data from OWM and updates the states. """
-
+        """Get the latest data from OWM and updates the states."""
         self.owa_client.update()
         data = self.owa_client.data
         fc_data = self.owa_client.fc_data
@@ -143,9 +141,10 @@ class OpenWeatherMapSensor(Entity):
 
 
 class WeatherData(object):
-    """ Gets the latest data from OpenWeatherMap. """
+    """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, forecast, latitude, longitude):
+        """Initialize the data object."""
         self.owm = owm
         self.forecast = forecast
         self.latitude = latitude
@@ -155,7 +154,7 @@ class WeatherData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """ Gets the latest data from OpenWeatherMap. """
+        """Get the latest data from OpenWeatherMap."""
         obs = self.owm.weather_at_coords(self.latitude, self.longitude)
         if obs is None:
             _LOGGER.warning('Failed to fetch data from OWM')

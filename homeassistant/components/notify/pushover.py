@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.pushover
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Pushover platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -8,10 +6,10 @@ https://home-assistant.io/components/notify.pushover/
 """
 import logging
 
-from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
-    DOMAIN, ATTR_TITLE, BaseNotificationService)
+    ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import validate_config
 
 REQUIREMENTS = ['python-pushover==0.2']
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-variable
 def get_service(hass, config):
-    """ Get the pushover notification service. """
-
+    """Get the Pushover notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['user_key', CONF_API_KEY]},
                            _LOGGER):
@@ -40,9 +37,10 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class PushoverNotificationService(BaseNotificationService):
-    """ Implements notification service for Pushover. """
+    """Implement the notification service for Pushover."""
 
     def __init__(self, user_key, api_token):
+        """Initialize the service."""
         from pushover import Client
         self._user_key = user_key
         self._api_token = api_token
@@ -50,7 +48,7 @@ class PushoverNotificationService(BaseNotificationService):
             self._user_key, api_token=self._api_token)
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
+        """Send a message to a user."""
         from pushover import RequestError
 
         try:

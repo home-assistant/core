@@ -1,9 +1,4 @@
-"""
-homeassistant.components.frontend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Provides a frontend for Home Assistant.
-"""
+"""Handle the frontend for Home Assistant."""
 import re
 import os
 import logging
@@ -11,6 +6,7 @@ import logging
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
+from homeassistant.components import api
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
@@ -25,20 +21,22 @@ FRONTEND_URLS = [
     re.compile(r'/states(/([a-zA-Z\._\-0-9/]+)|)'),
 ]
 
+URL_API_BOOTSTRAP = "/api/bootstrap"
+
 _FINGERPRINT = re.compile(r'^(\w+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 
 def setup(hass, config):
-    """ Setup serving the frontend. """
-    if 'http' not in hass.config.components:
-        _LOGGER.error('Dependency http is not loaded')
-        return False
-
+    """Setup serving the frontend."""
     for url in FRONTEND_URLS:
         hass.http.register_path('GET', url, _handle_get_root, False)
 
     hass.http.register_path('GET', '/service_worker.js',
                             _handle_get_service_worker, False)
+
+    # Bootstrap API
+    hass.http.register_path(
+        'GET', URL_API_BOOTSTRAP, _handle_get_api_bootstrap)
 
     # Static files
     hass.http.register_path(
@@ -54,8 +52,20 @@ def setup(hass, config):
     return True
 
 
+def _handle_get_api_bootstrap(handler, path_match, data):
+    """Return all data needed to bootstrap Home Assistant."""
+    hass = handler.server.hass
+
+    handler.write_json({
+        'config': hass.config.as_dict(),
+        'states': hass.states.all(),
+        'events': api.events_json(hass),
+        'services': api.services_json(hass),
+    })
+
+
 def _handle_get_root(handler, path_match, data):
-    """ Renders the frontend. """
+    """Render the frontend."""
     handler.send_response(HTTP_OK)
     handler.send_header('Content-type', 'text/html; charset=utf-8')
     handler.end_headers()
@@ -80,7 +90,7 @@ def _handle_get_root(handler, path_match, data):
 
 
 def _handle_get_service_worker(handler, path_match, data):
-    """ Returns service worker for the frontend. """
+    """Return service worker for the frontend."""
     if handler.server.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
     else:
@@ -91,7 +101,7 @@ def _handle_get_service_worker(handler, path_match, data):
 
 
 def _handle_get_static(handler, path_match, data):
-    """ Returns a static file for the frontend. """
+    """Return a static file for the frontend."""
     req_file = util.sanitize_path(path_match.group('file'))
 
     # Strip md5 hash out
@@ -105,9 +115,7 @@ def _handle_get_static(handler, path_match, data):
 
 
 def _handle_get_local(handler, path_match, data):
-    """
-    Returns a static file from the hass.config.path/www for the frontend.
-    """
+    """Return a static file from the hass.config.path/www for the frontend."""
     req_file = util.sanitize_path(path_match.group('file'))
 
     path = handler.server.hass.config.path('www', req_file)

@@ -1,9 +1,4 @@
-"""
-tests.test_core
-~~~~~~~~~~~~~~~~~
-
-Provides tests to verify that Home Assistant core works.
-"""
+"""Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import os
@@ -20,28 +15,27 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
     TEMP_FAHRENHEIT)
 
+from tests.common import get_test_home_assistant
+
 PST = pytz.timezone('America/Los_Angeles')
 
 
 class TestHomeAssistant(unittest.TestCase):
-    """
-    Tests the Home Assistant core classes.
-    """
+    """Test the Home Assistant core classes."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
-        self.hass = ha.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         try:
             self.hass.stop()
         except HomeAssistantError:
@@ -49,6 +43,7 @@ class TestHomeAssistant(unittest.TestCase):
             pass
 
     def test_start(self):
+        """Start the test."""
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
                                   lambda event: calls.append(1))
@@ -58,7 +53,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # @patch('homeassistant.core.time.sleep')
     def test_block_till_stoped(self):
-        """ Test if we can block till stop service is called. """
+        """Test if we can block till stop service is called."""
         with patch('time.sleep'):
             blocking_thread = threading.Thread(
                 target=self.hass.block_till_stopped)
@@ -81,11 +76,13 @@ class TestHomeAssistant(unittest.TestCase):
         self.assertFalse(blocking_thread.is_alive())
 
     def test_stopping_with_sigterm(self):
+        """Test for stopping with sigterm."""
         calls = []
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: calls.append(1))
 
         def send_sigterm(length):
+            """Send sigterm."""
             os.kill(os.getpid(), signal.SIGTERM)
 
         with patch('homeassistant.core.time.sleep', send_sigterm):
@@ -95,8 +92,10 @@ class TestHomeAssistant(unittest.TestCase):
 
 
 class TestEvent(unittest.TestCase):
-    """ Test Event class. """
+    """A Test Event class."""
+
     def test_eq(self):
+        """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
         event1, event2 = [
@@ -107,7 +106,7 @@ class TestEvent(unittest.TestCase):
         self.assertEqual(event1, event2)
 
     def test_repr(self):
-        """ Test that repr method works. #MoreCoverage """
+        """Test that repr method works."""
         self.assertEqual(
             "<Event TestEvent[L]>",
             str(ha.Event("TestEvent")))
@@ -119,6 +118,7 @@ class TestEvent(unittest.TestCase):
                          ha.EventOrigin.remote)))
 
     def test_as_dict(self):
+        """Test as dictionary."""
         event_type = 'some_type'
         now = dt_util.utcnow()
         data = {'some': 'attr'}
@@ -134,23 +134,23 @@ class TestEvent(unittest.TestCase):
 
 
 class TestEventBus(unittest.TestCase):
-    """ Test EventBus methods. """
+    """Test EventBus methods."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.bus = ha.EventBus(ha.create_worker_pool(0))
         self.bus.listen('test_event', lambda x: len)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down stuff we started."""
         self.bus._pool.stop()
 
     def test_add_remove_listener(self):
-        """ Test remove_listener method. """
+        """Test remove_listener method."""
         self.bus._pool.add_worker()
         old_count = len(self.bus.listeners)
 
-        listener = lambda x: len
+        def listener(_): pass
 
         self.bus.listen('test', listener)
 
@@ -167,7 +167,7 @@ class TestEventBus(unittest.TestCase):
         self.bus.remove_listener('test', listener)
 
     def test_listen_once_event(self):
-        """ Test listen_once_event method. """
+        """Test listen_once_event method."""
         runs = []
 
         self.bus.listen_once('test_event', lambda x: runs.append(1))
@@ -182,43 +182,49 @@ class TestEventBus(unittest.TestCase):
 
 
 class TestState(unittest.TestCase):
-    """ Test EventBus methods. """
+    """Test State methods."""
 
     def test_init(self):
-        """ Test state.init """
+        """Test state.init."""
         self.assertRaises(
             InvalidEntityFormatError, ha.State,
             'invalid_entity_format', 'test_state')
 
     def test_domain(self):
+        """Test domain."""
         state = ha.State('some_domain.hello', 'world')
         self.assertEqual('some_domain', state.domain)
 
     def test_object_id(self):
+        """Test object ID."""
         state = ha.State('domain.hello', 'world')
         self.assertEqual('hello', state.object_id)
 
     def test_name_if_no_friendly_name_attr(self):
+        """Test if there is no friendly name."""
         state = ha.State('domain.hello_world', 'world')
         self.assertEqual('hello world', state.name)
 
     def test_name_if_friendly_name_attr(self):
+        """Test if there is a friendly name."""
         name = 'Some Unique Name'
         state = ha.State('domain.hello_world', 'world',
                          {ATTR_FRIENDLY_NAME: name})
         self.assertEqual(name, state.name)
 
     def test_dict_conversion(self):
+        """Test conversion of dict."""
         state = ha.State('domain.hello', 'world', {'some': 'attr'})
         self.assertEqual(state, ha.State.from_dict(state.as_dict()))
 
     def test_dict_conversion_with_wrong_data(self):
+        """Test conversion with wrong data."""
         self.assertIsNone(ha.State.from_dict(None))
         self.assertIsNone(ha.State.from_dict({'state': 'yes'}))
         self.assertIsNone(ha.State.from_dict({'entity_id': 'yes'}))
 
     def test_repr(self):
-        """ Test state.repr """
+        """Test state.repr."""
         self.assertEqual("<state happy.happy=on @ 12:00:00 08-12-1984>",
                          str(ha.State(
                              "happy.happy", "on",
@@ -231,10 +237,10 @@ class TestState(unittest.TestCase):
 
 
 class TestStateMachine(unittest.TestCase):
-    """ Test EventBus methods. """
+    """Test State machine methods."""
 
     def setUp(self):    # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.pool = ha.create_worker_pool(0)
         self.bus = ha.EventBus(self.pool)
         self.states = ha.StateMachine(self.bus)
@@ -242,17 +248,17 @@ class TestStateMachine(unittest.TestCase):
         self.states.set("switch.AC", "off")
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down stuff we started."""
         self.pool.stop()
 
     def test_is_state(self):
-        """ Test is_state method. """
+        """Test is_state method."""
         self.assertTrue(self.states.is_state('light.Bowl', 'on'))
         self.assertFalse(self.states.is_state('light.Bowl', 'off'))
         self.assertFalse(self.states.is_state('light.Non_existing', 'on'))
 
     def test_is_state_attr(self):
-        """ Test is_state_attr method. """
+        """Test is_state_attr method."""
         self.states.set("light.Bowl", "on", {"brightness": 100})
         self.assertTrue(
             self.states.is_state_attr('light.Bowl', 'brightness', 100))
@@ -264,7 +270,7 @@ class TestStateMachine(unittest.TestCase):
             self.states.is_state_attr('light.Non_existing', 'brightness', 100))
 
     def test_entity_ids(self):
-        """ Test get_entity_ids method. """
+        """Test get_entity_ids method."""
         ent_ids = self.states.entity_ids()
         self.assertEqual(2, len(ent_ids))
         self.assertTrue('light.bowl' in ent_ids)
@@ -275,19 +281,35 @@ class TestStateMachine(unittest.TestCase):
         self.assertTrue('light.bowl' in ent_ids)
 
     def test_all(self):
+        """Test everything."""
         states = sorted(state.entity_id for state in self.states.all())
         self.assertEqual(['light.bowl', 'switch.ac'], states)
 
     def test_remove(self):
-        """ Test remove method. """
-        self.assertTrue('light.bowl' in self.states.entity_ids())
+        """Test remove method."""
+        self.pool.add_worker()
+        events = []
+        self.bus.listen(EVENT_STATE_CHANGED,
+                        lambda event: events.append(event))
+
+        self.assertIn('light.bowl', self.states.entity_ids())
         self.assertTrue(self.states.remove('light.bowl'))
-        self.assertFalse('light.bowl' in self.states.entity_ids())
+        self.pool.block_till_done()
+
+        self.assertNotIn('light.bowl', self.states.entity_ids())
+        self.assertEqual(1, len(events))
+        self.assertEqual('light.bowl', events[0].data.get('entity_id'))
+        self.assertIsNotNone(events[0].data.get('old_state'))
+        self.assertEqual('light.bowl', events[0].data['old_state'].entity_id)
+        self.assertIsNone(events[0].data.get('new_state'))
 
         # If it does not exist, we should get False
         self.assertFalse(self.states.remove('light.Bowl'))
+        self.pool.block_till_done()
+        self.assertEqual(1, len(events))
 
     def test_case_insensitivty(self):
+        """Test insensitivty."""
         self.pool.add_worker()
         runs = []
 
@@ -300,6 +322,7 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_last_changed_not_updated_on_same_state(self):
+        """Test to not update the existing, same state."""
         state = self.states.get('light.Bowl')
 
         future = dt_util.utcnow() + timedelta(hours=10)
@@ -312,9 +335,10 @@ class TestStateMachine(unittest.TestCase):
 
 
 class TestServiceCall(unittest.TestCase):
-    """ Test ServiceCall class. """
+    """Test ServiceCall class."""
+
     def test_repr(self):
-        """ Test repr method. """
+        """Test repr method."""
         self.assertEqual(
             "<ServiceCall homeassistant.start>",
             str(ha.ServiceCall('homeassistant', 'start')))
@@ -325,22 +349,22 @@ class TestServiceCall(unittest.TestCase):
 
 
 class TestServiceRegistry(unittest.TestCase):
-    """ Test EventBus methods. """
+    """Test ServicerRegistry methods."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.pool = ha.create_worker_pool(0)
         self.bus = ha.EventBus(self.pool)
         self.services = ha.ServiceRegistry(self.bus, self.pool)
         self.services.register("test_domain", "test_service", lambda x: None)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down stuff we started."""
         if self.pool.worker_count:
             self.pool.stop()
 
     def test_has_service(self):
-        """ Test has_service method. """
+        """Test has_service method."""
         self.assertTrue(
             self.services.has_service("test_domain", "test_service"))
         self.assertFalse(
@@ -349,12 +373,14 @@ class TestServiceRegistry(unittest.TestCase):
             self.services.has_service("non_existing", "test_service"))
 
     def test_services(self):
+        """Test services."""
         expected = {
             'test_domain': {'test_service': {'description': '', 'fields': {}}}
         }
         self.assertEqual(expected, self.services.services)
 
     def test_call_with_blocking_done_in_time(self):
+        """Test call with blocking."""
         self.pool.add_worker()
         self.pool.add_worker()
         calls = []
@@ -366,6 +392,7 @@ class TestServiceRegistry(unittest.TestCase):
         self.assertEqual(1, len(calls))
 
     def test_call_with_blocking_not_done_in_time(self):
+        """Test with blocking."""
         calls = []
         self.services.register("test_domain", "register_calls",
                                lambda x: calls.append(1))
@@ -378,6 +405,7 @@ class TestServiceRegistry(unittest.TestCase):
         ha.SERVICE_CALL_LIMIT = orig_limit
 
     def test_call_non_existing_with_blocking(self):
+        """Test non-existing with blocking."""
         self.pool.add_worker()
         self.pool.add_worker()
         orig_limit = ha.SERVICE_CALL_LIMIT
@@ -388,26 +416,28 @@ class TestServiceRegistry(unittest.TestCase):
 
 
 class TestConfig(unittest.TestCase):
+    """Test configuration methods."""
+
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.config = ha.Config()
 
     def test_config_dir_set_correct(self):
-        """ Test config dir set correct. """
+        """Test config dir set correct."""
         data_dir = os.getenv('APPDATA') if os.name == "nt" \
             else os.path.expanduser('~')
         self.assertEqual(os.path.join(data_dir, ".homeassistant"),
                          self.config.config_dir)
 
     def test_path_with_file(self):
-        """ Test get_config_path method. """
+        """Test get_config_path method."""
         data_dir = os.getenv('APPDATA') if os.name == "nt" \
             else os.path.expanduser('~')
         self.assertEqual(os.path.join(data_dir, ".homeassistant", "test.conf"),
                          self.config.path("test.conf"))
 
     def test_path_with_dir_and_file(self):
-        """ Test get_config_path method. """
+        """Test get_config_path method."""
         data_dir = os.getenv('APPDATA') if os.name == "nt" \
             else os.path.expanduser('~')
         self.assertEqual(
@@ -415,7 +445,7 @@ class TestConfig(unittest.TestCase):
             self.config.path("dir", "test.conf"))
 
     def test_temperature_not_convert_if_no_preference(self):
-        """ No unit conversion to happen if no preference. """
+        """No unit conversion to happen if no preference."""
         self.assertEqual(
             (25, TEMP_CELCIUS),
             self.config.temperature(25, TEMP_CELCIUS))
@@ -424,19 +454,20 @@ class TestConfig(unittest.TestCase):
             self.config.temperature(80, TEMP_FAHRENHEIT))
 
     def test_temperature_not_convert_if_invalid_value(self):
-        """ No unit conversion to happen if no preference. """
+        """No unit conversion to happen if no preference."""
         self.config.temperature_unit = TEMP_FAHRENHEIT
         self.assertEqual(
             ('25a', TEMP_CELCIUS),
             self.config.temperature('25a', TEMP_CELCIUS))
 
     def test_temperature_not_convert_if_invalid_unit(self):
-        """ No unit conversion to happen if no preference. """
+        """No unit conversion to happen if no preference."""
         self.assertEqual(
             (25, 'Invalid unit'),
             self.config.temperature(25, 'Invalid unit'))
 
     def test_temperature_to_convert_to_celcius(self):
+        """Test temperature conversion to celsius."""
         self.config.temperature_unit = TEMP_CELCIUS
 
         self.assertEqual(
@@ -447,6 +478,7 @@ class TestConfig(unittest.TestCase):
             self.config.temperature(80, TEMP_FAHRENHEIT))
 
     def test_temperature_to_convert_to_fahrenheit(self):
+        """Test temperature conversion to fahrenheit."""
         self.config.temperature_unit = TEMP_FAHRENHEIT
 
         self.assertEqual(
@@ -457,6 +489,7 @@ class TestConfig(unittest.TestCase):
             self.config.temperature(80, TEMP_FAHRENHEIT))
 
     def test_as_dict(self):
+        """Test as dict."""
         expected = {
             'latitude': None,
             'longitude': None,
@@ -471,7 +504,10 @@ class TestConfig(unittest.TestCase):
 
 
 class TestWorkerPool(unittest.TestCase):
+    """Test WorkerPool methods."""
+
     def test_exception_during_job(self):
+        """Test exception during a job."""
         pool = ha.create_worker_pool(1)
 
         def malicious_job(_):

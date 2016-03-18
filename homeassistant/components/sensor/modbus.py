@@ -1,6 +1,4 @@
 """
-homeassistant.components.modbus
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Modbus sensors.
 
 For more details about this platform, please refer to the documentation at
@@ -9,17 +7,16 @@ https://home-assistant.io/components/sensor.modbus/
 import logging
 
 import homeassistant.components.modbus as modbus
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    TEMP_CELCIUS, TEMP_FAHRENHEIT,
-    STATE_ON, STATE_OFF)
+    STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Read config and create Modbus devices. """
+    """Setup Modbus devices."""
     sensors = []
     slave = config.get("slave", None)
     if modbus.TYPE == "serial" and not slave:
@@ -54,10 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModbusSensor(Entity):
-    # pylint: disable=too-many-arguments
-    """ Represents a Modbus Sensor. """
+    """Representation of a Modbus Sensor."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, name, slave, register, bit=None, unit=None, coil=False):
+        """Initialize the sensor."""
         self._name = name
         self.slave = int(slave) if slave else 1
         self.register = int(register)
@@ -67,26 +65,24 @@ class ModbusSensor(Entity):
         self._coil = coil
 
     def __str__(self):
+        """Return the name and the state of the sensor."""
         return "%s: %s" % (self.name, self.state)
 
     @property
     def should_poll(self):
-        """
-        We should poll, because slaves are not allowed to
-        initiate communication on Modbus networks.
-        """
+        """Polling needed."""
         return True
 
     @property
     def unique_id(self):
-        """ Returns a unique id. """
+        """Return a unique id."""
         return "MODBUS-SENSOR-{}-{}-{}".format(self.slave,
                                                self.register,
                                                self.bit)
 
     @property
     def state(self):
-        """ Returns the state of the sensor. """
+        """Return the state of the sensor."""
         if self.bit:
             return STATE_ON if self._value else STATE_OFF
         else:
@@ -94,12 +90,12 @@ class ModbusSensor(Entity):
 
     @property
     def name(self):
-        """ Get the name of the sensor. """
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement of this entity, if any. """
+        """Return the unit of measurement of this entity, if any."""
         if self._unit == "C":
             return TEMP_CELCIUS
         elif self._unit == "F":
@@ -108,7 +104,7 @@ class ModbusSensor(Entity):
             return self._unit
 
     def update(self):
-        """ Update the state of the sensor. """
+        """Update the state of the sensor."""
         if self._coil:
             result = modbus.NETWORK.read_coils(self.register, 1)
             self._value = result.bits[0]

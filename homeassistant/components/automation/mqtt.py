@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.mqtt
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers MQTT listening automation rules.
+Offer MQTT listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#mqtt-trigger
@@ -17,7 +15,7 @@ CONF_PAYLOAD = 'payload'
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     topic = config.get(CONF_TOPIC)
     payload = config.get(CONF_PAYLOAD)
 
@@ -27,7 +25,7 @@ def trigger(hass, config, action):
         return False
 
     def mqtt_automation_listener(msg_topic, msg_payload, qos):
-        """ Listens for MQTT messages. """
+        """Listen for MQTT messages."""
         if payload is None or payload == msg_payload:
             action()
 

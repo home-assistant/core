@@ -1,15 +1,13 @@
 """
-homeassistant.components.switch.transmission
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Enable or disable Transmission BitTorrent client Turtle Mode.
+Support for setting the Transmission BitTorrent client Turtle Mode.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
-from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 STATE_ON, STATE_OFF)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGING = logging.getLogger(__name__)
@@ -18,7 +16,7 @@ REQUIREMENTS = ['transmissionrpc==0.11']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Sets up the transmission sensor. """
+    """Setup the transmission sensor."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
 
@@ -49,49 +47,48 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class TransmissionSwitch(ToggleEntity):
-    """ A Transmission sensor. """
+    """Representation of a Transmission sensor."""
 
     def __init__(self, transmission_client, name):
+        """Initialize the Transmission switch."""
         self._name = name
         self.transmission_client = transmission_client
         self._state = STATE_OFF
 
     @property
     def name(self):
+        """Return the name of the switch."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         return self._state
 
     @property
     def should_poll(self):
-        """ Poll for status regularly. """
+        """Poll for status regularly."""
         return True
 
     @property
     def is_on(self):
-        """ True if device is on. """
+        """Return true if device is on."""
         return self._state == STATE_ON
 
     def turn_on(self, **kwargs):
-        """ Turn the device on. """
-
+        """Turn the device on."""
         _LOGGING.info("Turning on Turtle Mode")
         self.transmission_client.set_session(
             alt_speed_enabled=True)
 
     def turn_off(self, **kwargs):
-        """ Turn the device off. """
-
+        """Turn the device off."""
         _LOGGING.info("Turning off Turtle Mode ")
         self.transmission_client.set_session(
             alt_speed_enabled=False)
 
     def update(self):
-        """ Gets the latest data from Transmission and updates the state. """
-
+        """Get the latest data from Transmission and updates the state."""
         active = self.transmission_client.get_session(
         ).alt_speed_enabled
         self._state = STATE_ON if active else STATE_OFF

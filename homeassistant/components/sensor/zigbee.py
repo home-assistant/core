@@ -1,27 +1,24 @@
 """
-homeassistant.components.sensor.zigbee
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Contains functionality to use a ZigBee device as a sensor.
+Support for functionality to use a ZigBee device as a sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zigbee/
-
 """
 import logging
 from binascii import hexlify
 
-from homeassistant.core import JobPriority
-from homeassistant.const import TEMP_CELCIUS
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import zigbee
-
+from homeassistant.const import TEMP_CELCIUS
+from homeassistant.core import JobPriority
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ["zigbee"]
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """
+    """Setup the Z-Wave platform.
+
     Uses the 'type' config value to work out which type of ZigBee sensor we're
     dealing with and instantiates the relevant classes to handle it.
     """
@@ -39,8 +36,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ZigBeeTemperatureSensor(Entity):
-    """ Allows usage of an XBee Pro as a temperature sensor. """
+    """Representation of XBee Pro temperature sensor."""
+
     def __init__(self, hass, config):
+        """Initialize the sensor."""
         self._config = config
         self._temp = None
         # Get initial state
@@ -49,17 +48,21 @@ class ZigBeeTemperatureSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._config.name
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._temp
 
     @property
     def unit_of_measurement(self):
+        """Unit the value is expressed in."""
         return TEMP_CELCIUS
 
     def update(self, *args):
+        """Get the latest data."""
         try:
             self._temp = zigbee.DEVICE.get_temperature(self._config.address)
         except zigbee.ZIGBEE_TX_FAILURE:

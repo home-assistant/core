@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.tellstick
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Shows sensor values from Tellstick sensors.
+Support for Tellstick sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tellstick/
@@ -9,9 +7,9 @@ https://home-assistant.io/components/sensor.tellstick/
 import logging
 from collections import namedtuple
 
+import homeassistant.util as util
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
 
@@ -20,7 +18,7 @@ REQUIREMENTS = ['tellcore-py==1.1.2']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up Tellstick sensors. """
+    """Setup Tellstick sensors."""
     import tellcore.telldus as telldus
     import tellcore.constants as tellcore_constants
 
@@ -79,9 +77,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TellstickSensor(Entity):
-    """ Represents a Tellstick sensor. """
+    """Representation of a Tellstick sensor."""
 
     def __init__(self, name, sensor, datatype, sensor_info):
+        """Initialize the sensor."""
         self.datatype = datatype
         self.sensor = sensor
         self._unit_of_measurement = sensor_info.unit or None
@@ -90,14 +89,15 @@ class TellstickSensor(Entity):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the sensor."""
         return self.sensor.value(self.datatype).value
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

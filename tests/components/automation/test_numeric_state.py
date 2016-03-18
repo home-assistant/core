@@ -1,32 +1,31 @@
-"""
-tests.components.automation.test_numeric_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests numeric state automation.
-"""
+"""The tests for numeric state automation."""
 import unittest
 
-import homeassistant.core as ha
 import homeassistant.components.automation as automation
+
+from tests.common import get_test_home_assistant
 
 
 class TestAutomationNumericState(unittest.TestCase):
-    """ Test the event automation. """
+    """Test the event automation."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = ha.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
         self.calls = []
 
         def record_call(service):
+            """Helper to record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_if_fires_on_entity_change_below(self):
+        """"Test the firing with changed entity."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -45,6 +44,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_over_to_below(self):
+        """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 11)
         self.hass.pool.block_till_done()
 
@@ -67,6 +67,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_entity_change_below_to_below(self):
+        """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 9)
         self.hass.pool.block_till_done()
 
@@ -89,6 +90,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_entity_change_above(self):
+        """"Test the firing with changed entity."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -107,6 +109,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_below_to_above(self):
+        """"Test the firing with changed entity."""
         # set initial state
         self.hass.states.set('test.entity', 9)
         self.hass.pool.block_till_done()
@@ -130,6 +133,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_entity_change_above_to_above(self):
+        """"Test the firing with changed entity."""
         # set initial state
         self.hass.states.set('test.entity', 11)
         self.hass.pool.block_till_done()
@@ -153,6 +157,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_entity_change_below_range(self):
+        """"Test the firing with changed entity."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -172,6 +177,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_below_above_range(self):
+        """"Test the firing with changed entity."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -191,6 +197,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_entity_change_over_to_below_range(self):
+        """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 11)
         self.hass.pool.block_till_done()
 
@@ -214,6 +221,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_entity_change_over_to_below_above_range(self):
+        """"Test the firing with changed entity."""
         self.hass.states.set('test.entity', 11)
         self.hass.pool.block_till_done()
 
@@ -237,6 +245,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_if_entity_not_match(self):
+        """"Test if not fired with non matching entity."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -254,6 +263,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_entity_change_below_with_attribute(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -267,11 +277,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 9, { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 9, {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_entity_change_not_below_with_attribute(self):
+        """"Test attributes."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -285,11 +296,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 11, { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 11, {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_attribute_change_with_attribute_below(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -304,11 +316,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_attribute_change_with_attribute_not_below(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -323,11 +336,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_on_entity_change_with_attribute_below(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -342,11 +356,12 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10, entity state value should not be tested
-        self.hass.states.set('test.entity', '9', { 'test_attribute': 11 })
+        self.hass.states.set('test.entity', '9', {'test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_on_entity_change_with_not_attribute_below(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -365,7 +380,8 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def test_if_fires_on_attribute_change_with_attribute_below_multiple_attributes(self):
+    def test_fires_on_attr_change_with_attribute_below_and_multiple_attr(self):
+        """"Test attributes change."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -380,17 +396,20 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 9, 'not_test_attribute': 11 })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': 9, 'not_test_attribute': 11})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_template_list(self):
+        """"Test template list."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ state.attributes.test_attribute[2] }}',
+                    'value_template':
+                    '{{ state.attributes.test_attribute[2] }}',
                     'below': 10,
                 },
                 'action': {
@@ -399,17 +418,20 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 3 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': [11, 15, 3] })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': [11, 15, 3]})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_template_string(self):
+        """"Test template string."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.entity',
-                    'value_template': '{{ state.attributes.test_attribute | multiply(10) }}',
+                    'value_template':
+                    '{{ state.attributes.test_attribute | multiply(10) }}',
                     'below': 10,
                 },
                 'action': {
@@ -418,11 +440,13 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': '0.9' })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': '0.9'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_not_fires_on_attribute_change_with_attribute_not_below_multiple_attributes(self):
+    def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
+        """"Test if not fired changed attributes."""
         self.assertTrue(automation.setup(self.hass, {
             automation.DOMAIN: {
                 'trigger': {
@@ -437,11 +461,13 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         }))
         # 11 is not below 10
-        self.hass.states.set('test.entity', 'entity', { 'test_attribute': 11, 'not_test_attribute': 9  })
+        self.hass.states.set('test.entity', 'entity',
+                             {'test_attribute': 11, 'not_test_attribute': 9})
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_action(self):
+        """"Test if action."""
         entity_id = 'domain.test_entity'
         test_state = 10
         automation.setup(self.hass, {
