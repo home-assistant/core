@@ -1,7 +1,5 @@
 """
-homeassistant.components.sensor.mold_indicator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Calculates mold growth indication from temperature and humidity
+Calculates mold growth indication from temperature and humidity.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mold_indicator/
@@ -32,8 +30,7 @@ ATTR_CRITICAL_TEMP = "Est. Crit. Temp"
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Setup MoldIndicator sensor. """
-
+    """Setup MoldIndicator sensor."""
     name = config.get('name', DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
     outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
@@ -54,11 +51,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         calib_value)])
 
 
+# pylint: disable=too-many-instance-attributes
 class MoldIndicator(Entity):
-    """ Represents a MoldIndication sensor """
+    """Represents a MoldIndication sensor."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
                  indoor_humidity_sensor, calib_value):
+        """Initialize the sensor."""
         self._state = "-"
         self._hass = hass
         self._name = name
@@ -86,7 +86,9 @@ class MoldIndicator(Entity):
         self._sensor_changed(indoor_humidity_sensor,
                              None, hass.states.get(indoor_humidity_sensor))
 
-    def _update_temp_sensor(self, state):
+    @staticmethod
+    def _update_temp_sensor(state):
+        """Parse temperature sensor value."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = util.convert(state.state, float)
 
@@ -107,7 +109,9 @@ class MoldIndicator(Entity):
 
         return None
 
-    def _update_hum_sensor(self, state):
+    @staticmethod
+    def _update_hum_sensor(state):
+        """Parse humidity sensor value."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         hum = util.convert(state.state, float)
 
@@ -133,22 +137,21 @@ class MoldIndicator(Entity):
         return hum
 
     def _sensor_changed(self, entity_id, old_state, new_state):
-        """ Called when sensor values change """
-
+        """Called when sensor values change."""
         if new_state is None:
             return
 
         if entity_id == self._indoor_temp_sensor:
             # update the indoor temp sensor
-            self._indoor_temp = self._update_temp_sensor(new_state)
+            self._indoor_temp = MoldIndicator._update_temp_sensor(new_state)
 
         elif entity_id == self._outdoor_temp_sensor:
             # update outdoor temp sensor
-            self._outdoor_temp = self._update_temp_sensor(new_state)
+            self._outdoor_temp = MoldIndicator._update_temp_sensor(new_state)
 
         elif entity_id == self._indoor_humidity_sensor:
             # update humidity
-            self._indoor_hum = self._update_hum_sensor(new_state)
+            self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
 
         # check all sensors
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
@@ -160,8 +163,7 @@ class MoldIndicator(Entity):
         self.update_ha_state()
 
     def _calc_dewpoint(self):
-        """ Calculates the dewpoint for the indoor air """
-
+        """Calculate the dewpoint for the indoor air."""
         # use magnus approximation to calculate the dew point
         alpha = MAGNUS_K2 * self._indoor_temp / (MAGNUS_K3 + self._indoor_temp)
         beta = MAGNUS_K2 * MAGNUS_K3 / (MAGNUS_K3 + self._indoor_temp)
@@ -172,8 +174,7 @@ class MoldIndicator(Entity):
         _LOGGER.debug("Dewpoint: %f " + TEMP_CELCIUS, self._dewpoint)
 
     def _calc_moldindicator(self):
-        """ Calculates the humidity at the (cold) calibration point """
-
+        """Calculate the humidity at the (cold) calibration point."""
         if None in (self._dewpoint, self._calib_value) or \
            self._calib_value == 0:
 
@@ -213,26 +214,27 @@ class MoldIndicator(Entity):
 
     @property
     def should_poll(self):
+        """Polling needed."""
         return False
 
     @property
     def name(self):
-        """ Returns the name. """
+        """Return the name."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """Return the unit of measurement."""
         return "%"
 
     @property
     def state(self):
-        """ Returns the state of the entity. """
+        """Return the state of the entity."""
         return self._state
 
     @property
     def state_attributes(self):
-        """ Returns the state attributes. """
+        """Return the state attributes."""
         if self._dewpoint and self._crit_temp:
 
             if self._is_metric:
