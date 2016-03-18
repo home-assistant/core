@@ -96,7 +96,7 @@ class SwitchTemplate(SwitchDevice):
 
     def _event_listener(self, event):
         """Called when the target device changes state."""
-        if not hasattr(self, 'hass'):
+        if not hasattr(self, 'hass') or self.hass is None:
             return
         self.update_ha_state(True)
 
