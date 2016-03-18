@@ -283,6 +283,9 @@ uvcclient==0.8
 # homeassistant.components.verisure
 vsure==0.6.1
 
+# homeassistant.components.switch.wake_on_lan
+wakeonlan==0.2.2
+
 # homeassistant.components.zigbee
 xbee-helper==0.0.6
 
