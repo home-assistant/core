@@ -213,7 +213,7 @@ python-twitch==1.2.0
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.6.3
+python-wink==0.6.4
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
