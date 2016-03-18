@@ -91,7 +91,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     def _event_listener(self, event):
-        if not hasattr(self, 'hass'):
+        if not hasattr(self, 'hass') or self.hass is None:
             return
         self.update_ha_state(True)
 
