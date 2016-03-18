@@ -119,7 +119,7 @@ limitlessled==1.0.0
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.5.4
+netdisco==0.5.5
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
