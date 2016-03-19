@@ -71,6 +71,9 @@ def setup(hass, config):
             message = call.data.get(ATTR_MESSAGE)
 
             if message is None:
+                _LOGGER.error(
+                    'Received call to %s without attribute %s',
+                    call.service, ATTR_MESSAGE)
                 return
 
             title = template.render(

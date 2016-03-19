@@ -45,7 +45,7 @@ class FileNotificationService(BaseNotificationService):
                 title = '{} notifications (Log started: {})\n{}\n'.format(
                     kwargs.get(ATTR_TITLE),
                     dt_util.strip_microseconds(dt_util.utcnow()),
-                    '-'*80)
+                    '-' * 80)
                 file.write(title)
 
             if self.add_timestamp == 1:
