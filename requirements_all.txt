@@ -225,7 +225,7 @@ pyuserinput==0.1.9
 pyvera==0.2.8
 
 # homeassistant.components.wemo
-pywemo==0.3.17
+pywemo==0.3.19
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
