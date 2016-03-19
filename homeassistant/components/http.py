@@ -32,8 +32,6 @@ from homeassistant.const import (
 
 DOMAIN = "http"
 
-REQUIREMENTS = ["passlib==1.6.5"]
-
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
@@ -178,8 +176,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def _handle_request(self, method):  # pylint: disable=too-many-branches
         """Perform some common checks and call appropriate method."""
-        from passlib import hash
-
         url = urlparse(self.path)
 
         # Read query input. parse_qs gives a list for each value, we want last
@@ -202,20 +198,12 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        try:
-            self.authenticated = (hash.sha256_crypt.verify(
-                                      self.headers.get(HTTP_HEADER_HA_AUTH),
-                                      self.server.api_password) or
-                                  hash.sha256_crypt.verify(
-                                      data.get(DATA_API_PASSWORD),
-                                      self.server.api_password) or
-                                  self.verify_session())
-        except (TypeError, ValueError):
-            self.authenticated = (self.server.api_password is None or
-                                  self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                                  self.server.api_password or
-                                  data.get(DATA_API_PASSWORD) ==
-                                  self.server.api_password)
+        self.authenticated = (self.server.api_password is None or
+                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
+                              self.server.api_password or
+                              data.get(DATA_API_PASSWORD) ==
+                              self.server.api_password or
+                              self.verify_session())
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
