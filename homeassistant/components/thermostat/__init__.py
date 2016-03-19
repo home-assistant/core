@@ -123,6 +123,9 @@ def setup(hass, config):
             service.data.get(ATTR_TEMPERATURE), float)
 
         if temperature is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE)
             return
 
         for thermostat in target_thermostats:

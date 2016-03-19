@@ -239,7 +239,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         if self._cur_track > 0:
             support |= SUPPORT_PREVIOUS_TRACK
 
-        if self._cur_track < len(self.tracks)-1:
+        if self._cur_track < len(self.tracks) - 1:
             support |= SUPPORT_NEXT_TRACK
 
         return support
@@ -252,7 +252,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
 
     def media_next_track(self):
         """Send next track command."""
-        if self._cur_track < len(self.tracks)-1:
+        if self._cur_track < len(self.tracks) - 1:
             self._cur_track += 1
             self.update_ha_state()
 
