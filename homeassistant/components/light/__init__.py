@@ -227,7 +227,7 @@ def setup(hass, config):
                 pass
 
         if ATTR_COLOR_TEMP in dat:
-            # color_temp should be an int of mirads value
+            # color_temp should be an int of mireds value
             colortemp = dat.get(ATTR_COLOR_TEMP)
 
             # Without this check, a ctcolor with value '99' would work
@@ -298,7 +298,7 @@ class Light(ToggleEntity):
 
     @property
     def color_temp(self):
-        """Return the CT color value in mirads."""
+        """Return the CT color value in mireds."""
         return None
 
     @property
