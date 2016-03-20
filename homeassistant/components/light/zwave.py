@@ -101,7 +101,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, Light):
 
         # Zwave multilevel switches use a range of [0, 99] to control
         # brightness.
-        brightness = (self._brightness / 255) * 99
+        brightness = int((self._brightness / 255) * 99)
 
         if self._value.node.set_dimmer(self._value.value_id, brightness):
             self._state = STATE_ON
