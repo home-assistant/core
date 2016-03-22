@@ -33,8 +33,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("Missing required variable: command_topic")
         return False
 
-    payload_on = convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
-    payload_off = convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF),
+    payload_on = convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON)
+    payload_off = convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF)
     add_devices_callback([MqttSwitch(
         hass,
         convert(config.get('name'), str, DEFAULT_NAME),
