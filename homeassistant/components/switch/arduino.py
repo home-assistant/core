@@ -28,24 +28,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     pins = config.get('pins')
     for pinnum, pin in pins.items():
         if pin.get('name'):
-            switches.append(ArduinoSwitch(pin.get('name'),
-                                          pinnum,
-                                          pin.get('type')))
+            switches.append(ArduinoSwitch(pinnum, pin))
     add_devices(switches)
 
 
 class ArduinoSwitch(SwitchDevice):
     """Representation of an Arduino switch."""
 
-    def __init__(self, name, pin, pin_type):
+    def __init__(self, pin, options):
         """Initialize the Pin."""
         self._pin = pin
-        self._name = name or DEVICE_DEFAULT_NAME
-        self.pin_type = pin_type
+        self._name = options.get('name') or DEVICE_DEFAULT_NAME
+        self.pin_type = options.get('type')
         self.direction = 'out'
-        self._state = False
+
+        self._state = options.get('initial', False)
+
+        if options.get('negate', False):
+            self.turn_on_handler = arduino.BOARD.set_digital_out_low
+            self.turn_off_handler = arduino.BOARD.set_digital_out_high
+        else:
+            self.turn_on_handler = arduino.BOARD.set_digital_out_high
+            self.turn_off_handler = arduino.BOARD.set_digital_out_low
 
         arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
 
     @property
     def name(self):
@@ -60,9 +67,9 @@ class ArduinoSwitch(SwitchDevice):
     def turn_on(self):
         """Turn the pin to high/on."""
         self._state = True
-        arduino.BOARD.set_digital_out_high(self._pin)
+        self.turn_on_handler(self._pin)
 
     def turn_off(self):
         """Turn the pin to low/off."""
         self._state = False
-        arduino.BOARD.set_digital_out_low(self._pin)
+        self.turn_off_handler(self._pin)
