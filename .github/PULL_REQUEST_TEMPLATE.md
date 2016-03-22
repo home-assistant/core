@@ -18,6 +18,7 @@ If code communicates with devices:
   - [ ] New files were added to `.coveragerc`.
 
 If the code does not interact with devices:
+  - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
   - [ ] Tests have been added to verify that the new code works.
 
 [fork]: http://stackoverflow.com/a/7244456
