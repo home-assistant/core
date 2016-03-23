@@ -12,6 +12,9 @@ PyISY==1.0.5
 # homeassistant.components.arduino
 PyMata==2.07a
 
+# homeassistant.components.sensor.rpi_gpio
+# RPi.GPIO==0.5.11
+
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
@@ -102,6 +105,7 @@ https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753
 # homeassistant.components.influxdb
 influxdb==2.12.0
 
+# homeassistant.components.insteon
 # homeassistant.components.insteon_hub
 insteon_hub==0.4.5
 
@@ -114,15 +118,12 @@ liffylights==0.9.4
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
-# homeassistant.components.notify.message_bird
-messagebird==1.1.1
-
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.5.5
+netdisco==0.5.4
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -170,7 +171,7 @@ pydispatcher==2.0.5
 pyfttt==0.3
 
 # homeassistant.components.device_tracker.icloud
-pyicloud==0.7.2
+pyicloud==0.8.1
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.2
@@ -216,7 +217,7 @@ python-twitch==1.2.0
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.6.4
+python-wink==0.6.3
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
@@ -225,7 +226,7 @@ pyuserinput==0.1.9
 pyvera==0.2.8
 
 # homeassistant.components.wemo
-pywemo==0.3.19
+pywemo==0.3.16
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
@@ -281,10 +282,7 @@ urllib3
 uvcclient==0.8
 
 # homeassistant.components.verisure
-vsure==0.7.1
-
-# homeassistant.components.switch.wake_on_lan
-wakeonlan==0.2.2
+vsure==0.6.1
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.6
