@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp==4.2.5']
+REQUIREMENTS = ['pysnmp==4.3.2']
 
 CONF_COMMUNITY = "community"
 CONF_BASEOID = "baseoid"
