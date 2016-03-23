@@ -195,7 +195,7 @@ python-mpd2==0.5.4
 python-nest==2.6.0
 
 # homeassistant.components.device_tracker.nmap_tracker
-python-nmap==0.4.3
+python-nmap==0.6.0
 
 # homeassistant.components.notify.pushover
 python-pushover==0.2
