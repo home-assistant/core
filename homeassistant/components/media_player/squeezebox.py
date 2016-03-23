@@ -42,9 +42,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     # Only add a media server once
-    if (host, port) in KNOWN_DEVICES:
+    if host in KNOWN_DEVICES:
         return False
-    KNOWN_DEVICES.append((host, port))
+    KNOWN_DEVICES.append(host)
 
     lms = LogitechMediaServer(
         host, port,
