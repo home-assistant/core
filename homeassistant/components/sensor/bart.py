@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['beautifulsoup4==4.4.1', 'lxml==3.6.0']
+REQUIREMENTS = ['lxml==3.6.0']
 
 ICON = 'mdi:train'
 
