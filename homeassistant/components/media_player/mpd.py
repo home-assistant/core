@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['python-mpd2==0.5.4']
+REQUIREMENTS = ['python-mpd2==0.5.5']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
