@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-forecastio==1.3.3']
+REQUIREMENTS = ['python-forecastio==1.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 # Sensor types are defined like so:
