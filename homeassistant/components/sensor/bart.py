@@ -1,30 +1,26 @@
 """
 Support for the BART (Bay Area Rapid Transit) API.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bart/
 """
 import logging
 from datetime import timedelta
 
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
-from lxml import etree
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['lxml==3.6.0']
 
 ICON = 'mdi:train'
 
 # Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 
 def parse_api_response(raw_xml):
     """Parse the BART API response."""
+    import xml.etree.ElementTree as etree
     if isinstance(raw_xml, bytes):
         parsed_xml = etree.fromstring(
             raw_xml, parser=etree.XMLParser(
@@ -33,11 +29,14 @@ def parse_api_response(raw_xml):
         parsed_xml = etree.parse(raw_xml)
     return parsed_xml
 
+
 def get_bart_xml(url):
     """Helper function to query the BART API."""
+    from urllib.request import urlopen
     raw_response = urlopen(url)
     xml = parse_api_response(raw_response)
     return xml
+
 
 def parse_bart_etd(etd, origin):
     """Parse time estimate into usable format."""
@@ -55,6 +54,7 @@ def parse_bart_etd(etd, origin):
         appending_estimate["provided_station"] = origin
         estimates.append(appending_estimate)
     return estimates
+
 
 # pylint: disable=too-few-public-methods
 class BARTAPIClient(object):
@@ -95,7 +95,6 @@ class BARTAPIClient(object):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the BART public transport sensor."""
-
     if None in (config.get('origin'), config.get('lines')):
         _LOGGER.error("Origin or lines not set in Home Assistant config")
         return False
@@ -125,6 +124,7 @@ NUMBER_NAMES = {
     9: 'Ninth',
     10: 'Tenth',
 }
+
 
 # pylint: disable=too-few-public-methods
 class BARTDepartureSensor(Entity):
@@ -176,6 +176,7 @@ class BARTDepartureSensor(Entity):
         except TypeError:
             pass
 
+
 # pylint: disable=too-few-public-methods
 class BARTAdvisorySensor(Entity):
     """Implementation of an BART API advisories sensor."""
@@ -219,6 +220,7 @@ class BARTAdvisorySensor(Entity):
         except TypeError:
             pass
 
+
 # pylint: disable=too-few-public-methods
 class DeparturesData(object):
     """The Class for handling the departures data retrieval."""
@@ -235,6 +237,7 @@ class DeparturesData(object):
         """Get the latest departures from the BART API."""
         bart = BARTAPIClient()
         self.departures = bart.etd(self.origin, self.lines)
+
 
 # pylint: disable=too-few-public-methods
 class AdvisoriesData(object):
