@@ -54,7 +54,7 @@ class TestTemplateSensor:
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.pool.block_till_done()
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'error'
+        assert state.state == 'unknown'
 
     def test_template_attribute_missing(self):
         """Test missing attribute template."""
@@ -71,7 +71,7 @@ class TestTemplateSensor:
         })
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'error'
+        assert state.state == 'unknown'
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
