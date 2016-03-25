@@ -2,7 +2,8 @@
 #
 [Unit]
 Description=Home Assistant for %i
-After=network.target
+After=network-online.target
+Requires=network-online.target
 
 [Service]
 Type=simple
