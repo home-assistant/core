@@ -125,6 +125,7 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/arest.py
+    homeassistant/components/sensor/bart.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/deutsche_bahn.py
