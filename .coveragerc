@@ -149,6 +149,7 @@ omit =
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
+    homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
