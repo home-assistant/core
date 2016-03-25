@@ -33,6 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(devices)
 
 
+# pylint: disable=too-many-instance-attributes
 class CommandSwitch(SwitchDevice):
     """Representation a switch that can be toggled using shell commands."""
 
@@ -91,6 +92,11 @@ class CommandSwitch(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def assumed_state(self):
+        """Return true if we do optimistic updates."""
+        return self._command_state is False
 
     def _query_state(self):
         """Query for state."""
