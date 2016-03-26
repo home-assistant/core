@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
@@ -76,6 +76,11 @@ class WinkBinarySensorDevice(BinarySensorDevice, Entity):
     def name(self):
         """Return the name of the sensor if any."""
         return self.wink.name()
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     def update(self):
         """Update state of the sensor."""

@@ -23,6 +23,15 @@ class TestHoneywell(unittest.TestCase):
             CONF_PASSWORD: 'pass',
             'region': 'us',
         }
+        bad_pass_config = {
+            CONF_USERNAME: 'user',
+            'region': 'us',
+        }
+        bad_region_config = {
+            CONF_USERNAME: 'user',
+            CONF_PASSWORD: 'pass',
+            'region': 'un',
+        }
         hass = mock.MagicMock()
         add_devices = mock.MagicMock()
 
@@ -37,6 +46,10 @@ class TestHoneywell(unittest.TestCase):
         locations[0].devices_by_id.values.return_value = devices_1
         locations[1].devices_by_id.values.return_value = devices_2
 
+        result = honeywell.setup_platform(hass, bad_pass_config, add_devices)
+        self.assertFalse(result)
+        result = honeywell.setup_platform(hass, bad_region_config, add_devices)
+        self.assertFalse(result)
         result = honeywell.setup_platform(hass, config, add_devices)
         self.assertTrue(result)
         mock_sc.assert_called_once_with('user', 'pass')

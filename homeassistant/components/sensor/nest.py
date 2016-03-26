@@ -32,10 +32,7 @@ JSON_VARIABLE_NAMES = {'weather_humidity': 'humidity',
 SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
                 'kph': 'kph', 'temperature': '°C'}
 
-SENSOR_TEMP_TYPES = ['temperature',
-                     'target',
-                     'away_temperature[0]',
-                     'away_temperature[1]']
+SENSOR_TEMP_TYPES = ['temperature', 'target']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

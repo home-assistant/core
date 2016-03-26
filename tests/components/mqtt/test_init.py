@@ -44,10 +44,6 @@ class TestMQTT(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertTrue(mqtt.MQTT_CLIENT.stop.called)
 
-    def test_setup_fails_if_no_broker_config(self):
-        """Test for setup failure if broker configuration is missing."""
-        self.assertFalse(mqtt.setup(self.hass, {mqtt.DOMAIN: {}}))
-
     def test_setup_fails_if_no_connect_broker(self):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('homeassistant.components.mqtt.MQTT',

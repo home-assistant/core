@@ -22,19 +22,32 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
+KNOWN_DEVICES = []
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
-    if not config.get(CONF_HOST):
+    if discovery_info is not None:
+        host = discovery_info[0]
+        port = 9090
+    else:
+        host = config.get(CONF_HOST)
+        port = int(config.get('port', 9090))
+
+    if not host:
         _LOGGER.error(
             "Missing required configuration items in %s: %s",
             DOMAIN,
             CONF_HOST)
         return False
 
+    # Only add a media server once
+    if host in KNOWN_DEVICES:
+        return False
+    KNOWN_DEVICES.append(host)
+
     lms = LogitechMediaServer(
-        config.get(CONF_HOST),
-        config.get('port', '9090'),
+        host, port,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD))
 

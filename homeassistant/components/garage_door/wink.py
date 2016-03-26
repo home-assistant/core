@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.garage_door import GarageDoorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -56,6 +56,11 @@ class WinkGarageDoorDevice(GarageDoorDevice):
     def is_closed(self):
         """Return true if door is closed."""
         return self.wink.state() == 0
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     def close_door(self):
         """Close the door."""

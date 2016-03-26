@@ -331,7 +331,9 @@ class ThreadPool(object):
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
 
-            worker = threading.Thread(target=self._worker)
+            worker = threading.Thread(
+                target=self._worker,
+                name='ThreadPool Worker {}'.format(self.worker_count))
             worker.daemon = True
             worker.start()
 
