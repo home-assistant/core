@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.template/
 """
 import logging
 
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
 from homeassistant.core import EVENT_STATE_CHANGED
@@ -15,11 +15,8 @@ from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers import template
 from homeassistant.util import slugify
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
 _LOGGER = logging.getLogger(__name__)
 CONF_SENSORS = 'sensors'
-STATE_ERROR = 'error'
 
 
 # pylint: disable=unused-argument
@@ -70,21 +67,21 @@ class SensorTemplate(Entity):
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
                  state_template):
         """Initialize the sensor."""
+        self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
                                             hass=hass)
-
-        self.hass = hass
         self._name = friendly_name
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
-        self.update()
-        self.hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        self._state = None
 
-    def _event_listener(self, event):
-        """Called when the target device changes state."""
-        if not hasattr(self, 'hass'):
-            return
-        self.update_ha_state(True)
+        self.update()
+
+        def template_sensor_event_listener(event):
+            """Called when the target device changes state."""
+            self.update_ha_state(True)
+
+        hass.bus.listen(EVENT_STATE_CHANGED, template_sensor_event_listener)
 
     @property
     def name(self):
@@ -111,10 +108,10 @@ class SensorTemplate(Entity):
         try:
             self._state = template.render(self.hass, self._template)
         except TemplateError as ex:
-            self._state = STATE_ERROR
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
                 _LOGGER.warning(ex)
                 return
+            self._state = None
             _LOGGER.error(ex)

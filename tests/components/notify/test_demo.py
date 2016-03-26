@@ -30,6 +30,12 @@ class TestNotifyDemo(unittest.TestCase):
         """"Stop down everything that was started."""
         self.hass.stop()
 
+    def test_sending_none_message(self):
+        """Test send with None as message."""
+        notify.send_message(self.hass, None)
+        self.hass.pool.block_till_done()
+        self.assertTrue(len(self.events) == 0)
+
     def test_sending_templated_message(self):
         """Send a templated message."""
         self.hass.states.set('sensor.temperature', 10)

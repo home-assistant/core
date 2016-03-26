@@ -26,11 +26,13 @@ omit =
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
+    homeassistant/components/tellstick.py
     homeassistant/components/*/tellstick.py
 
     homeassistant/components/tellduslive.py
     homeassistant/components/*/tellduslive.py
 
+    homeassistant/components/vera.py
     homeassistant/components/*/vera.py
 
     homeassistant/components/ecobee.py
@@ -56,9 +58,6 @@ omit =
 
     homeassistant/components/nest.py
     homeassistant/components/*/nest.py
-
-    homeassistant/components/rfxtrx.py
-    homeassistant/components/*/rfxtrx.py
 
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
@@ -108,9 +107,12 @@ omit =
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/yamaha.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/googlevoice.py
+    homeassistant/components/notify/gntp.py
     homeassistant/components/notify/instapush.py
+    homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
@@ -149,6 +151,7 @@ omit =
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
+    homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
@@ -156,8 +159,10 @@ omit =
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/orvibo.py
+    homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/transmission.py
+    homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/proliphix.py

@@ -89,4 +89,9 @@ class NetgearDeviceScanner(object):
         with self.lock:
             _LOGGER.info("Scanning")
 
-            self.last_results = self._api.get_attached_devices() or []
+            results = self._api.get_attached_devices()
+
+            if results is None:
+                _LOGGER.warning('Error scanning devices')
+
+            self.last_results = results or []

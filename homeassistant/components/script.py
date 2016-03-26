@@ -19,7 +19,8 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import ToggleEntity, split_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers.service import (call_from_config,
+                                           validate_service_call)
 from homeassistant.util import slugify
 
 DOMAIN = "script"
@@ -30,9 +31,7 @@ STATE_NOT_RUNNING = 'Not Running'
 
 CONF_ALIAS = "alias"
 CONF_SERVICE = "service"
-CONF_SERVICE_OLD = "execute_service"
 CONF_SERVICE_DATA = "data"
-CONF_SERVICE_DATA_OLD = "service_data"
 CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
@@ -174,7 +173,7 @@ class Script(ToggleEntity):
             for cur, action in islice(enumerate(self.sequence), self._cur,
                                       None):
 
-                if CONF_SERVICE in action or CONF_SERVICE_OLD in action:
+                if validate_service_call(action) is None:
                     self._call_service(action)
 
                 elif CONF_EVENT in action:
@@ -211,14 +210,7 @@ class Script(ToggleEntity):
 
     def _call_service(self, action):
         """Call the service specified in the action."""
-        # Backwards compatibility
-        if CONF_SERVICE not in action and CONF_SERVICE_OLD in action:
-            action[CONF_SERVICE] = action[CONF_SERVICE_OLD]
-
-        if CONF_SERVICE_DATA not in action and CONF_SERVICE_DATA_OLD in action:
-            action[CONF_SERVICE_DATA] = action[CONF_SERVICE_DATA_OLD]
-
-        self._last_action = action.get(CONF_ALIAS, action[CONF_SERVICE])
+        self._last_action = action.get(CONF_ALIAS, 'call service')
         _LOGGER.info("Executing script %s step %s", self._name,
                      self._last_action)
         call_from_config(self.hass, action, True)

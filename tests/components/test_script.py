@@ -92,35 +92,6 @@ class TestScript(unittest.TestCase):
         self.assertIsNone(
             self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
-    def test_calling_service_old(self):
-        """Test the calling of an old service."""
-        calls = []
-
-        def record_call(service):
-            """Add recorded event to set."""
-            calls.append(service)
-
-        self.hass.services.register('test', 'script', record_call)
-
-        self.assertTrue(script.setup(self.hass, {
-            'script': {
-                'test': {
-                    'sequence': [{
-                        'execute_service': 'test.script',
-                        'service_data': {
-                            'hello': 'world'
-                        }
-                    }]
-                }
-            }
-        }))
-
-        script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
-
-        self.assertEqual(1, len(calls))
-        self.assertEqual('world', calls[0].data.get('hello'))
-
     def test_calling_service(self):
         """Test the calling of a service."""
         calls = []
@@ -136,8 +107,48 @@ class TestScript(unittest.TestCase):
                 'test': {
                     'sequence': [{
                         'service': 'test.script',
-                        'service_data': {
+                        'data': {
                             'hello': 'world'
+                        }
+                    }]
+                }
+            }
+        }))
+
+        script.turn_on(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(calls))
+        self.assertEqual('world', calls[0].data.get('hello'))
+
+    def test_calling_service_template(self):
+        """Test the calling of a service."""
+        calls = []
+
+        def record_call(service):
+            """Add recorded event to set."""
+            calls.append(service)
+
+        self.hass.services.register('test', 'script', record_call)
+
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test': {
+                    'sequence': [{
+                        'service_template': """
+                            {% if True %}
+                                test.script
+                            {% else %}
+                                test.not_script
+                            {% endif %}""",
+                        'data_template': {
+                            'hello': """
+                                {% if True %}
+                                    world
+                                {% else %}
+                                    Not world
+                                {% endif %}
+                            """
                         }
                     }]
                 }

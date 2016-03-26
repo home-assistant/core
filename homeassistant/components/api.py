@@ -83,11 +83,13 @@ def setup(hass, config):
     hass.http.register_path(
         'GET', URL_API_COMPONENTS, _handle_get_api_components)
 
+    # /error_log
     hass.http.register_path('GET', URL_API_ERROR_LOG,
                             _handle_get_api_error_log)
 
     hass.http.register_path('POST', URL_API_LOG_OUT, _handle_post_api_log_out)
 
+    # /template
     hass.http.register_path('POST', URL_API_TEMPLATE,
                             _handle_post_api_template)
 
