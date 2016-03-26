@@ -224,7 +224,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @only_if_coordinator
     def media_play(self):
-        """Send paly command."""
+        """Send play command."""
         self._player.play()
 
     @only_if_coordinator
