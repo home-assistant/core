@@ -11,6 +11,7 @@ from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
+from homeassistant.util import convert
 
 DEPENDENCIES = ['mqtt']
 
@@ -46,8 +47,8 @@ def setup_scanner(hass, config, see):
             return
 
         if (not isinstance(data, dict) or data.get('_type') != 'location') or (
-                'acc' in data and max_gps_accuracy is not None and data[
-                    'acc'] > max_gps_accuracy):
+                max_gps_accuracy is not None and
+                convert(data.get('acc'), float, 0.0) > max_gps_accuracy):
             return
 
         dev_id, kwargs = _parse_see_args(topic, data)
