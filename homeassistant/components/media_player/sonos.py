@@ -9,8 +9,9 @@ import logging
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 
@@ -27,7 +28,8 @@ _REQUESTS_LOGGER = logging.getLogger('requests')
 _REQUESTS_LOGGER.setLevel(logging.ERROR)
 
 SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA |\
+    SUPPORT_SEEK
 
 
 # pylint: disable=unused-argument
@@ -249,3 +251,8 @@ class SonosDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self._player.play()
+
+    @only_if_coordinator
+    def play_media(self, media_type, media_id):
+        """Send the play_media command to the media player."""
+        self._player.play_uri(media_id)
