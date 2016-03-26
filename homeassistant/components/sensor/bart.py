@@ -7,6 +7,9 @@ https://home-assistant.io/components/sensor.bart/
 import logging
 from datetime import timedelta
 
+import xml.etree.ElementTree as etree
+import requests
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -18,24 +21,11 @@ ICON = 'mdi:train'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
-def parse_api_response(raw_xml):
-    """Parse the BART API response."""
-    import xml.etree.ElementTree as etree
-    if isinstance(raw_xml, bytes):
-        parsed_xml = etree.fromstring(
-            raw_xml, parser=etree.XMLParser(
-                encoding='utf-8'))
-    else:
-        parsed_xml = etree.parse(raw_xml)
-    return parsed_xml
-
-
 def get_bart_xml(url):
-    """Helper function to query the BART API."""
-    from urllib.request import urlopen
-    raw_response = urlopen(url)
-    xml = parse_api_response(raw_response)
-    return xml
+    """Helper function to query the BART API and parse the response."""
+    raw_response = requests.get(url)
+    return etree.fromstring(raw_response.text,
+                            parser=etree.XMLParser(encoding='utf-8'))
 
 
 def parse_bart_etd(etd, origin):
@@ -60,7 +50,7 @@ def parse_bart_etd(etd, origin):
 class BARTAPIClient(object):
     """The Class for accessing the BART API."""
 
-    def __init__(self, api_key="MW9S-E7SL-26DU-VV8V"):
+    def __init__(self, api_key):
         """Init the BART API client."""
         self.api_key = api_key
 
@@ -99,9 +89,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Origin or lines not set in Home Assistant config")
         return False
 
+    bart_public_api_key = 'MW9S-E7SL-26DU-VV8V'
+
     dev = []
-    departures = DeparturesData(config.get('origin'), config.get('lines'))
-    advisories = AdvisoriesData(config.get('origin'))
+    departures = DeparturesData(config.get('api_key', bart_public_api_key),
+                                config['origin'], config['lines'])
+    advisories = AdvisoriesData(config.get('api_key', bart_public_api_key),
+                                config['origin'])
     etd_iterator = 1
     advisory_iterator = 1
     for etd in departures.departures:
@@ -225,8 +219,9 @@ class BARTAdvisorySensor(Entity):
 class DeparturesData(object):
     """The Class for handling the departures data retrieval."""
 
-    def __init__(self, origin, lines):
+    def __init__(self, api_key, origin, lines):
         """Initialize the data object."""
+        self.api_key = api_key
         self.origin = origin
         self.lines = lines
         self.departures = None
@@ -235,7 +230,7 @@ class DeparturesData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest departures from the BART API."""
-        bart = BARTAPIClient()
+        bart = BARTAPIClient(self.api_key)
         self.departures = bart.etd(self.origin, self.lines)
 
 
@@ -243,8 +238,9 @@ class DeparturesData(object):
 class AdvisoriesData(object):
     """The Class for handling the advisories data retrieval."""
 
-    def __init__(self, origin):
+    def __init__(self, api_key, origin):
         """Initialize the data object."""
+        self.api_key = api_key
         self.origin = origin
         self.advisories = None
         self.update()
@@ -252,5 +248,5 @@ class AdvisoriesData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest advisories from the BART API."""
-        bart = BARTAPIClient()
+        bart = BARTAPIClient(self.api_key)
         self.advisories = bart.bsa(self.origin)
