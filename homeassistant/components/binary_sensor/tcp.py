@@ -9,7 +9,6 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.tcp import Sensor, DOMAIN, CONF_VALUE_ON
 
-DEPENDENCIES = [DOMAIN]
 _LOGGER = logging.getLogger(__name__)
 
 
