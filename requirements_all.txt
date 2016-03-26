@@ -186,7 +186,7 @@ pynetgear==0.3.2
 pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
-pyowm==2.3.0
+pyowm==2.3.1
 
 # homeassistant.components.device_tracker.snmp
 pysnmp==4.2.5
