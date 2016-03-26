@@ -7,8 +7,9 @@ After=network.target
 [Service]
 Type=simple
 User=%i
-WorkingDirectory=%h
-ExecStart=/usr/bin/hass --config %h/.homeassistant/
+# Enable the following line if you get network-related HA errors during boot
+#ExecStartPre=/usr/bin/sleep 60
+ExecStart=/usr/bin/hass
 SendSIGKILL=no
 
 [Install]
