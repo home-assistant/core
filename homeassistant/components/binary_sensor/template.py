@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.template/
 import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice,
-                                                    DOMAIN,
+                                                    ENTITY_ID_FORMAT,
                                                     SENSOR_CLASSES)
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import EVENT_STATE_CHANGED
@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers import template
 from homeassistant.util import slugify
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_SENSORS = 'sensors'
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,34 +75,22 @@ class BinarySensorTemplate(BinarySensorDevice):
     def __init__(self, hass, device, friendly_name, sensor_class,
                  value_template):
         """Initialize the Template binary sensor."""
-        self._hass = hass
-        self._device = device
+        self.hass = hass
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device,
+                                            hass=hass)
         self._name = friendly_name
         self._sensor_class = sensor_class
         self._template = value_template
         self._state = None
 
-        self.entity_id = generate_entity_id(
-            ENTITY_ID_FORMAT, device,
-            hass=hass)
+        self.update()
 
-        _LOGGER.info('Started template sensor %s', device)
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        def template_bsensor_event_listener(event):
+            """Called when the target device changes state."""
+            self.update_ha_state(True)
 
-    def _event_listener(self, event):
-        if not hasattr(self, 'hass'):
-            return
-        self.update_ha_state(True)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def sensor_class(self):
-        """Return the sensor class of the sensor."""
-        return self._sensor_class
+        hass.bus.listen(EVENT_STATE_CHANGED,
+                        template_bsensor_event_listener)
 
     @property
     def name(self):
@@ -115,10 +102,21 @@ class BinarySensorTemplate(BinarySensorDevice):
         """Return true if sensor is on."""
         return self._state
 
+    @property
+    def sensor_class(self):
+        """Return the sensor class of the sensor."""
+        return self._sensor_class
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
     def update(self):
         """Get the latest data and update the state."""
         try:
-            value = template.render(self._hass, self._template)
+            self._state = template.render(self.hass,
+                                          self._template).lower() == 'true'
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
@@ -126,5 +124,4 @@ class BinarySensorTemplate(BinarySensorDevice):
                 _LOGGER.warning(ex)
                 return
             _LOGGER.error(ex)
-            value = 'false'
-        self._state = value.lower() == 'true'
+            self._state = False

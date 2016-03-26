@@ -50,7 +50,7 @@ class KodiDevice(MediaPlayerDevice):
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url),
             auth=auth)
-        self._players = None
+        self._players = list()
         self._properties = None
         self._item = None
         self._app_properties = None
@@ -67,8 +67,9 @@ class KodiDevice(MediaPlayerDevice):
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
-            _LOGGER.warning('Unable to fetch kodi data')
-            _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
+            if self._players is not None:
+                _LOGGER.warning('Unable to fetch kodi data')
+                _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
             return None
 
     @property

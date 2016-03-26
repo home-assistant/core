@@ -10,7 +10,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
                                  STATE_OPEN, TEMP_CELCIUS)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 
@@ -73,6 +73,11 @@ class WinkSensorDevice(Entity):
     def name(self):
         """Return the name of the sensor if any."""
         return self.wink.name()
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     def update(self):
         """Update state of the sensor."""

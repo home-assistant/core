@@ -19,6 +19,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'media_player'
 SCAN_INTERVAL = 10
 
@@ -28,6 +30,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_CAST: 'cast',
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
+    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -229,11 +232,9 @@ def setup(hass, config):
 
     def media_player_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
-        target_players = component.extract_from_service(service)
-
         method = SERVICE_TO_METHOD[service.service]
 
-        for player in target_players:
+        for player in component.extract_from_service(service):
             getattr(player, method)()
 
             if player.should_poll:
@@ -245,14 +246,15 @@ def setup(hass, config):
 
     def volume_set_service(service):
         """Set specified volume on the media player."""
-        target_players = component.extract_from_service(service)
+        volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
 
-        if ATTR_MEDIA_VOLUME_LEVEL not in service.data:
+        if volume is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_VOLUME_LEVEL)
             return
 
-        volume = service.data[ATTR_MEDIA_VOLUME_LEVEL]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.set_volume_level(volume)
 
             if player.should_poll:
@@ -263,14 +265,15 @@ def setup(hass, config):
 
     def volume_mute_service(service):
         """Mute (true) or unmute (false) the media player."""
-        target_players = component.extract_from_service(service)
+        mute = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
 
-        if ATTR_MEDIA_VOLUME_MUTED not in service.data:
+        if mute is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_VOLUME_MUTED)
             return
 
-        mute = service.data[ATTR_MEDIA_VOLUME_MUTED]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.mute_volume(mute)
 
             if player.should_poll:
@@ -281,14 +284,15 @@ def setup(hass, config):
 
     def media_seek_service(service):
         """Seek to a position."""
-        target_players = component.extract_from_service(service)
+        position = service.data.get(ATTR_MEDIA_SEEK_POSITION)
 
-        if ATTR_MEDIA_SEEK_POSITION not in service.data:
+        if position is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_SEEK_POSITION)
             return
 
-        position = service.data[ATTR_MEDIA_SEEK_POSITION]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.media_seek(position)
 
             if player.should_poll:
@@ -302,10 +306,12 @@ def setup(hass, config):
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
         media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
 
-        if media_type is None:
-            return
-
-        if media_id is None:
+        if media_type is None or media_id is None:
+            missing_attr = (ATTR_MEDIA_CONTENT_TYPE if media_type is None
+                            else ATTR_MEDIA_CONTENT_ID)
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, missing_attr)
             return
 
         for player in component.extract_from_service(service):

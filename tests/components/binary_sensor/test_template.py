@@ -2,8 +2,11 @@
 import unittest
 from unittest import mock
 
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
+
+from tests.common import get_test_home_assistant
 
 
 class TestBinarySensorTemplate(unittest.TestCase):
@@ -88,21 +91,19 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_event(self):
         """"Test the event."""
-        hass = mock.MagicMock()
+        hass = get_test_home_assistant()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
                                            'motion', '{{ 1 > 1 }}')
-        with mock.patch.object(vs, 'update_ha_state') as mock_update:
-            vs._event_listener(None)
-            mock_update.assert_called_once_with(True)
+        vs.update_ha_state()
+        hass.pool.block_till_done()
 
-    def test_update(self):
-        """"Test the update."""
-        hass = mock.MagicMock()
-        vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
-                                           'motion', '{{ 2 > 1 }}')
-        self.assertEqual(None, vs._state)
-        vs.update()
-        self.assertTrue(vs._state)
+        with mock.patch.object(vs, 'update') as mock_update:
+            hass.bus.fire(EVENT_STATE_CHANGED)
+            hass.pool.block_till_done()
+            try:
+                assert mock_update.call_count == 1
+            finally:
+                hass.stop()
 
     @mock.patch('homeassistant.helpers.template.render')
     def test_update_template_error(self, mock_render):
