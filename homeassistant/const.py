@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.16.0"
+__version__ = "0.17.0.dev0"
 REQUIRED_PYTHON_VER = (3, 4)
 
 # Can be used to specify a catch all when registering state or event listeners.
