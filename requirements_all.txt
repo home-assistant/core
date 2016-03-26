@@ -31,7 +31,7 @@ astral==0.9
 blinkstick==1.1.7
 
 # homeassistant.components.sensor.bitcoin
-blockchain==1.2.1
+blockchain==1.3.1
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.12.0
@@ -54,6 +54,12 @@ freesms==0.1.0
 # homeassistant.components.conversation
 fuzzywuzzy==0.8.0
 
+# homeassistant.components.notify.gntp
+gntp==1.0.3
+
+# homeassistant.components.mqtt.server
+hbmqtt==0.6.3
+
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
 
@@ -62,9 +68,6 @@ hikvision==0.4
 
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
-
-# homeassistant.components.rfxtrx
-https://github.com/Danielhiversen/pyRFXtrx/archive/0.5.zip#pyRFXtrx==0.5
 
 # homeassistant.components.sensor.netatmo
 https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
@@ -77,6 +80,9 @@ https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
+
+# homeassistant.components.sensor.uber
+https://github.com/denismakogon/rides-python-sdk/archive/py3-support.zip#uber_rides==0.1.2-dev
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -114,12 +120,15 @@ liffylights==0.9.4
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
+# homeassistant.components.notify.message_bird
+messagebird==1.1.1
+
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.5.4
+netdisco==0.5.5
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -143,7 +152,7 @@ plexapi==1.1.0
 proliphix==0.1.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.0.0
+psutil==4.1.0
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.9.0
@@ -153,6 +162,9 @@ pushetta==1.0.15
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
+
+# homeassistant.components.rfxtrx
+pyRFXtrx==0.6.5
 
 # homeassistant.components.media_player.cast
 pychromecast==0.7.2
@@ -164,7 +176,7 @@ pydispatcher==2.0.5
 pyfttt==0.3
 
 # homeassistant.components.device_tracker.icloud
-pyicloud==0.7.2
+pyicloud==0.8.1
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.2
@@ -180,16 +192,16 @@ pyowm==2.3.0
 pysnmp==4.2.5
 
 # homeassistant.components.sensor.forecast
-python-forecastio==1.3.3
+python-forecastio==1.3.4
 
 # homeassistant.components.media_player.mpd
-python-mpd2==0.5.4
+python-mpd2==0.5.5
 
 # homeassistant.components.nest
 python-nest==2.6.0
 
 # homeassistant.components.device_tracker.nmap_tracker
-python-nmap==0.4.3
+python-nmap==0.6.0
 
 # homeassistant.components.notify.pushover
 python-pushover==0.2
@@ -198,7 +210,7 @@ python-pushover==0.2
 python-statsd==1.7.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==3.2.0
+python-telegram-bot==3.4
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
@@ -210,21 +222,22 @@ python-twitch==1.2.0
 # homeassistant.components.lock.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.6.2
+python-wink==0.6.4
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
 
-# homeassistant.components.light.vera
-# homeassistant.components.sensor.vera
-# homeassistant.components.switch.vera
+# homeassistant.components.vera
 pyvera==0.2.8
 
 # homeassistant.components.wemo
-pywemo==0.3.12
+pywemo==0.3.19
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
+
+# homeassistant.components.media_player.yamaha
+rxv==0.1.9
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.5.1
@@ -256,9 +269,8 @@ speedtest-cli==0.3.4
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
 
-# homeassistant.components.light.tellstick
+# homeassistant.components.tellstick
 # homeassistant.components.sensor.tellstick
-# homeassistant.components.switch.tellstick
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
@@ -278,7 +290,10 @@ urllib3
 uvcclient==0.8
 
 # homeassistant.components.verisure
-vsure==0.6.1
+vsure==0.7.1
+
+# homeassistant.components.switch.wake_on_lan
+wakeonlan==0.2.2
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.6

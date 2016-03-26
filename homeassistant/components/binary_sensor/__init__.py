@@ -9,7 +9,8 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
-from homeassistant.components import (bloomsky, mysensors, zwave, wemo, wink)
+from homeassistant.components import (
+    bloomsky, mysensors, zwave, vera, wemo, wink)
 
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = 30
@@ -37,6 +38,7 @@ DISCOVERY_PLATFORMS = {
     bloomsky.DISCOVER_BINARY_SENSORS: 'bloomsky',
     mysensors.DISCOVER_BINARY_SENSORS: 'mysensors',
     zwave.DISCOVER_BINARY_SENSORS: 'zwave',
+    vera.DISCOVER_BINARY_SENSORS: 'vera',
     wemo.DISCOVER_BINARY_SENSORS: 'wemo',
     wink.DISCOVER_BINARY_SENSORS: 'wink'
 }

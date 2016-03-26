@@ -1,5 +1,5 @@
 """
-Bitcoin information service that uses blockchain.info and its online wallet.
+Bitcoin information service that uses blockchain.info.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bitcoin/
@@ -10,10 +10,9 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['blockchain==1.2.1']
+REQUIREMENTS = ['blockchain==1.3.1']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
-    'wallet': ['Wallet balance', 'BTC'],
     'exchangerate': ['Exchange rate (1 BTC)', None],
     'trade_volume_btc': ['Trade volume', 'BTC'],
     'miners_revenue_usd': ['Miners revenue', 'USD'],
@@ -43,33 +42,17 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Bitcoin sensor."""
-    from blockchain.wallet import Wallet
-    from blockchain import exchangerates, exceptions
+    """Setup the Bitcoin sensors."""
+    from blockchain import exchangerates
 
-    wallet_id = config.get('wallet', None)
-    password = config.get('password', None)
     currency = config.get('currency', 'USD')
 
     if currency not in exchangerates.get_ticker():
-        _LOGGER.error('Currency "%s" is not available. Using "USD".', currency)
+        _LOGGER.error('Currency "%s" is not available. Using "USD"', currency)
         currency = 'USD'
-
-    if wallet_id is not None and password is not None:
-        wallet = Wallet(wallet_id, password)
-        try:
-            wallet.get_balance()
-        except exceptions.APIException as error:
-            _LOGGER.error(error)
-            wallet = None
-    else:
-        wallet = None
 
     data = BitcoinData()
     dev = []
-    if wallet is not None and password is not None:
-        dev.append(BitcoinSensor(data, 'wallet', currency, wallet))
-
     for variable in config['display_options']:
         if variable not in OPTION_TYPES:
             _LOGGER.error('Option type: "%s" does not exist', variable)
@@ -83,13 +66,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BitcoinSensor(Entity):
     """Representation of a Bitcoin sensor."""
 
-    def __init__(self, data, option_type, currency, wallet=''):
+    def __init__(self, data, option_type, currency):
         """Initialize the sensor."""
         self.data = data
         self._name = OPTION_TYPES[option_type][0]
         self._unit_of_measurement = OPTION_TYPES[option_type][1]
         self._currency = currency
-        self._wallet = wallet
         self.type = option_type
         self._state = None
         self.update()
@@ -122,10 +104,7 @@ class BitcoinSensor(Entity):
         ticker = self.data.ticker
 
         # pylint: disable=no-member
-        if self.type == 'wallet' and self._wallet is not None:
-            self._state = '{0:.8f}'.format(self._wallet.get_balance() *
-                                           0.00000001)
-        elif self.type == 'exchangerate':
+        if self.type == 'exchangerate':
             self._state = ticker[self._currency].p15min
             self._unit_of_measurement = self._currency
         elif self.type == 'trade_volume_btc':

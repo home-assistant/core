@@ -55,8 +55,13 @@ def _check_template(hass, value_template):
     """Check if result of template is true."""
     try:
         value = template.render(hass, value_template, {})
-    except TemplateError:
-        _LOGGER.exception('Error parsing template')
+    except TemplateError as ex:
+        if ex.args and ex.args[0].startswith(
+                "UndefinedError: 'None' has no attribute"):
+            # Common during HA startup - so just a warning
+            _LOGGER.warning(ex)
+        else:
+            _LOGGER.error(ex)
         return False
 
     return value.lower() == 'true'

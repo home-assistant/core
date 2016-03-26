@@ -9,7 +9,8 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wemo, wink, isy994, zwave, insteon_hub, mysensors)
+    group, discovery, wemo, wink, isy994,
+    zwave, insteon_hub, mysensors, tellstick, vera)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -64,6 +65,8 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
     mysensors.DISCOVER_LIGHTS: 'mysensors',
+    tellstick.DISCOVER_LIGHTS: 'tellstick',
+    vera.DISCOVER_LIGHTS: 'vera',
 }
 
 PROP_TO_ATTR = {
@@ -224,7 +227,7 @@ def setup(hass, config):
                 pass
 
         if ATTR_COLOR_TEMP in dat:
-            # color_temp should be an int of mirads value
+            # color_temp should be an int of mireds value
             colortemp = dat.get(ATTR_COLOR_TEMP)
 
             # Without this check, a ctcolor with value '99' would work
@@ -295,7 +298,7 @@ class Light(ToggleEntity):
 
     @property
     def color_temp(self):
-        """Return the CT color value in mirads."""
+        """Return the CT color value in mireds."""
         return None
 
     @property

@@ -74,7 +74,8 @@ def setup(hass, config):
     hass.bus.listen_once(
         ha.EVENT_HOMEASSISTANT_START,
         lambda event:
-        threading.Thread(target=server.start, daemon=True).start())
+        threading.Thread(target=server.start, daemon=True,
+                         name='HTTP-server').start())
 
     hass.http = server
     hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
@@ -236,9 +237,10 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Did we find a handler for the incoming request?
         if handle_request_method:
             # For some calls we need a valid password
+            msg = "API password missing or incorrect."
             if require_auth and not self.authenticated:
-                self.write_json_message(
-                    "API password missing or incorrect.", HTTP_UNAUTHORIZED)
+                self.write_json_message(msg, HTTP_UNAUTHORIZED)
+                _LOGGER.warning(msg)
                 return
 
             handle_request_method(self, path_match, data)
@@ -277,8 +279,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def write_json(self, data=None, status_code=HTTP_OK, location=None):
         """Helper method to return JSON to the caller."""
+        json_data = json.dumps(data, indent=4, sort_keys=True,
+                               cls=rem.JSONEncoder).encode('UTF-8')
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(json_data)))
 
         if location:
             self.send_header('Location', location)
@@ -288,20 +293,20 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
         if data is not None:
-            self.wfile.write(
-                json.dumps(data, indent=4, sort_keys=True,
-                           cls=rem.JSONEncoder).encode("UTF-8"))
+            self.wfile.write(json_data)
 
     def write_text(self, message, status_code=HTTP_OK):
         """Helper method to return a text message to the caller."""
+        msg_data = message.encode('UTF-8')
         self.send_response(status_code)
         self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
+        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(msg_data)))
 
         self.set_session_cookie_header()
 
         self.end_headers()
 
-        self.wfile.write(message.encode("UTF-8"))
+        self.wfile.write(msg_data)
 
     def write_file(self, path, cache_headers=True):
         """Return a file to the user."""
