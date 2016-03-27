@@ -15,6 +15,9 @@ PyMata==2.07a
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
+# homeassistant.components.sensor.gtfs
+SQLAlchemy
+
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
 
@@ -86,6 +89,9 @@ https://github.com/denismakogon/rides-python-sdk/archive/py3-support.zip#uber_ri
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
+
+# homeassistant.components.sensor.gtfs
+https://github.com/jarondl/pygtfs/archive/d6aea616e50a0f412b90c37dd7808296f1a6d881.zip#pygtfs==0.1.2
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/92a2f330cbaf601d0618456fdd97e5a8c42c1c47.zip#python-ecobee==0.0.4
