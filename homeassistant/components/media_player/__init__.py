@@ -306,7 +306,7 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
                            descriptions.get(SERVICE_MEDIA_SEEK))
-    
+
     def select_source_service(service):
         """Change input to selected source."""
         input_source = service.data.get(ATTR_SELECT_SOURCE)
@@ -316,16 +316,17 @@ def setup(hass, config):
                 'Received call to %s without attribute %s',
                 service.service, ATTR_SELECT_SOURCE)
             return
-    
+
         for player in component.extract_from_service(service):
             player.select_source(input_source)
-    
+
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_SELECT_SOURCE, select_source_service,
+    hass.services.register(DOMAIN, SERVICE_SELECT_SOURCE,
+                           select_source_service,
                            descriptions.get(SERVICE_SELECT_SOURCE))
-    
+
     def play_media_service(service):
         """Play specified media_id on the media player."""
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
@@ -454,8 +455,9 @@ class MediaPlayerDevice(Entity):
         """Name of the current running app."""
         return None
 
+    @property
     def current_source(self):
-        """Name of the current input source"""
+        """Name of the current input source."""
         return None
 
     @property
@@ -504,7 +506,7 @@ class MediaPlayerDevice(Entity):
         raise NotImplementedError()
 
     def select_source(self, source):
-        """Select input source"""
+        """Select input source."""
         raise NotImplementedError()
 
     # No need to overwrite these.
