@@ -227,7 +227,7 @@ class GTFSDepartureSensor(Entity):
                         for col in resource.__table__.columns.keys())
 
         def append_keys(resource, prefix=None):
-            """Properly format key val pairs to append to attributes"""
+            """Properly format key val pairs to append to attributes."""
             for key, val in resource.items():
                 if val == "" or val is None or key == "feed_id":
                     continue
