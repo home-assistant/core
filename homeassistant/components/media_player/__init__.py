@@ -31,9 +31,11 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
+    discovery.SERVICE_ONKYO: 'onkyo',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
+SERVICE_SELECT_SOURCE = 'select_source'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -54,6 +56,8 @@ ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
+ATTR_CURRENT_SOURCE = 'current_source'
+ATTR_SELECT_SOURCE = 'source'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -73,6 +77,7 @@ SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
 SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
+SUPPORT_SELECT_SOURCE = 2048
 
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
@@ -107,6 +112,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
+    ATTR_CURRENT_SOURCE,
 ]
 
 
@@ -301,6 +307,26 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
                            descriptions.get(SERVICE_MEDIA_SEEK))
 
+    def select_source_service(service):
+        """Change input to selected source."""
+        input_source = service.data.get(ATTR_SELECT_SOURCE)
+
+        if input_source is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_SELECT_SOURCE)
+            return
+
+        for player in component.extract_from_service(service):
+            player.select_source(input_source)
+
+            if player.should_poll:
+                player.update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_SOURCE,
+                           select_source_service,
+                           descriptions.get(SERVICE_SELECT_SOURCE))
+
     def play_media_service(service):
         """Play specified media_id on the media player."""
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
@@ -430,6 +456,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def current_source(self):
+        """Name of the current input source."""
+        return None
+
+    @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
         return 0
@@ -474,6 +505,10 @@ class MediaPlayerDevice(Entity):
         """Play a piece of media."""
         raise NotImplementedError()
 
+    def select_source(self, source):
+        """Select input source."""
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -509,6 +544,11 @@ class MediaPlayerDevice(Entity):
     def support_play_media(self):
         """Boolean if play media command supported."""
         return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+
+    @property
+    def support_select_source(self):
+        """Boolean if select source command supported."""
+        return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
 
     def toggle(self):
         """Toggle the power on the media player."""
