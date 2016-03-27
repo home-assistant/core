@@ -15,9 +15,6 @@ PyMata==2.07a
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
-# homeassistant.components.sensor.gtfs
-SQLAlchemy==1.0.12
-
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
 
@@ -90,9 +87,6 @@ https://github.com/denismakogon/rides-python-sdk/archive/py3-support.zip#uber_ri
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
-# homeassistant.components.sensor.gtfs
-https://github.com/jarondl/pygtfs/archive/d6aea616e50a0f412b90c37dd7808296f1a6d881.zip#pygtfs==0.1.2
-
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/92a2f330cbaf601d0618456fdd97e5a8c42c1c47.zip#python-ecobee==0.0.4
 
@@ -101,6 +95,9 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 
 # homeassistant.components.sensor.temper
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
+
+# homeassistant.components.sensor.gtfs
+https://github.com/robbiet480/pygtfs/archive/6b40d5fb30fd410cfaf637c901b5ed5a08c33e4c.zip#pygtfs==0.1.2
 
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
