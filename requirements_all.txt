@@ -81,6 +81,9 @@ https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
 
+# homeassistant.components.media_player.onkyo
+https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.2
+
 # homeassistant.components.sensor.uber
 https://github.com/denismakogon/rides-python-sdk/archive/py3-support.zip#uber_rides==0.1.2-dev
 
