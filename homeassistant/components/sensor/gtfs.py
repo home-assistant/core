@@ -12,7 +12,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ["SQLAlchemy", "https://github.com/jarondl/pygtfs/archive/"
+REQUIREMENTS = ["SQLAlchemy==1.0.12",
+                "https://github.com/jarondl/pygtfs/archive/"
                 "d6aea616e50a0f412b90c37dd7808296f1a6d881.zip#"
                 "pygtfs==0.1.2"]
 

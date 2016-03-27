@@ -16,7 +16,7 @@ PyMata==2.07a
 # RPi.GPIO==0.6.1
 
 # homeassistant.components.sensor.gtfs
-SQLAlchemy
+SQLAlchemy==1.0.12
 
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
