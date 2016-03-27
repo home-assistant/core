@@ -7,7 +7,6 @@ https://home-assistant.io/developers/api/
 import gzip
 import json
 import logging
-import os
 import ssl
 import threading
 import time
@@ -283,31 +282,21 @@ class RequestHandler(SimpleHTTPRequestHandler):
         json_data = json.dumps(data, indent=4, sort_keys=True,
                                cls=rem.JSONEncoder).encode('UTF-8')
         self.send_response(status_code)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(json_data)))
 
         if location:
             self.send_header('Location', location)
 
         self.set_session_cookie_header()
 
-        self.end_headers()
-
-        if data is not None:
-            self.wfile.write(json_data)
+        self.write_content(json_data, CONTENT_TYPE_JSON)
 
     def write_text(self, message, status_code=HTTP_OK):
         """Helper method to return a text message to the caller."""
         msg_data = message.encode('UTF-8')
         self.send_response(status_code)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
-        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(msg_data)))
-
         self.set_session_cookie_header()
 
-        self.end_headers()
-
-        self.wfile.write(msg_data)
+        self.write_content(msg_data, CONTENT_TYPE_TEXT_PLAIN)
 
     def write_file(self, path, cache_headers=True):
         """Return a file to the user."""
@@ -323,36 +312,32 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
     def write_file_pointer(self, content_type, inp, cache_headers=True):
         """Helper function to write a file pointer to the user."""
-        do_gzip = 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, '')
-
         self.send_response(HTTP_OK)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
 
         if cache_headers:
             self.set_cache_header()
         self.set_session_cookie_header()
 
-        if do_gzip:
-            gzip_data = gzip.compress(inp.read())
+        self.write_content(inp.read(), content_type)
+
+    def write_content(self, content, content_type=None):
+        """Helper method to write content bytes to output stream."""
+        if content_type is not None:
+            self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
+
+        if 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, ''):
+            content = gzip.compress(content)
 
             self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
-            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(gzip_data)))
 
-        else:
-            fst = os.fstat(inp.fileno())
-            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(fst[6]))
-
+        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(content)))
         self.end_headers()
 
         if self.command == 'HEAD':
             return
 
-        elif do_gzip:
-            self.wfile.write(gzip_data)
-
-        else:
-            self.copyfile(inp, self.wfile)
+        self.wfile.write(content)
 
     def set_cache_header(self):
         """Add cache headers if not in development."""
