@@ -68,7 +68,7 @@ def get_next_departure(sched, start_station_id, end_station_id):
     AND start_station.stop_id = :origin_station_id
                AND end_station.stop_id = :end_station_id
     ORDER BY origin_stop_time.departure_time LIMIT 1;""".format(day_name))
-    result = sched.engine.execute(sql_query,now_str=now_str,
+    result = sched.engine.execute(sql_query, now_str=now_str,
                                   origin_station_id=origin_station.id,
                                   end_station_id=destination_station.id)
     item = {}
@@ -145,11 +145,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     gtfs_dir = hass.config.path("gtfs")
 
     if not os.path.exists(gtfs_dir):
-      os.makedirs(gtfs_dir)
+        os.makedirs(gtfs_dir)
 
     if not os.path.exists(os.path.join(gtfs_dir, config["data"])):
-      _LOGGER.error("The given GTFS data file/folder was not found!")
-      return False
+        _LOGGER.error("The given GTFS data file/folder was not found!")
+        return False
 
     dev = []
     dev.append(GTFSDepartureSensor(config["data"], gtfs_dir,
