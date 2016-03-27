@@ -461,6 +461,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def current_source(self):
+        """Name of the current input source."""
+        return None
+
+    @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
         return 0
