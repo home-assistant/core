@@ -104,8 +104,6 @@ class TestAPI(unittest.TestCase):
             _url(const.URL_API_STATES_ENTITY.format("test.test")),
             headers=HA_HEADERS)
 
-        self.assertEqual(req.headers['content-length'], str(len(req.content)))
-
         data = ha.State.from_dict(req.json())
 
         state = hass.states.get("test.test")
