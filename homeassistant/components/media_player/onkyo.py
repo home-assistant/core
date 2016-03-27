@@ -21,16 +21,16 @@ SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
-    import eiscp
     from eiscp import eISCP
-    add_devices(OnkyoDevice('{}_{}'.format(receiver.info['model_name'],
-                receiver.info['identifier']), receiver)
+    add_devices(OnkyoDevice('{}_{}'.format(
+        receiver.info['model_name'], receiver.info['identifier']), receiver)
                 for receiver in eISCP.discover())
 
 
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
+    # pylint: disable=too-many-public-methods, abstract-method
     def __init__(self, name, receiver):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -52,7 +52,8 @@ class OnkyoDevice(MediaPlayerDevice):
         volume_raw = self._receiver.command('volume query')
         mute_raw = self._receiver.command('audio-muting query')
         current_source_raw = self._receiver.command('input-selector query')
-        self._current_source = '_'.join(map(str, current_source_raw[1])) 
+        self._current_source = '_'.join('_'.join(
+            [i for i in current_source_raw[1]]))
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = int(volume_raw[1], 16)/80.0
 
@@ -83,6 +84,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def current_source(self):
+        """"Return the current input source of the device."""
         return self._current_source
 
     def turn_off(self):
@@ -91,17 +93,15 @@ class OnkyoDevice(MediaPlayerDevice):
         self._receiver.command('system-power standby')
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. Onkyo ranges from 1-80"""
+        """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
         self._receiver.command('volume {}'.format(int(volume*80)))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
             self._receiver.command('audio-muting on')
-            self._mute = True
         else:
             self._receiver.command('audio-muting off')
-            self._mute = False
 
     def turn_on(self):
         """Turn the media player on."""
@@ -109,4 +109,4 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Set the input source."""
-        self._receiver.command('input-selector {}'.format(source))     
+        self._receiver.command('input-selector {}'.format(source))
