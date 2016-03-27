@@ -164,6 +164,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Track if this was an authenticated request
         self.authenticated = False
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+        self.protocol_version = 'HTTP/1.1'
 
     def log_message(self, fmt, *arguments):
         """Redirect built-in log to HA logging."""
