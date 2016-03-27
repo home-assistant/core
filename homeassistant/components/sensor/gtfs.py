@@ -12,9 +12,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ["SQLAlchemy==1.0.12",
-                "https://github.com/jarondl/pygtfs/archive/"
-                "d6aea616e50a0f412b90c37dd7808296f1a6d881.zip#"
+REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
+                "6b40d5fb30fd410cfaf637c901b5ed5a08c33e4c.zip#"
                 "pygtfs==0.1.2"]
 
 ICON = "mdi:train"
