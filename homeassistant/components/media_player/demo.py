@@ -8,7 +8,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
         DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
-        DemoMusicPlayer(), DemoTVShowPlayer(),
+        DemoMusicPlayer(), DemoTVShowPlayer(), DemoReceiver(),
     ])
 
 
@@ -36,6 +36,8 @@ MUSIC_PLAYER_SUPPORT = \
 
 NETFLIX_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+
+RECEIVER_SUPPORT = SUPPORT_SELECT_SOURCE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -337,3 +339,29 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
             self.update_ha_state()
+
+
+class DemoReceiver(AbstractDemoPlayer):
+    """A Demo receiver that only supports changing source input."""
+
+    # We only implement the methods that we support
+    # pylint: disable=abstract-method
+    def __init__(self):
+        """Initialize the demo device."""
+        super().__init__('receiver')
+        self._source = 'dvd'
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._source
+
+    def select_source(self, source):
+        """Set the input source."""
+        self._source = source
+        self.update_ha_state()
+
+    @property
+    def supported_media_commands(self):
+        """Flag of media commands that are supported."""
+        return RECEIVER_SUPPORT
