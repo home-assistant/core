@@ -63,11 +63,12 @@ def get_next_departure(sched, start_station_id, end_station_id):
                ON trip.trip_id = destination_stop_time.trip_id
     INNER JOIN stops end_station
                ON destination_stop_time.stop_id = end_station.stop_id
-    WHERE calendar.{} = 1
+    WHERE calendar.{day_name} = 1
                AND time(origin_stop_time.departure_time) > time(:now_str)
     AND start_station.stop_id = :origin_station_id
                AND end_station.stop_id = :end_station_id
-    ORDER BY origin_stop_time.departure_time LIMIT 1;""".format(day_name))
+    ORDER BY origin_stop_time.departure_time LIMIT 1;
+    """.format(day_name=day_name))
     result = sched.engine.execute(sql_query, now_str=now_str,
                                   origin_station_id=origin_station.id,
                                   end_station_id=destination_station.id)
