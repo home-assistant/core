@@ -9,8 +9,6 @@ import threading
 import time
 from multiprocessing import Process
 
-import homeassistant.config as config_util
-from homeassistant import bootstrap
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -32,6 +30,7 @@ def validate_python():
 
 def ensure_config_path(config_dir):
     """Validate the configuration directory."""
+    import homeassistant.config as config_util
     lib_dir = os.path.join(config_dir, 'lib')
 
     # Test if configuration directory exists
@@ -60,6 +59,7 @@ def ensure_config_path(config_dir):
 
 def ensure_config_file(config_dir):
     """Ensure configuration file exists."""
+    import homeassistant.config as config_util
     config_path = config_util.ensure_config_exists(config_dir)
 
     if config_path is None:
@@ -71,6 +71,7 @@ def ensure_config_file(config_dir):
 
 def get_arguments():
     """Get parsed passed in arguments."""
+    import homeassistant.config as config_util
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.")
     parser.add_argument('--version', action='version', version=__version__)
@@ -225,6 +226,8 @@ def setup_and_run_hass(config_dir, args, top_process=False):
     Block until stopped. Will assume it is running in a subprocess unless
     top_process is set to true.
     """
+    from homeassistant import bootstrap
+
     if args.demo_mode:
         config = {
             'frontend': {},
