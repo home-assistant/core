@@ -142,8 +142,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Data must be set in the GTFS configuration!")
         return False
 
+    gtfs_dir = hass.config.path("gtfs")
+
+    if not os.path.exists(gtfs_dir):
+      os.makedirs(gtfs_dir)
+
+    if not os.path.exists(os.path.join(gtfs_dir, config["data"])):
+      _LOGGER.error("The given GTFS data file/folder was not found!")
+      return False
+
     dev = []
-    dev.append(GTFSDepartureSensor(config["data"], hass.config.path("gtfs"),
+    dev.append(GTFSDepartureSensor(config["data"], gtfs_dir,
                                    config["origin"], config["destination"]))
     add_devices(dev)
 
