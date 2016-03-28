@@ -66,10 +66,6 @@ def _handle_get_api_bootstrap(handler, path_match, data):
 
 def _handle_get_root(handler, path_match, data):
     """Render the frontend."""
-    handler.send_response(HTTP_OK)
-    handler.send_header('Content-type', 'text/html; charset=utf-8')
-    handler.end_headers()
-
     if handler.server.development:
         app_url = "home-assistant-polymer/src/home-assistant.html"
     else:
@@ -86,7 +82,9 @@ def _handle_get_root(handler, path_match, data):
     template_html = template_html.replace('{{ auth }}', auth)
     template_html = template_html.replace('{{ icons }}', mdi_version.VERSION)
 
-    handler.wfile.write(template_html.encode("UTF-8"))
+    handler.send_response(HTTP_OK)
+    handler.write_content(template_html.encode("UTF-8"),
+                          'text/html; charset=utf-8')
 
 
 def _handle_get_service_worker(handler, path_match, data):
