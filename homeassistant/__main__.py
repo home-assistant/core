@@ -244,6 +244,9 @@ def setup_and_run_hass(config_dir, args, top_process=False):
             config_file, daemon=args.daemon, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
 
+    if hass is None:
+        return
+
     if args.open_ui:
         def open_browser(event):
             """Open the webinterface in a browser."""
