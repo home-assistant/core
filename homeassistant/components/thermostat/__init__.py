@@ -13,6 +13,7 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import ecobee
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
