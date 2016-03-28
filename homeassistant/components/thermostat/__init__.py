@@ -13,7 +13,7 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
-from homeassistant.components import ecobee
+from homeassistant.components import (ecobee, zwave)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELCIUS)
@@ -44,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_PLATFORMS = {
     ecobee.DISCOVER_THERMOSTAT: 'ecobee',
+    zwave.DISCOVER_THERMOSTATS: 'zwave'
 }
 
 
