@@ -147,6 +147,7 @@ omit =
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
+    homeassistant/components/sensor/teamspeak.py
     homeassistant/components/sensor/temper.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
