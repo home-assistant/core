@@ -5,6 +5,7 @@ pytz>=2015.4
 pip>=7.0.0
 vincenty==0.1.3
 jinja2>=2.8
+voluptuous==0.8.9
 
 # homeassistant.components.isy994
 PyISY==1.0.5

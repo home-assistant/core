@@ -10,6 +10,7 @@ import logging
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import group
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
