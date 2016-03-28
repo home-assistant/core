@@ -4,8 +4,10 @@ Support for Z-Wave.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import logging
 import os.path
 import sys
+import time
 from pprint import pprint
 
 from homeassistant import bootstrap
@@ -25,6 +27,9 @@ CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
 DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
                                          'python-openzwave', 'config')
+
+# How long to wait for the zwave network to be ready.
+NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
@@ -90,6 +95,8 @@ ATTR_VALUE_ID = "value_id"
 ATTR_SCENE_ID = "scene_id"
 
 NETWORK = None
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _obj_to_dict(obj):
@@ -217,8 +224,10 @@ def setup(hass, config):
             node_config = customize.get(name, {})
             polling_intensity = convert(
                 node_config.get(CONF_POLLING_INTENSITY), int)
-            if polling_intensity is not None:
+            if polling_intensity:
                 value.enable_poll(polling_intensity)
+            else:
+                value.disable_poll()
 
             # Fire discovery event
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
@@ -268,10 +277,30 @@ def setup(hass, config):
         """Startup Z-Wave."""
         NETWORK.start()
 
+        # Need to be in STATE_AWAKED before talking to nodes.
+        # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
+        # to be ready.
+        for i in range(NETWORK_READY_WAIT_SECS):
+            _LOGGER.info(
+                "network state: %d %s", NETWORK.state, NETWORK.state_str)
+            if NETWORK.state >= NETWORK.STATE_AWAKED:
+                _LOGGER.info("zwave ready after %d seconds", i)
+                break
+            time.sleep(1)
+        else:
+            _LOGGER.warning(
+                "zwave not ready after %d seconds, continuing anyway",
+                NETWORK_READY_WAIT_SECS)
+            _LOGGER.info(
+                "final network state: %d %s", NETWORK.state, NETWORK.state_str)
+
         polling_interval = convert(
             config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
             NETWORK.set_poll_interval(polling_interval, False)
+
+        poll_interval = NETWORK.get_poll_interval()
+        _LOGGER.info("zwave polling interval set to %d ms", poll_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
