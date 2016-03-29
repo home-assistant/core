@@ -24,6 +24,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._is_volume_muted = False
         self._media_title = None
         self._supported_media_commands = 0
+        self._source = None
 
         self.service_calls = {
             'turn_on': mock_service(

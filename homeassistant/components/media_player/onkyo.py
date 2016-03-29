@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_OFF, STATE_ON
 
 REQUIREMENTS = ['https://github.com/danieljkemp/onkyo-eiscp/archive/'
-                'python3.zip#'  'onkyo-eiscp==0.9.2']
+                'python3.zip#onkyo-eiscp==0.9.2']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -22,8 +22,7 @@ SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
     from eiscp import eISCP
-    add_devices(OnkyoDevice('{}_{}'.format(
-        receiver.info['model_name'], receiver.info['identifier']), receiver)
+    add_devices(OnkyoDevice(receiver)
                 for receiver in eISCP.discover())
 
 
@@ -31,14 +30,15 @@ class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, name, receiver):
+    def __init__(self, receiver):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
         self.update()
-        self._name = name
+        self._name = '{}_{}'.format(
+            receiver.info['model_name'], receiver.info['identifier'])
         self._current_source = None
 
     def update(self):
@@ -83,13 +83,12 @@ class OnkyoDevice(MediaPlayerDevice):
         return SUPPORT_ONKYO
 
     @property
-    def current_source(self):
+    def source(self):
         """"Return the current input source of the device."""
         return self._current_source
 
     def turn_off(self):
         """Turn off media player."""
-        self._pwstate = STATE_OFF
         self._receiver.command('system-power standby')
 
     def set_volume_level(self, volume):

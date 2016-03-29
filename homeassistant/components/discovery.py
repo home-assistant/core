@@ -25,7 +25,6 @@ SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_SONOS = 'sonos'
 SERVICE_PLEX = 'plex_mediaserver'
-SERVICE_ONKYO = 'onkyo'
 SERVICE_SQUEEZEBOX = 'logitech_mediaserver'
 
 SERVICE_HANDLERS = {
@@ -35,7 +34,6 @@ SERVICE_HANDLERS = {
     SERVICE_NETGEAR: 'device_tracker',
     SERVICE_SONOS: 'media_player',
     SERVICE_PLEX: 'media_player',
-    SERVICE_ONKYO: 'media_player',
     SERVICE_SQUEEZEBOX: 'media_player',
 }
 

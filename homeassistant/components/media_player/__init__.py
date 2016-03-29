@@ -31,7 +31,6 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
-    discovery.SERVICE_ONKYO: 'onkyo',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -56,8 +55,7 @@ ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
-ATTR_CURRENT_SOURCE = 'current_source'
-ATTR_SELECT_SOURCE = 'source'
+ATTR_INPUT_SOURCE = 'source'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -91,6 +89,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
     SERVICE_PLAY_MEDIA: 'play_media',
+    SERVICE_SELECT_SOURCE: 'select_source',
 }
 
 ATTR_TO_PROPERTY = [
@@ -112,7 +111,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
-    ATTR_CURRENT_SOURCE,
+    ATTR_INPUT_SOURCE,
 ]
 
 
@@ -224,6 +223,14 @@ def play_media(hass, media_type, media_id, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
+def select_source(hass, source, entity_id=None):
+    """Send the media player the command to select input source."""
+    data = {ATTR_INPUT_SOURCE: source}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
 
 def setup(hass, config):
     """Track states and offer events for media_players."""
@@ -309,12 +316,12 @@ def setup(hass, config):
 
     def select_source_service(service):
         """Change input to selected source."""
-        input_source = service.data.get(ATTR_SELECT_SOURCE)
+        input_source = service.data.get(ATTR_INPUT_SOURCE)
 
         if input_source is None:
             _LOGGER.error(
                 'Received call to %s without attribute %s',
-                service.service, ATTR_SELECT_SOURCE)
+                service.service, ATTR_INPUT_SOURCE)
             return
 
         for player in component.extract_from_service(service):
@@ -456,7 +463,7 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def current_source(self):
+    def source(self):
         """Name of the current input source."""
         return None
 
