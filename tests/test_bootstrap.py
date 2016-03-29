@@ -4,11 +4,14 @@ import os
 import tempfile
 import unittest
 
+import voluptuous as vol
+
 from homeassistant import bootstrap, loader
 from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 from tests.common import get_test_home_assistant, MockModule
 
@@ -120,4 +123,94 @@ class TestBootstrap(unittest.TestCase):
 
         bootstrap.setup_component(hass, 'comp_a')
         self.assertEqual(['comp_a'], hass.config.components)
+        hass.stop()
+
+    def test_validate_component_config(self):
+        """Test validating component configuration."""
+        config_schema = vol.Schema({
+            'comp_conf': {
+                'hello': str
+            }
+        }, required=True)
+        loader.set_component(
+            'comp_conf', MockModule('comp_conf', config_schema=config_schema))
+
+        hass = get_test_home_assistant()
+
+        assert not bootstrap._setup_component(hass, 'comp_conf', {})
+
+        assert not bootstrap._setup_component(hass, 'comp_conf', {
+            'comp_conf': None
+        })
+
+        assert not bootstrap._setup_component(hass, 'comp_conf', {
+            'comp_conf': {}
+        })
+
+        assert not bootstrap._setup_component(hass, 'comp_conf', {
+            'comp_conf': {
+                'hello': 'world',
+                'invalid': 'extra',
+            }
+        })
+
+        assert bootstrap._setup_component(hass, 'comp_conf', {
+            'comp_conf': {
+                'hello': 'world',
+            }
+        })
+
+        hass.stop()
+
+    def test_validate_platform_config(self):
+        """Test validating platform configuration."""
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'hello': str,
+        }, required=True)
+        loader.set_component(
+            'platform_conf',
+            MockModule('platform_conf', platform_schema=platform_schema))
+
+        hass = get_test_home_assistant()
+
+        assert not bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': None
+        })
+
+        assert not bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': {}
+        })
+
+        assert not bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': {
+                'hello': 'world',
+                'invalid': 'extra',
+            }
+        })
+
+        assert not bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': {
+                'platform': 'whatever',
+                'hello': 'world',
+            },
+
+            'platform_conf 2': {
+                'invalid': True
+            }
+        })
+
+        assert bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': {
+                'platform': 'whatever',
+                'hello': 'world',
+            }
+        })
+
+        assert bootstrap._setup_component(hass, 'platform_conf', {
+            'platform_conf': [{
+                'platform': 'whatever',
+                'hello': 'world',
+            }]
+        })
+
         hass.stop()
