@@ -3,8 +3,8 @@
 # Provides:          hass
 # Required-Start:    $local_fs $network $named $time $syslog
 # Required-Stop:     $local_fs $network $named $time $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
+# Default-Start:     3 4 5
+# Default-Stop:      0 1 2 6
 # Description:       Home\ Assistant
 ### END INIT INFO
 
