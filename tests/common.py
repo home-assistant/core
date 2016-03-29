@@ -143,10 +143,18 @@ class MockHTTP(object):
 class MockModule(object):
     """Representation of a fake module."""
 
-    def __init__(self, domain=None, dependencies=[], setup=None):
+    def __init__(self, domain=None, dependencies=[], setup=None,
+                 config_schema=None, platform_schema=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
+
+        if config_schema is not None:
+            self.CONFIG_SCHEMA = config_schema
+
+        if platform_schema is not None:
+            self.PLATFORM_SCHEMA = platform_schema
+
         # Setup a mock setup if none given.
         if setup is None:
             self.setup = lambda hass, config: True
