@@ -290,8 +290,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                 }
             ))
         except ImportError:
-            _LOGGER.warning(
-                "Colorlog package not found, console coloring disabled")
+            pass
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
