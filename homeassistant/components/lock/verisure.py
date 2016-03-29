@@ -8,45 +8,47 @@ import logging
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
+from homeassistant.const import (
+    ATTR_CODE, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_CODE = 'code'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Verisure platform."""
+    """Setup the Verisure platform."""
     locks = []
     if int(hub.config.get('locks', '1')):
         hub.update_locks()
         locks.extend([
             VerisureDoorlock(device_id)
             for device_id in hub.lock_status.keys()
-            ])
+        ])
     add_devices(locks)
 
 
 # pylint: disable=abstract-method
 class VerisureDoorlock(LockDevice):
-    """Represents a Verisure doorlock."""
+    """Representation of a Verisure doorlock."""
+
     def __init__(self, device_id):
+        """Initialize the lock."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
 
     @property
     def name(self):
-        """Returns the name of the lock."""
+        """Return the name of the lock."""
         return 'Lock {}'.format(self._id)
 
     @property
     def state(self):
-        """Returns the state of the lock."""
+        """Return the state of the lock."""
         return self._state
 
     @property
     def code_format(self):
-        """Six digit code required."""
+        """Return the required six digit code."""
         return '^\\d{%s}$' % self._digits
 
     def update(self):

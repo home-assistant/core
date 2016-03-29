@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.wemo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for WeMo switches.
 
 For more details about this component, please refer to the documentation at
@@ -34,7 +32,7 @@ WEMO_STANDBY = 8
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Register discovered WeMo switches."""
+    """Setup discovered WeMo switches."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
@@ -47,8 +45,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WemoSwitch(SwitchDevice):
-    """Represents a WeMo switch."""
+    """Representation of a WeMo switch."""
+
     def __init__(self, device):
+        """Initialize the WeMo switch."""
         self.wemo = device
         self.insight_params = None
         self.maker_params = None
@@ -59,29 +59,33 @@ class WemoSwitch(SwitchDevice):
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _params):
-        """Called by the wemo device callback to update state."""
+        """Called by the Wemo device callback to update state."""
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
+        if not hasattr(self, 'hass'):
+            self.update()
+            return
         self.update_ha_state(True)
 
     @property
     def should_poll(self):
-        """No polling needed with subscriptions"""
+        """No polling needed with subscriptions."""
         return False
 
     @property
     def unique_id(self):
-        """Returns the id of this WeMo switch"""
+        """Return the ID of this WeMo switch."""
         return "{}.{}".format(self.__class__, self.wemo.serialnumber)
 
     @property
     def name(self):
-        """Returns the name of the switch if any."""
+        """Return the name of the switch if any."""
         return self.wemo.name
 
     @property
     def device_state_attributes(self):
+        """Return the state attributes of the device."""
         attr = {}
         if self.maker_params:
             # Is the maker sensor on or off.
@@ -105,19 +109,19 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def current_power_mwh(self):
-        """Current power usage in mwh."""
+        """Current power usage in mWh."""
         if self.insight_params:
             return self.insight_params['currentpower']
 
     @property
     def today_power_mw(self):
-        """Today total power usage in mw."""
+        """Today total power usage in mW."""
         if self.insight_params:
             return self.insight_params['todaymw']
 
     @property
     def detail_state(self):
-        """Is the device on - or in standby."""
+        """Return the state of the device."""
         if self.insight_params:
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
@@ -131,29 +135,26 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """True if switch is on. Standby is on!"""
+        """Return true if switch is on. Standby is on."""
         return self._state
 
     @property
     def available(self):
         """True if switch is available."""
-        if (self.wemo.model_name == 'Insight' and
-                self.insight_params is None):
+        if self.wemo.model_name == 'Insight' and self.insight_params is None:
             return False
-
-        if (self.wemo.model_name == 'Maker' and
-                self.maker_params is None):
+        if self.wemo.model_name == 'Maker' and self.maker_params is None:
             return False
         return True
 
     def turn_on(self, **kwargs):
-        """Turns the switch on."""
+        """Turn the switch on."""
         self._state = WEMO_ON
         self.update_ha_state()
         self.wemo.on()
 
     def turn_off(self):
-        """Turns the switch off."""
+        """Turn the switch off."""
         self._state = WEMO_OFF
         self.update_ha_state()
         self.wemo.off()

@@ -1,7 +1,5 @@
 """
-homeassistant.components.device_tracker.owntracks
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-OwnTracks platform for the device tracker.
+Support the OwnTracks platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
@@ -13,6 +11,7 @@ from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
+from homeassistant.util import convert
 
 DEPENDENCIES = ['mqtt']
 
@@ -32,13 +31,11 @@ CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 
 
 def setup_scanner(hass, config, see):
-    """ Set up an OwnTracks tracker. """
-
+    """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
 
     def owntracks_location_update(topic, payload, qos):
-        """ MQTT message received. """
-
+        """MQTT message received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
         try:
@@ -50,8 +47,8 @@ def setup_scanner(hass, config, see):
             return
 
         if (not isinstance(data, dict) or data.get('_type') != 'location') or (
-                'acc' in data and max_gps_accuracy is not None and data[
-                    'acc'] > max_gps_accuracy):
+                max_gps_accuracy is not None and
+                convert(data.get('acc'), float, 0.0) > max_gps_accuracy):
             return
 
         dev_id, kwargs = _parse_see_args(topic, data)
@@ -69,8 +66,7 @@ def setup_scanner(hass, config, see):
 
     def owntracks_event_update(topic, payload, qos):
         # pylint: disable=too-many-branches, too-many-statements
-        """ MQTT event (geofences) received. """
-
+        """MQTT event (geofences) received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
         try:
@@ -104,14 +100,11 @@ def setup_scanner(hass, config, see):
                         _LOGGER.info("Added beacon %s", location)
                 else:
                     # Normal region
-                    if not zone.attributes.get('passive'):
-                        kwargs['location_name'] = location
-
                     regions = REGIONS_ENTERED[dev_id]
                     if location not in regions:
                         regions.append(location)
                     _LOGGER.info("Enter region %s", location)
-                    _set_gps_from_zone(kwargs, zone)
+                    _set_gps_from_zone(kwargs, location, zone)
 
                 see(**kwargs)
                 see_beacons(dev_id, kwargs)
@@ -126,9 +119,7 @@ def setup_scanner(hass, config, see):
                 if new_region:
                     # Exit to previous region
                     zone = hass.states.get("zone.{}".format(new_region))
-                    if not zone.attributes.get('passive'):
-                        kwargs['location_name'] = new_region
-                    _set_gps_from_zone(kwargs, zone)
+                    _set_gps_from_zone(kwargs, new_region, zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
                     see_beacons(dev_id, kwargs)
@@ -157,8 +148,7 @@ def setup_scanner(hass, config, see):
             return
 
     def see_beacons(dev_id, kwargs_param):
-        """ Set active beacons to the current location """
-
+        """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
         # the battery state applies to the tracking device, not the beacon
         kwargs.pop('battery', None)
@@ -168,16 +158,13 @@ def setup_scanner(hass, config, see):
             see(**kwargs)
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
-
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
 
     return True
 
 
 def _parse_see_args(topic, data):
-    """ Parse the OwnTracks location parameters,
-        into the format see expects. """
-
+    """Parse the OwnTracks location parameters, into the format see expects."""
     parts = topic.split('/')
     dev_id = '{}_{}'.format(parts[1], parts[2])
     host_name = parts[1]
@@ -193,12 +180,12 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-def _set_gps_from_zone(kwargs, zone):
-    """ Set the see parameters from the zone parameters """
-
+def _set_gps_from_zone(kwargs, location, zone):
+    """Set the see parameters from the zone parameters."""
     if zone is not None:
         kwargs['gps'] = (
             zone.attributes['latitude'],
             zone.attributes['longitude'])
         kwargs['gps_accuracy'] = zone.attributes['radius']
+        kwargs['location_name'] = location
     return kwargs

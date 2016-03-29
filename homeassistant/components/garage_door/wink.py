@@ -9,11 +9,11 @@ import logging
 from homeassistant.components.garage_door import GarageDoorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Wink garage door platform."""
+    """Setup the Wink garage door platform."""
     import pywink
 
     if discovery_info is None:
@@ -32,19 +32,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkGarageDoorDevice(GarageDoorDevice):
-    """Represents a Wink garage door."""
+    """Representation of a Wink garage door."""
 
     def __init__(self, wink):
+        """Initialize the garage door."""
         self.wink = wink
 
     @property
     def unique_id(self):
-        """Returns the id of this wink garage door."""
+        """Return the ID of this wink garage door."""
         return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
-        """Returns the name of the garage door if any."""
+        """Return the name of the garage door if any."""
         return self.wink.name()
 
     def update(self):
@@ -53,11 +54,16 @@ class WinkGarageDoorDevice(GarageDoorDevice):
 
     @property
     def is_closed(self):
-        """Returns true if door is closed."""
+        """Return true if door is closed."""
         return self.wink.state() == 0
 
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
+
     def close_door(self):
-        """Closes the door."""
+        """Close the door."""
         self.wink.set_state(0)
 
     def open_door(self):

@@ -18,7 +18,7 @@ ICON = 'mdi:flash'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Neurio sensor."""
+    """Setup the Neurio sensor."""
     api_key = config.get("api_key")
     api_secret = config.get("api_secret")
     sensor_id = config.get("sensor_id")
@@ -42,10 +42,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class NeurioEnergy(Entity):
-    """Implements an Neurio energy."""
+    """Implementation of an Neurio energy."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, api_key, api_secret, sensor_id):
+        """Initialize the sensor."""
         self._name = "Energy Usage"
         self.api_key = api_key
         self.api_secret = api_secret
@@ -55,17 +56,17 @@ class NeurioEnergy(Entity):
 
     @property
     def name(self):
-        """Returns the name of th sensor."""
+        """Return the name of th sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
@@ -74,7 +75,7 @@ class NeurioEnergy(Entity):
         return ICON
 
     def update(self):
-        """Gets the Neurio monitor data from the web service."""
+        """Get the Neurio monitor data from the web service."""
         import neurio
         try:
             neurio_tp = neurio.TokenProvider(key=self.api_key,

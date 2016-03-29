@@ -1,7 +1,5 @@
 """
-homeassistant.components.zone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows defintion of zones in Home Assistant.
+Support for the definition of zones.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zone/
@@ -32,7 +30,7 @@ ICON_HOME = 'mdi:home'
 
 
 def active_zone(hass, latitude, longitude, radius=0):
-    """ Find the active zone for given latitude, longitude. """
+    """Find the active zone for given latitude, longitude."""
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
     zones = (hass.states.get(entity_id) for entity_id
              in sorted(hass.states.entity_ids(DOMAIN)))
@@ -62,7 +60,7 @@ def active_zone(hass, latitude, longitude, radius=0):
 
 
 def in_zone(zone, latitude, longitude, radius=0):
-    """ Test if given latitude, longitude is in given zone. """
+    """Test if given latitude, longitude is in given zone."""
     zone_dist = distance(
         latitude, longitude,
         zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
@@ -71,7 +69,7 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 
 def setup(hass, config):
-    """ Setup zone. """
+    """Setup zone."""
     entities = set()
 
     for key in extract_domain_configs(config, DOMAIN):
@@ -108,9 +106,11 @@ def setup(hass, config):
 
 
 class Zone(Entity):
-    """ Represents a Zone in Home Assistant. """
+    """Representation of a Zone."""
+
     # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
+        """Initialize the zone."""
         self.hass = hass
         self._name = name
         self._latitude = latitude
@@ -121,19 +121,22 @@ class Zone(Entity):
 
     @property
     def name(self):
+        """Return the name of the zone."""
         return self._name
 
     @property
     def state(self):
-        """ The state property really does nothing for a zone. """
+        """Return the state property really does nothing for a zone."""
         return STATE
 
     @property
     def icon(self):
+        """Return the icon if any."""
         return self._icon
 
     @property
     def state_attributes(self):
+        """Return the state attributes of the zone."""
         data = {
             ATTR_HIDDEN: True,
             ATTR_LATITUDE: self._latitude,

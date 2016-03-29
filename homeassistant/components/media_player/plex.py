@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.plex
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides an interface to the Plex API.
+Support to interface with the Plex API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
@@ -35,7 +33,7 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 def config_from_file(filename, config=None):
-    """ Small configuration file management function. """
+    """Small configuration file management function."""
     if config:
         # We're writing configuration
         try:
@@ -61,8 +59,7 @@ def config_from_file(filename, config=None):
 
 # pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Sets up the plex platform. """
-
+    """Setup the Plex platform."""
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
     if len(config):
         # Setup a configured PlexServer
@@ -85,7 +82,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-branches
 def setup_plexserver(host, token, hass, add_devices_callback):
-    """ Setup a plexserver based on host parameter. """
+    """Setup a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
@@ -119,7 +116,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
-        """ Updates the devices objects. """
+        """Update the devices objects."""
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
@@ -145,7 +142,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
-        """ Updates the sessions objects. """
+        """Update the sessions objects."""
         try:
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
@@ -161,7 +158,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
 
 def request_configuration(host, hass, add_devices_callback):
-    """ Request configuration steps from the user. """
+    """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
     # We got an error if this method is called while we are configuring
@@ -172,7 +169,7 @@ def request_configuration(host, hass, add_devices_callback):
         return
 
     def plex_configuration_callback(data):
-        """ Actions to do when our configuration callback is called. """
+        """The actions to do when our configuration callback is called."""
         setup_plexserver(host, data.get('token'), hass, add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
@@ -185,33 +182,34 @@ def request_configuration(host, hass, add_devices_callback):
 
 
 class PlexClient(MediaPlayerDevice):
-    """ Represents a Plex device. """
+    """Representation of a Plex device."""
 
     # pylint: disable=too-many-public-methods, attribute-defined-outside-init
     def __init__(self, device, plex_sessions, update_devices, update_sessions):
+        """Initialize the Plex device."""
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
         self.set_device(device)
 
     def set_device(self, device):
-        """ Sets the device property. """
+        """Set the device property."""
         self.device = device
 
     @property
     def unique_id(self):
-        """ Returns the id of this plex client """
+        """Return the id of this plex client."""
         return "{}.{}".format(
             self.__class__, self.device.machineIdentifier or self.device.name)
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self.device.name or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
-        """ Returns the session, if any. """
+        """Return the session, if any."""
         if self.device.machineIdentifier not in self.plex_sessions:
             return None
 
@@ -219,7 +217,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         if self.session:
             state = self.session.player.state
             if state == 'playing':
@@ -235,18 +233,19 @@ class PlexClient(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     def update(self):
+        """Get the latest details."""
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         if self.session is not None:
             return self.session.ratingKey
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         if self.session is None:
             return None
         media_type = self.session.type
@@ -258,61 +257,61 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         if self.session is not None:
             return self.session.duration
 
     @property
     def media_image_url(self):
-        """ Image url of current playing media. """
+        """Image url of current playing media."""
         if self.session is not None:
             return self.session.thumbUrl
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         # find a string we can use as a title
         if self.session is not None:
             return self.session.title
 
     @property
     def media_season(self):
-        """ Season of curent playing media (TV Show only). """
+        """Season of curent playing media (TV Show only)."""
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.seasons()[0].index
 
     @property
     def media_series_title(self):
-        """ Series title of current playing media (TV Show only). """
+        """The title of the series of current playing media (TV Show only)."""
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.grandparentTitle
 
     @property
     def media_episode(self):
-        """ Episode of current playing media (TV Show only). """
+        """Episode of current playing media (TV Show only)."""
         from plexapi.video import Show
         if isinstance(self.session, Show):
             return self.session.index
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_PLEX
 
     def media_play(self):
-        """ media_play media player. """
+        """Send play command."""
         self.device.play()
 
     def media_pause(self):
-        """ media_pause media player. """
+        """Send pause command."""
         self.device.pause()
 
     def media_next_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self.device.skipNext()
 
     def media_previous_track(self):
-        """ Send previous track command. """
+        """Send previous track command."""
         self.device.skipPrevious()

@@ -101,9 +101,10 @@ def track_devices(hass, entity_id, old_state, new_state):
 
 @track_time_change(hour=7, minute=0, second=0)
 def wake_up(hass, now):
-    """
-    Turn it on in the morning (7 AM) if there are people home and
-    it is not already on.
+    """Turn light on in the morning.
+
+    Turn the light on at 7 AM if there are people home and it is not already
+    on.
     """
     if not TARGET_ID:
         return
@@ -126,8 +127,9 @@ def all_lights_off(hass, entity_id, old_state, new_state):
 
 @service(DOMAIN, SERVICE_FLASH)
 def flash_service(hass, call):
-    """
-    Service that will turn the target off for 10 seconds if on and vice versa.
+    """Service that will toggle the target.
+
+    Set the light to off for 10 seconds if on and vice versa.
     """
     if not TARGET_ID:
         return

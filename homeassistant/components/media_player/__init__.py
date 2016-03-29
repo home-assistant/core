@@ -1,6 +1,4 @@
 """
-homeassistant.components.media_player
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to interface with various media players.
 
 For more details about this component, please refer to the documentation at
@@ -21,6 +19,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'media_player'
 SCAN_INTERVAL = 10
 
@@ -30,6 +30,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_CAST: 'cast',
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
+    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -110,45 +111,48 @@ ATTR_TO_PROPERTY = [
 
 
 def is_on(hass, entity_id=None):
-    """ Returns true if specified media player entity_id is on.
-    Will check all media player if no entity_id specified. """
+    """
+    Return true if specified media player entity_id is on.
+
+    Check all media player if no entity_id specified.
+    """
     entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
     return any(not hass.states.is_state(entity_id, STATE_OFF)
                for entity_id in entity_ids)
 
 
 def turn_on(hass, entity_id=None):
-    """ Will turn on specified media player or all. """
+    """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 def turn_off(hass, entity_id=None):
-    """ Will turn off specified media player or all. """
+    """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 def toggle(hass, entity_id=None):
-    """ Will toggle specified media player or all. """
+    """Toggle specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 def volume_up(hass, entity_id=None):
-    """ Send the media player the command for volume up. """
+    """Send the media player the command for volume up."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_VOLUME_UP, data)
 
 
 def volume_down(hass, entity_id=None):
-    """ Send the media player the command for volume down. """
+    """Send the media player the command for volume down."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_VOLUME_DOWN, data)
 
 
 def mute_volume(hass, mute, entity_id=None):
-    """ Send the media player the command for volume down. """
+    """Send the media player the command for muting the volume."""
     data = {ATTR_MEDIA_VOLUME_MUTED: mute}
 
     if entity_id:
@@ -158,7 +162,7 @@ def mute_volume(hass, mute, entity_id=None):
 
 
 def set_volume_level(hass, volume, entity_id=None):
-    """ Send the media player the command for volume down. """
+    """Send the media player the command for setting the volume."""
     data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
 
     if entity_id:
@@ -168,45 +172,46 @@ def set_volume_level(hass, volume, entity_id=None):
 
 
 def media_play_pause(hass, entity_id=None):
-    """ Send the media player the command for play/pause. """
+    """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, data)
 
 
 def media_play(hass, entity_id=None):
-    """ Send the media player the command for play/pause. """
+    """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PLAY, data)
 
 
 def media_pause(hass, entity_id=None):
-    """ Send the media player the command for play/pause. """
+    """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
 
 def media_next_track(hass, entity_id=None):
-    """ Send the media player the command for next track. """
+    """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
 
 
 def media_previous_track(hass, entity_id=None):
-    """ Send the media player the command for prev track. """
+    """Send the media player the command for prev track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
 
 
 def media_seek(hass, position, entity_id=None):
-    """ Send the media player the command to seek in current playing media. """
+    """Send the media player the command to seek in current playing media."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     data[ATTR_MEDIA_SEEK_POSITION] = position
     hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
 
 
 def play_media(hass, media_type, media_id, entity_id=None):
-    """ Send the media player the command for playing media. """
-    data = {"media_type": media_type, "media_id": media_id}
+    """Send the media player the command for playing media."""
+    data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
+            ATTR_MEDIA_CONTENT_ID: media_id}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -215,7 +220,7 @@ def play_media(hass, media_type, media_id, entity_id=None):
 
 
 def setup(hass, config):
-    """ Track states and offer events for media_players. """
+    """Track states and offer events for media_players."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
@@ -226,12 +231,10 @@ def setup(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def media_player_service_handler(service):
-        """ Maps services to methods on MediaPlayerDevice. """
-        target_players = component.extract_from_service(service)
-
+        """Map services to methods on MediaPlayerDevice."""
         method = SERVICE_TO_METHOD[service.service]
 
-        for player in target_players:
+        for player in component.extract_from_service(service):
             getattr(player, method)()
 
             if player.should_poll:
@@ -242,15 +245,16 @@ def setup(hass, config):
                                descriptions.get(service))
 
     def volume_set_service(service):
-        """ Set specified volume on the media player. """
-        target_players = component.extract_from_service(service)
+        """Set specified volume on the media player."""
+        volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
 
-        if ATTR_MEDIA_VOLUME_LEVEL not in service.data:
+        if volume is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_VOLUME_LEVEL)
             return
 
-        volume = service.data[ATTR_MEDIA_VOLUME_LEVEL]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.set_volume_level(volume)
 
             if player.should_poll:
@@ -260,15 +264,16 @@ def setup(hass, config):
                            descriptions.get(SERVICE_VOLUME_SET))
 
     def volume_mute_service(service):
-        """ Mute (true) or unmute (false) the media player. """
-        target_players = component.extract_from_service(service)
+        """Mute (true) or unmute (false) the media player."""
+        mute = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
 
-        if ATTR_MEDIA_VOLUME_MUTED not in service.data:
+        if mute is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_VOLUME_MUTED)
             return
 
-        mute = service.data[ATTR_MEDIA_VOLUME_MUTED]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.mute_volume(mute)
 
             if player.should_poll:
@@ -278,15 +283,16 @@ def setup(hass, config):
                            descriptions.get(SERVICE_VOLUME_MUTE))
 
     def media_seek_service(service):
-        """ Seek to a position. """
-        target_players = component.extract_from_service(service)
+        """Seek to a position."""
+        position = service.data.get(ATTR_MEDIA_SEEK_POSITION)
 
-        if ATTR_MEDIA_SEEK_POSITION not in service.data:
+        if position is None:
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, ATTR_MEDIA_SEEK_POSITION)
             return
 
-        position = service.data[ATTR_MEDIA_SEEK_POSITION]
-
-        for player in target_players:
+        for player in component.extract_from_service(service):
             player.media_seek(position)
 
             if player.should_poll:
@@ -296,14 +302,16 @@ def setup(hass, config):
                            descriptions.get(SERVICE_MEDIA_SEEK))
 
     def play_media_service(service):
-        """ Plays specified media_id on the media player. """
-        media_type = service.data.get('media_type')
-        media_id = service.data.get('media_id')
+        """Play specified media_id on the media player."""
+        media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
+        media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
 
-        if media_type is None:
-            return
-
-        if media_id is None:
+        if media_type is None or media_id is None:
+            missing_attr = (ATTR_MEDIA_CONTENT_TYPE if media_type is None
+                            else ATTR_MEDIA_CONTENT_ID)
+            _LOGGER.error(
+                'Received call to %s without attribute %s',
+                service.service, missing_attr)
             return
 
         for player in component.extract_from_service(service):
@@ -320,206 +328,207 @@ def setup(hass, config):
 
 
 class MediaPlayerDevice(Entity):
-    """ ABC for media player devices. """
+    """ABC for media player devices."""
+
     # pylint: disable=too-many-public-methods,no-self-use
 
     # Implement these for your media player
 
     @property
     def state(self):
-        """ State of the player. """
+        """State of the player."""
         return STATE_UNKNOWN
 
     @property
     def volume_level(self):
-        """ Volume level of the media player (0..1). """
+        """Volume level of the media player (0..1)."""
         return None
 
     @property
     def is_volume_muted(self):
-        """ Boolean if volume is currently muted. """
+        """Boolean if volume is currently muted."""
         return None
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         return None
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         return None
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         return None
 
     @property
     def media_image_url(self):
-        """ Image url of current playing media. """
+        """Image url of current playing media."""
         return None
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         return None
 
     @property
     def media_artist(self):
-        """ Artist of current playing media. (Music track only) """
+        """Artist of current playing media, music track only."""
         return None
 
     @property
     def media_album_name(self):
-        """ Album name of current playing media. (Music track only) """
+        """Album name of current playing media, music track only."""
         return None
 
     @property
     def media_album_artist(self):
-        """ Album arist of current playing media. (Music track only) """
+        """Album artist of current playing media, music track only."""
         return None
 
     @property
     def media_track(self):
-        """ Track number of current playing media. (Music track only) """
+        """Track number of current playing media, music track only."""
         return None
 
     @property
     def media_series_title(self):
-        """ Series title of current playing media. (TV Show only)"""
+        """Title of series of current playing media, TV show only."""
         return None
 
     @property
     def media_season(self):
-        """ Season of current playing media. (TV Show only) """
+        """Season of current playing media, TV show only."""
         return None
 
     @property
     def media_episode(self):
-        """ Episode of current playing media. (TV Show only) """
+        """Episode of current playing media, TV show only."""
         return None
 
     @property
     def media_channel(self):
-        """ Channel currently playing. """
+        """Channel currently playing."""
         return None
 
     @property
     def media_playlist(self):
-        """ Title of Playlist currently playing. """
+        """Title of Playlist currently playing."""
         return None
 
     @property
     def app_id(self):
-        """  ID of the current running app. """
+        """ID of the current running app."""
         return None
 
     @property
     def app_name(self):
-        """  Name of the current running app. """
+        """Name of the current running app."""
         return None
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag media commands that are supported."""
         return 0
 
     def turn_on(self):
-        """ turn the media player on. """
+        """Turn the media player on."""
         raise NotImplementedError()
 
     def turn_off(self):
-        """ turn the media player off. """
+        """Turn the media player off."""
         raise NotImplementedError()
 
     def mute_volume(self, mute):
-        """ mute the volume. """
+        """Mute the volume."""
         raise NotImplementedError()
 
     def set_volume_level(self, volume):
-        """ set volume level, range 0..1. """
+        """Set volume level, range 0..1."""
         raise NotImplementedError()
 
     def media_play(self):
-        """ Send play commmand. """
+        """Send play commmand."""
         raise NotImplementedError()
 
     def media_pause(self):
-        """ Send pause command. """
+        """Send pause command."""
         raise NotImplementedError()
 
     def media_previous_track(self):
-        """ Send previous track command. """
+        """Send previous track command."""
         raise NotImplementedError()
 
     def media_next_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         raise NotImplementedError()
 
     def media_seek(self, position):
-        """ Send seek command. """
+        """Send seek command."""
         raise NotImplementedError()
 
     def play_media(self, media_type, media_id):
-        """ Plays a piece of media. """
+        """Play a piece of media."""
         raise NotImplementedError()
 
     # No need to overwrite these.
     @property
     def support_pause(self):
-        """ Boolean if pause is supported. """
+        """Boolean if pause is supported."""
         return bool(self.supported_media_commands & SUPPORT_PAUSE)
 
     @property
     def support_seek(self):
-        """ Boolean if seek is supported. """
+        """Boolean if seek is supported."""
         return bool(self.supported_media_commands & SUPPORT_SEEK)
 
     @property
     def support_volume_set(self):
-        """ Boolean if setting volume is supported. """
+        """Boolean if setting volume is supported."""
         return bool(self.supported_media_commands & SUPPORT_VOLUME_SET)
 
     @property
     def support_volume_mute(self):
-        """ Boolean if muting volume is supported. """
+        """Boolean if muting volume is supported."""
         return bool(self.supported_media_commands & SUPPORT_VOLUME_MUTE)
 
     @property
     def support_previous_track(self):
-        """ Boolean if previous track command supported. """
+        """Boolean if previous track command supported."""
         return bool(self.supported_media_commands & SUPPORT_PREVIOUS_TRACK)
 
     @property
     def support_next_track(self):
-        """ Boolean if next track command supported. """
+        """Boolean if next track command supported."""
         return bool(self.supported_media_commands & SUPPORT_NEXT_TRACK)
 
     @property
     def support_play_media(self):
-        """ Boolean if play media command supported. """
+        """Boolean if play media command supported."""
         return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
 
     def toggle(self):
-        """ Toggles the power on the media player. """
+        """Toggle the power on the media player."""
         if self.state in [STATE_OFF, STATE_IDLE]:
             self.turn_on()
         else:
             self.turn_off()
 
     def volume_up(self):
-        """ volume_up media player. """
+        """Turn volume up for media player."""
         if self.volume_level < 1:
             self.set_volume_level(min(1, self.volume_level + .1))
 
     def volume_down(self):
-        """ volume_down media player. """
+        """Turn volume down for media player."""
         if self.volume_level > 0:
             self.set_volume_level(max(0, self.volume_level - .1))
 
     def media_play_pause(self):
-        """ media_play_pause media player. """
+        """Play or pause the media player."""
         if self.state == STATE_PLAYING:
             self.media_pause()
         else:
@@ -532,7 +541,7 @@ class MediaPlayerDevice(Entity):
 
     @property
     def state_attributes(self):
-        """ Return the state attributes. """
+        """Return the state attributes."""
         if self.state == STATE_OFF:
             state_attr = {
                 ATTR_SUPPORTED_MEDIA_COMMANDS: self.supported_media_commands,

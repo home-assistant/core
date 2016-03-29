@@ -1,6 +1,4 @@
 """
-homeassistant.components.light
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides functionality to interact with lights.
 
 For more details about this component, please refer to the documentation at
@@ -11,7 +9,8 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wemo, wink, isy994, zwave, insteon_hub, mysensors)
+    group, discovery, wemo, wink, isy994,
+    zwave, insteon_hub, mysensors, tellstick, vera)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -30,26 +29,26 @@ ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-# integer that represents transition time in seconds to make change
+# Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
-# lists holding color values
+# Lists holding color values
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
 
-# int with value 0 .. 255 representing brightness of the light
+# int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
 
-# String representing a profile (built-in ones or external defined)
+# String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
 
-# If the light should flash, can be FLASH_SHORT or FLASH_LONG
+# If the light should flash, can be FLASH_SHORT or FLASH_LONG.
 ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
-# Apply an effect to the light, can be EFFECT_COLORLOOP
+# Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
@@ -57,7 +56,7 @@ EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
-# Maps discovered services to their platforms
+# Maps discovered services to their platforms.
 DISCOVERY_PLATFORMS = {
     wemo.DISCOVER_LIGHTS: 'wemo',
     wink.DISCOVER_LIGHTS: 'wink',
@@ -66,6 +65,8 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
     mysensors.DISCOVER_LIGHTS: 'mysensors',
+    tellstick.DISCOVER_LIGHTS: 'tellstick',
+    vera.DISCOVER_LIGHTS: 'vera',
 }
 
 PROP_TO_ATTR = {
@@ -79,9 +80,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """ Returns if the lights are on based on the statemachine. """
+    """Return if the lights are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
-
     return hass.states.is_state(entity_id, STATE_ON)
 
 
@@ -89,7 +89,7 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
             flash=None, effect=None):
-    """ Turns all or specified light on. """
+    """Turn all or specified light on."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -108,7 +108,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 
 
 def turn_off(hass, entity_id=None, transition=None):
-    """ Turns all or specified light off. """
+    """Turn all or specified light off."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -120,7 +120,7 @@ def turn_off(hass, entity_id=None, transition=None):
 
 
 def toggle(hass, entity_id=None, transition=None):
-    """ Toggles all or specified light. """
+    """Toggle all or specified light."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -133,8 +133,7 @@ def toggle(hass, entity_id=None, transition=None):
 
 # pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config):
-    """ Exposes light control via statemachine and services. """
-
+    """Expose light control via statemachine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_LIGHTS)
@@ -168,7 +167,7 @@ def setup(hass, config):
                 return False
 
     def handle_light_service(service):
-        """ Hande a turn light on or off service call. """
+        """Hande a turn light on or off service call."""
         # Get and validate data
         dat = service.data
 
@@ -197,11 +196,11 @@ def setup(hass, config):
                     light.update_ha_state(True)
             return
 
-        # Processing extra data for turn light on request
+        # Processing extra data for turn light on request.
 
         # We process the profile first so that we get the desired
         # behavior that extra service data attributes overwrite
-        # profile values
+        # profile values.
         profile = profiles.get(dat.get(ATTR_PROFILE))
 
         if profile:
@@ -215,10 +214,10 @@ def setup(hass, config):
 
         if ATTR_XY_COLOR in dat:
             try:
-                # xy_color should be a list containing 2 floats
+                # xy_color should be a list containing 2 floats.
                 xycolor = dat.get(ATTR_XY_COLOR)
 
-                # Without this check, a xycolor with value '99' would work
+                # Without this check, a xycolor with value '99' would work.
                 if not isinstance(xycolor, str):
                     params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
 
@@ -228,7 +227,7 @@ def setup(hass, config):
                 pass
 
         if ATTR_COLOR_TEMP in dat:
-            # color_temp should be an int of mirads value
+            # color_temp should be an int of mireds value
             colortemp = dat.get(ATTR_COLOR_TEMP)
 
             # Without this check, a ctcolor with value '99' would work
@@ -263,7 +262,7 @@ def setup(hass, config):
             if light.should_poll:
                 light.update_ha_state(True)
 
-    # Listen for light on and light off service calls
+    # Listen for light on and light off service calls.
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
@@ -279,32 +278,32 @@ def setup(hass, config):
 
 
 class Light(ToggleEntity):
-    """ Represents a light within Home Assistant. """
-    # pylint: disable=no-self-use
+    """Representation of a light."""
 
+    # pylint: disable=no-self-use
     @property
     def brightness(self):
-        """ Brightness of this light between 0..255. """
+        """Return the brightness of this light between 0..255."""
         return None
 
     @property
     def xy_color(self):
-        """ XY color value [float, float]. """
+        """Return the XY color value [float, float]."""
         return None
 
     @property
     def rgb_color(self):
-        """ RGB color value [int, int, int] """
+        """Return the RGB color value [int, int, int]."""
         return None
 
     @property
     def color_temp(self):
-        """ CT color value in mirads. """
+        """Return the CT color value in mireds."""
         return None
 
     @property
     def state_attributes(self):
-        """ Returns optional state attributes. """
+        """Return optional state attributes."""
         data = {}
 
         if self.is_on:

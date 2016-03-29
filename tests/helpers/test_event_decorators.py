@@ -1,9 +1,4 @@
-"""
-tests.helpers.test_event_decorators
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests event decorator helpers.
-"""
+"""Test event decorator helpers."""
 # pylint: disable=protected-access,too-many-public-methods
 # pylint: disable=too-few-public-methods
 import unittest
@@ -23,12 +18,10 @@ from tests.common import get_test_home_assistant
 
 
 class TestEventDecoratorHelpers(unittest.TestCase):
-    """
-    Tests the Home Assistant event helpers.
-    """
+    """Test the Home Assistant event helpers."""
 
     def setUp(self):     # pylint: disable=invalid-name
-        """ things to be run when tests are started. """
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set("light.Bowl", "on")
         self.hass.states.set("switch.AC", "off")
@@ -36,21 +29,21 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         event_decorators.HASS = self.hass
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
         event_decorators.HASS = None
 
     def test_track_sunrise(self):
-        """ Test track sunrise decorator """
+        """Test track sunrise decorator."""
         latitude = 32.87336
         longitude = 117.22743
 
-        # setup sun component
+        # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
-        # get next sunrise/sunset
+        # Get next sunrise/sunset
         astral = Astral()
         utc_now = dt_util.utcnow()
 
@@ -62,7 +55,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
                 break
             mod += 1
 
-        # use decorator
+        # Use decorator
         runs = []
         decor = track_sunrise()
         decor(lambda x: runs.append(1))
@@ -72,7 +65,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         decor = track_sunrise(offset)
         decor(lambda x: offset_runs.append(1))
 
-        # run tests
+        # Run tests
         self._send_time_changed(next_rising - offset)
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(runs))
@@ -89,16 +82,16 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         self.assertEqual(1, len(offset_runs))
 
     def test_track_sunset(self):
-        """ Test track sunset decorator """
+        """Test track sunset decorator."""
         latitude = 32.87336
         longitude = 117.22743
 
-        # setup sun component
+        # Setup sun component
         self.hass.config.latitude = latitude
         self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
-        # get next sunrise/sunset
+        # Get next sunrise/sunset
         astral = Astral()
         utc_now = dt_util.utcnow()
 
@@ -110,7 +103,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
                 break
             mod += 1
 
-        # use decorator
+        # Use decorator
         runs = []
         decor = track_sunset()
         decor(lambda x: runs.append(1))
@@ -137,7 +130,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         self.assertEqual(1, len(offset_runs))
 
     def test_track_time_change(self):
-        """ Test tracking time change. """
+        """Test tracking time change."""
         wildcard_runs = []
         specific_runs = []
 
@@ -163,7 +156,7 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         self.assertEqual(3, len(wildcard_runs))
 
     def test_track_state_change(self):
-        """ Test track_state_change. """
+        """Test track_state_change."""
         # 2 lists to track how often our callbacks get called
         specific_runs = []
         wildcard_runs = []
@@ -199,5 +192,5 @@ class TestEventDecoratorHelpers(unittest.TestCase):
         self.assertEqual(3, len(wildcard_runs))
 
     def _send_time_changed(self, now):
-        """ Send a time changed event. """
+        """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})

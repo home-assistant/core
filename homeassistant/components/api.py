@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Register the API with the HTTP interface."""
-
     # /api - for validation purposes
     hass.http.register_path('GET', URL_API, _handle_get_api)
 
@@ -84,11 +83,13 @@ def setup(hass, config):
     hass.http.register_path(
         'GET', URL_API_COMPONENTS, _handle_get_api_components)
 
+    # /error_log
     hass.http.register_path('GET', URL_API_ERROR_LOG,
                             _handle_get_api_error_log)
 
     hass.http.register_path('POST', URL_API_LOG_OUT, _handle_post_api_log_out)
 
+    # /template
     hass.http.register_path('POST', URL_API_TEMPLATE,
                             _handle_post_api_template)
 
@@ -96,7 +97,7 @@ def setup(hass, config):
 
 
 def _handle_get_api(handler, path_match, data):
-    """Renders the debug interface."""
+    """Render the debug interface."""
     handler.write_json_message("API running.")
 
 
@@ -114,7 +115,7 @@ def _handle_get_api_stream(handler, path_match, data):
         restrict = restrict.split(',')
 
     def write_message(payload):
-        """Writes a message to the output."""
+        """Write a message to the output."""
         with write_lock:
             msg = "data: {}\n\n".format(payload)
 
@@ -127,7 +128,7 @@ def _handle_get_api_stream(handler, path_match, data):
                 block.set()
 
     def forward_events(event):
-        """Forwards events to the open request."""
+        """Forward events to the open request."""
         nonlocal gracefully_closed
 
         if block.is_set() or event.event_type == EVENT_TIME_CHANGED:
@@ -171,17 +172,17 @@ def _handle_get_api_stream(handler, path_match, data):
 
 
 def _handle_get_api_config(handler, path_match, data):
-    """Returns the Home Assistant configuration."""
+    """Return the Home Assistant configuration."""
     handler.write_json(handler.server.hass.config.as_dict())
 
 
 def _handle_get_api_states(handler, path_match, data):
-    """Returns a dict containing all entity ids and their state."""
+    """Return a dict containing all entity ids and their state."""
     handler.write_json(handler.server.hass.states.all())
 
 
 def _handle_get_api_states_entity(handler, path_match, data):
-    """Returns the state of a specific entity."""
+    """Return the state of a specific entity."""
     entity_id = path_match.group('entity_id')
 
     state = handler.server.hass.states.get(entity_id)
@@ -193,7 +194,7 @@ def _handle_get_api_states_entity(handler, path_match, data):
 
 
 def _handle_post_state_entity(handler, path_match, data):
-    """Handles updating the state of an entity.
+    """Handle updating the state of an entity.
 
     This handles the following paths:
     /api/states/<entity_id>
@@ -240,15 +241,14 @@ def _handle_delete_state_entity(handler, path_match, data):
 
 
 def _handle_get_api_events(handler, path_match, data):
-    """Handles getting overview of event listeners."""
+    """Handle getting overview of event listeners."""
     handler.write_json(events_json(handler.server.hass))
 
 
 def _handle_api_post_events_event(handler, path_match, event_data):
-    """Handles firing of an event.
+    """Handle firing of an event.
 
-    This handles the following paths:
-    /api/events/<event_type>
+    This handles the following paths: /api/events/<event_type>
 
     Events from /api are threated as remote events.
     """
@@ -276,16 +276,15 @@ def _handle_api_post_events_event(handler, path_match, event_data):
 
 
 def _handle_get_api_services(handler, path_match, data):
-    """Handles getting overview of services."""
+    """Handle getting overview of services."""
     handler.write_json(services_json(handler.server.hass))
 
 
 # pylint: disable=invalid-name
 def _handle_post_api_services_domain_service(handler, path_match, data):
-    """Handles calling a service.
+    """Handle calling a service.
 
-    This handles the following paths:
-    /api/services/<domain>/<service>
+    This handles the following paths: /api/services/<domain>/<service>
     """
     domain = path_match.group('domain')
     service = path_match.group('service')
@@ -298,7 +297,7 @@ def _handle_post_api_services_domain_service(handler, path_match, data):
 
 # pylint: disable=invalid-name
 def _handle_post_api_event_forward(handler, path_match, data):
-    """Handles adding an event forwarding target."""
+    """Handle adding an event forwarding target."""
     try:
         host = data['host']
         api_password = data['api_password']
@@ -331,7 +330,7 @@ def _handle_post_api_event_forward(handler, path_match, data):
 
 
 def _handle_delete_api_event_forward(handler, path_match, data):
-    """Handles deleting an event forwarding target."""
+    """Handle deleting an event forwarding target."""
     try:
         host = data['host']
     except KeyError:
@@ -354,12 +353,12 @@ def _handle_delete_api_event_forward(handler, path_match, data):
 
 
 def _handle_get_api_components(handler, path_match, data):
-    """Returns all the loaded components."""
+    """Return all the loaded components."""
     handler.write_json(handler.server.hass.config.components)
 
 
 def _handle_get_api_error_log(handler, path_match, data):
-    """Returns the logged errors for this session."""
+    """Return the logged errors for this session."""
     handler.write_file(handler.server.hass.config.path(ERROR_LOG_FILENAME),
                        False)
 

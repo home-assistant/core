@@ -1,6 +1,4 @@
 """
-homeassistant.components.history
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provide pre-made queries on top of the recorder component.
 
 For more details about this component, please refer to the documentation at
@@ -26,7 +24,7 @@ URL_HISTORY_PERIOD = re.compile(
 
 
 def last_5_states(entity_id):
-    """ Return the last 5 states for entity_id. """
+    """Return the last 5 states for entity_id."""
     entity_id = entity_id.lower()
 
     query = """
@@ -39,12 +37,12 @@ def last_5_states(entity_id):
 
 
 def get_significant_states(start_time, end_time=None, entity_id=None):
-    """Return states changes during UTC period start_time - end_time.
+    """
+    Return states changes during UTC period start_time - end_time.
 
     Significant states are all states where there is a state change,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
-
     """
     where = """
         (domain IN ({}) OR last_changed=last_updated)
@@ -72,9 +70,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
 
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
-    """
-    Return states changes during UTC period start_time - end_time.
-    """
+    """Return states changes during UTC period start_time - end_time."""
     where = "last_changed=last_updated AND last_changed > ? "
     data = [start_time]
 
@@ -95,7 +91,7 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
 
 
 def get_states(utc_point_in_time, entity_ids=None, run=None):
-    """ Returns the states at a specific point in time. """
+    """Return the states at a specific point in time."""
     if run is None:
         run = recorder.run_information(utc_point_in_time)
 
@@ -124,7 +120,7 @@ def get_states(utc_point_in_time, entity_ids=None, run=None):
 
 
 def states_to_json(states, start_time, entity_id):
-    """Converts SQL results into JSON friendly data structure.
+    """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
     structure {'entity_id': [list of states], 'entity_id2': [list of states]}
@@ -133,7 +129,6 @@ def states_to_json(states, start_time, entity_id):
     each list of states, otherwise our graphs won't start on the Y
     axis correctly.
     """
-
     result = defaultdict(list)
 
     entity_ids = [entity_id] if entity_id is not None else None
@@ -151,7 +146,7 @@ def states_to_json(states, start_time, entity_id):
 
 
 def get_state(utc_point_in_time, entity_id, run=None):
-    """ Return a state at a specific point in time. """
+    """Return a state at a specific point in time."""
     states = get_states(utc_point_in_time, (entity_id,), run)
 
     return states[0] if states else None
@@ -159,7 +154,7 @@ def get_state(utc_point_in_time, entity_id, run=None):
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """ Setup history hooks. """
+    """Setup the history hooks."""
     hass.http.register_path(
         'GET',
         re.compile(
@@ -175,14 +170,14 @@ def setup(hass, config):
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
 def _api_last_5_states(handler, path_match, data):
-    """ Return the last 5 states for an entity id as JSON. """
+    """Return the last 5 states for an entity id as JSON."""
     entity_id = path_match.group('entity_id')
 
     handler.write_json(last_5_states(entity_id))
 
 
 def _api_history_period(handler, path_match, data):
-    """ Return history over a period of time. """
+    """Return history over a period of time."""
     date_str = path_match.group('date')
     one_day = timedelta(seconds=86400)
 

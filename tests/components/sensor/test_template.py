@@ -1,25 +1,22 @@
-"""
-tests.components.sensor.test_template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests template sensor.
-"""
+"""The test for the Template sensor platform."""
 import homeassistant.components.sensor as sensor
 
 from tests.common import get_test_home_assistant
 
 
 class TestTemplateSensor:
-    """ Test the Template sensor. """
+    """Test the Template sensor."""
 
     def setup_method(self, method):
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_template(self):
+        """Test template."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
@@ -41,6 +38,7 @@ class TestTemplateSensor:
         assert state.state == 'It Works.'
 
     def test_template_syntax_error(self):
+        """Test templating syntax error."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
@@ -56,9 +54,10 @@ class TestTemplateSensor:
         self.hass.states.set('sensor.test_state', 'Works')
         self.hass.pool.block_till_done()
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'error'
+        assert state.state == 'unknown'
 
     def test_template_attribute_missing(self):
+        """Test missing attribute template."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
@@ -72,9 +71,10 @@ class TestTemplateSensor:
         })
 
         state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'error'
+        assert state.state == 'unknown'
 
     def test_invalid_name_does_not_create(self):
+        """Test invalid name."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
@@ -89,6 +89,7 @@ class TestTemplateSensor:
         assert self.hass.states.all() == []
 
     def test_invalid_sensor_does_not_create(self):
+        """Test invalid sensor."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',
@@ -100,6 +101,7 @@ class TestTemplateSensor:
         assert self.hass.states.all() == []
 
     def test_no_sensors_does_not_create(self):
+        """Test no sensors."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template'
@@ -108,6 +110,7 @@ class TestTemplateSensor:
         assert self.hass.states.all() == []
 
     def test_missing_template_does_not_create(self):
+        """Test missing template."""
         assert sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'template',

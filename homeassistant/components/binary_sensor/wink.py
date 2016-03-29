@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
@@ -22,7 +22,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Wink platform."""
+    """Setup the Wink platform."""
     import pywink
 
     if discovery_info is None:
@@ -42,16 +42,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkBinarySensorDevice(BinarySensorDevice, Entity):
-    """Represents a Wink sensor."""
+    """Representation of a Wink sensor."""
 
     def __init__(self, wink):
+        """Initialize the Wink binary sensor."""
         self.wink = wink
         self._unit_of_measurement = self.wink.UNIT
         self.capability = self.wink.capability()
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         if self.capability == "loudness":
             return self.wink.loudness_boolean()
         elif self.capability == "vibration":
@@ -68,14 +69,19 @@ class WinkBinarySensorDevice(BinarySensorDevice, Entity):
 
     @property
     def unique_id(self):
-        """ Returns the id of this wink sensor """
+        """Return the ID of this wink sensor."""
         return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
-        """ Returns the name of the sensor if any. """
+        """Return the name of the sensor if any."""
         return self.wink.name()
 
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
+
     def update(self):
-        """ Update state of the sensor. """
+        """Update state of the sensor."""
         self.wink.update_state()

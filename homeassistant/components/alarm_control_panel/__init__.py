@@ -1,5 +1,5 @@
 """
-Component to interface with a alarm control panel.
+Component to interface with an alarm control panel.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel/
@@ -9,7 +9,7 @@ import os
 
 from homeassistant.components import verisure
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
+    ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
@@ -32,9 +32,6 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_TRIGGER: 'alarm_trigger'
 }
 
-ATTR_CODE = 'code'
-ATTR_CODE_FORMAT = 'code_format'
-
 ATTR_TO_PROPERTY = [
     ATTR_CODE,
     ATTR_CODE_FORMAT
@@ -50,7 +47,7 @@ def setup(hass, config):
     component.setup(config)
 
     def alarm_service_handler(service):
-        """Maps services to methods on Alarm."""
+        """Map services to methods on Alarm."""
         target_alarms = component.extract_from_service(service)
 
         if ATTR_CODE not in service.data:
@@ -121,7 +118,8 @@ def alarm_trigger(hass, code=None, entity_id=None):
 
 # pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
-    """An ABC for alarm control devices."""
+    """An abstract class for alarm control devices."""
+
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
@@ -148,5 +146,5 @@ class AlarmControlPanel(Entity):
         """Return the state attributes."""
         state_attr = {
             ATTR_CODE_FORMAT: self.code_format,
-            }
+        }
         return state_attr

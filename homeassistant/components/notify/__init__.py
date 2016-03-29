@@ -45,7 +45,7 @@ def send_message(hass, message, title=None):
 
 
 def setup(hass, config):
-    """Sets up notify services."""
+    """Setup the notify services."""
     success = False
 
     descriptions = load_yaml_config_file(
@@ -71,6 +71,9 @@ def setup(hass, config):
             message = call.data.get(ATTR_MESSAGE)
 
             if message is None:
+                _LOGGER.error(
+                    'Received call to %s without attribute %s',
+                    call.service, ATTR_MESSAGE)
                 return
 
             title = template.render(
@@ -91,11 +94,11 @@ def setup(hass, config):
 
 # pylint: disable=too-few-public-methods
 class BaseNotificationService(object):
-    """Provides an ABC for notification services."""
+    """An abstract class for notification services."""
 
     def send_message(self, message, **kwargs):
-        """
-        Send a message.
+        """Send a message.
+
         kwargs can contain ATTR_TITLE to specify a title.
         """
         raise NotImplementedError

@@ -1,6 +1,6 @@
 """
-homeassistant.components.recorder
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for recording details.
+
 Component that records all events and state changes. Allows other components
 to query this database.
 
@@ -35,14 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def query(sql_query, arguments=None):
-    """ Query the database. """
+    """Query the database."""
     _verify_instance()
 
     return _INSTANCE.query(sql_query, arguments)
 
 
 def query_states(state_query, arguments=None):
-    """ Query the database and return a list of states. """
+    """Query the database and return a list of states."""
     return [
         row for row in
         (row_to_state(row) for row in query(state_query, arguments))
@@ -50,7 +50,7 @@ def query_states(state_query, arguments=None):
 
 
 def query_events(event_query, arguments=None):
-    """ Query the database and return a list of states. """
+    """Query the database and return a list of states."""
     return [
         row for row in
         (row_to_event(row) for row in query(event_query, arguments))
@@ -58,7 +58,7 @@ def query_events(event_query, arguments=None):
 
 
 def row_to_state(row):
-    """ Convert a database row to a state. """
+    """Convert a database row to a state."""
     try:
         return State(
             row[1], row[2], json.loads(row[3]),
@@ -71,7 +71,7 @@ def row_to_state(row):
 
 
 def row_to_event(row):
-    """ Convert a databse row to an event. """
+    """Convert a databse row to an event."""
     try:
         return Event(row[1], json.loads(row[2]), EventOrigin(row[3]),
                      dt_util.utc_from_timestamp(row[5]))
@@ -82,8 +82,9 @@ def row_to_event(row):
 
 
 def run_information(point_in_time=None):
-    """
-    Returns information about current run or the run that covers point_in_time.
+    """Return information about current run.
+
+    There is also the run that covers point_in_time.
     """
     _verify_instance()
 
@@ -98,7 +99,7 @@ def run_information(point_in_time=None):
 
 
 def setup(hass, config):
-    """ Setup the recorder. """
+    """Setup the recorder."""
     # pylint: disable=global-statement
     global _INSTANCE
 
@@ -108,8 +109,10 @@ def setup(hass, config):
 
 
 class RecorderRun(object):
-    """ Represents a recorder run. """
+    """Representation of arecorder run."""
+
     def __init__(self, row=None):
+        """Initialize the recorder run."""
         self.end = None
 
         if row is None:
@@ -124,8 +127,8 @@ class RecorderRun(object):
             self.closed_incorrect = bool(row[3])
 
     def entity_ids(self, point_in_time=None):
-        """
-        Return the entity ids that existed in this run.
+        """Return the entity ids that existed in this run.
+
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
@@ -142,15 +145,18 @@ class RecorderRun(object):
 
     @property
     def where_after_start_run(self):
-        """
-        Returns SQL WHERE clause to select rows created after the start of the
-        run.
+        """Return SQL WHERE clause.
+
+        Selection of the rows created after the start of the run.
         """
         return "created >= {} ".format(_adapt_datetime(self.start))
 
     @property
     def where_limit_to_run(self):
-        """ Return a SQL WHERE clause to limit results to this run. """
+        """Return a SQL WHERE clause.
+
+        For limiting the results to this run.
+        """
         where = self.where_after_start_run
 
         if self.end is not None:
@@ -160,8 +166,10 @@ class RecorderRun(object):
 
 
 class Recorder(threading.Thread):
-    """ Threaded recorder class """
+    """A threaded recorder class."""
+
     def __init__(self, hass):
+        """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
@@ -173,7 +181,7 @@ class Recorder(threading.Thread):
         self.utc_offset = dt_util.now().utcoffset().total_seconds()
 
         def start_recording(event):
-            """ Start recording. """
+            """Start recording."""
             self.start()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
@@ -181,7 +189,7 @@ class Recorder(threading.Thread):
         hass.bus.listen(MATCH_ALL, self.event_listener)
 
     def run(self):
-        """ Start processing events to save. """
+        """Start processing events to save."""
         self._setup_connection()
         self._setup_run()
 
@@ -208,19 +216,16 @@ class Recorder(threading.Thread):
             self.queue.task_done()
 
     def event_listener(self, event):
-        """
-        Listens for new events on the EventBus and puts them in the process
-        queue.
-        """
+        """Listen for new events and put them in the process queue."""
         self.queue.put(event)
 
     def shutdown(self, event):
-        """ Tells the recorder to shut down. """
+        """Tell the recorder to shut down."""
         self.queue.put(self.quit_object)
         self.block_till_done()
 
     def record_state(self, entity_id, state, event_id):
-        """ Save a state to the database. """
+        """Save a state to the database."""
         now = dt_util.utcnow()
 
         # State got deleted
@@ -251,7 +256,7 @@ class Recorder(threading.Thread):
             info)
 
     def record_event(self, event):
-        """ Save an event to the database. """
+        """Save an event to the database."""
         info = (
             event.event_type, json.dumps(event.data, cls=JSONEncoder),
             str(event.origin), dt_util.utcnow(), event.time_fired,
@@ -264,7 +269,7 @@ class Recorder(threading.Thread):
             ") VALUES (?, ?, ?, ?, ?, ?)", info, RETURN_LASTROWID)
 
     def query(self, sql_query, data=None, return_value=None):
-        """ Query the database. """
+        """Query the database."""
         try:
             with self.conn, self.lock:
                 _LOGGER.debug("Running query %s", sql_query)
@@ -292,11 +297,11 @@ class Recorder(threading.Thread):
             return []
 
     def block_till_done(self):
-        """ Blocks till all events processed. """
+        """Block till all events processed."""
         self.queue.join()
 
     def _setup_connection(self):
-        """ Ensure database is ready to fly. """
+        """Ensure database is ready to fly."""
         db_path = self.hass.config.path(DB_FILE)
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
@@ -305,15 +310,15 @@ class Recorder(threading.Thread):
         # without the STOP event being fired.
         atexit.register(self._close_connection)
 
-        # Have datetime objects be saved as integers
+        # Have datetime objects be saved as integers.
         sqlite3.register_adapter(date, _adapt_datetime)
         sqlite3.register_adapter(datetime, _adapt_datetime)
 
-        # Validate we are on the correct schema or that we have to migrate
+        # Validate we are on the correct schema or that we have to migrate.
         cur = self.conn.cursor()
 
         def save_migration(migration_id):
-            """ Save and commit a migration to the database. """
+            """Save and commit a migration to the database."""
             cur.execute('INSERT INTO schema_version VALUES (?, ?)',
                         (migration_id, dt_util.utcnow()))
             self.conn.commit()
@@ -324,7 +329,7 @@ class Recorder(threading.Thread):
             migration_id = cur.fetchone()[0] or 0
 
         except sqlite3.OperationalError:
-            # The table does not exist
+            # The table does not exist.
             cur.execute('CREATE TABLE schema_version ('
                         'migration_id integer primary key, performed integer)')
             migration_id = 0
@@ -399,7 +404,7 @@ class Recorder(threading.Thread):
             save_migration(3)
 
         if migration_id < 4:
-            # We had a bug where we did not save utc offset for recorder runs
+            # We had a bug where we did not save utc offset for recorder runs.
             cur.execute(
                 """UPDATE recorder_runs SET utc_offset=?
                    WHERE utc_offset IS NULL""", [self.utc_offset])
@@ -412,15 +417,15 @@ class Recorder(threading.Thread):
             save_migration(4)
 
         if migration_id < 5:
-            # Add domain so that thermostat graphs look right
+            # Add domain so that thermostat graphs look right.
             try:
                 cur.execute("""
                     ALTER TABLE states
                     ADD COLUMN domain text
                 """)
             except sqlite3.OperationalError:
-                # We had a bug in this migration for a while on dev
-                # Without this, dev-users will have to throw away their db
+                # We had a bug in this migration for a while on dev.
+                # Without this, dev-users will have to throw away their db.
                 pass
 
             # TravisCI has Python compiled against an old version of SQLite3
@@ -429,13 +434,13 @@ class Recorder(threading.Thread):
                 "instr", 2,
                 lambda string, substring: string.find(substring) + 1)
 
-            # populate domain with defaults
+            # Populate domain with defaults.
             cur.execute("""
                 UPDATE states
                 set domain=substr(entity_id, 0, instr(entity_id, '.'))
             """)
 
-            # add indexes we are going to use a lot on selects
+            # Add indexes we are going to use a lot on selects.
             cur.execute("""
                 CREATE INDEX states__state_changes ON
                 states (last_changed, last_updated, entity_id)""")
@@ -445,13 +450,13 @@ class Recorder(threading.Thread):
             save_migration(5)
 
     def _close_connection(self):
-        """ Close connection to the database. """
+        """Close connection to the database."""
         _LOGGER.info("Closing database")
         atexit.unregister(self._close_connection)
         self.conn.close()
 
     def _setup_run(self):
-        """ Log the start of the current run. """
+        """Log the start of the current run."""
         if self.query("""UPDATE recorder_runs SET end=?, closed_incorrect=1
                       WHERE end IS NULL""", (self.recording_start, ),
                       return_value=RETURN_ROWCOUNT):
@@ -464,18 +469,18 @@ class Recorder(threading.Thread):
             (self.recording_start, dt_util.utcnow(), self.utc_offset))
 
     def _close_run(self):
-        """ Save end time for current run. """
+        """Save end time for current run."""
         self.query(
             "UPDATE recorder_runs SET end=? WHERE start=?",
             (dt_util.utcnow(), self.recording_start))
 
 
 def _adapt_datetime(datetimestamp):
-    """ Turn a datetime into an integer for in the DB. """
+    """Turn a datetime into an integer for in the DB."""
     return dt_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
 
 
 def _verify_instance():
-    """ Throws error if recorder not initialized. """
+    """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")

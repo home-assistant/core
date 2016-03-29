@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -31,8 +31,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkLockDevice(LockDevice):
-    """Represents a Wink lock."""
+    """Representation of a Wink lock."""
+
     def __init__(self, wink):
+        """Initialize the lock."""
         self.wink = wink
 
     @property
@@ -53,6 +55,11 @@ class WinkLockDevice(LockDevice):
     def is_locked(self):
         """Return true if device is locked."""
         return self.wink.state()
+
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
 
     def lock(self, **kwargs):
         """Lock the device."""

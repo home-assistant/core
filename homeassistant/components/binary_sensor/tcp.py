@@ -7,9 +7,9 @@ https://home-assistant.io/components/binary_sensor.tcp/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor.tcp import Sensor, DOMAIN, CONF_VALUE_ON
+from homeassistant.components.sensor.tcp import Sensor, CONF_VALUE_ON
 
-DEPENDENCIES = [DOMAIN]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -23,6 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class BinarySensor(BinarySensorDevice, Sensor):
     """A binary sensor which is on when its state == CONF_VALUE_ON."""
+
     required = (CONF_VALUE_ON,)
 
     @property

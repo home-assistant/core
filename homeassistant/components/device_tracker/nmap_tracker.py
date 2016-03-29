@@ -1,7 +1,5 @@
 """
-homeassistant.components.device_tracker.nmap
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Device tracker platform that supports scanning a network with nmap.
+Support for scanning a network with nmap.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.nmap_scanner/
@@ -26,11 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 # interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
-REQUIREMENTS = ['python-nmap==0.4.3']
+REQUIREMENTS = ['python-nmap==0.6.0']
 
 
 def get_scanner(hass, config):
-    """ Validates config and returns a Nmap scanner. """
+    """Validate the configuration and return a Nmap scanner."""
     if not validate_config(config, {DOMAIN: [CONF_HOSTS]},
                            _LOGGER):
         return None
@@ -43,7 +41,7 @@ Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
 
 
 def _arp(ip_address):
-    """ Get the MAC address for a given IP. """
+    """Get the MAC address for a given IP."""
     cmd = ['arp', '-n', ip_address]
     arp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     out, _ = arp.communicate()
@@ -55,9 +53,10 @@ def _arp(ip_address):
 
 
 class NmapDeviceScanner(object):
-    """ This class scans for devices using nmap. """
+    """This class scans for devices using nmap."""
 
     def __init__(self, config):
+        """Initialize the scanner."""
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
@@ -68,17 +67,13 @@ class NmapDeviceScanner(object):
         _LOGGER.info("nmap scanner initialized")
 
     def scan_devices(self):
-        """
-        Scans for new devices and return a list containing found device ids.
-        """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
         return [device.mac for device in self.last_results]
 
     def get_device_name(self, mac):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Return the name of the given device or None if we don't know."""
         filter_named = [device.name for device in self.last_results
                         if device.mac == mac]
 
@@ -89,8 +84,8 @@ class NmapDeviceScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """
-        Scans the network for devices.
+        """Scan the network for devices.
+
         Returns boolean if scanning successful.
         """
         _LOGGER.info("Scanning")

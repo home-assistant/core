@@ -1,6 +1,5 @@
 """
-Allows to configure custom shell commands to turn a value into a logical value
-for a binary sensor.
+Support for custom shell commands to to retrieve values.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.command/
@@ -27,7 +26,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Add the Command Sensor."""
+    """Setup the Command Sensor."""
     if config.get('command') is None:
         _LOGGER.error('Missing required variable: "command"')
         return False
@@ -52,11 +51,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
 class CommandBinarySensor(BinarySensorDevice):
+<<<<<<< HEAD
     """
     Represents a binary sensor that is returning a value of a shell commands.
     """
     def __init__(self, hass, data, name, sensor_class, payload_on,
+=======
+    """Represent a command line binary sensor."""
+
+    def __init__(self, hass, data, name, payload_on,
+>>>>>>> 0549bc02901b16ca653984713f3b41166fdbb445
                  payload_off, value_template):
+        """Initialize the Command line binary sensor."""
         self._hass = hass
         self.data = data
         self._name = name
@@ -69,12 +75,12 @@ class CommandBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     @property
@@ -83,7 +89,7 @@ class CommandBinarySensor(BinarySensorDevice):
         return self._sensor_class
 
     def update(self):
-        """Gets the latest data and updates the state."""
+        """Get the latest data and updates the state."""
         self.data.update()
         value = self.data.value
 

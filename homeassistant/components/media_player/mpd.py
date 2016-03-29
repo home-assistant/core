@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.mpd
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides functionality to interact with a Music Player Daemon.
+Support to interact with a Music Player Daemon.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
@@ -16,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['python-mpd2==0.5.4']
+REQUIREMENTS = ['python-mpd2==0.5.5']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -24,8 +22,7 @@ SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the MPD platform. """
-
+    """Setup the MPD platform."""
     daemon = config.get('server', None)
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
@@ -64,12 +61,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MpdDevice(MediaPlayerDevice):
-    """ Represents a MPD server. """
+    """Representation of a MPD server."""
 
     # MPD confuses pylint
     # pylint: disable=no-member, abstract-method
-
     def __init__(self, server, port, location, password):
+        """Initialize the MPD device."""
         import mpd
 
         self.server = server
@@ -85,6 +82,7 @@ class MpdDevice(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        """Get the latest data and update the state."""
         import mpd
         try:
             self.status = self.client.status()
@@ -100,12 +98,12 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the media state. """
+        """Return the media state."""
         if self.status['state'] == 'play':
             return STATE_PLAYING
         elif self.status['state'] == 'pause':
@@ -115,23 +113,23 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         return self.currentsong['id']
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         # Time does not exist for streams
         return self.currentsong.get('time')
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         name = self.currentsong.get('name', None)
         title = self.currentsong.get('title', None)
 
@@ -146,61 +144,62 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def media_artist(self):
-        """ Artist of current playing media. (Music track only) """
+        """Artist of current playing media (Music track only)."""
         return self.currentsong.get('artist')
 
     @property
     def media_album_name(self):
-        """ Album of current playing media. (Music track only) """
+        """Album of current playing media (Music track only)."""
         return self.currentsong.get('album')
 
     @property
     def volume_level(self):
+        """Return the volume level."""
         return int(self.status['volume'])/100
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_MPD
 
     def turn_off(self):
-        """ Service to send the MPD the command to stop playing. """
+        """Service to send the MPD the command to stop playing."""
         self.client.stop()
 
     def turn_on(self):
-        """ Service to send the MPD the command to start playing. """
+        """Service to send the MPD the command to start playing."""
         self.client.play()
 
     def set_volume_level(self, volume):
-        """ Sets volume """
+        """Set volume of media player."""
         self.client.setvol(int(volume * 100))
 
     def volume_up(self):
-        """ Service to send the MPD the command for volume up. """
+        """Service to send the MPD the command for volume up."""
         current_volume = int(self.status['volume'])
 
         if current_volume <= 100:
             self.client.setvol(current_volume + 5)
 
     def volume_down(self):
-        """ Service to send the MPD the command for volume down. """
+        """Service to send the MPD the command for volume down."""
         current_volume = int(self.status['volume'])
 
         if current_volume >= 0:
             self.client.setvol(current_volume - 5)
 
     def media_play(self):
-        """ Service to send the MPD the command for play/pause. """
+        """Service to send the MPD the command for play/pause."""
         self.client.pause(0)
 
     def media_pause(self):
-        """ Service to send the MPD the command for play/pause. """
+        """Service to send the MPD the command for play/pause."""
         self.client.pause(1)
 
     def media_next_track(self):
-        """ Service to send the MPD the command for next track. """
+        """Service to send the MPD the command for next track."""
         self.client.next()
 
     def media_previous_track(self):
-        """ Service to send the MPD the command for previous track. """
+        """Service to send the MPD the command for previous track."""
         self.client.previous()

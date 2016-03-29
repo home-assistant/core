@@ -97,21 +97,24 @@ def _handle_alexa(handler, path_match, data):
 
 
 class SpeechType(enum.Enum):
-    """Alexa speech types."""
+    """The Alexa speech types."""
+
     plaintext = "PlainText"
     ssml = "SSML"
 
 
 class CardType(enum.Enum):
-    """Alexa card types."""
+    """The Alexa card types."""
+
     simple = "Simple"
     link_account = "LinkAccount"
 
 
 class AlexaResponse(object):
-    """Helps generating the response for Alexa."""
+    """Help generating the response for Alexa."""
 
     def __init__(self, hass, intent=None):
+        """Initialize the response."""
         self.hass = hass
         self.speech = None
         self.card = None
@@ -125,7 +128,7 @@ class AlexaResponse(object):
             self.variables = {}
 
     def add_card(self, card_type, title, content):
-        """ Add a card to the response. """
+        """Add a card to the response."""
         assert self.card is None
 
         card = {
@@ -141,7 +144,7 @@ class AlexaResponse(object):
         self.card = card
 
     def add_speech(self, speech_type, text):
-        """ Add speech to the response. """
+        """Add speech to the response."""
         assert self.speech is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
@@ -163,7 +166,7 @@ class AlexaResponse(object):
         }
 
     def as_dict(self):
-        """Returns response in an Alexa valid dict."""
+        """Return response in an Alexa valid dict."""
         response = {
             'shouldEndSession': self.should_end_session
         }

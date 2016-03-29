@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.kodi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides an interface to the XBMC/Kodi JSON-RPC API
+Support for interfacing with the XBMC/Kodi JSON-RPC API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
@@ -23,8 +21,7 @@ SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the kodi platform. """
-
+    """Setup the Kodi platform."""
     url = '{}:{}'.format(config.get('host'), config.get('port', '8080'))
 
     jsonrpc_url = config.get('url')  # deprecated
@@ -42,18 +39,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class KodiDevice(MediaPlayerDevice):
-    """ Represents a XBMC/Kodi device. """
+    """Representation of a XBMC/Kodi device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-
     def __init__(self, name, url, auth=None):
+        """Initialize the Kodi device."""
         import jsonrpc_requests
         self._name = name
         self._url = url
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url),
             auth=auth)
-        self._players = None
+        self._players = list()
         self._properties = None
         self._item = None
         self._app_properties = None
@@ -61,22 +58,23 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     def _get_players(self):
-        """ Returns the active player objects or None """
+        """Return the active player objects or None."""
         import jsonrpc_requests
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
-            _LOGGER.warning('Unable to fetch kodi data')
-            _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
+            if self._players is not None:
+                _LOGGER.warning('Unable to fetch kodi data')
+                _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
             return None
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         if self._players is None:
             return STATE_OFF
 
@@ -89,7 +87,7 @@ class KodiDevice(MediaPlayerDevice):
             return STATE_PLAYING
 
     def update(self):
-        """ Retrieve latest state. """
+        """Retrieve latest state."""
         self._players = self._get_players()
 
         if self._players is not None and len(self._players) > 0:
@@ -117,31 +115,31 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """ Volume level of the media player (0..1). """
+        """Volume level of the media player (0..1)."""
         if self._app_properties is not None:
             return self._app_properties['volume'] / 100.0
 
     @property
     def is_volume_muted(self):
-        """ Boolean if volume is currently muted. """
+        """Boolean if volume is currently muted."""
         if self._app_properties is not None:
             return self._app_properties['muted']
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         if self._item is not None:
             return self._item.get('uniqueid', None)
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         if self._players is not None and len(self._players) > 0:
             return self._players[0]['type']
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         if self._properties is not None:
             total_time = self._properties['totaltime']
 
@@ -152,12 +150,12 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """ Image url of current playing media. """
+        """Image url of current playing media."""
         if self._item is not None:
             return self._get_image_url()
 
     def _get_image_url(self):
-        """ Helper function that parses the thumbnail URLs used by Kodi. """
+        """Helper function that parses the thumbnail URLs used by Kodi."""
         url_components = urllib.parse.urlparse(self._item['thumbnail'])
 
         if url_components.scheme == 'image':
@@ -167,7 +165,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         # find a string we can use as a title
         if self._item is not None:
             return self._item.get(
@@ -180,36 +178,36 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_KODI
 
     def turn_off(self):
-        """ turn_off media player. """
+        """Turn off media player."""
         self._server.System.Shutdown()
         self.update_ha_state()
 
     def volume_up(self):
-        """ volume_up media player. """
+        """Volume up the media player."""
         assert self._server.Input.ExecuteAction('volumeup') == 'OK'
         self.update_ha_state()
 
     def volume_down(self):
-        """ volume_down media player. """
+        """Volume down the media player."""
         assert self._server.Input.ExecuteAction('volumedown') == 'OK'
         self.update_ha_state()
 
     def set_volume_level(self, volume):
-        """ set volume level, range 0..1. """
+        """Set volume level, range 0..1."""
         self._server.Application.SetVolume(int(volume * 100))
         self.update_ha_state()
 
     def mute_volume(self, mute):
-        """ mute (true) or unmute (false) media player. """
+        """Mute (true) or unmute (false) media player."""
         self._server.Application.SetMute(mute)
         self.update_ha_state()
 
     def _set_play_state(self, state):
-        """ Helper method for play/pause/toggle. """
+        """Helper method for play/pause/toggle."""
         players = self._get_players()
 
         if len(players) != 0:
@@ -218,19 +216,19 @@ class KodiDevice(MediaPlayerDevice):
         self.update_ha_state()
 
     def media_play_pause(self):
-        """ media_play_pause media player. """
+        """Pause media on media player."""
         self._set_play_state('toggle')
 
     def media_play(self):
-        """ media_play media player. """
+        """Play media."""
         self._set_play_state(True)
 
     def media_pause(self):
-        """ media_pause media player. """
+        """Pause the media player."""
         self._set_play_state(False)
 
     def _goto(self, direction):
-        """ Helper method used for previous/next track. """
+        """Helper method used for previous/next track."""
         players = self._get_players()
 
         if len(players) != 0:
@@ -239,18 +237,18 @@ class KodiDevice(MediaPlayerDevice):
         self.update_ha_state()
 
     def media_next_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self._goto('next')
 
     def media_previous_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         # first seek to position 0, Kodi seems to go to the beginning
         # of the current track current track is not at the beginning
         self.media_seek(0)
         self._goto('previous')
 
     def media_seek(self, position):
-        """ Send seek command. """
+        """Send seek command."""
         players = self._get_players()
 
         time = {}

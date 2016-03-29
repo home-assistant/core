@@ -1,7 +1,5 @@
 """
-homeassistant.components.automation.state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Offers state listening automation rules.
+Offer state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#state-trigger
@@ -25,7 +23,7 @@ CONF_FOR = "for"
 
 
 def get_time_config(config):
-    """ Helper function to extract the time specified in the config """
+    """Helper function to extract the time specified in the configuration."""
     if CONF_FOR not in config:
         return None
 
@@ -51,7 +49,7 @@ def get_time_config(config):
 
 
 def trigger(hass, config, action):
-    """ Listen for state changes based on `config`. """
+    """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
 
     if entity_id is None:
@@ -72,17 +70,15 @@ def trigger(hass, config, action):
         return None
 
     def state_automation_listener(entity, from_s, to_s):
-        """ Listens for state changes and calls action. """
-
+        """Listen for state changes and calls action."""
         def state_for_listener(now):
-            """ Fires on state changes after a delay and calls action. """
+            """Fire on state changes after a delay and calls action."""
             hass.bus.remove_listener(
                 EVENT_STATE_CHANGED, for_state_listener)
             action()
 
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
-            """ Fires on state changes and cancels
-                for listener if state changed. """
+            """Fire on changes and cancel for listener if changed."""
             if inner_to_s == to_s:
                 return
             hass.bus.remove_listener(EVENT_TIME_CHANGED, for_time_listener)
@@ -106,7 +102,7 @@ def trigger(hass, config, action):
 
 
 def if_action(hass, config):
-    """ Wraps action method with state based condition. """
+    """Wrap action method with state based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
     state = config.get(CONF_STATE)
 
@@ -123,7 +119,7 @@ def if_action(hass, config):
     state = str(state)
 
     def if_state():
-        """ Test if condition. """
+        """Test if condition."""
         is_state = hass.states.is_state(entity_id, state)
         return (time_delta is None and is_state or
                 time_delta is not None and

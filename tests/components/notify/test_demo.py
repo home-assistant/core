@@ -1,9 +1,4 @@
-"""
-tests.components.notify.test_demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests notify demo component.
-"""
+"""The tests for the notify demo platform."""
 import unittest
 
 import homeassistant.components.notify as notify
@@ -13,9 +8,10 @@ from tests.common import get_test_home_assistant
 
 
 class TestNotifyDemo(unittest.TestCase):
-    """ Test the demo notify. """
+    """Test the demo notify."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(notify.setup(self.hass, {
             'notify': {
@@ -25,15 +21,23 @@ class TestNotifyDemo(unittest.TestCase):
         self.events = []
 
         def record_event(event):
+            """Record event to send notification."""
             self.events.append(event)
 
         self.hass.bus.listen(demo.EVENT_NOTIFY, record_event)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """"Stop down everything that was started."""
         self.hass.stop()
 
+    def test_sending_none_message(self):
+        """Test send with None as message."""
+        notify.send_message(self.hass, None)
+        self.hass.pool.block_till_done()
+        self.assertTrue(len(self.events) == 0)
+
     def test_sending_templated_message(self):
+        """Send a templated message."""
         self.hass.states.set('sensor.temperature', 10)
         notify.send_message(self.hass, '{{ states.sensor.temperature.state }}',
                             '{{ states.sensor.temperature.name }}')

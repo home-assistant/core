@@ -42,7 +42,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the NetAtmo sensor."""
+    """Setup the NetAtmo sensor."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY,
                                      CONF_USERNAME,
@@ -89,9 +89,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class NetAtmoSensor(Entity):
-    """Implements a NetAtmo sensor."""
+    """Implementation of a NetAtmo sensor."""
 
     def __init__(self, netatmo_data, module_name, sensor_type):
+        """Initialize the sensor."""
         self._name = "NetAtmo {} {}".format(module_name,
                                             SENSOR_TYPES[sensor_type][0])
         self.netatmo_data = netatmo_data
@@ -103,7 +104,7 @@ class NetAtmoSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -113,17 +114,17 @@ class NetAtmoSensor(Entity):
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
     def update(self):
-        """Gets the latest data from NetAtmo API and updates the states."""
+        """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
         data = self.netatmo_data.data[self.module_name]
 
@@ -146,9 +147,10 @@ class NetAtmoSensor(Entity):
 
 
 class NetAtmoData(object):
-    """Gets the latest data from NetAtmo."""
+    """Get the latest data from NetAtmo."""
 
     def __init__(self, auth):
+        """Initialize the data object."""
         self.auth = auth
         self.data = None
 

@@ -1,6 +1,4 @@
 """
-homeassistant.components.thermostat
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Provides functionality to interact with thermostats.
 
 For more details about this component, please refer to the documentation at
@@ -50,7 +48,7 @@ DISCOVERY_PLATFORMS = {
 
 
 def set_away_mode(hass, away_mode, entity_id=None):
-    """ Turn all or specified thermostat away mode on. """
+    """Turn all or specified thermostat away mode on."""
     data = {
         ATTR_AWAY_MODE: away_mode
     }
@@ -62,7 +60,7 @@ def set_away_mode(hass, away_mode, entity_id=None):
 
 
 def set_temperature(hass, temperature, entity_id=None):
-    """ Set new target temperature. """
+    """Set new target temperature."""
     data = {ATTR_TEMPERATURE: temperature}
 
     if entity_id is not None:
@@ -72,7 +70,7 @@ def set_temperature(hass, temperature, entity_id=None):
 
 
 def set_fan_mode(hass, fan_mode, entity_id=None):
-    """ Turn all or specified thermostat fan mode on. """
+    """Turn all or specified thermostat fan mode on."""
     data = {
         ATTR_FAN: fan_mode
     }
@@ -85,7 +83,7 @@ def set_fan_mode(hass, fan_mode, entity_id=None):
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Setup thermostats. """
+    """Setup thermostats."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 SCAN_INTERVAL, DISCOVERY_PLATFORMS)
     component.setup(config)
@@ -94,8 +92,7 @@ def setup(hass, config):
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     def away_mode_set_service(service):
-        """ Set away mode on target thermostats """
-
+        """Set away mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
         away_mode = service.data.get(ATTR_AWAY_MODE)
@@ -119,14 +116,16 @@ def setup(hass, config):
         descriptions.get(SERVICE_SET_AWAY_MODE))
 
     def temperature_set_service(service):
-        """ Set temperature on the target thermostats """
-
+        """Set temperature on the target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
         temperature = util.convert(
             service.data.get(ATTR_TEMPERATURE), float)
 
         if temperature is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE)
             return
 
         for thermostat in target_thermostats:
@@ -141,8 +140,7 @@ def setup(hass, config):
         descriptions.get(SERVICE_SET_TEMPERATURE))
 
     def fan_mode_set_service(service):
-        """ Set fan mode on target thermostats """
-
+        """Set fan mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
         fan_mode = service.data.get(ATTR_FAN)
@@ -169,19 +167,17 @@ def setup(hass, config):
 
 
 class ThermostatDevice(Entity):
-    """ Represents a thermostat within Home Assistant. """
+    """Representation of a thermostat."""
 
     # pylint: disable=no-self-use
-
     @property
     def state(self):
-        """ Returns the current state. """
+        """Return the current state."""
         return self.target_temperature or STATE_UNKNOWN
 
     @property
     def state_attributes(self):
-        """ Returns optional state attributes. """
-
+        """Return the optional state attributes."""
         data = {
             ATTR_CURRENT_TEMPERATURE:
             self._convert(self.current_temperature, 1),
@@ -210,83 +206,76 @@ class ThermostatDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """ Unit of measurement this thermostat expresses itself in. """
+        """Return the unit of measurement."""
         raise NotImplementedError
 
     @property
     def current_temperature(self):
-        """ Returns the current temperature. """
+        """Return the current temperature."""
         raise NotImplementedError
 
     @property
     def operation(self):
-        """ Returns current operation ie. heat, cool, idle """
+        """Return current operation ie. heat, cool, idle."""
         return None
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         raise NotImplementedError
 
     @property
     def target_temperature_low(self):
-        """ Returns the lower bound temperature we try to reach. """
+        """Return the lower bound temperature we try to reach."""
         return self.target_temperature
 
     @property
     def target_temperature_high(self):
-        """ Returns the upper bound temperature we try to reach. """
+        """Return the upper bound temperature we try to reach."""
         return self.target_temperature
 
     @property
     def is_away_mode_on(self):
-        """
-        Returns if away mode is on.
-        Return None if no away mode available.
-        """
+        """Return true if away mode is on."""
         return None
 
     @property
     def is_fan_on(self):
-        """
-        Returns if the fan is on
-        Return None if not available.
-        """
+        """Return true if the fan is on."""
         return None
 
     def set_temperate(self, temperature):
-        """ Set new target temperature. """
+        """Set new target temperature."""
         pass
 
     def turn_away_mode_on(self):
-        """ Turns away mode on. """
+        """Turn away mode on."""
         pass
 
     def turn_away_mode_off(self):
-        """ Turns away mode off. """
+        """Turn away mode off."""
         pass
 
     def turn_fan_on(self):
-        """ Turns fan on. """
+        """Turn fan on."""
         pass
 
     def turn_fan_off(self):
-        """ Turns fan off. """
+        """Turn fan off."""
         pass
 
     @property
     def min_temp(self):
-        """ Return minimum temperature. """
+        """Return the minimum temperature."""
         return round(convert(7, TEMP_CELCIUS, self.unit_of_measurement))
 
     @property
     def max_temp(self):
-        """ Return maxmum temperature. """
+        """Return the maximum temperature."""
         return round(convert(35, TEMP_CELCIUS, self.unit_of_measurement))
 
     def _convert(self, temp, round_dec=None):
-        """ Convert temperature from this thermost into user preferred
-            temperature. """
+        """Convert temperature into user preferred temperature."""
         if temp is None:
             return None
 

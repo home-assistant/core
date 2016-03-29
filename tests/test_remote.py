@@ -1,9 +1,4 @@
-"""
-tests.remote
-~~~~~~~~~~~~
-
-Tests Home Assistant remote methods and classes.
-"""
+"""Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
@@ -28,12 +23,12 @@ hass, slave, master_api = None, None, None
 
 
 def _url(path=""):
-    """ Helper method to generate urls. """
+    """Helper method to generate URLs."""
     return HTTP_BASE_URL + path
 
 
 def setUpModule():   # pylint: disable=invalid-name
-    """ Initalizes a Home Assistant server and Slave instance. """
+    """Initalization of a Home Assistant server and Slave instance."""
     global hass, slave, master_api
 
     hass = get_test_home_assistant()
@@ -63,20 +58,21 @@ def setUpModule():   # pylint: disable=invalid-name
 
 
 def tearDownModule():   # pylint: disable=invalid-name
-    """ Stops the Home Assistant server and slave. """
+    """Stop the Home Assistant server and slave."""
     slave.stop()
     hass.stop()
 
 
 class TestRemoteMethods(unittest.TestCase):
-    """ Test the homeassistant.remote module. """
+    """Test the homeassistant.remote module."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         slave.pool.block_till_done()
         hass.pool.block_till_done()
 
     def test_validate_api(self):
-        """ Test Python API validate_api. """
+        """Test Python API validate_api."""
         self.assertEqual(remote.APIStatus.OK, remote.validate_api(master_api))
 
         self.assertEqual(
@@ -88,7 +84,7 @@ class TestRemoteMethods(unittest.TestCase):
             remote.APIStatus.CANNOT_CONNECT, remote.validate_api(broken_api))
 
     def test_get_event_listeners(self):
-        """ Test Python API get_event_listeners. """
+        """Test Python API get_event_listeners."""
         local_data = hass.bus.listeners
         remote_data = remote.get_event_listeners(master_api)
 
@@ -101,27 +97,23 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual({}, remote.get_event_listeners(broken_api))
 
     def test_fire_event(self):
-        """ Test Python API fire_event. """
+        """Test Python API fire_event."""
         test_value = []
 
         def listener(event):
-            """ Helper method that will verify our event got called. """
+            """Helper method that will verify our event got called."""
             test_value.append(1)
 
         hass.bus.listen_once("test.event_no_data", listener)
-
         remote.fire_event(master_api, "test.event_no_data")
-
         hass.pool.block_till_done()
-
         self.assertEqual(1, len(test_value))
 
         # Should not trigger any exception
         remote.fire_event(broken_api, "test.event_no_data")
 
     def test_get_state(self):
-        """ Test Python API get_state. """
-
+        """Test Python API get_state."""
         self.assertEqual(
             hass.states.get('test.test'),
             remote.get_state(master_api, 'test.test'))
@@ -129,13 +121,12 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(None, remote.get_state(broken_api, 'test.test'))
 
     def test_get_states(self):
-        """ Test Python API get_state_entity_ids. """
-
+        """Test Python API get_state_entity_ids."""
         self.assertEqual(hass.states.all(), remote.get_states(master_api))
         self.assertEqual([], remote.get_states(broken_api))
 
     def test_remove_state(self):
-        """ Test Python API set_state. """
+        """Test Python API set_state."""
         hass.states.set('test.remove_state', 'set_test')
 
         self.assertIn('test.remove_state', hass.states.entity_ids())
@@ -143,7 +134,7 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertNotIn('test.remove_state', hass.states.entity_ids())
 
     def test_set_state(self):
-        """ Test Python API set_state. """
+        """Test Python API set_state."""
         remote.set_state(master_api, 'test.test', 'set_test')
 
         state = hass.states.get('test.test')
@@ -154,8 +145,7 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
 
     def test_is_state(self):
-        """ Test Python API is_state. """
-
+        """Test Python API is_state."""
         self.assertTrue(
             remote.is_state(master_api, 'test.test',
                             hass.states.get('test.test').state))
@@ -165,8 +155,7 @@ class TestRemoteMethods(unittest.TestCase):
                             hass.states.get('test.test').state))
 
     def test_get_services(self):
-        """ Test Python API get_services. """
-
+        """Test Python API get_services."""
         local_services = hass.services.services
 
         for serv_domain in remote.get_services(master_api):
@@ -177,11 +166,11 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual({}, remote.get_services(broken_api))
 
     def test_call_service(self):
-        """ Test Python API services.call. """
+        """Test Python API services.call."""
         test_value = []
 
         def listener(service_call):
-            """ Helper method that will verify that our service got called. """
+            """Helper method that will verify that our service got called."""
             test_value.append(1)
 
         hass.services.register("test_domain", "test_service", listener)
@@ -196,7 +185,7 @@ class TestRemoteMethods(unittest.TestCase):
         remote.call_service(broken_api, "test_domain", "test_service")
 
     def test_json_encoder(self):
-        """ Test the JSON Encoder. """
+        """Test the JSON Encoder."""
         ha_json_enc = remote.JSONEncoder()
         state = hass.states.get('test.test')
 
@@ -207,14 +196,15 @@ class TestRemoteMethods(unittest.TestCase):
 
 
 class TestRemoteClasses(unittest.TestCase):
-    """ Test the homeassistant.remote module. """
+    """Test the homeassistant.remote module."""
 
     def tearDown(self):
+        """Stop everything that was started."""
         slave.pool.block_till_done()
         hass.pool.block_till_done()
 
     def test_home_assistant_init(self):
-        """ Test HomeAssistant init. """
+        """Test HomeAssistant init."""
         # Wrong password
         self.assertRaises(
             ha.HomeAssistantError, remote.HomeAssistant,
@@ -226,12 +216,12 @@ class TestRemoteClasses(unittest.TestCase):
             remote.API('127.0.0.1', API_PASSWORD, BROKEN_PORT))
 
     def test_statemachine_init(self):
-        """ Tests if remote.StateMachine copies all states on init. """
+        """Test if remote.StateMachine copies all states on init."""
         self.assertEqual(sorted(hass.states.all()),
                          sorted(slave.states.all()))
 
     def test_statemachine_set(self):
-        """ Tests if setting the state on a slave is recorded. """
+        """Test if setting the state on a slave is recorded."""
         slave.states.set("remote.test", "remote.statemachine test")
 
         # Wait till slave tells master
@@ -243,6 +233,7 @@ class TestRemoteClasses(unittest.TestCase):
                          slave.states.get("remote.test").state)
 
     def test_statemachine_remove_from_master(self):
+        """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
         hass.pool.block_till_done()
 
@@ -254,6 +245,7 @@ class TestRemoteClasses(unittest.TestCase):
         self.assertNotIn('remote.master_remove', slave.states.entity_ids())
 
     def test_statemachine_remove_from_slave(self):
+        """Remove statemachine from slave."""
         hass.states.set("remote.slave_remove", "remove me!")
         hass.pool.block_till_done()
 
@@ -266,15 +258,14 @@ class TestRemoteClasses(unittest.TestCase):
         self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
     def test_eventbus_fire(self):
-        """ Test if events fired from the eventbus get fired. """
+        """Test if events fired from the eventbus get fired."""
         test_value = []
 
         def listener(event):
-            """ Helper method that will verify our event got called. """
+            """Helper method that will verify our event got called."""
             test_value.append(1)
 
         slave.bus.listen_once("test.event_no_data", listener)
-
         slave.bus.fire("test.event_no_data")
 
         # Wait till slave tells master

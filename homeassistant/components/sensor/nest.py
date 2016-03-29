@@ -32,14 +32,11 @@ JSON_VARIABLE_NAMES = {'weather_humidity': 'humidity',
 SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
                 'kph': 'kph', 'temperature': '°C'}
 
-SENSOR_TEMP_TYPES = ['temperature',
-                     'target',
-                     'away_temperature[0]',
-                     'away_temperature[1]']
+SENSOR_TEMP_TYPES = ['temperature', 'target']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Nest Sensor."""
+    """Setup the Nest Sensor."""
     logger = logging.getLogger(__name__)
     try:
         for structure in nest.NEST.structures:
@@ -68,16 +65,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NestSensor(Entity):
-    """Represents a Nest sensor."""
+    """Representation of a Nest sensor."""
 
     def __init__(self, structure, device, variable):
+        """Initialize the sensor."""
         self.structure = structure
         self.device = device
         self.variable = variable
 
     @property
     def name(self):
-        """Returns the name of the nest, if any."""
+        """Return the name of the nest, if any."""
         location = self.device.where
         name = self.device.name
         if location is None:
@@ -92,28 +90,30 @@ class NestSensor(Entity):
 
 
 class NestBasicSensor(NestSensor):
-    """Represents a basic Nest sensor with state."""
+    """Representation a basic Nest sensor."""
+
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return getattr(self.device, self.variable)
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return SENSOR_UNITS.get(self.variable, None)
 
 
 class NestTempSensor(NestSensor):
-    """Represents a Nest Temperature sensor."""
+    """Representation of a Nest Temperature sensor."""
+
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return TEMP_CELCIUS
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         temp = getattr(self.device, self.variable)
         if temp is None:
             return None
@@ -122,10 +122,11 @@ class NestTempSensor(NestSensor):
 
 
 class NestWeatherSensor(NestSensor):
-    """Represents a basic Nest Weather Conditions sensor."""
+    """Representation a basic Nest Weather Conditions sensor."""
+
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         if self.variable == 'kph' or self.variable == 'direction':
             return getattr(self.structure.weather.current.wind, self.variable)
         else:
@@ -133,5 +134,5 @@ class NestWeatherSensor(NestSensor):
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return SENSOR_UNITS.get(self.variable, None)

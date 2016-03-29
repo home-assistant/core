@@ -1,7 +1,5 @@
 """
-homeassistant.components.scene
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Allows users to set and activate scenes.
+Allow users to set and activate scenes.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
@@ -22,9 +20,8 @@ CONF_ENTITIES = "entities"
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up home assistant scene entries. """
+    """Setup home assistant scene entries."""
     scene_config = config.get("states")
 
     if not isinstance(scene_config, list):
@@ -37,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def _process_config(scene_config):
-    """ Process passed in config into a format to work with. """
+    """Process passed in config into a format to work with."""
     name = scene_config.get('name')
 
     states = {}
@@ -65,23 +62,25 @@ def _process_config(scene_config):
 
 
 class HomeAssistantScene(Scene):
-    """ A scene is a group of entities and the states we want them to be. """
+    """A scene is a group of entities and the states we want them to be."""
 
     def __init__(self, hass, scene_config):
+        """Initialize the scene."""
         self.hass = hass
         self.scene_config = scene_config
 
     @property
     def name(self):
+        """Return the name of the scene."""
         return self.scene_config.name
 
     @property
     def device_state_attributes(self):
-        """ Scene state attributes. """
+        """Return the scene state attributes."""
         return {
             ATTR_ENTITY_ID: list(self.scene_config.states.keys()),
         }
 
     def activate(self):
-        """ Activates scene. Tries to get entities into requested state. """
+        """Activate scene. Try to get entities into requested state."""
         reproduce_state(self.hass, self.scene_config.states.values(), True)

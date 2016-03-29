@@ -132,12 +132,13 @@ class JobPriority(util.OrderedEnum):
 
 
 class EventOrigin(enum.Enum):
-    """Represents origin of an event."""
+    """Represent the origin of an event."""
 
     local = "LOCAL"
     remote = "REMOTE"
 
     def __str__(self):
+        """Return the event."""
         return self.value
 
 
@@ -166,6 +167,7 @@ class Event(object):
         }
 
     def __repr__(self):
+        """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
             return "<Event {}[{}]: {}>".format(
@@ -176,6 +178,7 @@ class Event(object):
                                            str(self.origin)[0])
 
     def __eq__(self, other):
+        """Return the comparison."""
         return (self.__class__ == other.__class__ and
                 self.event_type == other.event_type and
                 self.data == other.data and
@@ -246,7 +249,7 @@ class EventBus(object):
         """
         @ft.wraps(listener)
         def onetime_listener(event):
-            """Remove listener from eventbus and then fires listener."""
+            """Remove listener from eventbus and then fire listener."""
             if hasattr(onetime_listener, 'run'):
                 return
             # Set variable so that we will never run twice.
@@ -281,8 +284,7 @@ class EventBus(object):
 
 
 class State(object):
-    """
-    Object to represent a state within the state machine.
+    """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
     state: the state of the entity
@@ -369,12 +371,14 @@ class State(object):
                    json_dict.get('attributes'), last_changed, last_updated)
 
     def __eq__(self, other):
+        """Return the comparison of the state."""
         return (self.__class__ == other.__class__ and
                 self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes)
 
     def __repr__(self):
+        """Return the representation of the states."""
         attr = "; {}".format(util.repr_helper(self.attributes)) \
                if self.attributes else ""
 
@@ -524,6 +528,7 @@ class ServiceCall(object):
         self.call_id = call_id
 
     def __repr__(self):
+        """Return the represenation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
@@ -770,7 +775,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
     def start_timer(event):
         """Start the timer."""
-        thread = threading.Thread(target=timer)
+        thread = threading.Thread(target=timer, name='Timer')
         thread.daemon = True
         thread.start()
 

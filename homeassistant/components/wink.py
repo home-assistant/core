@@ -1,7 +1,6 @@
 """
-homeassistant.components.wink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects to a Wink hub and loads relevant components to control its devices.
+Support for Wink hubs.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
@@ -16,7 +15,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.6.2']
+REQUIREMENTS = ['python-wink==0.6.4']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -27,7 +26,7 @@ DISCOVER_GARAGE_DOORS = "wink.garage_doors"
 
 
 def setup(hass, config):
-    """ Sets up the Wink component. """
+    """Setup the Wink component."""
     logger = logging.getLogger(__name__)
 
     if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
@@ -64,34 +63,40 @@ def setup(hass, config):
 
 
 class WinkToggleDevice(ToggleEntity):
-    """ Represents a Wink toogle (switch) device. """
+    """Represents a Wink toggle (switch) device."""
 
     def __init__(self, wink):
+        """Initialize the Wink device."""
         self.wink = wink
 
     @property
     def unique_id(self):
-        """ Returns the id of this Wink switch. """
+        """Return the ID of this Wink device."""
         return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
-        """ Returns the name of the light if any. """
+        """Return the name of the device."""
         return self.wink.name()
 
     @property
     def is_on(self):
-        """ True if light is on. """
+        """Return true if device is on."""
         return self.wink.state()
 
+    @property
+    def available(self):
+        """True if connection == True."""
+        return self.wink.available
+
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turn the device on."""
         self.wink.set_state(True)
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """Turn the device off."""
         self.wink.set_state(False)
 
     def update(self):
-        """ Update state of the light. """
+        """Update state of the device."""
         self.wink.update_state()

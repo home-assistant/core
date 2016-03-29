@@ -1,6 +1,4 @@
 """
-homeassistant.components.switch.dlink
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for D-link W215 smart switch.
 
 For more details about this platform, please refer to the documentation at
@@ -26,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return D-Link Smart Plugs. """
+    """Find and return D-Link Smart Plugs."""
     from pyW215.pyW215 import SmartPlug
 
     # check for required values in configuration file
@@ -47,19 +45,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class SmartPlugSwitch(SwitchDevice):
-    """ Represents an d-link Smart Plug switch. """
+    """Representation of a D-link Smart Plug switch."""
+
     def __init__(self, smartplug, name):
+        """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
 
     @property
     def name(self):
-        """ Returns the name of the Smart Plug, if any. """
+        """Return the name of the Smart Plug, if any."""
         return self._name
 
     @property
     def current_power_watt(self):
-        """ Current power usage in watt. """
+        """Return the current power usage in Watt."""
         try:
             return float(self.smartplug.current_consumption)
         except ValueError:
@@ -67,13 +67,13 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """ True if switch is on. """
+        """Return true if switch is on."""
         return self.smartplug.state == 'ON'
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
+        """Turn the switch on."""
         self.smartplug.state = 'ON'
 
     def turn_off(self):
-        """ Turns the switch off. """
+        """Turn the switch off."""
         self.smartplug.state = 'OFF'

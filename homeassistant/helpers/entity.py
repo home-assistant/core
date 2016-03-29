@@ -1,9 +1,4 @@
-"""
-homeassistant.helpers.entity.
-
-Provides ABC for entities in HA.
-"""
-
+"""An abstract class for entities."""
 import re
 from collections import defaultdict
 
@@ -23,7 +18,7 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
-    """Generate a unique entity ID based on given entity IDs or used ids."""
+    """Generate a unique entity ID based on given entity IDs or used IDs."""
     name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
@@ -46,18 +41,15 @@ def valid_entity_id(entity_id):
 
 
 class Entity(object):
-    """ABC for Home Assistant entities."""
+    """An abstract class for Home Assistant entities."""
 
     # pylint: disable=no-self-use
-
     # SAFE TO OVERWRITE
-    # The properties and methods here are safe to overwrite when inherting this
-    # class. These may be used to customize the behavior of the entity.
-
+    # The properties and methods here are safe to overwrite when inheriting
+    # this class. These may be used to customize the behavior of the entity.
     @property
     def should_poll(self):
-        """
-        Return True if entity has to be polled for state.
+        """Return True if entity has to be polled for state.
 
         False if entity pushes its state to HA.
         """
@@ -65,7 +57,7 @@ class Entity(object):
 
     @property
     def unique_id(self):
-        """Return a unique id."""
+        """Return an unique ID."""
         return "{}.{}".format(self.__class__, id(self))
 
     @property
@@ -80,8 +72,7 @@ class Entity(object):
 
     @property
     def state_attributes(self):
-        """
-        Return the state attributes.
+        """Return the state attributes.
 
         Implemented by component base class.
         """
@@ -89,8 +80,7 @@ class Entity(object):
 
     @property
     def device_state_attributes(self):
-        """
-        Return device specific state attributes.
+        """Return device specific state attributes.
 
         Implemented by platform classes.
         """
@@ -123,7 +113,7 @@ class Entity(object):
 
     @property
     def assumed_state(self):
-        """Return True if unable to access real state of entity."""
+        """Return True if unable to access real state of the entity."""
         return False
 
     def update(self):
@@ -140,8 +130,7 @@ class Entity(object):
     hass = None
 
     def update_ha_state(self, force_refresh=False):
-        """
-        Update Home Assistant with current state of entity.
+        """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
         """
@@ -176,10 +165,10 @@ class Entity(object):
         self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
 
-        # overwrite properties that have been set in the config file
+        # Overwrite properties that have been set in the config file.
         attr.update(_OVERWRITE.get(self.entity_id, {}))
 
-        # remove hidden property if false so it won't show up
+        # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):
             attr.pop(ATTR_HIDDEN)
 
@@ -210,16 +199,17 @@ class Entity(object):
             pass
 
     def __eq__(self, other):
+        """Return the comparison."""
         return (isinstance(other, Entity) and
                 other.unique_id == self.unique_id)
 
     def __repr__(self):
+        """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
 
     @staticmethod
     def overwrite_attribute(entity_id, attrs, vals):
-        """
-        Overwrite any attribute of an entity.
+        """Overwrite any attribute of an entity.
 
         This function should receive a list of attributes and a
         list of values. Set attribute to None to remove any overwritten
@@ -233,10 +223,9 @@ class Entity(object):
 
 
 class ToggleEntity(Entity):
-    """ABC for entities that can be turned on and off."""
+    """An abstract class for entities that can be turned on and off."""
 
     # pylint: disable=no-self-use
-
     @property
     def state(self):
         """Return the state."""
@@ -244,7 +233,7 @@ class ToggleEntity(Entity):
 
     @property
     def is_on(self):
-        """True if entity is on."""
+        """Return True if entity is on."""
         return False
 
     def turn_on(self, **kwargs):
