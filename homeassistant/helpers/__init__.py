@@ -40,7 +40,8 @@ def config_per_platform(config, domain):
             platform_config = [platform_config]
 
         for item in platform_config:
-            yield item.get(CONF_PLATFORM), item
+            platform = None if item is None else item.get(CONF_PLATFORM)
+            yield platform, item
 
 
 def extract_domain_configs(config, domain):
