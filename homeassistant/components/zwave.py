@@ -35,6 +35,7 @@ SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
+SERVICE_TEST_NETWORK = "test_network"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
@@ -269,6 +270,10 @@ def setup(hass, config):
         """Soft reset the controller."""
         NETWORK.controller.soft_reset()
 
+    def test_network(event):
+        """Test the network by sending commands to all the nodes."""
+        NETWORK.test()
+
     def stop_zwave(event):
         """Stop Z-Wave."""
         NETWORK.stop()
@@ -310,6 +315,7 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
+        hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
