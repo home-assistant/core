@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 rfxtrx.RFX_DEVICES[device_id].hass.bus.fire(
                     EVENT_BUTTON_PRESSED, {
                         ATTR_ENTITY_ID:
-                            rfxtrx.RFX_DEVICES[device_id].device_id,
+                            rfxtrx.RFX_DEVICES[device_id].entity_id,
                         ATTR_STATE: event.values['Command'].lower()
                     }
                 )
