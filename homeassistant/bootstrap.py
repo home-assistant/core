@@ -106,7 +106,7 @@ def _setup_component(hass, domain, config):
                 _LOGGER.error('Invalid config for [%s]: %s', domain, ex)
                 return False
 
-        if hasattr(component, 'PLATFORM_SCHEMA'):
+        elif hasattr(component, 'PLATFORM_SCHEMA'):
             platforms = []
             for _, platform in config_per_platform(config, domain):
                 try:
