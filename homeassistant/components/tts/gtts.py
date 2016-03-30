@@ -27,7 +27,8 @@ class GTTSService(BaseTTSService):
         """Initialize the service."""
 
     # pylint: disable=too-many-arguments
-    def speak(self, file_path, text, language, rate, codec, audio_format):
+    def get_speech(self, file_path, text, language=None, rate=None,
+                   codec=None, audio_format=None):
         """Generate an audio file from gTTS for the text."""
         from gtts import gTTS
         tts = gTTS(text=text, lang=language)

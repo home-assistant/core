@@ -7,7 +7,6 @@ https://home-assistant.io/components/tts.voicerss/
 
 import logging
 import shutil
-import urllib.parse
 import requests
 
 from homeassistant.helpers import validate_config
@@ -35,13 +34,24 @@ class VoiceRSSService(BaseTTSService):
         self.api_key = api_key
 
     # pylint: disable=too-many-arguments
-    def speak(self, file_path, text, language, rate, codec, audio_format):
+    def get_speech(self, file_path, text, language=None, rate=None,
+                   codec=None, audio_format=None):
         """Generate an audio file from VoiceRSS for the text."""
-        params = urllib.parse.urlencode({'key': self.api_key, 'src': text,
-                                         'hl': language, 'r': rate,
-                                         'c': codec, 'f': audio_format})
-        url = "https://api.voicerss.org/?{}".format(params)
-        tts_file = requests.get(url, stream=True)
+        if language is None:
+            language = 'en-us'
+        else:
+            language = language.lower()
+        if rate is None:
+            rate = 0
+        if codec is None:
+            codec = 'MP3'
+        if audio_format is None:
+            audio_format = '44khz_16bit_stereo'
+
+        payload = {'key': self.api_key, 'src': text, 'hl': language,
+                   'r': rate, 'c': codec, 'f': audio_format}
+        tts_file = requests.get("https://api.voicerss.org/",
+                                stream=True, params=payload)
         if tts_file.status_code == 200:
             with open(file_path, 'wb') as opened_file:
                 tts_file.raw.decode_content = True

@@ -5,18 +5,18 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tts/
 """
 
+import sys
 import logging
 import re
 import hashlib
 import os.path
 from functools import partial
 
-from homeassistant import core
 import homeassistant.bootstrap as bootstrap
 from homeassistant.helpers import config_per_platform
-from homeassistant.const import (ATTR_ENTITY_ID, SERVICE_PLAY_MEDIA, CONF_NAME)
-from homeassistant.components.media_player import MEDIA_TYPE_MUSIC
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_NAME)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.components import media_player
 
 DEPENDENCIES = ['http']
 
@@ -26,6 +26,7 @@ SERVICE_TTS = "tts"
 
 ATTR_TEXT = "text"
 ATTR_ALLOW_CACHE = "allow_cached_file"
+ATTR_DELETE_AFTER_USE = "delete_after_use"
 ATTR_PLAY = "play"
 ATTR_LANGUAGE = "language"
 ATTR_RATE = "rate"
@@ -64,19 +65,19 @@ def setup(hass, config):
                           platform)
             continue
 
+        # pylint: disable=too-many-locals
         def generate_speech(tts_service, platform_name, call):
             """Handle sending tts message service calls."""
             text = call.data.get(ATTR_TEXT)
             entity_id = call.data.get(ATTR_ENTITY_ID)
             allow_cached_file = call.data.get(ATTR_ALLOW_CACHE, True)
+            delete_after_use = call.data.get(ATTR_DELETE_AFTER_USE, False)
             play_file = call.data.get(ATTR_PLAY, True)
             language = call.data.get(ATTR_LANGUAGE, config.get(ATTR_LANGUAGE,
                                                                "en-us"))
-            rate = call.data.get(ATTR_RATE, config.get(ATTR_RATE, 0))
+            rate = call.data.get(ATTR_RATE, config.get(ATTR_RATE))
             codec = call.data.get(ATTR_CODEC, config.get(ATTR_CODEC, "MP3"))
-            audio_format = call.data.get(ATTR_FORMAT,
-                                         config.get(ATTR_FORMAT,
-                                                    "44khz_16bit_stereo"))
+            audio_format = call.data.get(ATTR_FORMAT, config.get(ATTR_FORMAT))
 
             hashed_text = hashlib.sha1(text.encode('utf-8')).hexdigest()
 
@@ -95,22 +96,23 @@ def setup(hass, config):
             if (os.path.isfile(file_path)) is False or \
                (allow_cached_file is False):
                 try:
-                    tts_service.speak(file_path, text, language, rate, codec,
-                                      audio_format)
+                    tts_service.get_speech(file_path, text, language,
+                                           rate, codec, audio_format)
                 # pylint: disable=bare-except
                 except:
-                    _LOGGER.error('Error trying to speak using %s',
+                    # _LOGGER.error("get_speech error:", sys.exc_info()[0])
+                    _LOGGER.error('Error trying to get_speech using %s',
                                   platform_name)
                     return
 
             if play_file is True or entity_id is None:
                 content_url = "{}/api/tts/{}".format(hass.config.api.base_url,
                                                      full_filename)
-                hass.services.call(core.DOMAIN, SERVICE_PLAY_MEDIA, {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_MEDIA_CONTENT_ID: content_url,
-                    ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC
-                })
+                media_player.play_media(hass, media_player.MEDIA_TYPE_MUSIC,
+                                        content_url, entity_id)
+
+            if delete_after_use:
+                os.remove(file_path)
 
         service_tts = p_config.get(CONF_NAME, platform)
         service_call_handler = partial(generate_speech, tts_engine,
@@ -138,6 +140,7 @@ class BaseTTSService(object):
     """An abstract class for TTS services."""
 
     # pylint: disable=too-many-arguments
-    def speak(self, file_path, text, language, rate, codec, audio_format):
+    def get_speech(self, file_path, text, language=None, rate=None,
+                   codec=None, audio_format=None):
         """Speak something."""
         raise NotImplementedError
