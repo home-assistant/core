@@ -18,7 +18,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, ATTR_INPUT_SOURCE,
+    SERVICE_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
@@ -322,6 +323,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._child_attr(ATTR_APP_NAME)
 
     @property
+    def current_source(self):
+        """"Return the current input source of the device."""
+        return self._child_attr(ATTR_INPUT_SOURCE)
+
+    @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
         flags = self._child_attr(ATTR_SUPPORTED_MEDIA_COMMANDS) or 0
@@ -339,6 +345,9 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if SERVICE_VOLUME_MUTE in self._cmds and \
                 ATTR_MEDIA_VOLUME_MUTED in self._attrs:
             flags |= SUPPORT_VOLUME_MUTE
+
+        if SUPPORT_SELECT_SOURCE in self._cmds:
+            flags |= SUPPORT_SELECT_SOURCE
 
         return flags
 
@@ -405,6 +414,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def media_play_pause(self):
         """Play or pause the media player."""
         self._call_service(SERVICE_MEDIA_PLAY_PAUSE)
+
+    def select_source(self, source):
+        """Set the input source."""
+        data = {ATTR_INPUT_SOURCE: source}
+        self._call_service(SERVICE_SELECT_SOURCE, data)
 
     def update(self):
         """Update state in HA."""

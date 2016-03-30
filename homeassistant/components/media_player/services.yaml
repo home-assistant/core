@@ -126,3 +126,14 @@ play_media:
     media_content_type:
       description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
       example: 'MUSIC'
+
+select_source:
+  description: Send the media player the command to change input source.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites to change source on
+      example: 'media_player.media_player.txnr535_0009b0d81f82'
+    source:
+      description: Name of the source to switch to. Platform dependent.
+      example: 'video1'
