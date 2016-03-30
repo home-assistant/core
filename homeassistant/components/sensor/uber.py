@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        if product.get('price_details') is not None:
+        if 'price_details' in product:
             dev.append(UberSensor('price', timeandpriceest,
                                   product_id, product))
     add_devices(dev)
@@ -72,18 +72,18 @@ class UberSensor(Entity):
             time_estimate = self._product.get('time_estimate_seconds', 0)
             self._state = int(time_estimate / 60)
         elif self._sensortype == "price":
-            price_details = self._product.get('price_details')
-            if price_details is not None:
+            if 'price_details' in self._product:
+                price_details = self._product['price_details']
                 self._unit_of_measurement = price_details.get('currency_code',
                                                               'N/A')
-                if price_details.get('low_estimate') is None:
+                if 'low_estimate' in price_details:
                     statekey = 'minimum'
                 else:
                     statekey = 'low_estimate'
                 self._state = int(price_details.get(statekey, 0))
             else:
                 self._unit_of_measurement = 'N/A'
-                self._state = int(0)
+                self._state = 0
         self.update()
 
     @property
@@ -104,14 +104,6 @@ class UberSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        price_details = self._product.get('price_details')
-        if price_details is None:
-            distance_key = 'Trip distance (in miles)'
-            distance_val = self._product.get('distance', 'N/A')
-        else:
-            distance_key = 'Trip distance (in {}s)'.format(price_details[
-                'distance_unit'])
-            distance_val = self._product.get('distance')
         time_estimate = self._product.get('time_estimate_seconds', 'N/A')
         params = {
             'Product ID': self._product['product_id'],
@@ -120,11 +112,14 @@ class UberSensor(Entity):
             'Product description': self._product['description'],
             'Pickup time estimate (in seconds)': time_estimate,
             'Trip duration (in seconds)': self._product.get('duration', 'N/A'),
-            distance_key: distance_val,
             'Vehicle Capacity': self._product['capacity']
         }
 
-        if price_details is not None:
+        if 'price_details' in self._product:
+            price_details = self._product['price_details']
+            distance_key = 'Trip distance (in {}s)'.format(price_details[
+                'distance_unit'])
+            distance_val = self._product.get('distance')
             params['Minimum price'] = price_details['minimum'],
             params['Cost per minute'] = price_details['cost_per_minute'],
             params['Distance units'] = price_details['distance_unit'],
@@ -139,6 +134,11 @@ class UberSensor(Entity):
                                                              'N/A'),
             params['Surge multiplier'] = price_details.get('surge_multiplier',
                                                            'N/A')
+        else:
+            distance_key = 'Trip distance (in miles)'
+            distance_val = self._product.get('distance', 'N/A')
+
+        params[distance_key] = distance_val
 
         return params
 
@@ -161,7 +161,7 @@ class UberSensor(Entity):
                 min_price = price_details.get('minimum')
                 self._state = int(price_details.get('low_estimate', min_price))
             else:
-                self._state = int(0)
+                self._state = 0
 
 
 # pylint: disable=too-few-public-methods
