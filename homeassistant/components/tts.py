@@ -68,12 +68,12 @@ def setup(hass, config):
         entity_id = service.data.get(ATTR_ENTITY_ID)
         allow_cached_file = service.data.get(ATTR_ALLOW_CACHE, True)
         play_file = service.data.get(ATTR_PLAY, True)
-        language = service.data.get("language", config.get("language",
-                                                           "en-us"))
-        rate = service.data.get("rate", config.get("rate", 0))
-        codec = service.data.get("codec", config.get("codec", "MP3"))
-        audio_format = service.data.get("format",
-                                        config.get("format",
+        language = service.data.get(ATTR_LANGUAGE, config.get(ATTR_LANGUAGE,
+                                                              "en-us"))
+        rate = service.data.get(ATTR_RATE, config.get(ATTR_RATE, 0))
+        codec = service.data.get(ATTR_CODEC, config.get(ATTR_CODEC, "MP3"))
+        audio_format = service.data.get(ATTR_FORMAT,
+                                        config.get(ATTR_FORMAT,
                                                    "44khz_16bit_stereo"))
 
         hashed_text = hashlib.sha1(text.encode('utf-8')).hexdigest()
