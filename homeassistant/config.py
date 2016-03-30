@@ -1,13 +1,18 @@
 """Module to help with parsing and generating configuration files."""
 import logging
 import os
+from types import MappingProxyType
+
+import voluptuous as vol
 
 import homeassistant.util.location as loc_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
-    CONF_TIME_ZONE)
+    CONF_TIME_ZONE, CONF_CUSTOMIZE)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import valid_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +40,31 @@ DEFAULT_COMPONENTS = {
     'logbook': 'View all events in a logbook',
     'sun': 'Track the sun',
 }
+
+
+def _valid_customize(value):
+    """Config validator for customize."""
+    if not isinstance(value, dict):
+        raise vol.Invalid('Expected dictionary')
+
+    for key, val in value.items():
+        if not valid_entity_id(key):
+            raise vol.Invalid('Invalid entity ID: {}'.format(key))
+
+        if not isinstance(val, dict):
+            raise vol.Invalid('Value of {} is not a dictionary'.format(key))
+
+    return value
+
+CORE_CONFIG_SCHEMA = vol.Schema({
+    CONF_NAME: vol.Coerce(str),
+    CONF_LATITUDE: cv.latitude,
+    CONF_LONGITUDE: cv.longitude,
+    CONF_TEMPERATURE_UNIT: cv.temperature_unit,
+    CONF_TIME_ZONE: cv.time_zone,
+    vol.Required(CONF_CUSTOMIZE,
+                 default=MappingProxyType({})): _valid_customize,
+})
 
 
 def get_default_config_dir():

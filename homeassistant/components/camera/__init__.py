@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import bloomsky
 from homeassistant.const import HTTP_OK, HTTP_NOT_FOUND, ATTR_ENTITY_ID
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 
 DOMAIN = 'camera'
