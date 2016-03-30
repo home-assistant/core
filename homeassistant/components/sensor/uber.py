@@ -72,7 +72,7 @@ class UberSensor(Entity):
             time_estimate = self._product.get('time_estimate_seconds', 0)
             self._state = int(time_estimate / 60)
         elif self._sensortype == "price":
-            price_details = self._product.get('price_details', {})
+            price_details = self._product.get('price_details')
             if price_details is not None:
                 self._unit_of_measurement = price_details.get('currency_code',
                                                               'N/A')
@@ -207,7 +207,7 @@ class UberEstimate(object):
 
             for price in prices:
                 product = self.products[price['product_id']]
-                price_details = product.get("price_details", {})
+                price_details = product.get("price_details")
                 product["duration"] = price.get('duration', '0')
                 product["distance"] = price.get('distance', '0')
                 if price_details is not None:
