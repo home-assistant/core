@@ -4,6 +4,9 @@ import unittest
 import unittest.mock as mock
 import os
 
+import pytest
+from voluptuous import MultipleInvalid
+
 from homeassistant.core import DOMAIN, HomeAssistantError
 import homeassistant.config as config_util
 from homeassistant.const import (
@@ -138,3 +141,28 @@ class TestConfig(unittest.TestCase):
             config_util.create_default_config(
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
+
+    def test_core_config_schema(self):
+        for value in (
+            {'temperature_unit': 'K'},
+            {'time_zone': 'non-exist'},
+            {'latitude': '91'},
+            {'longitude': -181},
+            {'customize': 'bla'},
+            {'customize': {'invalid_entity_id': {}}},
+            {'customize': {'light.sensor': 100}},
+        ):
+            with pytest.raises(MultipleInvalid):
+                config_util.CORE_CONFIG_SCHEMA(value)
+
+        config_util.CORE_CONFIG_SCHEMA({
+            'name': 'Test name',
+            'latitude': '-23.45',
+            'longitude': '123.45',
+            'temperature_unit': 'c',
+            'customize': {
+                'sensor.temperature': {
+                    'hidden': True,
+                },
+            },
+        })

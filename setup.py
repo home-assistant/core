@@ -17,6 +17,7 @@ REQUIRES = [
     'pip>=7.0.0',
     'vincenty==0.1.3',
     'jinja2>=2.8',
+    'voluptuous==0.8.9',
 ]
 
 setup(

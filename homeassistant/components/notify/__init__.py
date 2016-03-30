@@ -10,8 +10,8 @@ import os
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers import template
+from homeassistant.helpers import config_per_platform, template
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 from homeassistant.const import CONF_NAME
 
@@ -51,7 +51,7 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
+    for platform, p_config in config_per_platform(config, DOMAIN):
         notify_implementation = bootstrap.prepare_setup_platform(
             hass, config, DOMAIN, platform)
 
