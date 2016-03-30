@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         event = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
         new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
                                   entity_info.get(ATTR_DATA_TYPE, None))
-        rfxtrx.RFX_DEVICES[device_id] = new_sensor
+        rfxtrx.RFX_DEVICES[slugify(device_id)] = new_sensor
         sensors.append(new_sensor)
 
     add_devices_callback(sensors)
@@ -53,6 +53,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if device_id in rfxtrx.RFX_DEVICES:
             rfxtrx.RFX_DEVICES[device_id].event = event
+            k = 2
+            _device_id = device_id + "_" + str(k)
+            while _device_id in rfxtrx.RFX_DEVICES:
+                rfxtrx.RFX_DEVICES[_device_id].event = event
+                k = k + 1
+                _device_id = device_id + "_" + str(k)
             return
 
         # Add entity if not exist and the automatic_add is True
