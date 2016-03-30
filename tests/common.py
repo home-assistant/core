@@ -144,10 +144,11 @@ class MockModule(object):
     """Representation of a fake module."""
 
     def __init__(self, domain=None, dependencies=[], setup=None,
-                 config_schema=None, platform_schema=None):
+                 requirements=[], config_schema=None, platform_schema=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies
+        self.REQUIREMENTS = requirements
 
         if config_schema is not None:
             self.CONFIG_SCHEMA = config_schema
