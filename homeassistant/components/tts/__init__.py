@@ -112,8 +112,9 @@ def setup(hass, config):
                     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC
                 })
 
-        service_call_handler = partial(generate_speech, tts_engine, platform)
         service_tts = p_config.get(CONF_NAME, platform)
+        service_call_handler = partial(generate_speech, tts_engine,
+                                       service_tts)
         hass.services.register(DOMAIN, service_tts, service_call_handler,
                                descriptions.get(SERVICE_TTS))
         success = True
