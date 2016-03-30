@@ -47,7 +47,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        dev.append(UberSensor('price', timeandpriceest, product_id, product))
+        if 'price_details' in product:
+            dev.append(UberSensor('price', timeandpriceest,
+                                  product_id, product))
     add_devices(dev)
 
 
@@ -68,13 +70,18 @@ class UberSensor(Entity):
             time_estimate = self._product.get('time_estimate_seconds', 0)
             self._state = int(time_estimate / 60)
         elif self._sensortype == "price":
-            price_details = self._product['price_details']
-            if price_details['low_estimate'] is None:
-                self._unit_of_measurement = price_details['currency_code']
-                self._state = int(price_details['minimum'])
+            if 'price_details' in self._product:
+                price_details = self._product['price_details']
+                self._unit_of_measurement = price_details.get('currency_code',
+                                                              'N/A')
+                if 'low_estimate' in price_details:
+                    statekey = 'minimum'
+                else:
+                    statekey = 'low_estimate'
+                self._state = int(price_details.get(statekey, 0))
             else:
-                self._unit_of_measurement = price_details['currency_code']
-                self._state = int(price_details['low_estimate'])
+                self._unit_of_measurement = 'N/A'
+                self._state = 0
         self.update()
 
     @property
@@ -95,36 +102,43 @@ class UberSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        price_details = self._product['price_details']
-        distance_key = 'Trip distance (in {}s)'.format(price_details[
-            'distance_unit'])
-        distance_val = self._product.get('distance')
-        if (price_details.get('distance_unit') is None) or \
-           (self._product.get('distance') is None):
-            distance_key = 'Trip distance'
-            distance_val = 'N/A'
-        time_estimate = self._product['time_estimate_seconds']
-        return {
+        time_estimate = self._product.get('time_estimate_seconds', 'N/A')
+        params = {
             'Product ID': self._product['product_id'],
             'Product short description': self._product['short_description'],
             'Product display name': self._product['display_name'],
             'Product description': self._product['description'],
             'Pickup time estimate (in seconds)': time_estimate,
             'Trip duration (in seconds)': self._product.get('duration', 'N/A'),
-            distance_key: distance_val,
-            'Vehicle Capacity': self._product['capacity'],
-            'Minimum price': price_details['minimum'],
-            'Cost per minute': price_details['cost_per_minute'],
-            'Distance units': price_details['distance_unit'],
-            'Cancellation fee': price_details['cancellation_fee'],
-            'Cost per distance unit': price_details['cost_per_distance'],
-            'Base price': price_details['base'],
-            'Price estimate': price_details.get('estimate', 'N/A'),
-            'Price currency code': price_details.get('currency_code'),
-            'High price estimate': price_details.get('high_estimate', 'N/A'),
-            'Low price estimate': price_details.get('low_estimate', 'N/A'),
-            'Surge multiplier': price_details.get('surge_multiplier', 'N/A')
+            'Vehicle Capacity': self._product['capacity']
         }
+
+        if 'price_details' in self._product:
+            price_details = self._product['price_details']
+            distance_key = 'Trip distance (in {}s)'.format(price_details[
+                'distance_unit'])
+            distance_val = self._product.get('distance')
+            params['Minimum price'] = price_details['minimum'],
+            params['Cost per minute'] = price_details['cost_per_minute'],
+            params['Distance units'] = price_details['distance_unit'],
+            params['Cancellation fee'] = price_details['cancellation_fee'],
+            params['Cost per distance'] = price_details['cost_per_distance'],
+            params['Base price'] = price_details['base'],
+            params['Price estimate'] = price_details.get('estimate', 'N/A'),
+            params['Price currency code'] = price_details.get('currency_code'),
+            params['High price estimate'] = price_details.get('high_estimate',
+                                                              'N/A'),
+            params['Low price estimate'] = price_details.get('low_estimate',
+                                                             'N/A'),
+            params['Surge multiplier'] = price_details.get('surge_multiplier',
+                                                           'N/A')
+        else:
+            distance_key = 'Trip distance (in miles)'
+            distance_val = self._product.get('distance', 'N/A')
+
+        params[distance_key] = distance_val
+
+        return params
 
     @property
     def icon(self):
@@ -140,9 +154,12 @@ class UberSensor(Entity):
             time_estimate = self._product.get('time_estimate_seconds', 0)
             self._state = int(time_estimate / 60)
         elif self._sensortype == "price":
-            price_details = self._product['price_details']
-            min_price = price_details['minimum']
-            self._state = int(price_details.get('low_estimate', min_price))
+            price_details = self._product.get('price_details')
+            if price_details is not None:
+                min_price = price_details.get('minimum')
+                self._state = int(price_details.get('low_estimate', min_price))
+            else:
+                self._state = 0
 
 
 # pylint: disable=too-few-public-methods
@@ -184,17 +201,22 @@ class UberEstimate(object):
                 self.end_latitude,
                 self.end_longitude)
 
-            prices = price_response.json.get('prices')
+            prices = price_response.json.get('prices', [])
 
             for price in prices:
                 product = self.products[price['product_id']]
-                price_details = product["price_details"]
-                product["duration"] = price['duration']
-                product["distance"] = price['distance']
-                price_details["estimate"] = price['estimate']
-                price_details["high_estimate"] = price['high_estimate']
-                price_details["low_estimate"] = price['low_estimate']
-                price_details["surge_multiplier"] = price['surge_multiplier']
+                price_details = product.get("price_details")
+                product["duration"] = price.get('duration', '0')
+                product["distance"] = price.get('distance', '0')
+                if price_details is not None:
+                    price_details["estimate"] = price.get('estimate',
+                                                          '0')
+                    price_details["high_estimate"] = price.get('high_estimate',
+                                                               '0')
+                    price_details["low_estimate"] = price.get('low_estimate',
+                                                              '0')
+                    surge_multiplier = price.get('surge_multiplier', '0')
+                    price_details["surge_multiplier"] = surge_multiplier
 
         estimate_response = client.get_pickup_time_estimates(
             self.start_latitude, self.start_longitude)
