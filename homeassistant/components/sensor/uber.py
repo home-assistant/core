@@ -11,9 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['https://github.com/denismakogon/rides-python-sdk/archive/'
-                'py3-support.zip#'
-                'uber_rides==0.1.2-dev']
+REQUIREMENTS = ['uber_rides==0.2.1']
 
 ICON = 'mdi:taxi'
 
