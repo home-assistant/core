@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.util as util
 import homeassistant.util.color as color_util
 

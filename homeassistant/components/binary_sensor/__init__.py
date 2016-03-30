@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components import (
     bloomsky, mysensors, zwave, vera, wemo, wink)
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = 30

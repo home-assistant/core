@@ -49,9 +49,7 @@ class EntityComponent(object):
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        for p_type, p_config in \
-                config_per_platform(config, self.domain, self.logger):
-
+        for p_type, p_config in config_per_platform(config, self.domain):
             self._setup_platform(p_type, p_config)
 
         if self.discovery_platforms:
