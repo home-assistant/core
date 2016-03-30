@@ -29,30 +29,19 @@ def validate_config(config, items, logger):
     return not errors_found
 
 
-def config_per_platform(config, domain, logger):
+def config_per_platform(config, domain):
     """Generator to break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     """
-    config_key = domain
-    found = 1
-
     for config_key in extract_domain_configs(config, domain):
         platform_config = config[config_key]
         if not isinstance(platform_config, list):
             platform_config = [platform_config]
 
         for item in platform_config:
-            platform_type = item.get(CONF_PLATFORM)
-
-            if platform_type is None:
-                logger.warning('No platform specified for %s', config_key)
-                continue
-
-            yield platform_type, item
-
-        found += 1
-        config_key = "{} {}".format(domain, found)
+            platform = None if item is None else item.get(CONF_PLATFORM)
+            yield platform, item
 
 
 def extract_domain_configs(config, domain):

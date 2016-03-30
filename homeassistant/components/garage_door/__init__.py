@@ -10,7 +10,7 @@ import os
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, SERVICE_CLOSE, SERVICE_OPEN,
     ATTR_ENTITY_ID)
