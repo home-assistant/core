@@ -514,7 +514,14 @@ class Service(object):
 
     def __call__(self, call):
         """Execute the service."""
-        self.func(call)
+        try:
+            if self.schema:
+                call.data = self.schema(call.data)
+
+            self.func(call)
+        except vol.MultipleInvalid as ex:
+            _LOGGER.error('Invalid service data for %s.%s: %s',
+                          call.domain, call.service, ex)
 
 
 # pylint: disable=too-few-public-methods
@@ -642,15 +649,6 @@ class ServiceRegistry(object):
             return
 
         service_handler = self._services[domain][service]
-        service_validator = service_handler.schema
-        try:
-            if service_validator:
-                service_data = service_validator(service_data)
-        except vol.MultipleInvalid as ex:
-            _LOGGER.error('Invalid service data for %s.%s: %s',
-                          domain, service, ex)
-            return
-
         service_call = ServiceCall(domain, service, service_data, call_id)
 
         # Add a job to the pool that calls _execute_service
