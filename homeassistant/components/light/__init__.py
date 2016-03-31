@@ -8,6 +8,8 @@ import logging
 import os
 import csv
 
+import voluptuous as vol
+
 from homeassistant.components import (
     group, discovery, wemo, wink, isy994,
     zwave, insteon_hub, mysensors, tellstick, vera)
@@ -18,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-import homeassistant.util as util
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 
@@ -76,6 +78,31 @@ PROP_TO_ATTR = {
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
 }
+
+# Service call validation schemas
+VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+
+LIGHT_TURN_ON_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_PROFILE: str,
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_BRIGHTNESS: vol.All(int, vol.Range(min=0, max=255)),
+    ATTR_RGB_COLOR: vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+    ATTR_XY_COLOR: vol.ExactSequence((cv.small_float, cv.small_float)),
+    ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
+    ATTR_FLASH: [FLASH_SHORT, FLASH_LONG],
+    ATTR_EFFECT: [EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE],
+})
+
+LIGHT_TURN_OFF_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_TRANSITION: VALID_TRANSITION,
+})
+
+LIGHT_TOGGLE_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_TRANSITION: VALID_TRANSITION,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,18 +196,12 @@ def setup(hass, config):
 
     def handle_light_service(service):
         """Hande a turn light on or off service call."""
-        # Get and validate data
-        dat = service.data
+        # Get the validated data
+        params = service.data.copy()
 
         # Convert the entity ids to valid light ids
         target_lights = component.extract_from_service(service)
-
-        params = {}
-
-        transition = util.convert(dat.get(ATTR_TRANSITION), int)
-
-        if transition is not None:
-            params[ATTR_TRANSITION] = transition
+        params.pop(ATTR_ENTITY_ID, None)
 
         service_fun = None
         if service.service == SERVICE_TURN_OFF:
@@ -198,63 +219,11 @@ def setup(hass, config):
             return
 
         # Processing extra data for turn light on request.
-
-        # We process the profile first so that we get the desired
-        # behavior that extra service data attributes overwrite
-        # profile values.
-        profile = profiles.get(dat.get(ATTR_PROFILE))
+        profile = profiles.get(params.pop(ATTR_PROFILE, None))
 
         if profile:
-            *params[ATTR_XY_COLOR], params[ATTR_BRIGHTNESS] = profile
-
-        if ATTR_BRIGHTNESS in dat:
-            # We pass in the old value as the default parameter if parsing
-            # of the new one goes wrong.
-            params[ATTR_BRIGHTNESS] = util.convert(
-                dat.get(ATTR_BRIGHTNESS), int, params.get(ATTR_BRIGHTNESS))
-
-        if ATTR_XY_COLOR in dat:
-            try:
-                # xy_color should be a list containing 2 floats.
-                xycolor = dat.get(ATTR_XY_COLOR)
-
-                # Without this check, a xycolor with value '99' would work.
-                if not isinstance(xycolor, str):
-                    params[ATTR_XY_COLOR] = [float(val) for val in xycolor]
-
-            except (TypeError, ValueError):
-                # TypeError if xy_color is not iterable
-                # ValueError if value could not be converted to float
-                pass
-
-        if ATTR_COLOR_TEMP in dat:
-            # color_temp should be an int of mireds value
-            colortemp = dat.get(ATTR_COLOR_TEMP)
-
-            # Without this check, a ctcolor with value '99' would work
-            # These values are based on Philips Hue, may need ajustment later
-            if isinstance(colortemp, int) and 154 <= colortemp <= 500:
-                params[ATTR_COLOR_TEMP] = colortemp
-
-        if ATTR_RGB_COLOR in dat:
-            try:
-                # rgb_color should be a list containing 3 ints
-                rgb_color = dat.get(ATTR_RGB_COLOR)
-
-                if len(rgb_color) == 3:
-                    params[ATTR_RGB_COLOR] = [int(val) for val in rgb_color]
-
-            except (TypeError, ValueError):
-                # TypeError if rgb_color is not iterable
-                # ValueError if not all values can be converted to int
-                pass
-
-        if dat.get(ATTR_FLASH) in (FLASH_SHORT, FLASH_LONG):
-            params[ATTR_FLASH] = dat[ATTR_FLASH]
-
-        if dat.get(ATTR_EFFECT) in (EFFECT_COLORLOOP, EFFECT_WHITE,
-                                    EFFECT_RANDOM):
-            params[ATTR_EFFECT] = dat[ATTR_EFFECT]
+            params.setdefault(ATTR_XY_COLOR, list(profile[:2]))
+            params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
         for light in target_lights:
             light.turn_on(**params)
@@ -267,13 +236,16 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
-                           descriptions.get(SERVICE_TURN_ON))
+                           descriptions.get(SERVICE_TURN_ON),
+                           schema=LIGHT_TURN_ON_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
-                           descriptions.get(SERVICE_TURN_OFF))
+                           descriptions.get(SERVICE_TURN_OFF),
+                           schema=LIGHT_TURN_OFF_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_TOGGLE, handle_light_service,
-                           descriptions.get(SERVICE_TOGGLE))
+                           descriptions.get(SERVICE_TOGGLE),
+                           schema=LIGHT_TOGGLE_SCHEMA)
 
     return True
 
