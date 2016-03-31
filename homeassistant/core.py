@@ -14,6 +14,8 @@ import threading
 import time
 from types import MappingProxyType
 
+import voluptuous as vol
+
 import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -494,13 +496,14 @@ class StateMachine(object):
 class Service(object):
     """Represents a callable service."""
 
-    __slots__ = ['func', 'description', 'fields']
+    __slots__ = ['func', 'description', 'fields', 'schema']
 
-    def __init__(self, func, description, fields):
+    def __init__(self, func, description, fields, schema):
         """Initialize a service."""
         self.func = func
         self.description = description or ''
         self.fields = fields or {}
+        self.schema = schema
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -560,16 +563,20 @@ class ServiceRegistry(object):
         """Test if specified service exists."""
         return service in self._services.get(domain, [])
 
-    def register(self, domain, service, service_func, description=None):
+    # pylint: disable=too-many-arguments
+    def register(self, domain, service, service_func, description=None,
+                 schema=None):
         """
         Register a service.
 
         Description is a dict containing key 'description' to describe
         the service and a key 'fields' to describe the fields.
+
+        Schema is called to coerce and validate the service data.
         """
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}))
+                              description.get('fields', {}), schema)
         with self._lock:
             if domain in self._services:
                 self._services[domain][service] = service_obj
@@ -635,6 +642,15 @@ class ServiceRegistry(object):
             return
 
         service_handler = self._services[domain][service]
+        service_validator = service_handler.schema
+        try:
+            if service_validator:
+                service_data = service_validator(service_data)
+        except vol.MultipleInvalid as ex:
+            _LOGGER.error('Invalid service data for %s.%s: %s',
+                          domain, service, ex)
+            return
+
         service_call = ServiceCall(domain, service, service_data, call_id)
 
         # Add a job to the pool that calls _execute_service
