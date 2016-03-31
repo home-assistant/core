@@ -139,24 +139,24 @@ def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
             if device.deviceClass in ['badClient']:
                 continue
 
-            if device.identifier not in plex_clients:
-                new_client = PlexClient(device, device.identifier,
+            if device.machineIdentifier  not in plex_clients:
+                new_client = PlexClient(device, device.machineIdentifier,
                                         device.name, update_devices,
                                         update_sessions, plex_sessions)
-                plex_clients[device.identifier] = new_client
+                plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
-                plex_clients[device.identifier].set_device(device)
+                plex_clients[device.machineIdentifier].set_device(device)
 
         if list_sessions:
             for session in sessions:
-                if session.player.identifier not in plex_clients:
+                if session.player.machineIdentifier not in plex_clients:
                     title = session.user.title + '-' + session.player.title
                     new_client = PlexClient(None,
-                                            session.player.identifier,
+                                            session.player.machineIdentifier,
                                             title, update_devices,
                                             update_sessions, plex_sessions)
-                    plex_clients[session.player.identifier] = new_client
+                    plex_clients[session.player.machineIdentifier] = new_client
                     new_plex_clients.append(new_client)
 
         if new_plex_clients:
@@ -172,7 +172,7 @@ def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
 
         plex_sessions.clear()
         for session in sessions:
-            plex_sessions[session.player.identifier] = session
+            plex_sessions[session.player.machineIdentifier] = session
 
     track_utc_time_change(
         hass, update_sessions,
@@ -219,7 +219,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self.plex_sessions = plex_sessions
         self.identifier = identifier
-        self.name = name
+        self.clientname = name
         self.set_device(device)
         self.update_sessions = update_sessions
         self.update_devices = update_devices
@@ -232,12 +232,12 @@ class PlexClient(MediaPlayerDevice):
     def unique_id(self):
         """Return the id of this plex client."""
         return "{}.{}".format(
-            self.__class__, self.identifier or self.name)
+            self.__class__, self.identifier or self.clientname)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.name or DEVICE_DEFAULT_NAME
+        return self.clientname or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
