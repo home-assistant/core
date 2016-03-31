@@ -197,30 +197,26 @@ class SonosDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_SONOS
 
-    @only_if_coordinator
-    def turn_off(self):
-        """Turn off media player."""
-        self._player.pause()
-
-    @only_if_coordinator
     def volume_up(self):
         """Volume up media player."""
         self._player.volume += 1
 
-    @only_if_coordinator
     def volume_down(self):
         """Volume down media player."""
         self._player.volume -= 1
 
-    @only_if_coordinator
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
 
-    @only_if_coordinator
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
+
+    @only_if_coordinator
+    def turn_off(self):
+        """Turn off media player."""
+        self._player.pause()
 
     @only_if_coordinator
     def media_play(self):
