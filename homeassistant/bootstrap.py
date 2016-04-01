@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
 from homeassistant.helpers import (
-    event_decorators, service, config_per_platform)
+    event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +116,12 @@ def _setup_component(hass, domain, config):
                                   domain, ex, platform)
                     return False
 
-            config = {domain: platforms}
+            # Create a copy of the configuration with all config for current
+            # component removed and add validated config back in.
+            filter_keys = extract_domain_configs(config, domain)
+            config = {key: value for key, value in config.items()
+                      if key not in filter_keys}
+            config[domain] = platforms
 
         if not _handle_requirements(hass, component, domain):
             return False

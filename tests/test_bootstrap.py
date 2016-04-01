@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
-from tests.common import get_test_home_assistant, MockModule
+from tests.common import get_test_home_assistant, MockModule, MockPlatform
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -302,3 +302,28 @@ class TestBootstrap:
             }
         })
         assert not mock_process.called
+
+    def test_component_setup_with_validation_and_dependency(self):
+        """Test all config is passed to dependencies."""
+
+        def config_check_setup(hass, config):
+            """Setup method that tests config is passed in."""
+            if config.get('comp_a', {}).get('valid', False):
+                return True
+            raise Exception('Config not passed in: {}'.format(config))
+
+        loader.set_component('comp_a',
+                             MockModule('comp_a', setup=config_check_setup))
+
+        loader.set_component('switch.platform_a', MockPlatform('comp_b',
+                                                               ['comp_a']))
+
+        assert bootstrap.setup_component(self.hass, 'switch', {
+            'comp_a': {
+                'valid': True
+            },
+            'switch': {
+                'platform': 'platform_a',
+            }
+        })
+        assert 'comp_a' in self.hass.config.components
