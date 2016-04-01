@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.5.5']
+REQUIREMENTS = ['netdisco==0.6.1']
 
 SCAN_INTERVAL = 300  # seconds
 
