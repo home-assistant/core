@@ -12,8 +12,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): str,
 }, extra=vol.ALLOW_EXTRA)
 
-byte = vol.All(int, vol.Range(min=0, max=255))
-small_float = vol.All(float, vol.Range(min=0, max=1))
+byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
+small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90))
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180))
 
