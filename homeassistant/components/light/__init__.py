@@ -87,8 +87,10 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: vol.All(int, vol.Range(min=0, max=255)),
-    ATTR_RGB_COLOR: vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-    ATTR_XY_COLOR: vol.ExactSequence((cv.small_float, cv.small_float)),
+    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                            vol.Coerce(tuple)),
+    ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                           vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
     ATTR_FLASH: [FLASH_SHORT, FLASH_LONG],
     ATTR_EFFECT: [EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE],
@@ -222,7 +224,7 @@ def setup(hass, config):
         profile = profiles.get(params.pop(ATTR_PROFILE, None))
 
         if profile:
-            params.setdefault(ATTR_XY_COLOR, list(profile[:2]))
+            params.setdefault(ATTR_XY_COLOR, profile[:2])
             params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
         for light in target_lights:
