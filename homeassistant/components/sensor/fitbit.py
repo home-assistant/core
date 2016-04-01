@@ -16,20 +16,25 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['fitbit==0.2.2']
-DEPENDENCIES = ['http']
+REQUIREMENTS = ["fitbit==0.2.2"]
+DEPENDENCIES = ["http"]
 
-ICON = 'mdi:walk'
+ICON = "mdi:walk"
 
 _CONFIGURING = {}
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=30)
 
-FITBIT_AUTH_START = '/auth/fitbit'
-FITBIT_AUTH_CALLBACK_PATH = '/auth/fitbit/callback'
+FITBIT_AUTH_START = "/auth/fitbit"
+FITBIT_AUTH_CALLBACK_PATH = "/auth/fitbit/callback"
 
-FITBIT_CONFIG_FILE = 'fitbit.conf'
+DEFAULT_CONFIG = {
+    "client_id": "CLIENT_ID_HERE",
+    "client_secret": "CLIENT_SECRET_HERE"
+}
+
+FITBIT_CONFIG_FILE = "fitbit.conf"
 
 FITBIT_RESOURCES_LIST = {
     "activities/activityCalories": "cal",
@@ -106,47 +111,88 @@ FITBIT_MEASUREMENTS = {
 def config_from_file(filename, config=None):
     """Small configuration file management function."""
     if config:
-        # We're writing configuration
+        # We"re writing configuration
         try:
-            with open(filename, 'w') as fdesc:
+            with open(filename, "w") as fdesc:
                 fdesc.write(json.dumps(config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return config
     else:
-        # We're reading config
+        # We"re reading config
         if os.path.isfile(filename):
             try:
-                with open(filename, 'r') as fdesc:
+                with open(filename, "r") as fdesc:
                     return json.loads(fdesc.read())
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
-                # This won't work yet
+                _LOGGER.error("Reading config file failed: %s", error)
+                # This won"t work yet
                 return False
         else:
             return {}
 
 
-def request_configuration(hass):
-    """Request configuration steps from the user."""
-    configurator = get_component('configurator')
-    if 'fitbit' in _CONFIGURING:
+def request_app_setup(hass, config, add_devices, config_path,
+                      discovery_info=None):
+    """Assist user with configuring the Fitbit dev application."""
+    configurator = get_component("configurator")
+
+    # pylint: disable=unused-argument
+    def fitbit_configuration_callback(callback_data):
+        """The actions to do when our configuration callback is called."""
+        config_path = hass.config.path(FITBIT_CONFIG_FILE)
+        if os.path.isfile(config_path):
+            config_file = config_from_file(config_path)
+            if config_file == DEFAULT_CONFIG:
+                error_msg = ("You didn't correctly modify fitbit.conf",
+                             " please try again")
+                configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+            else:
+                setup_platform(hass, config, add_devices, discovery_info)
+        else:
+            setup_platform(hass, config, add_devices, discovery_info)
+
+    start_url = "{}{}".format(hass.http.base_url, FITBIT_AUTH_START)
+
+    description = """Please create a Fitbit developer app
+                   at https://dev.fitbit.com/apps/new.
+                   For the OAuth 2.0 Application Type choose Personal.
+                   Set the Callback URL to {}.
+                   They will provide you a Client ID and secret.
+                   These need to be saved into the file located at: {}.
+                   Then come back here and hit the below button.
+                   """.format(start_url, config_path)
+
+    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
+
+    _CONFIGURING["fitbit"] = configurator.request_config(
+        hass, "Fitbit", fitbit_configuration_callback,
+        description=description, submit_caption=submit,
+        description_image="/static/images/config_fitbit_app.png"
+    )
+
+
+def request_oauth_completion(hass):
+    """Request user complete Fitbit OAuth2 flow."""
+    configurator = get_component("configurator")
+    if "fitbit" in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING['fitbit'], "Failed to register, please try again.")
+            _CONFIGURING["fitbit"], "Failed to register, please try again.")
 
         return
 
     # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
         """The actions to do when our configuration callback is called."""
-        print("Configured!")
-        # setup_fitbit(hass, network, config)
 
-    _CONFIGURING['fitbit'] = configurator.request_config(
+    start_url = "{}{}".format(hass.http.base_url, FITBIT_AUTH_START)
+
+    description = "Please authorize Fitbit by visiting {}".format(start_url)
+
+    _CONFIGURING["fitbit"] = configurator.request_config(
         hass, "Fitbit", fitbit_configuration_callback,
-        description=('Please authorize Fitbit by visiting '
-                     'http://localhost:8123/auth/fitbit'),
+        description=description,
         submit_caption="I have authorized Fitbit."
     )
 
@@ -155,47 +201,49 @@ def request_configuration(hass):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fitbit sensor."""
-    if None in (config.get('client_id'), config.get('client_secret')):
-        _LOGGER.error(
-            "You must set client_id and client_secret to use Fitbit!")
-        return False
-
-    if 'fitbit' in _CONFIGURING:
-        get_component('configurator').request_done(_CONFIGURING.pop('fitbit'))
-
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
     if os.path.isfile(config_path):
         config_file = config_from_file(config_path)
+        if config_file == DEFAULT_CONFIG:
+            request_app_setup(hass, config, add_devices, config_path,
+                              discovery_info=None)
+            return False
     else:
-        default_config = {'client_id': config.get('client_id'),
-                          'client_secret': config.get('client_secret')}
-        config_file = config_from_file(config_path, default_config)
+        config_file = config_from_file(config_path, DEFAULT_CONFIG)
+        request_app_setup(hass, config, add_devices, config_path,
+                          discovery_info=None)
+        return False
+
+    if "fitbit" in _CONFIGURING:
+        get_component("configurator").request_done(_CONFIGURING.pop("fitbit"))
 
     import fitbit
 
-    access_token = config_file.get('access_token')
-    refresh_token = config_file.get('refresh_token')
+    access_token = config_file.get("access_token")
+    refresh_token = config_file.get("refresh_token")
     if None not in (access_token, refresh_token):
-        authd_client = fitbit.Fitbit(config.get('client_id'),
-                                     config.get('client_secret'),
+        authd_client = fitbit.Fitbit(config.get("client_id"),
+                                     config.get("client_secret"),
                                      access_token=access_token,
                                      refresh_token=refresh_token)
 
-        if int(time.time()) - config_file.get('last_saved_at', 0) > 3600:
+        if int(time.time()) - config_file.get("last_saved_at", 0) > 3600:
             authd_client.client.refresh_token()
 
-        authd_client.system = authd_client.user_profile_get()['user']['locale']
+        authd_client.system = authd_client.user_profile_get()["user"]["locale"]
 
         dev = []
-        for resource in config.get('monitored_resources',
+        for resource in config.get("monitored_resources",
                                    FITBIT_DEFAULT_RESOURCE_LIST):
             dev.append(FitbitSensor(authd_client, config_path, resource))
         add_devices(dev)
 
     else:
-        oauth = fitbit.api.FitbitOauth2Client(config.get('client_id'),
-                                              config.get('client_secret'))
-        redirect_uri = "http://127.0.0.1:8123/auth/fitbit/callback"
+        oauth = fitbit.api.FitbitOauth2Client(config.get("client_id"),
+                                              config.get("client_secret"))
+
+        redirect_uri = "{}{}".format(hass.http.base_url,
+                                     FITBIT_AUTH_CALLBACK_PATH)
 
         def _start_fitbit_auth(handler, path_match, data):
             """Start Fitbit OAuth2 flow."""
@@ -205,46 +253,59 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                       "settings", "sleep",
                                                       "weight"])
             handler.send_response(301)
-            handler.send_header('Location', url)
+            handler.send_header("Location", url)
             handler.end_headers()
 
         def _finish_fitbit_auth(handler, path_match, data):
             """Finish Fitbit OAuth2 flow."""
-            success_html = b"""<html><head><title>Fitbit Auth</title></head>
-            <body><h1>Fitbit has been successfully authorized! You can close
-            this window now!</h1></body></html>"""
-            handler.send_response(HTTP_OK)
-            handler.send_header("Content-type", "text/html")
-            handler.end_headers()
-            handler.wfile.write(success_html)
+            response_message = """Fitbit has been successfully authorized!
+            You can close this window now!"""
             from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
             from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-            if data.get('code') is not None:
+            if data.get("code") is not None:
                 try:
-                    oauth.fetch_access_token(data.get('code'), redirect_uri)
+                    oauth.fetch_access_token(data.get("code"), redirect_uri)
                 except MissingTokenError as error:
                     _LOGGER.error("Missing token: %s", error)
+                    response_message = """Something went wrong when
+                    attempting authenticating with Fitbit. The error
+                    encountered was {}. Please try again!""".format(error)
                 except MismatchingStateError as error:
                     _LOGGER.error("Mismatched state, CSRF error: %s", error)
+                    response_message = """Something went wrong when
+                    attempting authenticating with Fitbit. The error
+                    encountered was {}. Please try again!""".format(error)
             else:
                 _LOGGER.error("Unknown error when authing")
+                response_message = """Something went wrong when
+                    attempting authenticating with Fitbit.
+                    An unknown error occurred. Please try again!
+                    """
+
+            html_response = """<html><head><title>Fitbit Auth</title></head>
+            <body><h1>{}</h1></body></html>""".format(response_message)
+
+            html_response = html_response.encode("utf-8")
+
+            handler.send_response(HTTP_OK)
+            handler.write_content(html_response, content_type="text/html")
 
             config_contents = {
-                'access_token': oauth.token['access_token'],
-                'refresh_token': oauth.token['refresh_token'],
-                'client_id': oauth.client_id,
-                'client_secret': oauth.client_secret
+                "access_token": oauth.token["access_token"],
+                "refresh_token": oauth.token["refresh_token"],
+                "client_id": oauth.client_id,
+                "client_secret": oauth.client_secret
             }
             if not config_from_file(config_path, config_contents):
-                _LOGGER.error('failed to save config file')
+                _LOGGER.error("failed to save config file")
 
             setup_platform(hass, config, add_devices, discovery_info=None)
 
-        hass.http.register_path('GET', FITBIT_AUTH_START, _start_fitbit_auth)
-        hass.http.register_path('GET', FITBIT_AUTH_CALLBACK_PATH,
+        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth)
+        hass.http.register_path("GET", FITBIT_AUTH_CALLBACK_PATH,
                                 _finish_fitbit_auth)
 
-        request_configuration(hass)
+        request_oauth_completion(hass)
 
 
 # pylint: disable=too-few-public-methods
@@ -296,16 +357,16 @@ class FitbitSensor(Entity):
     def update(self):
         """Get the latest data from the Fitbit API and update the states."""
         container = self.resource_type.replace("/", "-")
-        response = self.client.time_series(self.resource_type, period='7d')
-        self._state = response[container][-1].get('value')
+        response = self.client.time_series(self.resource_type, period="7d")
+        self._state = response[container][-1].get("value")
         if self.resource_type == "activities/heart":
-            self._state = response[container][-1].get('restingHeartRate')
+            self._state = response[container][-1].get("restingHeartRate")
         config_contents = {
-            'access_token': self.client.client.token['access_token'],
-            'refresh_token': self.client.client.token['refresh_token'],
-            'client_id': self.client.client.client_id,
-            'client_secret': self.client.client.client_secret,
-            'last_saved_at': int(time.time())
+            "access_token": self.client.client.token["access_token"],
+            "refresh_token": self.client.client.token["refresh_token"],
+            "client_id": self.client.client.client_id,
+            "client_secret": self.client.client.client_secret,
+            "last_saved_at": int(time.time())
         }
         if not config_from_file(self.config_path, config_contents):
-            _LOGGER.error('failed to save config file')
+            _LOGGER.error("failed to save config file")
