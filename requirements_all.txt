@@ -182,6 +182,9 @@ pyfttt==0.3
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.7.2
 
+# homeassistant.components.sensor.loopenergy
+pyloopenergy==0.0.4
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.2
 
