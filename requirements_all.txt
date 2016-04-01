@@ -46,6 +46,9 @@ eliqonline==1.0.11
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.4
 
+# homeassistant.components.sensor.fitbit
+fitbit==0.2.2
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
