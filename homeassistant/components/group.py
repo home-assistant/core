@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import threading
+from collections import OrderedDict
 
 import voluptuous as vol
 
@@ -47,7 +48,7 @@ _SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
 
 def _group_dict(value):
     """Validate a dictionary of group definitions."""
-    config = {}
+    config = OrderedDict()
     for key, group in value.items():
         try:
             config[key] = _SINGLE_GROUP_CONFIG(group)
@@ -59,7 +60,7 @@ def _group_dict(value):
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(dict, _group_dict)
-}, extra=True)
+}, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
