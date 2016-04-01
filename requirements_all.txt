@@ -183,7 +183,7 @@ pyfttt==0.3
 pyicloud==0.7.2
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.4
+pyloopenergy==0.0.5
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.2
@@ -235,10 +235,10 @@ python-wink==0.6.4
 pyuserinput==0.1.9
 
 # homeassistant.components.vera
-pyvera==0.2.8
+pyvera==0.2.10
 
 # homeassistant.components.wemo
-pywemo==0.3.23
+pywemo==0.3.24
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
