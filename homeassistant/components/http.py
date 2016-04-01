@@ -25,7 +25,10 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_CONTENT_ENCODING,
     HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
-    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
+    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, HTTP_HEADER_ORIGIN,
+    HTTP_HEADER_ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
     SERVER_PORT)
 
@@ -37,6 +40,7 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
+CONF_ALLOW_CORS = 'cors'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -60,11 +64,12 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
+    allow_cors = conf.get(CONF_ALLOW_CORS, False)
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development, ssl_certificate, ssl_key)
+            development, ssl_certificate, ssl_key, allow_cors)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -93,7 +98,8 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development, ssl_certificate, ssl_key):
+                 hass, api_password, development, ssl_certificate, ssl_key,
+                 allow_cors):
         """Initialize the server."""
         super().__init__(server_address, request_handler_class)
 
@@ -104,6 +110,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.paths = []
         self.sessions = SessionStore()
         self.use_ssl = ssl_certificate is not None
+        self.allow_cors = allow_cors
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -332,6 +339,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
 
         self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(content)))
+
+        if self.server.allow_cors:
+          allowed_headers = ", ".join([HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
+                                      HTTP_HEADER_X_REQUESTED_WITH,
+                                      HTTP_HEADER_CONTENT_TYPE,
+                                      HTTP_HEADER_HA_AUTH])
+          self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, '*')
+          self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
+                           allowed_headers)
         self.end_headers()
 
         if self.command == 'HEAD':
