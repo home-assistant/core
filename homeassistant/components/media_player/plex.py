@@ -139,7 +139,7 @@ def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
             if device.deviceClass in ['badClient']:
                 continue
 
-            if device.machineIdentifier  not in plex_clients:
+            if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(device, device.machineIdentifier,
                                         device.name, update_devices,
                                         update_sessions, plex_sessions)
