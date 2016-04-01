@@ -7,12 +7,13 @@ https://home-assistant.io/components/sensor.loop_energy/
 import logging
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "loopenergy"
 
-REQUIREMENTS = ['pyloopenergy==0.0.4']
+REQUIREMENTS = ['pyloopenergy==0.0.5']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -44,6 +45,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         gas_serial,
         gas_secret
         )
+
+    def stop_loopenergy(event):
+        """Shutdown loopenergy thread on exit."""
+        _LOGGER.info("Shutting down loopenergy.")
+        controller.terminate()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_loopenergy)
 
     sensors = [LoopEnergyElec(controller)]
 
