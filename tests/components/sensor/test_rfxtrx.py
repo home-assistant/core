@@ -86,6 +86,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         rfxtrx.setup_platform(self.hass, config, add_dev_callback)
 
         self.assertEqual(3, len(devices))
+        self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
         device_num = 0
         for entity in devices:
             if entity.name == 'Bath_Humidity':
@@ -133,6 +134,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 devices.append(dev)
 
         rfxtrx.setup_platform(self.hass, config, add_dev_callback)
+
         event = rfxtrx_core.get_rfx_object('0a520801070100b81b0279')
         event.data = bytearray(b'\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y')
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
@@ -223,3 +225,117 @@ class TestSensorRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
         self.assertEqual(0, len(devices))
+
+    def test_update_of_sensors(self):
+        """Test with 3 sensors."""
+        config = {'devices':
+                  {'sensor_0502': {
+                      'name': 'Test',
+                      'packetid': '0a52080705020095220269',
+                      'data_type': 'Temperature'},
+                   'sensor_0601': {
+                       'name': 'Bath_Humidity',
+                       'packetid': '0a520802060100ff0e0269',
+                       'data_type': 'Humidity'},
+                   'sensor_0601 2': {
+                       'name': 'Bath',
+                       'packetid': '0a520802060100ff0e0269'}}}
+        devices = []
+
+        def add_dev_callback(devs):
+            """Add a callback to add devices."""
+            for dev in devs:
+                devices.append(dev)
+
+        rfxtrx.setup_platform(self.hass, config, add_dev_callback)
+
+        self.assertEqual(3, len(devices))
+        self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
+
+        device_num = 0
+        for entity in devices:
+            if entity.name == 'Bath_Humidity':
+                device_num = device_num + 1
+                self.assertEqual('%', entity.unit_of_measurement)
+                self.assertEqual(14, entity.state)
+                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
+                                  'Humidity': 14, 'Humidity status': 'normal',
+                                  'Humidity status numeric': 2,
+                                  'Rssi numeric': 6},
+                                 entity.device_state_attributes)
+                self.assertEqual('Bath_Humidity', entity.__str__())
+            elif entity.name == 'Bath':
+                device_num = device_num + 1
+                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(25.5, entity.state)
+                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
+                                  'Humidity': 14, 'Humidity status': 'normal',
+                                  'Humidity status numeric': 2,
+                                  'Rssi numeric': 6},
+                                 entity.device_state_attributes)
+                self.assertEqual('Bath', entity.__str__())
+            elif entity.name == 'Test':
+                device_num = device_num + 1
+                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(14.9, entity.state)
+                self.assertEqual({'Humidity status': 'normal',
+                                  'Temperature': 14.9,
+                                  'Rssi numeric': 6, 'Humidity': 34,
+                                  'Battery numeric': 9,
+                                  'Humidity status numeric': 2},
+                                 entity.device_state_attributes)
+                self.assertEqual('Test', entity.__str__())
+
+        self.assertEqual(3, device_num)
+
+        event = rfxtrx_core.get_rfx_object('0a520802060101ff0f0269')
+        event.data = bytearray(b'\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y')
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        entity = devices[0]
+
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        event = rfxtrx_core.get_rfx_object('0a52080705020085220269')
+        event.data = bytearray(b'\nR\x08\x04\x05\x02\x00\x95$\x02y')
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+
+        self.assertEqual(3, len(devices))
+        self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
+
+        device_num = 0
+        for entity in devices:
+            if entity.name == 'Bath_Humidity':
+                device_num = device_num + 1
+                self.assertEqual('%', entity.unit_of_measurement)
+                self.assertEqual(15, entity.state)
+                self.assertEqual({'Battery numeric': 9, 'Temperature': 51.1,
+                                  'Humidity': 15, 'Humidity status': 'normal',
+                                  'Humidity status numeric': 2,
+                                  'Rssi numeric': 6},
+                                 entity.device_state_attributes)
+                self.assertEqual('Bath_Humidity', entity.__str__())
+            elif entity.name == 'Bath':
+                device_num = device_num + 1
+                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(51.1, entity.state)
+                self.assertEqual({'Battery numeric': 9, 'Temperature': 51.1,
+                                  'Humidity': 15, 'Humidity status': 'normal',
+                                  'Humidity status numeric': 2,
+                                  'Rssi numeric': 6},
+                                 entity.device_state_attributes)
+                self.assertEqual('Bath', entity.__str__())
+            elif entity.name == 'Test':
+                device_num = device_num + 1
+                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(13.3, entity.state)
+                self.assertEqual({'Humidity status': 'normal',
+                                  'Temperature': 13.3,
+                                  'Rssi numeric': 6, 'Humidity': 34,
+                                  'Battery numeric': 9,
+                                  'Humidity status numeric': 2},
+                                 entity.device_state_attributes)
+                self.assertEqual('Test', entity.__str__())
+
+        self.assertEqual(3, device_num)
+
+        self.assertEqual(3, len(devices))
+        self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
