@@ -155,20 +155,21 @@ def request_app_setup(hass, config, add_devices, config_path,
 
     start_url = "{}{}".format(hass.http.base_url, FITBIT_AUTH_START)
 
-    description = """Please create a Fitbit developer app
-                   at https://dev.fitbit.com/apps/new.
-                   For the OAuth 2.0 Application Type choose Personal.
-                   Set the Callback URL to {}.
-                   They will provide you a Client ID and secret.
-                   These need to be saved into the file located at: {}.
-                   Then come back here and hit the below button.
-                   """.format(start_url, config_path)
+    description_html = """Please create a Fitbit developer app
+                       <a href="https://dev.fitbit.com/apps/new">here</a>.
+                       For the OAuth 2.0 Application Type choose Personal.
+                       Set the Callback URL to <pre>{}</pre>.
+                       They will provide you a Client ID and secret.
+                       These need to be saved into the file located at:
+                       <pre>{}</pre>.
+                       Then come back here and hit the below button.
+                       """.format(start_url, config_path)
 
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
     _CONFIGURING["fitbit"] = configurator.request_config(
         hass, "Fitbit", fitbit_configuration_callback,
-        description=description, submit_caption=submit,
+        description_html=description_html, submit_caption=submit,
         description_image="/static/images/config_fitbit_app.png"
     )
 
