@@ -310,3 +310,7 @@ xbee-helper==0.0.6
 
 # homeassistant.components.sensor.yr
 xmltodict
+
+# homeassistant.components.sensor.t411
+T411API==0.1.5
+humanize==0.5.1
