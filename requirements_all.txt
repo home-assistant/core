@@ -19,6 +19,9 @@ PyMata==2.07a
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
 
+# homeassistant.components.sensor.t411
+T411API==0.1.5
+
 # homeassistant.components.notify.twitter
 TwitterAPI==2.3.6
 
@@ -108,6 +111,9 @@ https://github.com/theolind/pymysensors/archive/f0c928532167fb24823efa793ec21ca6
 
 # homeassistant.components.notify.googlevoice
 https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1
+
+# homeassistant.components.sensor.t411
+humanize==0.5.1
 
 # homeassistant.components.influxdb
 influxdb==2.12.0
