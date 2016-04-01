@@ -4,7 +4,7 @@ Support for Nest thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
 """
-import logging
+import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -13,20 +13,21 @@ DOMAIN = 'nest'
 
 NEST = None
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Nest thermostat component."""
     global NEST
 
-    logger = logging.getLogger(__name__)
     username = config[DOMAIN].get(CONF_USERNAME)
     password = config[DOMAIN].get(CONF_PASSWORD)
-
-    if username is None or password is None:
-        logger.error("Missing required configuration items %s or %s",
-                     CONF_USERNAME, CONF_PASSWORD)
-        return
 
     import nest
 
