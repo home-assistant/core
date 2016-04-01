@@ -4,13 +4,13 @@ Support for T411 torrent tracker.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.t411/
 """
+import logging
+from datetime import timedelta
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import validate_config
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from datetime import timedelta
-import logging
 
 REQUIREMENTS = ['T411API==0.1.5', 'humanize==0.5.1']
 
@@ -34,16 +34,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import t411api
     api = t411api.T411API()
     try:
-        api.connect(config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None))
+        api.connect(config.get(CONF_USERNAME, None),
+                    config.get(CONF_PASSWORD, None))
     except t411api.API.APIError as inst:
         _LOGGER.error(inst.args)
         return False
 
     add_devices([
-        T411Sensor('username', api, config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None)),
-        T411Sensor('uploaded', api, config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None)),
-        T411Sensor('downloaded', api, config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None)),
-        T411Sensor('ratio', api, config.get(CONF_USERNAME, None), config.get(CONF_PASSWORD, None))
+        T411Sensor('username', api, config.get(CONF_USERNAME, None),
+                   config.get(CONF_PASSWORD, None)),
+        T411Sensor('uploaded', api, config.get(CONF_USERNAME, None),
+                   config.get(CONF_PASSWORD, None)),
+        T411Sensor('downloaded', api, config.get(CONF_USERNAME, None),
+                   config.get(CONF_PASSWORD, None)),
+        T411Sensor('ratio', api, config.get(CONF_USERNAME, None),
+                   config.get(CONF_PASSWORD, None))
     ])
 
 
@@ -67,18 +72,18 @@ class T411Sensor(Entity):
         """Return the state of the sensor."""
         import humanize
         import math
-        if (self._name == 'username'):
+        if self._name == 'username':
             return self._t411.user()['username']
-        elif (self._name == 'downloaded'):
+        elif self._name == 'downloaded':
             down = float(self._t411.user()['downloaded'])
             return humanize.naturalsize(down).split()[0]
-        elif (self._name == 'uploaded'):
-            up = float(self._t411.user()['uploaded'])
+        elif self._name == 'uploaded':
+            upload = float(self._t411.user()['uploaded'])
             return humanize.naturalsize(up).split()[0]
-        elif (self._name == 'ratio'):
+        elif self._name == 'ratio':
             down = float(self._t411.user()['downloaded'])
-            up = float(self._t411.user()['uploaded'])
-            ratio = math.floor(((up / down) * 100)) / 100
+            upload = float(self._t411.user()['uploaded'])
+            ratio = math.floor(((upload / down) * 100)) / 100
             return ratio
         else:
             return None
@@ -86,27 +91,28 @@ class T411Sensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if (self._name == 'username'):
+        if self._name == 'username':
             return 'mdi:account'
-        elif (self._name == 'downloaded'):
+        elif self._name == 'downloaded':
             return 'mdi:download'
-        elif (self._name == 'uploaded'):
+        elif self._name == 'uploaded':
             return 'mdi:upload'
-        elif (self._name == 'ratio'):
+        elif self._name == 'ratio':
             return 'mdi:percent'
         else:
             return None
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
         import humanize
         """Return the unit this state is expressed in."""
-        if (self._name == 'downloaded'):
+        if self._name == 'downloaded':
             down = float(self._t411.user()['downloaded'])
             return humanize.naturalsize(down).split()[1]
-        elif (self._name == 'uploaded'):
-            up = float(self._t411.user()['uploaded'])
-            return humanize.naturalsize(up).split()[1]
+        elif self._name == 'uploaded':
+            upload = float(self._t411.user()['uploaded'])
+            return humanize.naturalsize(upload).split()[1]
         else:
             return None
 
