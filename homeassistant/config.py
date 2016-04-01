@@ -31,14 +31,15 @@ DEFAULT_CONFIG = (
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
 DEFAULT_COMPONENTS = {
-    'introduction': 'Show links to resources in log and frontend',
-    'frontend': 'Enables the frontend',
-    'updater': 'Checks for available updates',
-    'discovery': 'Discover some devices automatically',
-    'conversation': 'Allows you to issue voice commands from the frontend',
-    'history': 'Enables support for tracking state changes over time.',
-    'logbook': 'View all events in a logbook',
-    'sun': 'Track the sun',
+    'introduction:': 'Show links to resources in log and frontend',
+    'frontend:': 'Enables the frontend',
+    'updater:': 'Checks for available updates',
+    'discovery:': 'Discover some devices automatically',
+    'conversation:': 'Allows you to issue voice commands from the frontend',
+    'history:': 'Enables support for tracking state changes over time.',
+    'logbook:': 'View all events in a logbook',
+    'sun:': 'Track the sun',
+    'sensor:\n   platform: yr': 'Prediction of weather',
 }
 
 
@@ -127,7 +128,7 @@ def create_default_config(config_dir, detect_location=True):
 
             for component, description in DEFAULT_COMPONENTS.items():
                 config_file.write("# {}\n".format(description))
-                config_file.write("{}:\n\n".format(component))
+                config_file.write("{}\n\n".format(component))
 
         return config_path
 
