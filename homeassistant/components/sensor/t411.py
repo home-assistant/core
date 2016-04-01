@@ -79,7 +79,7 @@ class T411Sensor(Entity):
             return humanize.naturalsize(down).split()[0]
         elif self._name == 'uploaded':
             upload = float(self._t411.user()['uploaded'])
-            return humanize.naturalsize(up).split()[0]
+            return humanize.naturalsize(upload).split()[0]
         elif self._name == 'ratio':
             down = float(self._t411.user()['downloaded'])
             upload = float(self._t411.user()['uploaded'])
@@ -106,7 +106,6 @@ class T411Sensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         import humanize
-        """Return the unit this state is expressed in."""
         if self._name == 'downloaded':
             down = float(self._t411.user()['downloaded'])
             return humanize.naturalsize(down).split()[1]
