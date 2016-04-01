@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['pyvera==0.2.8']
+REQUIREMENTS = ['pyvera==0.2.10']
 
 _LOGGER = logging.getLogger(__name__)
 
