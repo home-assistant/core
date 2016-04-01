@@ -86,7 +86,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: vol.All(int, vol.Range(min=0, max=255)),
+    ATTR_BRIGHTNESS: cv.byte,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
@@ -105,6 +105,10 @@ LIGHT_TOGGLE_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
 })
+
+PROFILE_SCHEMA = vol.Schema(
+    vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,15 +189,12 @@ def setup(hass, config):
             next(reader, None)
 
             try:
-                for profile_id, color_x, color_y, brightness in reader:
-                    profiles[profile_id] = (float(color_x), float(color_y),
-                                            int(brightness))
-            except ValueError:
-                # ValueError if not 4 values per row
-                # ValueError if convert to float/int failed
-                _LOGGER.error(
-                    "Error parsing light profiles from %s", profile_path)
-
+                for rec in reader:
+                    profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
+                    profiles[profile] = (color_x, color_y, brightness)
+            except vol.MultipleInvalid as ex:
+                _LOGGER.error("Error parsing light profile from %s: %s",
+                              profile_path, ex)
                 return False
 
     def handle_light_service(service):
