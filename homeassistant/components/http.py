@@ -341,13 +341,14 @@ class RequestHandler(SimpleHTTPRequestHandler):
         self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(content)))
 
         if self.server.allow_cors:
-          allowed_headers = ", ".join([HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                                      HTTP_HEADER_X_REQUESTED_WITH,
-                                      HTTP_HEADER_CONTENT_TYPE,
-                                      HTTP_HEADER_HA_AUTH])
-          self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, '*')
-          self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
-                           allowed_headers)
+            allowed_headers = ", ".join([HTTP_HEADER_ORIGIN,
+                                         HTTP_HEADER_ACCEPT,
+                                         HTTP_HEADER_X_REQUESTED_WITH,
+                                         HTTP_HEADER_CONTENT_TYPE,
+                                         HTTP_HEADER_HA_AUTH])
+            self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, '*')
+            self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
+                             allowed_headers)
         self.end_headers()
 
         if self.command == 'HEAD':
