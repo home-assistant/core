@@ -34,6 +34,17 @@ DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 _LOGGER = logging.getLogger(__name__)
 
 
+def iterate_automations(hass, config, config_key, conf):
+    """Iterate over the found automation and add it"""
+    for list_no, config_block in enumerate(conf):
+        if isinstance(conf[list_no], list):
+            iterate_automations(hass, config, config_key, conf[list_no])
+        else:
+            name = config_block.get(CONF_ALIAS, "{}, {}".format(config_key,
+                                                                list_no))
+            _setup_automation(hass, config_block, name, config)
+
+
 def setup(hass, config):
     """Setup the automation."""
     for config_key in extract_domain_configs(config, DOMAIN):
@@ -42,10 +53,7 @@ def setup(hass, config):
         if not isinstance(conf, list):
             conf = [conf]
 
-        for list_no, config_block in enumerate(conf):
-            name = config_block.get(CONF_ALIAS, "{}, {}".format(config_key,
-                                                                list_no))
-            _setup_automation(hass, config_block, name, config)
+        iterate_automations(hass, config, config_key, conf)
 
     return True
 
