@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "loopenergy"
 
-REQUIREMENTS = ['pyloopenergy==0.0.5']
+REQUIREMENTS = ['pyloopenergy==0.0.7']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -110,7 +110,7 @@ class LoopEnergyElec(LoopEnergyDevice):
 
     def update(self):
         """Get the cached Loop energy."""
-        self._state = self._controller.electricity_useage
+        self._state = round(self._controller.electricity_useage, 2)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -126,4 +126,4 @@ class LoopEnergyGas(LoopEnergyDevice):
 
     def update(self):
         """Get the cached Loop energy."""
-        self._state = self._controller.gas_useage
+        self._state = round(self._controller.gas_useage, 2)
