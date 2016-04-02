@@ -68,7 +68,7 @@ def mqtt_topic(value):
 
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): mqtt_topic,
-    vol.Exclusive(ATTR_PAYLOAD, 'payload'): cv.string,
+    vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
     vol.Required(ATTR_QOS, default=DEFAULT_QOS): vol.In([0, 1, 2]),
     vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): vol.Coerce(bool),
