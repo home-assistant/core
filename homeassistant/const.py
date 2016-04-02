@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.17.0.dev0"
+__version__ = "0.16.1"
 REQUIRED_PYTHON_VER = (3, 4)
 
 # Can be used to specify a catch all when registering state or event listeners.
@@ -21,6 +21,7 @@ CONF_CUSTOMIZE = "customize"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
+CONF_PORT = "port"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
