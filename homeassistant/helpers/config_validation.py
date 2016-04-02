@@ -47,6 +47,13 @@ def icon(value):
     raise vol.Invalid('Icons should start with prefix "mdi:"')
 
 
+def string(value):
+    """Coerce value to string, except for None."""
+    if value is not None:
+        return str(value)
+    raise vol.Invalid('Value should not be None')
+
+
 def temperature_unit(value):
     """Validate and transform temperature unit."""
     if isinstance(value, str):
