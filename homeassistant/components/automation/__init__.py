@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def iterate_automations(hass, config, config_key, conf):
-    """Iterate over the found automation and add it"""
+    """Iterate over the found automation and add it."""
     for list_no, config_block in enumerate(conf):
         if isinstance(conf[list_no], list):
             iterate_automations(hass, config, config_key, conf[list_no])
