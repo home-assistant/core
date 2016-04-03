@@ -7,7 +7,8 @@ at https://home-assistant.io/components/input_boolean/
 import logging
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_TOGGLE, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -72,11 +73,14 @@ def setup(hass, config):
         for input_b in target_inputs:
             if service.service == SERVICE_TURN_ON:
                 input_b.turn_on()
+            elif service.service == SERVICE_TOGGLE:
+                input_b.toggle()
             else:
                 input_b.turn_off()
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service)
+    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service)
 
     component.add_entities(entities)
 
