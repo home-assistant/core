@@ -72,8 +72,7 @@ MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
     vol.Required(ATTR_QOS, default=DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    # pylint: disable=no-value-for-parameter
-    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): vol.Boolean(),
+    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
 
