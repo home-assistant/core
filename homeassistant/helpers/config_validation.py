@@ -20,6 +20,17 @@ longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
 
 
+def boolean(value):
+    """Validate and coerce a boolean value."""
+    if isinstance(value, str):
+        if value in ('1', 'true', 'yes', 'on', 'enable'):
+            return True
+        if value in ('0', 'false', 'no', 'off', 'disable'):
+            return False
+        raise vol.Invalid('invalid boolean value {}'.format(value))
+    return bool(value)
+
+
 def entity_id(value):
     """Validate Entity ID."""
     if valid_entity_id(value):

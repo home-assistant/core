@@ -69,7 +69,7 @@ def _alias_stripper(validator):
 
 _DELAY_SCHEMA = {
     vol.Required(CONF_DELAY): vol.All({
-        CONF_ALIAS: str,
+        CONF_ALIAS: cv.string,
         'days': vol.All(vol.Coerce(int), vol.Range(min=0)),
         'seconds': vol.All(vol.Coerce(int), vol.Range(min=0)),
         'microseconds': vol.All(vol.Coerce(int), vol.Range(min=0)),
@@ -87,7 +87,7 @@ _EVENT_SCHEMA = cv.EVENT_SCHEMA.extend({
 })
 
 _SCRIPT_ENTRY_SCHEMA = vol.Schema({
-    CONF_ALIAS: str,
+    CONF_ALIAS: cv.string,
     vol.Required(CONF_SEQUENCE): vol.All(vol.Length(min=1), [vol.Any(
         _EVENT_SCHEMA,
         _DELAY_SCHEMA,
