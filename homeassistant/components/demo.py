@@ -95,18 +95,18 @@ def setup(hass, config):
             'demo': {
                 'alias': 'Toggle {}'.format(lights[0].split('.')[1]),
                 'sequence': [{
-                    'execute_service': 'light.turn_off',
-                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                    'service': 'light.turn_off',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
                 }, {
                     'delay': {'seconds': 5}
                 }, {
-                    'execute_service': 'light.turn_on',
-                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                    'service': 'light.turn_on',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
                 }, {
                     'delay': {'seconds': 5}
                 }, {
-                    'execute_service': 'light.turn_off',
-                    'service_data': {ATTR_ENTITY_ID: lights[0]}
+                    'service': 'light.turn_off',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
                 }]
             }}})
 
