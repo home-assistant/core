@@ -123,7 +123,8 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 })
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED): vol.Coerce(bool),
+    # pylint: disable=no-value-for-parameter
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): vol.Boolean(),
 })
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
