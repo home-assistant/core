@@ -63,7 +63,7 @@ class RestNotificationService(BaseNotificationService):
             data[self._title_param_name] = kwargs.get(ATTR_TITLE)
 
         if self._target_param_name is not None:
-            data[self._title_param_name] = kwargs.get(ATTR_TARGET)
+            data[self._target_param_name] = kwargs.get(ATTR_TARGET)
 
         if self._method == 'POST':
             response = requests.post(self._resource, data=data, timeout=10)
