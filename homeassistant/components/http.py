@@ -240,7 +240,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
             msg = "API password missing or incorrect."
             if require_auth and not self.authenticated:
                 self.write_json_message(msg, HTTP_UNAUTHORIZED)
-                _LOGGER.warning(msg)
+                _LOGGER.warning('%s Source IP: %s',
+                                msg,
+                                self.client_address[0])
                 return
 
             handle_request_method(self, path_match, data)
