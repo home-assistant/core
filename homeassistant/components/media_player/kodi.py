@@ -9,8 +9,7 @@ import urllib
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, 
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
@@ -275,6 +274,4 @@ class KodiDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id):
         """Send the play_media command to the media player."""
 
-        _LOGGER.warning(media_id)
-        self._server.Player.Open({media_type:media_id},{})
-
+        self._server.Player.Open({media_type: media_id}, {})
