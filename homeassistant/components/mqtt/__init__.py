@@ -70,9 +70,10 @@ MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): mqtt_topic,
     vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
-    vol.Required(ATTR_QOS, default=DEFAULT_QOS): vol.In([0, 1, 2]),
-    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): vol.Coerce(bool),
-})
+    vol.Required(ATTR_QOS, default=DEFAULT_QOS):
+        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): vol.Boolean(),
+}, required=True)
 
 
 def _build_publish_data(topic, qos, retain):
@@ -194,7 +195,8 @@ def setup(hass, config):
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
         try:
-            payload = payload or template.render(hass, payload_template)
+            payload = (payload if payload_template is None else
+                       template.render(hass, payload_template)) or ''
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "
