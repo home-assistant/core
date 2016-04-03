@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PLATFORM, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 
@@ -10,6 +10,7 @@ import homeassistant.util.dt as dt_util
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): str,
+    CONF_SCAN_INTERVAL: vol.All(vol.Coerce(int), vol.Range(min=1)),
 }, extra=vol.ALLOW_EXTRA)
 
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))

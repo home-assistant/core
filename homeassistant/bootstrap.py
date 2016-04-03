@@ -108,13 +108,32 @@ def _setup_component(hass, domain, config):
 
         elif hasattr(component, 'PLATFORM_SCHEMA'):
             platforms = []
-            for _, platform in config_per_platform(config, domain):
+            for p_name, p_config in config_per_platform(config, domain):
+                # Validate component specific platform schema
                 try:
-                    platforms.append(component.PLATFORM_SCHEMA(platform))
+                    p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
                     _LOGGER.error('Invalid platform config for [%s]: %s. %s',
-                                  domain, ex, platform)
+                                  domain, ex, p_config)
                     return False
+
+                platform = prepare_setup_platform(hass, config, domain,
+                                                  p_name)
+
+                if platform is None:
+                    return False
+
+                # Validate platform specific schema
+                if hasattr(platform, 'PLATFORM_SCHEMA'):
+                    try:
+                        p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    except vol.MultipleInvalid as ex:
+                        _LOGGER.error(
+                            'Invalid platform config for [%s.%s]: %s. %s',
+                            domain, p_name, ex, p_config)
+                        return False
+
+                platforms.append(p_validated)
 
             # Create a copy of the configuration with all config for current
             # component removed and add validated config back in.

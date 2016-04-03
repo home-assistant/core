@@ -165,10 +165,13 @@ class TestBootstrap:
         """Test validating platform configuration."""
         platform_schema = PLATFORM_SCHEMA.extend({
             'hello': str,
-        }, required=True)
+        })
         loader.set_component(
             'platform_conf',
             MockModule('platform_conf', platform_schema=platform_schema))
+
+        loader.set_component(
+            'platform_conf.whatever', MockPlatform('whatever'))
 
         assert not bootstrap._setup_component(self.hass, 'platform_conf', {
             'platform_conf': None
@@ -193,6 +196,13 @@ class TestBootstrap:
 
             'platform_conf 2': {
                 'invalid': True
+            }
+        })
+
+        assert not bootstrap._setup_component(self.hass, 'platform_conf', {
+            'platform_conf': {
+                'platform': 'not_existing',
+                'hello': 'world',
             }
         })
 
@@ -318,7 +328,7 @@ class TestBootstrap:
         loader.set_component('switch.platform_a', MockPlatform('comp_b',
                                                                ['comp_a']))
 
-        assert bootstrap.setup_component(self.hass, 'switch', {
+        bootstrap.setup_component(self.hass, 'switch', {
             'comp_a': {
                 'valid': True
             },
@@ -327,3 +337,36 @@ class TestBootstrap:
             }
         })
         assert 'comp_a' in self.hass.config.components
+
+    def test_platform_specific_config_validation(self):
+        """Test platform that specifies config."""
+
+        platform_schema = PLATFORM_SCHEMA.extend({
+            'valid': True,
+        }, extra=vol.PREVENT_EXTRA)
+
+        loader.set_component(
+            'switch.platform_a',
+            MockPlatform('comp_b', platform_schema=platform_schema))
+
+        assert not bootstrap.setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'platform_a',
+                'invalid': True
+            }
+        })
+
+        assert not bootstrap.setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'platform_a',
+                'valid': True,
+                'invalid_extra': True,
+            }
+        })
+
+        assert bootstrap.setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'platform_a',
+                'valid': True
+            }
+        })
