@@ -27,6 +27,9 @@ ATTR_TARGET = 'target'
 # Text to notify user of
 ATTR_MESSAGE = "message"
 
+# Platform specific data
+ATTR_DATA = 'data'
+
 SERVICE_NOTIFY = "notify"
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,8 +83,10 @@ def setup(hass, config):
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
             target = call.data.get(ATTR_TARGET)
             message = template.render(hass, message)
+            data = call.data.get(ATTR_DATA)
 
-            notify_service.send_message(message, title=title, target=target)
+            notify_service.send_message(message, title=title, target=target,
+                                        data=data)
 
         service_call_handler = partial(notify_message, notify_service)
         service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
