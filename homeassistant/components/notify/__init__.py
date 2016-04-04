@@ -19,7 +19,7 @@ DOMAIN = "notify"
 
 # Title of notification
 ATTR_TITLE = "title"
-ATTR_TITLE_DEFAULT = "Home Assistant"
+ATTR_TITLE_DEFAULT = ""
 
 # Target of the notification (user, device, etc)
 ATTR_TARGET = 'target'
