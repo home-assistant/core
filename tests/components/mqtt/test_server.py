@@ -1,6 +1,7 @@
 """The tests for the MQTT component embedded server."""
 from unittest.mock import MagicMock, patch
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.mqtt as mqtt
 
 from tests.common import get_test_home_assistant
@@ -27,15 +28,20 @@ class TestMQTT:
         password = 'super_secret'
 
         self.hass.config.api = MagicMock(api_password=password)
-        assert mqtt.setup(self.hass, {})
+        assert _setup_component(self.hass, mqtt.DOMAIN, {})
         assert mock_mqtt.called
         assert mock_mqtt.mock_calls[0][1][5] == 'homeassistant'
         assert mock_mqtt.mock_calls[0][1][6] == password
 
-        mock_mqtt.reset_mock()
-
+    @patch('homeassistant.components.mqtt.MQTT')
+    @patch('asyncio.gather')
+    @patch('asyncio.new_event_loop')
+    def test_creating_config_no_http_pass(self, mock_new_loop, mock_gather,
+                                          mock_mqtt):
+        """Test if the MQTT server gets started and subscribe/publish msg."""
+        self.hass.config.components.append('http')
         self.hass.config.api = MagicMock(api_password=None)
-        assert mqtt.setup(self.hass, {})
+        assert _setup_component(self.hass, mqtt.DOMAIN, {})
         assert mock_mqtt.called
         assert mock_mqtt.mock_calls[0][1][5] is None
         assert mock_mqtt.mock_calls[0][1][6] is None
@@ -50,6 +56,6 @@ class TestMQTT:
         mock_gather.side_effect = BrokerException
 
         self.hass.config.api = MagicMock(api_password=None)
-        assert not mqtt.setup(self.hass, {
-            'mqtt': {'embedded': {}}
+        assert not _setup_component(self.hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: {mqtt.CONF_EMBEDDED: {}}
         })
