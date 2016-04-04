@@ -1,7 +1,10 @@
 """Helpers for config validation using voluptuous."""
+from datetime import timedelta
+
 import jinja2
 import voluptuous as vol
 
+from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import valid_entity_id
@@ -11,7 +14,6 @@ from homeassistant.util import slugify
 # pylint: disable=invalid-name
 
 # Home Assistant types
-
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
@@ -30,6 +32,11 @@ def boolean(value):
             return False
         raise vol.Invalid('invalid boolean value {}'.format(value))
     return bool(value)
+
+
+def ensure_list(value):
+    """Wrap value in list if it is not one."""
+    return value if isinstance(value, list) else [value]
 
 
 def entity_id(value):
@@ -59,6 +66,59 @@ def icon(value):
         return value
 
     raise vol.Invalid('Icons should start with prefix "mdi:"')
+
+
+def time_offset(value):
+    """Validate and transform time offset."""
+    if not isinstance(value, str):
+        raise vol.Invalid('offset should be a string')
+
+    negative_offset = False
+    if value.startswith('-'):
+        negative_offset = True
+        value = value[1:]
+    elif value.startswith('+'):
+        value = value[1:]
+
+    try:
+        parsed = [int(x) for x in value.split(':')]
+    except ValueError:
+        raise vol.Invalid(
+            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
+
+    if len(parsed) == 2:
+        hour, minute = parsed
+        second = 0
+    elif len(parsed) == 3:
+        hour, minute, second = parsed
+    else:
+        raise vol.Invalid(
+            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
+
+    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+
+    if negative_offset:
+        offset *= -1
+
+    return offset
+
+
+def match_all(value):
+    """Validator that matches all values."""
+    return value
+
+
+def platform_validator(domain):
+    """Validate if platform exists for given domain."""
+    def validator(value):
+        """Test if platform exists."""
+        if value is None:
+            raise vol.Invalid('platform cannot be None')
+        if get_platform(domain, str(value)):
+            return value
+        raise vol.Invalid(
+            'platform {} does not exist for {}'.format(value, domain))
+    return validator
 
 
 def service(value):
@@ -122,60 +182,24 @@ def time_zone(value):
 
 # Validator helpers
 
-# pylint: disable=too-few-public-methods
+def key_dependency(key, dependency):
+    """Validate that all dependencies exist for key."""
+    def validator(value):
+        """Test dependencies."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('key dependencies require a dict')
+        print(key, value)
+        if key in value and dependency not in value:
+            raise vol.Invalid('dependency violation - key "{}" requires '
+                              'key "{}" to exist'.format(key, dependency))
 
-class DictValidator(object):
-    """Validate keys and values in a dictionary."""
-
-    def __init__(self, value_validator=None, key_validator=None):
-        """Initialize the dict validator."""
-        if value_validator is not None:
-            value_validator = vol.Schema(value_validator)
-
-        self.value_validator = value_validator
-
-        if key_validator is not None:
-            key_validator = vol.Schema(key_validator)
-
-        self.key_validator = key_validator
-
-    def __call__(self, obj):
-        """Validate the dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('Expected dictionary.')
-
-        errors = []
-
-        # So we keep it an OrderedDict if it is one
-        result = obj.__class__()
-
-        for key, value in obj.items():
-            if self.key_validator is not None:
-                try:
-                    key = self.key_validator(key)
-                except vol.Invalid as ex:
-                    errors.append('key {} is invalid ({})'.format(key, ex))
-
-            if self.value_validator is not None:
-                try:
-                    value = self.value_validator(value)
-                except vol.Invalid as ex:
-                    errors.append(
-                        'key {} contains invalid value ({})'.format(key, ex))
-
-            if not errors:
-                result[key] = value
-
-        if errors:
-            raise vol.Invalid(
-                'invalid dictionary: {}'.format(', '.join(errors)))
-
-        return result
+        return value
+    return validator
 
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(keys):
+def has_at_least_one_key(*keys):
     """Validator that at least one key exists."""
     def validate(obj):
         """Test keys exist in dict."""
@@ -206,5 +230,6 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): string,
     vol.Exclusive('data', 'service data'): dict,
-    vol.Exclusive('data_template', 'service data'): DictValidator(template),
-}), has_at_least_one_key(['service', 'service_template']))
+    vol.Exclusive('data_template', 'service data'): {match_all: template},
+    'entity_id': entity_ids,
+}), has_at_least_one_key('service', 'service_template'))

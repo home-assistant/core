@@ -4,12 +4,16 @@ Offer sun based automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#sun-trigger
 """
-import logging
 from datetime import timedelta
+import logging
 
+import voluptuous as vol
+
+from homeassistant.const import CONF_PLATFORM
 import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.helpers.event import track_sunrise, track_sunset
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['sun']
 
@@ -26,22 +30,30 @@ EVENT_SUNRISE = 'sunrise'
 _LOGGER = logging.getLogger(__name__)
 
 
+_SUN_EVENT = vol.All(vol.Lower, vol.Any(EVENT_SUNRISE, EVENT_SUNSET))
+
+TRIGGER_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'sun',
+    vol.Required(CONF_EVENT): _SUN_EVENT,
+    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_offset,
+})
+
+IF_ACTION_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_PLATFORM): 'sun',
+        CONF_BEFORE: _SUN_EVENT,
+        CONF_AFTER: _SUN_EVENT,
+        vol.Required(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_offset,
+        vol.Required(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_offset,
+    }),
+    cv.has_at_least_one_key(CONF_BEFORE, CONF_AFTER),
+)
+
+
 def trigger(hass, config, action):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
-
-    if event is None:
-        _LOGGER.error("Missing configuration key %s", CONF_EVENT)
-        return False
-
-    event = event.lower()
-    if event not in (EVENT_SUNRISE, EVENT_SUNSET):
-        _LOGGER.error("Invalid value for %s: %s", CONF_EVENT, event)
-        return False
-
-    offset = _parse_offset(config.get(CONF_OFFSET))
-    if offset is False:
-        return False
+    offset = config.get(CONF_OFFSET)
 
     # Do something to call action
     if event == EVENT_SUNRISE:
@@ -56,26 +68,8 @@ def if_action(hass, config):
     """Wrap action method with sun based condition."""
     before = config.get(CONF_BEFORE)
     after = config.get(CONF_AFTER)
-
-    # Make sure required configuration keys are present
-    if before is None and after is None:
-        logging.getLogger(__name__).error(
-            "Missing if-condition configuration key %s or %s",
-            CONF_BEFORE, CONF_AFTER)
-        return None
-
-    # Make sure configuration keys have the right value
-    if before not in (None, EVENT_SUNRISE, EVENT_SUNSET) or \
-       after not in (None, EVENT_SUNRISE, EVENT_SUNSET):
-        logging.getLogger(__name__).error(
-            "%s and %s can only be set to %s or %s",
-            CONF_BEFORE, CONF_AFTER, EVENT_SUNRISE, EVENT_SUNSET)
-        return None
-
-    before_offset = _parse_offset(config.get(CONF_BEFORE_OFFSET))
-    after_offset = _parse_offset(config.get(CONF_AFTER_OFFSET))
-    if before_offset is False or after_offset is False:
-        return None
+    before_offset = config.get(CONF_BEFORE_OFFSET)
+    after_offset = config.get(CONF_AFTER_OFFSET)
 
     if before is None:
         def before_func():
@@ -120,27 +114,3 @@ def if_action(hass, config):
         return True
 
     return time_if
-
-
-def _parse_offset(raw_offset):
-    """Parse the offset."""
-    if raw_offset is None:
-        return timedelta(0)
-
-    negative_offset = False
-    if raw_offset.startswith('-'):
-        negative_offset = True
-        raw_offset = raw_offset[1:]
-
-    try:
-        (hour, minute, second) = [int(x) for x in raw_offset.split(':')]
-    except ValueError:
-        _LOGGER.error('Could not parse offset %s', raw_offset)
-        return False
-
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
-
-    if negative_offset:
-        offset *= -1
-
-    return offset
