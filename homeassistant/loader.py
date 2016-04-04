@@ -16,6 +16,7 @@ import os
 import pkgutil
 import sys
 
+from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
 PREPARED = False
@@ -75,6 +76,11 @@ def set_component(comp_name, component):
     _check_prepared()
 
     _COMPONENT_CACHE[comp_name] = component
+
+
+def get_platform(domain, platform):
+    """Try to load specified platform."""
+    return get_component(PLATFORM_FORMAT.format(domain, platform))
 
 
 def get_component(comp_name):
