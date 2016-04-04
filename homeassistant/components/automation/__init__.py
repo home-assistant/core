@@ -6,13 +6,15 @@ https://home-assistant.io/components/automation/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components import logbook
 from homeassistant.helpers import extract_domain_configs
-from homeassistant.helpers.service import (call_from_config,
-                                           validate_service_call)
-
+from homeassistant.helpers.service import call_from_config
+from homeassistant.loader import get_platform
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
 
@@ -31,16 +33,71 @@ CONDITION_TYPE_OR = 'or'
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
 
+METHOD_TRIGGER = 'trigger'
+METHOD_IF_ACTION = 'if_action'
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def _platform_validator(method, schema):
+    """Generate platform validator for different steps."""
+    def validator(config):
+        """Validate it is a valid  platform."""
+        platform = get_platform(DOMAIN, config[CONF_PLATFORM])
+
+        if not hasattr(platform, method):
+            raise vol.Invalid('invalid method platform')
+
+        if not hasattr(platform, schema):
+            return config
+
+        print('validating config', method, config)
+
+        return getattr(platform, schema)(config)
+
+    return validator
+
+_TRIGGER_SCHEMA = vol.All(
+    cv.ensure_list,
+    [
+        vol.All(
+            vol.Schema({
+                vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+            }, extra=vol.ALLOW_EXTRA),
+            _platform_validator(METHOD_TRIGGER, 'TRIGGER_SCHEMA')
+        ),
+    ]
+)
+
+_CONDITION_SCHEMA = vol.Any(
+    CONDITION_USE_TRIGGER_VALUES,
+    vol.All(
+        cv.ensure_list,
+        [
+            vol.All(
+                vol.Schema({
+                    vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN),
+                }, extra=vol.ALLOW_EXTRA),
+                _platform_validator(METHOD_IF_ACTION, 'IF_ACTION_SCHEMA'),
+            )
+        ]
+    )
+)
+
+PLATFORM_SCHEMA = vol.Schema({
+    CONF_ALIAS: cv.string,
+    vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+    vol.Required(CONF_CONDITION_TYPE, default=DEFAULT_CONDITION_TYPE):
+        vol.All(vol.Lower, vol.Any(CONDITION_TYPE_AND, CONDITION_TYPE_OR)),
+    CONF_CONDITION: _CONDITION_SCHEMA,
+    vol.Required(CONF_ACTION): cv.SERVICE_SCHEMA,
+})
 
 
 def setup(hass, config):
     """Setup the automation."""
     for config_key in extract_domain_configs(config, DOMAIN):
         conf = config[config_key]
-
-        if not isinstance(conf, list):
-            conf = [conf]
 
         for list_no, config_block in enumerate(conf):
             name = config_block.get(CONF_ALIAS, "{}, {}".format(config_key,
@@ -54,10 +111,7 @@ def _setup_automation(hass, config_block, name, config):
     """Setup one instance of automation."""
     action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
 
-    if action is None:
-        return False
-
-    if CONF_CONDITION in config_block or CONF_CONDITION_TYPE in config_block:
+    if CONF_CONDITION in config_block:
         action = _process_if(hass, config, config_block, action)
 
         if action is None:
@@ -70,11 +124,6 @@ def _setup_automation(hass, config_block, name, config):
 
 def _get_action(hass, config, name):
     """Return an action based on a configuration."""
-    validation_error = validate_service_call(config)
-    if validation_error:
-        _LOGGER.error(validation_error)
-        return None
-
     def action():
         """Action to be executed."""
         _LOGGER.info('Executing %s', name)
@@ -96,12 +145,9 @@ def _process_if(hass, config, p_config, action):
     if use_trigger:
         if_configs = p_config[CONF_TRIGGER]
 
-    if isinstance(if_configs, dict):
-        if_configs = [if_configs]
-
     checks = []
     for if_config in if_configs:
-        platform = _resolve_platform('if_action', hass, config,
+        platform = _resolve_platform(METHOD_IF_ACTION, hass, config,
                                      if_config.get(CONF_PLATFORM))
         if platform is None:
             continue
@@ -134,7 +180,7 @@ def _process_trigger(hass, config, trigger_configs, name, action):
         trigger_configs = [trigger_configs]
 
     for conf in trigger_configs:
-        platform = _resolve_platform('trigger', hass, config,
+        platform = _resolve_platform(METHOD_TRIGGER, hass, config,
                                      conf.get(CONF_PLATFORM))
         if platform is None:
             continue

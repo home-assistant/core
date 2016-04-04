@@ -21,7 +21,7 @@ import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
@@ -32,7 +32,6 @@ _CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
-PLATFORM_FORMAT = '{}.{}'
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
@@ -117,6 +116,13 @@ def _setup_component(hass, domain, config):
                                   domain, ex, p_config)
                     return False
 
+                # Not all platform components follow same pattern for platforms
+                # Sof if p_name is None we are not going to validate platform
+                # (the automation component is one of them)
+                if p_name is None:
+                    platforms.append(p_validated)
+                    continue
+
                 platform = prepare_setup_platform(hass, config, domain,
                                                   p_name)
 
@@ -176,7 +182,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
-    platform = loader.get_component(platform_path)
+    platform = loader.get_platform(domain, platform_name)
 
     # Not found
     if platform is None:
