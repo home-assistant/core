@@ -261,28 +261,6 @@ def test_time_zone():
     schema('UTC')
 
 
-def test_dict_validator():
-    """Test DictValidator."""
-    schema = vol.Schema(cv.DictValidator(cv.entity_ids, cv.slug))
-
-    for value in (
-        None,
-        {'invalid slug': 'sensor.temp'},
-        {'hello world': 'invalid_entity'}
-    ):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    for value in (
-        {},
-        {'hello_world': 'sensor.temp'},
-    ):
-        schema(value)
-
-    assert schema({'hello_world': 'sensor.temp'}) == \
-        {'hello_world': ['sensor.temp']}
-
-
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))

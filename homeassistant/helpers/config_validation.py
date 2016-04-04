@@ -14,7 +14,7 @@ from homeassistant.util import slugify
 # pylint: disable=invalid-name
 
 # Home Assistant types
-
+match_all = lambda value: value
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
@@ -172,57 +172,6 @@ def time_zone(value):
 
 # Validator helpers
 
-# pylint: disable=too-few-public-methods
-
-class DictValidator(object):
-    """Validate keys and values in a dictionary."""
-
-    def __init__(self, value_validator=None, key_validator=None):
-        """Initialize the dict validator."""
-        if value_validator is not None:
-            value_validator = vol.Schema(value_validator)
-
-        self.value_validator = value_validator
-
-        if key_validator is not None:
-            key_validator = vol.Schema(key_validator)
-
-        self.key_validator = key_validator
-
-    def __call__(self, obj):
-        """Validate the dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('Expected dictionary.')
-
-        errors = []
-
-        # So we keep it an OrderedDict if it is one
-        result = obj.__class__()
-
-        for key, value in obj.items():
-            if self.key_validator is not None:
-                try:
-                    key = self.key_validator(key)
-                except vol.Invalid as ex:
-                    errors.append('key {} is invalid ({})'.format(key, ex))
-
-            if self.value_validator is not None:
-                try:
-                    value = self.value_validator(value)
-                except vol.Invalid as ex:
-                    errors.append(
-                        'key {} contains invalid value ({})'.format(key, ex))
-
-            if not errors:
-                result[key] = value
-
-        if errors:
-            raise vol.Invalid(
-                'invalid dictionary: {}'.format(', '.join(errors)))
-
-        return result
-
-
 def key_dependency(key, dependency):
     """Validate that all dependencies exist for key."""
     def validator(value):
@@ -271,6 +220,6 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): string,
     vol.Exclusive('data', 'service data'): dict,
-    vol.Exclusive('data_template', 'service data'): DictValidator(template),
+    vol.Exclusive('data_template', 'service data'): {match_all: template},
     'entity_id': entity_ids,
 }), has_at_least_one_key('service', 'service_template'))

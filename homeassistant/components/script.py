@@ -97,7 +97,7 @@ _SCRIPT_ENTRY_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): cv.DictValidator(_SCRIPT_ENTRY_SCHEMA, cv.slug)
+    vol.Required(DOMAIN): {cv.slug: _SCRIPT_ENTRY_SCHEMA}
 }, extra=vol.ALLOW_EXTRA)
 
 
