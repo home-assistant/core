@@ -33,6 +33,11 @@ def boolean(value):
     return bool(value)
 
 
+def ensure_list(value):
+    """Wrap value in list if it is not one."""
+    return value if isinstance(value, list) else [value]
+
+
 def entity_id(value):
     """Validate Entity ID."""
     if valid_entity_id(value):

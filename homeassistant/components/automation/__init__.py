@@ -39,11 +39,6 @@ METHOD_IF_ACTION = 'if_action'
 _LOGGER = logging.getLogger(__name__)
 
 
-def _ensure_list(value):
-    """Wrap value in list if it is not one."""
-    return value if isinstance(value, list) else [value]
-
-
 def _platform_validator(method, schema):
     """Generate platform validator for different steps."""
     def validator(config):
@@ -63,7 +58,7 @@ def _platform_validator(method, schema):
     return validator
 
 _TRIGGER_SCHEMA = vol.All(
-    _ensure_list,
+    cv.ensure_list,
     [
         vol.All(
             vol.Schema({
@@ -77,7 +72,7 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.Any(
     CONDITION_USE_TRIGGER_VALUES,
     vol.All(
-        _ensure_list,
+        cv.ensure_list,
         [
             vol.All(
                 vol.Schema({

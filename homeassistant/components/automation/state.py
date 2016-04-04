@@ -46,8 +46,7 @@ TRIGGER_SCHEMA = vol.Schema(vol.All(
 
 IF_ACTION_SCHEMA = vol.Schema(vol.All(
     BASE_SCHEMA,
-    vol.Any(cv.key_dependency(CONF_FOR, CONF_TO),
-            cv.key_dependency(CONF_FOR, CONF_STATE))
+    cv.key_dependency(CONF_FOR, CONF_STATE)
 ))
 
 
