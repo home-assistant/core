@@ -23,6 +23,7 @@ longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
 def boolean(value):
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
+        value = value.lower()
         if value in ('1', 'true', 'yes', 'on', 'enable'):
             return True
         if value in ('0', 'false', 'no', 'off', 'disable'):
