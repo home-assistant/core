@@ -1,7 +1,11 @@
+from datetime import timedelta
+
 import pytest
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+
+from tests.common import get_test_home_assistant
 
 
 def test_latitude():
@@ -102,6 +106,19 @@ def test_event_schema():
         cv.EVENT_SCHEMA(value)
 
 
+def test_platform_validator():
+    """Test platform validation."""
+    # Prepares loading
+    get_test_home_assistant()
+
+    schema = vol.Schema(cv.platform_validator('light'))
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema('platform_that_does_not_exist')
+
+    schema('hue')
+
+
 def test_icon():
     """Test icon validation."""
     schema = vol.Schema(cv.icon)
@@ -111,6 +128,25 @@ def test_icon():
             schema(value)
 
     schema('mdi:work')
+
+
+def test_time_offset():
+    """Test time_offset validation."""
+    schema = vol.Schema(cv.time_offset)
+
+    for value in (
+        None, '', 1234, 'hello:world', '12:', '12:34:56:78'
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00'
+    ):
+        schema(value)
+
+    assert timedelta(hours=23, minutes=59) == schema('23:59')
+    assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
 
 
 def test_service():
@@ -150,6 +186,14 @@ def test_service_schema():
 
     for value in (
         {'service': 'homeassistant.turn_on'},
+        {
+            'service': 'homeassistant.turn_on',
+            'entity_id': 'light.kitchen',
+        },
+        {
+            'service': 'homeassistant.turn_on',
+            'entity_id': ['light.kitchen', 'light.ceiling'],
+        },
     ):
         cv.SERVICE_SCHEMA(value)
 
@@ -239,9 +283,26 @@ def test_dict_validator():
         {'hello_world': ['sensor.temp']}
 
 
+def test_key_dependency():
+    """Test key_dependency validator."""
+    schema = vol.Schema(cv.key_dependency('beer', 'soda'))
+
+    for value in (
+        {'beer': None}
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        {'beer': None, 'soda': None},
+        {'soda': None}, {}
+    ):
+        schema(value)
+
+
 def test_has_at_least_one_key():
     """Test has_at_least_one_key validator."""
-    schema = vol.Schema(cv.has_at_least_one_key(['beer', 'soda']))
+    schema = vol.Schema(cv.has_at_least_one_key('beer', 'soda'))
 
     for value in (None, [], {}, {'wine': None}):
         with pytest.raises(vol.MultipleInvalid):

@@ -77,9 +77,9 @@ _DELAY_SCHEMA = {
         'minutes': vol.All(vol.Coerce(int), vol.Range(min=0)),
         'hours': vol.All(vol.Coerce(int), vol.Range(min=0)),
         'weeks': vol.All(vol.Coerce(int), vol.Range(min=0)),
-    }, cv.has_at_least_one_key([
+    }, cv.has_at_least_one_key(
         'days', 'seconds', 'microseconds', 'milliseconds', 'minutes', 'hours',
-        'weeks']))
+        'weeks'))
 }
 
 _EVENT_SCHEMA = cv.EVENT_SCHEMA.extend({

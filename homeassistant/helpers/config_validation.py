@@ -1,7 +1,10 @@
 """Helpers for config validation using voluptuous."""
+from datetime import timedelta
+
 import jinja2
 import voluptuous as vol
 
+from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import valid_entity_id
@@ -58,6 +61,54 @@ def icon(value):
         return value
 
     raise vol.Invalid('Icons should start with prefix "mdi:"')
+
+
+def time_offset(value):
+    """Validate and transform time offset."""
+    if not isinstance(value, str):
+        raise vol.Invalid('offset should be a string')
+
+    negative_offset = False
+    if value.startswith('-'):
+        negative_offset = True
+        value = value[1:]
+    elif value.startswith('+'):
+        value = value[1:]
+
+    try:
+        parsed = [int(x) for x in value.split(':')]
+    except ValueError:
+        raise vol.Invalid(
+            'offset should be format HH:MM or HH:MM:SS'.format(value))
+
+    if len(parsed) == 2:
+        hour, minute = parsed
+        second = 0
+    elif len(parsed) == 3:
+        hour, minute, second = parsed
+    else:
+        raise vol.Invalid(
+            'offset should be format HH:MM or HH:MM:SS'.format(value))
+
+    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+
+    if negative_offset:
+        offset *= -1
+
+    return offset
+
+
+def platform_validator(domain):
+    """Validate if platform exists for given domain."""
+    def validator(value):
+        """Test if platform exists."""
+        if value is None:
+            raise vol.Invalid('platform cannot be None')
+        if get_platform(domain, str(value)):
+            return value
+        raise vol.Invalid(
+            'platform {} does not exist for {}'.format(value, domain))
+    return validator
 
 
 def service(value):
@@ -172,9 +223,24 @@ class DictValidator(object):
         return result
 
 
+def key_dependency(key, dependency):
+    """Validate that all dependencies exist for key."""
+    def validator(value):
+        """Test dependencies."""
+        if not isinstance(value, dict):
+            raise vol.Invalid('key dependencies require a dict')
+        print(key, value)
+        if key in value and dependency not in value:
+            raise vol.Invalid('dependency violation - key "{}" requires '
+                              'key "{}" to exist'.format(key, dependency))
+
+        return value
+    return validator
+
+
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(keys):
+def has_at_least_one_key(*keys):
     """Validator that at least one key exists."""
     def validate(obj):
         """Test keys exist in dict."""
@@ -206,4 +272,5 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service_template', 'service name'): string,
     vol.Exclusive('data', 'service data'): dict,
     vol.Exclusive('data_template', 'service data'): DictValidator(template),
-}), has_at_least_one_key(['service', 'service_template']))
+    'entity_id': entity_ids,
+}), has_at_least_one_key('service', 'service_template'))
