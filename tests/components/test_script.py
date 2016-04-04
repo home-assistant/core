@@ -31,7 +31,7 @@ class TestScript(unittest.TestCase):
             {'test': {}},
             {
                 'test hello world': {
-                    'sequence': []
+                    'sequence': [{'event': 'bla'}]
                 }
             },
             {
