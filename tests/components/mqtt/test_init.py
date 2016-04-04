@@ -4,6 +4,7 @@ import unittest
 from unittest import mock
 import socket
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -48,9 +49,11 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
-            self.assertFalse(mqtt.setup(self.hass, {mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'test-broker',
-            }}))
+            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                }
+            })
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -211,7 +214,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
-            mqtt.setup(self.hass, {
+            _setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }

@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util as util
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
@@ -57,6 +56,25 @@ ATTR_QOS = 'qos'
 ATTR_RETAIN = 'retain'
 
 MAX_RECONNECT_WAIT = 300  # seconds
+
+_HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+            vol.All(vol.Coerce(int), vol.Range(min=15)),
+        vol.Optional(CONF_BROKER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CERTIFICATE): vol.IsFile,
+        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
+            [PROTOCOL_31, PROTOCOL_311],
+        vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
+    }),
+})
 
 
 # Service call validation schema
@@ -136,8 +154,8 @@ def setup(hass, config):
     # pylint: disable=too-many-locals
     conf = config.get(DOMAIN, {})
 
-    client_id = util.convert(conf.get(CONF_CLIENT_ID), str)
-    keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
+    client_id = conf.get(CONF_CLIENT_ID)
+    keepalive = conf.get(CONF_KEEPALIVE)
 
     broker_config = _setup_server(hass, config)
 
@@ -151,16 +169,11 @@ def setup(hass, config):
 
     if CONF_BROKER in conf:
         broker = conf[CONF_BROKER]
-        port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
-        username = util.convert(conf.get(CONF_USERNAME), str)
-        password = util.convert(conf.get(CONF_PASSWORD), str)
-        certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
-        protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
-
-    if protocol not in (PROTOCOL_31, PROTOCOL_311):
-        _LOGGER.error('Invalid protocol specified: %s. Allowed values: %s, %s',
-                      protocol, PROTOCOL_31, PROTOCOL_311)
-        return False
+        port = conf[CONF_PORT]
+        username = conf.get(CONF_USERNAME)
+        password = conf.get(CONF_PASSWORD)
+        certificate = conf.get(CONF_CERTIFICATE)
+        protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
