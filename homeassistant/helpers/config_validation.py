@@ -14,7 +14,6 @@ from homeassistant.util import slugify
 # pylint: disable=invalid-name
 
 # Home Assistant types
-match_all = lambda value: value
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
@@ -79,7 +78,7 @@ def time_offset(value):
         parsed = [int(x) for x in value.split(':')]
     except ValueError:
         raise vol.Invalid(
-            'offset should be format HH:MM or HH:MM:SS'.format(value))
+            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
 
     if len(parsed) == 2:
         hour, minute = parsed
@@ -88,7 +87,7 @@ def time_offset(value):
         hour, minute, second = parsed
     else:
         raise vol.Invalid(
-            'offset should be format HH:MM or HH:MM:SS'.format(value))
+            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
 
@@ -96,6 +95,11 @@ def time_offset(value):
         offset *= -1
 
     return offset
+
+
+def match_all(value):
+    """Validator that matches all values."""
+    return value
 
 
 def platform_validator(domain):

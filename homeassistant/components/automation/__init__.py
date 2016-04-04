@@ -129,10 +129,8 @@ def _setup_automation(hass, config_block, name, config):
 
 def _get_action(hass, config, name):
     """Return an action based on a configuration."""
-
     def action():
         """Action to be executed."""
-
         _LOGGER.info('Executing %s', name)
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
 

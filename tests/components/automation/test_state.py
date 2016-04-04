@@ -6,7 +6,6 @@ from unittest.mock import patch
 from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
-import homeassistant.components.automation.state as state
 
 from tests.common import fire_time_changed, get_test_home_assistant
 
