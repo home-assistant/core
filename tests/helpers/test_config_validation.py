@@ -4,6 +4,21 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 
+def test_boolean():
+    """Test boolean validation."""
+    schema = vol.Schema(cv.boolean)
+
+    for value in ('T', 'negative', 'lock'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('true', 'On', '1', 'YES', 'enable', 1, True):
+        assert schema(value)
+
+    for value in ('false', 'Off', '0', 'NO', 'disable', 0, False):
+        assert not schema(value)
+
+
 def test_latitude():
     """Test latitude validation."""
     schema = vol.Schema(cv.latitude)
