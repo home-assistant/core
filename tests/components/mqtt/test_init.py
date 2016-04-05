@@ -49,6 +49,7 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
+            self.hass.config.components = []
             assert not _setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'test-broker',
@@ -214,12 +215,12 @@ class TestMQTTCallbacks(unittest.TestCase):
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
-            _setup_component(self.hass, mqtt.DOMAIN, {
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }
             })
-            self.hass.config.components.append(mqtt.DOMAIN)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
