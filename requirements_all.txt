@@ -244,7 +244,7 @@ pywemo==0.3.24
 radiotherm==1.2
 
 # homeassistant.components.media_player.yamaha
-rxv==0.1.9
+rxv==0.1.11
 
 # homeassistant.components.media_player.samsungtv
 samsungctl==0.5.1
