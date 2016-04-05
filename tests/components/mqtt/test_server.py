@@ -33,13 +33,9 @@ class TestMQTT:
         assert mock_mqtt.mock_calls[0][1][5] == 'homeassistant'
         assert mock_mqtt.mock_calls[0][1][6] == password
 
-    @patch('homeassistant.components.mqtt.MQTT')
-    @patch('asyncio.gather')
-    @patch('asyncio.new_event_loop')
-    def test_creating_config_no_http_pass(self, mock_new_loop, mock_gather,
-                                          mock_mqtt):
-        """Test if the MQTT server gets started and subscribe/publish msg."""
-        self.hass.config.components.append('http')
+        mock_mqtt.reset_mock()
+
+        self.hass.config.components = ['http']
         self.hass.config.api = MagicMock(api_password=None)
         assert _setup_component(self.hass, mqtt.DOMAIN, {})
         assert mock_mqtt.called
