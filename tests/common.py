@@ -129,7 +129,6 @@ def mock_mqtt_component(hass, mock_mqtt):
             mqtt.CONF_BROKER: 'mock-broker',
         }
     })
-    hass.config.components.append(mqtt.DOMAIN)
     return mock_mqtt
 
 
