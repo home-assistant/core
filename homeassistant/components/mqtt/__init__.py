@@ -17,7 +17,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    CONF_PLATFORM, CONF_SCAN_INTERVAL)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
 CONF_PROTOCOL = 'protocol'
+CONF_QOS = 'qos'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -52,11 +54,12 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
-ATTR_QOS = 'qos'
+ATTR_QOS = CONF_QOS
 ATTR_RETAIN = 'retain'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
+_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 
 CONFIG_SCHEMA = vol.Schema({
@@ -76,20 +79,37 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 })
 
+MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+})
+
 
 # Service call validation schema
-def mqtt_topic(value):
-    """Validate that we can publish using this MQTT topic."""
-    if isinstance(value, str) and all(c not in value for c in '#+\0'):
+def _mqtt_topic(value, invalid_chars='\0'):
+    """Validate MQTT topic."""
+    if isinstance(value, str) and all(c not in value for c in invalid_chars):
         return vol.Length(min=1, max=65535)(value)
     raise vol.Invalid('Invalid MQTT topic name')
 
+
+def valid_publish_topic(value):
+    """Validate that we can publish using this MQTT topic."""
+    return _mqtt_topic(value, invalid_chars='#+\0')
+
+
+def valid_subscribe_topic(value):
+    """Validate that we can subscribe using this MQTT topic."""
+    return _mqtt_topic(value)
+
+
 MQTT_PUBLISH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TOPIC): mqtt_topic,
+    vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
-    vol.Required(ATTR_QOS, default=DEFAULT_QOS):
-        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
     vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
 
