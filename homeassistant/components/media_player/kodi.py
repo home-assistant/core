@@ -273,5 +273,4 @@ class KodiDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id):
         """Send the play_media command to the media player."""
-
         self._server.Player.Open({media_type: media_id}, {})

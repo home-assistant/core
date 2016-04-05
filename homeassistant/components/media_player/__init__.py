@@ -515,7 +515,7 @@ class MediaPlayerDevice(Entity):
 
     def play_media(self, media_type, media_id):
         """Play a piece of media."""
-        return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+        raise NotImplementedError()
 
     def select_source(self, source):
         """Select input source."""
