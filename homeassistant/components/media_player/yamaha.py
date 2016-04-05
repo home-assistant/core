@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_ON
-REQUIREMENTS = ['rxv==0.1.9']
+REQUIREMENTS = ['rxv==0.1.11']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
