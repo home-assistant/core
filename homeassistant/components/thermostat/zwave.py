@@ -14,6 +14,16 @@ from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELCIUS)
 CONF_NAME = 'name'
 DEFAULT_NAME = 'ZWave Thermostat'
 
+REMOTEC = 0x5254
+REMOTEC_ZXT_120 = 0x8377
+REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120, 0)
+
+WORKAROUND_ZXT_120 = 'zxt_120'
+
+DEVICE_MAPPINGS = {
+    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
+}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZWave thermostats."""
@@ -41,10 +51,21 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
         self._current_operation = STATE_IDLE
         self._current_operation_state = STATE_IDLE
         self._unit = None
+        self._zxt_120 = None
         self.update_properties()
         # register listener
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+        # Make sure that we have values for the key before converting to int
+        if (value.node.manufacturer_id.strip() and
+                value.node.product_id.strip()):
+            specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                                   int(value.node.product_id, 16),
+                                   value.index)
+
+            if specific_sensor_key in DEVICE_MAPPINGS:
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
+                    self._zxt_120 = 1
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
@@ -62,12 +83,16 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
         for _, value in self._node.get_values(class_id=0x40).items():
             self._current_operation = value.data_as_string
         # Current Temp
-        for _, value in self._node.get_values_for_command_class(0x31).items():
+        for _, value in self._node.get_values(class_id=0x31).items():
             self._current_temperature = int(value.data)
             self._unit = value.units
         # COMMAND_CLASS_THERMOSTAT_OPERATING_STATE
-        for _, value in self._node.get_values(class_id=0x42).items():
-            self._current_operation_state = value.data_as_string
+        if self._zxt_120 == 1:
+            for _, value in self._node.get_values(class_id=0x44).items():
+                self._current_operation_state = value.data_as_string
+        else:
+            for _, value in self._node.get_values(class_id=0x42).items():
+                self._current_operation_state = value.data_as_string
 
     @property
     def should_poll(self):
@@ -109,6 +134,24 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
     def set_temperature(self, temperature):
         """Set new target temperature."""
         # set point
+        if self._zxt_120 == 1:
+            # ZXT-120 does not support get setpoint
+            self._target_temperature = temperature
+            if self._current_operation == 'Heat':
+                for value in self._node.get_values(class_id=0x43).values():
+                    if value.command_class == 67 and value.index == 1:
+                        # ZXT-120 only responds to whole int
+                        value.data = int(round(temperature, 0))
+            elif self._current_operation == 'Cool':
+                if value.command_class == 67 and value.index == 2:
+                    value.data = int(round(temperature, 0))
+            elif self._current_operation == 'Dry Air':
+                if value.command_class == 67 and value.index == 8:
+                    value.data = int(round(temperature, 0))
+            elif self._current_operation == 'Auto Changeover':
+                if value.command_class == 67 and value.index == 10:
+                    value.data = int(round(temperature, 0))
+
         for _, value in self._node.get_values_for_command_class(0x43).items():
             if int(value.data) != 0:
                 value.data = temperature
