@@ -1,7 +1,7 @@
 """YAML utility functions."""
 import logging
 import os
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 
 import yaml
 
@@ -36,7 +36,11 @@ def _include_yaml(loader, node):
 def _ordered_dict(loader, node):
     """Load YAML mappings into an ordered dict to preserve key order."""
     loader.flatten_mapping(node)
-    return OrderedDict(loader.construct_pairs(node))
+    nodes = loader.construct_pairs(node)
+    dups = [k for k, v in Counter(k for k, _ in nodes).items() if v > 1]
+    if dups:
+        raise yaml.YAMLError("ERROR: duplicate keys: {}".format(dups))
+    return OrderedDict(nodes)
 
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
