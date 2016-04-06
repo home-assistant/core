@@ -88,8 +88,8 @@ MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
 
 
 # Service call validation schema
-def _mqtt_topic(value, invalid_chars='\0'):
-    """Validate MQTT topic."""
+def valid_subscribe_topic(value, invalid_chars='\0'):
+    """Validate that we can subscribe using this MQTT topic."""
     if isinstance(value, str) and all(c not in value for c in invalid_chars):
         return vol.Length(min=1, max=65535)(value)
     raise vol.Invalid('Invalid MQTT topic name')
@@ -97,13 +97,7 @@ def _mqtt_topic(value, invalid_chars='\0'):
 
 def valid_publish_topic(value):
     """Validate that we can publish using this MQTT topic."""
-    return _mqtt_topic(value, invalid_chars='#+\0')
-
-
-def valid_subscribe_topic(value):
-    """Validate that we can subscribe using this MQTT topic."""
-    return _mqtt_topic(value)
-
+    return valid_subscribe_topic(value, invalid_chars='#+\0')
 
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
