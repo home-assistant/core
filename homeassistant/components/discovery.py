@@ -26,6 +26,7 @@ SERVICE_NETGEAR = 'netgear_router'
 SERVICE_SONOS = 'sonos'
 SERVICE_PLEX = 'plex_mediaserver'
 SERVICE_SQUEEZEBOX = 'logitech_mediaserver'
+SERVICE_PANASONIC_VIERA = 'panasonic_viera'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "wemo",
@@ -35,6 +36,7 @@ SERVICE_HANDLERS = {
     SERVICE_SONOS: 'media_player',
     SERVICE_PLEX: 'media_player',
     SERVICE_SQUEEZEBOX: 'media_player',
+    SERVICE_PANASONIC_VIERA: 'media_player',
 }
 
 
