@@ -7,46 +7,85 @@ https://home-assistant.io/components/light.mqtt/
 import logging
 from functools import partial
 
+import voluptuous as vol
+
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import render_with_possible_json_value
-from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['mqtt']
+
+CONF_STATE_TOPIC = 'state_topic'
+CONF_COMMAND_TOPIC = 'command_topic'
+CONF_STATE_VALUE_TEMPLATE = 'state_value_template'
+CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
+CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
+CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
+CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
+CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
+CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
+CONF_PAYLOAD_ON = 'payload_on'
+CONF_PAYLOAD_OFF = 'payload_off'
+CONF_OPTIMISTIC = 'optimistic'
+CONF_BRIGHTNESS_SCALE = 'brightness_scale'
+
 DEFAULT_NAME = 'MQTT Light'
-DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS_SCALE = 255
 
-DEPENDENCIES = ['mqtt']
+PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Add MQTT Light."""
-    if config.get('command_topic') is None:
-        _LOGGER.error("Missing required variable: command_topic")
-        return False
-
     add_devices_callback([MqttLight(
         hass,
-        convert(config.get('name'), str, DEFAULT_NAME),
-        {key: convert(config.get(key), str) for key in
-         (typ + topic
-          for typ in ('', 'brightness_', 'rgb_')
-          for topic in ('state_topic', 'command_topic'))},
-        {key: convert(config.get(key + '_value_template'), str)
-         for key in ('state', 'brightness', 'rgb')},
-        convert(config.get('qos'), int, DEFAULT_QOS),
+        config[CONF_NAME],
         {
-            'on': convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
-            'off': convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF)
+            key: config.get(key) for key in (
+                CONF_STATE_TOPIC,
+                CONF_COMMAND_TOPIC,
+                CONF_BRIGHTNESS_STATE_TOPIC,
+                CONF_BRIGHTNESS_COMMAND_TOPIC,
+                CONF_RGB_STATE_TOPIC,
+                CONF_RGB_COMMAND_TOPIC,
+            )
         },
-        convert(config.get('optimistic'), bool, DEFAULT_OPTIMISTIC),
-        convert(config.get('brightness_scale'), int, DEFAULT_BRIGHTNESS_SCALE)
+        {
+            'state': config.get(CONF_STATE_VALUE_TEMPLATE),
+            'brightness': config.get(CONF_BRIGHTNESS_VALUE_TEMPLATE),
+            'rgb': config.get(CONF_RGB_VALUE_TEMPLATE)
+        },
+        config[mqtt.CONF_QOS],
+        {
+            'on': config[CONF_PAYLOAD_ON],
+            'off': config[CONF_PAYLOAD_OFF],
+        },
+        config[CONF_OPTIMISTIC],
+        config[CONF_BRIGHTNESS_SCALE],
     )])
 
 
