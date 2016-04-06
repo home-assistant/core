@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import render_with_possible_json_value
 
@@ -31,7 +31,6 @@ CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
 CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
-CONF_OPTIMISTIC = 'optimistic'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 
 DEFAULT_NAME = 'MQTT Light'
