@@ -35,6 +35,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
+    discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
