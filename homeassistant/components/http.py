@@ -7,6 +7,7 @@ https://home-assistant.io/developers/api/
 import gzip
 import json
 import logging
+import socket
 import ssl
 import threading
 import time
@@ -27,7 +28,9 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
-    SERVER_PORT)
+    SERVER_PORT, __version__)
+
+REQUIREMENTS = ["zeroconf==0.17.5"]
 
 DOMAIN = "http"
 
@@ -108,6 +111,10 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         # We will lazy init this one if needed
         self.event_forwarder = None
 
+        from zeroconf import Zeroconf
+
+        self.zeroconf = Zeroconf()
+
         if development:
             _LOGGER.info("running http in development mode")
 
@@ -122,14 +129,35 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         def stop_http(event):
             """Stop the HTTP server."""
             self.shutdown()
+            self.zeroconf.unregister_all_services()
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
         protocol = 'https' if self.use_ssl else 'http'
 
-        _LOGGER.info(
-            "Starting web interface at %s://%s:%d",
-            protocol, self.server_address[0], self.server_address[1])
+        base_url = "{}://{}:{}".format(protocol, util.get_local_ip(),
+                                       self.server_address[1])
+
+        zeroconf_type = "_home-assistant._tcp.local."
+        zeroconf_name = "{}.{}".format(self.hass.config.location_name,
+                                       zeroconf_type)
+
+        ip_address = socket.inet_aton(util.get_local_ip())
+
+        has_device_tracker = ("device_tracker" in self.hass.config.components)
+
+        params = {"version": __version__, "base_url": base_url,
+                  "device_tracker_component": has_device_tracker,
+                  "needs_password": (self.api_password != "")}
+
+        from zeroconf import ServiceInfo
+
+        info = ServiceInfo(zeroconf_type, zeroconf_name, ip_address,
+                           self.server_address[1], 0, 0, params)
+
+        self.zeroconf.register_service(info)
+
+        _LOGGER.info("Starting web interface at %s", base_url)
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
