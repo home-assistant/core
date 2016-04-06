@@ -142,8 +142,6 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         zeroconf_name = "{}.{}".format(self.hass.config.location_name,
                                        zeroconf_type)
 
-        ip_address = socket.inet_aton(util.get_local_ip())
-
         has_device_tracker = ("device_tracker" in self.hass.config.components)
 
         params = {"version": __version__, "base_url": base_url,
@@ -152,7 +150,8 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         from zeroconf import ServiceInfo
 
-        info = ServiceInfo(zeroconf_type, zeroconf_name, ip_address,
+        info = ServiceInfo(zeroconf_type, zeroconf_name,
+                           socket.inet_aton(util.get_local_ip()),
                            self.server_address[1], 0, 0, params)
 
         self.zeroconf.register_service(info)
