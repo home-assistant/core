@@ -94,6 +94,7 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, hass, player):
         """Initialize the Sonos device."""
         self.hass = hass
+        self.volume_increment = 5
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
@@ -199,11 +200,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Volume up media player."""
-        self._player.volume += 1
+        self._player.volume += self.volume_increment
 
     def volume_down(self):
         """Volume down media player."""
-        self._player.volume -= 1
+        self._player.volume -= self.volume_increment
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
