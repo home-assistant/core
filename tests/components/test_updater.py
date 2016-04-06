@@ -13,6 +13,7 @@ NEW_VERSION = '10000.0'
 # We need to use a 'real' looking version number to load the updater component
 MOCK_CURRENT_VERSION = '10.0'
 
+
 class TestUpdater(unittest.TestCase):
     """Test the Updater component."""
 
