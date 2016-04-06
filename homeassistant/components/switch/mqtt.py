@@ -18,6 +18,8 @@ DEFAULT_NAME = "MQTT Switch"
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
+DEFAULT_VALUE_ON = DEFAULT_PAYLOAD_ON
+DEFAULT_VALUE_OFF = DEFAULT_PAYLOAD_OFF
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
 
@@ -31,6 +33,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("Missing required variable: command_topic")
         return False
 
+    payload_on = convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON)
+    payload_off = convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF)
     add_devices_callback([MqttSwitch(
         hass,
         convert(config.get('name'), str, DEFAULT_NAME),
@@ -38,8 +42,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config.get('command_topic'),
         convert(config.get('qos'), int, DEFAULT_QOS),
         convert(config.get('retain'), bool, DEFAULT_RETAIN),
-        convert(config.get('payload_on'), str, DEFAULT_PAYLOAD_ON),
-        convert(config.get('payload_off'), str, DEFAULT_PAYLOAD_OFF),
+        payload_on,
+        payload_off,
+        convert(config.get('value_on'), str, payload_on),
+        convert(config.get('value_off'), str, payload_off),
         convert(config.get('optimistic'), bool, DEFAULT_OPTIMISTIC),
         config.get(CONF_VALUE_TEMPLATE))])
 
@@ -49,7 +55,8 @@ class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
     def __init__(self, hass, name, state_topic, command_topic, qos, retain,
-                 payload_on, payload_off, optimistic, value_template):
+                 payload_on, payload_off, value_on, value_off, optimistic,
+                 value_template):
         """Initialize the MQTT switch."""
         self._state = False
         self._hass = hass
@@ -60,6 +67,8 @@ class MqttSwitch(SwitchDevice):
         self._retain = retain
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._value_on = value_on
+        self._value_off = value_off
         self._optimistic = optimistic
 
         def message_received(topic, payload, qos):
@@ -67,10 +76,10 @@ class MqttSwitch(SwitchDevice):
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
-            if payload == self._payload_on:
+            if payload == self._value_on:
                 self._state = True
                 self.update_ha_state()
-            elif payload == self._payload_off:
+            elif payload == self._value_off:
                 self._state = False
                 self.update_ha_state()
 
