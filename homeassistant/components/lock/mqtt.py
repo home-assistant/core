@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
@@ -23,7 +23,6 @@ CONF_COMMAND_TOPIC = 'command_topic'
 CONF_RETAIN = 'retain'
 CONF_PAYLOAD_LOCK = 'payload_lock'
 CONF_PAYLOAD_UNLOCK = 'payload_unlock'
-CONF_OPTIMISTIC = 'optimistic'
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
