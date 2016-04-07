@@ -4,6 +4,8 @@ import unittest
 from unittest import mock
 import socket
 
+import voluptuous as vol
+
 from homeassistant.bootstrap import _setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
@@ -306,3 +308,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual({'test/topic': 1}, mqtt.MQTT_CLIENT.topics)
         self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
+
+    def test_invalid_mqtt_topics(self):
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')

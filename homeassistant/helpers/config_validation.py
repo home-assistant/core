@@ -34,6 +34,11 @@ def boolean(value):
     return bool(value)
 
 
+def isfile(value):
+    """Validate that the value is an existing file."""
+    return vol.IsFile('not a file')(value)
+
+
 def ensure_list(value):
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
