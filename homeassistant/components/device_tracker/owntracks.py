@@ -80,6 +80,11 @@ def setup_scanner(hass, config, see):
         if not isinstance(data, dict) or data.get('_type') != 'transition':
             return
 
+        if data.get('desc') is None:
+            _LOGGER.error(
+                "Location missing from `enter/exit` message - "
+                "please turn `Share` on in OwnTracks app")
+            return
         # OwnTracks uses - at the start of a beacon zone
         # to switch on 'hold mode' - ignore this
         location = data['desc'].lstrip("-")
