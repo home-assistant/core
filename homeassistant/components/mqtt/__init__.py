@@ -93,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema({
             [PROTOCOL_31, PROTOCOL_311],
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
     }),
-})
+}, extra=vol.ALLOW_EXTRA)
 
 MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
