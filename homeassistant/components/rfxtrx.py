@@ -178,8 +178,6 @@ def apply_received_command(event):
             is_on = RFX_DEVICES[device_id]._brightness > 0
             RFX_DEVICES[device_id]._state = is_on
             RFX_DEVICES[device_id].update_ha_state()
-        else:
-            return
 
         # Fire event
         if RFX_DEVICES[device_id].should_fire_event:
