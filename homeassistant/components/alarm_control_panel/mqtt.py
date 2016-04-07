@@ -14,14 +14,14 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
     CONF_NAME)
+from homeassistant.components.mqtt import (
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_STATE_TOPIC = 'state_topic'
-CONF_COMMAND_TOPIC = 'command_topic'
 CONF_PAYLOAD_DISARM = 'payload_disarm'
 CONF_PAYLOAD_ARM_HOME = 'payload_arm_home'
 CONF_PAYLOAD_ARM_AWAY = 'payload_arm_away'
@@ -50,11 +50,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_NAME],
         config[CONF_STATE_TOPIC],
         config[CONF_COMMAND_TOPIC],
-        config[mqtt.CONF_QOS],
+        config[CONF_QOS],
         config[CONF_PAYLOAD_DISARM],
         config[CONF_PAYLOAD_ARM_HOME],
         config[CONF_PAYLOAD_ARM_AWAY],
-        config.get('code'))])
+        config.get(CONF_CODE))])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
@@ -74,7 +74,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
-        self._code = str(code) if code else None
+        self._code = code
 
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
