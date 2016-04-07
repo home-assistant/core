@@ -67,20 +67,29 @@ def _alias_stripper(validator):
     return validate
 
 
-_DELAY_SCHEMA = {
-    vol.Required(CONF_DELAY): vol.All({
-        CONF_ALIAS: cv.string,
-        'days': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'seconds': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'microseconds': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'milliseconds': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'minutes': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'hours': vol.All(vol.Coerce(int), vol.Range(min=0)),
-        'weeks': vol.All(vol.Coerce(int), vol.Range(min=0)),
-    }, cv.has_at_least_one_key(
-        'days', 'seconds', 'microseconds', 'milliseconds', 'minutes', 'hours',
-        'weeks'))
-}
+_TIMESPEC = vol.Schema({
+    'days': cv.positive_int,
+    'hours': cv.positive_int,
+    'minutes': cv.positive_int,
+    'seconds': cv.positive_int,
+    'milliseconds': cv.positive_int,
+})
+_TIMESPEC_REQ = cv.has_at_least_one_key(
+    'days', 'hours', 'minutes', 'seconds', 'milliseconds',
+)
+
+_DELAY_SCHEMA = vol.Any(
+    vol.Schema({
+        vol.Required(CONF_DELAY): vol.All(_TIMESPEC.extend({
+            vol.Optional(CONF_ALIAS): cv.string
+        }), _TIMESPEC_REQ)
+    }),
+    # Alternative format in case people forgot to indent after 'delay:'
+    vol.All(_TIMESPEC.extend({
+        vol.Required(CONF_DELAY): None,
+        vol.Optional(CONF_ALIAS): cv.string,
+    }), _TIMESPEC_REQ)
+)
 
 _EVENT_SCHEMA = cv.EVENT_SCHEMA.extend({
     CONF_ALIAS: cv.string,
@@ -234,7 +243,9 @@ class Script(ToggleEntity):
                         self._listener = None
                         self.turn_on()
 
-                    delay = timedelta(**action[CONF_DELAY])
+                    timespec = action[CONF_DELAY] or action.copy()
+                    timespec.pop(CONF_DELAY, None)
+                    delay = timedelta(**timespec)
                     self._listener = track_point_in_utc_time(
                         self.hass, script_delay, date_util.utcnow() + delay)
                     self._cur = cur + 1
