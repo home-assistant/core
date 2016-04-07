@@ -79,8 +79,10 @@ def setup(hass, config):
         threading.Thread(target=server.start, daemon=True).start())
 
     hass.http = server
-    hass.config.api = rem.API(server_host if server_host != '0.0.0.0' else util.get_local_ip(),
-                              api_password, server_port, ssl_certificate is not None)
+    hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
+                              else util.get_local_ip(),
+                              api_password, server_port,
+                              ssl_certificate is not None)
 
     return True
 
