@@ -12,6 +12,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     SENSOR_CLASSES)
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
@@ -19,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_STATE_TOPIC = 'state_topic'
 CONF_SENSOR_CLASS = 'sensor_class'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
@@ -28,14 +28,12 @@ DEFAULT_NAME = 'MQTT Binary sensor'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_SENSOR_CLASS, default=None):
         vol.Any(vol.In(SENSOR_CLASSES), vol.SetTo(None)),
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -47,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_NAME],
         config[CONF_STATE_TOPIC],
         config[CONF_SENSOR_CLASS],
-        config[mqtt.CONF_QOS],
+        config[CONF_QOS],
         config[CONF_PAYLOAD_ON],
         config[CONF_PAYLOAD_OFF],
         config.get(CONF_VALUE_TEMPLATE)
