@@ -164,20 +164,22 @@ def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
 
     def update_sessions(now):
         """Update the sessions objects."""
-        try:
-            sessions = plexserver.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
-            return
+        if list_sessions:
+            try:
+                sessions = plexserver.sessions()
+            except plexapi.exceptions.BadRequest:
+                _LOGGER.exception("Error listing plex sessions")
+                return
 
-        plex_sessions.clear()
-        for session in sessions:
-            plex_sessions[session.player.machineIdentifier] = session
+            plex_sessions.clear()
+            for session in sessions:
+                plex_sessions[session.player.machineIdentifier] = session
 
-    track_utc_time_change(
-        hass, update_sessions,
-        second=range(0, 60, MIN_TIME_BETWEEN_SCANS.seconds)
-    )
+    if list_sessions:
+        track_utc_time_change(
+            hass, update_sessions,
+            second=range(0, 60, MIN_TIME_BETWEEN_SCANS.seconds)
+        )
 
     track_utc_time_change(
         hass, update_devices,
