@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
     }),
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
