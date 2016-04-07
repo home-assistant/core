@@ -88,7 +88,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERTIFICATE): vol.IsFile(),
+        vol.Optional(CONF_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             [PROTOCOL_31, PROTOCOL_311],
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
