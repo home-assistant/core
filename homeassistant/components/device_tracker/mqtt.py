@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
+from homeassistant.components.mqtt import CONF_QOS
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['mqtt']
@@ -25,7 +26,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config, see):
     """Setup the MQTT tracker."""
     devices = config[CONF_DEVICES]
-    qos = config[mqtt.CONF_QOS]
+    qos = config[CONF_QOS]
 
     dev_id_lookup = {}
 

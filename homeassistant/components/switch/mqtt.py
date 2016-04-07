@@ -11,6 +11,8 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.components.mqtt import (
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template
 
@@ -18,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_STATE_TOPIC = 'state_topic'
-CONF_COMMAND_TOPIC = 'command_topic'
-CONF_RETAIN = 'retain'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
 
@@ -28,17 +27,12 @@ DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
-DEFAULT_RETAIN = False
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -50,7 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config[CONF_NAME],
         config.get(CONF_STATE_TOPIC),
         config[CONF_COMMAND_TOPIC],
-        config[mqtt.CONF_QOS],
+        config[CONF_QOS],
         config[CONF_RETAIN],
         config[CONF_PAYLOAD_ON],
         config[CONF_PAYLOAD_OFF],

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
@@ -18,16 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_STATE_TOPIC = 'state_topic'
 CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
 
 DEFAULT_NAME = "MQTT Sensor"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -38,7 +36,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         hass,
         config[CONF_NAME],
         config[CONF_STATE_TOPIC],
-        config[mqtt.CONF_QOS],
+        config[CONF_QOS],
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_VALUE_TEMPLATE),
     )])
