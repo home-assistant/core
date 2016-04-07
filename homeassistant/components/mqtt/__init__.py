@@ -18,7 +18,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_PLATFORM, CONF_SCAN_INTERVAL)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_VALUE_TEMPLATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,11 @@ CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
 CONF_PROTOCOL = 'protocol'
+
+CONF_STATE_TOPIC = 'state_topic'
+CONF_COMMAND_TOPIC = 'command_topic'
 CONF_QOS = 'qos'
+CONF_RETAIN = 'retain'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -55,9 +59,21 @@ ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = CONF_QOS
-ATTR_RETAIN = 'retain'
+ATTR_RETAIN = CONF_RETAIN
 
 MAX_RECONNECT_WAIT = 300  # seconds
+
+
+def valid_subscribe_topic(value, invalid_chars='\0'):
+    """Validate that we can subscribe using this MQTT topic."""
+    if isinstance(value, str) and all(c not in value for c in invalid_chars):
+        return vol.Length(min=1, max=65535)(value)
+    raise vol.Invalid('Invalid MQTT topic name')
+
+
+def valid_publish_topic(value):
+    """Validate that we can publish using this MQTT topic."""
+    return valid_subscribe_topic(value, invalid_chars='#+\0')
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
@@ -86,19 +102,22 @@ MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
 })
 
+# Sensor type platforms subscribe to mqtt events
+MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
+
+# Switch type platforms publish to mqtt and may subscribe
+MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
+
 
 # Service call validation schema
-def valid_subscribe_topic(value, invalid_chars='\0'):
-    """Validate that we can subscribe using this MQTT topic."""
-    if isinstance(value, str) and all(c not in value for c in invalid_chars):
-        return vol.Length(min=1, max=65535)(value)
-    raise vol.Invalid('Invalid MQTT topic name')
-
-
-def valid_publish_topic(value):
-    """Validate that we can publish using this MQTT topic."""
-    return valid_subscribe_topic(value, invalid_chars='#+\0')
-
 MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,

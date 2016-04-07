@@ -11,6 +11,8 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.components.mqtt import (
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS)
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
@@ -18,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_STATE_TOPIC = 'state_topic'
-CONF_COMMAND_TOPIC = 'command_topic'
 CONF_PAYLOAD_UP = 'payload_up'
 CONF_PAYLOAD_DOWN = 'payload_down'
 CONF_PAYLOAD_STOP = 'payload_stop'
@@ -29,14 +29,11 @@ DEFAULT_PAYLOAD_UP = "UP"
 DEFAULT_PAYLOAD_DOWN = "DOWN"
 DEFAULT_PAYLOAD_STOP = "STOP"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_PAYLOAD_UP, default=DEFAULT_PAYLOAD_UP): cv.string,
     vol.Optional(CONF_PAYLOAD_DOWN, default=DEFAULT_PAYLOAD_DOWN): cv.string,
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
 
@@ -47,7 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config[CONF_NAME],
         config.get(CONF_STATE_TOPIC),
         config[CONF_COMMAND_TOPIC],
-        config[mqtt.CONF_QOS],
+        config[CONF_QOS],
         config[CONF_PAYLOAD_UP],
         config[CONF_PAYLOAD_DOWN],
         config[CONF_PAYLOAD_STOP],
