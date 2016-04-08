@@ -55,30 +55,26 @@ class TestRFXTRX(unittest.TestCase):
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
-                'dummy': True,
-        }}))
+                'dummy': True}}))
 
         self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True,
-                'debug': True,
-        }}))
-
+                'debug': True}}))
 
     def test_invalid_config(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {}
         }))
-        
+
         self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
-                'invalid_key': True
-        }}))
+                'invalid_key': True}}))
 
     def test_fire_event(self):
         """Test fire event."""

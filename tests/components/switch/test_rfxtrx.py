@@ -35,17 +35,18 @@ class TestSwitchRfxtrx(unittest.TestCase):
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))
 
-        self.assertTrue(_setup_component(self.hass, 'switch', {
+    def test_invalid_config1(self):
+        self.assertFalse(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'213c7f216': {
+                           {'2FF7f216': {
                                'name': 'Test',
                                'packetid': '0b1100cd0213c7f210010f51',
                                'signal_repetitions': 3}
                             }}}))
 
-    def test_invalid_config(self):
+    def test_invalid_config2(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
@@ -55,6 +56,39 @@ class TestSwitchRfxtrx(unittest.TestCase):
                            {'213c7f216': {
                                'name': 'Test',
                                'packetid': '0b1100cd0213c7f210010f51',
+                               rfxtrx_core.ATTR_FIREEVENT: True}
+                            }}}))
+
+    def test_invalid_config3(self):
+        self.assertFalse(_setup_component(self.hass, 'switch', {
+            'switch': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {'213c7f216': {
+                               'name': 'Test',
+                               'packetid': 'AA1100cd0213c7f210010f51',
+                               rfxtrx_core.ATTR_FIREEVENT: True}
+                            }}}))
+
+    def test_invalid_config4(self):
+        self.assertFalse(_setup_component(self.hass, 'switch', {
+            'switch': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {'AA3c7f216': {
+                               'name': 'Test',
+                               'packetid': '0b1100cd0213c7f210010f51',
+                               rfxtrx_core.ATTR_FIREEVENT: True}
+                            }}}))
+
+    def test_invalid_config5(self):
+        """Test configuration."""
+        self.assertFalse(_setup_component(self.hass, 'switch', {
+            'switch': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {'213c7f216': {
+                               'name': 'Test',
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))
 

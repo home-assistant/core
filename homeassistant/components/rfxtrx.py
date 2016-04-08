@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -12,7 +13,6 @@ from homeassistant.util import slugify
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ENTITY_ID
-from collections import OrderedDict
 
 REQUIREMENTS = ['pyRFXtrx==0.6.5']
 
@@ -39,8 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NAME): cv.string,
-    vol.Optional(ATTR_PACKETID, default=False): cv.string,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_PACKETID): cv.slug,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
@@ -50,27 +50,30 @@ def _valid_device(value):
     config = OrderedDict()
     for key, device in value.items():
         try:
+            key = cv.slug(key)
             config[key] = DEVICE_SCHEMA(device)
         except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Rfxtrx device {} is invalid: {}'.format(key, ex))
-
+            raise vol.Invalid('Rfxtrx device {} is invalid: {}'
+                              .format(key, ex))
     return config
-       
+
 
 DEFAULT_SCHEMA = vol.Schema({
     vol.Required("platform"): DOMAIN,
     vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):  vol.Coerce(int),
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
+        vol.Coerce(int),
 })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(ATTR_DEVICE): cv.string,
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
-        vol.Optional(ATTR_DUMMY, default=False): cv.boolean,    
+        vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
     }),
 })
+
 
 def setup(hass, config):
     """Setup the RFXtrx component."""
