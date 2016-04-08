@@ -6,9 +6,7 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 
-import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice
 
@@ -16,14 +14,7 @@ DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_DEVICE, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEBUG, default=DEFAULT_PAYLOAD_ON): cv.boolean,
-    vol.Optional(ATTR_NAME, default=DEFAULT_PAYLOAD_OFF): cv.string,
-    vol.Optional(ATTR_FIREEVENT, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(ATTR_FIREEVENT, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(ATTR_FIREEVENT, default=DEFAULT_OPTIMISTIC): cv.boolean,
-})
+PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the RFXtrx platform."""

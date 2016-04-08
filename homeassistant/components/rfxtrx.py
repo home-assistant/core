@@ -5,11 +5,15 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import ATTR_ENTITY_ID
+from collections import OrderedDict
+
 REQUIREMENTS = ['pyRFXtrx==0.6.5']
 
 DOMAIN = "rfxtrx"
@@ -22,8 +26,10 @@ ATTR_NAME = 'name'
 ATTR_PACKETID = 'packetid'
 ATTR_FIREEVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
-ATTR_DUMMY = "dummy"
-SIGNAL_REPETITIONS = 1
+ATTR_DUMMY = 'dummy'
+CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
+CONF_DEVICES = 'devices'
+DEFAULT_SIGNAL_REPETITIONS = 1
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
@@ -32,6 +38,39 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_PACKETID, default=False): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+})
+
+
+def _valid_device(value):
+    """Validate a dictionary of devices definitions."""
+    config = OrderedDict()
+    for key, device in value.items():
+        try:
+            config[key] = DEVICE_SCHEMA(device)
+        except vol.MultipleInvalid as ex:
+            raise vol.Invalid('Rfxtrx device {} is invalid: {}'.format(key, ex))
+
+    return config
+       
+
+DEFAULT_SCHEMA = vol.Schema({
+    vol.Required("platform"): DOMAIN,
+    vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
+    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):  vol.Coerce(int),
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(ATTR_DEVICE): cv.string,
+        vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
+        vol.Optional(ATTR_DUMMY, default=False): cv.boolean,    
+    }),
+})
 
 def setup(hass, config):
     """Setup the RFXtrx component."""
@@ -57,16 +96,9 @@ def setup(hass, config):
     # Init the rfxtrx module.
     global RFXOBJECT
 
-    if ATTR_DEVICE not in config[DOMAIN]:
-        _LOGGER.error(
-            "can not find device parameter in %s YAML configuration section",
-            DOMAIN
-        )
-        return False
-
     device = config[DOMAIN][ATTR_DEVICE]
-    debug = config[DOMAIN].get(ATTR_DEBUG, False)
-    dummy_connection = config[DOMAIN].get(ATTR_DUMMY, False)
+    debug = config[DOMAIN][ATTR_DEBUG]
+    dummy_connection = config[DOMAIN][ATTR_DUMMY]
 
     if dummy_connection:
         RFXOBJECT =\
@@ -104,16 +136,17 @@ def get_rfx_object(packetid):
 
 def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
-    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
+    signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
     devices = []
-    for device_id, entity_info in config.get('devices', {}).items():
+    print("____________----",config)
+    for device_id, entity_info in config[CONF_DEVICES].items():
         if device_id in RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx", entity_info[ATTR_NAME])
 
         # Check if i must fire event
-        fire_event = entity_info.get(ATTR_FIREEVENT, False)
+        fire_event = entity_info[ATTR_FIREEVENT]
         datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
         rfxobject = get_rfx_object(entity_info[ATTR_PACKETID])
@@ -128,7 +161,7 @@ def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id not in RFX_DEVICES:
-        automatic_add = config.get(ATTR_AUTOMATIC_ADD, False)
+        automatic_add = config[ATTR_AUTOMATIC_ADD]
         if not automatic_add:
             return
 
@@ -141,8 +174,7 @@ def get_new_device(event, config, device):
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)
         entity_name = "%s : %s" % (device_id, pkt_id)
         datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
-        signal_repetitions = config.get('signal_repetitions',
-                                        SIGNAL_REPETITIONS)
+        signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
         new_device = device(entity_name, event, datas,
                             signal_repetitions)
         RFX_DEVICES[device_id] = new_device
