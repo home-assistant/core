@@ -2,10 +2,10 @@
 import logging
 import os
 from collections import Counter, OrderedDict
-from homeassistant.util import repr_helper
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import repr_helper
 
 _LOGGER = logging.getLogger(__name__)
 
