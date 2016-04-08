@@ -128,7 +128,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
         entity.turn_off()
         self.assertFalse(entity.is_on)
 
-    def test_several_switchs(self):
+    def test_several_switches(self):
         """Test with 3 switches."""
         self.assertTrue(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
@@ -142,7 +142,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
                             'packetid': '0b1100100118cdea02010f70'},
                             '213c7f216': {
                             'name': 'Living',
-                            'packetid': '2b1121cd1213c7f211111f71'}}}}))
+                            'packetid': '0b1100100118cdea02010f70'}}}}))
 
         self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
         device_num = 0

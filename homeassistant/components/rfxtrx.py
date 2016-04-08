@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
-from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -38,29 +37,23 @@ RFX_DEVICES = {}
 _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
+
+def _validate_packetid(value):
+    if get_rfx_object(value):
+        return value
+    else:
+        raise vol.Invalid('invalid packet id for {}'.format(value))
+
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_PACKETID): cv.slug,
+    vol.Required(ATTR_PACKETID): _validate_packetid,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
-
-def _valid_device(value):
-    """Validate a dictionary of devices definitions."""
-    config = OrderedDict()
-    for key, device in value.items():
-        try:
-            key = cv.slug(key)
-            config[key] = DEVICE_SCHEMA(device)
-        except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Rfxtrx device {} is invalid: {}'
-                              .format(key, ex))
-    return config
-
-
 DEFAULT_SCHEMA = vol.Schema({
     vol.Required("platform"): DOMAIN,
-    vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
+    vol.Required(CONF_DEVICES): {cv.slug: DEVICE_SCHEMA},
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
         vol.Coerce(int),

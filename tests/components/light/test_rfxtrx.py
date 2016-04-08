@@ -120,7 +120,7 @@ class TestLightRfxtrx(unittest.TestCase):
                             'packetid': '0b1100100118cdea02010f70'},
                         '213c7f216': {
                             'name': 'Living',
-                            'packetid': '2b1121cd1213c7f211111f71'}}}}))
+                            'packetid': '0b1100100118cdea02010f70'}}}}))
 
         self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
         device_num = 0
