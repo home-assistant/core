@@ -6,10 +6,11 @@ from unittest import mock
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
+import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, TEMP_CELCIUS)
 from homeassistant.components import sun, mqtt
 
 _TEST_INSTANCE_PORT = SERVER_PORT
@@ -34,6 +35,8 @@ def get_test_home_assistant(num_threads=None):
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
+    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+    hass.config.temperature_unit = TEMP_CELCIUS
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
