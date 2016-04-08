@@ -194,7 +194,6 @@ def key_dependency(key, dependency):
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid('key dependencies require a dict')
-        print(key, value)
         if key in value and dependency not in value:
             raise vol.Invalid('dependency violation - key "{}" requires '
                               'key "{}" to exist'.format(key, dependency))
