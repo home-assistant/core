@@ -39,7 +39,7 @@ def _ordered_dict(loader, node):
     dups = [k for k, v in Counter(k for k, _ in nodes).items() if v > 1]
     if dups:
         msg = ""
-        for key in nodes:
+        for (key, _) in nodes:
             msg = msg + str(key) + "=..., "
         raise yaml.YAMLError("ERROR: duplicate keys:"
                              " {} in configuration of: {}"
