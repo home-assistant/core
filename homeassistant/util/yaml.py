@@ -41,7 +41,7 @@ def _ordered_dict(loader, node):
     if dups:
         msg = repr_helper(nodes)
         raise yaml.YAMLError("ERROR: duplicate keys:"
-                             " {} in configuration of: \n{}"
+                             " {} in configuration of: {}"
                              .format(dups, msg))
     return OrderedDict(nodes)
 
