@@ -14,7 +14,7 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as location_util
 
-REQUIREMENTS = ['astral==0.9']
+REQUIREMENTS = ['astral==1.0']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
