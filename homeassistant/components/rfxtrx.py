@@ -14,6 +14,7 @@ REQUIREMENTS = ['pyRFXtrx==0.6.5']
 
 DOMAIN = "rfxtrx"
 
+ATTR_AUTOMATIC_ADD = 'automatic_add'
 ATTR_DEVICE = 'device'
 ATTR_DEBUG = 'debug'
 ATTR_STATE = 'state'
@@ -127,7 +128,7 @@ def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id not in RFX_DEVICES:
-        automatic_add = config.get('automatic_add', False)
+        automatic_add = config.get(ATTR_AUTOMATIC_ADD, False)
         if not automatic_add:
             return
 
