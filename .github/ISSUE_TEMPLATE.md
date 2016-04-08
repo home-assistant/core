@@ -1,3 +1,5 @@
+Feature requests should go in the forum: https://community.home-assistant.io/c/feature-requests
+
 **Home Assistant release (`hass --version`):**
 
 
