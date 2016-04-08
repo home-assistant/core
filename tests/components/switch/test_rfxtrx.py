@@ -68,7 +68,6 @@ class TestSwitchRfxtrx(unittest.TestCase):
 
     def test_one_switch(self):
         """Test with 1 switch."""
-
         self.assertTrue(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
                        'devices':
@@ -79,7 +78,6 @@ class TestSwitchRfxtrx(unittest.TestCase):
         import RFXtrx as rfxtrxmod
         rfxtrx_core.RFXOBJECT =\
             rfxtrxmod.Core("", transport_protocol=rfxtrxmod.DummyTransport)
-        self.hass.pool.block_till_done()
 
         self.assertEqual(1,  len(rfxtrx_core.RFX_DEVICES))
         entity = rfxtrx_core.RFX_DEVICES['123efab1']

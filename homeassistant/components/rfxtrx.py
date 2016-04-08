@@ -139,7 +139,6 @@ def get_devices_from_config(config, device):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
     devices = []
-    print("____________----",config)
     for device_id, entity_info in config[CONF_DEVICES].items():
         if device_id in RFX_DEVICES:
             continue
