@@ -58,6 +58,17 @@ class TestMQTT(unittest.TestCase):
                 }
             })
 
+    def test_setup_protocol_validation(self):
+        """Test for setup failure if connection to broker is missing."""
+        with mock.patch('paho.mqtt.client.Client'):
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                    mqtt.CONF_PROTOCOL: 3.1,
+                }
+            })
+
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
         self.hass.bus.listen_once(EVENT_CALL_SERVICE, self.record_calls)
