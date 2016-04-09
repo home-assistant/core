@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
     outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
     indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
-    calib_value = util.convert(config.get(CONF_CALIBRATION_FACTOR),
+    calib_factor = util.convert(config.get(CONF_CALIBRATION_FACTOR),
                                float, None)
 
     if None in (indoor_temp_sensor,
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback([MoldIndicator(
         hass, name, indoor_temp_sensor,
         outdoor_temp_sensor, indoor_humidity_sensor,
-        calib_value)])
+        calib_factor)])
 
 
 # pylint: disable=too-many-instance-attributes
@@ -57,7 +57,7 @@ class MoldIndicator(Entity):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-                 indoor_humidity_sensor, calib_value):
+                 indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""
         self._state = "-"
         self._hass = hass
@@ -65,7 +65,7 @@ class MoldIndicator(Entity):
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
-        self._calib_value = calib_value
+        self._calib_factor = calib_factor
         self._is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
 
         self._dewpoint = None
@@ -175,19 +175,19 @@ class MoldIndicator(Entity):
 
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
-        if None in (self._dewpoint, self._calib_value) or \
-           self._calib_value == 0:
+        if None in (self._dewpoint, self._calib_factor) or \
+           self._calib_factor == 0:
 
             _LOGGER.debug("Invalid inputs - dewpoint: %s,"
-                          " calibration-Value: %s",
-                          self._dewpoint, self._calib_value)
-            self._state = "-"
+                          " calibration-factor: %s",
+                          self._dewpoint, self._calib_factor)
+            self._state = None
             return
 
         # first calculate the approximate temperature at the calibration point
         self._crit_temp = \
             self._outdoor_temp + (self._indoor_temp - self._outdoor_temp) / \
-            self._calib_value
+            self._calib_factor
 
         _LOGGER.debug(
             "Estimated Critical Temperature: %f " +
@@ -208,7 +208,7 @@ class MoldIndicator(Entity):
         elif crit_humidity < 0:
             self._state = '0'
         else:
-            self._state = '{0:.2f}'.format(crit_humidity)
+            self._state = '{0:d}'.format(int(crit_humidity))
 
         _LOGGER.debug('Mold indicator humidity: %s ', self._state)
 
@@ -239,17 +239,15 @@ class MoldIndicator(Entity):
 
             if self._is_metric:
                 return {
-                    ATTR_DEWPOINT: '{0:.2f}'.format(self._dewpoint) +
-                                   ' ' + TEMP_CELCIUS,
-                    ATTR_CRITICAL_TEMP: '{0:.2f}'.format(self._crit_temp) +
-                                        ' ' + TEMP_CELCIUS,
+                    ATTR_DEWPOINT: '{0:.1f}'.format(self._dewpoint),
+                    ATTR_CRITICAL_TEMP: '{0:.1f}'.format(self._crit_temp),
                 }
             else:
                 return {
-                    ATTR_DEWPOINT: '{0:.2f}'.format(
+                    ATTR_DEWPOINT: '{0:.1f}'.format(
                         util.temperature.celcius_to_fahrenheit(
-                            self._dewpoint)) + ' ' + TEMP_FAHRENHEIT,
-                    ATTR_CRITICAL_TEMP: '{0:.2f}'.format(
+                            self._dewpoint)),
+                    ATTR_CRITICAL_TEMP: '{0:.1f}'.format(
                         util.temperature.celcius_to_fahrenheit(
-                            self._crit_temp)) + ' ' + TEMP_FAHRENHEIT,
+                            self._crit_temp)),
                 }
