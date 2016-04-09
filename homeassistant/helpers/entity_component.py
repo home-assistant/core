@@ -49,9 +49,7 @@ class EntityComponent(object):
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        for p_type, p_config in \
-                config_per_platform(config, self.domain, self.logger):
-
+        for p_type, p_config in config_per_platform(config, self.domain):
             self._setup_platform(p_type, p_config)
 
         if self.discovery_platforms:
@@ -81,24 +79,22 @@ class EntityComponent(object):
         platform = prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
 
-        if platform is None:
-            return
+        # Config > Platform > Component
+        scan_interval = platform_config.get(
+            CONF_SCAN_INTERVAL,
+            getattr(platform, 'SCAN_INTERVAL', self.scan_interval))
 
         try:
-            # Config > Platform > Component
-            scan_interval = platform_config.get(
-                CONF_SCAN_INTERVAL,
-                getattr(platform, 'SCAN_INTERVAL', self.scan_interval))
             platform.setup_platform(
                 self.hass, platform_config,
                 EntityPlatform(self, scan_interval).add_entities,
                 discovery_info)
-            platform_name = '{}.{}'.format(self.domain, platform_type)
-            self.hass.config.components.append(platform_name)
+
+            self.hass.config.components.append(
+                '{}.{}'.format(self.domain, platform_type))
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
-            return
 
     def add_entity(self, entity):
         """Add entity to component."""

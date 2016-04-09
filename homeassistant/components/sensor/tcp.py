@@ -13,8 +13,6 @@ from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = "tcp"
-
 CONF_PORT = "port"
 CONF_TIMEOUT = "timeout"
 CONF_PAYLOAD = "payload"

@@ -14,10 +14,8 @@ import requests
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import bloomsky
-from homeassistant.const import (
-    HTTP_NOT_FOUND,
-    ATTR_ENTITY_ID,
-    )
+from homeassistant.const import HTTP_OK, HTTP_NOT_FOUND, ATTR_ENTITY_ID
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 
 DOMAIN = 'camera'
@@ -36,7 +34,7 @@ STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
 
-MULTIPART_BOUNDARY = '--jpegboundary'
+MULTIPART_BOUNDARY = '--jpgboundary'
 MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
 
 
@@ -49,17 +47,6 @@ def setup(hass, config):
 
     component.setup(config)
 
-    # -------------------------------------------------------------------------
-    # CAMERA COMPONENT ENDPOINTS
-    # -------------------------------------------------------------------------
-    # The following defines the endpoints for serving images from the camera
-    # via the HA http server.  This is means that you can access images from
-    # your camera outside of your LAN without the need for port forwards etc.
-
-    # Because the authentication header can't be added in image requests these
-    # endpoints are secured with session based security.
-
-    # pylint: disable=unused-argument
     def _proxy_camera_image(handler, path_match, data):
         """Serve the camera image via the HA server."""
         entity_id = path_match.group(ATTR_ENTITY_ID)
@@ -77,22 +64,16 @@ def setup(hass, config):
             handler.end_headers()
             return
 
-        handler.wfile.write(response)
+        handler.send_response(HTTP_OK)
+        handler.write_content(response)
 
     hass.http.register_path(
         'GET',
         re.compile(r'/api/camera_proxy/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _proxy_camera_image)
 
-    # pylint: disable=unused-argument
     def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """
-        Proxy the camera image as an mjpeg stream via the HA server.
-
-        This function takes still images from the IP camera and turns them
-        into an MJPEG stream.  This means that HA can return a live video
-        stream even with only a still image URL available.
-        """
+        """Proxy the camera image as an mjpeg stream via the HA server."""
         entity_id = path_match.group(ATTR_ENTITY_ID)
         camera = component.entities.get(entity_id)
 
@@ -112,8 +93,7 @@ def setup(hass, config):
 
     hass.http.register_path(
         'GET',
-        re.compile(
-            r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
+        re.compile(r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _proxy_camera_mjpeg_stream)
 
     return True
@@ -137,19 +117,16 @@ class Camera(Entity):
         return ENTITY_IMAGE_URL.format(self.entity_id)
 
     @property
-    # pylint: disable=no-self-use
     def is_recording(self):
         """Return true if the device is recording."""
         return False
 
     @property
-    # pylint: disable=no-self-use
     def brand(self):
         """Camera brand."""
         return None
 
     @property
-    # pylint: disable=no-self-use
     def model(self):
         """Camera model."""
         return None
@@ -160,29 +137,28 @@ class Camera(Entity):
 
     def mjpeg_stream(self, handler):
         """Generate an HTTP MJPEG stream from camera images."""
-        handler.request.sendall(bytes('HTTP/1.1 200 OK\r\n', 'utf-8'))
-        handler.request.sendall(bytes(
-            'Content-type: multipart/x-mixed-replace; \
-                boundary=--jpgboundary\r\n\r\n', 'utf-8'))
-        handler.request.sendall(bytes('--jpgboundary\r\n', 'utf-8'))
+        def write_string(text):
+            """Helper method to write a string to the stream."""
+            handler.request.sendall(bytes(text + '\r\n', 'utf-8'))
 
-        # MJPEG_START_HEADER.format()
+        write_string('HTTP/1.1 200 OK')
+        write_string('Content-type: multipart/x-mixed-replace; '
+                     'boundary={}'.format(MULTIPART_BOUNDARY))
+        write_string('')
+        write_string(MULTIPART_BOUNDARY)
+
         while True:
             img_bytes = self.camera_image()
+
             if img_bytes is None:
                 continue
-            headers_str = '\r\n'.join((
-                'Content-length: {}'.format(len(img_bytes)),
-                'Content-type: image/jpeg',
-            )) + '\r\n\r\n'
 
-            handler.request.sendall(
-                bytes(headers_str, 'utf-8') +
-                img_bytes +
-                bytes('\r\n', 'utf-8'))
-
-            handler.request.sendall(
-                bytes('--jpgboundary\r\n', 'utf-8'))
+            write_string('Content-length: {}'.format(len(img_bytes)))
+            write_string('Content-type: image/jpeg')
+            write_string('')
+            handler.request.sendall(img_bytes)
+            write_string('')
+            write_string(MULTIPART_BOUNDARY)
 
             time.sleep(0.5)
 
