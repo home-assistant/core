@@ -26,7 +26,7 @@ class TestRFXTRX(unittest.TestCase):
 
     def test_default_config(self):
         """Test configuration."""
-        self.assertTrue(rfxtrx.setup(self.hass, {
+        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
@@ -49,11 +49,32 @@ class TestRFXTRX(unittest.TestCase):
         self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
         self.assertEqual(len(devices), 2)
 
-    def test_config_failing(self):
+    def test_valid_config(self):
         """Test configuration."""
-        self.assertFalse(rfxtrx.setup(self.hass, {
+        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'dummy': True}}))
+
+        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'dummy': True,
+                'debug': True}}))
+
+    def test_invalid_config(self):
+        """Test configuration."""
+        self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {}
         }))
+
+        self.assertFalse(_setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'invalid_key': True}}))
 
     def test_fire_event(self):
         """Test fire event."""
