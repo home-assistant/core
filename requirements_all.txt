@@ -26,7 +26,7 @@ TwitterAPI==2.3.6
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==0.9
+astral==1.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
