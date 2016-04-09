@@ -8,6 +8,8 @@ import sys
 from collections import defaultdict
 from threading import RLock
 
+import voluptuous as vol
+
 import homeassistant.components as core_components
 import homeassistant.components.group as group
 import homeassistant.config as config_util
@@ -19,8 +21,9 @@ import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
-from homeassistant.helpers import event_decorators, service
+    TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+from homeassistant.helpers import (
+    event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +32,6 @@ _CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
-PLATFORM_FORMAT = '{}.{}'
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
@@ -72,7 +74,7 @@ def _handle_requirements(hass, component, name):
 
 def _setup_component(hass, domain, config):
     """Setup a component for Home Assistant."""
-    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-return-statements,too-many-branches
     if domain in hass.config.components:
         return True
 
@@ -95,6 +97,56 @@ def _setup_component(hass, domain, config):
                 'Not initializing %s because not all dependencies loaded: %s',
                 domain, ", ".join(missing_deps))
             return False
+
+        if hasattr(component, 'CONFIG_SCHEMA'):
+            try:
+                config = component.CONFIG_SCHEMA(config)
+            except vol.MultipleInvalid as ex:
+                _LOGGER.error('Invalid config for [%s]: %s', domain, ex)
+                return False
+
+        elif hasattr(component, 'PLATFORM_SCHEMA'):
+            platforms = []
+            for p_name, p_config in config_per_platform(config, domain):
+                # Validate component specific platform schema
+                try:
+                    p_validated = component.PLATFORM_SCHEMA(p_config)
+                except vol.MultipleInvalid as ex:
+                    _LOGGER.error('Invalid platform config for [%s]: %s. %s',
+                                  domain, ex, p_config)
+                    return False
+
+                # Not all platform components follow same pattern for platforms
+                # Sof if p_name is None we are not going to validate platform
+                # (the automation component is one of them)
+                if p_name is None:
+                    platforms.append(p_validated)
+                    continue
+
+                platform = prepare_setup_platform(hass, config, domain,
+                                                  p_name)
+
+                if platform is None:
+                    return False
+
+                # Validate platform specific schema
+                if hasattr(platform, 'PLATFORM_SCHEMA'):
+                    try:
+                        p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    except vol.MultipleInvalid as ex:
+                        _LOGGER.error(
+                            'Invalid platform config for [%s.%s]: %s. %s',
+                            domain, p_name, ex, p_config)
+                        return False
+
+                platforms.append(p_validated)
+
+            # Create a copy of the configuration with all config for current
+            # component removed and add validated config back in.
+            filter_keys = extract_domain_configs(config, domain)
+            config = {key: value for key, value in config.items()
+                      if key not in filter_keys}
+            config[domain] = platforms
 
         if not _handle_requirements(hass, component, domain):
             return False
@@ -130,7 +182,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
-    platform = loader.get_component(platform_path)
+    platform = loader.get_platform(domain, platform_name)
 
     # Not found
     if platform is None:
@@ -176,8 +228,14 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    try:
+        process_ha_core_config(hass, config_util.CORE_CONFIG_SCHEMA(
+            config.get(core.DOMAIN, {})))
+    except vol.MultipleInvalid as ex:
+        _LOGGER.error('Invalid config for [homeassistant]: %s', ex)
+        return None
+
     process_ha_config_upgrade(hass)
-    process_ha_core_config(hass, config.get(core.DOMAIN, {}))
 
     if enable_log:
         enable_logging(hass, verbose, daemon, log_rotate_days)
@@ -262,8 +320,7 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                 }
             ))
         except ImportError:
-            _LOGGER.warning(
-                "Colorlog package not found, console coloring disabled")
+            pass
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
@@ -336,40 +393,28 @@ def process_ha_core_config(hass, config):
         else:
             _LOGGER.error('Received invalid time zone %s', time_zone_str)
 
-    for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
-                           (CONF_LONGITUDE, 'longitude', float),
-                           (CONF_NAME, 'location_name', str)):
+    for key, attr in ((CONF_LATITUDE, 'latitude'),
+                      (CONF_LONGITUDE, 'longitude'),
+                      (CONF_NAME, 'location_name')):
         if key in config:
-            try:
-                setattr(hac, attr, typ(config[key]))
-            except ValueError:
-                _LOGGER.error('Received invalid %s value for %s: %s',
-                              typ.__name__, key, attr)
+            setattr(hac, attr, config[key])
 
-    set_time_zone(config.get(CONF_TIME_ZONE))
+    if CONF_TIME_ZONE in config:
+        set_time_zone(config.get(CONF_TIME_ZONE))
 
-    customize = config.get(CONF_CUSTOMIZE)
-
-    if isinstance(customize, dict):
-        for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
-            if not isinstance(attrs, dict):
-                continue
-            Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
+    for entity_id, attrs in config.get(CONF_CUSTOMIZE).items():
+        Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
 
     if CONF_TEMPERATURE_UNIT in config:
-        unit = config[CONF_TEMPERATURE_UNIT]
-
-        if unit == 'C':
-            hac.temperature_unit = TEMP_CELCIUS
-        elif unit == 'F':
-            hac.temperature_unit = TEMP_FAHRENHEIT
+        hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
 
     # If we miss some of the needed values, auto detect them
     if None not in (
             hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
         return
 
-    _LOGGER.info('Auto detecting location and temperature unit')
+    _LOGGER.warning('Incomplete core config. Auto detecting location and '
+                    'temperature unit')
 
     info = loc_util.detect_location_info()
 

@@ -14,7 +14,7 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as location_util
 
-REQUIREMENTS = ['astral==0.9']
+REQUIREMENTS = ['astral==1.0']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
@@ -113,8 +113,8 @@ def setup(hass, config):
 
     from astral import Location
 
-    location = Location(('', '', latitude, longitude, hass.config.time_zone,
-                         elevation))
+    location = Location(('', '', latitude, longitude,
+                         hass.config.time_zone.zone, elevation))
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())

@@ -12,6 +12,8 @@ import threading
 from datetime import timedelta
 from itertools import islice
 
+import voluptuous as vol
+
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_TIME_CHANGED, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -21,7 +23,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.service import (call_from_config,
                                            validate_service_call)
-from homeassistant.util import slugify
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -41,6 +43,71 @@ ATTR_LAST_ACTION = 'last_action'
 ATTR_CAN_CANCEL = 'can_cancel'
 
 _LOGGER = logging.getLogger(__name__)
+
+_ALIAS_VALIDATOR = vol.Schema(cv.string)
+
+
+def _alias_stripper(validator):
+    """Strip alias from object for validation."""
+    def validate(value):
+        """Validate without alias value."""
+        value = value.copy()
+        alias = value.pop(CONF_ALIAS, None)
+
+        if alias is not None:
+            alias = _ALIAS_VALIDATOR(alias)
+
+        value = validator(value)
+
+        if alias is not None:
+            value[CONF_ALIAS] = alias
+
+        return value
+
+    return validate
+
+
+_TIMESPEC = vol.Schema({
+    'days': cv.positive_int,
+    'hours': cv.positive_int,
+    'minutes': cv.positive_int,
+    'seconds': cv.positive_int,
+    'milliseconds': cv.positive_int,
+})
+_TIMESPEC_REQ = cv.has_at_least_one_key(
+    'days', 'hours', 'minutes', 'seconds', 'milliseconds',
+)
+
+_DELAY_SCHEMA = vol.Any(
+    vol.Schema({
+        vol.Required(CONF_DELAY): vol.All(_TIMESPEC.extend({
+            vol.Optional(CONF_ALIAS): cv.string
+        }), _TIMESPEC_REQ)
+    }),
+    # Alternative format in case people forgot to indent after 'delay:'
+    vol.All(_TIMESPEC.extend({
+        vol.Required(CONF_DELAY): None,
+        vol.Optional(CONF_ALIAS): cv.string,
+    }), _TIMESPEC_REQ)
+)
+
+_EVENT_SCHEMA = cv.EVENT_SCHEMA.extend({
+    CONF_ALIAS: cv.string,
+})
+
+_SCRIPT_ENTRY_SCHEMA = vol.Schema({
+    CONF_ALIAS: cv.string,
+    vol.Required(CONF_SEQUENCE): vol.All(vol.Length(min=1), [vol.Any(
+        _EVENT_SCHEMA,
+        _DELAY_SCHEMA,
+        # Can't extend SERVICE_SCHEMA because it is an vol.All
+        _alias_stripper(cv.SERVICE_SCHEMA),
+    )]),
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    vol.Required(DOMAIN): {cv.slug: _SCRIPT_ENTRY_SCHEMA}
+}, extra=vol.ALLOW_EXTRA)
 
 
 def is_on(hass, entity_id):
@@ -73,22 +140,12 @@ def setup(hass, config):
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script = component.entities.get(entity_id)
-        if not script:
-            return
         if script.is_on:
             _LOGGER.warning("Script %s already running.", entity_id)
             return
         script.turn_on()
 
     for object_id, cfg in config[DOMAIN].items():
-        if object_id != slugify(object_id):
-            _LOGGER.warning("Found invalid key for script: %s. Use %s instead",
-                            object_id, slugify(object_id))
-            continue
-        if not isinstance(cfg.get(CONF_SEQUENCE), list):
-            _LOGGER.warning("Key 'sequence' for script %s should be a list",
-                            object_id)
-            continue
         alias = cfg.get(CONF_ALIAS, object_id)
         script = Script(object_id, alias, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
@@ -186,7 +243,9 @@ class Script(ToggleEntity):
                         self._listener = None
                         self.turn_on()
 
-                    delay = timedelta(**action[CONF_DELAY])
+                    timespec = action[CONF_DELAY] or action.copy()
+                    timespec.pop(CONF_DELAY, None)
+                    delay = timedelta(**timespec)
                     self._listener = track_point_in_utc_time(
                         self.hass, script_delay, date_util.utcnow() + delay)
                     self._cur = cur + 1
