@@ -13,7 +13,8 @@ from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
-from homeassistant.components import ecobee
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components import (ecobee, zwave)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELCIUS)
@@ -44,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_PLATFORMS = {
     ecobee.DISCOVER_THERMOSTAT: 'ecobee',
+    zwave.DISCOVER_THERMOSTATS: 'zwave'
 }
 
 
@@ -123,6 +125,9 @@ def setup(hass, config):
             service.data.get(ATTR_TEMPERATURE), float)
 
         if temperature is None:
+            _LOGGER.error(
+                "Received call to %s without attribute %s",
+                SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE)
             return
 
         for thermostat in target_thermostats:
@@ -177,14 +182,15 @@ class ThermostatDevice(Entity):
         """Return the optional state attributes."""
         data = {
             ATTR_CURRENT_TEMPERATURE:
-            self._convert(self.current_temperature, 1),
-            ATTR_MIN_TEMP: self._convert(self.min_temp, 1),
-            ATTR_MAX_TEMP: self._convert(self.max_temp, 1),
-            ATTR_TEMPERATURE: self._convert(self.target_temperature, 1),
+            self._convert_for_display(self.current_temperature),
+            ATTR_MIN_TEMP: self._convert_for_display(self.min_temp),
+            ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
+            ATTR_TEMPERATURE:
+            self._convert_for_display(self.target_temperature),
             ATTR_TEMPERATURE_LOW:
-            self._convert(self.target_temperature_low, 1),
+            self._convert_for_display(self.target_temperature_low),
             ATTR_TEMPERATURE_HIGH:
-            self._convert(self.target_temperature_high, 1),
+            self._convert_for_display(self.target_temperature_high),
         }
 
         operation = self.operation
@@ -271,12 +277,18 @@ class ThermostatDevice(Entity):
         """Return the maximum temperature."""
         return round(convert(35, TEMP_CELCIUS, self.unit_of_measurement))
 
-    def _convert(self, temp, round_dec=None):
-        """Convert temperature into user preferred temperature."""
+    def _convert_for_display(self, temp):
+        """Convert temperature into preferred units for display purposes."""
         if temp is None:
             return None
 
         value = convert(temp, self.unit_of_measurement,
                         self.hass.config.temperature_unit)
 
-        return value if round_dec is None else round(value, round_dec)
+        if self.hass.config.temperature_unit is TEMP_CELCIUS:
+            decimal_count = 1
+        else:
+            # Users of fahrenheit generally expect integer units.
+            decimal_count = 0
+
+        return round(value, decimal_count)

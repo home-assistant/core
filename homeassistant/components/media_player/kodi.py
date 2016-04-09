@@ -9,7 +9,8 @@ import urllib
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
@@ -17,7 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['jsonrpc-requests==0.1']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
+    SUPPORT_PLAY_MEDIA
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,7 +52,7 @@ class KodiDevice(MediaPlayerDevice):
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url),
             auth=auth)
-        self._players = None
+        self._players = list()
         self._properties = None
         self._item = None
         self._app_properties = None
@@ -67,8 +69,9 @@ class KodiDevice(MediaPlayerDevice):
         try:
             return self._server.Player.GetActivePlayers()
         except jsonrpc_requests.jsonrpc.TransportError:
-            _LOGGER.warning('Unable to fetch kodi data')
-            _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
+            if self._players is not None:
+                _LOGGER.warning('Unable to fetch kodi data')
+                _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
             return None
 
     @property
@@ -267,3 +270,7 @@ class KodiDevice(MediaPlayerDevice):
             self._server.Player.Seek(players[0]['playerid'], time)
 
         self.update_ha_state()
+
+    def play_media(self, media_type, media_id):
+        """Send the play_media command to the media player."""
+        self._server.Player.Open({media_type: media_id}, {})

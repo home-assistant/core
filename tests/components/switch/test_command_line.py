@@ -6,6 +6,7 @@ import unittest
 
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
+import homeassistant.components.switch.command_line as command_line
 
 from tests.common import get_test_home_assistant
 
@@ -155,3 +156,21 @@ class TestCommandSwitch(unittest.TestCase):
 
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
+
+    def test_assumed_state_should_be_true_if_command_state_is_false(self):
+        """Test with state value."""
+        self.hass = get_test_home_assistant()
+
+        # Set state command to false
+        statecmd = False
+
+        no_state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
+                                                     "echo", statecmd, None)
+        self.assertTrue(no_state_device.assumed_state)
+
+        # Set state command
+        statecmd = 'cat {}'
+
+        state_device = command_line.CommandSwitch(self.hass, "Test", "echo",
+                                                  "echo", statecmd, None)
+        self.assertFalse(state_device.assumed_state)
