@@ -9,7 +9,8 @@ import threading
 from datetime import timedelta
 
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
+ CONF_PORT
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
