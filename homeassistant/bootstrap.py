@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
     TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
@@ -293,7 +294,10 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
     enable_logging(hass, verbose, daemon, log_rotate_days)
 
-    config_dict = config_util.load_yaml_config_file(config_path)
+    try:
+        config_dict = config_util.load_yaml_config_file(config_path)
+    except HomeAssistantError:
+        return None
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
