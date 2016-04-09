@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import (
-    group, wemo, wink, isy994, verisure,
+    group, insteon_hub, wemo, wink, isy994, verisure,
     zwave, tellduslive, tellstick, mysensors, vera)
 
 DOMAIN = 'switch'
@@ -37,6 +37,7 @@ DISCOVERY_PLATFORMS = {
     wemo.DISCOVER_SWITCHES: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
+    'insteon_hub.switch': 'insteon_hub',
     verisure.DISCOVER_SWITCHES: 'verisure',
     zwave.DISCOVER_SWITCHES: 'zwave',
     tellduslive.DISCOVER_SWITCHES: 'tellduslive',
