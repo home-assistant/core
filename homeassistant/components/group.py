@@ -145,7 +145,7 @@ def setup(hass, config):
     """Setup all groups found definded in the configuration."""
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
-        entity_ids = conf.get(CONF_ENTITIES, [])
+        entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
 
