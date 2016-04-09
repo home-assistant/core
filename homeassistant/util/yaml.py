@@ -2,7 +2,6 @@
 import logging
 import os
 from collections import Counter, OrderedDict
-
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
@@ -39,7 +38,10 @@ def _ordered_dict(loader, node):
     nodes = loader.construct_pairs(node)
     dups = [k for k, v in Counter(k for k, _ in nodes).items() if v > 1]
     if dups:
-        raise yaml.YAMLError("ERROR: duplicate keys: {}".format(dups))
+        msg = ', '.join('{}=…'.format(item[0]) for item in nodes)
+        raise yaml.YAMLError("ERROR: duplicate keys:"
+                             " {} in configuration of: {}"
+                             .format(dups, msg))
     return OrderedDict(nodes)
 
 
