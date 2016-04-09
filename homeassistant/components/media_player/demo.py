@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
         DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
-        DemoMusicPlayer(), DemoTVShowPlayer(), DemoReceiver(),
+        DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 
 
@@ -35,9 +35,7 @@ MUSIC_PLAYER_SUPPORT = \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-
-RECEIVER_SUPPORT = SUPPORT_SELECT_SOURCE
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -269,6 +267,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         super().__init__('Lounge room')
         self._cur_episode = 1
         self._episode_count = 13
+        self._source = 'dvd'
 
     @property
     def media_content_id(self):
@@ -316,6 +315,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return "Netflix"
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._source
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
@@ -340,28 +344,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
             self._cur_episode += 1
             self.update_ha_state()
 
-
-class DemoReceiver(AbstractDemoPlayer):
-    """A Demo receiver that only supports changing source input."""
-
-    # We only implement the methods that we support
-    # pylint: disable=abstract-method
-    def __init__(self):
-        """Initialize the demo device."""
-        super().__init__('receiver')
-        self._source = 'dvd'
-
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self._source
-
     def select_source(self, source):
         """Set the input source."""
         self._source = source
         self.update_ha_state()
-
-    @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
-        return RECEIVER_SUPPORT
