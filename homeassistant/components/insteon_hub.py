@@ -26,6 +26,19 @@ DISCOVERY = {
     'switch': DOMAIN + '.switch',
     'sensor': DOMAIN + '.sensor'}
 
+def filter(devices, categories):
+    categories = (categories  
+        if isinstance(categories, list) 
+        else [categories])
+    matchingDevices = []
+    for device in devices:
+        if any( 
+            device.DevCat == c['DevCat'] and 
+            ('SubCat' not in c or device.SubCat in c['SubCat'])
+            for c in  categories):
+                matchingDevices.append(device)
+    return matchingDevices
+
 def setup(hass, config):
     """Setup Insteon Hub component.
 
