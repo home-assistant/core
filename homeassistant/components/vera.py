@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['pyvera==0.2.8']
+REQUIREMENTS = ['pyvera==0.2.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ def setup(hass, base_config):
                                   (LIGHT, DISCOVER_LIGHTS),
                                   (SWITCH, DISCOVER_SWITCHES))):
         component = get_component(comp_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
+        bootstrap.setup_component(hass, component.DOMAIN, base_config)
         hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
                       {ATTR_SERVICE: discovery,
                        ATTR_DISCOVERED: {}})

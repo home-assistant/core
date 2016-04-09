@@ -9,7 +9,8 @@ import logging
 import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS)
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS,
+    CONF_OPTIMISTIC)
 from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
@@ -19,7 +20,6 @@ CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
 CONF_BAUD_RATE = 'baud_rate'
-CONF_OPTIMISTIC = 'optimistic'
 DEFAULT_VERSION = '1.4'
 DEFAULT_BAUD_RATE = 115200
 

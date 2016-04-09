@@ -8,7 +8,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 
@@ -35,7 +35,7 @@ MUSIC_PLAYER_SUPPORT = \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -267,6 +267,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         super().__init__('Lounge room')
         self._cur_episode = 1
         self._episode_count = 13
+        self._source = 'dvd'
 
     @property
     def media_content_id(self):
@@ -314,6 +315,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return "Netflix"
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._source
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
@@ -337,3 +343,8 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
             self.update_ha_state()
+
+    def select_source(self, source):
+        """Set the input source."""
+        self._source = source
+        self.update_ha_state()

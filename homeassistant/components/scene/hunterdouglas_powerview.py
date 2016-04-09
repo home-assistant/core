@@ -6,7 +6,8 @@ https://home-assistant.io/components/scene/
 """
 import logging
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import Scene, DOMAIN
+from homeassistant.helpers.entity import generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = [
@@ -46,6 +47,10 @@ class PowerViewScene(Scene):
         self.hass = hass
         self.scene_data = scene_data
         self._sync_room_data(room_data)
+        self.entity_id_format = DOMAIN + '.{}'
+        self.entity_id = generate_entity_id(self.entity_id_format,
+                                            str(self.scene_data["id"]),
+                                            hass=hass)
 
     def _sync_room_data(self, room_data):
         """Sync the room data."""
@@ -57,7 +62,7 @@ class PowerViewScene(Scene):
     @property
     def name(self):
         """Return the name of the scene."""
-        return self.scene_data["name"]
+        return str(self.scene_data["name"])
 
     @property
     def device_state_attributes(self):

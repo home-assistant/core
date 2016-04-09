@@ -1,8 +1,10 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.16.1"
+__version__ = "0.17.0"
 REQUIRED_PYTHON_VER = (3, 4)
+
+PLATFORM_FORMAT = '{}.{}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -27,6 +29,7 @@ CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
+CONF_OPTIMISTIC = 'optimistic'
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 

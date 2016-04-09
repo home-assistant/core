@@ -1,6 +1,7 @@
 """The tests for the MQTT automation."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.automation as automation
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
@@ -12,6 +13,7 @@ class TestAutomationMQTT(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         mock_mqtt_component(self.hass)
         self.calls = []
 
@@ -26,7 +28,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_fires_on_topic_match(self):
         """Test if message is fired on topic match."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',
@@ -36,7 +38,7 @@ class TestAutomationMQTT(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'test-topic', '')
         self.hass.pool.block_till_done()
@@ -44,7 +46,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_fires_on_topic_and_payload_match(self):
         """Test if message is fired on topic and payload match."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',
@@ -55,7 +57,7 @@ class TestAutomationMQTT(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'test-topic', 'hello')
         self.hass.pool.block_till_done()
@@ -63,7 +65,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
     def test_if_not_fires_on_topic_but_no_payload_match(self):
         """Test if message is not fired on topic but no payload."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'mqtt',
@@ -74,7 +76,7 @@ class TestAutomationMQTT(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_mqtt_message(self.hass, 'test-topic', 'no-hello')
         self.hass.pool.block_till_done()
