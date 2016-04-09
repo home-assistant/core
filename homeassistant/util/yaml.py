@@ -29,10 +29,9 @@ def load_yaml(fname):
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
             return yaml.load(conf_file, Loader=SafeLineLoader) or {}
-    except yaml.YAMLError:
-        error = 'Error reading YAML configuration file {}'.format(fname)
-        _LOGGER.exception(error)
-        raise HomeAssistantError(error)
+    except yaml.YAMLError as exc:
+        _LOGGER.error(exc)
+        raise HomeAssistantError(exc)
 
 
 def _include_yaml(loader, node):
@@ -55,9 +54,12 @@ def _ordered_dict(loader, node):
         line = getattr(node, '__line__', 'unknown')
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
-            raise yaml.YAMLError("ERROR: duplicate key: \"{}\""
-                                 " in {} line {} and {}"
-                                 .format(key, fname, seen[key], line))
+            first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
+            second_mark = yaml.Mark(fname, 0, line, -1, None, None)
+            raise yaml.MarkedYAMLError(
+                context="duplicate key: \"{}\"".format(key),
+                context_mark=first_mark, problem_mark=second_mark,
+            )
         seen[key] = line
 
     return OrderedDict(nodes)
