@@ -65,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
     }),
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
