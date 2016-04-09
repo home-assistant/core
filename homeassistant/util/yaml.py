@@ -1,7 +1,7 @@
 """YAML utility functions."""
 import logging
 import os
-from collections import Counter, OrderedDict
+from collections import OrderedDict
 
 import yaml
 
@@ -10,13 +10,25 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-ancestors
+class SafeLineLoader(yaml.SafeLoader):
+    """Loader class that keeps track of line numbers."""
+
+    def compose_node(self, parent, index):
+        """Annotate a node with the first line it was seen."""
+        last_line = self.line
+        node = super(SafeLineLoader, self).compose_node(parent, index)
+        node.__line__ = last_line + 1
+        return node
+
+
 def load_yaml(fname):
     """Load a YAML file."""
     try:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
-            return yaml.safe_load(conf_file) or {}
+            return yaml.load(conf_file, Loader=SafeLineLoader) or {}
     except yaml.YAMLError:
         error = 'Error reading YAML configuration file {}'.format(fname)
         _LOGGER.exception(error)
@@ -37,11 +49,18 @@ def _ordered_dict(loader, node):
     """Load YAML mappings into an ordered dict to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
-    dups = [k for k, v in Counter(k for k, _ in nodes).items() if v > 1]
-    if dups:
-        raise yaml.YAMLError("ERROR: duplicate keys: {}".format(dups))
-    return OrderedDict(nodes)
 
+    seen = {}
+    for (key, _), (node, _) in zip(nodes, node.value):
+        line = getattr(node, '__line__', 'unknown')
+        if key in seen:
+            fname = getattr(loader.stream, 'name', '')
+            raise yaml.YAMLError("ERROR: duplicate key: \"{}\""
+                                 " in {} line {} and {}"
+                                 .format(key, fname, seen[key], line))
+        seen[key] = line
+
+    return OrderedDict(nodes)
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
