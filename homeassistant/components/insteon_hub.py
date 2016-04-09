@@ -71,24 +71,50 @@ def setup(hass, config):
             { ATTR_SERVICE: DISCOVERY[deviceClass], ATTR_DISCOVERED: {}})
     return True
 
-
-class InsteonToggleDevice(ToggleEntity):
+class InsteonDevice(Entity):
     """An abstract Class for an Insteon node."""
 
     def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self._value = 0
 
     @property
     def name(self):
-        """Return the the name of the node."""
+        """Return the name of the node."""
         return self.node.DeviceName
 
     @property
     def unique_id(self):
         """Return the ID of this insteon node."""
         return self.node.DeviceID
+
+    def update(self):
+        """Update state of the device."""
+        pass
+
+class InsteonSensorDevice(InsteonDevice, Entity):
+    """An abstract Class for an Insteon node."""
+
+    def __init__(self, node):
+        super(InsteonSensorDevice, self).__init__(node)
+        self._state = 0
+
+    def update(self):
+        """Update state of the sensor."""
+        resp = self.node.send_command('get_relay_status', wait=True)
+        try:
+            _LOGGER.debug(str(resp))
+            self._state = resp
+        except KeyError:
+            pass
+
+class InsteonToggleDevice(InsteonDevice, ToggleEntity):
+    """An abstract Class for an Insteon node."""
+
+    def __init__(self, node):
+        """Initialize the device."""
+        super(InsteonToggleDevice, self).__init__(node)
+        self._value = 0
 
     def update(self):
         """Update state of the sensor."""
@@ -105,8 +131,33 @@ class InsteonToggleDevice(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.node.send_command('on')
+        self.node.send_command('on', { 'level':100 },  wait=True)
+        self.update()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.node.send_command('off')
+        self.node.send_command('off', wait=True)
+        self.update()
+
+class InsteonFanDevice(HMLOEntity, InsteonDevice):
+    """An abstract class for an Insteon node."""
+
+    def __init__(self, node):
+        super(InsteonFanDevice, self).__init__(node)
+        self._value = STATE_UNKNOWN
+
+    def update(self):
+        """Update state of the sensor."""
+        resp = self.node.send_command('get_status', wait=True)
+        _LOGGER.error(str(resp))
+
+    @property
+    def state(self):
+        """Get's the current fan speed."""
+        return self._value;
+
+    def set_level(self, level, **kwargs):
+        """Set's the fan speed."""
+        self.node.send_command('fan', {'speed': level}, wait=True)
+        self._value = level
+        self.state = level
