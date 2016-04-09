@@ -92,8 +92,8 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
-    ATTR_FLASH: [FLASH_SHORT, FLASH_LONG],
-    ATTR_EFFECT: [EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE],
+    ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
+    ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
