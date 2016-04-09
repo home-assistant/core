@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
     indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
     calib_factor = util.convert(config.get(CONF_CALIBRATION_FACTOR),
-                               float, None)
+                                float, None)
 
     if None in (indoor_temp_sensor,
                 outdoor_temp_sensor, indoor_humidity_sensor):

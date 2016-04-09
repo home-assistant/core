@@ -3,7 +3,7 @@ import unittest
 
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT,
-                                 TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                                 TEMP_CELCIUS)
 
 from tests.common import get_test_home_assistant
 
@@ -33,10 +33,8 @@ class TestSensorMoldIndicator(unittest.TestCase):
                 'indoor_temp_sensor': 'test.indoortemp',
                 'outdoor_temp_sensor': 'test.outdoortemp',
                 'indoor_humidity_sensor': 'test.indoorhumidity',
-                'calibration_factor': 2.0
+                'calibration_factor': '2.0'
             }
         }))
 
         moldind = self.hass.states.get('sensor.moldindicator')
-        print(moldind.state)
-       # self.assertEqual('')
