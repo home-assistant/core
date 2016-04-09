@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, STATE_UNKNOWN, STATE_OFF, STATE_UNKNOWN,
     STATE_LOW, STATE_MED, STATE_HIGH, STATE_ON)
 from homeassistant.helpers import validate_config
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import (Entity, ToggleEntity, HMLOEntity)
 from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"
