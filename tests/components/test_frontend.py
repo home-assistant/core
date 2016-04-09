@@ -55,6 +55,11 @@ class TestFrontend(unittest.TestCase):
         """Stop everything that was started."""
         hass.pool.block_till_done()
 
+    def test_http_version(self):
+        """Test HTTP version."""
+        HTTP_1_1 = 11
+        self.assertEqual(HTTP_1_1, requests.get(HTTP_BASE_URL).raw.version)
+
     def test_frontend_and_static(self):
         """Test if we can get the frontend."""
         req = requests.get(_url(""))

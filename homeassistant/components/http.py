@@ -166,7 +166,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         # Track if this was an authenticated request
         self.authenticated = False
         SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
-        self.protocol_version = 'HTTP/1.1'
 
     def log_message(self, fmt, *arguments):
         """Redirect built-in log to HA logging."""
@@ -177,12 +176,15 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 fmt, *(arg.replace(self.server.api_password, '*******')
                        if isinstance(arg, str) else arg for arg in arguments))
 
-    def _handle_request(self, method):  # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
+    def _handle_request(self, method):
         """Perform some common checks and call appropriate method."""
         url = urlparse(self.path)
 
         # Read query input. parse_qs gives a list for each value, we want last
         data = {key: data[-1] for key, data in parse_qs(url.query).items()}
+
+        self.protocol_version = 'HTTP/1.1'
 
         # Did we get post input ?
         content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
