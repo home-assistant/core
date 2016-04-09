@@ -29,9 +29,9 @@ def load_yaml(fname):
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
             return yaml.load(conf_file, Loader=SafeLineLoader) or {}
-    except yaml.YAMLError:
-        error = 'Error reading YAML configuration file {}'.format(fname)
-        _LOGGER.exception(error)
+    except yaml.YAMLError as e:
+        error = 'Error reading YAML configuration file {}: {}'.format(fname, e)
+        _LOGGER.error(error)
         raise HomeAssistantError(error)
 
 
