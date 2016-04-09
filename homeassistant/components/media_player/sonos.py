@@ -94,6 +94,7 @@ class SonosDevice(MediaPlayerDevice):
     def __init__(self, hass, player):
         """Initialize the Sonos device."""
         self.hass = hass
+        self.volume_increment = 5
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
@@ -197,30 +198,26 @@ class SonosDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_SONOS
 
-    @only_if_coordinator
-    def turn_off(self):
-        """Turn off media player."""
-        self._player.pause()
-
-    @only_if_coordinator
     def volume_up(self):
         """Volume up media player."""
-        self._player.volume += 1
+        self._player.volume += self.volume_increment
 
-    @only_if_coordinator
     def volume_down(self):
         """Volume down media player."""
-        self._player.volume -= 1
+        self._player.volume -= self.volume_increment
 
-    @only_if_coordinator
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
 
-    @only_if_coordinator
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
+
+    @only_if_coordinator
+    def turn_off(self):
+        """Turn off media player."""
+        self._player.pause()
 
     @only_if_coordinator
     def media_play(self):

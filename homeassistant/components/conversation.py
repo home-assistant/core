@@ -6,6 +6,7 @@ https://home-assistant.io/components/conversation/
 """
 import logging
 import re
+import warnings
 
 from homeassistant import core
 from homeassistant.const import (
@@ -24,6 +25,7 @@ REQUIREMENTS = ['fuzzywuzzy==0.8.0']
 
 def setup(hass, config):
     """Register the process service."""
+    warnings.filterwarnings('ignore', module='fuzzywuzzy')
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)

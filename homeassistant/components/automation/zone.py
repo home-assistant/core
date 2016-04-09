@@ -4,12 +4,13 @@ Offer zone automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#zone-trigger
 """
-import logging
+import voluptuous as vol
 
 from homeassistant.components import zone
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL)
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL, CONF_PLATFORM)
 from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
 
 CONF_ENTITY_ID = "entity_id"
 CONF_ZONE = "zone"
@@ -18,19 +19,26 @@ EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
 
+TRIGGER_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'zone',
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ZONE): cv.entity_id,
+    vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
+        vol.Any(EVENT_ENTER, EVENT_LEAVE),
+})
+
+IF_ACTION_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'zone',
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ZONE): cv.entity_id,
+})
+
 
 def trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
-
-    if entity_id is None or zone_entity_id is None:
-        logging.getLogger(__name__).error(
-            "Missing trigger configuration key %s or %s", CONF_ENTITY_ID,
-            CONF_ZONE)
-        return False
-
-    event = config.get(CONF_EVENT, DEFAULT_EVENT)
+    event = config.get(CONF_EVENT)
 
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
@@ -58,12 +66,6 @@ def if_action(hass, config):
     """Wrap action method with zone based condition."""
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
-
-    if entity_id is None or zone_entity_id is None:
-        logging.getLogger(__name__).error(
-            "Missing condition configuration key %s or %s", CONF_ENTITY_ID,
-            CONF_ZONE)
-        return False
 
     def if_in_zone():
         """Test if condition."""
