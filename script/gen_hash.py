@@ -1,15 +1,30 @@
 #!/usr/bin/python3
-"""Generate hashes from given strings."""
+"""Generate a SHA512 hash from a given string."""
 import getpass
-from passlib import hash
+import hashlib
+import uuid
 
-response1 = getpass.getpass('Please enter your string/password/API key: ')
-response2 = getpass.getpass('Please enter the string/password/API key again: ')
 
-hashed = hash.sha256_crypt.encrypt(response1)
+def hash_password(password):
+    """Create a hash of the given password"""
+    salt = uuid.uuid4().hex
+    return hashlib.sha512(
+        salt.encode() + password.encode()).hexdigest() + ':' + salt
 
-if hash.sha256_crypt.verify(response2, hashed):
-    print('Put the hash in your configuration.yaml file.')
+
+def check_password(hashed_password, plain_password):
+    """Check the given password against the re-entered one."""
+    password, salt = hashed_password.split(':')
+    return password == hashlib.sha512(
+        salt.encode() + plain_password.encode()).hexdigest()
+
+response1 = getpass.getpass('Please enter your password: ')
+response2 = getpass.getpass('Please enter your password again: ')
+
+hashed = hash_password(response1)
+
+if check_password(hashed, response2):
+    print('\nPut the hash in your configuration.yaml file.')
     print(hashed)
 else:
     print('No match! Please try again.')
