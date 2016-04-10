@@ -15,6 +15,8 @@ from homeassistant.helpers.temperature import convert
 
 REQUIREMENTS = []
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_ADDRESS = 'address'
 CONF_DEVICES = 'devices'
 CONF_ID = 'id'
@@ -27,38 +29,80 @@ PROPERTY_CONTROL_MODE = 'CONTROL_MODE'
 PROPERTY_BURST_MODE = 'BURST_RX'
 TYPE_HM_THERMOSTAT = 'HOMEMATIC_THERMOSTAT'
 TYPE_HM_WALLTHERMOSTAT = 'HOMEMATIC_WALLTHERMOSTAT'
-TYPE_MAX = 'MAX'
+TYPE_MAX_THERMOSTAT = 'MAX_THERMOSTAT'
 
-_LOGGER = logging.getLogger(__name__)
+
+class HomematicConfig():
+    """Encapsulates the individual Parameters needed to access a HM device."""
+
+    def __init__(self, device_type, platform_type, channel, maint_channel):
+        """Initialize the Config."""
+        self._device_type = device_type
+        self._platform_type = platform_type
+        self._channel = channel
+        self._maint_channel = maint_channel
+
+    @property
+    def device_type(self):
+        """Return the device type."""
+        return self._device_type
+
+    @property
+    def platform_type(self):
+        """Return the platform type."""
+        return self._platform_type
+
+    @property
+    def channel(self):
+        """Return the channel."""
+        return self._channel
+
+    @property
+    def maint_channel(self):
+        """Return the maintenance channel."""
+        return self._maint_channel
+
+
+HM_TYPE_MAPPING = {
+    'HM-CC-RT-DN': HomematicConfig('HM-CC-RT-DN',
+                                   TYPE_HM_THERMOSTAT,
+                                   4, 4),
+    'HM-CC-RT-DN-BoM': HomematicConfig('HM-CC-RT-DN-BoM',
+                                       TYPE_HM_THERMOSTAT,
+                                       4, 4),
+    'HM-TC-IT-WM-W-EU': HomematicConfig('HM-TC-IT-WM-W-EU',
+                                        TYPE_HM_WALLTHERMOSTAT,
+                                        2, 2),
+    'BC-RT-TRX-CyG': HomematicConfig('BC-RT-TRX-CyG',
+                                     TYPE_MAX_THERMOSTAT,
+                                     1, 0),
+    'BC-RT-TRX-CyG-2': HomematicConfig('BC-RT-TRX-CyG-2',
+                                       TYPE_MAX_THERMOSTAT,
+                                       1, 0),
+    'BC-RT-TRX-CyG-3': HomematicConfig('BC-RT-TRX-CyG-3',
+                                       TYPE_MAX_THERMOSTAT,
+                                       1, 0)
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic thermostat."""
     devices = []
     try:
+        address = config[CONF_ADDRESS]
+        homegear = ServerProxy(address)
+
         for name, device_cfg in config[CONF_DEVICES].items():
-            address = config[CONF_ADDRESS]
-            homegear = ServerProxy(address)
             # get device description to detect the type
             device_type = homegear.getDeviceDescription(
                 device_cfg[CONF_ID] + ':-1')['TYPE']
 
-            if device_type in ['HM-CC-RT-DN', 'HM-CC-RT-DN-BoM']:
-                devices.append(HomematicThermostat(TYPE_HM_THERMOSTAT,
-                                                   address,
-                                                   device_cfg[CONF_ID],
-                                                   name))
-            elif device_type in ['BC-RT-TRX-CyG', 'BC-RT-TRX-CyG-2',
-                                 'BC-RT-TRX-CyG-3']:
-                devices.append(HomematicThermostat(TYPE_MAX,
-                                                   address,
-                                                   device_cfg[CONF_ID],
-                                                   name))
-            elif device_type == 'HM-TC-IT-WM-W-EU':
-                devices.append(HomematicThermostat(TYPE_HM_WALLTHERMOSTAT,
-                                                   address,
-                                                   device_cfg[CONF_ID],
-                                                   name))
+            if device_type in HM_TYPE_MAPPING.keys():
+                devices.append(HomematicThermostat(
+                    HM_TYPE_MAPPING[device_type],
+                    address,
+                    device_cfg[CONF_ID],
+                    name))
             else:
                 raise ValueError(
                     "Device Type '{}' currently not supported".format(
@@ -76,39 +120,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HomematicThermostat(ThermostatDevice):
     """Representation of a Homematic thermostat."""
 
-    def __init__(self, platform_type, address, _id, name):
+    def __init__(self, hm_config, address, _id, name):
         """Initialize the thermostat."""
-        self._platform_type = platform_type
-        # default to homematic thermostat
-        self._channel = 4
-        self._maint_channel = 4
-        if platform_type == TYPE_MAX:
-            self._channel = 1
-            self._maint_channel = 0
-        elif platform_type == TYPE_HM_THERMOSTAT:
-            self._channel = 4
-            self._maint_channel = 4
-        elif platform_type == TYPE_HM_WALLTHERMOSTAT:
-            self._channel = 2
-            self._maint_channel = 2
-
+        self._hm_config = hm_config
         self.address = address
         self._id = _id
         self._name = name
-        self._full_device_name = '{}:{}'.format(self._id, self._channel)
-        self._maint_device_name = '{}:{}'.format(self._id, self._maint_channel)
-
+        self._full_device_name = '{}:{}'.format(self._id,
+                                                self._hm_config.channel)
+        self._maint_device_name = '{}:{}'.format(self._id,
+                                                 self._hm_config.maint_channel)
         self._current_temperature = None
         self._target_temperature = None
         self._valve = None
         self._battery = None
         self._mode = None
         self.update()
-
-    @property
-    def should_poll(self):
-        """Homematic has to be polled."""
-        return True
 
     @property
     def name(self):
@@ -164,15 +191,18 @@ class HomematicThermostat(ThermostatDevice):
             self._target_temperature = device.getValue(
                 self._full_device_name,
                 PROPERTY_SET_TEMPERATURE)
+            self._valve = device.getValue(
+                self._full_device_name,
+                PROPERTY_VALVE_STATE)
+            self._mode = device.getValue(
+                self._full_device_name,
+                PROPERTY_CONTROL_MODE)
 
-            self._valve = device.getValue(self._full_device_name,
-                                          PROPERTY_VALVE_STATE)
-
-            if self._platform_type in [TYPE_HM_THERMOSTAT,
-                                       TYPE_HM_WALLTHERMOSTAT]:
+            if self._hm_config.platform_type in [TYPE_HM_THERMOSTAT,
+                                                 TYPE_HM_WALLTHERMOSTAT]:
                 self._battery = device.getValue(self._maint_device_name,
                                                 PROPERTY_BATTERY_STATE)
-            elif self._platform_type == TYPE_MAX:
+            elif self._hm_config.platform_type == TYPE_MAX_THERMOSTAT:
                 # emulate homematic battery voltage,
                 # max reports lowbat if voltage < 2.2V
                 # while homematic battery_state should
@@ -184,8 +214,6 @@ class HomematicThermostat(ThermostatDevice):
                 else:
                     self._battery = 4.6
 
-            self._mode = device.getValue(self._full_device_name,
-                                         PROPERTY_CONTROL_MODE)
         except Error:
             _LOGGER.exception("Did not receive any temperature data from the "
                               "homematic API.")
