@@ -10,7 +10,6 @@ import socket
 import random
 import string
 import hashlib
-import uuid
 from functools import wraps
 from types import MappingProxyType
 
