@@ -77,6 +77,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
         self.last_lock_time = None
 
     def set_graceful_lock(self, state):
+        """Set the graceful state."""
         self.graceful_state = state
         self.reset_update_lock()
         self.lock_update()
@@ -101,7 +102,8 @@ class ThinkingCleanerSwitch(ToggleEntity):
     def is_on(self):
         """Return true if device is on."""
         if self.type == 'clean':
-            return self.graceful_state if self.is_update_locked() else self._tc_object.is_cleaning
+            return self.graceful_state \
+                if self.is_update_locked() else self._tc_object.is_cleaning
 
         return False
 
@@ -125,4 +127,5 @@ class ThinkingCleanerSwitch(ToggleEntity):
         """Update the switch state (Only for clean)."""
         if self.type == 'clean' and not self.is_update_locked():
             self._tc_object.update()
-            self._state = STATE_ON if self._tc_object.is_cleaning else STATE_OFF
+            self._state = STATE_ON \
+                if self._tc_object.is_cleaning else STATE_OFF
