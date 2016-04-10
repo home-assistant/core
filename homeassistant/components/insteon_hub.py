@@ -188,5 +188,5 @@ class InsteonFanDevice(LevelEntity, InsteonDevice):
     def set_level(self, level, **kwargs):
         """Set's the fan speed."""
         resp = self.node.send_command('fan', {'speed': level}, wait=True)
-        if is_successful(resp):
+        if self.is_successful(resp):
             self._value = level
