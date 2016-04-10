@@ -38,16 +38,22 @@ _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
 
-def _validate_packetid(value):
+def validate_packetid(value):
+    """Validate that value is a valid packet id for rfxtrx."""
     if get_rfx_object(value):
         return value
     else:
         raise vol.Invalid('invalid packet id for {}'.format(value))
 
+# Share between rfxtrx platforms
+VALID_DEVICE_ID = vol.All(cv.string, vol.Lower)
+VALID_SENSOR_DEVICE_ID = vol.All(VALID_DEVICE_ID,
+                                 vol.truth(lambda val:
+                                           val.startswith('sensor_')))
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_PACKETID): _validate_packetid,
+    vol.Required(ATTR_PACKETID): validate_packetid,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
@@ -61,7 +67,7 @@ DEFAULT_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(ATTR_DEVICE): cv.string,
+        vol.Required(ATTR_DEVICE): VALID_DEVICE_ID,
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
     }),
