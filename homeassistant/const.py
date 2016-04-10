@@ -23,6 +23,7 @@ CONF_CUSTOMIZE = "customize"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
+CONF_PORT = "port"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
