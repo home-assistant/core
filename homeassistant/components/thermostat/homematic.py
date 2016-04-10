@@ -8,6 +8,7 @@ import logging
 import socket
 from xmlrpc.client import ServerProxy
 from xmlrpc.client import Error
+from collections import namedtuple
 
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
@@ -31,37 +32,11 @@ TYPE_HM_THERMOSTAT = 'HOMEMATIC_THERMOSTAT'
 TYPE_HM_WALLTHERMOSTAT = 'HOMEMATIC_WALLTHERMOSTAT'
 TYPE_MAX_THERMOSTAT = 'MAX_THERMOSTAT'
 
-
-class HomematicConfig():
-    """Encapsulates the individual Parameters needed to access a HM device."""
-
-    def __init__(self, device_type, platform_type, channel, maint_channel):
-        """Initialize the Config."""
-        self._device_type = device_type
-        self._platform_type = platform_type
-        self._channel = channel
-        self._maint_channel = maint_channel
-
-    @property
-    def device_type(self):
-        """Return the device type."""
-        return self._device_type
-
-    @property
-    def platform_type(self):
-        """Return the platform type."""
-        return self._platform_type
-
-    @property
-    def channel(self):
-        """Return the channel."""
-        return self._channel
-
-    @property
-    def maint_channel(self):
-        """Return the maintenance channel."""
-        return self._maint_channel
-
+HomematicConfig = namedtuple('HomematicConfig',
+                             ['device_type',
+                             'platform_type',
+                             'channel',
+                             'maint_channel'])
 
 HM_TYPE_MAPPING = {
     'HM-CC-RT-DN': HomematicConfig('HM-CC-RT-DN',
