@@ -109,7 +109,6 @@ class InsteonSensorDevice(InsteonDevice, Entity):
         """Update state of the sensor."""
         resp = self.node.send_command('get_relay_status', wait=True)
         try:
-            _LOGGER.debug(str(resp))
             self._state = resp
         except KeyError:
             pass
