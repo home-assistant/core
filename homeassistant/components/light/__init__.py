@@ -63,7 +63,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 DISCOVERY_PLATFORMS = {
     wemo.DISCOVER_LIGHTS: 'wemo',
     wink.DISCOVER_LIGHTS: 'wink',
-    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
+    insteon_hub.DISCOVERY[DOMAIN]: 'insteon_hub',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',

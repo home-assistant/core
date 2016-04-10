@@ -8,7 +8,9 @@ from homeassistant.components.insteon_hub import (INSTEON, InsteonToggleDevice, 
 
 DEVICE_CATEGORIES = [{
     'DevCat': 1,
-    'SubCat': [46]}]
+    'SubCat': [14, 66]},{
+    'DevCat': 2,
+    'SubCat': [31, 42, 44, 47, 57]}]
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
     devs = []
