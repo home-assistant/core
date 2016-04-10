@@ -70,7 +70,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return round(self.device.temperature, 1)
+        return self.device.temperature
 
     @property
     def operation(self):
@@ -102,21 +102,21 @@ class NestThermostat(ThermostatDevice):
         else:
             temp = target
 
-        return round(temp, 1)
+        return temp
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.device.mode == 'range':
-            return round(self.device.target[0], 1)
-        return round(self.target_temperature, 1)
+            return self.device.target[0]
+        return self.target_temperature
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
         if self.device.mode == 'range':
-            return round(self.device.target[1], 1)
-        return round(self.target_temperature, 1)
+            return self.device.target[1]
+        return self.target_temperature
 
     @property
     def is_away_mode_on(self):
