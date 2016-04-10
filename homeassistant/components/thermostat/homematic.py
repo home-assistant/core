@@ -34,9 +34,9 @@ TYPE_MAX_THERMOSTAT = 'MAX_THERMOSTAT'
 
 HomematicConfig = namedtuple('HomematicConfig',
                              ['device_type',
-                             'platform_type',
-                             'channel',
-                             'maint_channel'])
+                              'platform_type',
+                              'channel',
+                              'maint_channel'])
 
 HM_TYPE_MAPPING = {
     'HM-CC-RT-DN': HomematicConfig('HM-CC-RT-DN',
