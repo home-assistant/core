@@ -162,7 +162,6 @@ class InsteonFanDevice(LevelEntity, InsteonDevice):
     def update(self):
         """Update state of the sensor."""
         resp = self.node.send_command('get_status', wait=True)
-        _LOGGER.error(str(resp))
 
     @property
     def state(self):
