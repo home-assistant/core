@@ -94,7 +94,6 @@ class InsteonDevice(Entity):
    
     def is_successful(self, response):
         try:
-            _LOGGER.info('SUCCESSFUL?' + str(response['status'] == 'succeeded') + '(' + str(response['status']) + ')')
             return response['status'] == 'succeeded'
         except KeyError:
             return False
