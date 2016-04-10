@@ -1,6 +1,4 @@
-"""
-Support for ThinkingCleaner.
-"""
+"""Support for ThinkingCleaner."""
 import logging
 from datetime import timedelta
 
@@ -34,29 +32,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
+        """Update all devices."""
         for device_object in devices:
             device_object.update()
 
     dev = []
     for device in devices:
-        for type_name, type_data in SWITCH_TYPES.items():
-            dev.append(ThinkingCleanerSwitch(device, type_name, update_devices))
+        for type_name in SWITCH_TYPES.keys():
+            dev.append(ThinkingCleanerSwitch(device, type_name,
+                                             update_devices))
 
     add_devices(dev)
 
 
 class ThinkingCleanerSwitch(ToggleEntity):
+    """ThinkingCleaner Switch (dock, clean, find me)."""
+
     def __init__(self, tc_object, switch_type, update_devices):
         """Initialize the ThinkingCleaner."""
         self.type = switch_type
 
         self._update_devices = update_devices
         self._tc_object = tc_object
-        self._state = self._tc_object.is_cleaning if switch_type == 'clean' else False
+        self._state = \
+            self._tc_object.is_cleaning if switch_type == 'clean' else False
         self.lock = False
 
     @util.Throttle(MIN_TIME_TO_WAIT)
     def toggle_lock(self):
+        """Lock the update since TC clean takes some time to update."""
         self.lock = not self.lock
         if self.lock:
             self.toggle_lock()

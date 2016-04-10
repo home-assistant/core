@@ -1,6 +1,4 @@
-"""
-Support for ThinkingCleaner.
-"""
+"""Support for ThinkingCleaner."""
 import logging
 from datetime import timedelta
 
@@ -59,18 +57,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
+        """Update all devices."""
         for device_object in devices:
             device_object.update()
 
     dev = []
     for device in devices:
-        for type_name, type_data in SENSOR_TYPES.items():
-            dev.append(ThinkingCleanerSensor(device, type_name, update_devices))
+        for type_name in SENSOR_TYPES.keys():
+            dev.append(ThinkingCleanerSensor(device, type_name,
+                                             update_devices))
 
     add_devices(dev)
 
 
 class ThinkingCleanerSensor(Entity):
+    """ThinkingCleaner Sensor."""
+
     def __init__(self, tc_object, sensor_type, update_devices):
         """Initialize the ThinkingCleaner."""
         self.type = sensor_type
