@@ -126,10 +126,16 @@ class InsteonToggleDevice(InsteonDevice, ToggleEntity):
     def update(self):
         """Update state of the sensor."""
         resp = self.node.send_command('get_status', wait=True)
+        self._value = self.get_level(resp)
+
+    def get_level(self, response):
         try:
-            self._value = resp['response']['level']
+            if self.is_successful(response):
+                return response['response']['level'] 
         except KeyError:
             pass
+
+        return self._value
 
     @property
     def is_on(self):
@@ -138,13 +144,13 @@ class InsteonToggleDevice(InsteonDevice, ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        self.node.send_command('on', { 'level':100 },  wait=True)
-        self.update()
+        resp = self.node.send_command('on', { 'level':100 },  wait=True)
+        self._value = self.get_level(resp)
 
     def turn_off(self, **kwargs):
         """Turn device off."""
-        self.node.send_command('off', wait=True)
-        self.update()
+        resp = self.node.send_command('off', wait=True)
+        self._value = self.get_level(resp)
 
 class InsteonFanDevice(LevelEntity, InsteonDevice):
     """An abstract class for an Insteon node."""
