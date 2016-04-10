@@ -47,6 +47,7 @@ def ensure_list(value):
 
 def entity_id(value):
     """Validate Entity ID."""
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid('Entity ID {} does not match format <domain>.<object_id>'
@@ -58,10 +59,7 @@ def entity_ids(value):
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(',')]
 
-    for ent_id in value:
-        entity_id(ent_id)
-
-    return value
+    return [entity_id(ent_id) for ent_id in value]
 
 
 def icon(value):
