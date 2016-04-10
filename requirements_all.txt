@@ -314,5 +314,5 @@ xbee-helper==0.0.6
 # homeassistant.components.sensor.yr
 xmltodict
 
-# homeassistant.components.http
+# homeassistant.components.zeroconf
 zeroconf==0.17.5
