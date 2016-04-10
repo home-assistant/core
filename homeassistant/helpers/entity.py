@@ -251,8 +251,8 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-class HMLOEntity(Entity):
-    """An abstract class for high/medium/low/off entities."""
+class LevelEntity(Entity):
+    """An abstract class for enumerated state entities."""
     
     #pylint: disable=no-self-use
     def set_level(self, level, **kwargs):
