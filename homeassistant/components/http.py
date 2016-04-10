@@ -103,14 +103,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.development = development
         self.paths = []
         self.sessions = SessionStore()
-        self.protocol = 'https' if ssl_certificate is not None else 'http'
-        if server_address[0] == '0.0.0.0':
-            self.routable_address = util.get_local_ip()
-        else:
-            self.routable_address = server_address[0]
-        self.base_url = "{}://{}:{}".format(self.protocol,
-                                            self.routable_address,
-                                            self.server_address[1])
+        self.use_ssl = ssl_certificate is not None
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -132,7 +125,11 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
         self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
 
-        _LOGGER.info("Starting web interface at %s", self.base_url)
+        protocol = 'https' if self.use_ssl else 'http'
+
+        _LOGGER.info(
+            "Starting web interface at %s://%s:%d",
+            protocol, self.server_address[0], self.server_address[1])
 
         # 31-1-2015: Refactored frontend/api components out of this component
         # To prevent stuff from breaking, load the two extracted components
