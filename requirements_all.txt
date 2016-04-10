@@ -189,7 +189,7 @@ pyicloud==0.7.2
 pyloopenergy==0.0.7
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.3.2
+pynetgear==0.3.3
 
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584

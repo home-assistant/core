@@ -9,14 +9,15 @@ import threading
 from datetime import timedelta
 
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
+ CONF_PORT
 from homeassistant.util import Throttle
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3.2']
+REQUIREMENTS = ['pynetgear==0.3.3']
 
 
 def get_scanner(hass, config):
@@ -25,12 +26,13 @@ def get_scanner(hass, config):
     host = info.get(CONF_HOST)
     username = info.get(CONF_USERNAME)
     password = info.get(CONF_PASSWORD)
+    port = info.get(CONF_PORT)
 
     if password is not None and host is None:
         _LOGGER.warning('Found username or password but no host')
         return None
 
-    scanner = NetgearDeviceScanner(host, username, password)
+    scanner = NetgearDeviceScanner(host, username, password, port)
 
     return scanner if scanner.success_init else None
 
@@ -38,7 +40,7 @@ def get_scanner(hass, config):
 class NetgearDeviceScanner(object):
     """Queries a Netgear wireless router using the SOAP-API."""
 
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, port):
         """Initialize the scanner."""
         import pynetgear
 
@@ -49,8 +51,10 @@ class NetgearDeviceScanner(object):
             self._api = pynetgear.Netgear()
         elif username is None:
             self._api = pynetgear.Netgear(password, host)
-        else:
+        elif port is None:
             self._api = pynetgear.Netgear(password, host, username)
+        else:
+            self._api = pynetgear.Netgear(password, host, username, port)
 
         _LOGGER.info("Logging in")
 
