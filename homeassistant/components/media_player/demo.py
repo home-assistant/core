@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
+YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -208,7 +208,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/107771475912710/picture'
+        return 'https://graph.facebook.com/v2.5/107771475912710/' \
+            'picture?type=large'
 
     @property
     def media_title(self):
@@ -287,7 +288,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/HouseofCards/picture'
+        return 'https://graph.facebook.com/v2.5/HouseofCards/picture?width=400'
 
     @property
     def media_title(self):
