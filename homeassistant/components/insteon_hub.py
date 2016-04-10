@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED, STATE_UNKNOWN, STATE_OFF, STATE_UNKNOWN,
     STATE_LOW, STATE_MED, STATE_HIGH, STATE_ON)
 from homeassistant.helpers import validate_config
-from homeassistant.helpers.entity import (Entity, ToggleEntity, HMLOEntity)
+from homeassistant.helpers.entity import (Entity, ToggleEntity, LevelEntity)
 from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"
@@ -139,7 +139,7 @@ class InsteonToggleDevice(InsteonDevice, ToggleEntity):
         self.node.send_command('off', wait=True)
         self.update()
 
-class InsteonFanDevice(HMLOEntity, InsteonDevice):
+class InsteonFanDevice(LevelEntity, InsteonDevice):
     """An abstract class for an Insteon node."""
 
     def __init__(self, node):
@@ -156,8 +156,26 @@ class InsteonFanDevice(HMLOEntity, InsteonDevice):
         """Get's the current fan speed."""
         return self._value;
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes."""
+        return ({
+            'options': [
+                {
+                 'icon': 'mdi:block-helper',
+                 'value': 'off',},
+                {
+                 'label': 'Low',
+                 'value': 'low',},
+                {
+                 'label': 'Medium',
+                 'value': 'med',},
+                {
+                 'label': 'High',
+                 'value': 'high',},],
+        })
+
     def set_level(self, level, **kwargs):
         """Set's the fan speed."""
         self.node.send_command('fan', {'speed': level}, wait=True)
         self._value = level
-        self.state = level
