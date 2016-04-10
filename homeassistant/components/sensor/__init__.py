@@ -9,8 +9,17 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import (
-    insteon_hub, wink, zwave, isy994, verisure, ecobee, tellduslive, mysensors,
-    bloomsky, vera)
+    insteon_hub,
+    wink,
+    zwave,
+    isy994,
+    verisure,
+    ecobee,
+    tellduslive,
+    mysensors,
+    bloomsky,
+    vera,
+)
 
 DOMAIN = 'sensor'
 SCAN_INTERVAL = 30
