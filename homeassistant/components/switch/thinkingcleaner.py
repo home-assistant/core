@@ -58,6 +58,8 @@ class ThinkingCleanerSwitch(ToggleEntity):
     @util.Throttle(MIN_TIME_TO_WAIT)
     def toggle_lock(self):
         self.lock = not self.lock
+        if self.lock:
+            self.toggle_lock()
 
     @property
     def name(self):
