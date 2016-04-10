@@ -4,6 +4,8 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util as util
+
+from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,14 +62,24 @@ class ThinkingCleanerSwitch(ToggleEntity):
             self._tc_object.is_cleaning if switch_type == 'clean' else False
         self.lock = False
         self.last_lock_time = None
+        self.graceful_state = False
 
-    @util.Throttle(MIN_TIME_TO_WAIT)
     def lock_update(self):
         """Lock the update since TC clean takes some time to update."""
         if self.is_update_locked():
             return
         self.lock = True
         self.last_lock_time = time.time()
+
+    def reset_update_lock(self):
+        """Reset the update lock."""
+        self.lock = False
+        self.last_lock_time = None
+
+    def set_graceful_lock(self, state):
+        self.graceful_state = state
+        self.reset_update_lock()
+        self.lock_update()
 
     def is_update_locked(self):
         """Check if the update method is locked."""
@@ -89,16 +101,14 @@ class ThinkingCleanerSwitch(ToggleEntity):
     def is_on(self):
         """Return true if device is on."""
         if self.type == 'clean':
-            if not self.is_update_locked():
-                self._update_devices()
-            return self._tc_object.is_cleaning
+            return self.graceful_state if self.is_update_locked() else self._tc_object.is_cleaning
 
         return False
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self.type == 'clean':
-            self.lock_update()
+            self.set_graceful_lock(True)
             self._tc_object.start_cleaning()
         elif self.type == 'dock':
             self._tc_object.dock()
@@ -108,4 +118,11 @@ class ThinkingCleanerSwitch(ToggleEntity):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self.type == 'clean':
+            self.set_graceful_lock(False)
             self._tc_object.stop_cleaning()
+
+    def update(self):
+        """Update the switch state (Only for clean)."""
+        if self.type == 'clean' and not self.is_update_locked():
+            self._tc_object.update()
+            self._state = STATE_ON if self._tc_object.is_cleaning else STATE_OFF
