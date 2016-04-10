@@ -13,13 +13,13 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
 REQUIREMENTS = ["zeroconf==0.17.5"]
 
+DEPENDENCIES = ["api"]
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "zeroconf"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
-
-DEPENDENCIES = ["http"]
 
 
 def setup(hass, config):
@@ -31,12 +31,12 @@ def setup(hass, config):
     zeroconf_name = "{}.{}".format(hass.config.location_name,
                                    ZEROCONF_TYPE)
 
-    params = {"version": __version__, "base_url": hass.http.base_url,
-              "needs_auth": (hass.http.api_password != "")}
+    params = {"version": __version__, "base_url": hass.config.api.base_url,
+              "needs_auth": (hass.config.api.api_password != "")}
 
     info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
-                       socket.inet_aton(hass.http.routable_address),
-                       hass.http.server_address[1], 0, 0, params)
+                       socket.inet_aton(hass.config.api.host),
+                       hass.config.api.port, 0, 0, params)
 
     zeroconf.register_service(info)
 
