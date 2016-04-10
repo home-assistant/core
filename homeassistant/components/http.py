@@ -7,7 +7,6 @@ https://home-assistant.io/developers/api/
 import gzip
 import json
 import logging
-import socket
 import ssl
 import threading
 import time
@@ -28,7 +27,7 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
-    SERVER_PORT, __version__)
+    SERVER_PORT)
 
 DOMAIN = "http"
 
@@ -105,8 +104,12 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.paths = []
         self.sessions = SessionStore()
         self.protocol = 'https' if ssl_certificate is not None else 'http'
+        if server_address[0] == '0.0.0.0':
+            self.routable_address = util.get_local_ip()
+        else:
+            self.routable_address = server_address[0]
         self.base_url = "{}://{}:{}".format(self.protocol,
-                                            util.get_local_ip(),
+                                            self.routable_address,
                                             self.server_address[1])
 
         # We will lazy init this one if needed
