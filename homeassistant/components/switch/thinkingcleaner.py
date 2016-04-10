@@ -1,4 +1,5 @@
 """Support for ThinkingCleaner."""
+import time
 import logging
 from datetime import timedelta
 
@@ -15,6 +16,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 MIN_TIME_TO_WAIT = timedelta(seconds=5)
+MIN_TIME_TO_LOCK_UPDATE = 5
 
 SWITCH_TYPES = {
     'clean': ['Clean', None, None],
@@ -57,13 +59,26 @@ class ThinkingCleanerSwitch(ToggleEntity):
         self._state = \
             self._tc_object.is_cleaning if switch_type == 'clean' else False
         self.lock = False
+        self.last_lock_time = None
 
     @util.Throttle(MIN_TIME_TO_WAIT)
-    def toggle_lock(self):
+    def lock_update(self):
         """Lock the update since TC clean takes some time to update."""
-        self.lock = not self.lock
-        if self.lock:
-            self.toggle_lock()
+        if self.is_update_locked():
+            return
+        self.lock = True
+        self.last_lock_time = time.time()
+
+    def is_update_locked(self):
+        """Check if the update method is locked."""
+        if self.last_lock_time is None:
+            return False
+
+        if time.time() - self.last_lock_time >= MIN_TIME_TO_LOCK_UPDATE:
+            self.last_lock_time = None
+            return False
+
+        return True
 
     @property
     def name(self):
@@ -74,7 +89,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
     def is_on(self):
         """Return true if device is on."""
         if self.type == 'clean':
-            if not self.lock:
+            if not self.is_update_locked():
                 self._update_devices()
             return self._tc_object.is_cleaning
 
@@ -83,7 +98,7 @@ class ThinkingCleanerSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self.type == 'clean':
-            self.toggle_lock()
+            self.lock_update()
             self._tc_object.start_cleaning()
         elif self.type == 'dock':
             self._tc_object.dock()
