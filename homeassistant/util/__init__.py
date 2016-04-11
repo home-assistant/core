@@ -9,6 +9,7 @@ import enum
 import socket
 import random
 import string
+import hashlib
 from functools import wraps
 from types import MappingProxyType
 
@@ -97,6 +98,16 @@ def get_random_string(length=10):
     source_chars = string.ascii_letters + string.digits
 
     return ''.join(generator.choice(source_chars) for _ in range(length))
+
+
+def check_password(hashed_password, plain_password):
+    """Check the hashed password against a plain-text one."""
+    try:
+        password, salt = hashed_password.split(':')
+        return password == hashlib.sha512(
+            salt.encode() + plain_password.encode()).hexdigest()
+    except (AttributeError, ValueError):
+        return None
 
 
 class OrderedEnum(enum.Enum):
