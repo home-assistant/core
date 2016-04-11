@@ -22,7 +22,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     def test_source_select(self):
         """Test the input source service."""
 
-        entity_id = 'media_player.receiver'
+        entity_id = 'media_player.lounge_room'
 
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)

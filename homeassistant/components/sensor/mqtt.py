@@ -6,33 +6,40 @@ https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "MQTT Sensor"
-DEFAULT_QOS = 0
-
 DEPENDENCIES = ['mqtt']
+
+CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
+
+DEFAULT_NAME = "MQTT Sensor"
+
+PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup MQTT Sensor."""
-    if config.get('state_topic') is None:
-        _LOGGER.error("Missing required variable: state_topic")
-        return False
-
     add_devices_callback([MqttSensor(
         hass,
-        config.get('name', DEFAULT_NAME),
-        config.get('state_topic'),
-        config.get('qos', DEFAULT_QOS),
-        config.get('unit_of_measurement'),
-        config.get(CONF_VALUE_TEMPLATE))])
+        config[CONF_NAME],
+        config[CONF_STATE_TOPIC],
+        config[CONF_QOS],
+        config.get(CONF_UNIT_OF_MEASUREMENT),
+        config.get(CONF_VALUE_TEMPLATE),
+    )])
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes

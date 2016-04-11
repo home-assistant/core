@@ -226,6 +226,7 @@ class TestComponentsGroup(unittest.TestCase):
                         'view': True,
                     },
                     'test_group': 'hello.world,sensor.happy',
+                    'empty_group': {'name': 'Empty Group', 'entities': None},
                 }
             })
 

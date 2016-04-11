@@ -5,9 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
 """
 import logging
-
 import requests
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -17,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ['xmltodict']
+
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -35,6 +38,13 @@ SENSOR_TYPES = {
     'highClouds': ['High clouds', '%'],
     'dewpointTemperature': ['Dewpoint temperature', '°C'],
 }
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required('platform'): 'yr',
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        [vol.In(SENSOR_TYPES.keys())],
+    vol.Optional('elevation'): cv.positive_int,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -58,12 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     weather = YrData(coordinates)
 
     dev = []
-    if 'monitored_conditions' in config:
-        for variable in config['monitored_conditions']:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(YrSensor(variable, weather))
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        dev.append(YrSensor(sensor_type, weather))
 
     # add symbol as default sensor
     if len(dev) == 0:

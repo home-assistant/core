@@ -16,6 +16,7 @@ from homeassistant.util import slugify
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 small_float = vol.All(vol.Coerce(float), vol.Range(min=0, max=1))
+positive_int = vol.All(vol.Coerce(int), vol.Range(min=0))
 latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
@@ -34,6 +35,11 @@ def boolean(value):
     return bool(value)
 
 
+def isfile(value):
+    """Validate that the value is an existing file."""
+    return vol.IsFile('not a file')(value)
+
+
 def ensure_list(value):
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
@@ -41,6 +47,7 @@ def ensure_list(value):
 
 def entity_id(value):
     """Validate Entity ID."""
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid('Entity ID {} does not match format <domain>.<object_id>'
@@ -52,10 +59,7 @@ def entity_ids(value):
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(',')]
 
-    for ent_id in value:
-        entity_id(ent_id)
-
-    return value
+    return [entity_id(ent_id) for ent_id in value]
 
 
 def icon(value):
@@ -188,7 +192,6 @@ def key_dependency(key, dependency):
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid('key dependencies require a dict')
-        print(key, value)
         if key in value and dependency not in value:
             raise vol.Invalid('dependency violation - key "{}" requires '
                               'key "{}" to exist'.format(key, dependency))
