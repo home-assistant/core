@@ -17,6 +17,7 @@ DOMAIN = "upnp"
 
 def setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
+    # pylint: disable=import-error
     import miniupnpc
 
     # pylint: disable=no-member
