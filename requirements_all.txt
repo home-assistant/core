@@ -136,7 +136,7 @@ messagebird==1.1.1
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.6.2
+netdisco==0.6.4
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -317,3 +317,6 @@ xbee-helper==0.0.6
 
 # homeassistant.components.sensor.yr
 xmltodict
+
+# homeassistant.components.zeroconf
+zeroconf==0.17.5
