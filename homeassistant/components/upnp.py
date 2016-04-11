@@ -19,8 +19,7 @@ def setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
     import miniupnpc
 
-    # Miniupnpc dynamically includes UPnP
-    # pylint: disable=no-name-in-module, no-member
+    # pylint: disable=no-member
     upnp = miniupnpc.UPnP()
 
     upnp.discoverdelay = 200
