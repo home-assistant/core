@@ -207,6 +207,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
                               self.server.api_password or
                               self.verify_session())
 
+        # we don't need to forward the password from here
+        data.pop(DATA_API_PASSWORD, None)
+
         if '_METHOD' in data:
             method = data.pop('_METHOD')
 
