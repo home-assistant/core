@@ -77,7 +77,9 @@ def setup(hass, config):
                          name='HTTP-server').start())
 
     hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+    hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
+                              else util.get_local_ip(),
+                              api_password, server_port,
                               ssl_certificate is not None)
 
     return True

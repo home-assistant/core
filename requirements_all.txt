@@ -26,7 +26,7 @@ TwitterAPI==2.3.6
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==0.9
+astral==1.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
@@ -132,7 +132,7 @@ messagebird==1.1.1
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.6.1
+netdisco==0.6.2
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -189,7 +189,7 @@ pyicloud==0.7.2
 pyloopenergy==0.0.7
 
 # homeassistant.components.device_tracker.netgear
-pynetgear==0.3.2
+pynetgear==0.3.3
 
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
@@ -241,7 +241,7 @@ pyuserinput==0.1.9
 pyvera==0.2.10
 
 # homeassistant.components.wemo
-pywemo==0.3.24
+pywemo==0.4.1
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
