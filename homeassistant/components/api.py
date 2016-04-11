@@ -18,7 +18,7 @@ from homeassistant.const import (
     HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, MATCH_ALL, URL_API, URL_API_COMPONENTS,
     URL_API_CONFIG, URL_API_ERROR_LOG, URL_API_EVENT_FORWARD, URL_API_EVENTS,
     URL_API_LOG_OUT, URL_API_SERVICES, URL_API_STATES, URL_API_STATES_ENTITY,
-    URL_API_STREAM, URL_API_TEMPLATE)
+    URL_API_STREAM, URL_API_TEMPLATE, __version__)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import TrackStates
 from homeassistant.helpers import template
@@ -35,15 +35,17 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """Register the API with the HTTP interface."""
     # /api - for validation purposes
-    hass.http.register_path('GET', URL_API, _handle_get_api)
+    hass.http.register_path('GET', URL_API, _handle_get_api,
+                            require_auth=False)
+
+    # /api/config
+    hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config,
+                            require_auth=False)
 
     # /api/stream
     hass.http.register_path('GET', URL_API_STREAM, _handle_get_api_stream)
 
-    # /api/config
-    hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config)
-
-    # /states
+    # /api/states
     hass.http.register_path('GET', URL_API_STATES, _handle_get_api_states)
     hass.http.register_path(
         'GET', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
@@ -58,13 +60,13 @@ def setup(hass, config):
         'DELETE', re.compile(r'/api/states/(?P<entity_id>[a-zA-Z\._0-9]+)'),
         _handle_delete_state_entity)
 
-    # /events
+    # /api/events
     hass.http.register_path('GET', URL_API_EVENTS, _handle_get_api_events)
     hass.http.register_path(
         'POST', re.compile(r'/api/events/(?P<event_type>[a-zA-Z\._0-9]+)'),
         _handle_api_post_events_event)
 
-    # /services
+    # /api/services
     hass.http.register_path('GET', URL_API_SERVICES, _handle_get_api_services)
     hass.http.register_path(
         'POST',
@@ -73,23 +75,23 @@ def setup(hass, config):
                     r'(?P<service>[a-zA-Z\._0-9]+)')),
         _handle_post_api_services_domain_service)
 
-    # /event_forwarding
+    # /api/event_forwarding
     hass.http.register_path(
         'POST', URL_API_EVENT_FORWARD, _handle_post_api_event_forward)
     hass.http.register_path(
         'DELETE', URL_API_EVENT_FORWARD, _handle_delete_api_event_forward)
 
-    # /components
+    # /api/components
     hass.http.register_path(
         'GET', URL_API_COMPONENTS, _handle_get_api_components)
 
-    # /error_log
+    # /api/error_log
     hass.http.register_path('GET', URL_API_ERROR_LOG,
                             _handle_get_api_error_log)
 
     hass.http.register_path('POST', URL_API_LOG_OUT, _handle_post_api_log_out)
 
-    # /template
+    # /api/template
     hass.http.register_path('POST', URL_API_TEMPLATE,
                             _handle_post_api_template)
 
@@ -173,7 +175,17 @@ def _handle_get_api_stream(handler, path_match, data):
 
 def _handle_get_api_config(handler, path_match, data):
     """Return the Home Assistant configuration."""
-    handler.write_json(handler.server.hass.config.as_dict())
+    if handler.authenticated:
+        handler.write_json(handler.server.hass.config.as_dict())
+    else:
+        needs_auth = (handler.server.hass.config.api.api_password is not None)
+        params = {
+            'base_url': handler.server.hass.config.api.base_url,
+            'location_name': handler.server.hass.config.location_name,
+            'requires_api_password': needs_auth,
+            'version': __version__
+        }
+        handler.write_json(params)
 
 
 def _handle_get_api_states(handler, path_match, data):
