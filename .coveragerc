@@ -66,6 +66,7 @@ omit =
     homeassistant/components/*/scsgate.py
 
     homeassistant/components/upnp.py
+    homeassistant/components/zeroconf.py
 
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
@@ -175,6 +176,7 @@ omit =
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
+    homeassistant/components/*/thinkingcleaner.py
 
 
 [report]
