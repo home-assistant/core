@@ -76,6 +76,10 @@ https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
+# homeassistant.components.sensor.thinkingcleaner
+# homeassistant.components.switch.thinkingcleaner
+https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
+
 # homeassistant.components.alarm_control_panel.alarmdotcom
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
@@ -132,7 +136,7 @@ messagebird==1.1.1
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.6.2
+netdisco==0.6.4
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -313,3 +317,6 @@ xbee-helper==0.0.6
 
 # homeassistant.components.sensor.yr
 xmltodict
+
+# homeassistant.components.zeroconf
+zeroconf==0.17.5
