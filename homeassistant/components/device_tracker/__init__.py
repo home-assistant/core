@@ -94,7 +94,7 @@ def setup(hass, config):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     conf = config.get(DOMAIN, {})
-    if isinstance(conf, list):
+    if isinstance(conf, list) and len(conf) > 0:
         conf = conf[0]
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
