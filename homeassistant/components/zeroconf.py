@@ -32,7 +32,7 @@ def setup(hass, config):
                                    ZEROCONF_TYPE)
 
     params = {"version": __version__, "base_url": hass.config.api.base_url,
-              "needs_auth": (hass.config.api.api_password != "")}
+              "needs_auth": (hass.config.api.api_password is not None)}
 
     info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
                        socket.inet_aton(hass.config.api.host),
@@ -43,6 +43,7 @@ def setup(hass, config):
     def stop_zeroconf(event):
         """Stop Zeroconf."""
         zeroconf.unregister_service(info)
+        zeroconf.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
 
