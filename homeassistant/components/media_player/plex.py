@@ -121,11 +121,12 @@ def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
 
     def update_devices(now):
         """Update the devices objects."""
-        try:
-            sessions = plexserver.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
-            return
+        if list_sessions:
+            try:
+                sessions = plexserver.sessions()
+            except plexapi.exceptions.BadRequest:
+                _LOGGER.exception("Error listing plex sessions")
+                return
 
         try:
             devices = plexserver.clients()
