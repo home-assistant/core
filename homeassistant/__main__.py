@@ -218,6 +218,24 @@ def uninstall_osx():
     print("Home Assistant has been uninstalled.")
 
 
+def closefds_osx(min_fd, max_fd):
+    """Make sure file descriptors get closed when we restart.
+
+    We cannot call close on guarded fds, and we cannot easily test which fds
+    are guarded. But we can set the close-on-exec flag on everything we want to
+    get rid of.
+    """
+    from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
+
+    for _fd in range(min_fd, max_fd):
+        try:
+            val = fcntl(_fd, F_GETFD)
+            if not val & FD_CLOEXEC:
+                fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
+        except IOError:
+            pass
+
+
 def setup_and_run_hass(config_dir, args):
     """Setup HASS and run."""
     from homeassistant import bootstrap
@@ -295,11 +313,14 @@ def try_to_restart():
         pass
 
     # Try to not leave behind open filedescriptors with the emphasis on try.
-    if platform.system() != 'Darwin':
-        try:
-            max_fd = os.sysconf("SC_OPEN_MAX")
-        except ValueError:
-            max_fd = 256
+    try:
+        max_fd = os.sysconf("SC_OPEN_MAX")
+    except ValueError:
+        max_fd = 256
+
+    if platform.system() == 'Darwin':
+        closefds_osx(3, max_fd)
+    else:
         os.closerange(3, max_fd)
 
     # Now launch into a new instance of Home-Assistant. If this fails we
