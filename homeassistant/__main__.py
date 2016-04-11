@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import argparse
-from multiprocessing.spawn import get_executable
 import os
 import signal
 import sys
@@ -302,9 +301,8 @@ def try_to_restart():
     # systemd will restart us when RestartForceExitStatus=100 is set in the
     # systemd.service file.
     sys.stderr.write("Restarting Home-Assistant\n")
-    exe = get_executable()
-    args = [exe] + [arg for arg in sys.argv if arg != '--daemon']
-    os.execv(exe, args)
+    args = [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
+    os.execv(sys.executable, args)
 
 
 def main():
