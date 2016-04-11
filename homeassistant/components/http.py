@@ -27,7 +27,7 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
     HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
-    SERVER_PORT)
+    SERVER_PORT, URL_ROOT, URL_API_EVENT_FORWARD)
 
 DOMAIN = "http"
 
@@ -207,8 +207,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
                               self.server.api_password or
                               self.verify_session())
 
-        # we don't need to forward the password from here
-        data.pop(DATA_API_PASSWORD, None)
+        # we really shouldn't need to forward the password from here
+        if url.path not in [URL_ROOT, URL_API_EVENT_FORWARD]:
+            data.pop(DATA_API_PASSWORD, None)
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
