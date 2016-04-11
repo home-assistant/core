@@ -4,6 +4,9 @@ import unittest
 from unittest import mock
 import socket
 
+import voluptuous as vol
+
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -48,9 +51,23 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
-            self.assertFalse(mqtt.setup(self.hass, {mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'test-broker',
-            }}))
+            self.hass.config.components = []
+            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                }
+            })
+
+    def test_setup_protocol_validation(self):
+        """Test for setup failure if connection to broker is missing."""
+        with mock.patch('paho.mqtt.client.Client'):
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                    mqtt.CONF_PROTOCOL: 3.1,
+                }
+            })
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -211,12 +228,12 @@ class TestMQTTCallbacks(unittest.TestCase):
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
-            mqtt.setup(self.hass, {
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }
             })
-            self.hass.config.components.append(mqtt.DOMAIN)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -302,3 +319,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual({'test/topic': 1}, mqtt.MQTT_CLIENT.topics)
         self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
+
+    def test_invalid_mqtt_topics(self):
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')

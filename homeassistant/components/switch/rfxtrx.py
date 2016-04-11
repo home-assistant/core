@@ -6,12 +6,15 @@ https://home-assistant.io/components/switch.rfxtrx/
 """
 import logging
 
+
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['rfxtrx']
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
