@@ -9,8 +9,17 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import (
-    wink, zwave, isy994, verisure, ecobee, tellduslive, mysensors,
-    bloomsky, vera)
+    insteon_hub,
+    wink,
+    zwave,
+    isy994,
+    verisure,
+    ecobee,
+    tellduslive,
+    mysensors,
+    bloomsky,
+    vera,
+)
 
 DOMAIN = 'sensor'
 SCAN_INTERVAL = 30
@@ -20,6 +29,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     bloomsky.DISCOVER_SENSORS: 'bloomsky',
+    insteon_hub.DISCOVERY[DOMAIN]: 'insteon_hub',
     wink.DISCOVER_SENSORS: 'wink',
     zwave.DISCOVER_SENSORS: 'zwave',
     isy994.DISCOVER_SENSORS: 'isy994',

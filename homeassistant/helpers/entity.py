@@ -3,10 +3,23 @@ import re
 from collections import defaultdict
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE)
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    ATTR_HIDDEN,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_DEFAULT_NAME,
+    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_LOW,
+    STATE_MED,
+    STATE_HIGH,
+    TEMP_CELCIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 
@@ -250,3 +263,15 @@ class ToggleEntity(Entity):
             self.turn_off(**kwargs)
         else:
             self.turn_on(**kwargs)
+
+class LevelEntity(Entity):
+    """An abstract class for enumerated state entities."""
+    
+    #pylint: disable=no-self-use
+    def set_level(self, level, **kwargs):
+        """Set the level of the entity"""
+        pass
+
+    @property
+    def state(self):
+        pass
