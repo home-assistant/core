@@ -35,8 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """Register the API with the HTTP interface."""
     # /api - for validation purposes
-    hass.http.register_path('GET', URL_API, _handle_get_api,
-                            require_auth=False)
+    hass.http.register_path('GET', URL_API, _handle_get_api)
 
     # /api/config
     hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config,
