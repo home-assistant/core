@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import platform
 import signal
 import sys
 import threading
@@ -294,7 +295,12 @@ def try_to_restart():
         pass
 
     # Try to not leave behind open filedescriptors with the emphasis on try.
-    os.closerange(3, 1024)
+    if platform.system() != 'Darwin':
+        try:
+            max_fd = os.sysconf("SC_OPEN_MAX")
+        except ValueError:
+            max_fd = 256
+        os.closerange(3, max_fd)
 
     # Now launch into a new instance of Home-Assistant. If this fails we
     # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
