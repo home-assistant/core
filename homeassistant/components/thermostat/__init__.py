@@ -270,12 +270,12 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return round(convert(7, TEMP_CELCIUS, self.unit_of_measurement))
+        return convert(7, TEMP_CELCIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return round(convert(35, TEMP_CELCIUS, self.unit_of_measurement))
+        return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
