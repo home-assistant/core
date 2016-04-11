@@ -65,6 +65,7 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/upnp.py
     homeassistant/components/zeroconf.py
 
     homeassistant/components/binary_sensor/arest.py
