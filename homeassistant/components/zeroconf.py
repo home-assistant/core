@@ -32,7 +32,7 @@ def setup(hass, config):
                                    ZEROCONF_TYPE)
 
     params = {"version": __version__, "base_url": hass.config.api.base_url,
-              "needs_auth": (hass.config.api.api_password is not None)}
+              "requires_api_password": (hass.config.api.api_password is not None)}
 
     info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
                        socket.inet_aton(hass.config.api.host),
