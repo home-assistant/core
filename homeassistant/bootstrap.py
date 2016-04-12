@@ -65,7 +65,7 @@ def _handle_requirements(hass, component, name):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('lib')):
+        if not pkg_util.install_package(req, target=hass.config.path('deps')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -211,7 +211,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 def mount_local_lib_path(config_dir):
     """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+    sys.path.insert(0, os.path.join(config_dir, 'deps'))
 
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
@@ -372,7 +372,13 @@ def process_ha_config_upgrade(hass):
     _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
                  __version__)
 
+    # This was where dependencies were installed before v0.18
+    # Probably should keep this around until ~v0.20.
     lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
+
+    lib_path = hass.config.path('deps')
     if os.path.isdir(lib_path):
         shutil.rmtree(lib_path)
 
