@@ -4,31 +4,26 @@ Support for Nest thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
 """
-import logging
-import socket
+import voluptuous as vol
 
 import homeassistant.components.nest as nest
 from homeassistant.components.thermostat import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELCIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL
 
 DEPENDENCIES = ['nest']
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
-    logger = logging.getLogger(__name__)
-
-    try:
-        add_devices([
-            NestThermostat(structure, device)
-            for structure in nest.NEST.structures
-            for device in structure.devices
-        ])
-    except socket.error:
-        logger.error(
-            "Connection error logging into the nest web service."
-        )
+    add_devices([NestThermostat(structure, device)
+                 for structure, device in nest.devices()])
 
 
 class NestThermostat(ThermostatDevice):
