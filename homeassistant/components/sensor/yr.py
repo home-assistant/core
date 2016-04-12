@@ -9,7 +9,10 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION,
+    CONF_MONITORED_CONDITIONS
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location
@@ -18,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ['xmltodict']
-
-CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -40,10 +41,12 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required('platform'): 'yr',
+    vol.Required(CONF_PLATFORM): 'yr',
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
-    vol.Optional('elevation'): cv.positive_int,
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_ELEVATION): cv.positive_int,
 })
 
 
@@ -51,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    elevation = config.get('elevation')
+    elevation = config.get(CONF_ELEVATION)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
