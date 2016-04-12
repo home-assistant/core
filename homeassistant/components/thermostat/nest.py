@@ -88,8 +88,10 @@ class NestThermostat(ThermostatDevice):
             elif self.operation == STATE_HEAT:
                 temp = low
             else:
-                range_average = (low + high)/2
-                if self.current_temperature < range_average:
+                # If the outside temp is lower than the current temp, consider
+                # the 'low' temp to the target, otherwise use the high temp
+                if (self.device.structure.weather.current.temperature <
+                        self.current_temperature):
                     temp = low
                 elif self.current_temperature >= range_average:
                     temp = high
