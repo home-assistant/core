@@ -8,6 +8,7 @@ config/custom_components/*
 !config/custom_components/hello_world.py
 !config/custom_components/mqtt_example.py
 
+tests/config/deps
 tests/config/home-assistant.log
 
 # Hide sublime text stuff
