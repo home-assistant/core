@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = vol.Schema({
         [vol.In(SENSOR_TYPES.keys())],
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_ELEVATION): cv.positive_int,
+    vol.Optional(CONF_ELEVATION): vol.Coerce(int),
 })
 
 
