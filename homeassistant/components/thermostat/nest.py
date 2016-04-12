@@ -93,7 +93,7 @@ class NestThermostat(ThermostatDevice):
                 if (self.device.structure.weather.current.temperature <
                         self.current_temperature):
                     temp = low
-                elif self.current_temperature >= range_average:
+                else:
                     temp = high
         else:
             if self.is_away_mode_on:
