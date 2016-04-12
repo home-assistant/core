@@ -479,7 +479,7 @@ class MediaPlayerDevice(Entity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return []
+        return None
 
     @property
     def supported_media_commands(self):
