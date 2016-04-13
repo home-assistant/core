@@ -16,9 +16,9 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
 )
 
-
 def validate_python():
     """Validate we're running the right Python version."""
+
     major, minor = sys.version_info[:2]
     req_major, req_minor = REQUIRED_PYTHON_VER
 
@@ -29,7 +29,6 @@ def validate_python():
 
 
 def ensure_config_path(config_dir):
-    """Validate the configuration directory."""
     import homeassistant.config as config_util
     lib_dir = os.path.join(config_dir, 'deps')
 
