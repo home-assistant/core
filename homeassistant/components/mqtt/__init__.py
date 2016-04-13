@@ -1,5 +1,5 @@
 """
-Support for MQTT message handling..
+Support for MQTT message handling.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
@@ -102,13 +102,13 @@ MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
 })
 
-# Sensor type platforms subscribe to mqtt events
+# Sensor type platforms subscribe to MQTT events
 MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
-# Switch type platforms publish to mqtt and may subscribe
+# Switch type platforms publish to MQTT and may subscribe
 MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
