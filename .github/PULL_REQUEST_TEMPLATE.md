@@ -23,6 +23,6 @@ If the code does not interact with devices:
 
 [fork]: http://stackoverflow.com/a/7244456
 [squash]: https://github.com/ginatrapani/todo.txt-android/wiki/Squash-All-Commits-Related-to-a-Single-Issue-into-a-Single-Commit
-[ex-requir]: https://github.com/balloob/home-assistant/blob/dev/homeassistant/components/keyboard.py#L16
-[ex-import]: https://github.com/balloob/home-assistant/blob/dev/homeassistant/components/keyboard.py#L51
+[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L16
+[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L51
 

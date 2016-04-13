@@ -4,10 +4,10 @@ Everybody is invited and welcome to contribute to Home Assistant. There is a lot
 
 The process is straight-forward.
 
- - Fork the Home Assistant [git repository](https://github.com/balloob/home-assistant).
+ - Fork the Home Assistant [git repository](https://github.com/home-assistant/home-assistant).
  - Write the code for your device, notification service, sensor, or IoT thing.
  - Ensure tests work.
- - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
+ - Create a Pull Request against the [**dev**](https://github.com/home-assistant/home-assistant/tree/dev) branch of Home Assistant.
 
 Still interested? Then you should read the next sections and get more details. 
 
@@ -20,20 +20,20 @@ After you finish adding support for your device:
  - Check that all dependencies are included via the `REQUIREMENTS` variable in your platform/component and only imported inside functions that use them.
  - Add any new dependencies to `requirements_all.txt` if needed. Use `script/gen_requirements_all.py`.
  - Update the `.coveragerc` file to exclude your platform if there are no tests available or your new code uses a 3rd party library for communication with the device/service/sensor.
- - Provide some documentation for [home-assistant.io](https://home-assistant.io/). It's OK to just add a docstring with configuration details (sample entry for `configuration.yaml` file and alike) to the file header as a start. Visit the [website documentation](https://home-assistant.io/developers/website/) for further information on contributing to [home-assistant.io](https://github.com/balloob/home-assistant.io).
+ - Provide some documentation for [home-assistant.io](https://home-assistant.io/). It's OK to just add a docstring with configuration details (sample entry for `configuration.yaml` file and alike) to the file header as a start. Visit the [website documentation](https://home-assistant.io/developers/website/) for further information on contributing to [home-assistant.io](https://github.com/home-assistant/home-assistant.io).
  - Make sure all your code passes ``pylint`` and ``flake8`` (PEP8 and some more) validation. To check your repository, run `tox` or `script/lint`.
- - Create a Pull Request against the [**dev**](https://github.com/balloob/home-assistant/tree/dev) branch of Home Assistant.
- - Check for comments and suggestions on your Pull Request and keep an eye on the [CI output](https://travis-ci.org/balloob/home-assistant/).
+ - Create a Pull Request against the [**dev**](https://github.com/home-assistant/home-assistant/tree/dev) branch of Home Assistant.
+ - Check for comments and suggestions on your Pull Request and keep an eye on the [CI output](https://travis-ci.org/home-assistant/home-assistant/).
 
 If you add a platform for an existing component, there is usually no need for updating the frontend. Only if you've added a new component that should show up in the frontend, there are more steps needed:
 
- - Update the file [`home-assistant-icons.html`](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/frontend/www_static/polymer/resources/home-assistant-icons.html) with an icon for your domain ([pick one from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon)).
+ - Update the file [`home-assistant-icons.html`](https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/frontend/www_static/polymer/resources/home-assistant-icons.html) with an icon for your domain ([pick one from this list](https://www.polymer-project.org/1.0/components/core-elements/demo.html#core-icon)).
  - Update the demo component with two states that it provides.
  - Add your component to `home-assistant.conf.example`.
 
 Since you've updated `home-assistant-icons.html`, you've made changes to the frontend:
 
- - Run `build_frontend`. This will build a new version of the frontend. Make sure you add the changed files `frontend.py` and `frontend.html` to the commit.
+ - Run `script/build_frontend`. This will build a new version of the frontend. Make sure you add the changed files `frontend.py` and `frontend.html` to the commit.
 
 ### Setting states
 
@@ -46,11 +46,11 @@ A state can have several attributes that will help the frontend in displaying yo
  - `unit_of_measurement`: this will be appended to the state in the interface
  - `hidden`: This is a suggestion to the frontend on if the state should be hidden
 
-These attributes are defined in [homeassistant.components](https://github.com/balloob/home-assistant/blob/master/homeassistant/components/__init__.py#L25).
+These attributes are defined in [homeassistant.components](https://github.com/home-assistant/home-assistant/blob/master/homeassistant/components/__init__.py#L25).
 
 ### Proper Visibility Handling
 
-Generally, when creating a new entity for Home Assistant you will want it to be a class that inherits the [homeassistant.helpers.entity.Entity](https://github.com/balloob/home-assistant/blob/master/homeassistant/helpers/entity.py) class. If this is done, visibility will be handled for you. 
+Generally, when creating a new entity for Home Assistant you will want it to be a class that inherits the [homeassistant.helpers.entity.Entity](https://github.com/home-assistant/home-assistant/blob/master/homeassistant/helpers/entity.py) class. If this is done, visibility will be handled for you. 
 You can set a suggestion for your entity's visibility by setting the hidden property by doing something similar to the following.
 
 ```python
