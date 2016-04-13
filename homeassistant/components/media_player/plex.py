@@ -10,7 +10,6 @@ import os
 from datetime import timedelta
 from urllib.parse import urlparse
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice)
@@ -18,6 +17,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 from homeassistant.loader import get_component
+from homeassistant.helpers.event import track_utc_time_change
 
 REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -28,6 +28,9 @@ PLEX_CONFIG_FILE = 'plex.conf'
 # Map ip to request id for configuring
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_LIST_SESSIONS = False
+CONF_LIST_SESSIONS = 'list_sessions'
 
 SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
@@ -60,6 +63,8 @@ def config_from_file(filename, config=None):
 # pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
+    list_sessions = config.get(CONF_LIST_SESSIONS, DEFAULT_LIST_SESSIONS)
+
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
     if len(config):
         # Setup a configured PlexServer
@@ -77,11 +82,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    setup_plexserver(host, token, hass, add_devices_callback)
+    setup_plexserver(host, token, hass, list_sessions, add_devices_callback)
 
 
 # pylint: disable=too-many-branches
-def setup_plexserver(host, token, hass, add_devices_callback):
+def setup_plexserver(host, token, hass, list_sessions, add_devices_callback):
     """Setup a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
@@ -114,9 +119,15 @@ def setup_plexserver(host, token, hass, add_devices_callback):
     plex_clients = {}
     plex_sessions = {}
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_devices():
+    def update_devices(now):
         """Update the devices objects."""
+        if list_sessions:
+            try:
+                sessions = plexserver.sessions()
+            except plexapi.exceptions.BadRequest:
+                _LOGGER.exception("Error listing plex sessions")
+                return
+
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
@@ -130,31 +141,51 @@ def setup_plexserver(host, token, hass, add_devices_callback):
                 continue
 
             if device.machineIdentifier not in plex_clients:
-                new_client = PlexClient(device, plex_sessions, update_devices,
-                                        update_sessions)
+                new_client = PlexClient(device, device.machineIdentifier,
+                                        device.name, update_devices,
+                                        update_sessions, plex_sessions)
                 plex_clients[device.machineIdentifier] = new_client
                 new_plex_clients.append(new_client)
             else:
                 plex_clients[device.machineIdentifier].set_device(device)
 
+        if list_sessions:
+            for session in sessions:
+                if session.player.machineIdentifier not in plex_clients:
+                    title = session.user.title + '-' + session.player.title
+                    new_client = PlexClient(None,
+                                            session.player.machineIdentifier,
+                                            title, update_devices,
+                                            update_sessions, plex_sessions)
+                    plex_clients[session.player.machineIdentifier] = new_client
+                    new_plex_clients.append(new_client)
+
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_sessions():
+    def update_sessions(now):
         """Update the sessions objects."""
-        try:
-            sessions = plexserver.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
-            return
+        if list_sessions:
+            try:
+                sessions = plexserver.sessions()
+            except plexapi.exceptions.BadRequest:
+                _LOGGER.exception("Error listing plex sessions")
+                return
 
-        plex_sessions.clear()
-        for session in sessions:
-            plex_sessions[session.player.machineIdentifier] = session
+            plex_sessions.clear()
+            for session in sessions:
+                plex_sessions[session.player.machineIdentifier] = session
 
-    update_devices()
-    update_sessions()
+    if list_sessions:
+        track_utc_time_change(
+            hass, update_sessions,
+            second=range(0, 60, MIN_TIME_BETWEEN_SCANS.seconds)
+        )
+
+    track_utc_time_change(
+        hass, update_devices,
+        second=range(0, 60, MIN_TIME_BETWEEN_SCANS.seconds)
+    )
 
 
 def request_configuration(host, hass, add_devices_callback):
@@ -170,7 +201,8 @@ def request_configuration(host, hass, add_devices_callback):
 
     def plex_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_plexserver(host, data.get('token'), hass, add_devices_callback)
+        setup_plexserver(host, data.get('token'), hass, DEFAULT_LIST_SESSIONS,
+                         add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Plex Media Server", plex_configuration_callback,
@@ -184,13 +216,16 @@ def request_configuration(host, hass, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-public-methods, attribute-defined-outside-init
-    def __init__(self, device, plex_sessions, update_devices, update_sessions):
+    # pylint: disable=too-many-public-methods, too-many-arguments
+    def __init__(self, device, identifier, name, update_devices,
+                 update_sessions, plex_sessions):
         """Initialize the Plex device."""
         self.plex_sessions = plex_sessions
-        self.update_devices = update_devices
-        self.update_sessions = update_sessions
+        self.identifier = identifier
+        self.clientname = name
         self.set_device(device)
+        self.update_sessions = update_sessions
+        self.update_devices = update_devices
 
     def set_device(self, device):
         """Set the device property."""
@@ -200,20 +235,20 @@ class PlexClient(MediaPlayerDevice):
     def unique_id(self):
         """Return the id of this plex client."""
         return "{}.{}".format(
-            self.__class__, self.device.machineIdentifier or self.device.name)
+            self.__class__, self.identifier or self.clientname)
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.name or DEVICE_DEFAULT_NAME
+        return self.clientname or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
         """Return the session, if any."""
-        if self.device.machineIdentifier not in self.plex_sessions:
+        if self.identifier not in self.plex_sessions:
             return None
 
-        return self.plex_sessions[self.device.machineIdentifier]
+        return self.plex_sessions[self.identifier]
 
     @property
     def state(self):
@@ -225,7 +260,7 @@ class PlexClient(MediaPlayerDevice):
             elif state == 'paused':
                 return STATE_PAUSED
         # This is nasty. Need to find a way to determine alive
-        elif self.device:
+        elif self.identifier:
             return STATE_IDLE
         else:
             return STATE_OFF
@@ -234,8 +269,8 @@ class PlexClient(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details."""
-        self.update_devices(no_throttle=True)
-        self.update_sessions(no_throttle=True)
+        self.update_sessions(None)
+        self.update_devices(None)
 
     @property
     def media_content_id(self):
@@ -302,16 +337,20 @@ class PlexClient(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        self.device.play()
+        if self.device is not None:
+            self.device.play()
 
     def media_pause(self):
         """Send pause command."""
-        self.device.pause()
+        if self.device is not None:
+            self.device.pause()
 
     def media_next_track(self):
         """Send next track command."""
-        self.device.skipNext()
+        if self.device is not None:
+            self.device.skipNext()
 
     def media_previous_track(self):
         """Send previous track command."""
-        self.device.skipPrevious()
+        if self.device is not None:
+            self.device.skipPrevious()
