@@ -6,7 +6,10 @@ at https://home-assistant.io/components/input_select/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -24,6 +27,11 @@ ATTR_OPTION = 'option'
 ATTR_OPTIONS = 'options'
 
 SERVICE_SELECT_OPTION = 'select_option'
+
+SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPTION): cv.string,
+})
 
 
 def select_option(hass, entity_id, option):
@@ -79,10 +87,11 @@ def setup(hass, config):
         target_inputs = component.extract_from_service(call)
 
         for input_select in target_inputs:
-            input_select.select_option(call.data.get(ATTR_OPTION))
+            input_select.select_option(call.data[ATTR_OPTION])
 
     hass.services.register(DOMAIN, SERVICE_SELECT_OPTION,
-                           select_option_service)
+                           select_option_service,
+                           schema=SERVICE_SELECT_OPTION_SCHEMA)
 
     component.add_entities(entities)
 
