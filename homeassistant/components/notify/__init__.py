@@ -10,8 +10,8 @@ import os
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
-from homeassistant.helpers import config_per_platform, template
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import template
 
 from homeassistant.const import CONF_NAME
 
@@ -19,16 +19,12 @@ DOMAIN = "notify"
 
 # Title of notification
 ATTR_TITLE = "title"
-ATTR_TITLE_DEFAULT = "Home Assistant"
 
 # Target of the notification (user, device, etc)
 ATTR_TARGET = 'target'
 
 # Text to notify user of
 ATTR_MESSAGE = "message"
-
-# Platform specific data
-ATTR_DATA = 'data'
 
 SERVICE_NOTIFY = "notify"
 
@@ -54,7 +50,7 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    for platform, p_config in config_per_platform(config, DOMAIN):
+    for platform, p_config in config_per_platform(config, DOMAIN, _LOGGER):
         notify_implementation = bootstrap.prepare_setup_platform(
             hass, config, DOMAIN, platform)
 
@@ -80,13 +76,11 @@ def setup(hass, config):
                 return
 
             title = template.render(
-                hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
+                hass, call.data.get(ATTR_TITLE))
             target = call.data.get(ATTR_TARGET)
             message = template.render(hass, message)
-            data = call.data.get(ATTR_DATA)
 
-            notify_service.send_message(message, title=title, target=target,
-                                        data=data)
+            notify_service.send_message(message, title=title, target=target)
 
         service_call_handler = partial(notify_message, notify_service)
         service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
