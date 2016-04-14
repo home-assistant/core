@@ -80,28 +80,38 @@ class NestThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        target = self.device.target
-
         if self.device.mode == 'range':
-            low, high = target
+            low, high = self.target_temperature_low, \
+                        self.target_temperature_high
             if self.operation == STATE_COOL:
                 temp = high
             elif self.operation == STATE_HEAT:
                 temp = low
             else:
-                range_average = (low + high)/2
-                if self.current_temperature < range_average:
+                # If the outside temp is lower than the current temp, consider
+                # the 'low' temp to the target, otherwise use the high temp
+                if (self.device.structure.weather.current.temperature <
+                        self.current_temperature):
                     temp = low
-                elif self.current_temperature >= range_average:
+                else:
                     temp = high
         else:
-            temp = target
+            if self.is_away_mode_on:
+                # away_temperature is a low, high tuple. Only one should be set
+                # if not in range mode, the other will be None
+                temp = self.device.away_temperature[0] or \
+                        self.device.away_temperature[1]
+            else:
+                temp = self.device.target
 
         return temp
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
+        if self.is_away_mode_on and self.device.away_temperature[0]:
+            # away_temperature is always a low, high tuple
+            return self.device.away_temperature[0]
         if self.device.mode == 'range':
             return self.device.target[0]
         return self.target_temperature
@@ -109,6 +119,9 @@ class NestThermostat(ThermostatDevice):
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
+        if self.is_away_mode_on and self.device.away_temperature[1]:
+            # away_temperature is always a low, high tuple
+            return self.device.away_temperature[1]
         if self.device.mode == 'range':
             return self.device.target[1]
         return self.target_temperature
