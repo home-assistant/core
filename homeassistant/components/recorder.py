@@ -13,6 +13,7 @@ import logging
 import queue
 import sqlite3
 import threading
+import voluptuous as vol
 from datetime import date, datetime, timedelta
 
 import homeassistant.util.dt as dt_util
@@ -29,6 +30,14 @@ DB_FILE = 'home-assistant.db'
 RETURN_ROWCOUNT = "rowcount"
 RETURN_LASTROWID = "lastrowid"
 RETURN_ONE_ROW = "one_row"
+
+CONF_PURGE_DAYS = "purge_days"
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(dict, {
+        CONF_PURGE_DAYS: int
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 _INSTANCE = None
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +111,8 @@ def setup(hass, config):
     """Setup the recorder."""
     # pylint: disable=global-statement
     global _INSTANCE
-    _INSTANCE = Recorder(hass, config.get('history', {}))
+    purge_days = config.get(DOMAIN, {}).get(CONF_PURGE_DAYS)
+    _INSTANCE = Recorder(hass, purge_days=purge_days)
 
     return True
 
@@ -168,12 +178,12 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, config):
+    def __init__(self, hass, purge_days):
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
-        self.config = config
+        self.purge_days = purge_days
         self.conn = None
         self.queue = queue.Queue()
         self.quit_object = object()
@@ -478,13 +488,12 @@ class Recorder(threading.Thread):
 
     def _purge_old_data(self):
         """Purge events and states older than purge_days ago."""
-        purge_days = self.config.get('purge_days', -1)
-        if purge_days < 1:
+        if not self.purge_days or self.purge_days < 1:
             _LOGGER.debug("purge_days set to %s, will not purge any old data.",
-                          purge_days)
+                          self.purge_days)
             return
 
-        purge_before = dt_util.utcnow() - timedelta(days=purge_days)
+        purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
 
         _LOGGER.info("Purging events created before %s", purge_before)
         deleted_rows = self.query(
