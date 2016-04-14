@@ -109,6 +109,11 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Required(DOMAIN): {cv.slug: _SCRIPT_ENTRY_SCHEMA}
 }, extra=vol.ALLOW_EXTRA)
 
+SCRIPT_SERVICE_SCHEMA = vol.Schema({})
+SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 
 def is_on(hass, entity_id):
     """Return if the switch is on based on the statemachine."""
@@ -149,7 +154,8 @@ def setup(hass, config):
         alias = cfg.get(CONF_ALIAS, object_id)
         script = Script(object_id, alias, cfg[CONF_SEQUENCE])
         component.add_entities((script,))
-        hass.services.register(DOMAIN, object_id, service_handler)
+        hass.services.register(DOMAIN, object_id, service_handler,
+                               schema=SCRIPT_SERVICE_SCHEMA)
 
     def turn_on_service(service):
         """Call a service to turn script on."""
@@ -168,10 +174,12 @@ def setup(hass, config):
         for script in component.extract_from_service(service):
             script.toggle()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, turn_on_service)
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, turn_off_service)
-    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service)
-
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
+                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, turn_off_service,
+                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TOGGLE, toggle_service,
+                           schema=SCRIPT_TURN_ONOFF_SCHEMA)
     return True
 
 
