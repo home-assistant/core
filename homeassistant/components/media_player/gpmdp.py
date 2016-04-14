@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.gpm_dp/
 """
 import logging
+import json
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
@@ -20,7 +21,6 @@ SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the GPMDP platform."""
     from websocket import create_connection
-    import json
 
     name = config.get("name", "GPM Desktop Player")
     address = config.get("address")
@@ -50,8 +50,7 @@ class GPMDP(MediaPlayerDevice):
         """Get the latest details from the player."""
         import socket
         try:
-            self._ws = self._connection(("ws://" + self._address + ":5672"),
-                                        timeout=1)
+            self._ws = self._connection(("ws://" + self._address + ":5672"), timeout=1)
             state = self._ws.recv()
             if ((self._json.loads(state))['payload']) is True:
                 song = self._ws.recv()
@@ -103,12 +102,10 @@ class GPMDP(MediaPlayerDevice):
     def media_next_track(self):
         """Send media_next command to media player."""
         self._ws.send('{"namespace": "playback", "method": "forward"}')
-        self.update_ha_state()
 
     def media_previous_track(self):
         """Send media_previous command media player."""
         self._ws.send('{"namespace": "playback", "method": "rewind"}')
-        self.update_ha_state()
 
     def media_play(self):
         """Send media_play command to media player."""
