@@ -139,7 +139,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                 if key in devices:
                     devices[key].update_ha_state(True)
                     continue
-                name = '{} {}.{}'.format(
+                name = '{} {} {}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
                 if isinstance(entity_class, dict):
                     device_class = entity_class[child.type]
