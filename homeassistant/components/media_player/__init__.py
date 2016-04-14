@@ -61,6 +61,7 @@ ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
+ATTR_INPUT_SOURCE_LIST = 'source_list'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -94,6 +95,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+    SERVICE_SELECT_SOURCE: 'select_source'
 }
 
 ATTR_TO_PROPERTY = [
@@ -116,6 +118,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
 ]
 
 # Service call validation schemas
@@ -471,6 +474,11 @@ class MediaPlayerDevice(Entity):
     @property
     def source(self):
         """Name of the current input source."""
+        return None
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
         return None
 
     @property
