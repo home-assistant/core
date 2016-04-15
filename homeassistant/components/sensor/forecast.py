@@ -87,7 +87,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(dev)
 
-
 # pylint: disable=too-few-public-methods
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
