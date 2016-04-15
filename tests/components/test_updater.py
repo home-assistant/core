@@ -4,12 +4,14 @@ from unittest.mock import patch
 
 import requests
 
-from homeassistant.const import __version__ as CURRENT_VERSION
 from homeassistant.components import updater
 import homeassistant.util.dt as dt_util
 from tests.common import fire_time_changed, get_test_home_assistant
 
 NEW_VERSION = '10000.0'
+
+# We need to use a 'real' looking version number to load the updater component
+MOCK_CURRENT_VERSION = '10.0'
 
 
 class TestUpdater(unittest.TestCase):
@@ -27,6 +29,7 @@ class TestUpdater(unittest.TestCase):
     def test_new_version_shows_entity_on_start(self, mock_get_newest_version):
         """Test if new entity is created if new version is available."""
         mock_get_newest_version.return_value = NEW_VERSION
+        updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
         self.assertTrue(updater.setup(self.hass, {
             'updater': None
@@ -38,7 +41,8 @@ class TestUpdater(unittest.TestCase):
     @patch('homeassistant.components.updater.get_newest_version')
     def test_no_entity_on_same_version(self, mock_get_newest_version):
         """Test if no entity is created if same version."""
-        mock_get_newest_version.return_value = CURRENT_VERSION
+        mock_get_newest_version.return_value = MOCK_CURRENT_VERSION
+        updater.CURRENT_VERSION = MOCK_CURRENT_VERSION
 
         self.assertTrue(updater.setup(self.hass, {
             'updater': None
@@ -67,3 +71,11 @@ class TestUpdater(unittest.TestCase):
 
         mock_get.side_effect = KeyError
         self.assertIsNone(updater.get_newest_version())
+
+    def test_updater_disabled_on_dev(self):
+        """Test if the updater component is disabled on dev."""
+        updater.CURRENT_VERSION = MOCK_CURRENT_VERSION + 'dev'
+
+        self.assertFalse(updater.setup(self.hass, {
+            'updater': None
+        }))

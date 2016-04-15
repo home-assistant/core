@@ -7,10 +7,13 @@ at https://home-assistant.io/components/garage_door/
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, SERVICE_CLOSE, SERVICE_OPEN,
     ATTR_ENTITY_ID)
@@ -28,6 +31,10 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 DISCOVERY_PLATFORMS = {
     wink.DISCOVER_GARAGE_DOORS: 'wink'
 }
+
+GARAGE_DOOR_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,10 +80,11 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_OPEN, handle_garage_door_service,
-                           descriptions.get(SERVICE_OPEN))
+                           descriptions.get(SERVICE_OPEN),
+                           schema=GARAGE_DOOR_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_CLOSE, handle_garage_door_service,
-                           descriptions.get(SERVICE_CLOSE))
-
+                           descriptions.get(SERVICE_CLOSE),
+                           schema=GARAGE_DOOR_SERVICE_SCHEMA)
     return True
 
 

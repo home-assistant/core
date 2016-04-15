@@ -32,16 +32,13 @@ class TestSun(unittest.TestCase):
 
     def test_setting_rising(self):
         """Test retrieving sun setting and rising."""
-        latitude = 32.87336
-        longitude = 117.22743
-
-        # Compare it with the real data
-        self.hass.config.latitude = latitude
-        self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         astral = Astral()
         utc_now = dt_util.utcnow()
+
+        latitude = self.hass.config.latitude
+        longitude = self.hass.config.longitude
 
         mod = -1
         while True:
@@ -73,8 +70,6 @@ class TestSun(unittest.TestCase):
 
     def test_state_change(self):
         """Test if the state changes at next setting/rising."""
-        self.hass.config.latitude = '32.87336'
-        self.hass.config.longitude = '117.22743'
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         if sun.is_on(self.hass):

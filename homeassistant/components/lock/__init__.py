@@ -8,10 +8,13 @@ from datetime import timedelta
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
     STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
@@ -32,6 +35,11 @@ DISCOVERY_PLATFORMS = {
     wink.DISCOVER_LOCKS: 'wink',
     verisure.DISCOVER_LOCKS: 'verisure'
 }
+
+LOCK_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_CODE): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,10 +83,7 @@ def setup(hass, config):
         """Handle calls to the lock services."""
         target_locks = component.extract_from_service(service)
 
-        if ATTR_CODE not in service.data:
-            code = None
-        else:
-            code = service.data[ATTR_CODE]
+        code = service.data.get(ATTR_CODE)
 
         for item in target_locks:
             if service.service == SERVICE_LOCK:
@@ -92,10 +97,11 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_UNLOCK, handle_lock_service,
-                           descriptions.get(SERVICE_UNLOCK))
+                           descriptions.get(SERVICE_UNLOCK),
+                           schema=LOCK_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_LOCK, handle_lock_service,
-                           descriptions.get(SERVICE_LOCK))
-
+                           descriptions.get(SERVICE_LOCK),
+                           schema=LOCK_SERVICE_SCHEMA)
     return True
 
 

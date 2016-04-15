@@ -65,6 +65,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/upnp.py
+    homeassistant/components/zeroconf.py
+
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -72,6 +75,7 @@ omit =
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
+    homeassistant/components/camera/rpi_camera.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
@@ -107,6 +111,8 @@ omit =
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/squeezebox.py
+    homeassistant/components/media_player/onkyo.py
+    homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/googlevoice.py
@@ -136,7 +142,10 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
+    homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/netatmo.py
+    homeassistant/components/sensor/nzbget.py
+    homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
@@ -167,6 +176,7 @@ omit =
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
+    homeassistant/components/*/thinkingcleaner.py
 
 
 [report]

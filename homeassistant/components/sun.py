@@ -13,12 +13,11 @@ from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as location_util
+from homeassistant.const import CONF_ELEVATION
 
-REQUIREMENTS = ['astral==0.9']
+REQUIREMENTS = ['astral==1.0']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
-
-CONF_ELEVATION = 'elevation'
 
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
@@ -113,8 +112,8 @@ def setup(hass, config):
 
     from astral import Location
 
-    location = Location(('', '', latitude, longitude, hass.config.time_zone,
-                         elevation))
+    location = Location(('', '', latitude, longitude,
+                         hass.config.time_zone.zone, elevation))
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())

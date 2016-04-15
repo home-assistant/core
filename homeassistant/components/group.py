@@ -5,6 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
 """
 import threading
+from collections import OrderedDict
+
+import voluptuous as vol
 
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -14,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import (
     Entity, generate_entity_id, split_entity_id)
 from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'group'
 
@@ -25,6 +29,38 @@ CONF_VIEW = 'view'
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
+
+
+def _conf_preprocess(value):
+    """Preprocess alternative configuration formats."""
+    if isinstance(value, (str, list)):
+        value = {CONF_ENTITIES: value}
+
+    return value
+
+_SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
+    vol.Optional(CONF_ENTITIES): vol.Any(None, cv.entity_ids),
+    CONF_VIEW: bool,
+    CONF_NAME: str,
+    CONF_ICON: cv.icon,
+}))
+
+
+def _group_dict(value):
+    """Validate a dictionary of group definitions."""
+    config = OrderedDict()
+    for key, group in value.items():
+        try:
+            config[key] = _SINGLE_GROUP_CONFIG(group)
+        except vol.MultipleInvalid as ex:
+            raise vol.Invalid('Group {} is invalid: {}'.format(key, ex))
+
+    return config
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(dict, _group_dict)
+}, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
@@ -108,16 +144,10 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def setup(hass, config):
     """Setup all groups found definded in the configuration."""
     for object_id, conf in config.get(DOMAIN, {}).items():
-        if not isinstance(conf, dict):
-            conf = {CONF_ENTITIES: conf}
-
         name = conf.get(CONF_NAME, object_id)
-        entity_ids = conf.get(CONF_ENTITIES)
+        entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
-
-        if isinstance(entity_ids, str):
-            entity_ids = [ent.strip() for ent in entity_ids.split(",")]
 
         Group(hass, name, entity_ids, icon=icon, view=view,
               object_id=object_id)

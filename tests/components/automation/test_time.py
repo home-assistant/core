@@ -3,6 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
@@ -15,6 +16,7 @@ class TestAutomationTime(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         self.calls = []
 
         def record_call(service):
@@ -28,7 +30,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_hour_matches(self):
         """Test for firing if hour is matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -38,7 +40,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
 
@@ -47,7 +49,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_minute_matches(self):
         """Test for firing if minutes are matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -57,7 +59,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(minute=0))
 
@@ -66,7 +68,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_second_matches(self):
         """Test for firing if seconds are matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -76,7 +78,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
 
@@ -85,7 +87,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_all_matches(self):
         """Test for firing if everything matches."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -97,7 +99,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=2, second=3))
@@ -107,7 +109,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_seconds(self):
         """Test for firing periodically every second."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -117,7 +119,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=0, second=2))
@@ -127,7 +129,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_minutes(self):
         """Test for firing periodically every minute."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -137,7 +139,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=2, second=0))
@@ -147,7 +149,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_hours(self):
         """Test for firing periodically every hour."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -157,7 +159,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=2, minute=0, second=0))
@@ -167,7 +169,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_using_after(self):
         """Test for firing after."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -177,7 +179,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
@@ -187,7 +189,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -196,7 +198,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
@@ -210,7 +212,7 @@ class TestAutomationTime(unittest.TestCase):
 
         This should break the before rule.
         """
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -221,7 +223,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=0, second=5))
@@ -232,7 +234,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_before(self):
         """Test for if action before."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -267,7 +269,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_after(self):
         """Test for if action after."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -302,7 +304,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_one_weekday(self):
         """Test for if action with one weekday."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -338,7 +340,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_list_weekday(self):
         """Test for action with a list of weekdays."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',

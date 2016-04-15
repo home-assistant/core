@@ -2,6 +2,7 @@
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
     ATTR_ASSUMED_STATE, )
@@ -218,19 +219,16 @@ class TestComponentsGroup(unittest.TestCase):
         test_group = group.Group(
             self.hass, 'init_group', ['light.Bowl', 'light.Ceiling'], False)
 
-        self.assertTrue(
-            group.setup(
-                self.hass,
-                {
-                    group.DOMAIN: {
-                        'second_group': {
-                            'entities': 'light.Bowl, ' + test_group.entity_id,
-                            'icon': 'mdi:work',
-                            'view': True,
-                        },
-                        'test_group': 'hello.world,sensor.happy',
-                    }
-                }))
+        _setup_component(self.hass, 'group', {'group': {
+                    'second_group': {
+                        'entities': 'light.Bowl, ' + test_group.entity_id,
+                        'icon': 'mdi:work',
+                        'view': True,
+                    },
+                    'test_group': 'hello.world,sensor.happy',
+                    'empty_group': {'name': 'Empty Group', 'entities': None},
+                }
+            })
 
         group_state = self.hass.states.get(
             group.ENTITY_ID_FORMAT.format('second_group'))

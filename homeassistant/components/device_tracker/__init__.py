@@ -17,6 +17,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 
@@ -93,7 +94,7 @@ def setup(hass, config):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     conf = config.get(DOMAIN, {})
-    if isinstance(conf, list):
+    if isinstance(conf, list) and len(conf) > 0:
         conf = conf[0]
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
@@ -129,8 +130,7 @@ def setup(hass, config):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
 
-    for p_type, p_config in \
-            config_per_platform(config, DOMAIN, _LOGGER):
+    for p_type, p_config in config_per_platform(config, DOMAIN):
         setup_platform(p_type, p_config)
 
     def device_tracker_discovered(service, info):
@@ -204,6 +204,7 @@ class DeviceTracker(object):
                 return
 
             # If no device can be found, create it
+            dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
             device = Device(
                 self.hass, self.consider_home, self.home_range, self.track_new,
                 dev_id, mac, (host_name or dev_id).replace('_', ' '))

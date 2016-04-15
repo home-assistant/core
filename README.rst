@@ -1,4 +1,4 @@
-Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/balloob/home-assistant|
+Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant|
 ===========================================================================================================
 
 Home Assistant is a home automation platform running on Python 3. The
@@ -88,11 +88,11 @@ If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
 section <https://home-assistant.io/help/>`__ how to reach us.
 
-.. |Build Status| image:: https://travis-ci.org/balloob/home-assistant.svg?branch=master
-   :target: https://travis-ci.org/balloob/home-assistant
-.. |Coverage Status| image:: https://img.shields.io/coveralls/balloob/home-assistant.svg
-   :target: https://coveralls.io/r/balloob/home-assistant?branch=master
-.. |Join the chat at https://gitter.im/balloob/home-assistant| image:: https://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/balloob/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |screenshot-states| image:: https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png
+.. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
+   :target: https://travis-ci.org/home-assistant/home-assistant
+.. |Coverage Status| image:: https://img.shields.io/coveralls/home-assistant/home-assistant.svg
+   :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
+.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://badges.gitter.im/Join%20Chat.svg
+   :target: https://gitter.im/home-assistant/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/

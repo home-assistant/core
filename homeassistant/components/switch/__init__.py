@@ -8,10 +8,13 @@ from datetime import timedelta
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
-
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
@@ -49,6 +52,10 @@ PROP_TO_ATTR = {
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
     'today_power_mw': ATTR_TODAY_MWH,
 }
+
+SWITCH_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,11 +109,14 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_switch_service,
-                           descriptions.get(SERVICE_TURN_OFF))
+                           descriptions.get(SERVICE_TURN_OFF),
+                           schema=SWITCH_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_switch_service,
-                           descriptions.get(SERVICE_TURN_ON))
+                           descriptions.get(SERVICE_TURN_ON),
+                           schema=SWITCH_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_TOGGLE, handle_switch_service,
-                           descriptions.get(SERVICE_TOGGLE))
+                           descriptions.get(SERVICE_TOGGLE),
+                           schema=SWITCH_SERVICE_SCHEMA)
 
     return True
 

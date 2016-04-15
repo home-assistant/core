@@ -14,7 +14,7 @@ To use the mqtt_example component you will need to add the following to your
 configuration.yaml file.
 
 mqtt_example:
-  topic: home-assistant/mqtt_example
+  topic: "home-assistant/mqtt_example"
 """
 import homeassistant.loader as loader
 
@@ -29,7 +29,7 @@ DEFAULT_TOPIC = 'home-assistant/mqtt_example'
 
 
 def setup(hass, config):
-    """Setup the  MQTT example component."""
+    """Setup the MQTT example component."""
     mqtt = loader.get_component('mqtt')
     topic = config[DOMAIN].get('topic', DEFAULT_TOPIC)
     entity_id = 'mqtt_example.last_message'

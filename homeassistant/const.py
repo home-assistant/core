@@ -1,8 +1,10 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.17.0.dev0"
+__version__ = "0.18.0.dev0"
 REQUIRED_PYTHON_VER = (3, 4)
+
+PLATFORM_FORMAT = '{}.{}'
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL = '*'
@@ -14,6 +16,7 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 CONF_ICON = "icon"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
+CONF_ELEVATION = "elevation"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_NAME = "name"
 CONF_TIME_ZONE = "time_zone"
@@ -21,12 +24,15 @@ CONF_CUSTOMIZE = "customize"
 
 CONF_PLATFORM = "platform"
 CONF_HOST = "host"
+CONF_PORT = "port"
 CONF_HOSTS = "hosts"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_API_KEY = "api_key"
 CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+CONF_OPTIMISTIC = 'optimistic'
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 
