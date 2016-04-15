@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
+import homeassistant.core as HA
+from homeassistant.components.sun import (STATE_ABOVE_HORIZON, ENTITY_ID as SUN_ID)
 from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -42,6 +44,8 @@ SENSOR_TYPES = {
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
+def is_daytime():
+    return HA.HomeAssistant().states.is_state(SUN_ID, STATE_ABOVE_HORIZON)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Forecast.io sensor."""
@@ -83,10 +87,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(dev)
 
-
 # pylint: disable=too-few-public-methods
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
+
+    _icon_enum = ({
+        'clear-day': 1,
+        'clear-night': 1,
+        'rain': 10,
+        'snow': 13,
+        'sleet': 12,
+        'wind': 6,
+        'fog': 15,
+        'cloudy': 4,
+        'partly-cloudy-day': 3,
+        'partly-cloudy-night': 103,
+        'hail': 12,
+        'thunderstorm': 11,
+        'tornado': 34,
+    })
 
     def __init__(self, weather_data, sensor_type):
         """Initialize the sensor."""
@@ -127,6 +146,24 @@ class ForeCastSensor(Entity):
     def unit_system(self):
         """Return the unit system of this entity."""
         return self._unit_system
+
+    @property
+    def entity_picture(self):
+        if self.type != 'icon':
+            return None
+        else:
+            try:
+                icon = self._icon_enum[self._state]
+                is_night = '' if is_daytime() else ';is_night=1'
+                return 'http://api.met.no/weatherapi/weathericon/1.1/?symbol={};content_type=image/png{}'.format(str(icon), is_night)
+            except KeyError:
+                return None
+
+    def getIcon(self, icon):
+        try:
+            return self._icon_enum[icon]
+        except KeyError:
+            return None
 
     # pylint: disable=too-many-branches
     def update(self):
