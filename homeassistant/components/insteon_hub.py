@@ -8,9 +8,19 @@ import logging
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_PLATFORM_DISCOVERED, STATE_UNKNOWN, STATE_OFF, STATE_UNKNOWN,
-    STATE_LOW, STATE_MED, STATE_HIGH, STATE_ON)
+    ATTR_DISCOVERED,
+    ATTR_SERVICE,
+    CONF_API_KEY,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_PLATFORM_DISCOVERED,
+    STATE_UNKNOWN,
+    STATE_OFF,
+    STATE_LOW,
+    STATE_MED,
+    STATE_HIGH,
+    STATE_ON,
+)
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import (
     Entity,
