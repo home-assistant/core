@@ -94,17 +94,17 @@ class ForeCastSensor(Entity):
     _icon_enum = ({
         'clear-day': 1,
         'clear-night': 1,
-        'rain': 10,
-        'snow': 13,
-        'sleet': 12,
-        'wind': 6,
-        'fog': 15,
         'cloudy': 4,
-        'partly-cloudy-day': 3,
-        'partly-cloudy-night': 103,
+        'fog': 15,
         'hail': 12,
+        'partly-cloudy-day': 3,
+        'partly-cloudy-night': 3,
+        'rain': 10,
+        'sleet': 12,
+        'snow': 13,
         'thunderstorm': 11,
         'tornado': 34,
+        'wind': 6,
     })
 
     def __init__(self, weather_data, sensor_type):
