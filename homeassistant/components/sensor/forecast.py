@@ -147,6 +147,24 @@ class ForeCastSensor(Entity):
         """Return the unit system of this entity."""
         return self._unit_system
 
+    @property
+    def entity_picture(self):
+        if self.type != 'icon':
+            return None
+        else:
+            try:
+                icon = self._icon_enum[self._state]
+                is_night = '' if is_daytime() else ';is_night=1'
+                return 'http://api.met.no/weatherapi/weathericon/1.1/?symbol={};content_type=image/png{}'.format(str(icon), is_night)
+            except KeyError:
+                return None
+
+    def getIcon(self, icon):
+        try:
+            return self._icon_enum[icon]
+        except KeyError:
+            return None
+
     # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
