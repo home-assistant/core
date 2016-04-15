@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
+import homeassistant.core as HA
+from homeassistant.components.sun import (STATE_ABOVE_HORIZON, ENTITY_ID as SUN_ID)
 from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -42,6 +44,8 @@ SENSOR_TYPES = {
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
+def is_daytime():
+    return HA.HomeAssistant().states.is_state(SUN_ID, STATE_ABOVE_HORIZON)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Forecast.io sensor."""
