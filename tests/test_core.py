@@ -128,7 +128,7 @@ class TestEvent(unittest.TestCase):
             'event_type': event_type,
             'data': data,
             'origin': 'LOCAL',
-            'time_fired': dt_util.datetime_to_str(now),
+            'time_fired': now,
         }
         self.assertEqual(expected, event.as_dict())
 
@@ -225,13 +225,14 @@ class TestState(unittest.TestCase):
 
     def test_repr(self):
         """Test state.repr."""
-        self.assertEqual("<state happy.happy=on @ 12:00:00 08-12-1984>",
+        self.assertEqual("<state happy.happy=on @ 1984-12-08T12:00:00+00:00>",
                          str(ha.State(
                              "happy.happy", "on",
                              last_changed=datetime(1984, 12, 8, 12, 0, 0))))
 
         self.assertEqual(
-            "<state happy.happy=on; brightness=144 @ 12:00:00 08-12-1984>",
+            "<state happy.happy=on; brightness=144 @ "
+            "1984-12-08T12:00:00+00:00>",
             str(ha.State("happy.happy", "on", {"brightness": 144},
                          datetime(1984, 12, 8, 12, 0, 0))))
 

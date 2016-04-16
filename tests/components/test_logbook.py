@@ -68,7 +68,7 @@ class TestComponentHistory(unittest.TestCase):
         """Test humanify filter too frequent sensor values."""
         entity_id = 'sensor.bla'
 
-        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointA = dt_util.utcnow().replace(minute=2)
         pointB = pointA.replace(minute=5)
         pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 

@@ -50,8 +50,7 @@ class VeraSwitch(VeraDevice, SwitchDevice):
             last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
-                    utc_time)
+                attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.is_tripped

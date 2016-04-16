@@ -87,7 +87,7 @@ def _handle_get_logbook(handler, path_match, data):
     date_str = path_match.group('date')
 
     if date_str:
-        start_date = dt_util.date_str_to_date(date_str)
+        start_date = dt_util.parse_date(date_str)
 
         if start_date is None:
             handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
@@ -122,7 +122,7 @@ class Entry(object):
     def as_dict(self):
         """Convert entry to a dict to be used within JSON."""
         return {
-            'when': dt_util.datetime_to_str(self.when),
+            'when': self.when,
             'name': self.name,
             'message': self.message,
             'domain': self.domain,

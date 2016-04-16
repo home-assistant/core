@@ -34,7 +34,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_sunset_trigger(self):
         """Test the sunset trigger."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_SETTING: '02:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '2015-09-16T02:00:00Z',
         })
 
         now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
@@ -61,7 +61,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_sunrise_trigger(self):
         """Test the sunrise trigger."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
@@ -88,7 +88,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_sunset_trigger_with_offset(self):
         """Test the sunset trigger with offset."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_SETTING: '02:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '2015-09-16T02:00:00Z',
         })
 
         now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
@@ -116,7 +116,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_sunrise_trigger_with_offset(self):
         """Test the runrise trigger with offset."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
@@ -144,7 +144,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_if_action_before(self):
         """Test if action was before."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {
@@ -180,7 +180,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_if_action_after(self):
         """Test if action was after."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {
@@ -216,7 +216,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_if_action_before_with_offset(self):
         """Test if action was before offset."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {
@@ -253,7 +253,7 @@ class TestAutomationSun(unittest.TestCase):
     def test_if_action_after_with_offset(self):
         """Test if action was after offset."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '14:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T14:00:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {
@@ -290,8 +290,8 @@ class TestAutomationSun(unittest.TestCase):
     def test_if_action_before_and_after_during(self):
         """Test if action was before and after during."""
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_RISING: '10:00:00 16-09-2015',
-            sun.STATE_ATTR_NEXT_SETTING: '15:00:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_RISING: '2015-09-16T10:00:00Z',
+            sun.STATE_ATTR_NEXT_SETTING: '2015-09-16T15:00:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {
@@ -337,7 +337,7 @@ class TestAutomationSun(unittest.TestCase):
         import pytz
 
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON, {
-            sun.STATE_ATTR_NEXT_SETTING: '17:30:00 16-09-2015',
+            sun.STATE_ATTR_NEXT_SETTING: '2015-09-16T17:30:00Z',
         })
 
         _setup_component(self.hass, automation.DOMAIN, {

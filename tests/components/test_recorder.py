@@ -63,4 +63,16 @@ class TestRecorder(unittest.TestCase):
         db_events = recorder.query_events(
             'SELECT * FROM events WHERE event_type = ?', (event_type, ))
 
-        self.assertEqual(events, db_events)
+        assert len(events) == 1
+        assert len(db_events) == 1
+
+        event = events[0]
+        db_event = db_events[0]
+
+        assert event.event_type == db_event.event_type
+        assert event.data == db_event.data
+        assert event.origin == db_event.origin
+
+        # Recorder uses SQLite and stores datetimes as integer unix timestamps
+        assert event.time_fired.replace(microsecond=0) == \
+            db_event.time_fired.replace(microsecond=0)
