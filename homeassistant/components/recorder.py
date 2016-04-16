@@ -13,8 +13,8 @@ import logging
 import queue
 import sqlite3
 import threading
-import voluptuous as vol
 from datetime import date, datetime, timedelta
+import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
