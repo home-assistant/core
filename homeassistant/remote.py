@@ -7,6 +7,7 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
+from datetime import datetime
 import enum
 import json
 import logging
@@ -277,7 +278,9 @@ class JSONEncoder(json.JSONEncoder):
 
         Hand other objects to the original method.
         """
-        if hasattr(obj, 'as_dict'):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, 'as_dict'):
             return obj.as_dict()
 
         try:
