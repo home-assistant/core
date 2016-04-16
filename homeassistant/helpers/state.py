@@ -92,9 +92,8 @@ class TrackStates(object):
 
 def get_changed_since(states, utc_point_in_time):
     """Return list of states that have been changed since utc_point_in_time."""
-    point_in_time = dt_util.strip_microseconds(utc_point_in_time)
-
-    return [state for state in states if state.last_updated >= point_in_time]
+    return [state for state in states
+            if state.last_updated >= utc_point_in_time]
 
 
 def reproduce_state(hass, states, blocking=False):

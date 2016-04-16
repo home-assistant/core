@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 def trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     if CONF_AFTER in config:
-        after = dt_util.parse_time_str(config[CONF_AFTER])
+        after = dt_util.parse_time(config[CONF_AFTER])
         if after is None:
             _error_time(config[CONF_AFTER], CONF_AFTER)
             return False
@@ -62,13 +62,13 @@ def if_action(hass, config):
         return None
 
     if before is not None:
-        before = dt_util.parse_time_str(before)
+        before = dt_util.parse_time(before)
         if before is None:
             _error_time(before, CONF_BEFORE)
             return None
 
     if after is not None:
-        after = dt_util.parse_time_str(after)
+        after = dt_util.parse_time(after)
         if after is None:
             _error_time(after, CONF_AFTER)
             return None
