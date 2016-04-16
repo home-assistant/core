@@ -39,7 +39,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("True", util.repr_helper(True))
         self.assertEqual("test=1",
                          util.repr_helper({"test": 1}))
-        self.assertEqual("12:00:00 09-07-1986",
+        self.assertEqual("1986-07-09T12:00:00+00:00",
                          util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)))
 
     def test_convert(self):
