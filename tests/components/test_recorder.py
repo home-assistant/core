@@ -33,31 +33,22 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - (60*60*24*5)
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        test_states = """
-        INSERT INTO states (
-        entity_id, domain, state, attributes, last_changed, last_updated,
-        created, utc_offset, event_id)
-        VALUES
-        ('test.recorder2', 'sensor', 'purgeme', '{attr}', {five_days_ago},
-            {five_days_ago}, {five_days_ago}, -18000, 1001),
-        ('test.recorder2', 'sensor', 'purgeme', '{attr}', {five_days_ago},
-            {five_days_ago}, {five_days_ago}, -18000, 1002),
-        ('test.recorder2', 'sensor', 'purgeme', '{attr}', {five_days_ago},
-            {five_days_ago}, {five_days_ago}, -18000, 1002),
-        ('test.recorder2', 'sensor', 'dontpurgeme', '{attr}', {now},
-            {now}, {now}, -18000, 1003),
-        ('test.recorder2', 'sensor', 'dontpurgeme', '{attr}', {now},
-            {now}, {now}, -18000, 1004);
-        """.format(
-            attr=json.dumps(attributes),
-            five_days_ago=five_days_ago,
-            now=now,
-        )
-
-        # insert test states
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
-        recorder.query(test_states)
+        for event_id in range(5):
+            if event_id < 3:
+                timestamp = five_days_ago
+                state = 'purgeme'
+            else:
+                timestamp = now
+                state = 'dontpurgeme'
+            recorder.query("INSERT INTO states ("
+                           "entity_id, domain, state, attributes, last_changed,"
+                           "last_updated, created, utc_offset, event_id)"
+                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                           ('test.recorder2', 'sensor', state,
+                           json.dumps(attributes), timestamp, timestamp,
+                           timestamp, -18000, event_id + 1000))
 
     def _add_test_events(self):
         """Adds a few events for testing."""
@@ -65,27 +56,21 @@ class TestRecorder(unittest.TestCase):
         five_days_ago = now - (60*60*24*5)
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
 
-        test_events = """
-        INSERT INTO events (
-        event_type, event_data, origin, created, time_fired, utc_offset
-        ) VALUES
-        ('EVENT_TEST_PURGE', '{event_data}', 'LOCAL', {five_days_ago},
-            {five_days_ago}, -18000),
-        ('EVENT_TEST_PURGE', '{event_data}', 'LOCAL', {five_days_ago},
-            {five_days_ago}, -18000),
-        ('EVENT_TEST', '{event_data}', 'LOCAL', {now}, {five_days_ago}, -18000),
-        ('EVENT_TEST', '{event_data}', 'LOCAL', {now}, {five_days_ago}, -18000),
-        ('EVENT_TEST', '{event_data}', 'LOCAL', {now}, {five_days_ago}, -18000);
-        """.format(
-            event_data=json.dumps(event_data),
-            now=now,
-            five_days_ago=five_days_ago
-        )
-
-        # insert test events
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
-        recorder.query(test_events)
+        for event_id in range(5):
+            if event_id < 2:
+                timestamp = five_days_ago
+                event_type = 'EVENT_TEST_PURGE'
+            else:
+                timestamp = now
+                event_type = 'EVENT_TEST'
+            recorder.query("INSERT INTO events"
+                           "(event_type, event_data, origin, created,"
+                           "time_fired, utc_offset)"
+                           "VALUES (?, ?, ?, ?, ?, ?)",
+                           (event_type, json.dumps(event_data), 'LOCAL',
+                            timestamp, timestamp, -18000))
 
     def test_saving_state(self):
         """Test saving and restoring a state."""
