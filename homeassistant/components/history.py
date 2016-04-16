@@ -182,7 +182,7 @@ def _api_history_period(handler, path_match, data):
     one_day = timedelta(seconds=86400)
 
     if date_str:
-        start_date = dt_util.date_str_to_date(date_str)
+        start_date = dt_util.parse_date(date_str)
 
         if start_date is None:
             handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)

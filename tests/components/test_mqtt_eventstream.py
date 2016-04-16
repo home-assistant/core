@@ -66,13 +66,13 @@ class TestMqttEventStream(unittest.TestCase):
         mock_sub.assert_called_with(self.hass, sub_topic, ANY)
 
     @patch('homeassistant.components.mqtt.publish')
-    @patch('homeassistant.core.dt_util.datetime_to_str')
-    def test_state_changed_event_sends_message(self, mock_datetime, mock_pub):
+    @patch('homeassistant.core.dt_util.utcnow')
+    def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
         """"Test the sending of a new message if event changed."""
-        now = '00:19:19 11-01-2016'
+        now = dt_util.as_utc(dt_util.now())
         e_id = 'fake.entity'
         pub_topic = 'bar'
-        mock_datetime.return_value = now
+        mock_utcnow.return_value = now
 
         # Add the eventstream component for publishing events
         self.assertTrue(self.add_eventstream(pub_topic=pub_topic))
@@ -97,11 +97,11 @@ class TestMqttEventStream(unittest.TestCase):
         event = {}
         event['event_type'] = EVENT_STATE_CHANGED
         new_state = {
-            "last_updated": now,
+            "last_updated": now.isoformat(),
             "state": "on",
             "entity_id": e_id,
             "attributes": {},
-            "last_changed": now
+            "last_changed": now.isoformat()
         }
         event['event_data'] = {"new_state": new_state, "entity_id": e_id}
 

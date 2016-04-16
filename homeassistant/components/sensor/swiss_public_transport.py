@@ -23,6 +23,8 @@ ATTR_TARGET = 'Destination'
 ATTR_REMAINING_TIME = 'Remaining time'
 ICON = 'mdi:bus'
 
+TIME_STR_FORMAT = "%H:%M"
+
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -126,10 +128,10 @@ class PublicTransportData(object):
 
         try:
             self.times = [
-                dt_util.datetime_to_time_str(
-                    dt_util.as_local(dt_util.utc_from_timestamp(
-                        item['from']['departureTimestamp']))
-                )
+                dt_util.as_local(
+                    dt_util.utc_from_timestamp(
+                        item['from']['departureTimestamp'])).strftime(
+                            TIME_STR_FORMAT)
                 for item in connections
             ]
             self.times.append(
