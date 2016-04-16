@@ -7,6 +7,7 @@ import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -193,6 +194,9 @@ class TestRemoteMethods(unittest.TestCase):
 
         # Default method raises TypeError if non HA object
         self.assertRaises(TypeError, ha_json_enc.default, 1)
+
+        now = dt_util.utcnow()
+        self.assertEqual(now.isoformat(), ha_json_enc.default(now))
 
 
 class TestRemoteClasses(unittest.TestCase):

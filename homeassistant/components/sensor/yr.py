@@ -138,10 +138,8 @@ class YrSensor(Entity):
 
         # Find sensor
         for time_entry in self._weather.data['product']['time']:
-            valid_from = dt_util.str_to_datetime(
-                time_entry['@from'], "%Y-%m-%dT%H:%M:%SZ")
-            valid_to = dt_util.str_to_datetime(
-                time_entry['@to'], "%Y-%m-%dT%H:%M:%SZ")
+            valid_from = dt_util.parse_datetime(time_entry['@from'])
+            valid_to = dt_util.parse_datetime(time_entry['@to'])
 
             loc_data = time_entry['location']
 
@@ -204,5 +202,4 @@ class YrData(object):
         model = self.data['meta']['model']
         if '@nextrun' not in model:
             model = model[0]
-        self._nextrun = dt_util.str_to_datetime(model['@nextrun'],
-                                                "%Y-%m-%dT%H:%M:%SZ")
+        self._nextrun = dt_util.parse_datetime(model['@nextrun'])
