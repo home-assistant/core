@@ -44,6 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     players = None
     hosts = config.get('hosts', None)
+    groups_only = config.get('groups_only', False)
+
     if hosts:
         # Support retro compatibility with comma separated list of hosts
         # from config
@@ -55,13 +57,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not players:
         players = soco.discover(interface_addr=config.get('interface_addr',
                                                           None))
-
     if not players:
         _LOGGER.warning('No Sonos speakers found.')
         return False
 
-    add_devices(SonosDevice(hass, p) for p in players)
-    _LOGGER.info('Added %s Sonos speakers', len(players))
+    if groups_only:
+        # Only care about whole groups
+        groups = {player.group.uid: player.group for player in players}
+        add_devices(SonosDeviceGroup(hass, group) for group in groups.values())
+        _LOGGER.info('Added %s Sonos groups', len(groups))
+    else:
+        add_devices(SonosDevice(hass, p) for p in players)
+        _LOGGER.info('Added %s Sonos speakers', len(players))
 
     return True
 
@@ -253,3 +260,26 @@ class SonosDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id):
         """Send the play_media command to the media player."""
         self._player.play_uri(media_id)
+
+
+class SonosDeviceGroup(SonosDevice):
+    """Wrapper around a group of players.
+
+    Hides separate devices and only cares about whole groups.
+    """
+
+    # pylint: disable=non-parent-init-called, super-init-not-called
+    def __init__(self, hass, group):
+        """Initialize sonos device group."""
+        self._group = group
+        super().__init__(hass, group.coordinator)
+
+    def update(self):
+        """Update the state, use group short label as name."""
+        super().update()
+        self._name = self._group.short_label
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}.{}".format(self.__class__, self._group.uid)
