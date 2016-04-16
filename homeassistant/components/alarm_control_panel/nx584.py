@@ -1,6 +1,4 @@
 """
-homeassistant.components.alarm_control_panel.nx584
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for NX584 alarm control panels.
 
 For more details about this platform, please refer to the documentation at
@@ -16,12 +14,11 @@ from homeassistant.const import (
     STATE_UNKNOWN)
 
 REQUIREMENTS = ['pynx584==0.2']
-
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup nx584. """
+    """Setup nx584 platform."""
     host = config.get('host', 'localhost:5007')
 
     try:
@@ -32,8 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NX584Alarm(alarm.AlarmControlPanel):
-    """ NX584-based alarm panel. """
+    """Represents the NX584-based alarm panel."""
+
     def __init__(self, hass, host, name):
+        """Initalize the nx584 alarm panel."""
         from nx584 import client
         self._hass = hass
         self._host = host
@@ -46,22 +45,22 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """ Polling needed. """
+        """Polling needed."""
         return True
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     @property
     def code_format(self):
-        """ Characters if code is defined. """
+        """The characters if code is defined."""
         return '[0-9]{4}([0-9]{2})?'
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         try:
             part = self._alarm.list_partitions()[0]
             zones = self._alarm.list_zones()
@@ -90,17 +89,17 @@ class NX584Alarm(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_AWAY
 
     def alarm_disarm(self, code=None):
-        """ Send disarm command. """
+        """Send disarm command."""
         self._alarm.disarm(code)
 
     def alarm_arm_home(self, code=None):
-        """ Send arm home command. """
+        """Send arm home command."""
         self._alarm.arm('home')
 
     def alarm_arm_away(self, code=None):
-        """ Send arm away command. """
+        """Send arm away command."""
         self._alarm.arm('auto')
 
     def alarm_trigger(self, code=None):
-        """ Alarm trigger command. """
+        """Alarm trigger command."""
         raise NotImplementedError()

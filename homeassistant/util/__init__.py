@@ -1,9 +1,4 @@
-"""
-homeassistant.util
-~~~~~~~~~~~~~~~~~~
-
-Helper methods for various modules.
-"""
+"""Helper methods for various modules."""
 import collections
 from itertools import chain
 import threading
@@ -25,24 +20,24 @@ RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
 def sanitize_filename(filename):
-    """ Sanitizes a filename by removing .. / and \\. """
+    r"""Sanitize a filename by removing .. / and \\."""
     return RE_SANITIZE_FILENAME.sub("", filename)
 
 
 def sanitize_path(path):
-    """ Sanitizes a path by removing ~ and .. """
+    """Sanitize a path by removing ~ and .."""
     return RE_SANITIZE_PATH.sub("", path)
 
 
 def slugify(text):
-    """ Slugifies a given text. """
+    """Slugify a given text."""
     text = text.lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
 
 def repr_helper(inp):
-    """ Helps creating a more readable string representation of objects. """
+    """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
@@ -54,7 +49,7 @@ def repr_helper(inp):
 
 
 def convert(value, to_type, default=None):
-    """ Converts value to to_type, returns default if fails. """
+    """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
     except (ValueError, TypeError):
@@ -63,8 +58,10 @@ def convert(value, to_type, default=None):
 
 
 def ensure_unique_string(preferred_string, current_strings):
-    """ Returns a string that is not present in current_strings.
-        If preferred string exists will append _2, _3, .. """
+    """Return a string that is not present in current_strings.
+
+    If preferred string exists will append _2, _3, ..
+    """
     test_string = preferred_string
     current_strings = set(current_strings)
 
@@ -79,7 +76,7 @@ def ensure_unique_string(preferred_string, current_strings):
 
 # Taken from: http://stackoverflow.com/a/11735897
 def get_local_ip():
-    """ Tries to determine the local IP address of the machine. """
+    """Try to determine the local IP address of the machine."""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -95,7 +92,7 @@ def get_local_ip():
 
 # Taken from http://stackoverflow.com/a/23728630
 def get_random_string(length=10):
-    """ Returns a random string with letters and digits. """
+    """Return a random string with letters and digits."""
     generator = random.SystemRandom()
     source_chars = string.ascii_letters + string.digits
 
@@ -103,34 +100,39 @@ def get_random_string(length=10):
 
 
 class OrderedEnum(enum.Enum):
-    """ Taken from Python 3.4.0 docs. """
-    # pylint: disable=no-init, too-few-public-methods
+    """Taken from Python 3.4.0 docs."""
 
+    # pylint: disable=no-init, too-few-public-methods
     def __ge__(self, other):
+        """Return the greater than element."""
         if self.__class__ is other.__class__:
             return self.value >= other.value
         return NotImplemented
 
     def __gt__(self, other):
+        """Return the greater element."""
         if self.__class__ is other.__class__:
             return self.value > other.value
         return NotImplemented
 
     def __le__(self, other):
+        """Return the lower than element."""
         if self.__class__ is other.__class__:
             return self.value <= other.value
         return NotImplemented
 
     def __lt__(self, other):
+        """Return the lower element."""
         if self.__class__ is other.__class__:
             return self.value < other.value
         return NotImplemented
 
 
 class OrderedSet(collections.MutableSet):
-    """ Ordered set taken from http://code.activestate.com/recipes/576694/ """
+    """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
     def __init__(self, iterable=None):
+        """Initialize the set."""
         self.end = end = []
         end += [None, end, end]         # sentinel node for doubly linked list
         self.map = {}                   # key --> [key, prev, next]
@@ -138,20 +140,22 @@ class OrderedSet(collections.MutableSet):
             self |= iterable
 
     def __len__(self):
+        """Return the length of the set."""
         return len(self.map)
 
     def __contains__(self, key):
+        """Check if key is in set."""
         return key in self.map
 
     def add(self, key):
-        """ Add an element to the end of the set. """
+        """Add an element to the end of the set."""
         if key not in self.map:
             end = self.end
             curr = end[1]
             curr[2] = end[1] = self.map[key] = [key, curr, end]
 
     def promote(self, key):
-        """ Promote element to beginning of the set, add if not there. """
+        """Promote element to beginning of the set, add if not there."""
         if key in self.map:
             self.discard(key)
 
@@ -160,13 +164,14 @@ class OrderedSet(collections.MutableSet):
         curr[2] = begin[1] = self.map[key] = [key, curr, begin]
 
     def discard(self, key):
-        """ Discard an element from the set. """
+        """Discard an element from the set."""
         if key in self.map:
             key, prev_item, next_item = self.map.pop(key)
             prev_item[2] = next_item
             next_item[1] = prev_item
 
     def __iter__(self):
+        """Iteration of the set."""
         end = self.end
         curr = end[2]
         while curr is not end:
@@ -174,6 +179,7 @@ class OrderedSet(collections.MutableSet):
             curr = curr[2]
 
     def __reversed__(self):
+        """Reverse the ordering."""
         end = self.end
         curr = end[1]
         while curr is not end:
@@ -181,8 +187,8 @@ class OrderedSet(collections.MutableSet):
             curr = curr[1]
 
     def pop(self, last=True):  # pylint: disable=arguments-differ
-        """
-        Pops element of the end of the set.
+        """Pop element of the end of the set.
+
         Set last=False to pop from the beginning.
         """
         if not self:
@@ -192,24 +198,27 @@ class OrderedSet(collections.MutableSet):
         return key
 
     def update(self, *args):
-        """ Add elements from args to the set. """
+        """Add elements from args to the set."""
         for item in chain(*args):
             self.add(item)
 
     def __repr__(self):
+        """Return the representation."""
         if not self:
             return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
+        """Return the comparision."""
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
 
 class Throttle(object):
-    """
-    A method decorator to add a cooldown to a method to prevent it from being
+    """A class for throttling the execution of tasks.
+
+    This method decorator adds a cooldown to a method to prevent it from being
     called more then 1 time within the timedelta interval `min_time` after it
     returned its result.
 
@@ -223,13 +232,15 @@ class Throttle(object):
 
     Adds a datetime attribute `last_call` to the method.
     """
-    # pylint: disable=too-few-public-methods
 
+    # pylint: disable=too-few-public-methods
     def __init__(self, min_time, limit_no_throttle=None):
+        """Initialize the throttle."""
         self.min_time = min_time
         self.limit_no_throttle = limit_no_throttle
 
     def __call__(self, method):
+        """Caller for the throttle."""
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
 
@@ -248,8 +259,8 @@ class Throttle(object):
 
         @wraps(method)
         def wrapper(*args, **kwargs):
-            """
-            Wrapper that allows wrapped to be called only once per min_time.
+            """Wrapper that allows wrapped to be called only once per min_time.
+
             If we cannot acquire the lock, it is running so return None.
             """
             # pylint: disable=protected-access
@@ -260,35 +271,39 @@ class Throttle(object):
             else:
                 host = args[0] if args else wrapper
 
-            if not hasattr(host, '_throttle_lock'):
-                host._throttle_lock = threading.Lock()
+            if not hasattr(host, '_throttle'):
+                host._throttle = {}
 
-            if not host._throttle_lock.acquire(False):
+            if id(self) not in host._throttle:
+                host._throttle[id(self)] = [threading.Lock(), None]
+            throttle = host._throttle[id(self)]
+
+            if not throttle[0].acquire(False):
                 return None
 
-            last_call = getattr(host, '_throttle_last_call', None)
             # Check if method is never called or no_throttle is given
-            force = not last_call or kwargs.pop('no_throttle', False)
+            force = not throttle[1] or kwargs.pop('no_throttle', False)
 
             try:
-                if force or utcnow() - last_call > self.min_time:
+                if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
-                    host._throttle_last_call = utcnow()
+                    throttle[1] = utcnow()
                     return result
                 else:
                     return None
             finally:
-                host._throttle_lock.release()
+                throttle[0].release()
 
         return wrapper
 
 
 class ThreadPool(object):
     """A priority queue-based thread pool."""
-    # pylint: disable=too-many-instance-attributes
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, job_handler, worker_count=0, busy_callback=None):
-        """
+        """Initialize the pool.
+
         job_handler: method to be called from worker thread to handle job
         worker_count: number of threads to run that handle jobs
         busy_callback: method to be called when queue gets too big.
@@ -316,7 +331,9 @@ class ThreadPool(object):
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
 
-            worker = threading.Thread(target=self._worker)
+            worker = threading.Thread(
+                target=self._worker,
+                name='ThreadPool Worker {}'.format(self.worker_count))
             worker.daemon = True
             worker.start()
 
@@ -335,18 +352,18 @@ class ThreadPool(object):
             self.busy_warning_limit = self.worker_count * 3
 
     def add_job(self, priority, job):
-        """ Add a job to the queue. """
+        """Add a job to the queue."""
         with self._lock:
             if not self.running:
                 raise RuntimeError("ThreadPool not running")
 
             self._work_queue.put(PriorityQueueItem(priority, job))
 
-            # check if our queue is getting too big
+            # Check if our queue is getting too big.
             if self._work_queue.qsize() > self.busy_warning_limit \
                and self._busy_callback is not None:
 
-                # Increase limit we will issue next warning
+                # Increase limit we will issue next warning.
                 self.busy_warning_limit *= 2
 
                 self._busy_callback(
@@ -401,12 +418,14 @@ class ThreadPool(object):
 
 
 class PriorityQueueItem(object):
-    """ Holds a priority and a value. Used within PriorityQueue. """
+    """Holds a priority and a value. Used within PriorityQueue."""
 
     # pylint: disable=too-few-public-methods
     def __init__(self, priority, item):
+        """Initialize the queue."""
         self.priority = priority
         self.item = item
 
     def __lt__(self, other):
+        """Return the ordering."""
         return self.priority < other.priority

@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.1.8']
+REQUIREMENTS = ['py-cpuinfo==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,13 +21,15 @@ ICON = 'mdi:pulse'
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the CPU speed sensor."""
+    """Setup the CPU speed sensor."""
     add_devices([CpuSpeedSensor(config.get('name', DEFAULT_NAME))])
 
 
 class CpuSpeedSensor(Entity):
-    """A CPU info sensor."""
+    """Representation a CPU sensor."""
+
     def __init__(self, name):
+        """Initialize the sensor."""
         self._name = name
         self._state = None
         self._unit_of_measurement = 'GHz'
@@ -35,22 +37,22 @@ class CpuSpeedSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
-        """Returns the state attributes."""
+        """Return the state attributes."""
         if self.info is not None:
             return {
                 ATTR_VENDOR: self.info['vendor_id'],
@@ -60,11 +62,11 @@ class CpuSpeedSensor(Entity):
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend, if any."""
         return ICON
 
     def update(self):
-        """Gets the latest data and updates the state."""
+        """Get the latest data and updates the state."""
         from cpuinfo import cpuinfo
 
         self.info = cpuinfo.get_cpu_info()

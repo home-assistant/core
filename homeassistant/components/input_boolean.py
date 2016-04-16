@@ -1,6 +1,4 @@
 """
-homeassistant.components.input_boolean
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to keep track of user controlled booleans for within automation.
 
 For more details about this component, please refer to the documentation
@@ -8,8 +6,11 @@ at https://home-assistant.io/components/input_boolean/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -23,6 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_NAME = "name"
 CONF_INITIAL = "initial"
 CONF_ICON = "icon"
+
+TOGGLE_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 
 def is_on(hass, entity_id):
@@ -41,7 +46,7 @@ def turn_off(hass, entity_id):
 
 
 def setup(hass, config):
-    """ Set up input boolean. """
+    """Set up input boolean."""
     if not isinstance(config.get(DOMAIN), dict):
         _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
         return False
@@ -68,7 +73,7 @@ def setup(hass, config):
         return False
 
     def toggle_service(service):
-        """ Handle a calls to the input boolean services. """
+        """Handle a calls to the input boolean services."""
         target_inputs = component.extract_from_service(service)
 
         for input_b in target_inputs:
@@ -77,8 +82,10 @@ def setup(hass, config):
             else:
                 input_b.turn_off()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service,
+                           schema=TOGGLE_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service,
+                           schema=TOGGLE_SERVICE_SCHEMA)
 
     component.add_entities(entities)
 
@@ -86,10 +93,10 @@ def setup(hass, config):
 
 
 class InputBoolean(ToggleEntity):
-    """ Represent a boolean input. """
+    """Representation of a boolean input."""
 
     def __init__(self, object_id, name, state, icon):
-        """ Initialize a boolean input. """
+        """Initialize a boolean input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._state = state
@@ -97,22 +104,22 @@ class InputBoolean(ToggleEntity):
 
     @property
     def should_poll(self):
-        """If entitiy should be polled."""
+        """If entity should be polled."""
         return False
 
     @property
     def name(self):
-        """Name of the boolean input."""
+        """Return name of the boolean input."""
         return self._name
 
     @property
     def icon(self):
-        """Icon to be used for this entity."""
+        """Returh the icon to be used for this entity."""
         return self._icon
 
     @property
     def is_on(self):
-        """True if entity is on."""
+        """Return true if entity is on."""
         return self._state
 
     def turn_on(self, **kwargs):

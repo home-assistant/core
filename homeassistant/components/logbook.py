@@ -9,6 +9,8 @@ import re
 from datetime import timedelta
 from itertools import groupby
 
+import voluptuous as vol
+
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.const import (
@@ -18,6 +20,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -39,9 +42,16 @@ ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
+LOG_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_MESSAGE): cv.string,
+    vol.Optional(ATTR_DOMAIN): cv.slug,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
-    """Adds an entry to the logbook."""
+    """Add an entry to the logbook."""
     data = {
         ATTR_NAME: name,
         ATTR_MESSAGE: message
@@ -55,23 +65,20 @@ def log_entry(hass, name, message, domain=None, entity_id=None):
 
 
 def setup(hass, config):
-    """Listens for download events to download files."""
-
+    """Listen for download events to download files."""
     def log_message(service):
         """Handle sending notification message service calls."""
-        message = service.data.get(ATTR_MESSAGE)
-        name = service.data.get(ATTR_NAME)
-        domain = service.data.get(ATTR_DOMAIN, None)
-        entity_id = service.data.get(ATTR_ENTITY_ID, None)
-
-        if not message or not name:
-            return
+        message = service.data[ATTR_MESSAGE]
+        name = service.data[ATTR_NAME]
+        domain = service.data.get(ATTR_DOMAIN)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
         message = template.render(hass, message)
         log_entry(hass, name, message, domain, entity_id)
 
     hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, 'log', log_message)
+    hass.services.register(DOMAIN, 'log', log_message,
+                           schema=LOG_MESSAGE_SCHEMA)
     return True
 
 
@@ -105,6 +112,7 @@ class Entry(object):
     # pylint: disable=too-many-arguments, too-few-public-methods
     def __init__(self, when=None, name=None, message=None, domain=None,
                  entity_id=None):
+        """Initialize the entry."""
         self.when = when
         self.name = name
         self.message = message
@@ -123,8 +131,7 @@ class Entry(object):
 
 
 def humanify(events):
-    """
-    Generator that converts a list of events into Entry objects.
+    """Generator that converts a list of events into Entry objects.
 
     Will try to group events if possible:
      - if 2+ sensor updates in GROUP_BY_MINUTES, show last
@@ -237,7 +244,6 @@ def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
     # pylint: disable=too-many-return-statements
-
     if domain == 'device_tracker':
         if state.state == STATE_NOT_HOME:
             return 'is away'

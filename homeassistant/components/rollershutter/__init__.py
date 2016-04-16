@@ -1,7 +1,5 @@
 """
-homeassistant.components.rollershutter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Rollershutter component.
+Support for Roller shutters.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter/
@@ -9,9 +7,13 @@ https://home-assistant.io/components/rollershutter/
 import os
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
@@ -34,40 +36,44 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
 
+ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 
 def is_open(hass, entity_id=None):
-    """ Returns if the rollershutter is open based on the statemachine. """
+    """Return if the roller shutter is open based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_ROLLERSHUTTERS
     return hass.states.is_state(entity_id, STATE_OPEN)
 
 
 def move_up(hass, entity_id=None):
-    """ Move up all or specified rollershutter. """
+    """Move up all or specified roller shutter."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_MOVE_UP, data)
 
 
 def move_down(hass, entity_id=None):
-    """ Move down all or specified rollershutter. """
+    """Move down all or specified roller shutter."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_MOVE_DOWN, data)
 
 
 def stop(hass, entity_id=None):
-    """ Stops all or specified rollershutter. """
+    """Stop all or specified roller shutter."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_STOP, data)
 
 
 def setup(hass, config):
-    """ Track states and offer events for rollershutters. """
+    """Track states and offer events for roller shutters."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
     def handle_rollershutter_service(service):
-        """ Handles calls to the rollershutter services. """
+        """Handle calls to the roller shutter services."""
         target_rollershutters = component.extract_from_service(service)
 
         for rollershutter in target_rollershutters:
@@ -86,32 +92,34 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_MOVE_UP,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_MOVE_UP))
+                           descriptions.get(SERVICE_MOVE_UP),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_MOVE_DOWN,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_MOVE_DOWN))
+                           descriptions.get(SERVICE_MOVE_DOWN),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_STOP))
-
+                           descriptions.get(SERVICE_STOP),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     return True
 
 
 class RollershutterDevice(Entity):
-    """ Represents a rollershutter within Home Assistant. """
-    # pylint: disable=no-self-use
+    """Representation a rollers hutter."""
 
+    # pylint: disable=no-self-use
     @property
     def current_position(self):
-        """
-        Return current position of rollershutter.
+        """Return current position of roller shutter.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         raise NotImplementedError()
 
     @property
     def state(self):
-        """ Returns the state of the rollershutter. """
+        """Return the state of the roller shutter."""
         current = self.current_position
 
         if current is None:
@@ -121,7 +129,7 @@ class RollershutterDevice(Entity):
 
     @property
     def state_attributes(self):
-        """ Return the state attributes. """
+        """Return the state attributes."""
         current = self.current_position
 
         if current is None:
@@ -132,13 +140,13 @@ class RollershutterDevice(Entity):
         }
 
     def move_up(self, **kwargs):
-        """ Move the rollershutter down. """
+        """Move the roller shutter down."""
         raise NotImplementedError()
 
     def move_down(self, **kwargs):
-        """ Move the rollershutter up. """
+        """Move the roller shutter up."""
         raise NotImplementedError()
 
     def stop(self, **kwargs):
-        """ Stop the rollershutter. """
+        """Stop the roller shutter."""
         raise NotImplementedError()

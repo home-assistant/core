@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.hyperion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Hyperion remotes.
 
 For more details about this platform, please refer to the documentation at
@@ -18,7 +16,7 @@ REQUIREMENTS = []
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Sets up a Hyperion server remote """
+    """Setup a Hyperion server remote."""
     host = config.get(CONF_HOST, None)
     port = config.get("port", 19444)
     device = Hyperion(host, port)
@@ -30,9 +28,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class Hyperion(Light):
-    """ Represents a Hyperion remote """
+    """Representation of a Hyperion remote."""
 
     def __init__(self, host, port):
+        """Initialize the light."""
         self._host = host
         self._port = port
         self._name = host
@@ -41,21 +40,21 @@ class Hyperion(Light):
 
     @property
     def name(self):
-        """ Return the hostname of the server. """
+        """Return the hostname of the server."""
         return self._name
 
     @property
     def rgb_color(self):
-        """ Last RGB color value set. """
+        """Return last RGB color value set."""
         return self._rgb_color
 
     @property
     def is_on(self):
-        """ True if the device is online. """
+        """Return true if the device is online."""
         return self._is_available
 
     def turn_on(self, **kwargs):
-        """ Turn the lights on. """
+        """Turn the lights on."""
         if self._is_available:
             if ATTR_RGB_COLOR in kwargs:
                 self._rgb_color = kwargs[ATTR_RGB_COLOR]
@@ -64,16 +63,16 @@ class Hyperion(Light):
                                "color": self._rgb_color})
 
     def turn_off(self, **kwargs):
-        """ Disconnect the remote. """
+        """Disconnect the remote."""
         self.json_request({"command": "clearall"})
 
     def update(self):
-        """ Ping the remote. """
+        """Ping the remote."""
         # just see if the remote port is open
         self._is_available = self.json_request()
 
     def setup(self):
-        """ Get the hostname of the remote. """
+        """Get the hostname of the remote."""
         response = self.json_request({"command": "serverinfo"})
         if response:
             self._name = response["info"]["hostname"]
@@ -82,7 +81,7 @@ class Hyperion(Light):
         return False
 
     def json_request(self, request=None, wait_for_response=False):
-        """ Communicate with the json server. """
+        """Communicate with the JSON server."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
 
@@ -93,7 +92,7 @@ class Hyperion(Light):
             return False
 
         if not request:
-            # no communication needed, simple presence detection returns True
+            # No communication needed, simple presence detection returns True
             sock.close()
             return True
 
@@ -101,11 +100,11 @@ class Hyperion(Light):
         try:
             buf = sock.recv(4096)
         except socket.timeout:
-            # something is wrong, assume it's offline
+            # Something is wrong, assume it's offline
             sock.close()
             return False
 
-        # read until a newline or timeout
+        # Read until a newline or timeout
         buffering = True
         while buffering:
             if "\n" in str(buf, "utf-8"):

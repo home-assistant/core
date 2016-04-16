@@ -1,29 +1,43 @@
-"""
-tests.components.notify.test_command_line
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests command line notification.
-"""
+"""The tests for the command line notification platform."""
 import os
 import tempfile
 import unittest
 
-from homeassistant import core
 import homeassistant.components.notify as notify
+
+from tests.common import get_test_home_assistant
+
 from unittest.mock import patch
 
 
 class TestCommandLine(unittest.TestCase):
-    """ Test the command line. """
+    """Test the command line notifications."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        self.hass = core.HomeAssistant()
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
+    def test_bad_config(self):
+        """Test set up the platform with bad/missing config."""
+        self.assertFalse(notify.setup(self.hass, {
+            'notify': {
+                'name': 'test',
+                'platform': 'bad_platform',
+            }
+        }))
+        self.assertFalse(notify.setup(self.hass, {
+            'notify': {
+                'name': 'test',
+                'platform': 'command_line',
+            }
+        }))
+
     def test_command_line_output(self):
+        """Test the command line output."""
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'message.txt')
             message = 'one, two, testing, testing'
@@ -44,7 +58,7 @@ class TestCommandLine(unittest.TestCase):
 
     @patch('homeassistant.components.notify.command_line._LOGGER.error')
     def test_error_for_none_zero_exit_code(self, mock_error):
-        """ Test if an error if logged for non zero exit codes. """
+        """Test if an error is logged for non zero exit codes."""
         self.assertTrue(notify.setup(self.hass, {
             'notify': {
                 'name': 'test',

@@ -10,7 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['psutil==3.4.2']
+REQUIREMENTS = ['psutil==4.1.0']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the sensors."""
+    """Setup the System sensors."""
     dev = []
     for resource in config['resources']:
         if 'arg' not in resource:
@@ -52,9 +52,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SystemMonitorSensor(Entity):
-    """A system monitor sensor."""
+    """Implementation of a system monitor sensor."""
 
     def __init__(self, sensor_type, argument=''):
+        """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0] + ' ' + argument
         self.argument = argument
         self.type = sensor_type
@@ -64,7 +65,7 @@ class SystemMonitorSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name.rstrip()
 
     @property
@@ -74,12 +75,12 @@ class SystemMonitorSensor(Entity):
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches

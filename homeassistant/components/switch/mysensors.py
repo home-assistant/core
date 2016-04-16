@@ -52,10 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsSwitch(SwitchDevice):
-    """Represent the value of a MySensors child node."""
+    """Representation of the value of a MySensors child node."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
-
     def __init__(
             self, gateway, node_id, child_id, name, value_type, child_type):
         """Setup class attributes on instantiation.
@@ -89,7 +88,7 @@ class MySensorsSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """MySensor gateway pushes its state to HA."""
+        """Mysensor gateway pushes its state to HA."""
         return False
 
     @property
@@ -148,6 +147,11 @@ class MySensorsSwitch(SwitchDevice):
     def available(self):
         """Return True if entity is available."""
         return self.value_type in self._values
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of entity."""
+        return self.gateway.optimistic
 
     def update(self):
         """Update the controller with the latest value from a sensor."""

@@ -1,13 +1,13 @@
 """
-homeassistant.components.zwave
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Connects Home Assistant to a Z-Wave network.
+Support for Z-Wave.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import logging
 import os.path
 import sys
+import time
 from pprint import pprint
 
 from homeassistant import bootstrap
@@ -28,13 +28,20 @@ CONF_POLLING_INTENSITY = "polling_intensity"
 DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
                                          'python-openzwave', 'config')
 
+# How long to wait for the zwave network to be ready.
+NETWORK_READY_WAIT_SECS = 30
+
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_HEAL_NETWORK = "heal_network"
+SERVICE_SOFT_RESET = "soft_reset"
+SERVICE_TEST_NETWORK = "test_network"
 
 DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
 DISCOVER_LIGHTS = "zwave.light"
 DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
+DISCOVER_THERMOSTATS = 'zwave.thermostat'
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
@@ -46,6 +53,7 @@ COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
 COMMAND_CLASS_ALARM = 113  # 0x71
+COMMAND_CLASS_THERMOSTAT_MODE = 64  # 0x40
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -56,8 +64,8 @@ TYPE_BOOL = "Bool"
 TYPE_DECIMAL = "Decimal"
 
 
-# list of tuple (DOMAIN, discovered service, supported command
-# classes, value type)
+# List of tuple (DOMAIN, discovered service, supported command classes,
+# value type).
 DISCOVERY_COMPONENTS = [
     ('sensor',
      DISCOVER_SENSORS,
@@ -80,7 +88,12 @@ DISCOVERY_COMPONENTS = [
      DISCOVER_BINARY_SENSORS,
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
-     GENRE_USER)
+     GENRE_USER),
+    ('thermostat',
+     DISCOVER_THERMOSTATS,
+     [COMMAND_CLASS_THERMOSTAT_MODE],
+     TYPE_WHATEVER,
+     GENRE_WHATEVER),
 ]
 
 
@@ -91,30 +104,33 @@ ATTR_SCENE_ID = "scene_id"
 
 NETWORK = None
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def _obj_to_dict(obj):
-    """ Converts an obj into a hash for debug. """
+    """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
 def _node_name(node):
-    """ Returns the name of the node. """
+    """Return the name of the node."""
     return node.name or "{} {}".format(
         node.manufacturer_name, node.product_name)
 
 
 def _value_name(value):
-    """ Returns the name of the value. """
+    """Return the name of the value."""
     return "{} {}".format(_node_name(value.node), value.label)
 
 
 def _object_id(value):
-    """ Returns the object_id of the device value.
-    The object_id contains node_id and value instance id
-    to not collide with other entity_ids"""
+    """Return the object_id of the device value.
 
+    The object_id contains node_id and value instance id
+    to not collide with other entity_ids.
+    """
     object_id = "{}_{}".format(slugify(_value_name(value)),
                                value.node.node_id)
 
@@ -126,7 +142,7 @@ def _object_id(value):
 
 
 def nice_print_node(node):
-    """ Prints a nice formatted node to the output (debug method). """
+    """Print a nice formatted node to the output (debug method)."""
     node_dict = _obj_to_dict(node)
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
@@ -138,8 +154,7 @@ def nice_print_node(node):
 
 
 def get_config_value(node, value_index):
-    """ Returns the current config value for a specific index. """
-
+    """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
             # 112 == config command class
@@ -151,9 +166,10 @@ def get_config_value(node, value_index):
         return get_config_value(node, value_index)
 
 
+# pylint: disable=R0914
 def setup(hass, config):
-    """
-    Setup Z-wave.
+    """Setup Z-Wave.
+
     Will automatically load components to support devices found on the network.
     """
     # pylint: disable=global-statement, import-error
@@ -181,7 +197,7 @@ def setup(hass, config):
 
     if use_debug:
         def log_all(signal, value=None):
-            """ Log all the signals. """
+            """Log all the signals."""
             print("")
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
@@ -193,8 +209,7 @@ def setup(hass, config):
         dispatcher.connect(log_all, weak=False)
 
     def value_added(node, value):
-        """ Called when a value is added to a node on the network. """
-
+        """Called when a value is added to a node on the network."""
         for (component,
              discovery_service,
              command_ids,
@@ -217,8 +232,10 @@ def setup(hass, config):
             node_config = customize.get(name, {})
             polling_intensity = convert(
                 node_config.get(CONF_POLLING_INTENSITY), int)
-            if polling_intensity is not None:
+            if polling_intensity:
                 value.enable_poll(polling_intensity)
+            else:
+                value.disable_poll()
 
             # Fire discovery event
             hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
@@ -230,7 +247,7 @@ def setup(hass, config):
             })
 
     def scene_activated(node, scene_id):
-        """ Called when a scene is activated on any node in the network. """
+        """Called when a scene is activated on any node in the network."""
         name = _node_name(node)
         object_id = "{}_{}".format(slugify(name), node.node_id)
 
@@ -245,32 +262,67 @@ def setup(hass, config):
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
 
     def add_node(event):
-        """ Switch into inclusion mode """
+        """Switch into inclusion mode."""
         NETWORK.controller.begin_command_add_device()
 
     def remove_node(event):
-        """ Switch into exclusion mode"""
+        """Switch into exclusion mode."""
         NETWORK.controller.begin_command_remove_device()
 
+    def heal_network(event):
+        """Heal the network."""
+        NETWORK.heal()
+
+    def soft_reset(event):
+        """Soft reset the controller."""
+        NETWORK.controller.soft_reset()
+
+    def test_network(event):
+        """Test the network by sending commands to all the nodes."""
+        NETWORK.test()
+
     def stop_zwave(event):
-        """ Stop Z-wave. """
+        """Stop Z-Wave."""
         NETWORK.stop()
 
     def start_zwave(event):
-        """ Called when Home Assistant starts up. """
+        """Startup Z-Wave."""
         NETWORK.start()
+
+        # Need to be in STATE_AWAKED before talking to nodes.
+        # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
+        # to be ready.
+        for i in range(NETWORK_READY_WAIT_SECS):
+            _LOGGER.info(
+                "network state: %d %s", NETWORK.state, NETWORK.state_str)
+            if NETWORK.state >= NETWORK.STATE_AWAKED:
+                _LOGGER.info("zwave ready after %d seconds", i)
+                break
+            time.sleep(1)
+        else:
+            _LOGGER.warning(
+                "zwave not ready after %d seconds, continuing anyway",
+                NETWORK_READY_WAIT_SECS)
+            _LOGGER.info(
+                "final network state: %d %s", NETWORK.state, NETWORK.state_str)
 
         polling_interval = convert(
             config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
             NETWORK.set_poll_interval(polling_interval, False)
 
+        poll_interval = NETWORK.get_poll_interval()
+        _LOGGER.info("zwave polling interval set to %d ms", poll_interval)
+
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # register add / remove node services for zwave sticks without
+        # Register add / remove node services for Z-Wave sticks without
         # hardware inclusion button
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
+        hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
+        hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
@@ -278,37 +330,40 @@ def setup(hass, config):
 
 
 class ZWaveDeviceEntity:
-    """ Represents a ZWave node entity within Home Assistant. """
+    """Representation of a Z-Wave node entity."""
+
     def __init__(self, value, domain):
+        """Initialize the z-Wave device."""
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
 
     @property
     def should_poll(self):
-        """ False because we will push our own state to HA when changed. """
+        """No polling needed."""
         return False
 
     @property
     def unique_id(self):
-        """ Returns a unique id. """
+        """Return an unique ID."""
         return "ZWAVE-{}-{}".format(self._value.node.node_id,
                                     self._value.object_id)
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return _value_name(self._value)
 
     def _object_id(self):
-        """ Returns the object_id of the device value.
-        The object_id contains node_id and value instance id
-        to not collide with other entity_ids"""
+        """Return the object_id of the device value.
 
+        The object_id contains node_id and value instance id to not collide
+        with other entity_ids.
+        """
         return _object_id(self._value)
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self._value.node.node_id,
         }

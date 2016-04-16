@@ -1,6 +1,4 @@
 """
-homeassistant.components.insteon_hub
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Insteon Hub.
 
 For more details about this component, please refer to the documentation at
@@ -24,8 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """
-    Setup Insteon Hub component.
+    """Setup Insteon Hub component.
+
     This will automatically import associated lights.
     """
     if not validate_config(
@@ -58,24 +56,25 @@ def setup(hass, config):
 
 
 class InsteonToggleDevice(ToggleEntity):
-    """ Abstract Class for an Insteon node. """
+    """An abstract Class for an Insteon node."""
 
     def __init__(self, node):
+        """Initialize the device."""
         self.node = node
         self._value = 0
 
     @property
     def name(self):
-        """ Returns the name of the node. """
+        """Return the the name of the node."""
         return self.node.DeviceName
 
     @property
     def unique_id(self):
-        """ Returns the id of this insteon node. """
+        """Return the ID of this insteon node."""
         return self.node.DeviceID
 
     def update(self):
-        """ Update state of the sensor. """
+        """Update state of the sensor."""
         resp = self.node.send_command('get_status', wait=True)
         try:
             self._value = resp['response']['level']
@@ -84,11 +83,13 @@ class InsteonToggleDevice(ToggleEntity):
 
     @property
     def is_on(self):
-        """ Returns boolean response if the node is on. """
+        """Return the boolean response if the node is on."""
         return self._value != 0
 
     def turn_on(self, **kwargs):
+        """Turn device on."""
         self.node.send_command('on')
 
     def turn_off(self, **kwargs):
+        """Turn device off."""
         self.node.send_command('off')

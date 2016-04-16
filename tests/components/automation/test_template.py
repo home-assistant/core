@@ -1,35 +1,35 @@
-"""
-tests.components.automation.test_template
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests template automation.
-"""
+"""The tests fr the Template automation."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import get_test_home_assistant
 
 
 class TestAutomationTemplate(unittest.TestCase):
-    """ Test the event automation. """
+    """Test the event automation."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
         def record_call(service):
+            """helper for recording calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_if_fires_on_change_bool(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on boolean change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -39,14 +39,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_change_str(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -56,14 +57,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_change_str_crazy(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -73,14 +75,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_change_bool(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for not firing on boolean change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -90,14 +93,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_on_change_str(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for not firing on string change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -107,14 +111,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_not_fires_on_change_str_crazy(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for not firing on string change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -124,14 +129,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_no_change(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on no change."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -141,14 +147,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'hello')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_two_change(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on two changes."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -158,7 +165,7 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         # Trigger once
         self.hass.states.set('test.entity', 'world')
@@ -171,7 +178,8 @@ class TestAutomationTemplate(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_change_with_template(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change with template."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -181,14 +189,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_not_fires_on_change_with_template(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for not firing on change with template."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -198,14 +207,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_change_with_template_advanced(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change with template advanced."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -219,14 +229,15 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_no_change_with_template_advanced(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on no change with template advanced."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -240,7 +251,7 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         # Different state
         self.hass.states.set('test.entity', 'worldz')
@@ -253,7 +264,8 @@ class TestAutomationTemplate(unittest.TestCase):
         self.assertEqual(0, len(self.calls))
 
     def test_if_fires_on_change_with_template_2(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change with template."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -264,7 +276,7 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
@@ -291,7 +303,8 @@ class TestAutomationTemplate(unittest.TestCase):
         self.assertEqual(2, len(self.calls))
 
     def test_if_action(self):
-        automation.setup(self.hass, {
+        """Test for firing if action."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -323,7 +336,8 @@ class TestAutomationTemplate(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_change_with_bad_template(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change with bad template."""
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -333,14 +347,11 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
-
-        self.hass.states.set('test.entity', 'world')
-        self.hass.pool.block_till_done()
-        self.assertEqual(0, len(self.calls))
+        })
 
     def test_if_fires_on_change_with_bad_template_2(self):
-        self.assertTrue(automation.setup(self.hass, {
+        """Test for firing on change with bad template."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
@@ -350,7 +361,7 @@ class TestAutomationTemplate(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()

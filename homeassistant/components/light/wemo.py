@@ -1,6 +1,4 @@
 """
-homeassistant.components.light.wemo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Belkin WeMo lights.
 
 For more details about this component, please refer to the documentation at
@@ -10,8 +8,10 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util as util
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_XY_COLOR)
 
 DEPENDENCIES = ['wemo']
 
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Probe WeMo bridges and register connected lights."""
+    """Setup WeMo bridges and register connected lights."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
@@ -40,19 +40,15 @@ def setup_bridge(bridge, add_devices_callback):
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_lights():
-        """Updates the WeMo led objects with latest info from the bridge."""
-
-        bridge.bridge_get_lights()
+        """Update the WeMo led objects with latest info from the bridge."""
+        bridge.bridge_update()
 
         new_lights = []
 
-        for light_id, info in bridge.Lights.items():
+        for light_id, device in bridge.Lights.items():
             if light_id not in lights:
-                lights[light_id] = WemoLight(bridge, light_id, info,
-                                             update_lights)
+                lights[light_id] = WemoLight(device, update_lights)
                 new_lights.append(lights[light_id])
-            else:
-                lights[light_id].info = info
 
         if new_lights:
             add_devices_callback(new_lights)
@@ -61,45 +57,75 @@ def setup_bridge(bridge, add_devices_callback):
 
 
 class WemoLight(Light):
-    """Represents a WeMo light"""
+    """Representation of a WeMo light."""
 
-    def __init__(self, bridge, light_id, info, update_lights):
-        self.bridge = bridge
-        self.light_id = light_id
-        self.info = info
+    def __init__(self, device, update_lights):
+        """Initialize the light."""
+        self.light_id = device.name
+        self.device = device
         self.update_lights = update_lights
 
     @property
     def unique_id(self):
-        """Returns the id of this light"""
-        deviceid = self.bridge.light_get_id(self.info)
+        """Return the ID of this light."""
+        deviceid = self.device.uniqueID
         return "{}.{}".format(self.__class__, deviceid)
 
     @property
     def name(self):
-        """Get the name of the light."""
-        return self.bridge.light_name(self.info)
+        """Return the name of the light."""
+        return self.device.name
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
-        state = self.bridge.light_get_state(self.info)
-        return int(state['dim'])
+        """Return the brightness of this light between 0..255."""
+        return self.device.state.get('level', 255)
+
+    @property
+    def xy_color(self):
+        """Return the XY color values of this light."""
+        return self.device.state.get('color_xy')
+
+    @property
+    def color_temp(self):
+        """Return the color temperature of this light in mireds."""
+        return self.device.state.get('temperature_mireds')
 
     @property
     def is_on(self):
         """True if device is on."""
-        state = self.bridge.light_get_state(self.info)
-        return int(state['state'])
+        return self.device.state['onoff'] != 0
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        dim = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-        self.bridge.light_set_state(self.info, state=1, dim=dim)
+        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+
+        if ATTR_XY_COLOR in kwargs:
+            xycolor = kwargs[ATTR_XY_COLOR]
+        elif ATTR_RGB_COLOR in kwargs:
+            xycolor = color_util.color_RGB_to_xy(
+                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+        else:
+            xycolor = None
+
+        if xycolor is not None:
+            self.device.set_color(xycolor, transition=transitiontime)
+
+        if ATTR_COLOR_TEMP in kwargs:
+            colortemp = kwargs[ATTR_COLOR_TEMP]
+            self.device.set_temperature(mireds=colortemp,
+                                        transition=transitiontime)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+            self.device.turn_on(level=brightness, transition=transitiontime)
+        else:
+            self.device.turn_on(transition=transitiontime)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self.bridge.light_set_state(self.info, state=0, dim=0)
+        transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
+        self.device.turn_off(transition=transitiontime)
 
     def update(self):
         """Synchronize state with bridge."""

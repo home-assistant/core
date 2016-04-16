@@ -1,6 +1,5 @@
 """
-Monitors home energy use as measured by an efergy engage hub using its
-(unofficial, undocumented) API.
+Support for Efergy sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.efergy/
@@ -21,7 +20,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the Efergy sensor."""
+    """Setup the Efergy sensor."""
     app_token = config.get("app_token")
     if not app_token:
         _LOGGER.error(
@@ -46,10 +45,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class EfergySensor(Entity):
-    """Implements an Efergy sensor."""
+    """Implementation of an Efergy sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, sensor_type, app_token, utc_offset, period, currency):
+        """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self.app_token = app_token
@@ -64,21 +64,21 @@ class EfergySensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
-        """Gets the Efergy monitor data from the web service."""
+        """Get the Efergy monitor data from the web service."""
         try:
             if self.type == 'instant_readings':
                 url_string = _RESOURCE + 'getInstant?token=' + self.app_token

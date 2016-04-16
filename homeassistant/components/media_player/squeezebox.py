@@ -1,7 +1,5 @@
 """
-homeassistant.components.media_player.squeezebox
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Provides an interface to the Logitech SqueezeBox API
+Support for interfacing to the Logitech SqueezeBox API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.squeezebox/
@@ -24,19 +22,32 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
+KNOWN_DEVICES = []
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the squeezebox platform. """
-    if not config.get(CONF_HOST):
+    """Setup the squeezebox platform."""
+    if discovery_info is not None:
+        host = discovery_info[0]
+        port = 9090
+    else:
+        host = config.get(CONF_HOST)
+        port = int(config.get('port', 9090))
+
+    if not host:
         _LOGGER.error(
             "Missing required configuration items in %s: %s",
             DOMAIN,
             CONF_HOST)
         return False
 
+    # Only add a media server once
+    if host in KNOWN_DEVICES:
+        return False
+    KNOWN_DEVICES.append(host)
+
     lms = LogitechMediaServer(
-        config.get(CONF_HOST),
-        config.get('port', '9090'),
+        host, port,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD))
 
@@ -49,9 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LogitechMediaServer(object):
-    """ Represents a Logitech media server. """
+    """Representation of a Logitech media server."""
 
     def __init__(self, host, port, username, password):
+        """Initialize the Logitech device."""
         self.host = host
         self.port = port
         self._username = username
@@ -60,7 +72,7 @@ class LogitechMediaServer(object):
         self.init_success = True if self.http_port else False
 
     def _get_http_port(self):
-        """ Get http port from media server, it is used to get cover art. """
+        """Get http port from media server, it is used to get cover art."""
         http_port = None
         try:
             http_port = self.query('pref', 'httpport', '?')
@@ -80,7 +92,7 @@ class LogitechMediaServer(object):
             return
 
     def create_players(self):
-        """ Create a list of SqueezeBoxDevices connected to the LMS. """
+        """Create a list of SqueezeBoxDevices connected to the LMS."""
         players = []
         count = self.query('player', 'count', '?')
         for index in range(0, int(count)):
@@ -90,7 +102,7 @@ class LogitechMediaServer(object):
         return players
 
     def query(self, *parameters):
-        """ Send request and await response from server. """
+        """Send request and await response from server."""
         telnet = telnetlib.Telnet(self.host, self.port)
         if self._username and self._password:
             telnet.write('login {username} {password}\n'.format(
@@ -107,7 +119,7 @@ class LogitechMediaServer(object):
         return urllib.parse.unquote(response)
 
     def get_player_status(self, player):
-        """ Get ithe status of a player. """
+        """Get ithe status of a player."""
         #   (title) : Song title
         # Requested Information
         # a (artist): Artist name 'artist'
@@ -133,10 +145,11 @@ class LogitechMediaServer(object):
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
 class SqueezeBoxDevice(MediaPlayerDevice):
-    """ Represents a SqueezeBox device. """
+    """Representation of a SqueezeBox device."""
 
     # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
+        """Initialize the SqeezeBox device."""
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
         self._id = player_id
@@ -145,12 +158,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def name(self):
-        """ Returns the name of the device. """
+        """Return the name of the device."""
         return self._name
 
     @property
     def state(self):
-        """ Returns the state of the device. """
+        """Return the state of the device."""
         if 'power' in self._status and self._status['power'] == '0':
             return STATE_OFF
         if 'mode' in self._status:
@@ -163,40 +176,41 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     def update(self):
-        """ Retrieve latest state. """
+        """Retrieve latest state."""
         self._status = self._lms.get_player_status(self._id)
 
     @property
     def volume_level(self):
-        """ Volume level of the media player (0..1). """
+        """Volume level of the media player (0..1)."""
         if 'mixer volume' in self._status:
             return int(float(self._status['mixer volume'])) / 100.0
 
     @property
     def is_volume_muted(self):
+        """Return true if volume is muted."""
         if 'mixer volume' in self._status:
             return self._status['mixer volume'].startswith('-')
 
     @property
     def media_content_id(self):
-        """ Content ID of current playing media. """
+        """Content ID of current playing media."""
         if 'current_title' in self._status:
             return self._status['current_title']
 
     @property
     def media_content_type(self):
-        """ Content type of current playing media. """
+        """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """ Duration of current playing media in seconds. """
+        """Duration of current playing media in seconds."""
         if 'duration' in self._status:
             return int(float(self._status['duration']))
 
     @property
     def media_image_url(self):
-        """ Image url of current playing media. """
+        """Image url of current playing media."""
         if 'artwork_url' in self._status:
             media_url = self._status['artwork_url']
         elif 'id' in self._status:
@@ -214,7 +228,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """ Title of current playing media. """
+        """Title of current playing media."""
         if 'artist' in self._status and 'title' in self._status:
             return '{artist} - {title}'.format(
                 artist=self._status['artist'],
@@ -225,67 +239,67 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        """ Flags of media commands that are supported. """
+        """Flag of media commands that are supported."""
         return SUPPORT_SQUEEZEBOX
 
     def turn_off(self):
-        """ turn_off media player. """
+        """Turn off media player."""
         self._lms.query(self._id, 'power', '0')
         self.update_ha_state()
 
     def volume_up(self):
-        """ volume_up media player. """
+        """Volume up media player."""
         self._lms.query(self._id, 'mixer', 'volume', '+5')
         self.update_ha_state()
 
     def volume_down(self):
-        """ volume_down media player. """
+        """Volume down media player."""
         self._lms.query(self._id, 'mixer', 'volume', '-5')
         self.update_ha_state()
 
     def set_volume_level(self, volume):
-        """ set volume level, range 0..1. """
+        """Set volume level, range 0..1."""
         volume_percent = str(int(volume*100))
         self._lms.query(self._id, 'mixer', 'volume', volume_percent)
         self.update_ha_state()
 
     def mute_volume(self, mute):
-        """ mute (true) or unmute (false) media player. """
+        """Mute (true) or unmute (false) media player."""
         mute_numeric = '1' if mute else '0'
         self._lms.query(self._id, 'mixer', 'muting', mute_numeric)
         self.update_ha_state()
 
     def media_play_pause(self):
-        """ media_play_pause media player. """
+        """Send pause command to media player."""
         self._lms.query(self._id, 'pause')
         self.update_ha_state()
 
     def media_play(self):
-        """ media_play media player. """
+        """Send play command to media player."""
         self._lms.query(self._id, 'play')
         self.update_ha_state()
 
     def media_pause(self):
-        """ media_pause media player. """
+        """Send pause command to media player."""
         self._lms.query(self._id, 'pause', '1')
         self.update_ha_state()
 
     def media_next_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self._lms.query(self._id, 'playlist', 'index', '+1')
         self.update_ha_state()
 
     def media_previous_track(self):
-        """ Send next track command. """
+        """Send next track command."""
         self._lms.query(self._id, 'playlist', 'index', '-1')
         self.update_ha_state()
 
     def media_seek(self, position):
-        """ Send seek command. """
+        """Send seek command."""
         self._lms.query(self._id, 'time', position)
         self.update_ha_state()
 
     def turn_on(self):
-        """ turn the media player on. """
+        """Turn the media player on."""
         self._lms.query(self._id, 'power', '1')
         self.update_ha_state()

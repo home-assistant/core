@@ -11,21 +11,24 @@ from homeassistant.const import TEMP_CELCIUS, TEMP_FAHRENHEIT
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo thermostats."""
     add_devices([
-        DemoThermostat("Nest", 21, TEMP_CELCIUS, False, 19),
-        DemoThermostat("Thermostat", 68, TEMP_FAHRENHEIT, True, 77),
+        DemoThermostat("Nest", 21, TEMP_CELCIUS, False, 19, False),
+        DemoThermostat("Thermostat", 68, TEMP_FAHRENHEIT, True, 77, True),
     ])
 
 
 # pylint: disable=too-many-arguments
 class DemoThermostat(ThermostatDevice):
-    """Represents a HeatControl thermostat."""
+    """Representation of a demo thermostat."""
+
     def __init__(self, name, target_temperature, unit_of_measurement,
-                 away, current_temperature):
+                 away, current_temperature, is_fan_on):
+        """Initialize the thermostat."""
         self._name = name
         self._target_temperature = target_temperature
         self._unit_of_measurement = unit_of_measurement
         self._away = away
         self._current_temperature = current_temperature
+        self._is_fan_on = is_fan_on
 
     @property
     def should_poll(self):
@@ -34,7 +37,7 @@ class DemoThermostat(ThermostatDevice):
 
     @property
     def name(self):
-        """Return the thermostat."""
+        """Return the name of the thermostat."""
         return self._name
 
     @property
@@ -57,6 +60,11 @@ class DemoThermostat(ThermostatDevice):
         """Return if away mode is on."""
         return self._away
 
+    @property
+    def is_fan_on(self):
+        """Return true if the fan is on."""
+        return self._is_fan_on
+
     def set_temperature(self, temperature):
         """Set new target temperature."""
         self._target_temperature = temperature
@@ -68,3 +76,11 @@ class DemoThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
+
+    def turn_fan_on(self):
+        """Turn fan on."""
+        self._is_fan_on = True
+
+    def turn_fan_off(self):
+        """Turn fan off."""
+        self._is_fan_on = False

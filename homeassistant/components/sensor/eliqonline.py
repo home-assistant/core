@@ -17,8 +17,7 @@ DEFAULT_NAME = "ELIQ Energy Usage"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Eliq sensor."""
-
+    """Setup the Eliq sensor."""
     import eliqonline
 
     access_token = config.get(CONF_ACCESS_TOKEN)
@@ -37,9 +36,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class EliqSensor(Entity):
-    """Implements a Eliq sensor."""
+    """Implementation of an Eliq sensor."""
 
     def __init__(self, api, channel_id, name):
+        """Initialize the sensor."""
         self._name = name
         self._unit_of_measurement = "W"
         self._state = STATE_UNKNOWN
@@ -50,26 +50,26 @@ class EliqSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def icon(self):
-        """Returns icon."""
+        """Return icon."""
         return "mdi:speedometer"
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def state(self):
-        """Returns the state of the device."""
+        """Return the state of the device."""
         return self._state
 
     def update(self):
-        """Gets the latest data."""
+        """Get the latest data."""
         try:
             response = self.api.get_data_now(channelid=self.channel_id)
             self._state = int(response.power)

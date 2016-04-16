@@ -1,6 +1,4 @@
 """
-homeassistant.components.input_select
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Component to offer a way to select an option from a list.
 
 For more details about this component, please refer to the documentation
@@ -8,7 +6,10 @@ at https://home-assistant.io/components/input_select/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -27,9 +28,14 @@ ATTR_OPTIONS = 'options'
 
 SERVICE_SELECT_OPTION = 'select_option'
 
+SERVICE_SELECT_OPTION_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPTION): cv.string,
+})
+
 
 def select_option(hass, entity_id, option):
-    """ Set input_select to False. """
+    """Set input_select to False."""
     hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_OPTION: option,
@@ -37,7 +43,7 @@ def select_option(hass, entity_id, option):
 
 
 def setup(hass, config):
-    """ Set up input select. """
+    """Setup input select."""
     if not isinstance(config.get(DOMAIN), dict):
         _LOGGER.error('Expected %s config to be a dictionary', DOMAIN)
         return False
@@ -77,14 +83,15 @@ def setup(hass, config):
         return False
 
     def select_option_service(call):
-        """ Handle a calls to the input select services. """
+        """Handle a calls to the input select services."""
         target_inputs = component.extract_from_service(call)
 
         for input_select in target_inputs:
-            input_select.select_option(call.data.get(ATTR_OPTION))
+            input_select.select_option(call.data[ATTR_OPTION])
 
     hass.services.register(DOMAIN, SERVICE_SELECT_OPTION,
-                           select_option_service)
+                           select_option_service,
+                           schema=SERVICE_SELECT_OPTION_SCHEMA)
 
     component.add_entities(entities)
 
@@ -92,11 +99,11 @@ def setup(hass, config):
 
 
 class InputSelect(Entity):
-    """ Represent a select input. """
+    """Representation of a select input."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, object_id, name, state, options, icon):
-        """ Initialize a select input. """
+        """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_option = state
@@ -105,33 +112,33 @@ class InputSelect(Entity):
 
     @property
     def should_poll(self):
-        """ If entity should be polled. """
+        """If entity should be polled."""
         return False
 
     @property
     def name(self):
-        """ Name of the select input. """
+        """Return the name of the select input."""
         return self._name
 
     @property
     def icon(self):
-        """ Icon to be used for this entity. """
+        """Return the icon to be used for this entity."""
         return self._icon
 
     @property
     def state(self):
-        """ State of the component. """
+        """Return the state of the component."""
         return self._current_option
 
     @property
     def state_attributes(self):
-        """ State attributes. """
+        """Return the state attributes."""
         return {
             ATTR_OPTIONS: self._options,
         }
 
     def select_option(self, option):
-        """ Select new option. """
+        """Select new option."""
         if option not in self._options:
             _LOGGER.warning('Invalid option: %s (possible options: %s)',
                             option, ', '.join(self._options))

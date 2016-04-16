@@ -1,6 +1,4 @@
 """
-homeassistant.components.shell_command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Exposes regular shell commands as services.
 
 For more details about this platform, please refer to the documentation at
@@ -9,29 +7,29 @@ https://home-assistant.io/components/shell_command/
 import logging
 import subprocess
 
-from homeassistant.util import slugify
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'shell_command'
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.slug: cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+SHELL_COMMAND_SCHEMA = vol.Schema({})
+
 
 def setup(hass, config):
-    """ Sets up the shell_command component. """
-    conf = config.get(DOMAIN)
-
-    if not isinstance(conf, dict):
-        _LOGGER.error('Expected configuration to be a dictionary')
-        return False
-
-    for name in conf.keys():
-        if name != slugify(name):
-            _LOGGER.error('Invalid service name: %s. Try %s',
-                          name, slugify(name))
-            return False
+    """Setup the shell_command component."""
+    conf = config.get(DOMAIN, {})
 
     def service_handler(call):
-        """ Execute a shell command service. """
+        """Execute a shell command service."""
         try:
             subprocess.call(conf[call.service], shell=True,
                             stdout=subprocess.DEVNULL,
@@ -40,6 +38,6 @@ def setup(hass, config):
             _LOGGER.exception('Error running command')
 
     for name in conf.keys():
-        hass.services.register(DOMAIN, name, service_handler)
-
+        hass.services.register(DOMAIN, name, service_handler,
+                               schema=SHELL_COMMAND_SCHEMA)
     return True

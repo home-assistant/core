@@ -1,6 +1,4 @@
 """
-homeassistant.components.camera.uvc
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Ubiquiti's UVC cameras.
 
 For more details about this platform, please refer to the documentation at
@@ -20,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Discover cameras on a Unifi NVR. """
+    """Discover cameras on a Unifi NVR."""
     if not validate_config({DOMAIN: config}, {DOMAIN: ['nvr', 'key']},
                            _LOGGER):
         return None
@@ -60,9 +58,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class UnifiVideoCamera(Camera):
-    """ A Ubiquiti Unifi Video Camera. """
+    """A Ubiquiti Unifi Video Camera."""
 
     def __init__(self, nvr, uuid, name):
+        """Initialize an Unifi camera."""
         super(UnifiVideoCamera, self).__init__()
         self._nvr = nvr
         self._uuid = uuid
@@ -73,23 +72,28 @@ class UnifiVideoCamera(Camera):
 
     @property
     def name(self):
+        """Return the name of this camera."""
         return self._name
 
     @property
     def is_recording(self):
+        """Return true if the camera is recording."""
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['recordingSettings']['fullTimeRecordEnabled']
 
     @property
     def brand(self):
+        """Return the brand of this camera."""
         return 'Ubiquiti'
 
     @property
     def model(self):
+        """Return the model of this camera."""
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['model']
 
     def _login(self):
+        """Login to the camera."""
         from uvcclient import camera as uvc_camera
         from uvcclient import store as uvc_store
 
@@ -131,6 +135,7 @@ class UnifiVideoCamera(Camera):
         return True
 
     def camera_image(self):
+        """Return the image of this camera."""
         from uvcclient import camera as uvc_camera
         if not self._camera:
             if not self._login():

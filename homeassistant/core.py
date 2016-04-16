@@ -14,6 +14,8 @@ import threading
 import time
 from types import MappingProxyType
 
+import voluptuous as vol
+
 import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -132,12 +134,13 @@ class JobPriority(util.OrderedEnum):
 
 
 class EventOrigin(enum.Enum):
-    """Represents origin of an event."""
+    """Represent the origin of an event."""
 
     local = "LOCAL"
     remote = "REMOTE"
 
     def __str__(self):
+        """Return the event."""
         return self.value
 
 
@@ -166,6 +169,7 @@ class Event(object):
         }
 
     def __repr__(self):
+        """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
             return "<Event {}[{}]: {}>".format(
@@ -176,6 +180,7 @@ class Event(object):
                                            str(self.origin)[0])
 
     def __eq__(self, other):
+        """Return the comparison."""
         return (self.__class__ == other.__class__ and
                 self.event_type == other.event_type and
                 self.data == other.data and
@@ -246,7 +251,7 @@ class EventBus(object):
         """
         @ft.wraps(listener)
         def onetime_listener(event):
-            """Remove listener from eventbus and then fires listener."""
+            """Remove listener from eventbus and then fire listener."""
             if hasattr(onetime_listener, 'run'):
                 return
             # Set variable so that we will never run twice.
@@ -281,8 +286,7 @@ class EventBus(object):
 
 
 class State(object):
-    """
-    Object to represent a state within the state machine.
+    """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
     state: the state of the entity
@@ -369,12 +373,14 @@ class State(object):
                    json_dict.get('attributes'), last_changed, last_updated)
 
     def __eq__(self, other):
+        """Return the comparison of the state."""
         return (self.__class__ == other.__class__ and
                 self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes)
 
     def __repr__(self):
+        """Return the representation of the states."""
         attr = "; {}".format(util.repr_helper(self.attributes)) \
                if self.attributes else ""
 
@@ -490,13 +496,14 @@ class StateMachine(object):
 class Service(object):
     """Represents a callable service."""
 
-    __slots__ = ['func', 'description', 'fields']
+    __slots__ = ['func', 'description', 'fields', 'schema']
 
-    def __init__(self, func, description, fields):
+    def __init__(self, func, description, fields, schema):
         """Initialize a service."""
         self.func = func
         self.description = description or ''
         self.fields = fields or {}
+        self.schema = schema
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -507,7 +514,14 @@ class Service(object):
 
     def __call__(self, call):
         """Execute the service."""
-        self.func(call)
+        try:
+            if self.schema:
+                call.data = self.schema(call.data)
+
+            self.func(call)
+        except vol.MultipleInvalid as ex:
+            _LOGGER.error('Invalid service data for %s.%s: %s',
+                          call.domain, call.service, ex)
 
 
 # pylint: disable=too-few-public-methods
@@ -524,6 +538,7 @@ class ServiceCall(object):
         self.call_id = call_id
 
     def __repr__(self):
+        """Return the represenation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
@@ -555,16 +570,20 @@ class ServiceRegistry(object):
         """Test if specified service exists."""
         return service in self._services.get(domain, [])
 
-    def register(self, domain, service, service_func, description=None):
+    # pylint: disable=too-many-arguments
+    def register(self, domain, service, service_func, description=None,
+                 schema=None):
         """
         Register a service.
 
         Description is a dict containing key 'description' to describe
         the service and a key 'fields' to describe the fields.
+
+        Schema is called to coerce and validate the service data.
         """
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}))
+                              description.get('fields', {}), schema)
         with self._lock:
             if domain in self._services:
                 self._services[domain][service] = service_obj
@@ -770,7 +789,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
     def start_timer(event):
         """Start the timer."""
-        thread = threading.Thread(target=timer)
+        thread = threading.Thread(target=timer, name='Timer')
         thread.daemon = True
         thread.start()
 

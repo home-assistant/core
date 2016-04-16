@@ -1,100 +1,59 @@
 """
-homeassistant.components.switch.tellstick
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Support for Tellstick switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tellstick/
 """
-import logging
-
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.components import tellstick
+from homeassistant.components.tellstick import (ATTR_DISCOVER_DEVICES,
+                                                ATTR_DISCOVER_CONFIG)
 from homeassistant.helpers.entity import ToggleEntity
-
-SIGNAL_REPETITIONS = 1
-REQUIREMENTS = ['tellcore-py==1.1.2']
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """ Find and return Tellstick switches. """
-    import tellcore.telldus as telldus
-    import tellcore.constants as tellcore_constants
-    from tellcore.library import DirectCallbackDispatcher
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup Tellstick switches."""
+    if (discovery_info is None or
+            discovery_info[ATTR_DISCOVER_DEVICES] is None or
+            tellstick.TELLCORE_REGISTRY is None):
+        return
 
-    core = telldus.TelldusCore(callback_dispatcher=DirectCallbackDispatcher())
+    # Allow platform level override, fallback to module config
+    signal_repetitions = discovery_info.get(
+        ATTR_DISCOVER_CONFIG, tellstick.DEFAULT_SIGNAL_REPETITIONS)
 
-    signal_repetitions = config.get('signal_repetitions', SIGNAL_REPETITIONS)
-
-    switches_and_lights = core.devices()
-
-    switches = []
-
-    for switch in switches_and_lights:
-        if not switch.methods(tellcore_constants.TELLSTICK_DIM):
-            switches.append(
-                TellstickSwitchDevice(switch, signal_repetitions))
-
-    def _device_event_callback(id_, method, data, cid):
-        """ Called from the TelldusCore library to update one device """
-        for switch_device in switches:
-            if switch_device.tellstick_device.id == id_:
-                switch_device.update_ha_state()
-                break
-
-    callback_id = core.register_device_event(_device_event_callback)
-
-    def unload_telldus_lib(event):
-        """ Un-register the callback bindings """
-        if callback_id is not None:
-            core.unregister_callback(callback_id)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, unload_telldus_lib)
-
-    add_devices_callback(switches)
+    add_devices(TellstickSwitchDevice(
+        tellstick.TELLCORE_REGISTRY.get_device(switch_id), signal_repetitions)
+                for switch_id in discovery_info[ATTR_DISCOVER_DEVICES])
 
 
-class TellstickSwitchDevice(ToggleEntity):
-    """ Represents a Tellstick switch. """
-
-    def __init__(self, tellstick_device, signal_repetitions):
-        import tellcore.constants as tellcore_constants
-
-        self.tellstick_device = tellstick_device
-        self.signal_repetitions = signal_repetitions
-
-        self.last_sent_command_mask = (tellcore_constants.TELLSTICK_TURNON |
-                                       tellcore_constants.TELLSTICK_TURNOFF)
-
-    @property
-    def should_poll(self):
-        """ Tells Home Assistant not to poll this entity. """
-        return False
-
-    @property
-    def name(self):
-        """ Returns the name of the switch if any. """
-        return self.tellstick_device.name
+class TellstickSwitchDevice(tellstick.TellstickDevice, ToggleEntity):
+    """Representation of a Tellstick switch."""
 
     @property
     def is_on(self):
-        """ True if switch is on. """
-        import tellcore.constants as tellcore_constants
+        """Return true if switch is on."""
+        return self._state
 
-        last_command = self.tellstick_device.last_sent_command(
-            self.last_sent_command_mask)
+    def set_tellstick_state(self, last_command_sent, last_data_sent):
+        """Update the internal representation of the switch."""
+        from tellcore.constants import TELLSTICK_TURNON
+        self._state = last_command_sent == TELLSTICK_TURNON
 
-        return last_command == tellcore_constants.TELLSTICK_TURNON
+    def _send_tellstick_command(self, command, data):
+        """Handle the turn_on / turn_off commands."""
+        from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF
+        if command == TELLSTICK_TURNON:
+            self.tellstick_device.turn_on()
+        elif command == TELLSTICK_TURNOFF:
+            self.tellstick_device.turn_off()
 
     def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        for _ in range(self.signal_repetitions):
-            self.tellstick_device.turn_on()
-        self.update_ha_state()
+        """Turn the switch on."""
+        from tellcore.constants import TELLSTICK_TURNON
+        self.call_tellstick(TELLSTICK_TURNON)
 
     def turn_off(self, **kwargs):
-        """ Turns the switch off. """
-        for _ in range(self.signal_repetitions):
-            self.tellstick_device.turn_off()
-        self.update_ha_state()
+        """Turn the switch off."""
+        from tellcore.constants import TELLSTICK_TURNOFF
+        self.call_tellstick(TELLSTICK_TURNOFF)

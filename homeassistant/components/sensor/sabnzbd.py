@@ -29,7 +29,7 @@ _THROTTLED_REFRESH = None
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sets up the SABnzbd sensors."""
+    """Setup the SABnzbd sensors."""
     from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
     api_key = config.get("api_key")
@@ -65,9 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SabnzbdSensor(Entity):
-    """Represents an SABnzbd sensor."""
+    """Representation of an SABnzbd sensor."""
 
     def __init__(self, sensor_type, sabnzb_client, client_name):
+        """Initialize the sensor."""
         self._name = SENSOR_TYPES[sensor_type][0]
         self.sabnzb_client = sabnzb_client
         self.type = sensor_type
@@ -77,21 +78,21 @@ class SabnzbdSensor(Entity):
 
     @property
     def name(self):
-        """Returns the name of the sensor."""
+        """Return the name of the sensor."""
         return self.client_name + ' ' + self._name
 
     @property
     def state(self):
-        """Returns the state of the sensor."""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def refresh_sabnzbd_data(self):
-        """Calls the throttled SABnzbd refresh method."""
+        """Call the throttled SABnzbd refresh method."""
         if _THROTTLED_REFRESH is not None:
             from pysabnzbd import SabnzbdApiException
             try:
@@ -102,7 +103,7 @@ class SabnzbdSensor(Entity):
                 )
 
     def update(self):
-        """Gets the latest data and updates the states."""
+        """Get the latest data and updates the states."""
         self.refresh_sabnzbd_data()
         if self.sabnzb_client.queue:
             if self.type == 'current_status':

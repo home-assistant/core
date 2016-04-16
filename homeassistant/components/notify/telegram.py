@@ -1,6 +1,4 @@
 """
-homeassistant.components.notify.telegram
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Telegram platform for notify component.
 
 For more details about this platform, please refer to the documentation at
@@ -16,11 +14,11 @@ from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==3.2.0']
+REQUIREMENTS = ['python-telegram-bot==3.4']
 
 
 def get_service(hass, config):
-    """ Get the Telegram notification service. """
+    """Get the Telegram notification service."""
     import telegram
 
     if not validate_config({DOMAIN: config},
@@ -41,9 +39,10 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
-    """ Implements notification service for Telegram. """
+    """Implement the notification service for Telegram."""
 
     def __init__(self, api_key, chat_id):
+        """Initialize the service."""
         import telegram
 
         self._api_key = api_key
@@ -51,7 +50,7 @@ class TelegramNotificationService(BaseNotificationService):
         self.bot = telegram.Bot(token=self._api_key)
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a user. """
+        """Send a message to a user."""
         import telegram
 
         title = kwargs.get(ATTR_TITLE)

@@ -1,9 +1,4 @@
-"""
-tests.util.test_init
-~~~~~~~~~~~~~~~~~~~~
-
-Tests Home Assistant util methods.
-"""
+"""Test Home Assistant util methods."""
 # pylint: disable=too-many-public-methods
 import unittest
 from unittest.mock import patch
@@ -14,9 +9,10 @@ import homeassistant.util.dt as dt_util
 
 
 class TestUtil(unittest.TestCase):
-    """ Tests util methods. """
+    """Test util methods."""
+
     def test_sanitize_filename(self):
-        """ Test sanitize_filename. """
+        """Test sanitize_filename."""
         self.assertEqual("test", util.sanitize_filename("test"))
         self.assertEqual("test", util.sanitize_filename("/test"))
         self.assertEqual("test", util.sanitize_filename("..test"))
@@ -24,20 +20,20 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test", util.sanitize_filename("\\../test"))
 
     def test_sanitize_path(self):
-        """ Test sanitize_path. """
+        """Test sanitize_path."""
         self.assertEqual("test/path", util.sanitize_path("test/path"))
         self.assertEqual("test/path", util.sanitize_path("~test/path"))
         self.assertEqual("//test/path",
                          util.sanitize_path("~/../test/path"))
 
     def test_slugify(self):
-        """ Test slugify. """
+        """Test slugify."""
         self.assertEqual("test", util.slugify("T-!@#$!#@$!$est"))
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
 
     def test_repr_helper(self):
-        """ Test repr_helper. """
+        """Test repr_helper."""
         self.assertEqual("A", util.repr_helper("A"))
         self.assertEqual("5", util.repr_helper(5))
         self.assertEqual("True", util.repr_helper(True))
@@ -47,7 +43,7 @@ class TestUtil(unittest.TestCase):
                          util.repr_helper(datetime(1986, 7, 9, 12, 0, 0)))
 
     def test_convert(self):
-        """ Test convert. """
+        """Test convert."""
         self.assertEqual(5, util.convert("5", int))
         self.assertEqual(5.0, util.convert("5", float))
         self.assertEqual(True, util.convert("True", bool))
@@ -56,7 +52,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(1, util.convert(object, int, 1))
 
     def test_ensure_unique_string(self):
-        """ Test ensure_unique_string. """
+        """Test ensure_unique_string."""
         self.assertEqual(
             "Beer_3",
             util.ensure_unique_string("Beer", ["Beer", "Beer_2"]))
@@ -65,10 +61,10 @@ class TestUtil(unittest.TestCase):
             util.ensure_unique_string("Beer", ["Wine", "Soda"]))
 
     def test_ordered_enum(self):
-        """ Test the ordered enum class. """
-
+        """Test the ordered enum class."""
         class TestEnum(util.OrderedEnum):
-            """ Test enum that can be ordered. """
+            """Test enum that can be ordered."""
+
             FIRST = 1
             SECOND = 2
             THIRD = 3
@@ -104,6 +100,7 @@ class TestUtil(unittest.TestCase):
                           lambda x, y: x >= y, TestEnum.FIRST, 1)
 
     def test_ordered_set(self):
+        """Test ordering of set."""
         set1 = util.OrderedSet([1, 2, 3, 4])
         set2 = util.OrderedSet([3, 4, 5])
 
@@ -164,7 +161,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual([2, 3, 1, 5, 6], set1)
 
     def test_throttle(self):
-        """ Test the add cooldown decorator. """
+        """Test the add cooldown decorator."""
         calls1 = []
         calls2 = []
 
@@ -216,21 +213,25 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(2, len(calls2))
 
     def test_throttle_per_instance(self):
-        """ Test that the throttle method is done per instance of a class. """
-
+        """Test that the throttle method is done per instance of a class."""
         class Tester(object):
+            """A tester class for the throttle."""
+
             @util.Throttle(timedelta(seconds=1))
             def hello(self):
+                """Test the throttle."""
                 return True
 
         self.assertTrue(Tester().hello())
         self.assertTrue(Tester().hello())
 
     def test_throttle_on_method(self):
-        """ Test that throttle works when wrapping a method. """
-
+        """Test that throttle works when wrapping a method."""
         class Tester(object):
+            """A tester class for the throttle."""
+
             def hello(self):
+                """Test the throttle."""
                 return True
 
         tester = Tester()
@@ -238,3 +239,23 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(throttled())
         self.assertIsNone(throttled())
+
+    def test_throttle_on_two_method(self):
+        """Test that throttle works when wrapping two methods."""
+        class Tester(object):
+            """A test class for the throttle."""
+
+            @util.Throttle(timedelta(seconds=1))
+            def hello(self):
+                """Test the throttle."""
+                return True
+
+            @util.Throttle(timedelta(seconds=1))
+            def goodbye(self):
+                """Test the throttle."""
+                return True
+
+        tester = Tester()
+
+        self.assertTrue(tester.hello())
+        self.assertTrue(tester.goodbye())

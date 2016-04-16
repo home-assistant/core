@@ -1,39 +1,35 @@
-"""
-tests.components.sensor.test_command_sensor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests command sensor.
-"""
+"""The tests for the Command line sensor platform."""
 import unittest
 
-from homeassistant.components.sensor import command_sensor
+from homeassistant.components.sensor import command_line
 
 from tests.common import get_test_home_assistant
 
 
 class TestCommandSensorSensor(unittest.TestCase):
-    """ Test the Command line sensor. """
+    """Test the Command line sensor."""
 
     def setUp(self):
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_setup(self):
-        """ Test sensor setup. """
+        """Test sensor setup."""
         config = {'name': 'Test',
                   'unit_of_measurement': 'in',
                   'command': 'echo 5'}
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
-        command_sensor.setup_platform(
+        command_line.setup_platform(
             self.hass, config, add_dev_callback)
 
         self.assertEqual(1, len(devices))
@@ -43,33 +39,33 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual('5', entity.state)
 
     def test_setup_bad_config(self):
-        """ Test setup with a bad configuration. """
+        """Test setup with a bad configuration."""
         config = {}
 
         devices = []
 
         def add_dev_callback(devs):
-            """ callback to add device """
+            """Add a callback to add devices."""
             for dev in devs:
                 devices.append(dev)
 
-        self.assertFalse(command_sensor.setup_platform(
+        self.assertFalse(command_line.setup_platform(
             self.hass, config, add_dev_callback))
 
         self.assertEqual(0, len(devices))
 
     def test_template(self):
-        """ Test command sensor with template. """
-        data = command_sensor.CommandSensorData('echo 50')
+        """Test command sensor with template."""
+        data = command_line.CommandSensorData('echo 50')
 
-        entity = command_sensor.CommandSensor(
+        entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in', '{{ value | multiply(0.1) }}')
 
         self.assertEqual(5, float(entity.state))
 
     def test_bad_command(self):
-        """ Test bad command. """
-        data = command_sensor.CommandSensorData('asdfasdf')
+        """Test bad command."""
+        data = command_line.CommandSensorData('asdfasdf')
         data.update()
 
         self.assertEqual(None, data.value)

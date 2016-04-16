@@ -1,7 +1,5 @@
 """
-homeassistant.components.updater
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Component that checks for available updates.
+Support to check for available updates.
 
 For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/updater/
@@ -21,10 +19,14 @@ ENTITY_ID = 'updater.updater'
 
 
 def setup(hass, config):
-    """ Setup the updater component. """
+    """Setup the updater component."""
+    if 'dev' in CURRENT_VERSION:
+        # This component only makes sense in release versions
+        _LOGGER.warning('Updater not supported in development version')
+        return False
 
     def check_newest_version(_=None):
-        """ Check if a new version is available and report if one is. """
+        """Check if a new version is available and report if one is."""
         newest = get_newest_version()
 
         if newest != CURRENT_VERSION and newest is not None:
@@ -40,7 +42,7 @@ def setup(hass, config):
 
 
 def get_newest_version():
-    """ Get the newest Home Assistant version from PyPI. """
+    """Get the newest Home Assistant version from PyPI."""
     try:
         req = requests.get(PYPI_URL)
 

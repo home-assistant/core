@@ -1,11 +1,7 @@
-"""
-tests.components.automation.test_init
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Tests automation component.
-"""
+"""The tests for the automation component."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID
 
@@ -13,10 +9,12 @@ from tests.common import get_test_home_assistant
 
 
 class TestAutomation(unittest.TestCase):
-    """ Test the event automation. """
+    """Test the event automation."""
 
     def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         self.calls = []
 
         def record_call(service):
@@ -25,72 +23,12 @@ class TestAutomation(unittest.TestCase):
         self.hass.services.register('test', 'automation', record_call)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """ Stop down stuff we started. """
+        """Stop everything that was started."""
         self.hass.stop()
 
-    def test_old_config_service_data_not_a_dict(self):
-        automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'event',
-                'event_type': 'test_event',
-                'execute_service': 'test.automation',
-                'service_data': 100
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
-    def test_old_config_service_specify_data(self):
-        automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'event',
-                'event_type': 'test_event',
-                'execute_service': 'test.automation',
-                'service_data': {'some': 'data'}
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual('data', self.calls[0].data['some'])
-
-    def test_old_config_service_specify_entity_id(self):
-        automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'event',
-                'event_type': 'test_event',
-                'execute_service': 'test.automation',
-                'service_entity_id': 'hello.world'
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(['hello.world'],
-                         self.calls[0].data.get(ATTR_ENTITY_ID))
-
-    def test_old_config_service_specify_entity_id_list(self):
-        automation.setup(self.hass, {
-            automation.DOMAIN: {
-                'platform': 'event',
-                'event_type': 'test_event',
-                'execute_service': 'test.automation',
-                'service_entity_id': ['hello.world', 'hello.world2']
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-        self.assertEqual(['hello.world', 'hello.world2'],
-                         self.calls[0].data.get(ATTR_ENTITY_ID))
-
     def test_service_data_not_a_dict(self):
-        automation.setup(self.hass, {
+        """Test service data not dict."""
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -103,12 +41,9 @@ class TestAutomation(unittest.TestCase):
             }
         })
 
-        self.hass.bus.fire('test_event')
-        self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
     def test_service_specify_data(self):
-        automation.setup(self.hass, {
+        """Test service data."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -127,7 +62,8 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual('data', self.calls[0].data['some'])
 
     def test_service_specify_entity_id(self):
-        automation.setup(self.hass, {
+        """Test service data."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -147,7 +83,8 @@ class TestAutomation(unittest.TestCase):
                          self.calls[0].data.get(ATTR_ENTITY_ID))
 
     def test_service_specify_entity_id_list(self):
-        automation.setup(self.hass, {
+        """Test service data."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -167,7 +104,8 @@ class TestAutomation(unittest.TestCase):
                          self.calls[0].data.get(ATTR_ENTITY_ID))
 
     def test_two_triggers(self):
-        automation.setup(self.hass, {
+        """Test triggers."""
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -193,8 +131,9 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(2, len(self.calls))
 
     def test_two_conditions_with_and(self):
+        """Test two and conditions."""
         entity_id = 'test.entity'
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -206,7 +145,7 @@ class TestAutomation(unittest.TestCase):
                     {
                         'platform': 'state',
                         'entity_id': entity_id,
-                        'state': 100
+                        'state': '100'
                     },
                     {
                         'platform': 'numeric_state',
@@ -236,8 +175,9 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_two_conditions_with_or(self):
+        """Test two or conditions."""
         entity_id = 'test.entity'
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -250,7 +190,7 @@ class TestAutomation(unittest.TestCase):
                     {
                         'platform': 'state',
                         'entity_id': entity_id,
-                        'state': 200
+                        'state': '200'
                     },
                     {
                         'platform': 'numeric_state',
@@ -280,15 +220,15 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(2, len(self.calls))
 
     def test_using_trigger_as_condition(self):
-        """ """
+        """Test triggers as condition."""
         entity_id = 'test.entity'
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
                         'platform': 'state',
                         'entity_id': entity_id,
-                        'state': 100
+                        'state': '100'
                     },
                     {
                         'platform': 'numeric_state',
@@ -305,21 +245,21 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.states.set(entity_id, 100)
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(2, len(self.calls))
 
         self.hass.states.set(entity_id, 120)
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(2, len(self.calls))
 
         self.hass.states.set(entity_id, 151)
         self.hass.pool.block_till_done()
-        self.assertEqual(1, len(self.calls))
+        self.assertEqual(2, len(self.calls))
 
     def test_using_trigger_as_condition_with_invalid_condition(self):
-        """ Event is not a valid condition. Will it still work? """
+        """Event is not a valid condition."""
         entity_id = 'test.entity'
         self.hass.states.set(entity_id, 100)
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': [
                     {
@@ -344,8 +284,8 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_automation_list_setting(self):
-        """ Event is not a valid condition. Will it still work? """
-        self.assertTrue(automation.setup(self.hass, {
+        """Event is not a valid condition."""
+        self.assertTrue(_setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: [{
                 'trigger': {
                     'platform': 'event',

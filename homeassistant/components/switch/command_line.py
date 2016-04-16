@@ -33,13 +33,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(devices)
 
 
+# pylint: disable=too-many-instance-attributes
 class CommandSwitch(SwitchDevice):
-    """Represents a switch that can be toggled using shell commands."""
+    """Representation a switch that can be toggled using shell commands."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, command_on, command_off,
                  command_state, value_template):
-
+        """Initialize the switch."""
         self._hass = hass
         self._name = name
         self._state = False
@@ -84,13 +85,18 @@ class CommandSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
+
+    @property
+    def assumed_state(self):
+        """Return true if we do optimistic updates."""
+        return self._command_state is False
 
     def _query_state(self):
         """Query for state."""

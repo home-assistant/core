@@ -1,7 +1,5 @@
 """
-homeassistant.components.thermostat.proliphix
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The Proliphix NT10e Thermostat is an ethernet connected thermostat.
+Support for Proliphix NT10e Thermostats.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.proliphix/
@@ -15,7 +13,7 @@ REQUIREMENTS = ['proliphix==0.1.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Proliphix thermostats. """
+    """Setup the Proliphix thermostats."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
@@ -30,9 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ProliphixThermostat(ThermostatDevice):
-    """ Represents a Proliphix thermostat. """
+    """Representation a Proliphix thermostat."""
 
     def __init__(self, pdp):
+        """Initialize the thermostat."""
         self._pdp = pdp
         # initial data
         self._pdp.update()
@@ -40,43 +39,43 @@ class ProliphixThermostat(ThermostatDevice):
 
     @property
     def should_poll(self):
-        """ Polling needed for thermostat.. """
+        """Polling needed for thermostat."""
         return True
 
     def update(self):
-        """ Update the data from the thermostat. """
+        """Update the data from the thermostat."""
         self._pdp.update()
 
     @property
     def name(self):
-        """ Returns the name of the thermostat. """
+        """Return the name of the thermostat."""
         return self._name
 
     @property
     def device_state_attributes(self):
-        """ Returns device specific state attributes. """
+        """Return the device specific state attributes."""
         return {
             "fan": self._pdp.fan_state
         }
 
     @property
     def unit_of_measurement(self):
-        """ Returns the unit of measurement. """
+        """Return the unit of measurement."""
         return TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
-        """ Returns the current temperature. """
+        """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
     def target_temperature(self):
-        """ Returns the temperature we try to reach. """
+        """Return the temperature we try to reach."""
         return self._pdp.setback_heat
 
     @property
     def operation(self):
-        """ Returns the current state of the thermostat. """
+        """Return the current state of the thermostat."""
         state = self._pdp.hvac_state
         if state in (1, 2):
             return STATE_IDLE
@@ -86,5 +85,5 @@ class ProliphixThermostat(ThermostatDevice):
             return STATE_COOL
 
     def set_temperature(self, temperature):
-        """ Set new target temperature. """
+        """Set new target temperature."""
         self._pdp.setback_heat = temperature

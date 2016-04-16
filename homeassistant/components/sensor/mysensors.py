@@ -61,8 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pres.S_MULTIMETER: [set_req.V_VOLTAGE,
                                     set_req.V_CURRENT,
                                     set_req.V_IMPEDANCE],
-                pres.S_SPRINKLER: [set_req.V_TRIPPED],
-                pres.S_WATER_LEAK: [set_req.V_TRIPPED],
                 pres.S_SOUND: [set_req.V_LEVEL],
                 pres.S_VIBRATION: [set_req.V_LEVEL],
                 pres.S_MOISTURE: [set_req.V_LEVEL],
@@ -119,7 +117,7 @@ class MySensorsSensor(Entity):
 
     @property
     def name(self):
-        """The name of this entity."""
+        """Return the name of this entity."""
         return self._name
 
     @property
@@ -131,7 +129,7 @@ class MySensorsSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity."""
+        """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         unit_map = {
             set_req.V_TEMP: (TEMP_CELCIUS

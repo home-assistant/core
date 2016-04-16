@@ -20,7 +20,6 @@ DEPENDENCIES = []
 
 def setup(hass, config):
     """Setup our skeleton component."""
-
     # States are in the format DOMAIN.OBJECT_ID.
     hass.states.set('hello_world.Hello_World', 'Works!')
 

@@ -1,7 +1,4 @@
 """
-homeassistant.util.location
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
@@ -20,16 +17,35 @@ LocationInfo = collections.namedtuple(
      'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
      'use_fahrenheit'])
 
+DATA_SOURCE = ['https://freegeoip.io/json/', 'http://ip-api.com/json']
+
 
 def detect_location_info():
-    """ Detect location information. """
-    try:
-        raw_info = requests.get(
-            'https://freegeoip.net/json/', timeout=5).json()
-    except requests.RequestException:
-        return
+    """Detect location information."""
+    success = None
 
-    data = {key: raw_info.get(key) for key in LocationInfo._fields}
+    for source in DATA_SOURCE:
+        try:
+            raw_info = requests.get(source, timeout=5).json()
+            success = source
+            break
+        except (requests.RequestException, ValueError):
+            success = False
+
+    if success is False:
+        return None
+    else:
+        data = {key: raw_info.get(key) for key in LocationInfo._fields}
+        if success is DATA_SOURCE[1]:
+            data['ip'] = raw_info.get('query')
+            data['country_code'] = raw_info.get('countryCode')
+            data['country_name'] = raw_info.get('country')
+            data['region_code'] = raw_info.get('region')
+            data['region_name'] = raw_info.get('regionName')
+            data['zip_code'] = raw_info.get('zip')
+            data['time_zone'] = raw_info.get('timezone')
+            data['latitude'] = raw_info.get('lat')
+            data['longitude'] = raw_info.get('lon')
 
     # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
     # the Cayman Islands, Palau, and the United States and associated
@@ -41,12 +57,12 @@ def detect_location_info():
 
 
 def distance(lat1, lon1, lat2, lon2):
-    """ Calculate the distance in meters between two points. """
+    """Calculate the distance in meters between two points."""
     return vincenty((lat1, lon1), (lat2, lon2)) * 1000
 
 
 def elevation(latitude, longitude):
-    """ Return elevation for given latitude and longitude. """
+    """Return elevation for given latitude and longitude."""
     req = requests.get(ELEVATION_URL, params={
         'locations': '{},{}'.format(latitude, longitude),
         'sensor': 'false',

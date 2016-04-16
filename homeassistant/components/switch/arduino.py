@@ -1,8 +1,7 @@
 """
-homeassistant.components.switch.arduino
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Support for switching Arduino pins on and off. So far only digital pins are
-supported.
+Support for switching Arduino pins on and off.
+
+So far only digital pins are supported.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.arduino/
@@ -19,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Sets up the Arduino platform. """
-
+    """Setup the Arduino platform."""
     # Verify that Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error('A connection has not been made to the Arduino board.')
@@ -30,39 +28,48 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     pins = config.get('pins')
     for pinnum, pin in pins.items():
         if pin.get('name'):
-            switches.append(ArduinoSwitch(pin.get('name'),
-                                          pinnum,
-                                          pin.get('type')))
+            switches.append(ArduinoSwitch(pinnum, pin))
     add_devices(switches)
 
 
 class ArduinoSwitch(SwitchDevice):
-    """ Represents an Arduino switch. """
-    def __init__(self, name, pin, pin_type):
+    """Representation of an Arduino switch."""
+
+    def __init__(self, pin, options):
+        """Initialize the Pin."""
         self._pin = pin
-        self._name = name or DEVICE_DEFAULT_NAME
-        self.pin_type = pin_type
+        self._name = options.get('name') or DEVICE_DEFAULT_NAME
+        self.pin_type = options.get('type')
         self.direction = 'out'
-        self._state = False
+
+        self._state = options.get('initial', False)
+
+        if options.get('negate', False):
+            self.turn_on_handler = arduino.BOARD.set_digital_out_low
+            self.turn_off_handler = arduino.BOARD.set_digital_out_high
+        else:
+            self.turn_on_handler = arduino.BOARD.set_digital_out_high
+            self.turn_off_handler = arduino.BOARD.set_digital_out_low
 
         arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
 
     @property
     def name(self):
-        """ Get the name of the pin. """
+        """Get the name of the pin."""
         return self._name
 
     @property
     def is_on(self):
-        """ Returns True if pin is high/on. """
+        """Return true if pin is high/on."""
         return self._state
 
     def turn_on(self):
-        """ Turns the pin to high/on. """
+        """Turn the pin to high/on."""
         self._state = True
-        arduino.BOARD.set_digital_out_high(self._pin)
+        self.turn_on_handler(self._pin)
 
     def turn_off(self):
-        """ Turns the pin to low/off. """
+        """Turn the pin to low/off."""
         self._state = False
-        arduino.BOARD.set_digital_out_low(self._pin)
+        self.turn_off_handler(self._pin)

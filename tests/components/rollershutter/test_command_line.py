@@ -1,8 +1,4 @@
-"""
-tests.components.rollershutter.command_rollershutter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tests the command_rollershutter component
-"""
+"""The tests the Roller shutter command line platform."""
 
 import os
 import tempfile
@@ -12,11 +8,14 @@ from unittest import mock
 import homeassistant.core as ha
 import homeassistant.components.rollershutter as rollershutter
 from homeassistant.components.rollershutter import (
-    command_rollershutter as cmd_rs)
+    command_line as cmd_rs)
 
 
 class TestCommandRollerShutter(unittest.TestCase):
+    """Test the Roller shutter command line platform."""
+
     def setup_method(self, method):
+        """Setup things to be run when tests are started."""
         self.hass = ha.HomeAssistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
@@ -26,15 +25,17 @@ class TestCommandRollerShutter(unittest.TestCase):
                                               None)  # FIXME
 
     def teardown_method(self, method):
-        """ Stop down stuff we started. """
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_should_poll(self):
+        """Test the setting of polling."""
         self.assertTrue(self.rs.should_poll)
         self.rs._command_state = None
         self.assertFalse(self.rs.should_poll)
 
     def test_query_state_value(self):
+        """Test with state value."""
         with mock.patch('subprocess.check_output') as mock_run:
             mock_run.return_value = b' foo bar '
             result = self.rs._query_state_value('runme')
@@ -42,6 +43,7 @@ class TestCommandRollerShutter(unittest.TestCase):
             mock_run.assert_called_once_with('runme', shell=True)
 
     def test_state_value(self):
+        """Test with state value."""
         with tempfile.TemporaryDirectory() as tempdirname:
             path = os.path.join(tempdirname, 'rollershutter_status')
             test_rollershutter = {
@@ -53,7 +55,7 @@ class TestCommandRollerShutter(unittest.TestCase):
             }
             self.assertTrue(rollershutter.setup(self.hass, {
                 'rollershutter': {
-                    'platform': 'command_rollershutter',
+                    'platform': 'command_line',
                     'rollershutters': {
                         'test': test_rollershutter
                     }

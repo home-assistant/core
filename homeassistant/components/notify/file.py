@@ -1,7 +1,5 @@
 """
-homeassistant.components.notify.file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-File notification service.
+Support for file notification.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.file/
@@ -18,8 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """ Get the file notification service. """
-
+    """Get the file notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['filename',
                                      'timestamp']},
@@ -34,21 +31,21 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods
 class FileNotificationService(BaseNotificationService):
-    """ Implements notification service for the File service. """
+    """Implement the notification service for the File service."""
 
     def __init__(self, hass, filename, add_timestamp):
+        """Initialize the service."""
         self.filepath = os.path.join(hass.config.config_dir, filename)
         self.add_timestamp = add_timestamp
 
     def send_message(self, message="", **kwargs):
-        """ Send a message to a file. """
-
+        """Send a message to a file."""
         with open(self.filepath, 'a') as file:
             if os.stat(self.filepath).st_size == 0:
                 title = '{} notifications (Log started: {})\n{}\n'.format(
                     kwargs.get(ATTR_TITLE),
                     dt_util.strip_microseconds(dt_util.utcnow()),
-                    '-'*80)
+                    '-' * 80)
                 file.write(title)
 
             if self.add_timestamp == 1:

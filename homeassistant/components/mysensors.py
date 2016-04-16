@@ -1,9 +1,5 @@
 """
-homeassistant.components.mysensors.
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-MySensors component that connects to a MySensors gateway via pymysensors
-API.
+Connect to a MySensors gateway via pymysensors API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
@@ -13,7 +9,8 @@ import logging
 import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS)
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS,
+    CONF_OPTIMISTIC)
 from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
@@ -23,7 +20,6 @@ CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
 CONF_BAUD_RATE = 'baud_rate'
-CONF_OPTIMISTIC = 'optimistic'
 DEFAULT_VERSION = '1.4'
 DEFAULT_BAUD_RATE = 115200
 
@@ -143,7 +139,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                 if key in devices:
                     devices[key].update_ha_state(True)
                     continue
-                name = '{} {}.{}'.format(
+                name = '{} {} {}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
                 if isinstance(entity_class, dict):
                     device_class = entity_class[child.type]
