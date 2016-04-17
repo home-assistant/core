@@ -49,9 +49,6 @@ evohomeclient==0.2.4
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
-# homeassistant.components.device_tracker.fritz
-# fritzconnection==0.4.6
-
 # homeassistant.components.conversation
 fuzzywuzzy==0.8.0
 
@@ -88,6 +85,9 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 
 # homeassistant.components.media_player.onkyo
 https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.2
+
+# homeassistant.components.device_tracker.fritz
+# https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
