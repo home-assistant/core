@@ -39,8 +39,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import soco
 
     if discovery_info:
-        add_devices([SonosDevice(hass, soco.SoCo(discovery_info))])
-        return True
+        player = soco.SoCo(discovery_info)
+        if player.is_visible:
+            add_devices([SonosDevice(hass, player)])
+            return True
+        return False
 
     players = None
     hosts = config.get('hosts', None)
