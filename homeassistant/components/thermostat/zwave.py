@@ -6,9 +6,7 @@ from homeassistant.components.thermostat import DOMAIN
 from homeassistant.components.thermostat import (
     ThermostatDevice,
     STATE_IDLE)
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID, NETWORK,
-    ZWaveDeviceEntity)
+from homeassistant.components import zwave
 from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELCIUS)
 
 CONF_NAME = 'name'
@@ -17,24 +15,24 @@ DEFAULT_NAME = 'ZWave Thermostat'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZWave thermostats."""
-    if discovery_info is None or NETWORK is None:
+    if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
     value.set_change_verified(False)
     add_devices([ZWaveThermostat(value)])
 
 
 # pylint: disable=too-many-arguments
-class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
+class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 
     def __init__(self, value):
         """Initialize the zwave thermostat."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
         self._target_temperature = None
         self._current_temperature = None
