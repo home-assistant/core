@@ -8,11 +8,7 @@ import logging
 import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
-
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID,
-    COMMAND_CLASS_SENSOR_BINARY, NETWORK,
-    ZWaveDeviceEntity, get_config_value)
+from homeassistant.components import zwave
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
@@ -36,11 +32,11 @@ DEVICE_MAPPINGS = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Z-Wave platform for sensors."""
-    if discovery_info is None or NETWORK is None:
+    if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
     value.set_change_verified(False)
 
     # Make sure that we have values for the key before converting to int
@@ -53,18 +49,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if specific_sensor_key in DEVICE_MAPPINGS:
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
                 # Default the multiplier to 4
-                re_arm_multiplier = (get_config_value(value.node, 9) or 4)
+                re_arm_multiplier = (zwave.get_config_value(value.node,
+                                                            9) or 4)
                 add_devices([
                     ZWaveTriggerSensor(value, "motion",
                                        hass, re_arm_multiplier * 8)
                 ])
                 return
 
-    if value.command_class == COMMAND_CLASS_SENSOR_BINARY:
+    if value.command_class == zwave.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value, None)])
 
 
-class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
+class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, value, sensor_class):
@@ -74,7 +71,7 @@ class ZWaveBinarySensor(BinarySensorDevice, ZWaveDeviceEntity):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
