@@ -201,6 +201,6 @@ class InsteonFanDevice(EnumEntity, InsteonDevice):
 
     def set_value(self, value, **kwargs):
         """Set's the fan speed."""
-        resp = self.node.send_command('fan', {'speed': level}, wait=True)
+        resp = self.node.send_command('fan', {'speed': value}, wait=True)
         if self.is_successful(resp):
-            self._value = level
+            self._value = value
