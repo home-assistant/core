@@ -2,7 +2,6 @@
 # pylint: disable=proctected-access, too-many-public-methods
 import unittest
 
-from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_HIGH,
@@ -16,25 +15,35 @@ DEVICE_CATEGORY = 'device_category'
 DEVICE_SUB_CATEGORY = 'device_sub_category'
 DEVICE_NAME = 'device_name'
 
+
 class Device(object):
     DeviceID = None
     DevCat = None
     SubCat = None
     DeviceName = None
 
-    command_responses= {}
+    command_responses = {}
 
     def __init__(self, props):
-        self.DeviceID = props[DEVICE_ID] if DEVICE_ID in props else None
-        self.DevCat = props[DEVICE_CATEGORY] if DEVICE_CATEGORY in props else None
-        self.SubCat = props[DEVICE_SUB_CATEGORY] if DEVICE_SUB_CATEGORY in props else None
-        self.DeviceName = props[DEVICE_NAME] if DEVICE_NAME in props else None
-    
+        self.DeviceID = (props[DEVICE_ID]
+                         if DEVICE_ID in props
+                         else None)
+        self.DevCat = (props[DEVICE_CATEGORY]
+                       if DEVICE_CATEGORY in props
+                       else None)
+        self.SubCat = (props[DEVICE_SUB_CATEGORY]
+                       if DEVICE_SUB_CATEGORY in props
+                       else None)
+        self.DeviceName = (props[DEVICE_NAME]
+                           if DEVICE_NAME in props
+                           else None)
+
     def send_command(self, command, payload=None, level=None, wait=False):
         if command not in self.command_responses:
-            raise Error('no mock response for command' + command)
+            raise Exception('no mock response for command' + command)
 
         return self.command_responses[command]
+
 
 class TestComponentsInsteonHub(unittest.TestCase):
     """ Test insteon hub component."""
@@ -43,11 +52,13 @@ class TestComponentsInsteonHub(unittest.TestCase):
         Device({
             DEVICE_CATEGORY: 1,
             DEVICE_SUB_CATEGORY: 5,
-            DEVICE_NAME: 'A',}),
+            DEVICE_NAME: 'A',
+        }),
         Device({
             DEVICE_CATEGORY: 5,
             DEVICE_SUB_CATEGORY: 10,
-            DEVICE_NAME: 'B',}),
+            DEVICE_NAME: 'B',
+        }),
     ]
 
     def setUp(self):
@@ -62,7 +73,7 @@ class TestComponentsInsteonHub(unittest.TestCase):
         dev_filter = [{
             'DevCat': 1,
         }]
-        filteredDevices = insteon_hub.filter(self.devices, dev_filter)
+        filteredDevices = insteon_hub.filter_devices(self.devices, dev_filter)
         self.assertEquals(1, len(filteredDevices))
         self.assertEquals('A', filteredDevices[0].DeviceName)
 
@@ -71,10 +82,11 @@ class TestComponentsInsteonHub(unittest.TestCase):
             'DevCat': 5,
             'SubCat': [1, 3, 10],
         }]
-        filteredDevices = insteon_hub.filter(self.devices, dev_filter)
+        filteredDevices = insteon_hub.filter_devices(self.devices, dev_filter)
 
         self.assertEquals(1, len(filteredDevices))
         self.assertEquals('B', filteredDevices[0].DeviceName)
+
 
 class TestInsteonDevice(unittest.TestCase):
     """ Tests around the inteon device class."""
@@ -98,11 +110,15 @@ class TestInsteonDevice(unittest.TestCase):
         self.assertEquals(self.node.DeviceName, device.name)
 
     def test_is_successful(self):
-        device = insteon_hub.InsteonDevice(self.node)
+        self.assertEquals(True,
+                          insteon_hub.InsteonDevice.is_successful(
+                              {'status': 'succeeded'}))
+        self.assertEquals(False,
+                          insteon_hub.InsteonDevice.is_successful(
+                              {'status': 'failed'}))
+        self.assertEquals(False,
+                          insteon_hub.InsteonDevice.is_successful({}))
 
-        self.assertEquals(True, device.is_successful({'status': 'succeeded'}))
-        self.assertEquals(False, device.is_successful({'status': 'failed'}))
-        self.assertEquals(False, device.is_successful({}))
 
 class TestInsteonToggleDevice(TestInsteonDevice):
 
@@ -138,7 +154,11 @@ class TestInsteonToggleDevice(TestInsteonDevice):
     def test_get_level(self):
         device = insteon_hub.InsteonToggleDevice(self.node)
 
-        self.assertEquals(42, device.get_level({'status': 'succeeded', 'response': {'level': 42}}))
+        self.assertEquals(42,
+                          device.get_level({
+                              'status': 'succeeded',
+                              'response': {'level': 42}
+                          }))
         self.assertEquals(0, device.get_level({}))
 
     def test_is_on(self):
@@ -161,6 +181,7 @@ class TestInsteonToggleDevice(TestInsteonDevice):
 
         self.assertEquals(0, device._value)
 
+
 class TestInsteonFanDevice(TestInsteonDevice):
     def setUp(self):
         self.node.command_responses = {
@@ -174,6 +195,7 @@ class TestInsteonFanDevice(TestInsteonDevice):
                 'status': 'succeeded'
             }
         }
+
     def test_update(self):
         device = insteon_hub.InsteonFanDevice(self.node)
 
