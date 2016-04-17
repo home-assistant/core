@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_LOW,
     STATE_MED,
     STATE_HIGH,
-    SERVICE_SET_LEVEL,
+    SERVICE_SET_VALUE,
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -114,8 +114,8 @@ def setup(hass, config):
         params.pop(ATTR_ENTITY_ID, None)
 
         service_fun = None
-        if service.service == SERVICE_SET_LEVEL:
-            service_fun = 'set_level'
+        if service.service == SERVICE_SET_VALUE:
+            service_fun = 'set_value'
 
         if service_fun:
             for fan in target_fans:
@@ -134,8 +134,8 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_SET_LEVEL, handle_fan_service,
-                           descriptions.get(SERVICE_SET_LEVEL),
+    hass.services.register(DOMAIN, SERVICE_SET_VALUE, handle_fan_service,
+                           descriptions.get(SERVICE_SET_VALUE),
                            schema=FAN_SET_SPEED_SCHEMA)
 
     return True

@@ -268,7 +268,7 @@ class EnumEntity(Entity):
     """An abstract class for enumerated state entities."""
     
     #pylint: disable=no-self-use
-    def set_level(self, level, **kwargs):
+    def set_value(self, value, **kwargs):
         """Set the level of the entity"""
         pass
 

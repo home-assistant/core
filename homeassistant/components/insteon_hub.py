@@ -199,7 +199,7 @@ class InsteonFanDevice(EnumEntity, InsteonDevice):
                  'value': 'high',},],
         })
 
-    def set_level(self, level, **kwargs):
+    def set_value(self, value, **kwargs):
         """Set's the fan speed."""
         resp = self.node.send_command('fan', {'speed': level}, wait=True)
         if self.is_successful(resp):
