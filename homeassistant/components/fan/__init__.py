@@ -11,13 +11,20 @@ import csv
 import voluptuous as vol
 
 from homeassistant.components import (
-    insteon_hub, group)
+    insteon_hub,
+    group,
+)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID, STATE_OFF, STATE_LOW, STATE_MED, STATE_HIGH,
-    SERVICE_SET_LEVEL, STATE_UNKNOWN)
-from homeassistant.helpers.entity import LevelEntity
+    STATE_ON,
+    ATTR_ENTITY_ID,
+    STATE_UNKNOWN,
+    STATE_OFF,
+    STATE_LOW,
+    STATE_MED,
+    STATE_HIGH,
+    SERVICE_SET_LEVEL,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv

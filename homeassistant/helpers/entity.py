@@ -264,7 +264,7 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-class LevelEntity(Entity):
+class EnumEntity(Entity):
     """An abstract class for enumerated state entities."""
     
     #pylint: disable=no-self-use

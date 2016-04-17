@@ -8,11 +8,25 @@ import logging
 
 import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_PLATFORM_DISCOVERED, STATE_UNKNOWN, STATE_OFF, STATE_UNKNOWN,
-    STATE_LOW, STATE_MED, STATE_HIGH, STATE_ON)
+    ATTR_DISCOVERED,
+    ATTR_SERVICE,
+    CONF_API_KEY,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_PLATFORM_DISCOVERED,
+    STATE_UNKNOWN,
+    STATE_OFF,
+    STATE_LOW,
+    STATE_MED,
+    STATE_HIGH,
+    STATE_ON,
+)
 from homeassistant.helpers import validate_config
-from homeassistant.helpers.entity import (Entity, ToggleEntity, LevelEntity)
+from homeassistant.helpers.entity import (
+    Entity,
+    ToggleEntity,
+    EnumEntity,
+)
 from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"
@@ -150,7 +164,7 @@ class InsteonToggleDevice(InsteonDevice, ToggleEntity):
         resp = self.node.send_command('off', wait=True)
         self._value = self.get_level(resp)
 
-class InsteonFanDevice(LevelEntity, InsteonDevice):
+class InsteonFanDevice(EnumEntity, InsteonDevice):
     """An abstract class for an Insteon node."""
 
     def __init__(self, node):
