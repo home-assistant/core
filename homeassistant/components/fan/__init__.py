@@ -6,7 +6,6 @@ https://home-assistant.io/components/fan/
 """
 import logging
 import os
-import csv
 
 import voluptuous as vol
 
@@ -18,7 +17,6 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON,
     ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
     STATE_OFF,
     STATE_LOW,
     STATE_MED,
@@ -28,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
-
 
 DOMAIN = "fan"
 SCAN_INTERVAL = 30
