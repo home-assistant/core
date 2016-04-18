@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup a Hyperion server remote."""
     host = config.get(CONF_HOST, None)
     port = config.get("port", 19444)
-    device = Hyperion( config.get('name', host), host, port)
+    device = Hyperion(config.get('name', host), host, port)
     if device.setup():
         add_devices_callback([device])
         return True
