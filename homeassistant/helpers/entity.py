@@ -14,9 +14,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_OFF,
     STATE_ON,
-    STATE_LOW,
-    STATE_MED,
-    STATE_HIGH,
     TEMP_CELCIUS,
     TEMP_FAHRENHEIT,
 )
@@ -264,14 +261,11 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
+
 class EnumEntity(Entity):
     """An abstract class for enumerated state entities."""
-    
-    #pylint: disable=no-self-use
-    def set_value(self, value, **kwargs):
-        """Set the level of the entity"""
-        pass
 
-    @property
-    def state(self):
+    # pylint: disable=no-self-use
+    def set_value(self, value, **kwargs):
+        """Set the level of the entity."""
         pass

@@ -6,7 +6,6 @@ https://home-assistant.io/components/fan/
 """
 import logging
 import os
-import csv
 
 import voluptuous as vol
 
@@ -18,7 +17,6 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON,
     ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
     STATE_OFF,
     STATE_LOW,
     STATE_MED,
@@ -28,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
-
 
 DOMAIN = "fan"
 SCAN_INTERVAL = 30
@@ -55,15 +51,23 @@ DISCOVERY_PLATFORMS = {
 PROP_TO_ATTR = {
     'level': ATTR_SPEED,
 }
+
+
 # Service call validation schemas
-def isValidSpeed(val):
-    if isinstance(val, str) and val in [STATE_OFF, STATE_LOW, STATE_MED, STATE_HIGH]:
-        return val;
+def is_valid_speed(val):
+    """Check if the value is valid."""
+    if (isinstance(val, str) and
+            val in [
+                STATE_OFF,
+                STATE_LOW,
+                STATE_MED,
+                STATE_HIGH]):
+        return val
     return vol.Invalid('Not a valid speed setting')
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_SPEED: isValidSpeed 
+    ATTR_SPEED: is_valid_speed
 })
 
 PROFILE_SCHEMA = vol.Schema(
@@ -75,12 +79,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def is_on(hass, entity_id=None):
     """Return if the lights are on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
+    entity_id = entity_id or ENTITY_ID_ALL_FANS
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 # pylint: disable=too-many-arguments
-def set_level(hass, entity_id=None, level=None):
+def set_value(hass, entity_id=None, level=None):
     """Set the fan speed."""
     data = {
         key: value for key, value in [
@@ -89,7 +93,8 @@ def set_level(hass, entity_id=None, level=None):
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_SPEED, data)
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, data)
+
 
 # pylint: disable=too-many-branches, too-many-locals, too-many-statements
 def setup(hass, config):
@@ -98,11 +103,6 @@ def setup(hass, config):
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
         GROUP_NAME_ALL_FANS)
     component.setup(config)
-
-    # Load built-in profiles and custom profiles
-    profile_paths = [os.path.join(os.path.dirname(__file__),
-                                  FAN_PROFILES_FILE),
-                     hass.config.path(FAN_PROFILES_FILE)]
 
     def handle_fan_service(service):
         """Hande a turn light on or off service call."""

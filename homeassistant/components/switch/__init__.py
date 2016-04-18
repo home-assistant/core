@@ -47,7 +47,7 @@ DISCOVERY_PLATFORMS = {
     wemo.DISCOVER_SWITCHES: 'wemo',
     wink.DISCOVER_SWITCHES: 'wink',
     isy994.DISCOVER_SWITCHES: 'isy994',
-    'insteon_hub.switch': 'insteon_hub',
+    insteon_hub.DISCOVERY[DOMAIN]: 'insteon_hub',
     verisure.DISCOVER_SWITCHES: 'verisure',
     zwave.DISCOVER_SWITCHES: 'zwave',
     tellduslive.DISCOVER_SWITCHES: 'tellduslive',
