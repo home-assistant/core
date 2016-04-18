@@ -177,6 +177,7 @@ omit =
     homeassistant/components/thermostat/proliphix.py
     homeassistant/components/thermostat/radiotherm.py
     homeassistant/components/*/thinkingcleaner.py
+    homeassistant/components/*/webostv.py
 
 
 [report]
