@@ -57,6 +57,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
+        configured_host = _find_host_from_config(hass, filename)
+        if configured_host is not None:
+            if host != configured_host and \
+                    host == socket.gethostbyname(configured_host):
+                return
     else:
         host = config.get(CONF_HOST, None)
 
