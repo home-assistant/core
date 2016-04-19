@@ -92,6 +92,7 @@ omit =
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
+    homeassistant/components/feedreader.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/ifttt.py
     homeassistant/components/keyboard.py
