@@ -79,6 +79,9 @@ https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
+# homeassistant.components.media_player.webostv
+https://github.com/TheRealLink/pylgtv/archive/v0.1.1.zip#pylgtv==0.1.1
+
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
