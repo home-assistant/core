@@ -10,6 +10,8 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE, ATTR_INPUT_SOURCE)
 from homeassistant.components.notify import (
     ATTR_MESSAGE, SERVICE_NOTIFY)
+from homeassistant.components.tts import (
+    ATTR_TEXT, SERVICE_TTS)
 from homeassistant.components.sun import (
     STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
 from homeassistant.components.thermostat import (
@@ -40,6 +42,7 @@ SERVICE_ATTRIBUTES = {
     SERVICE_VOLUME_MUTE: [ATTR_MEDIA_VOLUME_MUTED],
     SERVICE_VOLUME_SET: [ATTR_MEDIA_VOLUME_LEVEL],
     SERVICE_NOTIFY: [ATTR_MESSAGE],
+    SERVICE_TTS: [ATTR_TEXT],
     SERVICE_SET_AWAY_MODE: [ATTR_AWAY_MODE],
     SERVICE_SET_FAN_MODE: [ATTR_FAN],
     SERVICE_SET_TEMPERATURE: [ATTR_TEMPERATURE],
