@@ -1,6 +1,9 @@
 """
 Support for eq3 Bluetooth Smart thermostats.
+
+Uses bluepy_devices library.
 """
+
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
