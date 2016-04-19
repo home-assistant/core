@@ -67,7 +67,7 @@ DEFAULT_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(ATTR_DEVICE): VALID_DEVICE_ID,
+        vol.Required(ATTR_DEVICE): cv.string,
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DUMMY, default=False): cv.boolean,
     }),
@@ -188,7 +188,7 @@ def apply_received_command(event):
     # Check if entity exists or previously added automatically
     if device_id in RFX_DEVICES:
         _LOGGER.debug(
-            "EntityID: %s light_update. Command: %s",
+            "EntityID: %s device_update. Command: %s",
             device_id,
             event.values['Command']
         )
@@ -257,7 +257,7 @@ class RfxtrxDevice(Entity):
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return true if device is on."""
         return self._state
 
     @property
@@ -266,7 +266,7 @@ class RfxtrxDevice(Entity):
         return True
 
     def turn_off(self, **kwargs):
-        """Turn the light off."""
+        """Turn the device off."""
         self._send_command("turn_off")
 
     def _send_command(self, command, brightness=0):
