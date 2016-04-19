@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.mysensors/
 import logging
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
@@ -132,7 +132,7 @@ class MySensorsSensor(Entity):
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         unit_map = {
-            set_req.V_TEMP: (TEMP_CELCIUS
+            set_req.V_TEMP: (TEMP_CELSIUS
                              if self.gateway.metric else TEMP_FAHRENHEIT),
             set_req.V_HUM: '%',
             set_req.V_DIMMER: '%',

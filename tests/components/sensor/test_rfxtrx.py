@@ -3,7 +3,7 @@ import unittest
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 
 from tests.common import get_test_home_assistant
 
@@ -44,7 +44,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         print(rfxtrx_core.RFX_DEVICES)
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']
         self.assertEqual('Test', entity.name)
-        self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+        self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
         self.assertEqual(14.9, entity.state)
         self.assertEqual({'Humidity status': 'normal', 'Temperature': 14.9,
                           'Rssi numeric': 6, 'Humidity': 34,
@@ -85,7 +85,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath_Humidity', entity.__str__())
             elif entity.name == 'Bath':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(25.5, entity.state)
                 self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
                                   'Humidity': 14, 'Humidity status': 'normal',
@@ -95,7 +95,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath', entity.__str__())
             elif entity.name == 'Test':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(14.9, entity.state)
                 self.assertEqual({'Humidity status': 'normal',
                                   'Temperature': 14.9,
@@ -226,7 +226,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath_Humidity', entity.__str__())
             elif entity.name == 'Bath':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(25.5, entity.state)
                 self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
                                   'Humidity': 14, 'Humidity status': 'normal',
@@ -236,7 +236,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath', entity.__str__())
             elif entity.name == 'Test':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(14.9, entity.state)
                 self.assertEqual({'Humidity status': 'normal',
                                   'Temperature': 14.9,
@@ -274,7 +274,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath_Humidity', entity.__str__())
             elif entity.name == 'Bath':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(51.1, entity.state)
                 self.assertEqual({'Battery numeric': 9, 'Temperature': 51.1,
                                   'Humidity': 15, 'Humidity status': 'normal',
@@ -284,7 +284,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                 self.assertEqual('Bath', entity.__str__())
             elif entity.name == 'Test':
                 device_num = device_num + 1
-                self.assertEqual(TEMP_CELCIUS, entity.unit_of_measurement)
+                self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual(13.3, entity.state)
                 self.assertEqual({'Humidity status': 'normal',
                                   'Temperature': 13.3,

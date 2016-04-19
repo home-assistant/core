@@ -11,7 +11,7 @@ from homeassistant.components.zwave import (
     ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_ALARM, COMMAND_CLASS_METER,
     COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
     TYPE_DECIMAL, ZWaveDeviceEntity)
-from homeassistant.const import (TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 
@@ -123,7 +123,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
         unit = self._value.units
 
         if unit == 'C':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:

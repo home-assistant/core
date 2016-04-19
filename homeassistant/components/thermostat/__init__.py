@@ -19,7 +19,7 @@ from homeassistant.components import (ecobee, zwave)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELCIUS)
+    TEMP_CELSIUS)
 
 DOMAIN = "thermostat"
 
@@ -269,12 +269,12 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(7, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(7, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(35, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
@@ -284,7 +284,7 @@ class ThermostatDevice(Entity):
         value = convert(temp, self.unit_of_measurement,
                         self.hass.config.temperature_unit)
 
-        if self.hass.config.temperature_unit is TEMP_CELCIUS:
+        if self.hass.config.temperature_unit is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.

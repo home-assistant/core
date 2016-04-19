@@ -21,7 +21,7 @@ import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
@@ -440,7 +440,7 @@ def process_ha_core_config(hass, config):
         if info.use_fahrenheit:
             hac.temperature_unit = TEMP_FAHRENHEIT
         else:
-            hac.temperature_unit = TEMP_CELCIUS
+            hac.temperature_unit = TEMP_CELSIUS
 
     if hac.location_name is None:
         hac.location_name = info.city
