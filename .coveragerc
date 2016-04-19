@@ -172,6 +172,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/thermostat/eq3btsmart.py
     homeassistant/components/thermostat/heatmiser.py
     homeassistant/components/thermostat/homematic.py
     homeassistant/components/thermostat/proliphix.py
