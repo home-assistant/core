@@ -9,7 +9,7 @@ import logging
 import requests
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 
@@ -96,7 +96,7 @@ class MfiSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._port.tag == 'temperature':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif self._port.tag == 'active_pwr':
             return 'Watts'
         elif self._port.model == 'Input Digital':

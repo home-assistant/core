@@ -9,7 +9,7 @@ import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    TEMP_CELCIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
+    TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
 )
 
 DEPENDENCIES = ['nest']
@@ -103,7 +103,7 @@ class NestTempSensor(NestSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def state(self):

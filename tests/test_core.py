@@ -17,7 +17,7 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
+    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
@@ -448,8 +448,8 @@ class TestConfig(unittest.TestCase):
     def test_temperature_not_convert_if_no_preference(self):
         """No unit conversion to happen if no preference."""
         self.assertEqual(
-            (25, TEMP_CELCIUS),
-            self.config.temperature(25, TEMP_CELCIUS))
+            (25, TEMP_CELSIUS),
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
             (80, TEMP_FAHRENHEIT),
             self.config.temperature(80, TEMP_FAHRENHEIT))
@@ -458,8 +458,8 @@ class TestConfig(unittest.TestCase):
         """No unit conversion to happen if no preference."""
         self.config.temperature_unit = TEMP_FAHRENHEIT
         self.assertEqual(
-            ('25a', TEMP_CELCIUS),
-            self.config.temperature('25a', TEMP_CELCIUS))
+            ('25a', TEMP_CELSIUS),
+            self.config.temperature('25a', TEMP_CELSIUS))
 
     def test_temperature_not_convert_if_invalid_unit(self):
         """No unit conversion to happen if no preference."""
@@ -467,15 +467,15 @@ class TestConfig(unittest.TestCase):
             (25, 'Invalid unit'),
             self.config.temperature(25, 'Invalid unit'))
 
-    def test_temperature_to_convert_to_celcius(self):
+    def test_temperature_to_convert_to_celsius(self):
         """Test temperature conversion to celsius."""
-        self.config.temperature_unit = TEMP_CELCIUS
+        self.config.temperature_unit = TEMP_CELSIUS
 
         self.assertEqual(
-            (25, TEMP_CELCIUS),
-            self.config.temperature(25, TEMP_CELCIUS))
+            (25, TEMP_CELSIUS),
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
-            (26.7, TEMP_CELCIUS),
+            (26.7, TEMP_CELSIUS),
             self.config.temperature(80, TEMP_FAHRENHEIT))
 
     def test_temperature_to_convert_to_fahrenheit(self):
@@ -484,7 +484,7 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(
             (77, TEMP_FAHRENHEIT),
-            self.config.temperature(25, TEMP_CELCIUS))
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
             (80, TEMP_FAHRENHEIT),
             self.config.temperature(80, TEMP_FAHRENHEIT))
