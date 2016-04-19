@@ -6,6 +6,7 @@ https://home-assistant.io/components/Tellstick/
 """
 import logging
 import threading
+import voluptuous as vol
 
 from homeassistant import bootstrap
 from homeassistant.const import (
@@ -39,6 +40,14 @@ TELLSTICK_LOCK = threading.Lock()
 # Used from entities that register callback listeners
 TELLCORE_REGISTRY = None
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(ATTR_SIGNAL_REPETITIONS,
+                     default=DEFAULT_SIGNAL_REPETITIONS):
+        vol.Coerce(int),
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 def _discover(hass, config, found_devices, component_name):
     """Setup and send the discovery event."""
@@ -52,8 +61,7 @@ def _discover(hass, config, found_devices, component_name):
     bootstrap.setup_component(hass, component.DOMAIN,
                               config)
 
-    signal_repetitions = config[DOMAIN].get(
-        ATTR_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS)
+    signal_repetitions = config[DOMAIN].get(ATTR_SIGNAL_REPETITIONS)
 
     hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
                   {ATTR_SERVICE: DISCOVERY_TYPES[component_name],
