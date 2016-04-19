@@ -5,6 +5,7 @@ import argparse
 import os
 import platform
 import signal
+import subprocess
 import sys
 import threading
 import time
@@ -122,6 +123,10 @@ def get_arguments():
         '--restart-osx',
         action='store_true',
         help='Restarts on OS X.')
+    parser.add_argument(
+        '--runner',
+        action='store_true',
+        help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
     if os.name == "posix":
         parser.add_argument(
             '--daemon',
@@ -129,8 +134,9 @@ def get_arguments():
             help='Run Home Assistant as daemon')
 
     arguments = parser.parse_args()
-    if os.name != "posix" or arguments.debug:
+    if os.name != "posix" or arguments.debug or arguments.runner:
         arguments.daemon = False
+
     return arguments
 
 
@@ -236,9 +242,25 @@ def closefds_osx(min_fd, max_fd):
             pass
 
 
+def cmdline():
+    """Collect path and arguments to re-execute the current hass instance."""
+    return [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
+
+
 def setup_and_run_hass(config_dir, args):
     """Setup HASS and run."""
     from homeassistant import bootstrap
+
+    # Run a simple daemon runner process on Windows to handle restarts
+    if os.name == 'nt' and '--runner' not in sys.argv:
+        args = cmdline() + ['--runner']
+        while True:
+            try:
+                subprocess.check_call(args)
+                sys.exit(0)
+            except subprocess.CalledProcessError as exc:
+                if exc.returncode != RESTART_EXIT_CODE:
+                    sys.exit(exc.returncode)
 
     if args.demo_mode:
         config = {
@@ -328,8 +350,8 @@ def try_to_restart():
     # systemd will restart us when RestartForceExitStatus=100 is set in the
     # systemd.service file.
     sys.stderr.write("Restarting Home-Assistant\n")
-    args = [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
-    os.execv(sys.executable, args)
+    args = cmdline()
+    os.execv(args[0], args)
 
 
 def main():
@@ -368,7 +390,7 @@ def main():
         os.setpgid(0, 0)
 
     exit_code = setup_and_run_hass(config_dir, args)
-    if exit_code == RESTART_EXIT_CODE:
+    if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
     return exit_code
