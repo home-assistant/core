@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -156,7 +156,7 @@ def temperature_unit(value):
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == 'C':
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
     elif value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')

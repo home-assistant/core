@@ -6,13 +6,18 @@ from unittest import mock
 import influxdb as influx_client
 
 import homeassistant.components.influxdb as influxdb
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 
 
+@mock.patch('influxdb.InfluxDBClient')
 class TestInfluxDB(unittest.TestCase):
     """Test the InfluxDB component."""
 
-    @mock.patch('influxdb.InfluxDBClient')
+    def setUp(self):
+        """Setup things to be run when tests are started."""
+        self.hass = mock.MagicMock()
+        self.handler_method = None
+
     def test_setup_config_full(self, mock_client):
         """Test the setup with full configuration."""
         config = {
@@ -26,14 +31,12 @@ class TestInfluxDB(unittest.TestCase):
                 'verify_ssl': 'False',
             }
         }
-        hass = mock.MagicMock()
-        self.assertTrue(influxdb.setup(hass, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.assertTrue(influxdb.setup(self.hass, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
         self.assertTrue(mock_client.return_value.query.called)
 
-    @mock.patch('influxdb.InfluxDBClient')
     def test_setup_config_defaults(self, mock_client):
         """Test the setup with default configuration."""
         config = {
@@ -43,13 +46,11 @@ class TestInfluxDB(unittest.TestCase):
                 'password': 'pass',
             }
         }
-        hass = mock.MagicMock()
-        self.assertTrue(influxdb.setup(hass, config))
-        self.assertTrue(hass.bus.listen.called)
+        self.assertTrue(influxdb.setup(self.hass, config))
+        self.assertTrue(self.hass.bus.listen.called)
         self.assertEqual(EVENT_STATE_CHANGED,
-                         hass.bus.listen.call_args_list[0][0][0])
+                         self.hass.bus.listen.call_args_list[0][0][0])
 
-    @mock.patch('influxdb.InfluxDBClient')
     def test_setup_missing_keys(self, mock_client):
         """Test the setup with missing keys."""
         config = {
@@ -59,13 +60,11 @@ class TestInfluxDB(unittest.TestCase):
                 'password': 'pass',
             }
         }
-        hass = mock.MagicMock()
         for missing in config['influxdb'].keys():
             config_copy = copy.deepcopy(config)
             del config_copy['influxdb'][missing]
-            self.assertFalse(influxdb.setup(hass, config_copy))
+            self.assertFalse(influxdb.setup(self.hass, config_copy))
 
-    @mock.patch('influxdb.InfluxDBClient')
     def test_setup_query_fail(self, mock_client):
         """Test the setup for query failures."""
         config = {
@@ -75,14 +74,12 @@ class TestInfluxDB(unittest.TestCase):
                 'password': 'pass',
             }
         }
-        hass = mock.MagicMock()
         mock_client.return_value.query.side_effect = \
             influx_client.exceptions.InfluxDBClientError('fake')
-        self.assertFalse(influxdb.setup(hass, config))
+        self.assertFalse(influxdb.setup(self.hass, config))
 
-    def _setup(self, mock_influx):
+    def _setup(self):
         """Setup the client."""
-        self.mock_client = mock_influx.return_value
         config = {
             'influxdb': {
                 'host': 'host',
@@ -91,14 +88,12 @@ class TestInfluxDB(unittest.TestCase):
                 'blacklist': ['fake.blacklisted']
             }
         }
-        self.hass = mock.MagicMock()
         influxdb.setup(self.hass, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
-    @mock.patch('influxdb.InfluxDBClient')
-    def test_event_listener(self, mock_influx):
+    def test_event_listener(self, mock_client):
         """Test the event listener."""
-        self._setup(mock_influx)
+        self._setup()
 
         valid = {'1': 1,
                  '1.0': 1.0,
@@ -125,13 +120,12 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
-            self.mock_client.write_points.assert_called_once_with(body)
-            self.mock_client.write_points.reset_mock()
+            mock_client.return_value.write_points.assert_called_once_with(body)
+            mock_client.return_value.write_points.reset_mock()
 
-    @mock.patch('influxdb.InfluxDBClient')
-    def test_event_listener_no_units(self, mock_influx):
+    def test_event_listener_no_units(self, mock_client):
         """Test the event listener for missing units."""
-        self._setup(mock_influx)
+        self._setup()
 
         for unit in (None, ''):
             if unit:
@@ -157,13 +151,12 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
-            self.mock_client.write_points.assert_called_once_with(body)
-            self.mock_client.write_points.reset_mock()
+            mock_client.return_value.write_points.assert_called_once_with(body)
+            mock_client.return_value.write_points.reset_mock()
 
-    @mock.patch('influxdb.InfluxDBClient')
-    def test_event_listener_fail_write(self, mock_influx):
+    def test_event_listener_fail_write(self, mock_client):
         """Test the event listener for write failures."""
-        self._setup(mock_influx)
+        self._setup()
 
         state = mock.MagicMock(state=1,
                                domain='fake',
@@ -172,14 +165,44 @@ class TestInfluxDB(unittest.TestCase):
                                attributes={})
         event = mock.MagicMock(data={'new_state': state},
                                time_fired=12345)
-        self.mock_client.write_points.side_effect = \
+        mock_client.return_value.write_points.side_effect = \
             influx_client.exceptions.InfluxDBClientError('foo')
         self.handler_method(event)
 
-    @mock.patch('influxdb.InfluxDBClient')
-    def test_event_listener_blacklist(self, mock_influx):
+    def test_event_listener_states(self, mock_client):
+        """Test the event listener against ignored states."""
+        self._setup()
+
+        for state_state in (1, 'unknown', '', 'unavailable'):
+            state = mock.MagicMock(state=state_state,
+                                   domain='fake',
+                                   entity_id='entity-id',
+                                   object_id='entity',
+                                   attributes={})
+            event = mock.MagicMock(data={'new_state': state},
+                                   time_fired=12345)
+            body = [{
+                'measurement': 'entity-id',
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': 'entity',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if state_state == 1:
+                mock_client.return_value.write_points.assert_called_once_with(
+                    body)
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_blacklist(self, mock_client):
         """Test the event listener against a blacklist."""
-        self._setup(mock_influx)
+        self._setup()
 
         for entity_id in ('ok', 'blacklisted'):
             state = mock.MagicMock(state=1,
@@ -202,7 +225,8 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             if entity_id == 'ok':
-                self.mock_client.write_points.assert_called_once_with(body)
+                mock_client.return_value.write_points.assert_called_once_with(
+                    body)
             else:
-                self.assertFalse(self.mock_client.write_points.called)
-            self.mock_client.write_points.reset_mock()
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()

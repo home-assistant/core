@@ -9,7 +9,7 @@ import os
 import time
 from glob import glob
 
-from homeassistant.const import STATE_UNKNOWN, TEMP_CELCIUS
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 BASE_DIR = '/sys/bus/w1/devices/'
@@ -84,7 +84,7 @@ class OneWire(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     def update(self):
         """Get the latest data from the device."""

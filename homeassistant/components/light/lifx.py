@@ -209,6 +209,8 @@ class LIFXLight(Light):
             brightness = self._bri
 
         if ATTR_COLOR_TEMP in kwargs:
+            # pylint: disable=fixme
+            # TODO: Use color_temperature_mired_to_kelvin from util.color
             kelvin = int(((TEMP_MAX - TEMP_MIN) *
                           (kwargs[ATTR_COLOR_TEMP] - TEMP_MIN_HASS) /
                           (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
