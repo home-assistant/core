@@ -222,10 +222,6 @@ class RequestHandler(SimpleHTTPRequestHandler):
         if url.path not in [URL_ROOT, URL_API_EVENT_FORWARD]:
             data.pop(DATA_API_PASSWORD, None)
 
-        # we really shouldn't need to forward the password from here
-        if url.path not in [URL_ROOT, URL_API_EVENT_FORWARD]:
-            data.pop(DATA_API_PASSWORD, None)
-
         if '_METHOD' in data:
             method = data.pop('_METHOD')
 
