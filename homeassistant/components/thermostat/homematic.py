@@ -11,7 +11,7 @@ from xmlrpc.client import Error
 from collections import namedtuple
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.temperature import convert
 
 REQUIREMENTS = []
@@ -120,7 +120,7 @@ class HomematicThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that is used."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -149,12 +149,12 @@ class HomematicThermostat(ThermostatDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature - 4.5 means off."""
-        return convert(4.5, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature - 30.5 means on."""
-        return convert(30.5, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def update(self):
         """Update the data from the thermostat."""
