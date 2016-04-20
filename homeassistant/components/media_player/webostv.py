@@ -22,8 +22,8 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.1.zip'
-                '#pylgtv==0.1.1']
+                '/archive/v0.1.2.zip'
+                '#pylgtv==0.1.2']
 
 SUPPORT_WEBOSTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -130,6 +130,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._current_source = None
         self._current_source_id = None
         self._source_list = None
+        self._source_label_list = None
         self._state = STATE_UNKNOWN
         self._app_list = None
 
@@ -144,13 +145,18 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._volume = self._client.get_volume()
             self._current_source_id = self._client.get_input()
 
-            self._source_list = []
+            self._source_list = {}
+            self._source_label_list = []
             self._app_list = {}
             for app in self._client.get_apps():
                 self._app_list[app['id']] = app
-                self._source_list.append(app['title'])
-                if app['id'] == self._current_source_id:
-                    self._current_source = app['title']
+
+            for source in self._client.get_inputs():
+                self._source_list[source['label']] = source
+                self._app_list[source['appId']] = source
+                self._source_label_list.append(source['label'])
+                if source['appId'] == self._current_source_id:
+                    self._current_source = source['label']
 
         except ConnectionRefusedError:
             self._state = STATE_OFF
@@ -183,7 +189,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_list
+        return self._source_label_list
 
     @property
     def media_content_type(self):
@@ -219,6 +225,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
+        self._muted = mute
         self._client.set_mute(mute)
 
     def media_play_pause(self):
@@ -227,6 +234,12 @@ class LgWebOSDevice(MediaPlayerDevice):
             self.media_pause()
         else:
             self.media_play()
+
+    def select_source(self, source):
+        """Select input source."""
+        self._current_source_id = self._source_list[source]['appId']
+        self._current_source = self._source_list[source]['label']
+        self._client.set_input(self._source_list[source]['id'])
 
     def media_play(self):
         """Send play command."""
