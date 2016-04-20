@@ -151,12 +151,12 @@ class LgWebOSDevice(MediaPlayerDevice):
             for app in self._client.get_apps():
                 self._app_list[app['id']] = app
 
-            for input in self._client.get_inputs():
-                self._source_list[input['label']] = input
-                self._app_list[input['appId']] = input
-                self._source_label_list.append(input['label'])
-                if input['appId'] == self._current_source_id:
-                    self._current_source = input['label']
+            for source in self._client.get_inputs():
+                self._source_list[source['label']] = source
+                self._app_list[source['appId']] = source
+                self._source_label_list.append(source['label'])
+                if source['appId'] == self._current_source_id:
+                    self._current_source = source['label']
 
         except ConnectionRefusedError:
             self._state = STATE_OFF
