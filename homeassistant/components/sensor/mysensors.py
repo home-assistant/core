@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON,
+                                 TEMP_CELCIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
@@ -157,14 +157,11 @@ class MySensorsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        try:
-            ip_address, tcp_port = self.gateway.server_address
-            device = '{}:{}'.format(ip_address, tcp_port)
-        except AttributeError:
-            try:
-                device = self.gateway.port
-            except AttributeError:
-                device = ''
+        address = getattr(self.gateway, 'server_address', None)
+        if address:
+            device = '{}:{}'.format(address[0], address[1])
+        else:
+            device = self.gateway.port
         attr = {
             self.mysensors.ATTR_DEVICE: device,
             self.mysensors.ATTR_NODE_ID: self.node_id,

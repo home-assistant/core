@@ -6,8 +6,8 @@ https://home-assistant.io/components/light.mysensors/
 """
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            Light)
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.loader import get_component
 from homeassistant.util.color import rgb_hex_to_rgb_list
@@ -100,14 +100,11 @@ class MySensorsLight(Light):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        try:
-            ip_address, tcp_port = self.gateway.server_address
-            device = '{}:{}'.format(ip_address, tcp_port)
-        except AttributeError:
-            try:
-                device = self.gateway.port
-            except AttributeError:
-                device = ''
+        address = getattr(self.gateway, 'server_address', None)
+        if address:
+            device = '{}:{}'.format(address[0], address[1])
+        else:
+            device = self.gateway.port
         attr = {
             self.mysensors.ATTR_DEVICE: device,
             self.mysensors.ATTR_NODE_ID: self.node_id,
