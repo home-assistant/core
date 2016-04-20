@@ -139,10 +139,12 @@ class MqttLight(Light):
             percent_bright = device_value / self._brightness_scale
             self._brightness = int(percent_bright * 255)
 
-            if self._natural_behavior and not self._state and self._brightness > 0:
-                self._state = True
-            elif self._natural_behavior and self._state and self._brightness == 0:
-                self._state = False
+            if self._natural_behavior and not self._state and \
+                self._brightness > 0:
+                    self._state = True
+            elif self._natural_behavior and self._state and \
+                self._brightness == 0:
+                    self._state = False
 
             self.update_ha_state()
 
