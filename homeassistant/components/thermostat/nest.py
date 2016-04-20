@@ -9,7 +9,7 @@ import voluptuous as vol
 import homeassistant.components.nest as nest
 from homeassistant.components.thermostat import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import TEMP_CELCIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL
+from homeassistant.const import TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL
 
 DEPENDENCIES = ['nest']
 
@@ -50,7 +50,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def device_state_attributes(self):

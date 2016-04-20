@@ -7,7 +7,7 @@ from homeassistant.components.thermostat import (
     ThermostatDevice,
     STATE_IDLE)
 from homeassistant.components import zwave
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELCIUS)
+from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 
 CONF_NAME = 'name'
 DEFAULT_NAME = 'ZWave Thermostat'
@@ -82,7 +82,7 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         """Return the unit of measurement."""
         unit = self._unit
         if unit == 'C':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:

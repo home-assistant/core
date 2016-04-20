@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
+from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.temperature_unit == TEMP_CELCIUS:
+    elif hass.config.temperature_unit == TEMP_CELSIUS:
         units = 'si'
     else:
         units = 'us'
