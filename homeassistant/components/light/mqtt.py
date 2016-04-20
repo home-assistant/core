@@ -55,7 +55,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_NATURAL_BEHAVIOR, default=DEFAULT_NATURAL_BEHAVIOR): cv.boolean,
+    vol.Optional(CONF_NATURAL_BEHAVIOR, default=DEFAULT_NATURAL_BEHAVIOR):
+        cv.boolean,
 })
 
 
