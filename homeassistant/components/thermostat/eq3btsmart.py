@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, import-error
 class EQ3BTSmartThermostat(ThermostatDevice):
     """Representation of a EQ3 Bluetooth Smart thermostat."""
 
