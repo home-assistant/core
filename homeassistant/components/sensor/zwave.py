@@ -8,7 +8,7 @@ at https://home-assistant.io/components/sensor.zwave/
 # pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
-from homeassistant.const import (TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 
@@ -120,7 +120,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
         unit = self._value.units
 
         if unit == 'C':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:

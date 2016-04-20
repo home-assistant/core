@@ -9,7 +9,7 @@ import logging
 import homeassistant.bootstrap as bootstrap
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELSIUS,
     CONF_OPTIMISTIC)
 from homeassistant.helpers import validate_config
 
@@ -64,7 +64,7 @@ def setup(hass, config):
     import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
-    is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
+    is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
 
     def setup_gateway(port, persistence, persistence_file, version, baud_rate):
         """Return gateway after setup of the gateway."""
