@@ -27,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELCIUS,
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
@@ -698,7 +698,7 @@ class Config(object):
 
     def temperature(self, value, unit):
         """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELCIUS, TEMP_FAHRENHEIT) and
+        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                 self.temperature_unit and unit != self.temperature_unit):
             return value, unit
 
