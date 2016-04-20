@@ -11,6 +11,7 @@ COMMENT_REQUIREMENTS = [
     'Adafruit_Python_DHT',
     'fritzconnection',
     'pybluez',
+    'bluepy',
 ]
 
 
