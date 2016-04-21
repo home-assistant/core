@@ -50,7 +50,10 @@ class YamahaDevice(MediaPlayerDevice):
         self._muted = self._receiver.mute
         self._volume = (self._receiver.volume/100) + 1
         self._current_source = self._receiver.input
-        self._source_list = list(self._receiver.inputs().keys())
+
+        if self.source_list is None:
+            self._source_list = list(self._receiver.inputs().keys())
+            self._source_list.sort()
 
     @property
     def name(self):
