@@ -39,6 +39,8 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
+CONF_CLIENT_KEY = 'client_key'
+CONF_CLIENT_CERT = 'client_cert'
 CONF_PROTOCOL = 'protocol'
 
 CONF_STATE_TOPIC = 'state_topic'
@@ -89,6 +91,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_CLIENT_KEY): cv.isfile,
+        vol.Optional(CONF_CLIENT_CERT): cv.isfile,
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
@@ -194,7 +198,8 @@ def setup(hass, config):
 
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
-        broker, port, username, password, certificate, protocol = broker_config
+        broker, port, username, password, certificate, client_key, 
+        client_cert, protocol = broker_config
     elif not broker_config and (CONF_EMBEDDED in conf or
                                 CONF_BROKER not in conf):
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
@@ -206,6 +211,8 @@ def setup(hass, config):
         username = conf.get(CONF_USERNAME)
         password = conf.get(CONF_PASSWORD)
         certificate = conf.get(CONF_CERTIFICATE)
+        client_key = conf.get(CONF_CLIENT_KEY)
+        client_cert = conf.get(CONF_CLIENT_CERT)
         protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
@@ -217,7 +224,8 @@ def setup(hass, config):
     global MQTT_CLIENT
     try:
         MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate, protocol)
+                           password, certificate, client_key, client_cert,
+                           protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -268,7 +276,7 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, protocol):
+                 password, certificate, client_key, client_cert, protocol):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -289,7 +297,15 @@ class MQTT(object):
         if username is not None:
             self._mqttc.username_pw_set(username, password)
         if certificate is not None:
-            self._mqttc.tls_set(certificate)
+            if (client_key is not None) and (client_cert is not None):
+                self._mqttc.tls_set(certificate, certfile=client_cert, 
+                                    keyfile=client_key)
+            elif (client_key is not None) or (client_cert is not None):
+                _LOGGER.warning(
+                    'Both client_key and client_cert should be supplied')
+                self._mqttc.tls_set(certificate)
+            else:
+                self._mqttc.tls_set(certificate)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
