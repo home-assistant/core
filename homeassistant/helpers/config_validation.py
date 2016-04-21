@@ -231,8 +231,8 @@ EVENT_SCHEMA = vol.Schema({
 
 SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
-    vol.Exclusive('service_template', 'service name'): string,
-    vol.Exclusive('data', 'service data'): dict,
-    vol.Exclusive('data_template', 'service data'): {match_all: template},
-    'entity_id': entity_ids,
+    vol.Exclusive('service_template', 'service name'): template,
+    vol.Optional('data'): dict,
+    vol.Optional('data_template'): {match_all: template},
+    vol.Optional('entity_id'): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
