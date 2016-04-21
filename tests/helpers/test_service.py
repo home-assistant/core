@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+import homeassistant.components  # noqa - to prevent circular import
 from homeassistant import core as ha, loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import service
@@ -49,6 +50,27 @@ class TestServiceHelpers(unittest.TestCase):
         decor(lambda x, y: runs.append(y))
 
         service.call_from_config(self.hass, config)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('goodbye', runs[0].data['hello'])
+
+    def test_passing_variables_to_templates(self):
+        config = {
+            'service_template': '{{ var_service }}',
+            'entity_id': 'hello.world',
+            'data_template': {
+                'hello': '{{ var_data }}',
+            },
+        }
+        runs = []
+
+        decor = service.service('test_domain', 'test_service')
+        decor(lambda x, y: runs.append(y))
+
+        service.call_from_config(self.hass, config, variables={
+            'var_service': 'test_domain.test_service',
+            'var_data': 'goodbye',
+        })
         self.hass.pool.block_till_done()
 
         self.assertEqual('goodbye', runs[0].data['hello'])
