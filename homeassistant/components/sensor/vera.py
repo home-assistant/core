@@ -9,7 +9,7 @@ import logging
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
@@ -65,8 +65,7 @@ class VeraSensor(VeraDevice, Entity):
             last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
                 utc_time = dt_util.utc_from_timestamp(int(last_tripped))
-                attr[ATTR_LAST_TRIP_TIME] = dt_util.datetime_to_str(
-                    utc_time)
+                attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.is_tripped
@@ -85,7 +84,7 @@ class VeraSensor(VeraDevice, Entity):
             if vera_temp_units == 'F':
                 self._temperature_units = TEMP_FAHRENHEIT
             else:
-                self._temperature_units = TEMP_CELCIUS
+                self._temperature_units = TEMP_CELSIUS
 
             if self.hass:
                 temp = self.hass.config.temperature(

@@ -7,8 +7,10 @@ https://home-assistant.io/components/ifttt/
 import logging
 
 import requests
+import voluptuous as vol
 
 from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +24,13 @@ ATTR_VALUE2 = 'value2'
 ATTR_VALUE3 = 'value3'
 
 REQUIREMENTS = ['pyfttt==0.3']
+
+SERVICE_TRIGGER_SCHEMA = vol.Schema({
+    vol.Required(ATTR_EVENT): cv.string,
+    vol.Optional(ATTR_VALUE1): cv.string,
+    vol.Optional(ATTR_VALUE2): cv.string,
+    vol.Optional(ATTR_VALUE3): cv.string,
+})
 
 
 def trigger(hass, event, value1=None, value2=None, value3=None):
@@ -44,12 +53,10 @@ def setup(hass, config):
 
     def trigger_service(call):
         """Handle IFTTT trigger service calls."""
-        event = call.data.get(ATTR_EVENT)
+        event = call.data[ATTR_EVENT]
         value1 = call.data.get(ATTR_VALUE1)
         value2 = call.data.get(ATTR_VALUE2)
         value3 = call.data.get(ATTR_VALUE3)
-        if event is None:
-            return
 
         try:
             import pyfttt as pyfttt
@@ -57,6 +64,7 @@ def setup(hass, config):
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
-    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service)
+    hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service,
+                           schema=SERVICE_TRIGGER_SCHEMA)
 
     return True

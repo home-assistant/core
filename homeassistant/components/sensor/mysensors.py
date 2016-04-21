@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON,
+                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
@@ -132,7 +132,7 @@ class MySensorsSensor(Entity):
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         unit_map = {
-            set_req.V_TEMP: (TEMP_CELCIUS
+            set_req.V_TEMP: (TEMP_CELSIUS
                              if self.gateway.metric else TEMP_FAHRENHEIT),
             set_req.V_HUM: '%',
             set_req.V_DIMMER: '%',
@@ -157,8 +157,13 @@ class MySensorsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
+        address = getattr(self.gateway, 'server_address', None)
+        if address:
+            device = '{}:{}'.format(address[0], address[1])
+        else:
+            device = self.gateway.port
         attr = {
-            self.mysensors.ATTR_PORT: self.gateway.port,
+            self.mysensors.ATTR_DEVICE: device,
             self.mysensors.ATTR_NODE_ID: self.node_id,
             self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,

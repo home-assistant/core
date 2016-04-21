@@ -107,31 +107,16 @@ class TestDateUtil(unittest.TestCase):
             datetime(1986, 7, 9, tzinfo=dt_util.UTC),
             dt_util.utc_from_timestamp(521251200))
 
-    def test_datetime_to_str(self):
-        """Test datetime_to_str."""
-        self.assertEqual(
-            "12:00:00 09-07-1986",
-            dt_util.datetime_to_str(datetime(1986, 7, 9, 12, 0, 0)))
+    def test_parse_datetime_converts_correctly(self):
+        """Test parse_datetime converts strings."""
+        assert \
+            datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC) == \
+            dt_util.parse_datetime("1986-07-09T12:00:00Z")
 
-    def test_datetime_to_local_str(self):
-        """Test datetime_to_local_str."""
-        self.assertEqual(
-            dt_util.datetime_to_str(dt_util.now()),
-            dt_util.datetime_to_local_str(dt_util.utcnow()))
+        utcnow = dt_util.utcnow()
 
-    def test_str_to_datetime_converts_correctly(self):
-        """Test str_to_datetime converts strings."""
-        self.assertEqual(
-            datetime(1986, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC),
-            dt_util.str_to_datetime("12:00:00 09-07-1986"))
+        assert utcnow == dt_util.parse_datetime(utcnow.isoformat())
 
-    def test_str_to_datetime_returns_none_for_incorrect_format(self):
-        """Test str_to_datetime returns None if incorrect format."""
-        self.assertIsNone(dt_util.str_to_datetime("not a datetime string"))
-
-    def test_strip_microseconds(self):
-        """Test the now method."""
-        test_time = datetime(2015, 1, 1, microsecond=5000)
-
-        self.assertNotEqual(0, test_time.microsecond)
-        self.assertEqual(0, dt_util.strip_microseconds(test_time).microsecond)
+    def test_parse_datetime_returns_none_for_incorrect_format(self):
+        """Test parse_datetime returns None if incorrect format."""
+        self.assertIsNone(dt_util.parse_datetime("not a datetime string"))

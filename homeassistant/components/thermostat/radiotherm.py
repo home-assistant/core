@@ -80,7 +80,7 @@ class RadioThermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return round(self._current_temperature, 1)
+        return self._current_temperature
 
     @property
     def operation(self):
@@ -90,7 +90,7 @@ class RadioThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return round(self._target_temperature, 1)
+        return self._target_temperature
 
     def update(self):
         """Update the data from the thermostat."""
