@@ -35,7 +35,7 @@ _SUN_EVENT = vol.All(vol.Lower, vol.Any(EVENT_SUNRISE, EVENT_SUNSET))
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'sun',
     vol.Required(CONF_EVENT): _SUN_EVENT,
-    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_offset,
+    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
 })
 
 IF_ACTION_SCHEMA = vol.All(
@@ -43,8 +43,8 @@ IF_ACTION_SCHEMA = vol.All(
         vol.Required(CONF_PLATFORM): 'sun',
         CONF_BEFORE: _SUN_EVENT,
         CONF_AFTER: _SUN_EVENT,
-        vol.Required(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_offset,
-        vol.Required(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_offset,
+        vol.Required(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
+        vol.Required(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
     }),
     cv.has_at_least_one_key(CONF_BEFORE, CONF_AFTER),
 )

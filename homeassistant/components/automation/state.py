@@ -92,7 +92,7 @@ def trigger(hass, config, action):
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
             hass.bus.remove_listener(
-                EVENT_STATE_CHANGED, attached_state_for_cancel_listener)
+                EVENT_STATE_CHANGED, attached_state_for_cancel)
             call_action()
 
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
@@ -102,12 +102,12 @@ def trigger(hass, config, action):
             hass.bus.remove_listener(EVENT_TIME_CHANGED,
                                      attached_state_for_listener)
             hass.bus.remove_listener(EVENT_STATE_CHANGED,
-                                     attached_state_for_cancel_listener)
+                                     attached_state_for_cancel)
 
         attached_state_for_listener = track_point_in_time(
             hass, state_for_listener, dt_util.utcnow() + time_delta)
 
-        attached_state_for_cancel_listener = track_state_change(
+        attached_state_for_cancel = track_state_change(
             hass, entity_id, state_for_cancel_listener)
 
     track_state_change(

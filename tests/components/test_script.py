@@ -37,19 +37,11 @@ class TestScript(unittest.TestCase):
             {
                 'test': {
                     'sequence': {
-                        'event': 'test_event'
-                    }
-                }
-            },
-            {
-                'test': {
-                    'sequence': {
                         'event': 'test_event',
                         'service': 'homeassistant.turn_on',
                     }
                 }
             },
-
         ):
             assert not _setup_component(self.hass, 'script', {
                 'script': value
@@ -204,45 +196,6 @@ class TestScript(unittest.TestCase):
 
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
 
-        self.assertEqual(2, len(calls))
-
-    def test_alt_delay(self):
-        """Test alternative delay config format."""
-        event = 'test_event'
-        calls = []
-
-        def record_event(event):
-            """Add recorded event to set."""
-            calls.append(event)
-
-        self.hass.bus.listen(event, record_event)
-
-        assert _setup_component(self.hass, 'script', {
-            'script': {
-                'test': {
-                    'sequence': [{
-                        'event': event,
-                    }, {
-                        'delay': None,
-                        'seconds': 5
-                    }, {
-                        'event': event,
-                    }]
-                }
-            }
-        })
-
-        script.turn_on(self.hass, ENTITY_ID)
-        self.hass.pool.block_till_done()
-
-        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(1, len(calls))
-
-        future = dt_util.utcnow() + timedelta(seconds=5)
-        fire_time_changed(self.hass, future)
-        self.hass.pool.block_till_done()
-
-        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(2, len(calls))
 
     def test_cancel_while_delay(self):
