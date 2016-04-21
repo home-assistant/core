@@ -21,7 +21,7 @@ import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
@@ -65,7 +65,7 @@ def _handle_requirements(hass, component, name):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('lib')):
+        if not pkg_util.install_package(req, target=hass.config.path('deps')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -211,7 +211,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 def mount_local_lib_path(config_dir):
     """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+    sys.path.insert(0, os.path.join(config_dir, 'deps'))
 
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
@@ -372,7 +372,13 @@ def process_ha_config_upgrade(hass):
     _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
                  __version__)
 
+    # This was where dependencies were installed before v0.18
+    # Probably should keep this around until ~v0.20.
     lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
+
+    lib_path = hass.config.path('deps')
     if os.path.isdir(lib_path):
         shutil.rmtree(lib_path)
 
@@ -434,7 +440,7 @@ def process_ha_core_config(hass, config):
         if info.use_fahrenheit:
             hac.temperature_unit = TEMP_FAHRENHEIT
         else:
-            hac.temperature_unit = TEMP_CELCIUS
+            hac.temperature_unit = TEMP_CELSIUS
 
     if hac.location_name is None:
         hac.location_name = info.city

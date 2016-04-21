@@ -7,17 +7,19 @@ https://home-assistant.io/components/thermostat/
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.config import load_yaml_config_file
-import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import (ecobee, zwave)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELCIUS)
+    TEMP_CELSIUS)
 
 DOMAIN = "thermostat"
 
@@ -47,6 +49,19 @@ DISCOVERY_PLATFORMS = {
     ecobee.DISCOVER_THERMOSTAT: 'ecobee',
     zwave.DISCOVER_THERMOSTATS: 'zwave'
 }
+
+SET_AWAY_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AWAY_MODE): cv.boolean,
+})
+SET_TEMPERATURE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
+})
+SET_FAN_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_FAN): cv.boolean,
+})
 
 
 def set_away_mode(hass, away_mode, entity_id=None):
@@ -97,13 +112,7 @@ def setup(hass, config):
         """Set away mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
-        away_mode = service.data.get(ATTR_AWAY_MODE)
-
-        if away_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
-            return
+        away_mode = service.data[ATTR_AWAY_MODE]
 
         for thermostat in target_thermostats:
             if away_mode:
@@ -115,20 +124,14 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_AWAY_MODE, away_mode_set_service,
-        descriptions.get(SERVICE_SET_AWAY_MODE))
+        descriptions.get(SERVICE_SET_AWAY_MODE),
+        schema=SET_AWAY_MODE_SCHEMA)
 
     def temperature_set_service(service):
         """Set temperature on the target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
-        temperature = util.convert(
-            service.data.get(ATTR_TEMPERATURE), float)
-
-        if temperature is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_TEMPERATURE, ATTR_TEMPERATURE)
-            return
+        temperature = service.data[ATTR_TEMPERATURE]
 
         for thermostat in target_thermostats:
             thermostat.set_temperature(convert(
@@ -139,19 +142,14 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_TEMPERATURE, temperature_set_service,
-        descriptions.get(SERVICE_SET_TEMPERATURE))
+        descriptions.get(SERVICE_SET_TEMPERATURE),
+        schema=SET_TEMPERATURE_SCHEMA)
 
     def fan_mode_set_service(service):
         """Set fan mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
-        fan_mode = service.data.get(ATTR_FAN)
-
-        if fan_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_FAN_MODE, ATTR_FAN)
-            return
+        fan_mode = service.data[ATTR_FAN]
 
         for thermostat in target_thermostats:
             if fan_mode:
@@ -163,7 +161,8 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, SERVICE_SET_FAN_MODE, fan_mode_set_service,
-        descriptions.get(SERVICE_SET_FAN_MODE))
+        descriptions.get(SERVICE_SET_FAN_MODE),
+        schema=SET_FAN_MODE_SCHEMA)
 
     return True
 
@@ -270,12 +269,12 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return round(convert(7, TEMP_CELCIUS, self.unit_of_measurement))
+        return convert(7, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return round(convert(35, TEMP_CELCIUS, self.unit_of_measurement))
+        return convert(35, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
@@ -285,7 +284,7 @@ class ThermostatDevice(Entity):
         value = convert(temp, self.unit_of_measurement,
                         self.hass.config.temperature_unit)
 
-        if self.hass.config.temperature_unit is TEMP_CELCIUS:
+        if self.hass.config.temperature_unit is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.

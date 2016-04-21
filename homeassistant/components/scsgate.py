@@ -98,12 +98,11 @@ class SCSGate:
         from scsgate.tasks import GetStatusTask
 
         with self._devices_to_register_lock:
-            if len(self._devices_to_register) == 0:
-                return
-            _, device = self._devices_to_register.popitem()
-            self._devices[device.scs_id] = device
-            self._device_being_registered = device.scs_id
-            self._reactor.append_task(GetStatusTask(target=device.scs_id))
+            while len(self._devices_to_register) != 0:
+                _, device = self._devices_to_register.popitem()
+                self._devices[device.scs_id] = device
+                self._device_being_registered = device.scs_id
+                self._reactor.append_task(GetStatusTask(target=device.scs_id))
 
     def is_device_registered(self, device_id):
         """Check whether a device is already registered or not."""

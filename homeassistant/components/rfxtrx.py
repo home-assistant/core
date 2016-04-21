@@ -38,16 +38,22 @@ _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
 
-def _validate_packetid(value):
+def validate_packetid(value):
+    """Validate that value is a valid packet id for rfxtrx."""
     if get_rfx_object(value):
         return value
     else:
         raise vol.Invalid('invalid packet id for {}'.format(value))
 
+# Share between rfxtrx platforms
+VALID_DEVICE_ID = vol.All(cv.string, vol.Lower)
+VALID_SENSOR_DEVICE_ID = vol.All(VALID_DEVICE_ID,
+                                 vol.truth(lambda val:
+                                           val.startswith('sensor_')))
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_PACKETID): _validate_packetid,
+    vol.Required(ATTR_PACKETID): validate_packetid,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
@@ -182,7 +188,7 @@ def apply_received_command(event):
     # Check if entity exists or previously added automatically
     if device_id in RFX_DEVICES:
         _LOGGER.debug(
-            "EntityID: %s light_update. Command: %s",
+            "EntityID: %s device_update. Command: %s",
             device_id,
             event.values['Command']
         )
@@ -251,7 +257,7 @@ class RfxtrxDevice(Entity):
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return true if device is on."""
         return self._state
 
     @property
@@ -260,7 +266,7 @@ class RfxtrxDevice(Entity):
         return True
 
     def turn_off(self, **kwargs):
-        """Turn the light off."""
+        """Turn the device off."""
         self._send_command("turn_off")
 
     def _send_command(self, command, brightness=0):

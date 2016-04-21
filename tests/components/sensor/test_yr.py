@@ -4,9 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.components.sensor as sensor
+from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
-
 from tests.common import get_test_home_assistant
 
 
@@ -32,12 +31,9 @@ class TestSensorYr:
                    return_value=betamax_session):
             with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
                        return_value=now):
-                assert sensor.setup(self.hass, {
-                    'sensor': {
-                        'platform': 'yr',
-                        'elevation': 0,
-                    }
-                })
+                    assert _setup_component(self.hass, 'sensor', {
+                                    'sensor': {'platform': 'yr',
+                                               'elevation': 0}})
 
         state = self.hass.states.get('sensor.yr_symbol')
 
@@ -53,19 +49,15 @@ class TestSensorYr:
                    return_value=betamax_session):
             with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
                        return_value=now):
-                assert sensor.setup(self.hass, {
-                    'sensor': {
-                        'platform': 'yr',
-                        'elevation': 0,
-                        'monitored_conditions': {
-                            'pressure',
-                            'windDirection',
-                            'humidity',
-                            'fog',
-                            'windSpeed'
-                        }
-                    }
-                })
+                assert _setup_component(self.hass, 'sensor', {
+                                        'sensor': {'platform': 'yr',
+                                                   'elevation': 0,
+                                                   'monitored_conditions': [
+                                                       'pressure',
+                                                       'windDirection',
+                                                       'humidity',
+                                                       'fog',
+                                                       'windSpeed']}})
 
         state = self.hass.states.get('sensor.yr_pressure')
         assert 'hPa' == state.attributes.get('unit_of_measurement')

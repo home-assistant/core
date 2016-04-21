@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -47,6 +47,7 @@ def ensure_list(value):
 
 def entity_id(value):
     """Validate Entity ID."""
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
     raise vol.Invalid('Entity ID {} does not match format <domain>.<object_id>'
@@ -58,10 +59,7 @@ def entity_ids(value):
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(',')]
 
-    for ent_id in value:
-        entity_id(ent_id)
-
-    return value
+    return [entity_id(ent_id) for ent_id in value]
 
 
 def icon(value):
@@ -158,7 +156,7 @@ def temperature_unit(value):
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == 'C':
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
     elif value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')

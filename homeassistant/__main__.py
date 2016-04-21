@@ -31,7 +31,7 @@ def validate_python():
 def ensure_config_path(config_dir):
     """Validate the configuration directory."""
     import homeassistant.config as config_util
-    lib_dir = os.path.join(config_dir, 'lib')
+    lib_dir = os.path.join(config_dir, 'deps')
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):

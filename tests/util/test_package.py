@@ -21,7 +21,7 @@ class TestPackageUtil(unittest.TestCase):
     def setUp(self):
         """Create local library for testing."""
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.lib_dir = os.path.join(self.tmp_dir.name, 'lib')
+        self.lib_dir = os.path.join(self.tmp_dir.name, 'deps')
 
     def tearDown(self):
         """Stop everything that was started."""
