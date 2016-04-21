@@ -2,7 +2,8 @@
 import unittest
 from unittest.mock import patch
 
-import homeassistant.components  # noqa - to prevent circular import
+# To prevent circular import when running just this file
+import homeassistant.components  # noqa
 from homeassistant import core as ha, loader
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
 from homeassistant.helpers import service
