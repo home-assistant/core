@@ -35,7 +35,7 @@ def get_service(hass, config):
     except PyLGTVPairException:
         _LOGGER.error('Pairing failed.')
         return None
-    except ConnectionRefusedError:
+    except OSError:
         _LOGGER.error('Host unreachable.')
         return None
 
@@ -58,5 +58,5 @@ class LgWebOSNotificationService(BaseNotificationService):
             self._client.send_message(message)
         except PyLGTVPairException:
             _LOGGER.error('Pairing failed.')
-        except ConnectionRefusedError:
+        except OSError:
             _LOGGER.error('Host unreachable.')
