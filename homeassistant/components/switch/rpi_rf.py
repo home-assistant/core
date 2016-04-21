@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('name', dev_name),
                 rfdevice,
                 properties.get('pulselength', DEFAULT_PULSELENGTH),
-                properties.get('onid', 0),
-                properties.get('offid', 0),
+                properties.get('code_on', 0),
+                properties.get('code_off', 0),
                 properties.get(CONF_VALUE_TEMPLATE, False)))
     add_devices_callback(devices)
 
@@ -44,7 +44,7 @@ class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, rfdevice, pulselength, id_on, id_off,
+    def __init__(self, hass, name, rfdevice, pulselength, code_on, code_off,
                  value_template):
         """Initialize the switch."""
         self._hass = hass
@@ -52,8 +52,8 @@ class RPiRFSwitch(SwitchDevice):
         self._state = False
         self._rfdevice = rfdevice
         self._pulselength = pulselength
-        self._id_on = id_on
-        self._id_off = id_off
+        self._code_on = code_on
+        self._code_off = code_off
         self._value_template = value_template
 
         rfdevice.enable_tx()
@@ -84,12 +84,12 @@ class RPiRFSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the switch on."""
-        if self._send_code(self._id_on, self._pulselength):
+        if self._send_code(self._code_on, self._pulselength):
             self._state = True
             self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
-        if self._send_code(self._id_off, self._pulselength):
+        if self._send_code(self._code_off, self._pulselength):
             self._state = False
             self.update_ha_state()
