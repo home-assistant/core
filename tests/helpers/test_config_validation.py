@@ -70,7 +70,7 @@ def test_entity_id():
     with pytest.raises(vol.MultipleInvalid):
         schema('invalid_entity')
 
-    schema('sensor.light')
+    assert 'sensor.light' == schema('sensor.LIGHT')
 
 
 def test_entity_ids():
@@ -94,7 +94,7 @@ def test_entity_ids():
     ):
         schema(value)
 
-    assert schema('sensor.light, light.kitchen ') == [
+    assert schema('sensor.LIGHT, light.kitchen ') == [
         'sensor.light', 'light.kitchen'
     ]
 

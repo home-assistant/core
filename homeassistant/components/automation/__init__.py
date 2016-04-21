@@ -51,8 +51,6 @@ def _platform_validator(method, schema):
         if not hasattr(platform, schema):
             return config
 
-        print('validating config', method, config)
-
         return getattr(platform, schema)(config)
 
     return validator

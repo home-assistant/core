@@ -5,6 +5,7 @@ For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
 import gzip
+import hmac
 import json
 import logging
 import ssl
@@ -200,12 +201,22 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self.authenticated = (self.server.api_password is None or
-                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password or
-                              data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password or
-                              self.verify_session())
+        if self.verify_session():
+            # The user has a valid session already
+            self.authenticated = True
+        elif self.server.api_password is None:
+            # No password is set, so everyone is authenticated
+            self.authenticated = True
+        elif hmac.compare_digest(self.headers.get(HTTP_HEADER_HA_AUTH, ''),
+                                 self.server.api_password):
+            # A valid auth header has been set
+            self.authenticated = True
+        elif hmac.compare_digest(data.get(DATA_API_PASSWORD, ''),
+                                 self.server.api_password):
+            # A valid password has been specified
+            self.authenticated = True
+        else:
+            self.authenticated = False
 
         # we really shouldn't need to forward the password from here
         if url.path not in [URL_ROOT, URL_API_EVENT_FORWARD]:

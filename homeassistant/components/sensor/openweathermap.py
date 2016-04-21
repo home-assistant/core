@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.openweathermap/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -106,7 +106,7 @@ class OpenWeatherMapSensor(Entity):
         if self.type == 'weather':
             self._state = data.get_detailed_status()
         elif self.type == 'temperature':
-            if self.temp_unit == TEMP_CELCIUS:
+            if self.temp_unit == TEMP_CELSIUS:
                 self._state = round(data.get_temperature('celsius')['temp'],
                                     1)
             elif self.temp_unit == TEMP_FAHRENHEIT:

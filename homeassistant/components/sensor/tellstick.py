@@ -8,7 +8,7 @@ import logging
 from collections import namedtuple
 
 import homeassistant.util as util
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 DatatypeDescription = namedtuple("DatatypeDescription", ['name', 'unit'])
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE:
         DatatypeDescription(
-            'temperature', config.get('temperature_scale', TEMP_CELCIUS)),
+            'temperature', config.get('temperature_scale', TEMP_CELSIUS)),
 
         tellcore_constants.TELLSTICK_HUMIDITY:
         DatatypeDescription('humidity', '%'),
