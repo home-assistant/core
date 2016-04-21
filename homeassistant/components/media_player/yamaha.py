@@ -22,7 +22,11 @@ SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
-    add_devices(YamahaDevice(config.get("name"), receiver)
+
+    excludes = config.get('excludes', None)
+    mapping = config.get('mapping', None)
+
+    add_devices(YamahaDevice(config.get("name"), receiver, excludes, mapping)
                 for receiver in rxv.find())
 
 
@@ -30,7 +34,8 @@ class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, name, receiver):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, name, receiver, excludes=None, mapping=None):
         """Initialize the Yamaha Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -38,6 +43,9 @@ class YamahaDevice(MediaPlayerDevice):
         self._pwstate = STATE_OFF
         self._current_source = None
         self._source_list = None
+        self._excludes = excludes
+        self._mapping = mapping
+        self._reverse_mapping = None
         self.update()
         self._name = name
 
@@ -49,8 +57,40 @@ class YamahaDevice(MediaPlayerDevice):
             self._pwstate = STATE_OFF
         self._muted = self._receiver.mute
         self._volume = (self._receiver.volume/100) + 1
-        self._current_source = self._receiver.input
-        self._source_list = list(self._receiver.inputs().keys())
+
+        if self.source_list is None:
+            self.build_source_list()
+
+        current_source = self._receiver.input
+        if self._mapping is not None:
+            if current_source in list(self._mapping.keys()):
+                self._current_source = self._mapping[current_source]
+            else:
+                self._current_source = current_source
+        else:
+            self._current_source = current_source
+
+    def build_source_list(self):
+        """Build the source list."""
+        self._source_list = []
+
+        if self._mapping is not None:
+            self._reverse_mapping = {}
+            mapping_list = list(self._mapping.keys())
+            for source, alias in self._mapping.items():
+                self._reverse_mapping[alias] = source
+        else:
+            mapping_list = []
+
+        source_list = list(self._receiver.inputs().keys())
+        for source in source_list:
+            if self._excludes is not None and source in self._excludes:
+                continue
+            if source in mapping_list:
+                self._source_list.append(self._mapping[source])
+            else:
+                self._source_list.append(source)
+        self._source_list.sort()
 
     @property
     def name(self):
@@ -108,4 +148,10 @@ class YamahaDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._receiver.input = source
+        if self._reverse_mapping is not None:
+            if source in list(self._reverse_mapping.keys()):
+                self._receiver.input = self._reverse_mapping[source]
+            else:
+                self._receiver.input = source
+        else:
+            self._receiver.input = source
