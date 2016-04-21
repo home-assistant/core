@@ -26,7 +26,12 @@ def trigger(hass, config, action):
         """Listen for events and calls the action when data matches."""
         if not event_data or all(val == event.data.get(key) for key, val
                                  in event_data.items()):
-            action()
+            action({
+                'trigger': {
+                    'platform': 'event',
+                    'event': event,
+                },
+            })
 
     hass.bus.listen(event_type, handle_event)
     return True

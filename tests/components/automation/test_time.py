@@ -176,7 +176,11 @@ class TestAutomationTime(unittest.TestCase):
                     'after': '5:00:00',
                 },
                 'action': {
-                    'service': 'test.automation'
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.platform }} - '
+                                '{{ trigger.now.hour }}'
+                    },
                 }
             }
         })
@@ -186,6 +190,7 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual('time - 5', self.calls[0].data['some'])
 
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""

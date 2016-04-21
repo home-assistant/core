@@ -21,7 +21,9 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     to_state = _process_match_param(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
-    if isinstance(entity_ids, str):
+    if entity_ids == MATCH_ALL:
+        pass
+    elif isinstance(entity_ids, str):
         entity_ids = (entity_ids.lower(),)
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
@@ -29,7 +31,8 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     @ft.wraps(action)
     def state_change_listener(event):
         """The listener that listens for specific state changes."""
-        if event.data['entity_id'] not in entity_ids:
+        if entity_ids != MATCH_ALL and \
+           event.data['entity_id'] not in entity_ids:
             return
 
         if event.data['old_state'] is None:
