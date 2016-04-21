@@ -122,12 +122,11 @@ def _setup_automation(hass, config_block, name, config):
 
 def _get_action(hass, config, name):
     """Return an action based on a configuration."""
-    def action():
+    def action(variables=None):
         """Action to be executed."""
         _LOGGER.info('Executing %s', name)
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
-
-        call_from_config(hass, config)
+        call_from_config(hass, config, variables=variables)
 
     return action
 
@@ -159,24 +158,21 @@ def _process_if(hass, config, p_config, action):
         checks.append(check)
 
     if cond_type == CONDITION_TYPE_AND:
-        def if_action():
+        def if_action(variables=None):
             """AND all conditions."""
-            if all(check() for check in checks):
-                action()
+            if all(check(variables) for check in checks):
+                action(variables)
     else:
-        def if_action():
+        def if_action(variables=None):
             """OR all conditions."""
-            if any(check() for check in checks):
-                action()
+            if any(check(variables) for check in checks):
+                action(variables)
 
     return if_action
 
 
 def _process_trigger(hass, config, trigger_configs, name, action):
     """Setup the triggers."""
-    if isinstance(trigger_configs, dict):
-        trigger_configs = [trigger_configs]
-
     for conf in trigger_configs:
         platform = _resolve_platform(METHOD_TRIGGER, hass, config,
                                      conf.get(CONF_PLATFORM))
