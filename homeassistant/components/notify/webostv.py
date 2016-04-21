@@ -10,6 +10,10 @@ from homeassistant.components.notify import (BaseNotificationService, DOMAIN)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.helpers import validate_config
 
+REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
+                '/archive/v0.1.2.zip'
+                '#pylgtv==0.1.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 
