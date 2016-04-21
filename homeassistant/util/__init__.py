@@ -12,7 +12,7 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
-from .dt import datetime_to_local_str, utcnow
+from .dt import as_local, utcnow
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -43,7 +43,7 @@ def repr_helper(inp):
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
     elif isinstance(inp, datetime):
-        return datetime_to_local_str(inp)
+        return as_local(inp).isoformat()
     else:
         return str(inp)
 

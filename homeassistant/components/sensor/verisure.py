@@ -7,7 +7,7 @@ documentation at https://home-assistant.io/components/verisure/
 import logging
 
 from homeassistant.components.verisure import HUB as hub
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class VerisureThermometer(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     def update(self):
         """Update the sensor."""

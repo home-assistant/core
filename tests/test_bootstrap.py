@@ -58,7 +58,7 @@ class TestBootstrap:
         """Test removal of library on upgrade."""
         with tempfile.TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'lib')
+            lib_dir = os.path.join(config_dir, 'deps')
             check_file = os.path.join(lib_dir, 'check')
 
             with open(version_path, 'wt') as outp:
@@ -79,7 +79,7 @@ class TestBootstrap:
         """Test removal of library with no upgrade."""
         with tempfile.TemporaryDirectory() as config_dir:
             version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'lib')
+            lib_dir = os.path.join(config_dir, 'deps')
             check_file = os.path.join(lib_dir, 'check')
 
             with open(version_path, 'wt') as outp:

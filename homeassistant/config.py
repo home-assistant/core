@@ -26,7 +26,7 @@ DEFAULT_CONFIG = (
     (CONF_LATITUDE, None, 'latitude', 'Location required to calculate the time'
      ' the sun rises and sets'),
     (CONF_LONGITUDE, None, 'longitude', None),
-    (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celcius, F for Fahrenheit'),
+    (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )

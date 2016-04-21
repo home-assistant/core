@@ -11,7 +11,7 @@ from homeassistant.components import switch
 from homeassistant.components.thermostat import (
     STATE_HEAT, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.event import track_state_change
 
 DEPENDENCIES = ['switch', 'sensor']
@@ -142,11 +142,11 @@ class HeatControl(ThermostatDevice):
         """Update thermostat with latest state from sensor."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if unit not in (TEMP_CELCIUS, TEMP_FAHRENHEIT):
+        if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             self._cur_temp = None
             self._unit = None
             _LOGGER.error('Sensor has unsupported unit: %s (allowed: %s, %s)',
-                          unit, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                          unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
             return
 
         temp = util.convert(state.state, float)
