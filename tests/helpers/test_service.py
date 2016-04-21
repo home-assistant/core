@@ -37,7 +37,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_template_service_call(self):
-        """ Test service call with tempating. """
+        """Test service call with tempating."""
         config = {
             'service_template': '{{ \'test_domain.test_service\' }}',
             'entity_id': 'hello.world',
@@ -56,6 +56,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.assertEqual('goodbye', runs[0].data['hello'])
 
     def test_passing_variables_to_templates(self):
+        """Test passing variables to templates."""
         config = {
             'service_template': '{{ var_service }}',
             'entity_id': 'hello.world',
@@ -141,7 +142,7 @@ class TestServiceHelpers(unittest.TestCase):
                          service.extract_entity_ids(self.hass, call))
 
     def test_validate_service_call(self):
-        """Test is_valid_service_call method"""
+        """Test is_valid_service_call method."""
         self.assertNotEqual(
             service.validate_service_call(
                 {}),
