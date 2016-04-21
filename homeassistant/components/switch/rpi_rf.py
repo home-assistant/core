@@ -12,7 +12,7 @@ from homeassistant.const import CONF_VALUE_TEMPLATE
 
 DEFAULT_PULSELENGTH = 350
 
-REQUIREMENTS = ['RPi.GPIO==0.6.2', 'rpi-rf==0.9.3']
+REQUIREMENTS = ['RPi.GPIO==0.6.2', 'rpi-rf==0.9.4']
 
 _LOGGER = logging.getLogger(__name__)
 
