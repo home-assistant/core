@@ -105,6 +105,11 @@ class TestAutomationSun(unittest.TestCase):
                     },
                     'action': {
                         'service': 'test.automation',
+                        'data_template': {
+                            'some':
+                            '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                                'platform', 'event', 'offset'))
+                        },
                     }
                 }
             })
@@ -112,6 +117,7 @@ class TestAutomationSun(unittest.TestCase):
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual('sun - sunset - 0:30:00', self.calls[0].data['some'])
 
     def test_sunrise_trigger_with_offset(self):
         """Test the runrise trigger with offset."""

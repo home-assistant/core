@@ -55,11 +55,21 @@ def trigger(hass, config, action):
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
 
+    def call_action():
+        """Call action with right context."""
+        action({
+            'trigger': {
+                'platform': 'sun',
+                'event': event,
+                'offset': offset,
+            },
+        })
+
     # Do something to call action
     if event == EVENT_SUNRISE:
-        track_sunrise(hass, action, offset)
+        track_sunrise(hass, call_action, offset)
     else:
-        track_sunset(hass, action, offset)
+        track_sunset(hass, call_action, offset)
 
     return True
 
@@ -97,7 +107,7 @@ def if_action(hass, config):
             """Return time after sunset."""
             return sun.next_setting(hass) + after_offset
 
-    def time_if():
+    def time_if(variables):
         """Validate time based if-condition."""
         now = dt_util.now()
         before = before_func()

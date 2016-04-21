@@ -51,7 +51,10 @@ class TestAutomation(unittest.TestCase):
                 },
                 'action': {
                     'service': 'test.automation',
-                    'data': {'some': 'data'}
+                    'data_template': {
+                        'some': '{{ trigger.platform }} - '
+                                '{{ trigger.event.event_type }}'
+                    },
                 }
             }
         })
@@ -59,7 +62,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('data', self.calls[0].data['some'])
+        self.assertEqual('event - test_event', self.calls[0].data['some'])
 
     def test_service_specify_entity_id(self):
         """Test service data."""
