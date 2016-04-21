@@ -208,6 +208,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
+        self._state = STATE_OFF
         self._client.power_off()
 
     def volume_up(self):
