@@ -91,7 +91,7 @@ def _handle_alexa(handler, path_match, data):
                           card['content'])
 
     if action is not None:
-        call_from_config(handler.server.hass, action, True)
+        call_from_config(handler.server.hass, action, True, response.variables)
 
     handler.write_json(response.as_dict())
 
