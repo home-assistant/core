@@ -50,11 +50,11 @@ class TestScriptComponent(unittest.TestCase):
     def test_turn_on_service(self):
         """Verify that the turn_on service."""
         event = 'test_event'
-        calls = []
+        events = []
 
         def record_event(event):
             """Add recorded event to set."""
-            calls.append(event)
+            events.append(event)
 
         self.hass.bus.listen(event, record_event)
 
@@ -75,21 +75,21 @@ class TestScriptComponent(unittest.TestCase):
         script.turn_on(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(calls))
+        self.assertEqual(0, len(events))
 
         # Calling turn_on a second time should not advance the script
         script.turn_on(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
-        self.assertEqual(0, len(calls))
+        self.assertEqual(0, len(events))
 
     def test_toggle_service(self):
         """Test the toggling of a service."""
         event = 'test_event'
-        calls = []
+        events = []
 
         def record_event(event):
             """Add recorded event to set."""
-            calls.append(event)
+            events.append(event)
 
         self.hass.bus.listen(event, record_event)
 
@@ -110,9 +110,50 @@ class TestScriptComponent(unittest.TestCase):
         script.toggle(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(calls))
+        self.assertEqual(0, len(events))
 
         script.toggle(self.hass, ENTITY_ID)
         self.hass.pool.block_till_done()
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(0, len(calls))
+        self.assertEqual(0, len(events))
+
+    def test_passing_variables(self):
+        """Test different ways of passing in variables."""
+        calls = []
+
+        def record_call(service):
+            """Add recorded event to set."""
+            calls.append(service)
+
+        self.hass.services.register('test', 'script', record_call)
+
+        assert _setup_component(self.hass, 'script', {
+            'script': {
+                'test': {
+                    'sequence': {
+                        'service': 'test.script',
+                        'data_template': {
+                            'hello': '{{ greeting }}',
+                        },
+                    },
+                },
+            },
+        })
+
+        script.turn_on(self.hass, ENTITY_ID, {
+            'greeting': 'world'
+        })
+
+        self.hass.pool.block_till_done()
+
+        assert len(calls) == 1
+        assert calls[-1].data['hello'] == 'world'
+
+        self.hass.services.call('script', 'test', {
+            'greeting': 'universe',
+        })
+
+        self.hass.pool.block_till_done()
+
+        assert len(calls) == 2
+        assert calls[-1].data['hello'] == 'universe'
