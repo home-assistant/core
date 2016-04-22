@@ -3,7 +3,6 @@
 from datetime import timedelta
 import unittest
 
-from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import script
 
