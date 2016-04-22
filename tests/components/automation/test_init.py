@@ -316,3 +316,29 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event_2')
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
+
+    def test_automation_calling_two_actions(self):
+        """Test if we can call two actions from automation definition."""
+        self.assertTrue(_setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+
+                'action': [{
+                    'service': 'test.automation',
+                    'data': {'position': 0},
+                }, {
+                    'service': 'test.automation',
+                    'data': {'position': 1},
+                }],
+            }
+        }))
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        assert len(self.calls) == 2
+        assert self.calls[0].data['position'] == 0
+        assert self.calls[1].data['position'] == 1

@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components import logbook
-from homeassistant.helpers import extract_domain_configs
-from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers import extract_domain_configs, script
 from homeassistant.loader import get_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -88,7 +87,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_CONDITION_TYPE, default=DEFAULT_CONDITION_TYPE):
         vol.All(vol.Lower, vol.Any(CONDITION_TYPE_AND, CONDITION_TYPE_OR)),
     CONF_CONDITION: _CONDITION_SCHEMA,
-    vol.Required(CONF_ACTION): cv.SERVICE_SCHEMA,
+    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 
@@ -122,11 +121,13 @@ def _setup_automation(hass, config_block, name, config):
 
 def _get_action(hass, config, name):
     """Return an action based on a configuration."""
+    script_obj = script.Script(hass, config, name)
+
     def action(variables=None):
         """Action to be executed."""
         _LOGGER.info('Executing %s', name)
         logbook.log_entry(hass, name, 'has been triggered', DOMAIN)
-        call_from_config(hass, config, variables=variables)
+        script_obj.run(variables)
 
     return action
 
