@@ -173,3 +173,47 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 0
+
+    def test_passing_variables_to_script(self):
+        """Test if we can pass variables to script."""
+        calls = []
+
+        def record_call(service):
+            """Add recorded event to set."""
+            calls.append(service)
+
+        self.hass.services.register('test', 'script', record_call)
+
+        script_obj = script.Script(self.hass, [
+            {
+                'service': 'test.script',
+                'data_template': {
+                    'hello': '{{ greeting }}',
+                },
+            },
+            {'delay': {'seconds': 5}},
+            {
+                'service': 'test.script',
+                'data_template': {
+                    'hello': '{{ greeting2 }}',
+                },
+            }])
+
+        script_obj.run({
+            'greeting': 'world',
+            'greeting2': 'universe',
+        })
+
+        self.hass.pool.block_till_done()
+
+        assert script_obj.is_running
+        assert len(calls) == 1
+        assert calls[-1].data['hello'] == 'world'
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.pool.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(calls) == 2
+        assert calls[-1].data['hello'] == 'universe'
