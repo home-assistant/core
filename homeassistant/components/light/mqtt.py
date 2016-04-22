@@ -194,8 +194,8 @@ class MqttLight(Light):
 
         if not self._state:
             mqtt.publish(self._hass, self._topic["command_topic"],
-            self._payload["on"], self._qos, self._retain)
-            
+                         self._payload["on"], self._qos, self._retain)
+
         if ATTR_RGB_COLOR in kwargs and \
            self._topic["rgb_command_topic"] is not None:
 
