@@ -80,6 +80,7 @@ https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
 # homeassistant.components.media_player.webostv
+# homeassistant.components.notify.webostv
 https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip#pylgtv==0.1.2
 
 # homeassistant.components.sensor.thinkingcleaner
