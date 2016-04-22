@@ -8,8 +8,7 @@ import enum
 import logging
 
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
-from homeassistant.helpers.service import call_from_config
-from homeassistant.helpers import template
+from homeassistant.helpers import template, script
 
 DOMAIN = 'alexa'
 DEPENDENCIES = ['http']
@@ -91,7 +90,8 @@ def _handle_alexa(handler, path_match, data):
                           card['content'])
 
     if action is not None:
-        call_from_config(handler.server.hass, action, True, response.variables)
+        script.call_from_config(handler.server.hass, action,
+                                response.variables)
 
     handler.write_json(response.as_dict())
 
