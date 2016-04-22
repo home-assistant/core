@@ -20,9 +20,9 @@ CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 
-def call_from_config(hass, config):
+def call_from_config(hass, config, variables=None):
     """Call a script based on a config entry."""
-    Script(hass, config).run()
+    Script(hass, config).run(variables)
 
 
 class Script():
