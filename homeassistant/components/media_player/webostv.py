@@ -69,7 +69,7 @@ def setup_tv(host, hass, add_devices):
                 _LOGGER.warning(
                     'Connected to LG WebOS TV at %s but not paired.', host)
                 return
-            except ConnectionRefusedError:
+            except OSError:
                 _LOGGER.error('Unable to connect to host %s.', host)
                 return
         else:
@@ -158,7 +158,7 @@ class LgWebOSDevice(MediaPlayerDevice):
                 if source['appId'] == self._current_source_id:
                     self._current_source = source['label']
 
-        except ConnectionRefusedError:
+        except OSError:
             self._state = STATE_OFF
 
     @property
@@ -208,6 +208,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
+        self._state = STATE_OFF
         self._client.power_off()
 
     def volume_up(self):
