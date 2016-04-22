@@ -26,11 +26,11 @@ DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
 
+ATTR_VARIABLES = 'variables'
 ATTR_LAST_ACTION = 'last_action'
 ATTR_CAN_CANCEL = 'can_cancel'
 
 _LOGGER = logging.getLogger(__name__)
-
 
 _SCRIPT_ENTRY_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
@@ -41,9 +41,10 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Required(DOMAIN): {cv.slug: _SCRIPT_ENTRY_SCHEMA}
 }, extra=vol.ALLOW_EXTRA)
 
-SCRIPT_SERVICE_SCHEMA = vol.Schema({})
+SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_VARIABLES): dict,
 })
 
 
@@ -52,11 +53,11 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-def turn_on(hass, entity_id):
+def turn_on(hass, entity_id, variables=None):
     """Turn script on."""
     _, object_id = split_entity_id(entity_id)
 
-    hass.services.call(DOMAIN, object_id)
+    hass.services.call(DOMAIN, object_id, variables)
 
 
 def turn_off(hass, entity_id):
@@ -80,7 +81,7 @@ def setup(hass, config):
         if script.is_on:
             _LOGGER.warning("Script %s already running.", entity_id)
             return
-        script.turn_on()
+        script.turn_on(variables=service.data)
 
     for object_id, cfg in config[DOMAIN].items():
         alias = cfg.get(CONF_ALIAS, object_id)
@@ -92,9 +93,9 @@ def setup(hass, config):
     def turn_on_service(service):
         """Call a service to turn script on."""
         # We could turn on script directly here, but we only want to offer
-        # one way to do it. Otherwise no easy way to call invocations.
+        # one way to do it. Otherwise no easy way to detect invocations.
         for script in component.extract_from_service(service):
-            turn_on(hass, script.entity_id)
+            turn_on(hass, script.entity_id, service.data.get(ATTR_VARIABLES))
 
     def turn_off_service(service):
         """Cancel a script."""
@@ -151,7 +152,7 @@ class ScriptEntity(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        self.script.run()
+        self.script.run(kwargs.get(ATTR_VARIABLES))
 
     def turn_off(self, **kwargs):
         """Turn script off."""
