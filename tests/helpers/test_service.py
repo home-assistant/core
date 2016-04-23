@@ -140,21 +140,3 @@ class TestServiceHelpers(unittest.TestCase):
 
         self.assertEqual(['light.ceiling', 'light.kitchen'],
                          service.extract_entity_ids(self.hass, call))
-
-    def test_validate_service_call(self):
-        """Test is_valid_service_call method."""
-        self.assertNotEqual(
-            service.validate_service_call(
-                {}),
-            None
-            )
-        self.assertEqual(
-            service.validate_service_call(
-                {'service': 'test_domain.test_service'}),
-            None
-            )
-        self.assertEqual(
-            service.validate_service_call(
-                {'service_template': 'test_domain.{{ \'test_service\' }}'}),
-            None
-            )
