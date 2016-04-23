@@ -57,7 +57,6 @@ def _valid_device(value):
     for key, device in value.items():
         # Still accept old configuration
         if 'packetid' in device.keys():
-            print(key, device.keys(), device, config)
             msg = 'You are using an outdated configuration of the rfxtrx ' +\
                   'devuce, {}. Your new config should be:\n{}: \n\t name:{}\n'\
                   .format(key, device.get('packetid'),
