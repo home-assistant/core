@@ -35,7 +35,7 @@ _SUN_EVENT = vol.All(vol.Lower, vol.Any(EVENT_SUNRISE, EVENT_SUNSET))
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'sun',
     vol.Required(CONF_EVENT): _SUN_EVENT,
-    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_offset,
+    vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
 })
 
 IF_ACTION_SCHEMA = vol.All(
@@ -43,8 +43,8 @@ IF_ACTION_SCHEMA = vol.All(
         vol.Required(CONF_PLATFORM): 'sun',
         CONF_BEFORE: _SUN_EVENT,
         CONF_AFTER: _SUN_EVENT,
-        vol.Required(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_offset,
-        vol.Required(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_offset,
+        vol.Required(CONF_BEFORE_OFFSET, default=timedelta(0)): cv.time_period,
+        vol.Required(CONF_AFTER_OFFSET, default=timedelta(0)): cv.time_period,
     }),
     cv.has_at_least_one_key(CONF_BEFORE, CONF_AFTER),
 )
@@ -55,11 +55,21 @@ def trigger(hass, config, action):
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
 
+    def call_action():
+        """Call action with right context."""
+        action({
+            'trigger': {
+                'platform': 'sun',
+                'event': event,
+                'offset': offset,
+            },
+        })
+
     # Do something to call action
     if event == EVENT_SUNRISE:
-        track_sunrise(hass, action, offset)
+        track_sunrise(hass, call_action, offset)
     else:
-        track_sunset(hass, action, offset)
+        track_sunset(hass, call_action, offset)
 
     return True
 
@@ -97,7 +107,7 @@ def if_action(hass, config):
             """Return time after sunset."""
             return sun.next_setting(hass) + after_offset
 
-    def time_if():
+    def time_if(variables):
         """Validate time based if-condition."""
         now = dt_util.now()
         before = before_func()
