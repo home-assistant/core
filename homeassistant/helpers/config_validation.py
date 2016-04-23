@@ -6,7 +6,8 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_ALIAS)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -21,6 +22,23 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+
+
+# Adapted from:
+# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
+def has_at_least_one_key(*keys):
+    """Validator that at least one key exists."""
+    def validate(obj):
+        """Test keys exist in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for k in obj.keys():
+            if k in keys:
+                return obj
+        raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
 
 
 def boolean(value):
@@ -72,10 +90,24 @@ def icon(value):
     raise vol.Invalid('Icons should start with prefix "mdi:"')
 
 
-def time_offset(value):
+time_period_dict = vol.All(
+    dict, vol.Schema({
+        'days': vol.Coerce(int),
+        'hours': vol.Coerce(int),
+        'minutes': vol.Coerce(int),
+        'seconds': vol.Coerce(int),
+        'milliseconds': vol.Coerce(int),
+    }),
+    has_at_least_one_key('days', 'hours', 'minutes',
+                         'seconds', 'milliseconds'),
+    lambda value: timedelta(**value))
+
+
+def time_period_str(value):
     """Validate and transform time offset."""
     if not isinstance(value, str):
-        raise vol.Invalid('offset should be a string')
+        raise vol.Invalid(
+            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
 
     negative_offset = False
     if value.startswith('-'):
@@ -107,6 +139,9 @@ def time_offset(value):
     return offset
 
 
+time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+
+
 def match_all(value):
     """Validator that matches all values."""
     return value
@@ -123,6 +158,13 @@ def platform_validator(domain):
         raise vol.Invalid(
             'platform {} does not exist for {}'.format(value, domain))
     return validator
+
+
+def positive_timedelta(value):
+    """Validate timedelta is positive."""
+    if value < timedelta(0):
+        raise vol.Invalid('Time period should be positive')
+    return value
 
 
 def service(value):
@@ -200,23 +242,6 @@ def key_dependency(key, dependency):
     return validator
 
 
-# Adapted from:
-# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys):
-    """Validator that at least one key exists."""
-    def validate(obj):
-        """Test keys exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        for k in obj.keys():
-            if k in keys:
-                return obj
-        raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
-
-    return validate
-
-
 # Schemas
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -225,14 +250,26 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
-    'event_data': dict
+    vol.Optional('event_data'): dict,
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
     vol.Exclusive('service', 'service name'): service,
-    vol.Exclusive('service_template', 'service name'): string,
-    vol.Exclusive('data', 'service data'): dict,
-    vol.Exclusive('data_template', 'service data'): {match_all: template},
-    'entity_id': entity_ids,
+    vol.Exclusive('service_template', 'service name'): template,
+    vol.Optional('data'): dict,
+    vol.Optional('data_template'): {match_all: template},
+    vol.Optional('entity_id'): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
+
+_SCRIPT_DELAY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("delay"): vol.All(time_period, positive_timedelta)
+})
+
+SCRIPT_SCHEMA = vol.All(
+    ensure_list,
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA)],
+)
