@@ -32,13 +32,15 @@ def service(domain, service_name):
     return register_service_decorator
 
 
-def call_from_config(hass, config, blocking=False, variables=None):
+def call_from_config(hass, config, blocking=False, variables=None,
+                     validate_config=True):
     """Call a service based on a config hash."""
-    try:
-        config = cv.SERVICE_SCHEMA(config)
-    except vol.Invalid as ex:
-        _LOGGER.error("Invalid config for calling service: %s", ex)
-        return
+    if validate_config:
+        try:
+            config = cv.SERVICE_SCHEMA(config)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid config for calling service: %s", ex)
+            return
 
     if CONF_SERVICE in config:
         domain_service = config[CONF_SERVICE]
@@ -85,16 +87,3 @@ def extract_entity_ids(hass, service_call):
         return group.expand_entity_ids(hass, [service_ent_id])
 
     return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
-
-
-def validate_service_call(config):
-    """Validate service call configuration.
-
-    Helper method to validate that a configuration is a valid service call.
-    Returns None if validation succeeds, else an error description
-    """
-    try:
-        cv.SERVICE_SCHEMA(config)
-        return None
-    except vol.Invalid as ex:
-        return str(ex)
