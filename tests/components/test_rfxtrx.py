@@ -82,9 +82,8 @@ class TestRFXTRX(unittest.TestCase):
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'213c7f216': {
+                           {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               'packetid': '0b1100cd0213c7f210010f51',
                                rfxtrx.ATTR_FIREEVENT: True}
                             }}}))
 
