@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_PACKETID, ATTR_NAME,
+    ATTR_AUTOMATIC_ADD, ATTR_NAME,
     CONF_DEVICES, ATTR_DATA_TYPE)
 
 DEPENDENCIES = ['rfxtrx']
@@ -31,18 +31,27 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Required(ATTR_PACKETID): rfxtrx.validate_packetid,
-    vol.Optional(ATTR_DATA_TYPE, default=None):
-        vol.In(list(DATA_TYPES.keys())),
+    vol.Optional(ATTR_DATA_TYPE, default=[]):
+        vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
 })
 
 
-def _valid_device(value):
+def _valid_sensor(value):
     """Validate a dictionary of devices definitions."""
     config = OrderedDict()
     for key, device in value.items():
+        # Still accept old configuration
+        if 'packetid' in device.keys():
+            print(key, device.keys(), device, config)
+            msg = 'You are using an outdated configuration of the rfxtrx ' +\
+                  'sensor, {}. Your new config should be:\n{}: \n\t name:{}\n'\
+                  .format(key, device.get('packetid'),
+                          device.get(ATTR_NAME, 'sensor_name'))
+            _LOGGER.warning(msg)
+            key = device.get('packetid')
+            device.pop('packetid')
         try:
-            key = rfxtrx.VALID_SENSOR_DEVICE_ID(key)
+            key = rfxtrx.validate_packetid(key)
             config[key] = DEVICE_SCHEMA(device)
             if not config[key][ATTR_NAME]:
                 config[key][ATTR_NAME] = key
@@ -54,7 +63,7 @@ def _valid_device(value):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required("platform"): rfxtrx.DOMAIN,
-    vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
+    vol.Required(CONF_DEVICES): vol.All(dict, _valid_sensor),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
@@ -64,15 +73,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     from RFXtrx import SensorEvent
 
     sensors = []
-    for device_id, entity_info in config['devices'].items():
+    for packet_id, entity_info in config['devices'].items():
+        event = rfxtrx.get_rfx_object(packet_id)
+        device_id = "sensor_" + slugify(event.device.id_string.lower())
+
         if device_id in rfxtrx.RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
-        event = rfxtrx.get_rfx_object(entity_info[ATTR_PACKETID])
-        new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
-                                  entity_info[ATTR_DATA_TYPE])
-        rfxtrx.RFX_DEVICES[slugify(device_id)] = new_sensor
-        sensors.append(new_sensor)
+        sub_sensors = {}
+        for _data_type in cv.ensure_list(entity_info[ATTR_DATA_TYPE]):
+            new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
+                                      _data_type)
+            sensors.append(new_sensor)
+            sub_sensors[_data_type] = new_sensor
+        rfxtrx.RFX_DEVICES[slugify(device_id)] = sub_sensors
 
     add_devices_callback(sensors)
 
@@ -84,13 +98,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device_id = "sensor_" + slugify(event.device.id_string.lower())
 
         if device_id in rfxtrx.RFX_DEVICES:
-            rfxtrx.RFX_DEVICES[device_id].event = event
-            k = 2
-            _device_id = device_id + "_" + str(k)
-            while _device_id in rfxtrx.RFX_DEVICES:
-                rfxtrx.RFX_DEVICES[_device_id].event = event
-                k = k + 1
-                _device_id = device_id + "_" + str(k)
+            sensors = rfxtrx.RFX_DEVICES[device_id]
+            for key in sensors:
+                sensors[key].event = event
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -103,7 +113,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 pkt_id)
 
             new_sensor = RfxtrxSensor(event, entity_name)
-            rfxtrx.RFX_DEVICES[device_id] = new_sensor
+            sub_sensors = {}
+            sub_sensors[new_sensor.data_type] = new_sensor
+            rfxtrx.RFX_DEVICES[device_id] = sub_sensors
             add_devices_callback([new_sensor])
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
@@ -117,16 +129,16 @@ class RfxtrxSensor(Entity):
         """Initialize the sensor."""
         self.event = event
         self._unit_of_measurement = None
-        self._data_type = None
+        self.data_type = None
         self._name = name
         if data_type:
-            self._data_type = data_type
+            self.data_type = data_type
             self._unit_of_measurement = DATA_TYPES[data_type]
             return
         for data_type in DATA_TYPES:
             if data_type in self.event.values:
                 self._unit_of_measurement = DATA_TYPES[data_type]
-                self._data_type = data_type
+                self.data_type = data_type
                 break
 
     def __str__(self):
@@ -136,8 +148,8 @@ class RfxtrxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._data_type:
-            return self.event.values[self._data_type]
+        if self.data_type:
+            return self.event.values[self.data_type]
         return None
 
     @property

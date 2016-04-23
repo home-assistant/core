@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +23,6 @@ ATTR_DEVICE = 'device'
 ATTR_DEBUG = 'debug'
 ATTR_STATE = 'state'
 ATTR_NAME = 'name'
-ATTR_PACKETID = 'packetid'
 ATTR_FIREEVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
@@ -45,21 +45,39 @@ def validate_packetid(value):
     else:
         raise vol.Invalid('invalid packet id for {}'.format(value))
 
-# Share between rfxtrx platforms
-VALID_DEVICE_ID = vol.All(cv.string, vol.Lower)
-VALID_SENSOR_DEVICE_ID = vol.All(VALID_DEVICE_ID,
-                                 vol.truth(lambda val:
-                                           val.startswith('sensor_')))
-
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
-    vol.Required(ATTR_PACKETID): validate_packetid,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
+
+def _valid_device(value):
+    """Validate a dictionary of devices definitions."""
+    config = OrderedDict()
+    for key, device in value.items():
+        # Still accept old configuration
+        if 'packetid' in device.keys():
+            print(key, device.keys(), device, config)
+            msg = 'You are using an outdated configuration of the rfxtrx ' +\
+                  'devuce, {}. Your new config should be:\n{}: \n\t name:{}\n'\
+                  .format(key, device.get('packetid'),
+                          device.get(ATTR_NAME, 'deivce_name'))
+            _LOGGER.warning(msg)
+            key = device.get('packetid')
+            device.pop('packetid')
+        try:
+            key = validate_packetid(key)
+            config[key] = DEVICE_SCHEMA(device)
+            if not config[key][ATTR_NAME]:
+                config[key][ATTR_NAME] = key
+        except vol.MultipleInvalid as ex:
+            raise vol.Invalid('Rfxtrx deive {} is invalid: {}'
+                              .format(key, ex))
+    return config
+
 DEFAULT_SCHEMA = vol.Schema({
     vol.Required("platform"): DOMAIN,
-    vol.Required(CONF_DEVICES): {cv.slug: DEVICE_SCHEMA},
+    vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
         vol.Coerce(int),
@@ -141,7 +159,9 @@ def get_devices_from_config(config, device):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
     devices = []
-    for device_id, entity_info in config[CONF_DEVICES].items():
+    for packet_id, entity_info in config[CONF_DEVICES].items():
+        event = get_rfx_object(packet_id)
+        device_id = slugify(event.device.id_string.lower())
         if device_id in RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx", entity_info[ATTR_NAME])
@@ -150,8 +170,7 @@ def get_devices_from_config(config, device):
         fire_event = entity_info[ATTR_FIREEVENT]
         datas = {ATTR_STATE: False, ATTR_FIREEVENT: fire_event}
 
-        rfxobject = get_rfx_object(entity_info[ATTR_PACKETID])
-        new_device = device(entity_info[ATTR_NAME], rfxobject, datas,
+        new_device = device(entity_info[ATTR_NAME], event, datas,
                             signal_repetitions)
         RFX_DEVICES[device_id] = new_device
         devices.append(new_device)
@@ -161,67 +180,66 @@ def get_devices_from_config(config, device):
 def get_new_device(event, config, device):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
-    if device_id not in RFX_DEVICES:
-        automatic_add = config[ATTR_AUTOMATIC_ADD]
-        if not automatic_add:
-            return
+    if device_id in RFX_DEVICES:
+        return
 
-        _LOGGER.info(
-            "Automatic add %s rfxtrx device (Class: %s Sub: %s)",
-            device_id,
-            event.device.__class__.__name__,
-            event.device.subtype
-        )
-        pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-        entity_name = "%s : %s" % (device_id, pkt_id)
-        datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
-        signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
-        new_device = device(entity_name, event, datas,
-                            signal_repetitions)
-        RFX_DEVICES[device_id] = new_device
-        return new_device
+    automatic_add = config[ATTR_AUTOMATIC_ADD]
+    if not automatic_add:
+        return
+
+    _LOGGER.info(
+        "Automatic add %s rfxtrx device (Class: %s Sub: %s)",
+        device_id,
+        event.device.__class__.__name__,
+        event.device.subtype
+    )
+    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+    entity_name = "%s : %s" % (device_id, pkt_id)
+    datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
+    signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
+    new_device = device(entity_name, event, datas,
+                        signal_repetitions)
+    RFX_DEVICES[device_id] = new_device
+    return new_device
 
 
 def apply_received_command(event):
     """Apply command from rfxtrx."""
     device_id = slugify(event.device.id_string.lower())
     # Check if entity exists or previously added automatically
-    if device_id in RFX_DEVICES:
-        _LOGGER.debug(
-            "EntityID: %s device_update. Command: %s",
-            device_id,
-            event.values['Command']
+    if device_id not in RFX_DEVICES:
+        return
+
+    _LOGGER.debug(
+        "EntityID: %s device_update. Command: %s",
+        device_id,
+        event.values['Command']
+    )
+
+    if event.values['Command'] == 'On'\
+            or event.values['Command'] == 'Off':
+
+        # Update the rfxtrx device state
+        is_on = event.values['Command'] == 'On'
+        RFX_DEVICES[device_id].update_state(is_on)
+
+    elif hasattr(RFX_DEVICES[device_id], 'brightness')\
+            and event.values['Command'] == 'Set level':
+        _brightness = (event.values['Dim level'] * 255 // 100)
+
+        # Update the rfxtrx device state
+        is_on = _brightness > 0
+        RFX_DEVICES[device_id].update_state(is_on, _brightness)
+
+    # Fire event
+    if RFX_DEVICES[device_id].should_fire_event:
+        RFX_DEVICES[device_id].hass.bus.fire(
+            EVENT_BUTTON_PRESSED, {
+                ATTR_ENTITY_ID:
+                    RFX_DEVICES[device_id].entity_id,
+                ATTR_STATE: event.values['Command'].lower()
+            }
         )
-
-        if event.values['Command'] == 'On'\
-                or event.values['Command'] == 'Off':
-
-            # Update the rfxtrx device state
-            is_on = event.values['Command'] == 'On'
-            # pylint: disable=protected-access
-            RFX_DEVICES[device_id]._state = is_on
-            RFX_DEVICES[device_id].update_ha_state()
-
-        elif hasattr(RFX_DEVICES[device_id], 'brightness')\
-                and event.values['Command'] == 'Set level':
-            # pylint: disable=protected-access
-            RFX_DEVICES[device_id]._brightness = \
-                (event.values['Dim level'] * 255 // 100)
-
-            # Update the rfxtrx device state
-            is_on = RFX_DEVICES[device_id]._brightness > 0
-            RFX_DEVICES[device_id]._state = is_on
-            RFX_DEVICES[device_id].update_ha_state()
-
-        # Fire event
-        if RFX_DEVICES[device_id].should_fire_event:
-            RFX_DEVICES[device_id].hass.bus.fire(
-                EVENT_BUTTON_PRESSED, {
-                    ATTR_ENTITY_ID:
-                        RFX_DEVICES[device_id].entity_id,
-                    ATTR_STATE: event.values['Command'].lower()
-                }
-            )
 
 
 class RfxtrxDevice(Entity):
@@ -233,11 +251,11 @@ class RfxtrxDevice(Entity):
 
     def __init__(self, name, event, datas, signal_repetitions):
         """Initialize the device."""
+        self.signal_repetitions = signal_repetitions
         self._name = name
         self._event = event
         self._state = datas[ATTR_STATE]
         self._should_fire_event = datas[ATTR_FIREEVENT]
-        self.signal_repetitions = signal_repetitions
         self._brightness = 0
 
     @property
@@ -268,6 +286,12 @@ class RfxtrxDevice(Entity):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._send_command("turn_off")
+
+    def update_state(self, state, brightness=0):
+        """Update det state of the device."""
+        self._state = state
+        self._brightness = brightness
+        self.update_ha_state()
 
     def _send_command(self, command, brightness=0):
         if not self._event:
