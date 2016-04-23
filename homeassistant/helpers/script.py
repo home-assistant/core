@@ -76,11 +76,11 @@ class Script():
                         self._change_listener()
                     return
 
-                elif service.validate_service_call(action) is None:
-                    self._call_service(action, variables)
-
                 elif CONF_EVENT in action:
                     self._fire_event(action)
+
+                else:
+                    self._call_service(action, variables)
 
             self._cur = -1
             self.last_action = None
@@ -102,7 +102,8 @@ class Script():
         """Call the service specified in the action."""
         self.last_action = action.get(CONF_ALIAS, 'call service')
         self._log("Executing step %s", self.last_action)
-        service.call_from_config(self.hass, action, True, variables)
+        service.call_from_config(self.hass, action, True, variables,
+                                 validate_config=False)
 
     def _fire_event(self, action):
         """Fire an event."""
