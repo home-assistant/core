@@ -26,7 +26,14 @@ CONF_ACTION = 'action'
 
 def setup(hass, config):
     """Activate Alexa component."""
-    _CONFIG.update(config[DOMAIN].get(CONF_INTENTS, {}))
+    intents = config[DOMAIN].get(CONF_INTENTS, {})
+
+    for name, intent in intents.items():
+        if CONF_ACTION in intent:
+            intent[CONF_ACTION] = script.Script(hass, intent[CONF_ACTION],
+                                                "Alexa intent {}".format(name))
+
+    _CONFIG.update(intents)
 
     hass.http.register_path('POST', API_ENDPOINT, _handle_alexa, True)
 
@@ -90,8 +97,7 @@ def _handle_alexa(handler, path_match, data):
                           card['content'])
 
     if action is not None:
-        script.call_from_config(handler.server.hass, action,
-                                response.variables)
+        action.run(response.variables)
 
     handler.write_json(response.as_dict())
 
