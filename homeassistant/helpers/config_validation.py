@@ -264,14 +264,12 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional('entity_id'): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
-# ----- SCRIPT
-
-_DELAY_SCHEMA = vol.Schema({
+_SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.All(time_period, positive_timedelta)
 })
 
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
-    [vol.Any(SERVICE_SCHEMA, _DELAY_SCHEMA, EVENT_SCHEMA)],
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA)],
 )
