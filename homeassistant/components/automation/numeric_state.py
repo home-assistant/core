@@ -18,12 +18,15 @@ CONF_ABOVE = "above"
 _LOGGER = logging.getLogger(__name__)
 
 
-def _renderer(hass, value_template, state):
+def _renderer(hass, value_template, state, variables=None):
     """Render the state value."""
     if value_template is None:
         return state.state
 
-    return template.render(hass, value_template, {'state': state})
+    variables = dict(variables or {})
+    variables['state'] = state
+
+    return template.render(hass, value_template, variables)
 
 
 def trigger(hass, config, action):
@@ -50,9 +53,27 @@ def trigger(hass, config, action):
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         # Fire action if we go from outside range into range
-        if _in_range(above, below, renderer(to_s)) and \
-           (from_s is None or not _in_range(above, below, renderer(from_s))):
-            action()
+        if to_s is None:
+            return
+
+        variables = {
+            'trigger': {
+                'platform': 'numeric_state',
+                'entity_id': entity_id,
+                'below': below,
+                'above': above,
+            }
+        }
+        to_s_value = renderer(to_s, variables)
+        from_s_value = None if from_s is None else renderer(from_s, variables)
+        if _in_range(above, below, to_s_value) and \
+           (from_s is None or not _in_range(above, below, from_s_value)):
+            variables['trigger']['from_state'] = from_s
+            variables['trigger']['from_value'] = from_s_value
+            variables['trigger']['to_state'] = to_s
+            variables['trigger']['to_value'] = to_s_value
+
+            action(variables)
 
     track_state_change(
         hass, entity_id, state_automation_listener)
@@ -80,7 +101,7 @@ def if_action(hass, config):
 
     renderer = partial(_renderer, hass, value_template)
 
-    def if_numeric_state():
+    def if_numeric_state(variables):
         """Test numeric state condition."""
         state = hass.states.get(entity_id)
         return state is not None and _in_range(above, below, renderer(state))

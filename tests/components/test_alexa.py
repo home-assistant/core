@@ -71,8 +71,8 @@ def setUpModule():   # pylint: disable=invalid-name
                     },
                     'action': {
                         'service': 'test.alexa',
-                        'data': {
-                            'hello': 1
+                        'data_template': {
+                            'hello': '{{ ZodiacSign }}'
                         },
                         'entity_id': 'switch.test',
                     }
@@ -278,6 +278,12 @@ class TestAlexa(unittest.TestCase):
                 'timestamp': '2015-05-13T12:34:56Z',
                 'intent': {
                     'name': 'CallServiceIntent',
+                    'slots': {
+                        'ZodiacSign': {
+                            'name': 'ZodiacSign',
+                            'value': 'virgo',
+                        }
+                    }
                 }
             }
         }
@@ -289,7 +295,7 @@ class TestAlexa(unittest.TestCase):
         self.assertEqual('test', call.domain)
         self.assertEqual('alexa', call.service)
         self.assertEqual(['switch.test'], call.data.get('entity_id'))
-        self.assertEqual(1, call.data.get('hello'))
+        self.assertEqual('virgo', call.data.get('hello'))
 
     def test_session_ended_request(self):
         """Test the request for ending the session."""

@@ -13,6 +13,7 @@ MATCH_ALL = '*'
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # #### CONFIG ####
+CONF_ALIAS = "alias"
 CONF_ICON = "icon"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
