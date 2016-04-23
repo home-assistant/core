@@ -33,6 +33,7 @@ CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_OPTIMISTIC = 'optimistic'
+CONF_ENTITY_NAMESPACE = "entity_namespace"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 
