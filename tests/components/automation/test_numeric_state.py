@@ -437,15 +437,28 @@ class TestAutomationNumericState(unittest.TestCase):
                     'below': 10,
                 },
                 'action': {
-                    'service': 'test.automation'
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                                    'platform', 'entity_id', 'below', 'above',
+                                    'from_state.state', 'from_value',
+                                    'to_state.state', 'to_value'))
+                    },
                 }
             }
         })
         # 9 is below 10
-        self.hass.states.set('test.entity', 'entity',
+        self.hass.states.set('test.entity', 'test state 1',
+                             {'test_attribute': '1.2'})
+        self.hass.pool.block_till_done()
+        self.hass.states.set('test.entity', 'test state 2',
                              {'test_attribute': '0.9'})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'numeric_state - test.entity - 10 - None - test state 1 - 12.0 - '
+            'test state 2 - 9.0',
+            self.calls[0].data['some'])
 
     def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
         """"Test if not fired changed attributes."""

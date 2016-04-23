@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from astral import Astral
 
 import homeassistant.core as ha
+from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
     track_point_in_utc_time,
     track_point_in_time,
@@ -93,6 +94,7 @@ class TestEventHelpers(unittest.TestCase):
         # 2 lists to track how often our callbacks get called
         specific_runs = []
         wildcard_runs = []
+        wildercard_runs = []
 
         track_state_change(
             self.hass, 'light.Bowl', lambda a, b, c: specific_runs.append(1),
@@ -100,14 +102,18 @@ class TestEventHelpers(unittest.TestCase):
 
         track_state_change(
             self.hass, 'light.Bowl',
-            lambda _, old_s, new_s: wildcard_runs.append((old_s, new_s)),
-            ha.MATCH_ALL, ha.MATCH_ALL)
+            lambda _, old_s, new_s: wildcard_runs.append((old_s, new_s)))
+
+        track_state_change(
+            self.hass, MATCH_ALL,
+            lambda _, old_s, new_s: wildercard_runs.append((old_s, new_s)))
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
         self.assertIsNone(wildcard_runs[-1][0])
         self.assertIsNotNone(wildcard_runs[-1][1])
 
@@ -116,31 +122,45 @@ class TestEventHelpers(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(specific_runs))
         self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'off')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(2, len(wildcard_runs))
+        self.assertEqual(2, len(wildercard_runs))
 
         # State change off -> off
         self.hass.states.set('light.Bowl', 'off', {"some_attr": 1})
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(3, len(wildcard_runs))
+        self.assertEqual(3, len(wildercard_runs))
 
         # State change off -> on
         self.hass.states.set('light.Bowl', 'on')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(4, len(wildcard_runs))
+        self.assertEqual(4, len(wildercard_runs))
 
         self.hass.states.remove('light.bowl')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(5, len(wildcard_runs))
+        self.assertEqual(5, len(wildercard_runs))
         self.assertIsNotNone(wildcard_runs[-1][0])
         self.assertIsNone(wildcard_runs[-1][1])
+        self.assertIsNotNone(wildercard_runs[-1][0])
+        self.assertIsNone(wildercard_runs[-1][1])
+
+        # Set state for different entity id
+        self.hass.states.set('switch.kitchen', 'on')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(5, len(wildcard_runs))
+        self.assertEqual(6, len(wildercard_runs))
 
     def test_track_sunrise(self):
         """Test track the sunrise."""

@@ -73,29 +73,42 @@ def trigger(hass, config, action):
 
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
+        def call_action():
+            """Call action with right context."""
+            action({
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': entity,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                    'for': time_delta,
+                }
+            })
+
+        if time_delta is None:
+            call_action()
+            return
+
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
             hass.bus.remove_listener(
-                EVENT_STATE_CHANGED, for_state_listener)
-            action()
+                EVENT_STATE_CHANGED, attached_state_for_cancel)
+            call_action()
 
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
             """Fire on changes and cancel for listener if changed."""
             if inner_to_s == to_s:
                 return
-            hass.bus.remove_listener(EVENT_TIME_CHANGED, for_time_listener)
-            hass.bus.remove_listener(
-                EVENT_STATE_CHANGED, for_state_listener)
+            hass.bus.remove_listener(EVENT_TIME_CHANGED,
+                                     attached_state_for_listener)
+            hass.bus.remove_listener(EVENT_STATE_CHANGED,
+                                     attached_state_for_cancel)
 
-        if time_delta is not None:
-            target_tm = dt_util.utcnow() + time_delta
-            for_time_listener = track_point_in_time(
-                hass, state_for_listener, target_tm)
-            for_state_listener = track_state_change(
-                hass, entity_id, state_for_cancel_listener,
-                MATCH_ALL, MATCH_ALL)
-        else:
-            action()
+        attached_state_for_listener = track_point_in_time(
+            hass, state_for_listener, dt_util.utcnow() + time_delta)
+
+        attached_state_for_cancel = track_state_change(
+            hass, entity_id, state_for_cancel_listener)
 
     track_state_change(
         hass, entity_id, state_automation_listener, from_state, to_state)
@@ -109,7 +122,7 @@ def if_action(hass, config):
     state = config.get(CONF_STATE)
     time_delta = get_time_config(config)
 
-    def if_state():
+    def if_state(variables):
         """Test if condition."""
         is_state = hass.states.is_state(entity_id, state)
         return (time_delta is None and is_state or
