@@ -10,9 +10,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
 
-DEFAULT_PULSELENGTH = 350
-
-REQUIREMENTS = ['RPi.GPIO==0.6.2', 'rpi-rf==0.9.4']
+REQUIREMENTS = ['RPi.GPIO==0.6.2', 'rpi-rf==0.9.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +31,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 hass,
                 properties.get('name', dev_name),
                 rfdevice,
-                properties.get('pulselength', DEFAULT_PULSELENGTH),
+                properties.get('protocol', None),
+                properties.get('pulselength', None),
                 properties.get('code_on', 0),
                 properties.get('code_off', 0),
                 properties.get(CONF_VALUE_TEMPLATE, False)))
@@ -44,13 +43,14 @@ class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, rfdevice, pulselength, code_on, code_off,
-                 value_template):
+    def __init__(self, hass, name, rfdevice, protocol, pulselength,
+                 code_on, code_off, value_template):
         """Initialize the switch."""
         self._hass = hass
         self._name = name
         self._state = False
         self._rfdevice = rfdevice
+        self._protocol = protocol
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
@@ -73,23 +73,22 @@ class RPiRFSwitch(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    def _send_code(self, code, pulselength):
+    def _send_code(self, code, protocol, pulselength):
         """Send the code with a specified pulselength."""
-        _LOGGER.info('Sending code: %s (%s)', code, pulselength)
-        self._rfdevice.tx_pulselength = pulselength
-        res = self._rfdevice.tx_code(code)
+        _LOGGER.info('Sending code: %s', code)
+        res = self._rfdevice.tx_code(code, protocol, pulselength)
         if not res:
             _LOGGER.error('Sending code %s failed', code)
         return res
 
     def turn_on(self):
         """Turn the switch on."""
-        if self._send_code(self._code_on, self._pulselength):
+        if self._send_code(self._code_on, self._protocol, self._pulselength):
             self._state = True
             self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
-        if self._send_code(self._code_off, self._pulselength):
+        if self._send_code(self._code_off, self._protocol, self._pulselength):
             self._state = False
             self.update_ha_state()
