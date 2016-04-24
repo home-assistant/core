@@ -10,7 +10,7 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_VALUE_TEMPLATE
 
-REQUIREMENTS = ['RPi.GPIO==0.6.2', 'rpi-rf==0.9.5']
+REQUIREMENTS = ['rpi-rf==0.9.5']
 
 _LOGGER = logging.getLogger(__name__)
 

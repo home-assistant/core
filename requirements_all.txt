@@ -16,9 +16,6 @@ PyMata==2.07a
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
 
-# homeassistant.components.switch.rpi_rf
-# RPi.GPIO==0.6.2
-
 # homeassistant.components.media_player.sonos
 SoCo==0.11.1
 
