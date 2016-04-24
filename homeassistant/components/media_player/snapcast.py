@@ -82,7 +82,7 @@ class SnapcastDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source."""
-        return self._client.stream.id
+        return self._client.stream.identifier
 
     @property
     def source_list(self):
