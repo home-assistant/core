@@ -12,11 +12,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyRFXtrx==0.6.5']
 
 DOMAIN = "rfxtrx"
+
+DEFAULT_SIGNAL_REPETITIONS = 1
 
 ATTR_AUTOMATIC_ADD = 'automatic_add'
 ATTR_DEVICE = 'device'
@@ -28,9 +30,16 @@ ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
-DEFAULT_SIGNAL_REPETITIONS = 1
-
 EVENT_BUTTON_PRESSED = 'button_pressed'
+
+DATA_TYPES = OrderedDict([
+    ('Temperature', TEMP_CELSIUS),
+    ('Humidity', '%'),
+    ('Barometer', ''),
+    ('Wind direction', ''),
+    ('Rain rate', ''),
+    ('Energy usage', 'W'),
+    ('Total usage', 'W')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
@@ -38,45 +47,60 @@ _LOGGER = logging.getLogger(__name__)
 RFXOBJECT = None
 
 
-def validate_packetid(value):
-    """Validate that value is a valid packet id for rfxtrx."""
-    if get_rfx_object(value):
-        return value
-    else:
-        raise vol.Invalid('invalid packet id for {}'.format(value))
+def _valid_device(value, device_type):
+    """Validate a dictionary of devices definitions."""
+    config = OrderedDict()
+    for key, device in value.items():
+
+        # Still accept old configuration
+        if 'packetid' in device.keys():
+            msg = 'You are using an outdated configuration of the rfxtrx ' +\
+                  'device, {}.'.format(key) +\
+                  ' Your new config should be:\n    {}: \n        name: {}'\
+                  .format(device.get('packetid'),
+                          device.get(ATTR_NAME, 'deivce_name'))
+            _LOGGER.warning(msg)
+            key = device.get('packetid')
+            device.pop('packetid')
+
+        if get_rfx_object(key) is None:
+            raise vol.Invalid('Rfxtrx device {} is invalid: '
+                              'Invalid device id for {}'.format(key, value))
+
+        if device_type == 'sensor':
+            config[key] = DEVICE_SCHEMA_SENSOR(device)
+        elif device_type == 'light_switch':
+            config[key] = DEVICE_SCHEMA(device)
+        else:
+            raise vol.Invalid('Rfxtrx device is invalid')
+
+        if not config[key][ATTR_NAME]:
+            config[key][ATTR_NAME] = key
+    return config
+
+
+def valid_sensor(value):
+    """Validate sensor configuration."""
+    return _valid_device(value, "sensor")
+
+
+def _valid_light_switch(value):
+    return _valid_device(value, "light_switch")
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
 })
 
-
-def _valid_device(value):
-    """Validate a dictionary of devices definitions."""
-    config = OrderedDict()
-    for key, device in value.items():
-        # Still accept old configuration
-        if 'packetid' in device.keys():
-            msg = 'You are using an outdated configuration of the rfxtrx ' +\
-                  'devuce, {}. Your new config should be:\n{}: \n\t name:{}\n'\
-                  .format(key, device.get('packetid'),
-                          device.get(ATTR_NAME, 'deivce_name'))
-            _LOGGER.warning(msg)
-            key = device.get('packetid')
-            device.pop('packetid')
-        try:
-            key = validate_packetid(key)
-            config[key] = DEVICE_SCHEMA(device)
-            if not config[key][ATTR_NAME]:
-                config[key][ATTR_NAME] = key
-        except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Rfxtrx deive {} is invalid: {}'
-                              .format(key, ex))
-    return config
+DEVICE_SCHEMA_SENSOR = vol.Schema({
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_DATA_TYPE, default=[]):
+        vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+})
 
 DEFAULT_SCHEMA = vol.Schema({
     vol.Required("platform"): DOMAIN,
-    vol.Required(CONF_DEVICES): vol.All(dict, _valid_device),
+    vol.Optional(CONF_DEVICES, default={}): vol.All(dict, _valid_light_switch),
     vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
         vol.Coerce(int),
@@ -99,11 +123,7 @@ def setup(hass, config):
         # Log RFXCOM event
         if not event.device.id_string:
             return
-        entity_id = slugify(event.device.id_string.lower())
-        packet_id = "".join("{0:02x}".format(x) for x in event.data)
-        entity_name = "%s : %s" % (entity_id, packet_id)
-        _LOGGER.info("Receive RFXCOM event from %s => %s",
-                     event.device, entity_name)
+        _LOGGER.info("Receive RFXCOM event from %s", event.device)
 
         # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
@@ -138,19 +158,16 @@ def get_rfx_object(packetid):
     import RFXtrx as rfxtrxmod
 
     binarypacket = bytearray.fromhex(packetid)
-
     pkt = rfxtrxmod.lowlevel.parse(binarypacket)
-    if pkt is not None:
-        if isinstance(pkt, rfxtrxmod.lowlevel.SensorPacket):
-            obj = rfxtrxmod.SensorEvent(pkt)
-        elif isinstance(pkt, rfxtrxmod.lowlevel.Status):
-            obj = rfxtrxmod.StatusEvent(pkt)
-        else:
-            obj = rfxtrxmod.ControlEvent(pkt)
-
-        return obj
-
-    return None
+    if pkt is None:
+        return None
+    if isinstance(pkt, rfxtrxmod.lowlevel.SensorPacket):
+        obj = rfxtrxmod.SensorEvent(pkt)
+    elif isinstance(pkt, rfxtrxmod.lowlevel.Status):
+        obj = rfxtrxmod.StatusEvent(pkt)
+    else:
+        obj = rfxtrxmod.ControlEvent(pkt)
+    return obj
 
 
 def get_devices_from_config(config, device):
@@ -182,8 +199,7 @@ def get_new_device(event, config, device):
     if device_id in RFX_DEVICES:
         return
 
-    automatic_add = config[ATTR_AUTOMATIC_ADD]
-    if not automatic_add:
+    if not config[ATTR_AUTOMATIC_ADD]:
         return
 
     _LOGGER.info(
@@ -193,10 +209,9 @@ def get_new_device(event, config, device):
         event.device.subtype
     )
     pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-    entity_name = "%s : %s" % (device_id, pkt_id)
     datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
-    new_device = device(entity_name, event, datas,
+    new_device = device(pkt_id, event, datas,
                         signal_repetitions)
     RFX_DEVICES[device_id] = new_device
     return new_device
@@ -244,7 +259,7 @@ def apply_received_command(event):
 class RfxtrxDevice(Entity):
     """Represents a Rfxtrx device.
 
-    Contains the common logic for all Rfxtrx devices.
+    Contains the common logic for Rfxtrx lights and switches.
 
     """
 
