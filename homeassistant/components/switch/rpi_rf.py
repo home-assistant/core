@@ -45,6 +45,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('pulselength', None),
                 properties.get('code_on'),
                 properties.get('code_off')))
+    if devices:
+        rfdevice.enable_tx()
+
     add_devices_callback(devices)
 
 
@@ -63,8 +66,6 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
-
-        rfdevice.enable_tx()
 
     @property
     def should_poll(self):
