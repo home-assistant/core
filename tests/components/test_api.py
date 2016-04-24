@@ -58,6 +58,12 @@ class TestAPI(unittest.TestCase):
         """Stop everything that was started."""
         hass.pool.block_till_done()
 
+    def test_http_version(self):
+        """Test HTTP version."""
+        HTTP_1_1 = 11
+        self.assertEqual(HTTP_1_1,
+                         requests.get(_url(const.URL_API)).raw.version)
+
     # TODO move back to http component and test with use_auth.
     def test_access_denied_without_password(self):
         """Test access without password."""
