@@ -190,7 +190,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         entity = rfxtrx_core.RFX_DEVICES['118cdea2']
         self.assertEqual(1, len(rfxtrx_core.RFX_DEVICES))
-        self.assertEqual('<Entity 118cdea2 : 0b1100100118cdea01010f70: on>',
+        self.assertEqual('<Entity 0b1100100118cdea01010f70: on>',
                          entity.__str__())
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
@@ -203,7 +203,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         entity = rfxtrx_core.RFX_DEVICES['118cdeb2']
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
-        self.assertEqual('<Entity 118cdeb2 : 0b1100120118cdea02000070: on>',
+        self.assertEqual('<Entity 0b1100120118cdea02000070: on>',
                          entity.__str__())
 
         # Trying to add a sensor

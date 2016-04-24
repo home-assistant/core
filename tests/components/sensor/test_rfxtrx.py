@@ -71,6 +71,25 @@ class TestSensorRfxtrx(unittest.TestCase):
                           'Humidity status numeric': 2},
                          entity.device_state_attributes)
 
+    def test_one_sensor_no_datatype(self):
+        """Test with 1 sensor."""
+        self.assertTrue(_setup_component(self.hass, 'sensor', {
+            'sensor': {'platform': 'rfxtrx',
+                       'devices':
+                           {'0a52080705020095220269': {
+                               'name': 'Test'}}}}))
+
+        self.assertEqual(1, len(rfxtrx_core.RFX_DEVICES))
+        entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
+        self.assertEqual('Test', entity.name)
+        self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
+        self.assertEqual(14.9, entity.state)
+        self.assertEqual({'Humidity status': 'normal', 'Temperature': 14.9,
+                          'Rssi numeric': 6, 'Humidity': 34,
+                          'Battery numeric': 9,
+                          'Humidity status numeric': 2},
+                         entity.device_state_attributes)
+
     def test_several_sensors(self):
         """Test with 3 sensors."""
         self.assertTrue(_setup_component(self.hass, 'sensor', {
@@ -145,7 +164,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                           'Battery numeric': 9,
                           'Humidity status numeric': 2},
                          entity.device_state_attributes)
-        self.assertEqual('sensor_0701 : 0a520801070100b81b0279',
+        self.assertEqual('0a520801070100b81b0279',
                          entity.__str__())
 
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
@@ -162,7 +181,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                           'Battery numeric': 9,
                           'Humidity status numeric': 2},
                          entity.device_state_attributes)
-        self.assertEqual('sensor_0502 : 0a52080405020095240279',
+        self.assertEqual('0a52080405020095240279',
                          entity.__str__())
 
         event = rfxtrx_core.get_rfx_object('0a52085e070100b31b0279')
@@ -176,7 +195,7 @@ class TestSensorRfxtrx(unittest.TestCase):
                           'Battery numeric': 9,
                           'Humidity status numeric': 2},
                          entity.device_state_attributes)
-        self.assertEqual('sensor_0701 : 0a520801070100b81b0279',
+        self.assertEqual('0a520801070100b81b0279',
                          entity.__str__())
 
         # trying to add a switch
