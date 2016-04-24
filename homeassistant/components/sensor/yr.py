@@ -111,7 +111,7 @@ class YrSensor(Entity):
         """Weather symbol if type is symbol."""
         if self.type != 'symbol':
             return None
-        return "http://api.met.no/weatherapi/weathericon/1.1/" \
+        return "//api.met.no/weatherapi/weathericon/1.1/" \
                "?symbol={0};content_type=image/png".format(self._state)
 
     @property
