@@ -8,7 +8,6 @@ https://home-assistant.io/components/switch.rpi_rf/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_VALUE_TEMPLATE
 
 REQUIREMENTS = ['rpi-rf==0.9.5']
 
@@ -45,8 +44,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get('protocol', None),
                 properties.get('pulselength', None),
                 properties.get('code_on'),
-                properties.get('code_off'),
-                properties.get(CONF_VALUE_TEMPLATE, False)))
+                properties.get('code_off')))
     add_devices_callback(devices)
 
 
@@ -55,7 +53,7 @@ class RPiRFSwitch(SwitchDevice):
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, hass, name, rfdevice, protocol, pulselength,
-                 code_on, code_off, value_template):
+                 code_on, code_off):
         """Initialize the switch."""
         self._hass = hass
         self._name = name
@@ -65,7 +63,6 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
-        self._value_template = value_template
 
         rfdevice.enable_tx()
 
