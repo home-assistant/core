@@ -20,12 +20,23 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
     import rpi_rf
 
-    gpio = config.get('gpio', 17)
+    gpio = config.get('gpio')
+    if not gpio:
+        _LOGGER.error("No GPIO specified")
+        return False
+
     rfdevice = rpi_rf.RFDevice(gpio)
 
     switches = config.get('switches', {})
     devices = []
     for dev_name, properties in switches.items():
+        if not properties.get('code_on'):
+            _LOGGER.error("%s: code_on not specified", dev_name)
+            continue
+        if not properties.get('code_off'):
+            _LOGGER.error("%s: code_off not specified", dev_name)
+            continue
+
         devices.append(
             RPiRFSwitch(
                 hass,
@@ -33,8 +44,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 rfdevice,
                 properties.get('protocol', None),
                 properties.get('pulselength', None),
-                properties.get('code_on', 0),
-                properties.get('code_off', 0),
+                properties.get('code_on'),
+                properties.get('code_off'),
                 properties.get(CONF_VALUE_TEMPLATE, False)))
     add_devices_callback(devices)
 
