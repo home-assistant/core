@@ -16,18 +16,22 @@ REQUIREMENTS = ['rxv==0.1.11']
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                 SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+
+CONF_SOURCE_NAMES = 'source_names'
+CONF_SOURCE_IGNORE = 'source_ignore'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yamaha platform."""
     import rxv
 
-    excludes = config.get('excludes', None)
-    mapping = config.get('mapping', None)
+    source_ignore = config.get(CONF_SOURCE_IGNORE, [])
+    source_names = config.get(CONF_SOURCE_NAMES, {})
 
-    add_devices(YamahaDevice(config.get("name"), receiver, excludes, mapping)
-                for receiver in rxv.find())
+    add_devices(
+        YamahaDevice(config.get("name"), receiver, source_ignore, source_names)
+        for receiver in rxv.find())
 
 
 class YamahaDevice(MediaPlayerDevice):
@@ -35,7 +39,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, receiver, excludes=None, mapping=None):
+    def __init__(self, name, receiver, source_ignore, source_names):
         """Initialize the Yamaha Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -43,8 +47,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._pwstate = STATE_OFF
         self._current_source = None
         self._source_list = None
-        self._excludes = excludes
-        self._mapping = mapping
+        self._source_ignore = source_ignore
+        self._source_names = source_names
         self._reverse_mapping = None
         self.update()
         self._name = name
@@ -56,41 +60,26 @@ class YamahaDevice(MediaPlayerDevice):
         else:
             self._pwstate = STATE_OFF
         self._muted = self._receiver.mute
-        self._volume = (self._receiver.volume/100) + 1
+        self._volume = (self._receiver.volume / 100) + 1
 
         if self.source_list is None:
             self.build_source_list()
 
         current_source = self._receiver.input
-        if self._mapping is not None:
-            if current_source in list(self._mapping.keys()):
-                self._current_source = self._mapping[current_source]
-            else:
-                self._current_source = current_source
+        if current_source in self._source_names:
+            self._current_source = self._source_names[current_source]
         else:
             self._current_source = current_source
 
     def build_source_list(self):
         """Build the source list."""
-        self._source_list = []
+        self._reverse_mapping = {alias: source for source, alias in
+                                 self._source_names.items()}
 
-        if self._mapping is not None:
-            self._reverse_mapping = {}
-            mapping_list = list(self._mapping.keys())
-            for source, alias in self._mapping.items():
-                self._reverse_mapping[alias] = source
-        else:
-            mapping_list = []
-
-        source_list = list(self._receiver.inputs().keys())
-        for source in source_list:
-            if self._excludes is not None and source in self._excludes:
-                continue
-            if source in mapping_list:
-                self._source_list.append(self._mapping[source])
-            else:
-                self._source_list.append(source)
-        self._source_list.sort()
+        self._source_list = sorted(
+            self._source_names.get(source, source) for source in
+            self._receiver.inputs()
+            if source not in self._source_ignore)
 
     @property
     def name(self):
@@ -133,7 +122,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        receiver_vol = 100-(volume * 100)
+        receiver_vol = 100 - (volume * 100)
         negative_receiver_vol = -receiver_vol
         self._receiver.volume = negative_receiver_vol
 
@@ -144,14 +133,11 @@ class YamahaDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self._receiver.on = True
-        self._volume = (self._receiver.volume/100) + 1
+        self._volume = (self._receiver.volume / 100) + 1
 
     def select_source(self, source):
         """Select input source."""
-        if self._reverse_mapping is not None:
-            if source in list(self._reverse_mapping.keys()):
-                self._receiver.input = self._reverse_mapping[source]
-            else:
-                self._receiver.input = source
+        if source in self._reverse_mapping:
+            self._receiver.input = self._reverse_mapping[source]
         else:
             self._receiver.input = source
