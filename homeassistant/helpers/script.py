@@ -4,9 +4,9 @@ import threading
 from itertools import islice
 
 import homeassistant.util.dt as date_util
-from homeassistant.const import EVENT_TIME_CHANGED
+from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service
+from homeassistant.helpers import service, condition
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +76,10 @@ class Script():
                         self._change_listener()
                     return
 
+                elif CONF_CONDITION in action:
+                    if not self._check_condition(action, variables):
+                        break
+
                 elif CONF_EVENT in action:
                     self._fire_event(action)
 
@@ -110,6 +114,13 @@ class Script():
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
         self._log("Executing step %s", self.last_action)
         self.hass.bus.fire(action[CONF_EVENT], action.get(CONF_EVENT_DATA))
+
+    def _check_condition(self, action, variables):
+        """Test if condition is matching."""
+        self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
+        check = condition.from_config(action)(self.hass, False)
+        self._log("Test condition %s: %s", self.last_action, check)
+        return check
 
     def _remove_listener(self):
         """Remove point in time listener, if any."""

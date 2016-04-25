@@ -146,12 +146,12 @@ class TestAutomation(unittest.TestCase):
                 ],
                 'condition': [
                     {
-                        'platform': 'state',
+                        'condition': 'state',
                         'entity_id': entity_id,
                         'state': '100'
                     },
                     {
-                        'platform': 'numeric_state',
+                        'condition': 'numeric_state',
                         'entity_id': entity_id,
                         'below': 150
                     }
@@ -231,6 +231,7 @@ class TestAutomation(unittest.TestCase):
                     {
                         'platform': 'state',
                         'entity_id': entity_id,
+                        'from': '120',
                         'state': '100'
                     },
                     {
@@ -248,9 +249,13 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.states.set(entity_id, 100)
         self.hass.pool.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 120)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 100)
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
 
