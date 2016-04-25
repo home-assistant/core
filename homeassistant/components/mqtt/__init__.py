@@ -199,16 +199,17 @@ def setup(hass, config):
 
     broker_config = _setup_server(hass, config)
 
+    broker_in_conf = True if CONF_BROKER in conf else False
+    
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
-        broker, port, username, password, certificate, client_key, 
-        client_cert, tls_insecure, protocol = broker_config
+        broker, port, username, password, certificate, protocol = broker_config
     elif not broker_config and (CONF_EMBEDDED in conf or
                                 CONF_BROKER not in conf):
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
 
-    if CONF_BROKER in conf:
+    if broker_in_conf:
         broker = conf[CONF_BROKER]
         port = conf[CONF_PORT]
         username = conf.get(CONF_USERNAME)
@@ -227,9 +228,14 @@ def setup(hass, config):
 
     global MQTT_CLIENT
     try:
-        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate, client_key, client_cert, 
-                           tls_insecure, protocol)
+        #Embedded broker doesn't have some ssl variables
+        if broker_in_conf:
+            MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, 
+                               username, password, certificate, client_key,
+                               client_cert, tls_insecure, protocol)
+        else:
+            MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, 
+                               username, password, certificate, protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
