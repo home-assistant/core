@@ -269,6 +269,9 @@ pywemo==0.4.2
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
 
+# homeassistant.components.switch.rpi_rf
+rpi-rf==0.9.5
+
 # homeassistant.components.media_player.yamaha
 rxv==0.1.11
 
