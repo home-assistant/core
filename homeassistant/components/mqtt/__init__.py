@@ -195,8 +195,7 @@ def setup(hass, config):
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
-    elif not broker_config and (CONF_EMBEDDED in conf or
-                                CONF_BROKER not in conf):
+    elif not broker_config and CONF_BROKER not in conf:
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
 
