@@ -6,7 +6,6 @@ https://home-assistant.io/components/zwave/
 """
 import logging
 import os.path
-import sys
 import time
 from pprint import pprint
 
@@ -25,8 +24,6 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
-DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
-                                         'python-openzwave', 'config')
 
 # How long to wait for the zwave network to be ready.
 NETWORK_READY_WAIT_SECS = 30
@@ -175,9 +172,19 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
+    try:
+        import libopenzwave
+    except ImportError:
+        _LOGGER.error("You are missing required dependency Python Open "
+                      "Z-Wave. Please follow instructions at: "
+                      "https://home-assistant.io/components/zwave/")
+        return False
     from pydispatch import dispatcher
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
+
+    default_zwave_config_path = os.path.join(os.path.dirname(
+        libopenzwave.__file__), 'config')
 
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
@@ -188,7 +195,7 @@ def setup(hass, config):
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
         config_path=config[DOMAIN].get('config_path',
-                                       DEFAULT_ZWAVE_CONFIG_PATH),)
+                                       default_zwave_config_path),)
 
     options.set_console_output(use_debug)
     options.lock()
