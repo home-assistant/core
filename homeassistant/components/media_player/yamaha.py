@@ -66,10 +66,8 @@ class YamahaDevice(MediaPlayerDevice):
             self.build_source_list()
 
         current_source = self._receiver.input
-        if current_source in self._source_names:
-            self._current_source = self._source_names[current_source]
-        else:
-            self._current_source = current_source
+        self._current_source = self._source_names.get(current_source,
+                                                      current_source)
 
     def build_source_list(self):
         """Build the source list."""
@@ -137,7 +135,5 @@ class YamahaDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        if source in self._reverse_mapping:
-            self._receiver.input = self._reverse_mapping[source]
-        else:
-            self._receiver.input = source
+        self._receiver.input = self._reverse_mapping.get(source,
+                                                         source)
