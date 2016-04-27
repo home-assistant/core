@@ -5,7 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.heat_control/
 """
 import logging
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 from homeassistant.components import switch
 from homeassistant.components.thermostat import (
@@ -28,21 +30,26 @@ CONF_TARGET_TEMP = 'target_temp'
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required("platform"): "heat_control",
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HEATER): cv.entity_id,
+    vol.Required(CONF_SENSOR): cv.entity_id,
+    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the heat control thermostat."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
+    name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
-    min_temp = util.convert(config.get(CONF_MIN_TEMP), float, None)
-    max_temp = util.convert(config.get(CONF_MAX_TEMP), float, None)
-    target_temp = util.convert(config.get(CONF_TARGET_TEMP), float, None)
-
-    if None in (heater_entity_id, sensor_entity_id):
-        _LOGGER.error('Missing required key %s or %s', CONF_HEATER,
-                      CONF_SENSOR)
-        return False
+    min_temp = config.get(CONF_MIN_TEMP)
+    max_temp = config.get(CONF_MAX_TEMP)
+    target_temp = config.get(CONF_TARGET_TEMP)
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
                              min_temp, max_temp, target_temp)])

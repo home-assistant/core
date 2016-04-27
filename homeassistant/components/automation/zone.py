@@ -48,13 +48,22 @@ def trigger(hass, config, action):
                      to_s.attributes.get(ATTR_LONGITUDE)):
             return
 
-        from_match = _in_zone(hass, zone_entity_id, from_s) if from_s else None
-        to_match = _in_zone(hass, zone_entity_id, to_s)
+        zone_state = hass.states.get(zone_entity_id)
+        from_match = _in_zone(hass, zone_state, from_s) if from_s else None
+        to_match = _in_zone(hass, zone_state, to_s)
 
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
-            action()
+            action({
+                'trigger': {
+                    'platform': 'zone',
+                    'entity_id': entity,
+                    'from_state': from_s,
+                    'to_state': to_s,
+                    'zone': zone_state,
+                },
+            })
 
     track_state_change(
         hass, entity_id, zone_automation_listener, MATCH_ALL, MATCH_ALL)
@@ -67,20 +76,20 @@ def if_action(hass, config):
     entity_id = config.get(CONF_ENTITY_ID)
     zone_entity_id = config.get(CONF_ZONE)
 
-    def if_in_zone():
+    def if_in_zone(variables):
         """Test if condition."""
-        return _in_zone(hass, zone_entity_id, hass.states.get(entity_id))
+        zone_state = hass.states.get(zone_entity_id)
+        return _in_zone(hass, zone_state, hass.states.get(entity_id))
 
     return if_in_zone
 
 
-def _in_zone(hass, zone_entity_id, state):
+def _in_zone(hass, zone_state, state):
     """Check if state is in zone."""
     if not state or None in (state.attributes.get(ATTR_LATITUDE),
                              state.attributes.get(ATTR_LONGITUDE)):
         return False
 
-    zone_state = hass.states.get(zone_entity_id)
     return zone_state and zone.in_zone(
         zone_state, state.attributes.get(ATTR_LATITUDE),
         state.attributes.get(ATTR_LONGITUDE),

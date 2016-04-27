@@ -12,7 +12,8 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import validate_config
 
 # Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['urllib3', 'unifi==1.2.4']
+REQUIREMENTS = ['urllib3', 'unifi==1.2.5']
+
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 

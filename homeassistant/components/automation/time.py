@@ -41,7 +41,12 @@ def trigger(hass, config, action):
 
     def time_automation_listener(now):
         """Listen for time changes and calls action."""
-        action()
+        action({
+            'trigger': {
+                'platform': 'time',
+                'now': now,
+            },
+        })
 
     track_time_change(hass, time_automation_listener,
                       hour=hours, minute=minutes, second=seconds)
@@ -73,7 +78,7 @@ def if_action(hass, config):
             _error_time(after, CONF_AFTER)
             return None
 
-    def time_if():
+    def time_if(variables):
         """Validate time based if-condition."""
         now = dt_util.now()
         if before is not None and now > now.replace(hour=before.hour,

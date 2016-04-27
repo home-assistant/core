@@ -1,4 +1,9 @@
-"""RSS/Atom feed reader for Home Assistant."""
+"""
+Support for RSS/Atom feed.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/feedreader/
+"""
 from datetime import datetime
 from logging import getLogger
 import voluptuous as vol

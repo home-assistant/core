@@ -13,6 +13,7 @@ MATCH_ALL = '*'
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # #### CONFIG ####
+CONF_ALIAS = "alias"
 CONF_ICON = "icon"
 CONF_LATITUDE = "latitude"
 CONF_LONGITUDE = "longitude"
@@ -33,6 +34,7 @@ CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_OPTIMISTIC = 'optimistic'
+CONF_ENTITY_NAMESPACE = "entity_namespace"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
 
