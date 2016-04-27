@@ -12,7 +12,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP)
 
 DOMAIN = "keyboard"
-REQUIREMENTS = ['pyuserinput==0.1.9']
+REQUIREMENTS = ['pyuserinput==0.1.10']
 
 TAP_KEY_SCHEMA = vol.Schema({})
 

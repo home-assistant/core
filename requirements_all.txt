@@ -258,7 +258,7 @@ python-twitch==1.2.0
 python-wink==0.7.4
 
 # homeassistant.components.keyboard
-pyuserinput==0.1.9
+pyuserinput==0.1.10
 
 # homeassistant.components.vera
 pyvera==0.2.10
