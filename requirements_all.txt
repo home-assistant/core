@@ -130,7 +130,7 @@ influxdb==2.12.0
 insteon_hub==0.4.5
 
 # homeassistant.components.media_player.kodi
-jsonrpc-requests==0.1
+jsonrpc-requests==0.2
 
 # homeassistant.components.light.lifx
 liffylights==0.9.4
