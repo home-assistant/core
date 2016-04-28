@@ -80,9 +80,9 @@ Built home automation on top of your devices:
 
 The system is built modular so support for other devices or actions can
 be implemented easily. See also the `section on
-architecture <https://home-assistant.io/developers/architecture.html>`__
+architecture <https://home-assistant.io/developers/architecture/>`__
 and the `section on creating your own
-components <https://home-assistant.io/developers/creating_components.html>`__.
+components <https://home-assistant.io/developers/creating_components/>`__.
 
 If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
