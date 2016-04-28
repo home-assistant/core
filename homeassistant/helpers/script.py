@@ -119,7 +119,7 @@ class Script():
         """Test if condition is matching."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
         check = condition.from_config(action)(self.hass, False)
-        self._log("Test condition %s: %s", self.last_action, check)
+        self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
     def _remove_listener(self):
