@@ -33,8 +33,8 @@ def render_with_possible_json_value(hass, template, value,
 
     try:
         return render(hass, template, variables)
-    except TemplateError:
-        _LOGGER.exception('Error parsing value')
+    except TemplateError as ex:
+        _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
 
