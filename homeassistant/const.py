@@ -12,6 +12,8 @@ MATCH_ALL = '*'
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
+WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
 # #### CONFIG ####
 CONF_ALIAS = "alias"
 CONF_ICON = "icon"
@@ -34,9 +36,13 @@ CONF_ACCESS_TOKEN = "access_token"
 CONF_FILENAME = "filename"
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_OPTIMISTIC = 'optimistic'
+CONF_ENTITY_ID = "entity_id"
 CONF_ENTITY_NAMESPACE = "entity_namespace"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_VALUE_TEMPLATE = "value_template"
+CONF_CONDITION = 'condition'
+CONF_BELOW = 'below'
+CONF_ABOVE = 'above'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
