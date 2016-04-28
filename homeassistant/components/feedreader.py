@@ -30,6 +30,7 @@ class FeedManager(object):
         self._url = url
         self._feed = None
         self._hass = hass
+        self._firstrun = True
         # Initialize last entry timestamp as epoch time
         self._last_entry_timestamp = datetime.utcfromtimestamp(0).timetuple()
         _LOGGER.debug('Loading feed %s', self._url)
@@ -44,7 +45,7 @@ class FeedManager(object):
     def _update(self):
         """Update the feed and publish new entries in the event bus."""
         import feedparser
-        _LOGGER.info('Fetching new data from feed %s', self._url)
+        _LOGGER.info('Fetching new data from feed "%s"', self._url)
         self._feed = feedparser.parse(self._url,
                                       etag=None if not self._feed
                                       else self._feed.get('etag'),
@@ -58,24 +59,42 @@ class FeedManager(object):
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
             elif len(self._feed.entries) > 0:
-                _LOGGER.debug('Entries available in feed %s', self._url)
+                _LOGGER.debug('%s entri(es) available in feed %s',
+                              len(self._feed.entries),
+                              self._url)
                 self._publish_new_entries()
-                self._last_entry_timestamp = \
-                    self._feed.entries[0].published_parsed
             else:
                 self._log_no_entries()
+        _LOGGER.info('Fetch from feed "%s" completed', self._url)
+
+    def _update_and_fire_entry(self, entry):
+        """Update last_entry_timestamp and fire entry."""
+        # We are lucky, `published_parsed` data available,
+        # let's make use of it to publish only new available
+        # entries since the last run
+        if 'published_parsed' in entry.keys():
+            self._last_entry_timestamp = max(entry.published_parsed,
+                                             self._last_entry_timestamp)
+        else:
+            _LOGGER.debug('No `published_parsed` info available '
+                          'for entry "%s"', entry.title)
+        entry.update({'feed_url': self._url})
+        self._hass.bus.fire(EVENT_FEEDREADER, entry)
 
     def _publish_new_entries(self):
         """Publish new entries to the event bus."""
         new_entries = False
         for entry in self._feed.entries:
-            # Consider only entries newer then the latest parsed one
-            if entry.published_parsed > self._last_entry_timestamp:
+            if self._firstrun or (
+                    'published_parsed' in entry.keys() and
+                    entry.published_parsed > self._last_entry_timestamp):
+                self._update_and_fire_entry(entry)
                 new_entries = True
-                entry.update({'feed_url': self._url})
-                self._hass.bus.fire(EVENT_FEEDREADER, entry)
+            else:
+                _LOGGER.debug('Entry %s already processed', entry.title)
         if not new_entries:
             self._log_no_entries()
+        self._firstrun = False
 
 
 def setup(hass, config):
