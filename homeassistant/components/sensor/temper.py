@@ -11,9 +11,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
-                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
-                '#temperusb==1.2.3']
+REQUIREMENTS = ['temperusb==1.3.1']
 
 
 # pylint: disable=unused-argument
