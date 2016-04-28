@@ -6,11 +6,10 @@ at https://home-assistant.io/components/automation/#zone-trigger
 """
 import voluptuous as vol
 
-from homeassistant.components import zone
-from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL, CONF_PLATFORM)
+from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import track_state_change
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    condition, config_validation as cv, location)
 
 CONF_ENTITY_ID = "entity_id"
 CONF_ZONE = "zone"
@@ -27,12 +26,6 @@ TRIGGER_SCHEMA = vol.Schema({
         vol.Any(EVENT_ENTER, EVENT_LEAVE),
 })
 
-IF_ACTION_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'zone',
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_ZONE): cv.entity_id,
-})
-
 
 def trigger(hass, config, action):
     """Listen for state changes based on configuration."""
@@ -42,15 +35,16 @@ def trigger(hass, config, action):
 
     def zone_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
-        if from_s and None in (from_s.attributes.get(ATTR_LATITUDE),
-                               from_s.attributes.get(ATTR_LONGITUDE)) or \
-            None in (to_s.attributes.get(ATTR_LATITUDE),
-                     to_s.attributes.get(ATTR_LONGITUDE)):
+        if from_s and not location.has_location(from_s) or \
+           not location.has_location(to_s):
             return
 
         zone_state = hass.states.get(zone_entity_id)
-        from_match = _in_zone(hass, zone_state, from_s) if from_s else None
-        to_match = _in_zone(hass, zone_state, to_s)
+        if from_s:
+            from_match = condition.zone(hass, zone_state, from_s)
+        else:
+            from_match = False
+        to_match = condition.zone(hass, zone_state, to_s)
 
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
@@ -69,28 +63,3 @@ def trigger(hass, config, action):
         hass, entity_id, zone_automation_listener, MATCH_ALL, MATCH_ALL)
 
     return True
-
-
-def if_action(hass, config):
-    """Wrap action method with zone based condition."""
-    entity_id = config.get(CONF_ENTITY_ID)
-    zone_entity_id = config.get(CONF_ZONE)
-
-    def if_in_zone(variables):
-        """Test if condition."""
-        zone_state = hass.states.get(zone_entity_id)
-        return _in_zone(hass, zone_state, hass.states.get(entity_id))
-
-    return if_in_zone
-
-
-def _in_zone(hass, zone_state, state):
-    """Check if state is in zone."""
-    if not state or None in (state.attributes.get(ATTR_LATITUDE),
-                             state.attributes.get(ATTR_LONGITUDE)):
-        return False
-
-    return zone_state and zone.in_zone(
-        zone_state, state.attributes.get(ATTR_LATITUDE),
-        state.attributes.get(ATTR_LONGITUDE),
-        state.attributes.get(ATTR_GPS_ACCURACY, 0))

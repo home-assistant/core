@@ -10,8 +10,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_PLATFORM, MATCH_ALL)
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
 
@@ -34,7 +33,7 @@ def trigger(hass, config, action):
     def state_changed_listener(entity_id, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal already_triggered
-        template_result = _check_template(hass, value_template)
+        template_result = condition.template(hass, value_template)
 
         # Check to see if template returns true
         if template_result and not already_triggered:
@@ -52,27 +51,3 @@ def trigger(hass, config, action):
 
     track_state_change(hass, MATCH_ALL, state_changed_listener)
     return True
-
-
-def if_action(hass, config):
-    """Wrap action method with state based condition."""
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-
-    return lambda variables: _check_template(hass, value_template,
-                                             variables=variables)
-
-
-def _check_template(hass, value_template, variables=None):
-    """Check if result of template is true."""
-    try:
-        value = template.render(hass, value_template, variables)
-    except TemplateError as ex:
-        if ex.args and ex.args[0].startswith(
-                "UndefinedError: 'None' has no attribute"):
-            # Common during HA startup - so just a warning
-            _LOGGER.warning(ex)
-        else:
-            _LOGGER.error(ex)
-        return False
-
-    return value.lower() == 'true'
