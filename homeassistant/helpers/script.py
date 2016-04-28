@@ -105,14 +105,14 @@ class Script():
     def _call_service(self, action, variables):
         """Call the service specified in the action."""
         self.last_action = action.get(CONF_ALIAS, 'call service')
-        self._log("Executing step %s", self.last_action)
+        self._log("Executing step %s" % self.last_action)
         service.call_from_config(self.hass, action, True, variables,
                                  validate_config=False)
 
     def _fire_event(self, action):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
-        self._log("Executing step %s", self.last_action)
+        self._log("Executing step %s" % self.last_action)
         self.hass.bus.fire(action[CONF_EVENT], action.get(CONF_EVENT_DATA))
 
     def _check_condition(self, action, variables):
@@ -129,9 +129,9 @@ class Script():
                                           self._delay_listener)
             self._delay_listener = None
 
-    def _log(self, msg, *substitutes):
+    def _log(self, msg):
         """Logger helper."""
         if self.name is not None:
-            msg = "Script {}: {}".format(self.name, msg, *substitutes)
+            msg = "Script {}: {}".format(self.name, msg)
 
         _LOGGER.info(msg)
