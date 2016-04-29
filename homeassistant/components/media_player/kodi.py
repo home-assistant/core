@@ -278,6 +278,6 @@ class KodiDevice(MediaPlayerDevice):
 
         self.update_ha_state()
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
         self._server.Player.Open({media_type: media_id}, {})

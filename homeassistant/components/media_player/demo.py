@@ -152,7 +152,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         """Flag of media commands that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         self.youtube_id = media_id
         self.update_ha_state()

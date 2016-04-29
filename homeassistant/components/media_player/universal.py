@@ -402,7 +402,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         self._call_service(SERVICE_MEDIA_SEEK, data)
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
                 ATTR_MEDIA_CONTENT_ID: media_id}

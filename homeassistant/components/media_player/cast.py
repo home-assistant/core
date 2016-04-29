@@ -253,7 +253,7 @@ class CastDevice(MediaPlayerDevice):
         """Seek the media to a specific location."""
         self.cast.media_controller.seek(position)
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
         self.cast.media_controller.play_media(media_id, media_type)
 

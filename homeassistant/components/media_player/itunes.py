@@ -320,7 +320,7 @@ class ItunesDevice(MediaPlayerDevice):
         response = self.client.previous()
         self.update_state(response)
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
         if media_type == MEDIA_TYPE_PLAYLIST:
             response = self.client.play_playlist(media_id)
