@@ -57,7 +57,6 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_TLS_INSECURE = True
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -82,6 +81,9 @@ def valid_publish_topic(value):
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 
+CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
+                      'the mqtt broker config'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -93,8 +95,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): cv.isfile,
-        vol.Optional(CONF_CLIENT_KEY): cv.isfile,
-        vol.Optional(CONF_CLIENT_CERT): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
@@ -204,6 +208,8 @@ def setup(hass, config):
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
+        # Embedded broker doesn't have some ssl variables
+        client_key, client_cert, tls_insecure = None, None, None
     elif not broker_config and CONF_BROKER not in conf:
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
@@ -227,14 +233,9 @@ def setup(hass, config):
 
     global MQTT_CLIENT
     try:
-        # Embedded broker doesn't have some ssl variables
-        if broker_in_conf:
-            MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
-                               username, password, certificate, client_key,
-                               client_cert, tls_insecure, protocol)
-        else:
-            MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
-                               username, password, certificate, protocol)
+        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
+                           username, password, certificate, client_key,
+                           client_cert, tls_insecure, protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -285,8 +286,8 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, protocol, client_key=None,
-                 client_cert=None, tls_insecure=None):
+                 password, certificate, client_key, client_cert,
+                 tls_insecure, protocol):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -308,18 +309,11 @@ class MQTT(object):
             self._mqttc.username_pw_set(username, password)
 
         if certificate is not None:
-            if (client_key is not None) and (client_cert is not None):
-                self._mqttc.tls_set(certificate, certfile=client_cert,
-                                    keyfile=client_key)
-            elif (client_key is not None) or (client_cert is not None):
-                _LOGGER.warning(
-                    'Both client_key and client_cert should be supplied')
-                self._mqttc.tls_set(certificate)
-            else:
-                self._mqttc.tls_set(certificate)
+            self._mqttc.tls_set(certificate, certfile=client_cert,
+                                keyfile=client_key)
 
-            if tls_insecure is not None:
-                self._mqttc.tls_insecure_set(tls_insecure)
+        if tls_insecure is not None:
+            self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
