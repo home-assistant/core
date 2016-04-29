@@ -6,7 +6,6 @@ https://home-assistant.io/components/zwave/
 """
 import logging
 import os.path
-import sys
 import time
 from pprint import pprint
 
@@ -25,8 +24,6 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
-DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
-                                         'python-openzwave', 'config')
 
 # How long to wait for the zwave network to be ready.
 NETWORK_READY_WAIT_SECS = 30
@@ -41,6 +38,7 @@ DISCOVER_SENSORS = "zwave.sensors"
 DISCOVER_SWITCHES = "zwave.switch"
 DISCOVER_LIGHTS = "zwave.light"
 DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
+DISCOVER_THERMOSTATS = 'zwave.thermostat'
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
@@ -52,6 +50,7 @@ COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
 COMMAND_CLASS_ALARM = 113  # 0x71
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -86,7 +85,12 @@ DISCOVERY_COMPONENTS = [
      DISCOVER_BINARY_SENSORS,
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
-     GENRE_USER)
+     GENRE_USER),
+    ('thermostat',
+     DISCOVER_THERMOSTATS,
+     [COMMAND_CLASS_THERMOSTAT_SETPOINT],
+     TYPE_WHATEVER,
+     GENRE_WHATEVER),
 ]
 
 
@@ -168,9 +172,19 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
+    try:
+        import libopenzwave
+    except ImportError:
+        _LOGGER.error("You are missing required dependency Python Open "
+                      "Z-Wave. Please follow instructions at: "
+                      "https://home-assistant.io/components/zwave/")
+        return False
     from pydispatch import dispatcher
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
+
+    default_zwave_config_path = os.path.join(os.path.dirname(
+        libopenzwave.__file__), 'config')
 
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
@@ -181,7 +195,7 @@ def setup(hass, config):
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
         config_path=config[DOMAIN].get('config_path',
-                                       DEFAULT_ZWAVE_CONFIG_PATH),)
+                                       default_zwave_config_path),)
 
     options.set_console_output(use_debug)
     options.lock()

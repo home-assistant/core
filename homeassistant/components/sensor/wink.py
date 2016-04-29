@@ -7,10 +7,10 @@ at https://home-assistant.io/components/sensor.wink/
 import logging
 
 from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
-                                 STATE_OPEN, TEMP_CELCIUS)
+                                 STATE_OPEN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.6.4']
+REQUIREMENTS = ['python-wink==0.7.5']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 
@@ -45,7 +45,7 @@ class WinkSensorDevice(Entity):
         self.wink = wink
         self.capability = self.wink.capability()
         if self.wink.UNIT == "°":
-            self._unit_of_measurement = TEMP_CELCIUS
+            self._unit_of_measurement = TEMP_CELSIUS
         else:
             self._unit_of_measurement = self.wink.UNIT
 

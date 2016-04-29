@@ -5,33 +5,36 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
+import socket
 
 import homeassistant.bootstrap as bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED, TEMP_CELCIUS)
+from homeassistant.const import (ATTR_DISCOVERED, ATTR_SERVICE,
+                                 CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 EVENT_PLATFORM_DISCOVERED, TEMP_CELSIUS)
 from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
-CONF_PORT = 'port'
+CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
 CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_VERSION = 'version'
 CONF_BAUD_RATE = 'baud_rate'
-CONF_OPTIMISTIC = 'optimistic'
+CONF_TCP_PORT = 'tcp_port'
 DEFAULT_VERSION = '1.4'
 DEFAULT_BAUD_RATE = 115200
+DEFAULT_TCP_PORT = 5003
 
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    'f0c928532167fb24823efa793ec21ca646fd37a6.zip#pymysensors==0.5']
+    'cc5d0b325e13c2b623fa934f69eea7cd4555f110.zip#pymysensors==0.6']
 _LOGGER = logging.getLogger(__name__)
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
-ATTR_PORT = 'port'
+ATTR_DEVICE = 'device'
 
 GATEWAYS = None
 
@@ -49,30 +52,39 @@ DISCOVERY_COMPONENTS = [
 ]
 
 
-def setup(hass, config):
+def setup(hass, config):  # pylint: disable=too-many-locals
     """Setup the MySensors component."""
     if not validate_config(config,
                            {DOMAIN: [CONF_GATEWAYS]},
                            _LOGGER):
         return False
-    if not all(CONF_PORT in gateway
+    if not all(CONF_DEVICE in gateway
                for gateway in config[DOMAIN][CONF_GATEWAYS]):
         _LOGGER.error('Missing required configuration items '
-                      'in %s: %s', DOMAIN, CONF_PORT)
+                      'in %s: %s', DOMAIN, CONF_DEVICE)
         return False
 
     import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
-    is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
+    is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
+    persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
 
-    def setup_gateway(port, persistence, persistence_file, version, baud_rate):
+    def setup_gateway(device, persistence_file, baud_rate, tcp_port):
         """Return gateway after setup of the gateway."""
-        gateway = mysensors.SerialGateway(port, event_callback=None,
-                                          persistence=persistence,
-                                          persistence_file=persistence_file,
-                                          protocol_version=version,
-                                          baud=baud_rate)
+        try:
+            socket.inet_aton(device)
+            # valid ip address
+            gateway = mysensors.TCPGateway(
+                device, event_callback=None, persistence=persistence,
+                persistence_file=persistence_file, protocol_version=version,
+                port=tcp_port)
+        except OSError:
+            # invalid ip address
+            gateway = mysensors.SerialGateway(
+                device, event_callback=None, persistence=persistence,
+                persistence_file=persistence_file, protocol_version=version,
+                baud=baud_rate)
         gateway.metric = is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG, False)
         optimistic = config[DOMAIN].get(CONF_OPTIMISTIC, False)
@@ -93,22 +105,22 @@ def setup(hass, config):
 
         return gateway
 
-    # Setup all ports from config
+    # Setup all devices from config
     global GATEWAYS
     GATEWAYS = {}
     conf_gateways = config[DOMAIN][CONF_GATEWAYS]
     if isinstance(conf_gateways, dict):
         conf_gateways = [conf_gateways]
-    persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
 
     for index, gway in enumerate(conf_gateways):
-        port = gway[CONF_PORT]
+        device = gway[CONF_DEVICE]
         persistence_file = gway.get(
             CONF_PERSISTENCE_FILE,
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
         baud_rate = gway.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE)
-        GATEWAYS[port] = setup_gateway(
-            port, persistence, persistence_file, version, baud_rate)
+        tcp_port = gway.get(CONF_TCP_PORT, DEFAULT_TCP_PORT)
+        GATEWAYS[device] = setup_gateway(
+            device, persistence_file, baud_rate, tcp_port)
 
     for (component, discovery_service) in DISCOVERY_COMPONENTS:
         # Ensure component is loaded
@@ -139,7 +151,7 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                 if key in devices:
                     devices[key].update_ha_state(True)
                     continue
-                name = '{} {}.{}'.format(
+                name = '{} {} {}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
                 if isinstance(entity_class, dict):
                     device_class = entity_class[child.type]

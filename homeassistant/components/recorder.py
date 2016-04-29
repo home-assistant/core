@@ -168,6 +168,7 @@ class RecorderRun(object):
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, hass):
         """Initialize the recorder."""
         threading.Thread.__init__(self)
@@ -179,6 +180,7 @@ class Recorder(threading.Thread):
         self.lock = threading.Lock()
         self.recording_start = dt_util.utcnow()
         self.utc_offset = dt_util.now().utcoffset().total_seconds()
+        self.db_path = self.hass.config.path(DB_FILE)
 
         def start_recording(event):
             """Start recording."""
@@ -302,8 +304,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        db_path = self.hass.config.path(DB_FILE)
-        self.conn = sqlite3.connect(db_path, check_same_thread=False)
+        self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
 
         # Make sure the database is closed whenever Python exits
@@ -477,7 +478,7 @@ class Recorder(threading.Thread):
 
 def _adapt_datetime(datetimestamp):
     """Turn a datetime into an integer for in the DB."""
-    return dt_util.as_utc(datetimestamp.replace(microsecond=0)).timestamp()
+    return dt_util.as_utc(datetimestamp).timestamp()
 
 
 def _verify_instance():

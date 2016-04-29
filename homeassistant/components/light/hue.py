@@ -32,6 +32,9 @@ PHUE_CONFIG_FILE = "phue.conf"
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
+# Track previously setup bridges
+_CONFIGURED_BRIDGES = {}
+
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
     """Attempt to detect host based on existing configuration."""
@@ -68,7 +71,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             return False
 
     # Only act if we are not already configuring this host
-    if host in _CONFIGURING:
+    if host in _CONFIGURING or \
+            socket.gethostbyname(host) in _CONFIGURED_BRIDGES:
         return
 
     setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable)
@@ -142,6 +146,7 @@ def setup_bridge(host, hass, add_devices_callback, filename,
         if new_lights:
             add_devices_callback(new_lights)
 
+    _CONFIGURED_BRIDGES[socket.gethostbyname(host)] = True
     update_lights()
 
 

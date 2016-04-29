@@ -19,6 +19,8 @@ OPTION_TYPES = {
     'time_utc': 'Time (UTC)',
 }
 
+TIME_STR_FORMAT = "%H:%M"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Time and Date sensor."""
@@ -70,9 +72,9 @@ class TimeDateSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         time_date = dt_util.utcnow()
-        time = dt_util.datetime_to_time_str(dt_util.as_local(time_date))
-        time_utc = dt_util.datetime_to_time_str(time_date)
-        date = dt_util.datetime_to_date_str(dt_util.as_local(time_date))
+        time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
+        time_utc = time_date.strftime(TIME_STR_FORMAT)
+        date = dt_util.as_local(time_date).date().isoformat()
 
         # Calculate the beat (Swatch Internet Time) time without date.
         hours, minutes, seconds = time_date.strftime('%H:%M:%S').split(':')

@@ -3,7 +3,9 @@ from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.components import discovery, group
-from homeassistant.const import ATTR_ENTITY_ID, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
+    DEVICE_DEFAULT_NAME)
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
@@ -37,8 +39,8 @@ class EntityComponent(object):
         self.config = None
         self.lock = Lock()
 
-        self.add_entities = EntityPlatform(self,
-                                           self.scan_interval).add_entities
+        self.add_entities = EntityPlatform(self, self.scan_interval,
+                                           None).add_entities
 
     def setup(self, config):
         """Set up a full entity component.
@@ -82,23 +84,26 @@ class EntityComponent(object):
         if platform is None:
             return
 
+        # Config > Platform > Component
+        scan_interval = platform_config.get(
+            CONF_SCAN_INTERVAL,
+            getattr(platform, 'SCAN_INTERVAL', self.scan_interval))
+        entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
+
         try:
-            # Config > Platform > Component
-            scan_interval = platform_config.get(
-                CONF_SCAN_INTERVAL,
-                getattr(platform, 'SCAN_INTERVAL', self.scan_interval))
             platform.setup_platform(
                 self.hass, platform_config,
-                EntityPlatform(self, scan_interval).add_entities,
+                EntityPlatform(self, scan_interval,
+                               entity_namespace).add_entities,
                 discovery_info)
-            platform_name = '{}.{}'.format(self.domain, platform_type)
-            self.hass.config.components.append(platform_name)
+
+            self.hass.config.components.append(
+                '{}.{}'.format(self.domain, platform_type))
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
-            return
 
-    def add_entity(self, entity):
+    def add_entity(self, entity, platform=None):
         """Add entity to component."""
         if entity is None or entity in self.entities.values():
             return False
@@ -106,8 +111,14 @@ class EntityComponent(object):
         entity.hass = self.hass
 
         if getattr(entity, 'entity_id', None) is None:
+            object_id = entity.name or DEVICE_DEFAULT_NAME
+
+            if platform is not None and platform.entity_namespace is not None:
+                object_id = '{} {}'.format(platform.entity_namespace,
+                                           object_id)
+
             entity.entity_id = generate_entity_id(
-                self.entity_id_format, entity.name,
+                self.entity_id_format, object_id,
                 self.entities.keys())
 
         self.entities[entity.entity_id] = entity
@@ -129,10 +140,11 @@ class EntityPlatform(object):
     """Keep track of entities for a single platform."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, component, scan_interval):
+    def __init__(self, component, scan_interval, entity_namespace):
         """Initalize the entity platform."""
         self.component = component
         self.scan_interval = scan_interval
+        self.entity_namespace = entity_namespace
         self.platform_entities = []
         self.is_polling = False
 
@@ -140,7 +152,7 @@ class EntityPlatform(object):
         """Add entities for a single platform."""
         with self.component.lock:
             for entity in new_entities:
-                if self.component.add_entity(entity):
+                if self.component.add_entity(entity, self):
                     self.platform_entities.append(entity)
 
             self.component.update_group()
