@@ -137,10 +137,10 @@ class ForeCastSensor(Entity):
         import forecastio
 
         self.forecast_client.update()
-        data = self.forecast_client.data
-        data_minutely = self.forecast_client.data_minutely
-        data_hourly = self.forecast_client.data_hourly
-        data_daily = self.forecast_client.data_daily
+        data = self.forecast_client.data.currently()
+        data_minutely = self.forecast_client.data.minutely()
+        data_hourly = self.forecast_client.data.hourly()
+        data_daily = self.forecast_client.data.daily()
 
         try:
             if self.type == 'summary':
@@ -197,9 +197,6 @@ class ForeCastData(object):
         self.latitude = latitude
         self.longitude = longitude
         self.data = None
-        self.data_minutely = None
-        self.data_hourly = None
-        self.data_daily = None
         self.unit_system = None
         self.units = units
         self.update()
@@ -213,8 +210,5 @@ class ForeCastData(object):
                                             self.latitude,
                                             self.longitude,
                                             units=self.units)
-        self.data = forecast.currently()
-        self.data_minutely = forecast.minutely()
-        self.data_hourly = forecast.hourly()
-        self.data_daily = forecast.daily()
+        self.data = forecast
         self.unit_system = forecast.json['flags']['units']
