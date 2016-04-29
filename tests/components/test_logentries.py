@@ -79,7 +79,7 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'http://localhost/' + token  + '/',
+            payload = {'host': 'http://localhost/token/',
                        'event': body}
             self.handler_method(event)
             self.mock_post.assert_called_once_with(
