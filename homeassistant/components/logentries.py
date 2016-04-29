@@ -1,5 +1,5 @@
 """
-Support for sending data to Logentries webhook endpoint
+Support for sending data to Logentries webhook endpoint.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logentries/
 """
@@ -40,7 +40,6 @@ def setup(hass, config):
     else:
         uri_scheme = "http://"
     le_wh = uri_scheme + DEFAULT_HOST + "/" + token + "/"
-
 
     def logentries_event_listener(event):
         """Listen for new messages on the bus and sends them to Logentries."""

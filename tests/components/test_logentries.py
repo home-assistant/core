@@ -13,7 +13,7 @@ class TestLogentries(unittest.TestCase):
         """Test setup with all data."""
         config = {
             'logentries': {
-                'host': 'webhook.logentries.com',
+                'host': 'host',
                 'token': 'secret',
                 'use_ssl': 'False',
             }
@@ -28,7 +28,7 @@ class TestLogentries(unittest.TestCase):
         """Test setup with defaults."""
         config = {
             'logentries': {
-                'host': 'webhook.logentries.com',
+                'host': 'host',
                 'token': 'secret',
             }
         }
@@ -45,7 +45,7 @@ class TestLogentries(unittest.TestCase):
         mock_requests.exceptions.RequestException = self.mock_request_exception
         config = {
             'logentries': {
-                'host': 'webhook.logentries.com',
+                'host': 'host',
                 'token': 'secret',
             }
         }
@@ -79,7 +79,7 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'webhook.logentries.com',
+            payload = {'host': 'http://localhost/' + token  + '/',
                        'event': body}
             self.handler_method(event)
             self.mock_post.assert_called_once_with(
