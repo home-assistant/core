@@ -236,8 +236,6 @@ class KodiDevice(MediaPlayerDevice):
         if len(players) != 0:
             self._server.Player.Stop(players[0]['playerid'])
 
-        self.update_ha_state()
-
     def _goto(self, direction):
         """Helper method used for previous/next track."""
         players = self._get_players()
