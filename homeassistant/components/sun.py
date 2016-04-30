@@ -25,6 +25,7 @@ STATE_BELOW_HORIZON = "below_horizon"
 STATE_ATTR_NEXT_RISING = "next_rising"
 STATE_ATTR_NEXT_SETTING = "next_setting"
 STATE_ATTR_ELEVATION = "elevation"
+STATE_ATTR_AZIMUTH = "azimuth"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ def next_rising_utc(hass, entity_id=None):
 
 
 def setup(hass, config):
-    """Track the state of the sun in HA."""
+    """Track the state of the sun."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
@@ -151,7 +152,8 @@ class Sun(Entity):
         return {
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
             STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
-            STATE_ATTR_ELEVATION: round(self.solar_elevation, 2)
+            STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
+            STATE_ATTR_AZIMUTH: round(self.solar_azimuth, 2)
         }
 
     @property
@@ -164,6 +166,15 @@ class Sun(Entity):
         """Angle the sun is above the horizon."""
         from astral import Astral
         return Astral().solar_elevation(
+            dt_util.utcnow(),
+            self.location.latitude,
+            self.location.longitude)
+
+    @property
+    def solar_azimuth(self):
+        """Angle the sun is clockwise from North."""
+        from astral import Astral
+        return Astral().solar_azimuth(
             dt_util.utcnow(),
             self.location.latitude,
             self.location.longitude)
