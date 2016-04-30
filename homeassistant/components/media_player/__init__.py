@@ -231,7 +231,7 @@ def media_pause(hass, entity_id=None):
 
 
 def media_stop(hass, entity_id=None):
-    """Send the media player the command for pause."""
+    """Send the media player the stop command."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
 
