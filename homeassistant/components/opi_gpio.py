@@ -10,7 +10,7 @@ import logging
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['git+git://github.com/duxingkei33/orangepi_PC_gpio_pyH3.git@master#pyA20==0.2.1']
+REQUIREMENTS = ['git+git://github.com/Toshik/orangepi_PC_gpio_pyH3.git@master#pyA20==0.2.1']
 DOMAIN = "opi_gpio"
 _LOGGER = logging.getLogger(__name__)
 
