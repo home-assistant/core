@@ -40,7 +40,7 @@ class TestAutomationSun(unittest.TestCase):
         now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 2, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             _setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
@@ -67,7 +67,7 @@ class TestAutomationSun(unittest.TestCase):
         now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 14, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             _setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
@@ -94,7 +94,7 @@ class TestAutomationSun(unittest.TestCase):
         now = datetime(2015, 9, 15, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 2, 30, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             _setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
@@ -105,6 +105,11 @@ class TestAutomationSun(unittest.TestCase):
                     },
                     'action': {
                         'service': 'test.automation',
+                        'data_template': {
+                            'some':
+                            '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                                'platform', 'event', 'offset'))
+                        },
                     }
                 }
             })
@@ -112,6 +117,7 @@ class TestAutomationSun(unittest.TestCase):
         fire_time_changed(self.hass, trigger_time)
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual('sun - sunset - 0:30:00', self.calls[0].data['some'])
 
     def test_sunrise_trigger_with_offset(self):
         """Test the runrise trigger with offset."""
@@ -122,7 +128,7 @@ class TestAutomationSun(unittest.TestCase):
         now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 13, 30, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.automation.sun.dt_util.utcnow',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             _setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
@@ -164,14 +170,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 10, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -200,14 +206,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 13, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -237,14 +243,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 15, 1, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -274,14 +280,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 14, 59, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -312,21 +318,21 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 9, 59, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, 1, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 12, tzinfo=dt_util.UTC)
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -358,7 +364,7 @@ class TestAutomationSun(unittest.TestCase):
 
         # Before
         now = datetime(2015, 9, 16, 17, tzinfo=pytz.timezone('US/Mountain'))
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -366,7 +372,7 @@ class TestAutomationSun(unittest.TestCase):
 
         # After
         now = datetime(2015, 9, 16, 18, tzinfo=pytz.timezone('US/Mountain'))
-        with patch('homeassistant.components.automation.sun.dt_util.now',
+        with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()

@@ -1,4 +1,4 @@
-"""The tests fr the Template automation."""
+"""The tests for the Template automation."""
 import unittest
 
 from homeassistant.bootstrap import _setup_component
@@ -226,7 +226,13 @@ class TestAutomationTemplate(unittest.TestCase):
                                          {%- endif -%}''',
                 },
                 'action': {
-                    'service': 'test.automation'
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                    },
                 }
             }
         })
@@ -234,6 +240,9 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.states.set('test.entity', 'world')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'template - test.entity - hello - world',
+            self.calls[0].data['some'])
 
     def test_if_fires_on_no_change_with_template_advanced(self):
         """Test for firing on no change with template advanced."""
