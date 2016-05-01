@@ -9,7 +9,7 @@ from collections import OrderedDict
 import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -20,7 +20,7 @@ from homeassistant.components.rfxtrx import (
 DEPENDENCIES = ['rfxtrx']
 
 DATA_TYPES = OrderedDict([
-    ('Temperature', TEMP_CELCIUS),
+    ('Temperature', TEMP_CELSIUS),
     ('Humidity', '%'),
     ('Barometer', ''),
     ('Wind direction', ''),

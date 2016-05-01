@@ -6,10 +6,9 @@ https://home-assistant.io/components/binary_sensor.mysensors/
 """
 import logging
 
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, SENSOR_CLASSES)
+from homeassistant.components.binary_sensor import (SENSOR_CLASSES,
+                                                    BinarySensorDevice)
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,8 +100,13 @@ class MySensorsBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
+        address = getattr(self.gateway, 'server_address', None)
+        if address:
+            device = '{}:{}'.format(address[0], address[1])
+        else:
+            device = self.gateway.port
         attr = {
-            self.mysensors.ATTR_PORT: self.gateway.port,
+            self.mysensors.ATTR_DEVICE: device,
             self.mysensors.ATTR_NODE_ID: self.node_id,
             self.mysensors.ATTR_CHILD_ID: self.child_id,
             ATTR_BATTERY_LEVEL: self.battery_level,

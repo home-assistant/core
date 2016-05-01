@@ -79,6 +79,9 @@ class EntityComponent(object):
         platform = prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
 
+        if platform is None:
+            return
+
         # Config > Platform > Component
         scan_interval = platform_config.get(
             CONF_SCAN_INTERVAL,

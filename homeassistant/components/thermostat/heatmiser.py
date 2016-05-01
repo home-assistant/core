@@ -10,7 +10,7 @@ https://home-assistant.io/components/thermostat.heatmiser/
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 
 CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
@@ -79,7 +79,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.18.0.dev0"
+__version__ = "0.18.2"
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
@@ -98,6 +98,7 @@ ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
 TEMP_CELCIUS = "°C"
+TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Contains the information that is discovered
