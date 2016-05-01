@@ -230,7 +230,7 @@ class KodiDevice(MediaPlayerDevice):
         self._set_play_state(False)
 
     def media_stop(self):
-        """Stop de media player."""
+        """Stop the media player."""
         players = self._get_players()
 
         if len(players) != 0:
