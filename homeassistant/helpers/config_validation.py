@@ -8,7 +8,8 @@ from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE)
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    SUN_EVENT_SUNRISE)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -25,6 +26,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 
 
 # Adapted from:
@@ -298,7 +300,7 @@ STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
 
 SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
-    vol.Optional('before'): vol.Any('sunset', 'sunrise'),
+    vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
     vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
     vol.Optional('after_offset'): time_period,
