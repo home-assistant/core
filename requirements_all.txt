@@ -352,3 +352,6 @@ xmltodict
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.5
+
+# homeassistant.component.qwikswitch
+https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip#pyqwikswitch==0.1
