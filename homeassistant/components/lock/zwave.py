@@ -9,6 +9,7 @@ https://home-assistant.io/components/lock.zwave/
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Z-Wave switches."""
