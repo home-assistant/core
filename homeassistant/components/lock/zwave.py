@@ -55,9 +55,13 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         return self._state
 
     def lock(self, **kwargs):
-        """Turn the device on."""
-        self._value.node.set_switch(self._value.value_id, True)
+        """Lock the device."""
+        for value in self._value.node.get_values(class_id=zwave.COMMAND_CLASS_DOOR_LOCK).values():
+            if value.command_class == zwave.COMMAND_CLASS_DOOR_LOCK and value.index == 0:
+                value.data = True
 
     def unlock(self, **kwargs):
-        """Turn the device off."""
-        self._value.node.set_switch(self._value.value_id, False)
+        """Unlock the device."""
+        for value in self._value.node.get_values(class_id=zwave.COMMAND_CLASS_DOOR_LOCK).values():
+            if value.command_class == zwave.COMMAND_CLASS_DOOR_LOCK and value.index == 0:
+                value.data = False
