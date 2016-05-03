@@ -51,7 +51,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     @property
     def is_locked(self):
-        """Return true if device is on."""
+        """Return true if device is locked."""
         return self._state
 
     def lock(self, **kwargs):
