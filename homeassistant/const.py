@@ -14,35 +14,44 @@ DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
-# #### CONFIG ####
-CONF_ALIAS = "alias"
-CONF_ICON = "icon"
-CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
-CONF_ELEVATION = "elevation"
-CONF_TEMPERATURE_UNIT = "temperature_unit"
-CONF_NAME = "name"
-CONF_TIME_ZONE = "time_zone"
-CONF_CUSTOMIZE = "customize"
+SUN_EVENT_SUNSET = 'sunset'
+SUN_EVENT_SUNRISE = 'sunrise'
 
-CONF_PLATFORM = "platform"
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_HOSTS = "hosts"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_API_KEY = "api_key"
-CONF_ACCESS_TOKEN = "access_token"
-CONF_FILENAME = "filename"
-CONF_MONITORED_CONDITIONS = 'monitored_conditions'
-CONF_OPTIMISTIC = 'optimistic'
-CONF_ENTITY_ID = "entity_id"
-CONF_ENTITY_NAMESPACE = "entity_namespace"
-CONF_SCAN_INTERVAL = "scan_interval"
-CONF_VALUE_TEMPLATE = "value_template"
-CONF_CONDITION = 'condition'
-CONF_BELOW = 'below'
+# #### CONFIG ####
 CONF_ABOVE = 'above'
+CONF_ACCESS_TOKEN = 'access_token'
+CONF_AFTER = 'after'
+CONF_ALIAS = 'alias'
+CONF_API_KEY = 'api_key'
+CONF_BEFORE = 'before'
+CONF_BELOW = 'below'
+CONF_CONDITION = 'condition'
+CONF_CUSTOMIZE = 'customize'
+CONF_ELEVATION = 'elevation'
+CONF_ENTITY_ID = 'entity_id'
+CONF_ENTITY_NAMESPACE = 'entity_namespace'
+CONF_EVENT = 'event'
+CONF_FILENAME = 'filename'
+CONF_HOST = 'host'
+CONF_HOSTS = 'hosts'
+CONF_ICON = 'icon'
+CONF_LATITUDE = 'latitude'
+CONF_LONGITUDE = 'longitude'
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+CONF_NAME = 'name'
+CONF_OFFSET = 'offset'
+CONF_OPTIMISTIC = 'optimistic'
+CONF_PASSWORD = 'password'
+CONF_PLATFORM = 'platform'
+CONF_PORT = 'port'
+CONF_SCAN_INTERVAL = 'scan_interval'
+CONF_STATE = 'state'
+CONF_TEMPERATURE_UNIT = 'temperature_unit'
+CONF_TIME_ZONE = 'time_zone'
+CONF_USERNAME = 'username'
+CONF_VALUE_TEMPLATE = 'value_template'
+CONF_WEEKDAY = 'weekday'
+CONF_ZONE = 'zone'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"

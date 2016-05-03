@@ -6,21 +6,19 @@ at https://home-assistant.io/components/automation/#zone-trigger
 """
 import voluptuous as vol
 
-from homeassistant.const import MATCH_ALL, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
 
-CONF_ENTITY_ID = "entity_id"
-CONF_ZONE = "zone"
-CONF_EVENT = "event"
 EVENT_ENTER = "enter"
 EVENT_LEAVE = "leave"
 DEFAULT_EVENT = EVENT_ENTER
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'zone',
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Required(CONF_ZONE): cv.entity_id,
     vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
         vol.Any(EVENT_ENTER, EVENT_LEAVE),
@@ -56,6 +54,7 @@ def trigger(hass, config, action):
                     'from_state': from_s,
                     'to_state': to_s,
                     'zone': zone_state,
+                    'event': event,
                 },
             })
 
