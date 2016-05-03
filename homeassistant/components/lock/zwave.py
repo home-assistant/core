@@ -56,12 +56,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        for value in self._value.node.get_values(class_id=zwave.COMMAND_CLASS_DOOR_LOCK).values():
-            if value.command_class == zwave.COMMAND_CLASS_DOOR_LOCK and value.index == 0:
-                value.data = True
+        self._value.data = True
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        for value in self._value.node.get_values(class_id=zwave.COMMAND_CLASS_DOOR_LOCK).values():
-            if value.command_class == zwave.COMMAND_CLASS_DOOR_LOCK and value.index == 0:
-                value.data = False
+        self._value.data = False
