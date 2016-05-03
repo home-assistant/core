@@ -338,7 +338,7 @@ vsure==0.8.1
 wakeonlan==0.2.2
 
 # homeassistant.components.zigbee
-xbee-helper==0.0.6
+xbee-helper==0.0.7
 
 # homeassistant.components.sensor.yr
 xmltodict
