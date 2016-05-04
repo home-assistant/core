@@ -76,6 +76,7 @@ def _handle_requirements(hass, component, name):
 def _setup_component(hass, domain, config):
     """Setup a component for Home Assistant."""
     # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
@@ -103,6 +104,12 @@ def _setup_component(hass, domain, config):
             try:
                 config = component.CONFIG_SCHEMA(config)
             except vol.MultipleInvalid as ex:
+                if 'extra keys not allowed' in ex.error_message:
+                    _LOGGER.error('Invalid config: [%s] is an invalid option'
+                                  ' for [%s]. Check: %s.', ex.path[-1], domain,
+                                  '->'.join('%s' % m for m in ex.path))
+                    return False
+
                 _LOGGER.error('Invalid config for [%s]: %s', domain, ex)
                 return False
 
@@ -113,6 +120,12 @@ def _setup_component(hass, domain, config):
                 try:
                     p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
+                    if 'extra keys not allowed' in ex.error_message:
+                        _LOGGER.error('Invalid config: [%s] is an invalid'
+                                      ' option for [%s]. Check: %s->%s.',
+                                      ex.path[-1], domain, domain,
+                                      '->'.join('%s' % m for m in ex.path))
+                        return False
                     _LOGGER.error('Invalid platform config for [%s]: %s. %s',
                                   domain, ex, p_config)
                     return False
@@ -233,6 +246,11 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         process_ha_core_config(hass, config_util.CORE_CONFIG_SCHEMA(
             config.get(core.DOMAIN, {})))
     except vol.MultipleInvalid as ex:
+        if 'extra keys not allowed' in ex.error_message:
+            _LOGGER.error('Invalid config: [%s] is an invalid option'
+                          ' for [homeassistant]. Check: homeassistant->%s.',
+                          ex.path[-1], '->'.join('%s' % m for m in ex.path))
+            return None
         _LOGGER.error('Invalid config for [homeassistant]: %s', ex)
         return None
 
