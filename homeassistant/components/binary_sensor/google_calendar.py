@@ -92,8 +92,6 @@ class GoogleCalendarSensor(BinarySensorDevice):
     def state_attributes(self):
         """State Attributes for HA."""
         return {
-            'next_start':
-                self._start.isoformat() if self._start else 'No events found',
             'message': self._message or '',
             'all_day': self.is_all_day,
             'time_till': self.time_till,

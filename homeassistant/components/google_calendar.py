@@ -199,8 +199,8 @@ def request_api_setup(hass, config):
     if DOMAIN in _CONFIGURING:
         return False
 
-    description = """Please setup Google API per:
-        https://home-assistant.io/setup"""
+    description = """Please see install instructions at:
+        https://home-assistant.io/components/binary_sensor.google_calendar/"""
 
     def _configuration_callback(callback_data):
         """What actions to do when user clicks button."""
