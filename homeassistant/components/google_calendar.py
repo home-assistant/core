@@ -199,8 +199,8 @@ def request_api_setup(hass, config):
     if DOMAIN in _CONFIGURING:
         return False
 
-    description = """Please see install instructions at:
-        https://home-assistant.io/components/binary_sensor.google_calendar/"""
+    description = """Please setup Google API per:
+        https://home-assistant.io/setup"""
 
     def _configuration_callback(callback_data):
         """What actions to do when user clicks button."""
@@ -291,6 +291,7 @@ def do_setup(hass, config):
         platform_discovered(hass, calendar_hash)
 
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
+    setup_scanner_platform(hass, config)
     return True
 
 
@@ -370,8 +371,10 @@ def setup_scanner_platform(hass, config):
     """Setup the scanner to look for new calendars."""
     from homeassistant.util import convert
     from homeassistant.helpers.event import track_utc_time_change
-    interval = convert(config.get(CONF_SCAN_INTERVAL), int,
-                       DEFAULT_CONF_SCAN_INTERVAL)
+    interval = convert(config.get(CONF_SCAN_INTERVAL), int, 0)
+
+    if interval == 0:
+        return
 
     def calendar_tracker_scan(now):
         """Call up service and get list of calendars.
