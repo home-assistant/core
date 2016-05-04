@@ -10,7 +10,10 @@ import sys
 from datetime import timedelta
 from subprocess import check_output
 
+import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
@@ -31,12 +34,12 @@ SENSOR_TYPES = {
 }
 
 # Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Speedtest sensor."""
-    data = SpeedtestData()
+    data = SpeedtestData(hass, config)
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         if sensor not in SENSOR_TYPES:
@@ -45,6 +48,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev.append(SpeedtestSensor(data, sensor))
 
     add_devices(dev)
+
+    def update(call=None):
+        """Update service for manual updates."""
+        data.update(dt_util.now())
+        for sensor in dev:
+            sensor.update()
+
+    hass.services.register(DOMAIN, 'update_speedtest', update)
 
 
 # pylint: disable=too-few-public-methods
@@ -76,7 +87,6 @@ class SpeedtestSensor(Entity):
 
     def update(self):
         """Get the latest data and update the states."""
-        self.speedtest_client.update()
         data = self.speedtest_client.data
         if data is None:
             return
@@ -92,12 +102,18 @@ class SpeedtestSensor(Entity):
 class SpeedtestData(object):
     """Get the latest data from speedtest.net."""
 
-    def __init__(self):
+    def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
+        self.hass = hass
+        self.path = hass.config.path
+        track_time_change(self.hass, self.update,
+                          minute=config.get(CONF_MINUTE, 0),
+                          hour=config.get(CONF_HOUR, None),
+                          day=config.get(CONF_DAY, None))
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self, now):
         """Get the latest data from speedtest.net."""
         import speedtest_cli
 
