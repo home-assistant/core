@@ -1,0 +1,84 @@
+set_aux_heat:
+  description: Turn auxillary heater on/off for hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.kitchen'
+
+    aux_heat:
+      description: New value of axillary heater
+      example: true
+
+set_away_mode:
+  description: Turn away mode on/off for hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.kitchen'
+
+    away_mode:
+      description: New value of away mode
+      example: true
+
+set_temperature:
+  description: Set target temperature of hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.kitchen'
+
+    temperature:
+      description: New target temperature for hvac
+      example: 25
+
+set_humidity:
+  description: Set target humidity of hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.kitchen'
+
+    humidity:
+      description: New target humidity for hvac
+      example: 60
+
+set_fan_mode:
+  description: Set fan operation for hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.nest'
+
+    fan:
+      description: New value of fan mode
+      example: On Low
+
+set_operation_mode:
+  description: Set operation mode for hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.nest'
+
+    operation_mode:
+      description: New value of operation mode
+      example: Heat
+
+
+set_swing_mode:
+  description: Set swing operation for hvac
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'hvac.nest'
+
+    swing_mode:
+    description: New value of swing mode
+    example: 1
