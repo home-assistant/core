@@ -164,6 +164,11 @@ class PioneerDevice(MediaPlayerDevice):
         """List of available input sources."""
         return list(self._source_name_to_number.keys())
 
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._selected_source
+
     def turn_off(self):
         """Turn off media player."""
         self.telnet_command("PF")
