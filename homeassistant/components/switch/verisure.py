@@ -42,6 +42,11 @@ class VerisureSmartplug(SwitchDevice):
         """Return true if on."""
         return hub.smartplug_status[self._id].status == 'on'
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
+
     def turn_on(self):
         """Set smartplug status on."""
         hub.my_pages.smartplug.set(self._id, 'on')
