@@ -3,6 +3,8 @@
 from datetime import timedelta
 import unittest
 
+# Otherwise can't test just this file (import order issue)
+import homeassistant.components  # noqa
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import script
 
@@ -233,9 +235,8 @@ class TestScriptHelper(unittest.TestCase):
         script_obj = script.Script(self.hass, [
             {'event': event},
             {
-                'condition': 'state',
-                'entity_id': 'test.entity',
-                'state': 'hello',
+                'condition': 'template',
+                'value_template': '{{ states.test.entity.state == "hello" }}',
             },
             {'event': event},
         ])
