@@ -1,46 +1,22 @@
-# pylint: disable=line-too-long
 """
-Support for Qwikswitch lights.
+Support for Qwikswitch lights and switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch
-
-* QSToggleEntity implement base QS methods(modeled around HA ToggleEntity)
-* QSLight extends QSToggleEntity and Light(ToggleEntity)
-* QSSwitch extends QSToggleEntity and SwitchDevice(ToggleEntity)
-
-[ToggleEntity](https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/helpers/entity.py)
-[Light](https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/light/__init__.py)
-[SwitchDevice](https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/switch/__init__.py)
 """
-# pylint: enable=line-too-long
 
 import logging
-# import requests
-# import math
-# import threading
-# from time import sleep
+import pyqwikswitch
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.light import (
-    Light,
-    ATTR_BRIGHTNESS
-)
+
+from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.discovery import discover
 
-# from homeassistant import bootstrap
-# from homeassistant.const import (
-#    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
-# from homeassistant.loader import get_component
-# from homeassistant.helpers import validate_config
-
-import pyqwikswitch
-
-
-REQUIREMENTS = ['requests',
-                'https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip'
+REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip'
                 '#pyqwikswitch==0.1']
-DEPENDENCIES = ['switch']
+DEPENDENCIES = ['switch', 'light']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +41,7 @@ def setup(hass, config):
     # Register add_device callbacks onto the gloabl QSUSB
     for comp_name in ('switch', 'light'):
         discover(hass, 'qwikswitch.'+comp_name, component=comp_name)
-        # discover seems to wrap these commands -- simplify
-        # component = get_component(comp_name)
+        # discover method seems to wrap these commands -- simplify
         # bootstrap.setup_component(hass, component.DOMAIN, config)
         # hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
         #              {ATTR_SERVICE: '{}.qwikswitch'.format(comp_name),
@@ -86,7 +61,6 @@ class QSUsbManager(pyqwikswitch.QSUsb):
         self.hass = hass
         self.qsdevices = {'': None}
 
-        # pylint: disable=unused-argument
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                   lambda event: self.stop())
 
@@ -137,7 +111,20 @@ class QSUsbManager(pyqwikswitch.QSUsb):
 
 
 class QSToggleEntity(object):
-    """Representation of a Qwikswitch Entiry."""
+    # pylint: disable=line-too-long
+    """Representation of a Qwikswitch Entiry.
+
+    Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
+    be used in a class that extends both QSToggleEntity *and* ToggleEntity.
+
+    Implemented:
+     - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
+     - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
+
+    [1] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/helpers/entity.py  # NOQA
+    [2] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/light/__init__.py  # NOQA
+    [3] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/switch/__init__.py  # NOQA
+    """
 
     def __init__(self, qsitem, qsusb):
         """Initialize the light."""
@@ -172,8 +159,8 @@ class QSToggleEntity(object):
     def update_value(self, value):
         """Decode QSUSB value & update HA state."""
         self._value = value
-        if self.hass is not None:
-            self.update_ha_state()
+        # pylint: disable=no-member
+        super().update_ha_state()  # Part of Entity/ToggleEntity
         return self._value
 
     # pylint: disable=unused-argument

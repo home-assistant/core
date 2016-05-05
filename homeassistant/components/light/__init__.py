@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import (
     group, discovery, wemo, wink, isy994,
-    zwave, insteon_hub, mysensors, tellstick, vera)  # qwikswitch,
+    zwave, insteon_hub, mysensors, tellstick, vera)  # qwikswitch
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
