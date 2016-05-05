@@ -1,0 +1,36 @@
+
+set_away_mode:
+  description: Turn away mode on/off for a thermostat
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'light.kitchen'
+
+    away_mode:
+      description: New value of away mode
+      example: true
+
+set_temperature:
+  description: Set temperature of thermostat
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'light.kitchen'
+
+    temperature:
+      description: New target temperature for thermostat
+      example: 25
+
+set_fan_mode:
+  description: Turn fan on/off for a thermostat
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: 'thermostat.nest'
+
+    fan:
+      description: New value of fan mode
+      example: true

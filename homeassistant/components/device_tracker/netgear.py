@@ -1,95 +1,101 @@
-""" Supports scanning a Netgear router. """
+"""
+Support for Netgear routers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.netgear/
+"""
 import logging
-from datetime import timedelta
 import threading
+from datetime import timedelta
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers import validate_config
-from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
+ CONF_PORT
+from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['pynetgear==0.3.3']
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a Netgear scanner. """
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
-                           _LOGGER):
+    """Validate the configuration and returns a Netgear scanner."""
+    info = config[DOMAIN]
+    host = info.get(CONF_HOST)
+    username = info.get(CONF_USERNAME)
+    password = info.get(CONF_PASSWORD)
+    port = info.get(CONF_PORT)
+
+    if password is not None and host is None:
+        _LOGGER.warning('Found username or password but no host')
         return None
 
-    scanner = NetgearDeviceScanner(config[DOMAIN])
+    scanner = NetgearDeviceScanner(host, username, password, port)
 
     return scanner if scanner.success_init else None
 
 
 class NetgearDeviceScanner(object):
-    """ This class queries a Netgear wireless router using the SOAP-api. """
+    """Queries a Netgear wireless router using the SOAP-API."""
 
-    def __init__(self, config):
-        host = config[CONF_HOST]
-        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+    def __init__(self, host, username, password, port):
+        """Initialize the scanner."""
+        import pynetgear
 
         self.last_results = []
-
-        try:
-            # Pylint does not play nice if not every folders has an __init__.py
-            # pylint: disable=no-name-in-module, import-error
-            import homeassistant.external.pynetgear.pynetgear as pynetgear
-        except ImportError:
-            _LOGGER.exception(
-                ("Failed to import pynetgear. "
-                 "Did you maybe not run `git submodule init` "
-                 "and `git submodule update`?"))
-
-            self.success_init = False
-
-            return
-
-        self._api = pynetgear.Netgear(host, username, password)
         self.lock = threading.Lock()
 
-        _LOGGER.info("Logging in")
-        if self._api.login():
-            self.success_init = True
-            self._update_info()
+        if host is None:
+            self._api = pynetgear.Netgear()
+        elif username is None:
+            self._api = pynetgear.Netgear(password, host)
+        elif port is None:
+            self._api = pynetgear.Netgear(password, host, username)
+        else:
+            self._api = pynetgear.Netgear(password, host, username, port)
 
+        _LOGGER.info("Logging in")
+
+        results = self._api.get_attached_devices()
+
+        self.success_init = results is not None
+
+        if self.success_init:
+            self.last_results = results
         else:
             _LOGGER.error("Failed to Login")
 
-            self.success_init = False
-
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [device.mac for device in self.last_results]
+        return (device.mac for device in self.last_results)
 
     def get_device_name(self, mac):
-        """ Returns the name of the given device or None if we don't know. """
-
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
-
-        if filter_named:
-            return filter_named[0]
-        else:
+        """Return the name of the given device or None if we don't know."""
+        try:
+            return next(device.name for device in self.last_results
+                        if device.mac == mac)
+        except StopIteration:
             return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Retrieves latest information from the Netgear router.
-            Returns boolean if scanning successful. """
+        """Retrieve latest information from the Netgear router.
+
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return
 
         with self.lock:
             _LOGGER.info("Scanning")
 
-            self.last_results = self._api.get_attached_devices()
+            results = self._api.get_attached_devices()
+
+            if results is None:
+                _LOGGER.warning('Error scanning devices')
+
+            self.last_results = results or []

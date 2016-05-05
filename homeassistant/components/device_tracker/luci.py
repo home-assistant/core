@@ -1,25 +1,30 @@
-""" Supports scanning a OpenWRT router. """
-import logging
+"""
+Support for OpenWRT (luci) routers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.luci/
+"""
 import json
-from datetime import timedelta
+import logging
 import re
 import threading
+from datetime import timedelta
+
 import requests
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
-# Return cached results if last scan was less then this time ago
+# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """ Validates config and returns a Luci scanner. """
+    """Validate the configuration and return a Luci scanner."""
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
                            _LOGGER):
@@ -32,19 +37,13 @@ def get_scanner(hass, config):
 
 # pylint: disable=too-many-instance-attributes
 class LuciDeviceScanner(object):
-    """ This class queries a wireless router running OpenWrt firmware
-    for connected devices. Adapted from Tomato scanner.
+    """This class queries a wireless router running OpenWrt firmware.
 
-    # opkg install luci-mod-rpc
-    for this to work on the router.
-
-    The API is described here:
-    http://luci.subsignal.org/trac/wiki/Documentation/JsonRpcHowTo
-
-    (Currently, we do only wifi iwscan, and no DHCP lease access.)
+    Adapted from Tomato scanner.
     """
 
     def __init__(self, config):
+        """Initialize the scanner."""
         host = config[CONF_HOST]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
@@ -61,16 +60,12 @@ class LuciDeviceScanner(object):
         self.success_init = self.token is not None
 
     def scan_devices(self):
-        """ Scans for new devices and return a
-            list containing found device ids. """
-
+        """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-
         return self.last_results
 
     def get_device_name(self, device):
-        """ Returns the name of the given device or None if we don't know. """
-
+        """Return the name of the given device or None if we don't know."""
         with self.lock:
             if self.mac2name is None:
                 url = 'http://{}/cgi-bin/luci/rpc/uci'.format(self.host)
@@ -80,17 +75,20 @@ class LuciDeviceScanner(object):
                     hosts = [x for x in result.values()
                              if x['.type'] == 'host' and
                              'mac' in x and 'name' in x]
-                    mac2name_list = [(x['mac'], x['name']) for x in hosts]
+                    mac2name_list = [
+                        (x['mac'].upper(), x['name']) for x in hosts]
                     self.mac2name = dict(mac2name_list)
                 else:
                     # Error, handled in the _req_json_rpc
                     return
-            return self.mac2name.get(device, None)
+            return self.mac2name.get(device.upper(), None)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """ Ensures the information from the Luci router is up to date.
-            Returns boolean if scanning successful. """
+        """Ensure the information from the Luci router is up to date.
+
+        Returns boolean if scanning successful.
+        """
         if not self.success_init:
             return False
 
@@ -101,7 +99,12 @@ class LuciDeviceScanner(object):
             result = _req_json_rpc(url, 'net.arptable',
                                    params={'auth': self.token})
             if result:
-                self.last_results = [x['HW address'] for x in result]
+                self.last_results = []
+                for device_entry in result:
+                    # Check if the Flags for each device contain
+                    # NUD_REACHABLE and if so, add it to last_results
+                    if int(device_entry['Flags'], 16) & 0x2:
+                        self.last_results.append(device_entry['HW address'])
 
                 return True
 
@@ -109,7 +112,7 @@ class LuciDeviceScanner(object):
 
 
 def _req_json_rpc(url, method, *args, **kwargs):
-    """ Perform one JSON RPC operation. """
+    """Perform one JSON RPC operation."""
     data = json.dumps({'method': method, 'params': args})
     try:
         res = requests.post(url, data=data, timeout=5, **kwargs)
@@ -139,6 +142,6 @@ def _req_json_rpc(url, method, *args, **kwargs):
 
 
 def _get_token(host, username, password):
-    """ Get authentication token for the given host+username+password """
+    """Get authentication token for the given host+username+password."""
     url = 'http://{}/cgi-bin/luci/rpc/auth'.format(host)
     return _req_json_rpc(url, 'login', username, password)

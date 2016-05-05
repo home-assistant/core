@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+cd "$(dirname "$0")/.."
+
+git submodule init
+script/bootstrap
+python3 setup.py develop

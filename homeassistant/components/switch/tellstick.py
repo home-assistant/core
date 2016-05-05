@@ -1,62 +1,59 @@
-""" Support for Tellstick switches. """
-import logging
+"""
+Support for Tellstick switches.
 
-from homeassistant.helpers import ToggleDevice
-from homeassistant.const import ATTR_FRIENDLY_NAME
-
-try:
-    import tellcore.constants as tc_constants
-except ImportError:
-    # Don't care for now. Warning will come when get_switches is called.
-    pass
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.tellstick/
+"""
+from homeassistant.components import tellstick
+from homeassistant.components.tellstick import (ATTR_DISCOVER_DEVICES,
+                                                ATTR_DISCOVER_CONFIG)
+from homeassistant.helpers.entity import ToggleEntity
 
 
 # pylint: disable=unused-argument
-def get_devices(hass, config):
-    """ Find and return Tellstick switches. """
-    try:
-        import tellcore.telldus as telldus
-    except ImportError:
-        logging.getLogger(__name__).exception(
-            "Failed to import tellcore")
-        return []
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup Tellstick switches."""
+    if (discovery_info is None or
+            discovery_info[ATTR_DISCOVER_DEVICES] is None or
+            tellstick.TELLCORE_REGISTRY is None):
+        return
 
-    core = telldus.TelldusCore()
-    switches = core.devices()
+    # Allow platform level override, fallback to module config
+    signal_repetitions = discovery_info.get(
+        ATTR_DISCOVER_CONFIG, tellstick.DEFAULT_SIGNAL_REPETITIONS)
 
-    return [TellstickSwitch(switch) for switch in switches]
+    add_devices(TellstickSwitchDevice(
+        tellstick.TELLCORE_REGISTRY.get_device(switch_id), signal_repetitions)
+                for switch_id in discovery_info[ATTR_DISCOVER_DEVICES])
 
 
-class TellstickSwitch(ToggleDevice):
-    """ represents a Tellstick switch within home assistant. """
-    last_sent_command_mask = (tc_constants.TELLSTICK_TURNON |
-                              tc_constants.TELLSTICK_TURNOFF)
+class TellstickSwitchDevice(tellstick.TellstickDevice, ToggleEntity):
+    """Representation of a Tellstick switch."""
 
-    def __init__(self, tellstick):
-        self.tellstick = tellstick
-        self.state_attr = {ATTR_FRIENDLY_NAME: tellstick.name}
-
-    def get_name(self):
-        """ Returns the name of the switch if any. """
-        return self.tellstick.name
-
-    # pylint: disable=unused-argument
-    def turn_on(self, **kwargs):
-        """ Turns the switch on. """
-        self.tellstick.turn_on()
-
-    # pylint: disable=unused-argument
-    def turn_off(self, **kwargs):
-        """ Turns the switch off. """
-        self.tellstick.turn_off()
-
+    @property
     def is_on(self):
-        """ True if switch is on. """
-        last_command = self.tellstick.last_sent_command(
-            self.last_sent_command_mask)
+        """Return true if switch is on."""
+        return self._state
 
-        return last_command == tc_constants.TELLSTICK_TURNON
+    def set_tellstick_state(self, last_command_sent, last_data_sent):
+        """Update the internal representation of the switch."""
+        from tellcore.constants import TELLSTICK_TURNON
+        self._state = last_command_sent == TELLSTICK_TURNON
 
-    def get_state_attributes(self):
-        """ Returns optional state attributes. """
-        return self.state_attr
+    def _send_tellstick_command(self, command, data):
+        """Handle the turn_on / turn_off commands."""
+        from tellcore.constants import TELLSTICK_TURNON, TELLSTICK_TURNOFF
+        if command == TELLSTICK_TURNON:
+            self.tellstick_device.turn_on()
+        elif command == TELLSTICK_TURNOFF:
+            self.tellstick_device.turn_off()
+
+    def turn_on(self, **kwargs):
+        """Turn the switch on."""
+        from tellcore.constants import TELLSTICK_TURNON
+        self.call_tellstick(TELLSTICK_TURNON)
+
+    def turn_off(self, **kwargs):
+        """Turn the switch off."""
+        from tellcore.constants import TELLSTICK_TURNOFF
+        self.call_tellstick(TELLSTICK_TURNOFF)

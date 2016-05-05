@@ -1,161 +1,179 @@
 """
-homeassistant.components.demo
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Sets up a demo environment that mimics interaction with devices.
 
-Sets up a demo environment that mimics interaction with devices
+For more details about this component, please refer to the documentation
+https://home-assistant.io/components/demo/
 """
-import random
+import time
 
-import homeassistant as ha
+import homeassistant.bootstrap as bootstrap
+import homeassistant.core as ha
 import homeassistant.loader as loader
-from homeassistant.helpers import extract_entity_ids
-from homeassistant.const import (
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF,
-    ATTR_ENTITY_PICTURE, ATTR_ENTITY_ID, CONF_LATITUDE, CONF_LONGITUDE)
-from homeassistant.components.light import (
-    ATTR_XY_COLOR, ATTR_RGB_COLOR, ATTR_BRIGHTNESS, GROUP_NAME_ALL_LIGHTS)
-from homeassistant.util import split_entity_id, color_RGB_to_xy
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
 DOMAIN = "demo"
 
-DEPENDENCIES = []
+DEPENDENCIES = ['conversation', 'introduction', 'zone']
+
+COMPONENTS_WITH_DEMO_PLATFORM = [
+    'alarm_control_panel',
+    'binary_sensor',
+    'camera',
+    'device_tracker',
+    'garage_door',
+    'light',
+    'lock',
+    'media_player',
+    'notify',
+    'rollershutter',
+    'sensor',
+    'switch',
+    'thermostat',
+]
 
 
 def setup(hass, config):
-    """ Setup a demo environment. """
+    """Setup a demo environment."""
     group = loader.get_component('group')
+    configurator = loader.get_component('configurator')
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
 
-    if config[DOMAIN].get('hide_demo_state') != '1':
+    if config[DOMAIN].get('hide_demo_state') != 1:
         hass.states.set('a.Demo_Mode', 'Enabled')
 
-    light_colors = [
-        [0.861, 0.3259],
-        [0.6389, 0.3028],
-        [0.1684, 0.0416]
-    ]
-
-    def mock_turn_on(service):
-        """ Will fake the component has been turned on. """
-        if service.data and ATTR_ENTITY_ID in service.data:
-            entity_ids = extract_entity_ids(hass, service)
-        else:
-            entity_ids = hass.states.entity_ids(service.domain)
-
-        for entity_id in entity_ids:
-            domain, _ = split_entity_id(entity_id)
-
-            if domain == "light":
-                rgb_color = service.data.get(ATTR_RGB_COLOR)
-
-                if rgb_color:
-                    color = color_RGB_to_xy(
-                        rgb_color[0], rgb_color[1], rgb_color[2])
-
-                else:
-                    cur_state = hass.states.get(entity_id)
-
-                    # Use current color if available
-                    if cur_state and cur_state.attributes.get(ATTR_XY_COLOR):
-                        color = cur_state.attributes.get(ATTR_XY_COLOR)
-                    else:
-                        color = random.choice(light_colors)
-
-                data = {
-                    ATTR_BRIGHTNESS: service.data.get(ATTR_BRIGHTNESS, 200),
-                    ATTR_XY_COLOR: color
-                }
-            else:
-                data = None
-
-            hass.states.set(entity_id, STATE_ON, data)
-
-    def mock_turn_off(service):
-        """ Will fake the component has been turned off. """
-        if service.data and ATTR_ENTITY_ID in service.data:
-            entity_ids = extract_entity_ids(hass, service)
-        else:
-            entity_ids = hass.states.entity_ids(service.domain)
-
-        for entity_id in entity_ids:
-            hass.states.set(entity_id, STATE_OFF)
-
     # Setup sun
-    if CONF_LATITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][CONF_LATITUDE] = '32.87336'
+    if not hass.config.latitude:
+        hass.config.latitude = 32.87336
 
-    if CONF_LONGITUDE not in config[ha.DOMAIN]:
-        config[ha.DOMAIN][CONF_LONGITUDE] = '-117.22743'
+    if not hass.config.longitude:
+        hass.config.longitude = 117.22743
 
-    loader.get_component('sun').setup(hass, config)
+    bootstrap.setup_component(hass, 'sun')
 
-    # Setup fake lights
-    lights = ['light.Bowl', 'light.Ceiling', 'light.TV_Back_light',
-              'light.Bed_light']
-
-    hass.services.register('light', SERVICE_TURN_ON, mock_turn_on)
-    hass.services.register('light', SERVICE_TURN_OFF, mock_turn_off)
-
-    mock_turn_on(ha.ServiceCall('light', SERVICE_TURN_ON,
-                                {'entity_id': lights[0:2]}))
-    mock_turn_off(ha.ServiceCall('light', SERVICE_TURN_OFF,
-                                 {'entity_id': lights[2:]}))
-
-    group.setup_group(hass, GROUP_NAME_ALL_LIGHTS, lights, False)
-
-    # Setup switch
-    switches = ['switch.AC', 'switch.Christmas_Lights']
-
-    hass.services.register('switch', SERVICE_TURN_ON, mock_turn_on)
-    hass.services.register('switch', SERVICE_TURN_OFF, mock_turn_off)
-
-    mock_turn_on(ha.ServiceCall('switch', SERVICE_TURN_ON,
-                                {'entity_id': switches[0:1]}))
-    mock_turn_off(ha.ServiceCall('switch', SERVICE_TURN_OFF,
-                                 {'entity_id': switches[1:]}))
+    # Setup demo platforms
+    demo_config = config.copy()
+    for component in COMPONENTS_WITH_DEMO_PLATFORM:
+        demo_config[component] = {CONF_PLATFORM: 'demo'}
+        bootstrap.setup_component(hass, component, demo_config)
 
     # Setup room groups
-    group.setup_group(hass, 'living_room', lights[0:3] + switches[0:1])
-    group.setup_group(hass, 'bedroom', [lights[3]] + switches[1:])
+    lights = sorted(hass.states.entity_ids('light'))
+    switches = sorted(hass.states.entity_ids('switch'))
+    media_players = sorted(hass.states.entity_ids('media_player'))
+    group.Group(hass, 'living room', [
+        lights[1], switches[0], 'input_select.living_room_preset',
+        'rollershutter.living_room_window', media_players[1],
+        'scene.romantic_lights'])
+    group.Group(hass, 'bedroom', [lights[0], switches[1], media_players[0]])
+    group.Group(hass, 'kitchen', [
+        lights[2], 'rollershutter.kitchen_window', 'lock.kitchen_door'])
+    group.Group(hass, 'doors', [
+        'lock.front_door', 'lock.kitchen_door',
+        'garage_door.right_garage_door', 'garage_door.left_garage_door'])
+    group.Group(hass, 'automations', [
+        'input_select.who_cooks', 'input_boolean.notify', ])
+    group.Group(hass, 'people', [
+        'device_tracker.demo_anne_therese', 'device_tracker.demo_home_boy',
+        'device_tracker.demo_paulus'])
+    group.Group(hass, 'thermostats', [
+        'thermostat.nest', 'thermostat.thermostat'])
+    group.Group(hass, 'downstairs', [
+        'group.living_room', 'group.kitchen',
+        'scene.romantic_lights', 'rollershutter.kitchen_window',
+        'rollershutter.living_room_window', 'group.doors', 'thermostat.nest',
+    ], view=True)
+    group.Group(hass, 'Upstairs', [
+        'thermostat.thermostat', 'group.bedroom',
+    ], view=True)
 
-    # Setup process
-    hass.states.set("process.XBMC", STATE_ON)
+    # Setup scripts
+    bootstrap.setup_component(
+        hass, 'script',
+        {'script': {
+            'demo': {
+                'alias': 'Toggle {}'.format(lights[0].split('.')[1]),
+                'sequence': [{
+                    'service': 'light.turn_off',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'service': 'light.turn_on',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
+                }, {
+                    'delay': {'seconds': 5}
+                }, {
+                    'service': 'light.turn_off',
+                    'data': {ATTR_ENTITY_ID: lights[0]}
+                }]
+            }}})
 
-    # Setup device tracker
-    hass.states.set("device_tracker.Paulus", "home",
-                    {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/schoutsen/picture"})
-    hass.states.set("device_tracker.Anne_Therese", "not_home",
-                    {ATTR_ENTITY_PICTURE:
-                     "http://graph.facebook.com/anne.t.frederiksen/picture"})
+    # Setup scenes
+    bootstrap.setup_component(
+        hass, 'scene',
+        {'scene': [
+            {'name': 'Romantic lights',
+             'entities': {
+                 lights[0]: True,
+                 lights[1]: {'state': 'on', 'xy_color': [0.33, 0.66],
+                             'brightness': 200},
+             }},
+            {'name': 'Switch on and off',
+             'entities': {
+                 switches[0]: True,
+                 switches[1]: False,
+             }},
+            ]})
 
-    hass.states.set("group.all_devices", "home",
-                    {
-                        "auto": True,
-                        "entity_id": [
-                            "device_tracker.Paulus",
-                            "device_tracker.Anne_Therese"
-                        ]
-                    })
+    # Set up input select
+    bootstrap.setup_component(
+        hass, 'input_select',
+        {'input_select':
+         {'living_room_preset': {'options': ['Visitors',
+                                             'Visitors with kids',
+                                             'Home Alone']},
+          'who_cooks': {'icon': 'mdi:panda',
+                        'initial': 'Anne Therese',
+                        'name': 'Cook today',
+                        'options': ['Paulus', 'Anne Therese']}}})
+    # Set up input boolean
+    bootstrap.setup_component(
+        hass, 'input_boolean',
+        {'input_boolean': {'notify': {'icon': 'mdi:car',
+                                      'initial': False,
+                                      'name': 'Notify Anne Therese is home'}}})
+    # Set up weblink
+    bootstrap.setup_component(
+        hass, 'weblink',
+        {'weblink': {'entities': [{'name': 'Router',
+                                   'url': 'http://192.168.1.1'}]}})
+    # Setup configurator
+    configurator_ids = []
 
-    # Setup chromecast
-    hass.states.set("chromecast.Living_Rm", "Plex",
-                    {'friendly_name': 'Living Room',
-                     ATTR_ENTITY_PICTURE:
-                     'http://graph.facebook.com/KillBillMovie/picture'})
+    def hue_configuration_callback(data):
+        """Fake callback, mark config as done."""
+        time.sleep(2)
 
-    # Setup tellstick sensors
-    hass.states.set("tellstick_sensor.Outside_temperature", "15.6",
-                    {
-                        'friendly_name': 'Outside temperature',
-                        'unit_of_measurement': '°C'
-                    })
-    hass.states.set("tellstick_sensor.Outside_humidity", "54",
-                    {
-                        'friendly_name': 'Outside humidity',
-                        'unit_of_measurement': '%'
-                    })
+        # First time it is called, pretend it failed.
+        if len(configurator_ids) == 1:
+            configurator.notify_errors(
+                configurator_ids[0],
+                "Failed to register, please try again.")
+
+            configurator_ids.append(0)
+        else:
+            configurator.request_done(configurator_ids[0])
+
+    request_id = configurator.request_config(
+        hass, "Philips Hue", hue_configuration_callback,
+        description=("Press the button on the bridge to register Philips Hue "
+                     "with Home Assistant."),
+        description_image="/static/images/config_philips_hue.jpg",
+        submit_caption="I have pressed the button"
+    )
+
+    configurator_ids.append(request_id)
 
     return True

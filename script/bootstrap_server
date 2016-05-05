@@ -1,0 +1,18 @@
+cd "$(dirname "$0")/.."
+
+echo "Installing dependencies..."
+python3 -m pip install -r requirements_all.txt
+
+REQ_STATUS=$?
+
+echo  "Installing development dependencies.."
+python3 -m pip install -r requirements_test.txt
+
+REQ_DEV_STATUS=$?
+
+if [ $REQ_DEV_STATUS -eq 0 ]
+then
+  exit $REQ_STATUS
+else
+  exit $REQ_DEV_STATUS
+fi

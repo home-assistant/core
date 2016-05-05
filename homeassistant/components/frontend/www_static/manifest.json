@@ -1,0 +1,19 @@
+{
+  "name": "Home Assistant",
+  "short_name": "Assistant",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#03A9F4",
+  "icons": [
+    {
+     "src": "/static/favicon-192x192.png",
+     "sizes": "192x192",
+     "type": "image/png",
+    },
+    {
+     "src": "/static/favicon-384x384.png",
+     "sizes": "384x384",
+     "type": "image/png",
+    }
+  ]
+}

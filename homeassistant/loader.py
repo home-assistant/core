@@ -1,7 +1,4 @@
 """
-homeassistant.loader
-~~~~~~~~~~~~~~~~~~~~
-
 Provides methods for loading Home Assistant components.
 
 This module has quite some complex parts. I have tried to add as much
@@ -13,12 +10,13 @@ call get_component('switch.your_platform'). In both cases the config directory
 is checked to see if it contains a user provided version. If not available it
 will check the built-in components and platforms.
 """
-import os
-import sys
-import pkgutil
 import importlib
 import logging
+import os
+import pkgutil
+import sys
 
+from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
 PREPARED = False
@@ -33,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def prepare(hass):
-    """ Prepares the loading of components. """
+    """Prepare the loading of components."""
     global PREPARED  # pylint: disable=global-statement
 
     # Load the built-in components
@@ -46,11 +44,11 @@ def prepare(hass):
         pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
 
     # Look for available custom components
-    custom_path = hass.get_config_path("custom_components")
+    custom_path = hass.config.path("custom_components")
 
     if os.path.isdir(custom_path):
         # Ensure we can load custom components using Pythons import
-        sys.path.insert(0, hass.config_dir)
+        sys.path.insert(0, hass.config.config_dir)
 
         # We cannot use the same approach as for built-in components because
         # custom components might only contain a platform for a component.
@@ -61,11 +59,10 @@ def prepare(hass):
         # python components. If this assumption is not true, HA won't break,
         # just might output more errors.
         for fil in os.listdir(custom_path):
-            if os.path.isdir(os.path.join(custom_path, fil)):
-                if fil != '__pycache__':
-                    AVAILABLE_COMPONENTS.append(
-                        'custom_components.{}'.format(fil))
-
+            if fil == '__pycache__':
+                continue
+            elif os.path.isdir(os.path.join(custom_path, fil)):
+                AVAILABLE_COMPONENTS.append('custom_components.{}'.format(fil))
             else:
                 # For files we will strip out .py extension
                 AVAILABLE_COMPONENTS.append(
@@ -75,17 +72,23 @@ def prepare(hass):
 
 
 def set_component(comp_name, component):
-    """ Sets a component in the cache. """
+    """Set a component in the cache."""
     _check_prepared()
 
     _COMPONENT_CACHE[comp_name] = component
 
 
-def get_component(comp_name):
-    """ Tries to load specified component.
-        Looks in config dir first, then built-in components.
-        Only returns it if also found to be valid. """
+def get_platform(domain, platform):
+    """Try to load specified platform."""
+    return get_component(PLATFORM_FORMAT.format(domain, platform))
 
+
+def get_component(comp_name):
+    """Try to load specified component.
+
+    Looks in config dir first, then built-in components.
+    Only returns it if also found to be valid.
+    """
     if comp_name in _COMPONENT_CACHE:
         return _COMPONENT_CACHE[comp_name]
 
@@ -132,10 +135,13 @@ def get_component(comp_name):
 
             return module
 
-        except ImportError:
-            _LOGGER.exception(
-                ("Error loading %s. Make sure all "
-                 "dependencies are installed"), path)
+        except ImportError as err:
+            # This error happens if for example custom_components/switch
+            # exists and we try to load switch.demo.
+            if str(err) != "No module named '{}'".format(path):
+                _LOGGER.exception(
+                    ("Error loading %s. Make sure all "
+                     "dependencies are installed"), path)
 
     _LOGGER.error("Unable to find component %s", comp_name)
 
@@ -143,40 +149,38 @@ def get_component(comp_name):
 
 
 def load_order_components(components):
-    """
-    Takes in a list of components we want to load:
-     - filters out components we cannot load
-     - filters out components that have invalid/circular dependencies
-     - Will ensure that all components that do not directly depend on
-       the group component will be loaded before the group component.
-     - returns an OrderedSet load order.
+    """Take in a list of components we want to load.
+
+    - filters out components we cannot load
+    - filters out components that have invalid/circular dependencies
+    - Will make sure the recorder component is loaded first
+    - Will ensure that all components that do not directly depend on
+      the group component will be loaded before the group component.
+    - returns an OrderedSet load order.
     """
     _check_prepared()
-
-    group = get_component('group')
 
     load_order = OrderedSet()
 
     # Sort the list of modules on if they depend on group component or not.
-    # We do this because the components that do not depend on the group
-    # component usually set up states that the group component requires to be
-    # created before it can group them.
-    # This does not matter in the future if we can setup groups without the
-    # states existing yet.
+    # Components that do not depend on the group usually set up states.
+    # Components that depend on group usually use states in their setup.
     for comp_load_order in sorted((load_order_component(component)
                                    for component in components),
-                                  # Test if group component exists in case
-                                  # above get_component call had an error.
-                                  key=lambda order:
-                                  group and group.DOMAIN in order):
+                                  key=lambda order: 'group' in order):
         load_order.update(comp_load_order)
+
+    # Push some to first place in load order
+    for comp in ('logger', 'recorder', 'introduction'):
+        if comp in load_order:
+            load_order.promote(comp)
 
     return load_order
 
 
 def load_order_component(comp_name):
-    """
-    Returns an OrderedSet of components in the correct order of loading.
+    """Return an OrderedSet of components in the correct order of loading.
+
     Raises HomeAssistantError if a circular dependency is detected.
     Returns an empty list if component could not be loaded.
     """
@@ -184,35 +188,35 @@ def load_order_component(comp_name):
 
 
 def _load_order_component(comp_name, load_order, loading):
-    """ Recursive function to get load order of components. """
+    """Recursive function to get load order of components."""
     component = get_component(comp_name)
 
-    # if None it does not exist, error already thrown by get_component
+    # If None it does not exist, error already thrown by get_component.
     if component is None:
         return OrderedSet()
 
     loading.add(comp_name)
 
-    for dependency in component.DEPENDENCIES:
+    for dependency in getattr(component, 'DEPENDENCIES', []):
         # Check not already loaded
-        if dependency not in load_order:
-            # If we are already loading it, we have a circular dependency
-            if dependency in loading:
-                _LOGGER.error('Circular dependency detected: %s -> %s',
-                              comp_name, dependency)
+        if dependency in load_order:
+            continue
 
-                return OrderedSet()
+        # If we are already loading it, we have a circular dependency.
+        if dependency in loading:
+            _LOGGER.error('Circular dependency detected: %s -> %s',
+                          comp_name, dependency)
+            return OrderedSet()
 
-            dep_load_order = _load_order_component(
-                dependency, load_order, loading)
+        dep_load_order = _load_order_component(dependency, load_order, loading)
 
-            # length == 0 means error loading dependency or children
-            if len(dep_load_order) == 0:
-                _LOGGER.error('Error loading %s dependency: %s',
-                              comp_name, dependency)
-                return OrderedSet()
+        # length == 0 means error loading dependency or children
+        if len(dep_load_order) == 0:
+            _LOGGER.error('Error loading %s dependency: %s',
+                          comp_name, dependency)
+            return OrderedSet()
 
-            load_order.update(dep_load_order)
+        load_order.update(dep_load_order)
 
     load_order.add(comp_name)
     loading.remove(comp_name)
@@ -221,7 +225,7 @@ def _load_order_component(comp_name, load_order, loading):
 
 
 def _check_prepared():
-    """ Issues a warning if loader.prepare() has never been called. """
+    """Issue a warning if loader.prepare() has never been called."""
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "

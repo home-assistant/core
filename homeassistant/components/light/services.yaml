@@ -1,0 +1,69 @@
+# Describes the format for available light services
+
+turn_on:
+  description: Turn a light on
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'light.kitchen'
+
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60
+
+    rgb_color:
+      description: Color for the light in RGB-format
+      example: '[255, 100, 100]'
+
+    xy_color:
+      description: Color for the light in XY-format
+      example: '[0.52, 0.43]'
+
+    color_temp:
+      description: Color temperature for the light in mireds (154-500)
+      example: '250'
+
+    brightness:
+      description: Number between 0..255 indicating brightness
+      example: 120
+
+    profile:
+      description: Name of a light profile to use
+      example: relax
+
+    flash:
+      description: If the light should flash
+      values:
+        - short
+        - long
+
+    effect:
+      description: Light effect
+      values:
+        - colorloop
+        - random
+
+turn_off:
+  description: Turn a light off
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off
+      example: 'light.kitchen'
+
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60
+
+toggle:
+  description: Toggles a light
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle
+      example: 'light.kitchen'
+
+    transition:
+      description: Duration in seconds it takes to get to next state
+      example: 60

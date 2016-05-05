@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# NOTE: all testing is now driven through tox. The tox command below
+# performs roughly what this test did in the past.
+
+tox -e lint

@@ -1,0 +1,21 @@
+# Pushes a new version to PyPi
+
+cd "$(dirname "$0")/.."
+
+head -n 3 homeassistant/const.py | tail -n 1 | grep dev
+
+if [ $? -eq 0 ]
+then
+  echo "Release version should not contain dev tag"
+  exit 1
+fi
+
+CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+
+if [ "$CURRENT_BRANCH" != "master" ]
+then
+  echo "You have to be on the master branch to release."
+  exit 1
+fi
+
+python3 setup.py sdist bdist_wheel upload

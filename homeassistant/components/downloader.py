@@ -1,46 +1,49 @@
 """
-homeassistant.components.downloader
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Support for functionality to download files.
 
-Provides functionality to download files.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/downloader/
 """
-import os
 import logging
+import os
 import re
 import threading
 
+import requests
+import voluptuous as vol
+
 from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
-DEPENDENCIES = []
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
 ATTR_URL = "url"
 ATTR_SUBDIR = "subdir"
 
+SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_URL): vol.Url,
+    vol.Optional(ATTR_SUBDIR): cv.string,
+})
+
 CONF_DOWNLOAD_DIR = 'download_dir'
 
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
-    """ Listens for download events to download files. """
-
+    """Listen for download events to download files."""
     logger = logging.getLogger(__name__)
-
-    try:
-        import requests
-    except ImportError:
-        logger.exception(("Failed to import requests. "
-                          "Did you maybe not execute 'pip install requests'?"))
-
-        return False
 
     if not validate_config(config, {DOMAIN: [CONF_DOWNLOAD_DIR]}, logger):
         return False
 
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
+
+    # If path is relative, we assume relative to HASS config dir
+    if not os.path.isabs(download_path):
+        download_path = hass.config.path(download_path)
 
     if not os.path.isdir(download_path):
 
@@ -51,14 +54,9 @@ def setup(hass, config):
         return False
 
     def download_file(service):
-        """ Starts thread to download file specified in the url. """
-
-        if ATTR_URL not in service.data:
-            logger.error("Service called but 'url' parameter not specified.")
-            return
-
+        """Start thread to download file specified in the URL."""
         def do_download():
-            """ Downloads the file. """
+            """Download the file."""
             try:
                 url = service.data[ATTR_URL]
 
@@ -132,7 +130,7 @@ def setup(hass, config):
 
         threading.Thread(target=do_download).start()
 
-    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE,
-                           download_file)
+    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE, download_file,
+                           schema=SERVICE_DOWNLOAD_FILE_SCHEMA)
 
     return True

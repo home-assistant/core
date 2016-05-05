@@ -1,32 +1,74 @@
 """
-homeassistant.components.groups
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Provides functionality to group entities.
 
-Provides functionality to group devices that can be turned on or off.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/group/
 """
+import threading
+from collections import OrderedDict
 
-import logging
+import voluptuous as vol
 
-import homeassistant as ha
-import homeassistant.util as util
+import homeassistant.core as ha
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME)
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_UNKNOWN,
+    ATTR_ASSUMED_STATE, )
+from homeassistant.helpers.entity import (
+    Entity, generate_entity_id, split_entity_id)
+from homeassistant.helpers.event import track_state_change
+import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "group"
-DEPENDENCIES = []
+DOMAIN = 'group'
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_AUTO = "auto"
+CONF_ENTITIES = 'entities'
+CONF_VIEW = 'view'
+
+ATTR_AUTO = 'auto'
+ATTR_ORDER = 'order'
+ATTR_VIEW = 'view'
+
+
+def _conf_preprocess(value):
+    """Preprocess alternative configuration formats."""
+    if isinstance(value, (str, list)):
+        value = {CONF_ENTITIES: value}
+
+    return value
+
+_SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
+    vol.Optional(CONF_ENTITIES): vol.Any(None, cv.entity_ids),
+    CONF_VIEW: bool,
+    CONF_NAME: str,
+    CONF_ICON: cv.icon,
+}))
+
+
+def _group_dict(value):
+    """Validate a dictionary of group definitions."""
+    config = OrderedDict()
+    for key, group in value.items():
+        try:
+            config[key] = _SINGLE_GROUP_CONFIG(group)
+        except vol.MultipleInvalid as ex:
+            raise vol.Invalid('Group {} is invalid: {}'.format(key, ex))
+
+    return config
+
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.All(dict, _group_dict)
+}, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
-_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME)]
-
-_GROUPS = {}
+_GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
+                (STATE_OPEN, STATE_CLOSED)]
 
 
 def _get_group_on_off(state):
-    """ Determine the group on/off states based on a state. """
+    """Determine the group on/off states based on a state."""
     for states in _GROUP_TYPES:
         if state in states:
             return states
@@ -35,7 +77,7 @@ def _get_group_on_off(state):
 
 
 def is_on(hass, entity_id):
-    """ Returns if the group state is in its ON-state. """
+    """Test if the group state is in its ON-state."""
     state = hass.states.get(entity_id)
 
     if state:
@@ -48,19 +90,23 @@ def is_on(hass, entity_id):
 
 
 def expand_entity_ids(hass, entity_ids):
-    """ Returns the given list of entity ids and expands group ids into
-        the entity ids it represents if found. """
+    """Return entity_ids with group entity ids replaced by their members."""
     found_ids = []
 
     for entity_id in entity_ids:
+        if not isinstance(entity_id, str):
+            continue
+
+        entity_id = entity_id.lower()
+
         try:
             # If entity_id points at a group, expand it
-            domain, _ = util.split_entity_id(entity_id)
+            domain, _ = split_entity_id(entity_id)
 
             if domain == DOMAIN:
                 found_ids.extend(
                     ent_id for ent_id
-                    in get_entity_ids(hass, entity_id)
+                    in expand_entity_ids(hass, get_entity_ids(hass, entity_id))
                     if ent_id not in found_ids)
 
             else:
@@ -68,18 +114,22 @@ def expand_entity_ids(hass, entity_ids):
                     found_ids.append(entity_id)
 
         except AttributeError:
-            # Raised by util.split_entity_id if entity_id is not a string
+            # Raised by split_entity_id if entity_id is not a string
             pass
 
     return found_ids
 
 
 def get_entity_ids(hass, entity_id, domain_filter=None):
-    """ Get the entity ids that make up this group. """
+    """Get members of this group."""
+    entity_id = entity_id.lower()
+
     try:
         entity_ids = hass.states.get(entity_id).attributes[ATTR_ENTITY_ID]
 
         if domain_filter:
+            domain_filter = domain_filter.lower()
+
             return [ent_id for ent_id in entity_ids
                     if ent_id.startswith(domain_filter)]
         else:
@@ -92,123 +142,189 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 
 def setup(hass, config):
-    """ Sets up all groups found definded in the configuration. """
-    for name, entity_ids in config.get(DOMAIN, {}).items():
-        entity_ids = entity_ids.split(",")
+    """Setup all groups found definded in the configuration."""
+    for object_id, conf in config.get(DOMAIN, {}).items():
+        name = conf.get(CONF_NAME, object_id)
+        entity_ids = conf.get(CONF_ENTITIES) or []
+        icon = conf.get(CONF_ICON)
+        view = conf.get(CONF_VIEW)
 
-        setup_group(hass, name, entity_ids)
+        Group(hass, name, entity_ids, icon=icon, view=view,
+              object_id=object_id)
 
     return True
 
 
-def setup_group(hass, name, entity_ids, user_defined=True):
-    """ Sets up a group state that is the combined state of
-        several states. Supports ON/OFF and DEVICE_HOME/DEVICE_NOT_HOME. """
-    logger = logging.getLogger(__name__)
+class Group(Entity):
+    """Track a group of entity ids."""
 
-    # In case an iterable is passed in
-    entity_ids = list(entity_ids)
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
+    def __init__(self, hass, name, entity_ids=None, user_defined=True,
+                 icon=None, view=False, object_id=None):
+        """Initialize a group."""
+        self.hass = hass
+        self._name = name
+        self._state = STATE_UNKNOWN
+        self._order = len(hass.states.entity_ids(DOMAIN))
+        self._user_defined = user_defined
+        self._icon = icon
+        self._view = view
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, object_id or name, hass=hass)
+        self.tracking = []
+        self.group_on = None
+        self.group_off = None
+        self._assumed_state = False
+        self._lock = threading.Lock()
 
-    if not entity_ids:
-        logger.error(
-            'Error setting up group %s: no entities passed in to track', name)
-
-        return False
-
-    # Loop over the given entities to:
-    #  - determine which group type this is (on_off, device_home)
-    #  - determine which states exist and have groupable states
-    #  - determine the current state of the group
-    warnings = []
-    group_ids = []
-    group_on, group_off = None, None
-    group_state = False
-
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-
-        # Try to determine group type if we didn't yet
-        if group_on is None and state:
-            group_on, group_off = _get_group_on_off(state.state)
-
-            if group_on is None:
-                # We did not find a matching group_type
-                warnings.append(
-                    "Entity {} has ungroupable state '{}'".format(
-                        name, state.state))
-
-                continue
-
-        # Check if entity exists
-        if not state:
-            warnings.append("Entity {} does not exist".format(entity_id))
-
-        # Check if entity is invalid state
-        elif state.state != group_off and state.state != group_on:
-
-            warnings.append("State of {} is {} (expected: {} or {})".format(
-                entity_id, state.state, group_off, group_on))
-
-        # We have a valid group state
+        if entity_ids is not None:
+            self.update_tracked_entity_ids(entity_ids)
         else:
-            group_ids.append(entity_id)
+            self.update_ha_state(True)
 
-            # Keep track of the group state to init later on
-            group_state = group_state or state.state == group_on
-
-    # If none of the entities could be found during setup
-    if not group_ids:
-        logger.error('Unable to find any entities to track for group %s', name)
-
+    @property
+    def should_poll(self):
+        """No need to poll because groups will update themselves."""
         return False
 
-    elif warnings:
-        logger.warning(
-            'Warnings during setting up group %s: %s',
-            name, ", ".join(warnings))
+    @property
+    def name(self):
+        """Return the name of the group."""
+        return self._name
 
-    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
-    state = group_on if group_state else group_off
-    state_attr = {ATTR_ENTITY_ID: group_ids, ATTR_AUTO: not user_defined}
+    @property
+    def state(self):
+        """Return the state of the group."""
+        return self._state
 
-    # pylint: disable=unused-argument
-    def update_group_state(entity_id, old_state, new_state):
-        """ Updates the group state based on a state change by
-            a tracked entity. """
+    @property
+    def icon(self):
+        """Return the icon of the group."""
+        return self._icon
 
-        cur_gr_state = hass.states.get(group_entity_id).state
+    @property
+    def hidden(self):
+        """If group should be hidden or not."""
+        return not self._user_defined or self._view
 
-        # if cur_gr_state = OFF and new_state = ON: set ON
-        # if cur_gr_state = ON and new_state = OFF: research
-        # else: ignore
+    @property
+    def state_attributes(self):
+        """Return the state attributes for the group."""
+        data = {
+            ATTR_ENTITY_ID: self.tracking,
+            ATTR_ORDER: self._order,
+        }
+        if not self._user_defined:
+            data[ATTR_AUTO] = True
+        if self._view:
+            data[ATTR_VIEW] = True
+        return data
 
-        if cur_gr_state == group_off and new_state.state == group_on:
+    @property
+    def assumed_state(self):
+        """Test if any member has an assumed state."""
+        return self._assumed_state
 
-            hass.states.set(group_entity_id, group_on, state_attr)
+    def update_tracked_entity_ids(self, entity_ids):
+        """Update the member entity IDs."""
+        self.stop()
+        self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
+        self.group_on, self.group_off = None, None
 
-        elif cur_gr_state == group_on and new_state.state == group_off:
+        self.update_ha_state(True)
 
-            # Check if any of the other states is still on
-            if not any([hass.states.is_state(ent_id, group_on)
-                        for ent_id in group_ids
-                        if entity_id != ent_id]):
-                hass.states.set(group_entity_id, group_off, state_attr)
+        self.start()
 
-    _GROUPS[group_entity_id] = hass.states.track_change(
-        group_ids, update_group_state)
+    def start(self):
+        """Start tracking members."""
+        track_state_change(
+            self.hass, self.tracking, self._state_changed_listener)
 
-    hass.states.set(group_entity_id, state, state_attr)
+    def stop(self):
+        """Unregister the group from Home Assistant."""
+        self.hass.states.remove(self.entity_id)
 
-    return True
+        self.hass.bus.remove_listener(
+            ha.EVENT_STATE_CHANGED, self._state_changed_listener)
 
+    def update(self):
+        """Query all members and determine current group state."""
+        self._state = STATE_UNKNOWN
+        self._update_group_state()
 
-def remove_group(hass, name):
-    """ Remove a group and its state listener from Home Assistant. """
-    group_entity_id = ENTITY_ID_FORMAT.format(util.slugify(name))
+    def _state_changed_listener(self, entity_id, old_state, new_state):
+        """Respond to a member state changing."""
+        self._update_group_state(new_state)
+        self.update_ha_state()
 
-    if hass.states.get(group_entity_id) is not None:
-        hass.states.remove(group_entity_id)
+    @property
+    def _tracking_states(self):
+        """The states that the group is tracking."""
+        states = []
 
-    if group_entity_id in _GROUPS:
-        hass.bus.remove_listener(
-            ha.EVENT_STATE_CHANGED, _GROUPS.pop(group_entity_id))
+        for entity_id in self.tracking:
+            state = self.hass.states.get(entity_id)
+
+            if state is not None:
+                states.append(state)
+
+        return states
+
+    def _update_group_state(self, tr_state=None):
+        """Update group state.
+
+        Optionally you can provide the only state changed since last update
+        allowing this method to take shortcuts.
+        """
+        # pylint: disable=too-many-branches
+        # To store current states of group entities. Might not be needed.
+        with self._lock:
+            states = None
+            gr_state = self._state
+            gr_on = self.group_on
+            gr_off = self.group_off
+
+            # We have not determined type of group yet
+            if gr_on is None:
+                if tr_state is None:
+                    states = self._tracking_states
+
+                    for state in states:
+                        gr_on, gr_off = \
+                            _get_group_on_off(state.state)
+                        if gr_on is not None:
+                            break
+                else:
+                    gr_on, gr_off = _get_group_on_off(tr_state.state)
+
+                if gr_on is not None:
+                    self.group_on, self.group_off = gr_on, gr_off
+
+            # We cannot determine state of the group
+            if gr_on is None:
+                return
+
+            if tr_state is None or (gr_state == gr_on and
+                                    tr_state.state == gr_off):
+                if states is None:
+                    states = self._tracking_states
+
+                if any(state.state == gr_on for state in states):
+                    self._state = gr_on
+                else:
+                    self._state = gr_off
+
+            elif tr_state.state in (gr_on, gr_off):
+                self._state = tr_state.state
+
+            if tr_state is None or self._assumed_state and \
+               not tr_state.attributes.get(ATTR_ASSUMED_STATE):
+                if states is None:
+                    states = self._tracking_states
+
+                self._assumed_state = any(
+                    state.attributes.get(ATTR_ASSUMED_STATE) for state
+                    in states)
+
+            elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
+                self._assumed_state = True

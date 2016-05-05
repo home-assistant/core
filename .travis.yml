@@ -1,12 +1,19 @@
+sudo: false
+matrix:
+  fast_finish: true
+  include:
+    - python: "3.4"
+      env: TOXENV=py34
+    - python: "3.4"
+      env: TOXENV=requirements
+    - python: "3.5"
+      env: TOXENV=lint
+    - python: "3.5"
+      env: TOXENV=py35
+cache:
+  directories:
+    - $HOME/.cache/pip
+install: pip install -U tox coveralls
 language: python
-python:
-  - "3.4"
-install:
-  - pip install -r requirements.txt
-  - pip install flake8 pylint coveralls
-script:
-  - flake8 homeassistant --exclude bower_components,external
-  - pylint homeassistant
-  - coverage run --source=homeassistant -m unittest discover ha_test
-after_success:
-  - coveralls
+script: tox
+after_success: coveralls

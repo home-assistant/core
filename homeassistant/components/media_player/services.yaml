@@ -1,0 +1,139 @@
+# Describes the format for available media_player services
+
+turn_on:
+  description: Turn a media player power on
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'media_player.living_room_chromecast'
+
+turn_off:
+  description: Turn a media player power off
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off
+      example: 'media_player.living_room_chromecast'
+
+toggle:
+  description: Toggles a media player power state
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle
+      example: 'media_player.living_room_chromecast'
+
+volume_up:
+  description: Turn a media player volume up
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn volume up on
+      example: 'media_player.living_room_sonos'
+
+volume_down:
+  description: Turn a media player volume down
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn volume down on
+      example: 'media_player.living_room_sonos'
+
+mute_volume:
+  description: Mute a media player's volume
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to mute
+      example: 'media_player.living_room_sonos'
+    mute:
+      description: True/false for mute/unmute
+      example: true
+
+set_volume_level:
+  description: Set a media player's volume level
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set volume level on
+      example: 'media_player.living_room_sonos'
+    volume:
+      description: Volume level to set
+      example: 60
+
+media_play_pause:
+  description: Toggle media player play/pause state
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle play/pause state on
+      example: 'media_player.living_room_sonos'
+
+media_play:
+  description: Send the media player the command for play.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to play on
+      example: 'media_player.living_room_sonos'
+
+media_pause:
+  description: Send the media player the command for pause.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to pause on
+      example: 'media_player.living_room_sonos'
+
+media_next_track:
+  description: Send the media player the command for next track.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to send next track command to
+      example: 'media_player.living_room_sonos'
+
+media_previous_track:
+  description: Send the media player the command for previous track.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to send previous track command to
+      example: 'media_player.living_room_sonos'
+
+media_seek:
+  description: Send the media player the command to seek in current playing media.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to seek media on
+      example: 'media_player.living_room_chromecast'
+    position:
+      description: Position to seek to. The format is platform dependent.
+      example: 100
+
+play_media:
+  description: Send the media player the command for playing media.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to seek media on
+      example: 'media_player.living_room_chromecast'
+    media_content_id:
+      description: The ID of the content to play. Platform dependent.
+      example: 'https://home-assistant.io/images/cast/splash.png'
+    media_content_type:
+      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
+      example: 'MUSIC'
+
+select_source:
+  description: Send the media player the command to change input source.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites to change source on
+      example: 'media_player.media_player.txnr535_0009b0d81f82'
+    source:
+      description: Name of the source to switch to. Platform dependent.
+      example: 'video1'
