@@ -165,6 +165,7 @@ omit =
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
     homeassistant/components/sensor/transmission.py
+    homeassistant/components/sensor/travel_time.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py

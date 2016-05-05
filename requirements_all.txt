@@ -61,6 +61,9 @@ fuzzywuzzy==0.8.0
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
+# homeassistant.components.sensor.travel_time
+googlemaps
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.6.3
 
