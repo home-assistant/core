@@ -2,7 +2,7 @@
 Support for command roller shutters.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rollershutter.command_rollershutter/
+https://home-assistant.io/components/rollershutter.command_line/
 """
 import logging
 import subprocess
