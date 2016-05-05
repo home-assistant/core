@@ -11,7 +11,7 @@ from homeassistant.components.light import ATTR_RGB_COLOR, Light
 _LOGGER = logging.getLogger(__name__)
 
 
-REQUIREMENTS = ["blinkstick==1.1.7"]
+REQUIREMENTS = ["blinkstick==1.1.8"]
 
 
 # pylint: disable=unused-argument
