@@ -5,15 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.travel_time/
 """
 from datetime import datetime
+from datetime import timedelta
 import logging
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['googlemaps']
+REQUIREMENTS = ['googlemaps==2.4.3']
+
+# Return cached results if last update was less then this time ago
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
@@ -30,7 +35,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the RFXtrx platform."""
+    """Setup the travel time platform."""
     # pylint: disable=too-many-locals
 
     is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
@@ -39,12 +44,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     destination = config.get(CONF_DESTINATION)
     travel_mode = config.get(CONF_TRAVEL_MODE)
 
-    sensor = GoogleMapsSensor(api_key, origin, destination,
+    sensor = TravelTimeSensor(api_key, origin, destination,
                               travel_mode, is_metric)
     add_devices_callback([sensor])
 
 
-class GoogleMapsSensor(Entity):
+class TravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
@@ -97,6 +102,7 @@ class GoogleMapsSensor(Entity):
         """Return the unit this state is expressed in."""
         return "min"
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
         now = datetime.now()
