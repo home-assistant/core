@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.info("Automatic add rfxtrx.sensor: %s",
                      device_id)
 
-        data_type = "Unkown"
+        data_type = "Unknown"
         for _data_type in DATA_TYPES:
             if _data_type in event.values:
                 data_type = _data_type
@@ -98,7 +98,7 @@ class RfxtrxSensor(Entity):
         self.event = event
         self._name = name
         if data_type not in DATA_TYPES:
-            data_type = "Unkown"
+            data_type = "Unknown"
         self.data_type = data_type
         self._unit_of_measurement = DATA_TYPES[data_type]
 
