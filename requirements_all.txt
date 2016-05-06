@@ -11,7 +11,7 @@ voluptuous==0.8.9
 PyISY==1.0.5
 
 # homeassistant.components.arduino
-PyMata==2.07a
+PyMata==2.12
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
