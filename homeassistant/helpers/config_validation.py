@@ -146,6 +146,18 @@ def time_period_str(value):
 time_period = vol.Any(time_period_str, timedelta, time_period_dict)
 
 
+def log_exception(logger, ex, domain):
+    """Generate log exception for config validation."""
+    message = 'Invalid config for [{}]: '.format(domain)
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join('%s' % m for m in ex.path))
+    else:
+        message += ex.error_message
+    logger.error(message)
+
+
 def match_all(value):
     """Validator that matches all values."""
     return value
