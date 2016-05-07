@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.helpers import validate_config
 
 DOMAIN = "arduino"
-REQUIREMENTS = ['PyMata==2.07a']
+REQUIREMENTS = ['PyMata==2.12']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class ArduinoBoard(object):
                                      self._board.ANALOG)
         elif mode == 'digital' and direction == 'in':
             self._board.set_pin_mode(pin,
-                                     self._board.OUTPUT,
+                                     self._board.INPUT,
                                      self._board.DIGITAL)
         elif mode == 'digital' and direction == 'out':
             self._board.set_pin_mode(pin,

@@ -59,6 +59,17 @@ def as_utc(dattim):
     return dattim.astimezone(UTC)
 
 
+def as_timestamp(dt_value):
+    """Convert a date/time into a unix time (seconds since 1970)."""
+    if hasattr(dt_value, "timestamp"):
+        parsed_dt = dt_value
+    else:
+        parsed_dt = parse_datetime(str(dt_value))
+        if not parsed_dt:
+            raise ValueError("not a valid date/time.")
+    return parsed_dt.timestamp()
+
+
 def as_local(dattim):
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:

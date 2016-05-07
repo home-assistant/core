@@ -14,6 +14,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/dweet.py
+    homeassistant/components/*/dweet.py
+
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
@@ -31,6 +34,9 @@ omit =
 
     homeassistant/components/nest.py
     homeassistant/components/*/nest.py
+
+    homeassistant/components/octoprint.py
+    homeassistant/components/*/octoprint.py
 
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
@@ -110,6 +116,7 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/panasonic_viera.py
+    homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
@@ -139,11 +146,12 @@ omit =
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
-    homeassistant/components/sensor/dweet.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
+    homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
+    homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/netatmo.py
@@ -164,6 +172,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
+    homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
@@ -172,6 +181,7 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py
+    homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thermostat/eq3btsmart.py
