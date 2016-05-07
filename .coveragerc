@@ -148,6 +148,7 @@ omit =
     homeassistant/components/sensor/dht.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
+    homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/forecast.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
