@@ -1,5 +1,4 @@
 """Provides helper methods to handle the time in HA."""
-import calendar
 import datetime as dt
 import re
 
@@ -62,13 +61,13 @@ def as_utc(dattim):
 
 def as_timestamp(dt_value):
     """Convert a date/time into a unix time (seconds since 1970)."""
-    if hasattr(dt_value, "utctimetuple"):
+    if hasattr(dt_value, "timestamp"):
         parsed_dt = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))
         if not parsed_dt:
             raise ValueError("not a valid date/time.")
-    return calendar.timegm(parsed_dt.utctimetuple())
+    return parsed_dt.timestamp()
 
 
 def as_local(dattim):
