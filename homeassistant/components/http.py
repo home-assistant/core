@@ -41,7 +41,6 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
-CONF_ALLOW_CORS = 'cors'
 CONF_CORS_HEADERS = 'cors_allowed_headers'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
@@ -67,7 +66,6 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
-    allow_cors = conf.get(CONF_ALLOW_CORS, False)
     cors_headers = conf.get(CONF_CORS_HEADERS, [HTTP_HEADER_ORIGIN,
                                                 HTTP_HEADER_ACCEPT,
                                                 HTTP_HEADER_X_REQUESTED_WITH,
@@ -78,7 +76,7 @@ def setup(hass, config):
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development, ssl_certificate, ssl_key, allow_cors, cors_headers,
+            development, ssl_certificate, ssl_key, cors_headers,
             cors_origins)
     except OSError:
         # If address already in use
@@ -111,7 +109,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
                  hass, api_password, development, ssl_certificate, ssl_key,
-                 allow_cors, cors_headers, cors_origins):
+                 cors_headers, cors_origins):
         """Initialize the server."""
         super().__init__(server_address, request_handler_class)
 
@@ -122,7 +120,6 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.paths = []
         self.sessions = SessionStore()
         self.use_ssl = ssl_certificate is not None
-        self.allow_cors = allow_cors
         self.cors_headers = cors_headers
         self.cors_origins = cors_origins
 
@@ -372,7 +369,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         cors_check = (self.headers.get("Origin") in self.server.cors_origins)
 
-        if self.server.allow_cors and cors_check:
+        if len(self.server.cors_origins) > 0 and cors_check:
             self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
                              self.headers.get("Origin"))
             self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
