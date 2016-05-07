@@ -12,7 +12,7 @@ import threading
 from homeassistant.components.mqtt import PROTOCOL_311
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['hbmqtt==0.6.3']
+REQUIREMENTS = ['hbmqtt==0.7.1']
 DEPENDENCIES = ['http']
 
 
