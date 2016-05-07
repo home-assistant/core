@@ -7,11 +7,15 @@ https://home-assistant.io/components/alarm_control_panel/
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.components import verisure
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
 from homeassistant.config import load_yaml_config_file
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -37,6 +41,11 @@ ATTR_TO_PROPERTY = [
     ATTR_CODE_FORMAT
 ]
 
+ALARM_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_CODE): cv.string,
+})
+
 
 def setup(hass, config):
     """Track states and offer events for sensors."""
@@ -50,10 +59,7 @@ def setup(hass, config):
         """Map services to methods on Alarm."""
         target_alarms = component.extract_from_service(service)
 
-        if ATTR_CODE not in service.data:
-            code = None
-        else:
-            code = service.data[ATTR_CODE]
+        code = service.data.get(ATTR_CODE)
 
         method = SERVICE_TO_METHOD[service.service]
 
@@ -67,8 +73,8 @@ def setup(hass, config):
 
     for service in SERVICE_TO_METHOD:
         hass.services.register(DOMAIN, service, alarm_service_handler,
-                               descriptions.get(service))
-
+                               descriptions.get(service),
+                               schema=ALARM_SERVICE_SCHEMA)
     return True
 
 

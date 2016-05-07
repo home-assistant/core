@@ -35,6 +35,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_SONOS: 'sonos',
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
+    discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -60,6 +61,7 @@ ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
+ATTR_INPUT_SOURCE_LIST = 'source_list'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -93,6 +95,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PAUSE: 'media_pause',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
+    SERVICE_SELECT_SOURCE: 'select_source'
 }
 
 ATTR_TO_PROPERTY = [
@@ -115,6 +118,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
     ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
 ]
 
 # Service call validation schemas
@@ -123,7 +127,7 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
 })
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_VOLUME_MUTED): vol.Coerce(bool),
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
 })
 
 MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -470,6 +474,11 @@ class MediaPlayerDevice(Entity):
     @property
     def source(self):
         """Name of the current input source."""
+        return None
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
         return None
 
     @property

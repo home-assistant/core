@@ -1,7 +1,7 @@
 """The tests for the Recorder component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import os
+from unittest.mock import patch
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
@@ -15,7 +15,8 @@ class TestRecorder(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        recorder.setup(self.hass, {})
+        with patch('homeassistant.core.Config.path', return_value=':memory:'):
+            recorder.setup(self.hass, {})
         self.hass.start()
         recorder._INSTANCE.block_till_done()
 
@@ -23,7 +24,6 @@ class TestRecorder(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
         recorder._INSTANCE.block_till_done()
-        os.remove(self.hass.config.path(recorder.DB_FILE))
 
     def test_saving_state(self):
         """Test saving and restoring a state."""
@@ -63,4 +63,16 @@ class TestRecorder(unittest.TestCase):
         db_events = recorder.query_events(
             'SELECT * FROM events WHERE event_type = ?', (event_type, ))
 
-        self.assertEqual(events, db_events)
+        assert len(events) == 1
+        assert len(db_events) == 1
+
+        event = events[0]
+        db_event = db_events[0]
+
+        assert event.event_type == db_event.event_type
+        assert event.data == db_event.data
+        assert event.origin == db_event.origin
+
+        # Recorder uses SQLite and stores datetimes as integer unix timestamps
+        assert event.time_fired.replace(microsecond=0) == \
+            db_event.time_fired.replace(microsecond=0)

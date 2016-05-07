@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.forecast/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_API_KEY, TEMP_CELCIUS
+from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
     'summary': ['Summary', None, None, None, None, None],
+    'minutely_summary': ['Minutely Summary', None, None, None, None, None],
+    'hourly_summary': ['Hourly Summary', None, None, None, None, None],
+    'daily_summary': ['Daily Summary', None, None, None, None, None],
     'icon': ['Icon', None, None, None, None, None],
     'nearest_storm_distance': ['Nearest Storm Distance',
                                'km', 'm', 'km', 'km', 'm'],
@@ -64,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.temperature_unit == TEMP_CELCIUS:
+    elif hass.config.temperature_unit == TEMP_CELSIUS:
         units = 'si'
     else:
         units = 'us'
@@ -134,11 +137,20 @@ class ForeCastSensor(Entity):
         import forecastio
 
         self.forecast_client.update()
-        data = self.forecast_client.data
+        data = self.forecast_client.data.currently()
+        data_minutely = self.forecast_client.data.minutely()
+        data_hourly = self.forecast_client.data.hourly()
+        data_daily = self.forecast_client.data.daily()
 
         try:
             if self.type == 'summary':
                 self._state = data.summary
+            elif self.type == 'minutely_summary':
+                self._state = data_minutely.summary
+            elif self.type == 'hourly_summary':
+                self._state = data_hourly.summary
+            elif self.type == 'daily_summary':
+                self._state = data_daily.summary
             elif self.type == 'icon':
                 self._state = data.icon
             elif self.type == 'nearest_storm_distance':
@@ -198,5 +210,5 @@ class ForeCastData(object):
                                             self.latitude,
                                             self.longitude,
                                             units=self.units)
-        self.data = forecast.currently()
+        self.data = forecast
         self.unit_system = forecast.json['flags']['units']

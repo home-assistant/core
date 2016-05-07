@@ -131,9 +131,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'ipv6_address':
             self._state = psutil.net_if_addrs()[self.argument][1][1]
         elif self.type == 'last_boot':
-            self._state = dt_util.datetime_to_date_str(
-                dt_util.as_local(
-                    dt_util.utc_from_timestamp(psutil.boot_time())))
+            self._state = dt_util.as_local(
+                dt_util.utc_from_timestamp(psutil.boot_time())
+            ).date().isoformat()
         elif self.type == 'since_last_boot':
             self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 psutil.boot_time())

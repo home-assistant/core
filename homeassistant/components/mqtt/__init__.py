@@ -1,5 +1,5 @@
 """
-Support for MQTT message handling..
+Support for MQTT message handling.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
@@ -14,11 +14,11 @@ import voluptuous as vol
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util as util
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_VALUE_TEMPLATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,15 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
+CONF_CLIENT_KEY = 'client_key'
+CONF_CLIENT_CERT = 'client_cert'
+CONF_TLS_INSECURE = 'tls_insecure'
 CONF_PROTOCOL = 'protocol'
+
+CONF_STATE_TOPIC = 'state_topic'
+CONF_COMMAND_TOPIC = 'command_topic'
+CONF_QOS = 'qos'
+CONF_RETAIN = 'retain'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -53,26 +61,81 @@ DEFAULT_PROTOCOL = PROTOCOL_311
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
-ATTR_QOS = 'qos'
-ATTR_RETAIN = 'retain'
+ATTR_QOS = CONF_QOS
+ATTR_RETAIN = CONF_RETAIN
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-# Service call validation schema
-def mqtt_topic(value):
-    """Validate that we can publish using this MQTT topic."""
-    if isinstance(value, str) and all(c not in value for c in '#+\0'):
+def valid_subscribe_topic(value, invalid_chars='\0'):
+    """Validate that we can subscribe using this MQTT topic."""
+    if isinstance(value, str) and all(c not in value for c in invalid_chars):
         return vol.Length(min=1, max=65535)(value)
     raise vol.Invalid('Invalid MQTT topic name')
 
+
+def valid_publish_topic(value):
+    """Validate that we can publish using this MQTT topic."""
+    return valid_subscribe_topic(value, invalid_chars='#+\0')
+
+_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+_HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
+
+CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
+                      'the mqtt broker config'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_CLIENT_ID): cv.string,
+        vol.Optional(CONF_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+            vol.All(vol.Coerce(int), vol.Range(min=15)),
+        vol.Optional(CONF_BROKER): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
+            vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
+        vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+MQTT_BASE_PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+})
+
+# Sensor type platforms subscribe to MQTT events
+MQTT_RO_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
+
+# Switch type platforms publish to MQTT and may subscribe
+MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+})
+
+
+# Service call validation schema
 MQTT_PUBLISH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_TOPIC): mqtt_topic,
+    vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Exclusive(ATTR_PAYLOAD, 'payload'): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, 'payload'): cv.string,
-    vol.Required(ATTR_QOS, default=DEFAULT_QOS): vol.In([0, 1, 2]),
-    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): vol.Coerce(bool),
-})
+    vol.Required(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Required(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+}, required=True)
 
 
 def _build_publish_data(topic, qos, retain):
@@ -135,31 +198,32 @@ def setup(hass, config):
     # pylint: disable=too-many-locals
     conf = config.get(DOMAIN, {})
 
-    client_id = util.convert(conf.get(CONF_CLIENT_ID), str)
-    keepalive = util.convert(conf.get(CONF_KEEPALIVE), int, DEFAULT_KEEPALIVE)
+    client_id = conf.get(CONF_CLIENT_ID)
+    keepalive = conf.get(CONF_KEEPALIVE)
 
     broker_config = _setup_server(hass, config)
+
+    broker_in_conf = True if CONF_BROKER in conf else False
 
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
-    elif not broker_config and (CONF_EMBEDDED in conf or
-                                CONF_BROKER not in conf):
+        # Embedded broker doesn't have some ssl variables
+        client_key, client_cert, tls_insecure = None, None, None
+    elif not broker_config and CONF_BROKER not in conf:
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
 
-    if CONF_BROKER in conf:
+    if broker_in_conf:
         broker = conf[CONF_BROKER]
-        port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
-        username = util.convert(conf.get(CONF_USERNAME), str)
-        password = util.convert(conf.get(CONF_PASSWORD), str)
-        certificate = util.convert(conf.get(CONF_CERTIFICATE), str)
-        protocol = util.convert(conf.get(CONF_PROTOCOL), str, DEFAULT_PROTOCOL)
-
-    if protocol not in (PROTOCOL_31, PROTOCOL_311):
-        _LOGGER.error('Invalid protocol specified: %s. Allowed values: %s, %s',
-                      protocol, PROTOCOL_31, PROTOCOL_311)
-        return False
+        port = conf[CONF_PORT]
+        username = conf.get(CONF_USERNAME)
+        password = conf.get(CONF_PASSWORD)
+        certificate = conf.get(CONF_CERTIFICATE)
+        client_key = conf.get(CONF_CLIENT_KEY)
+        client_cert = conf.get(CONF_CLIENT_CERT)
+        tls_insecure = conf.get(CONF_TLS_INSECURE)
+        protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
@@ -169,8 +233,9 @@ def setup(hass, config):
 
     global MQTT_CLIENT
     try:
-        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate, protocol)
+        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
+                           username, password, certificate, client_key,
+                           client_cert, tls_insecure, protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -194,7 +259,8 @@ def setup(hass, config):
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
         try:
-            payload = payload or template.render(hass, payload_template)
+            payload = (payload if payload_template is None else
+                       template.render(hass, payload_template)) or ''
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "
@@ -220,7 +286,8 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, protocol):
+                 password, certificate, client_key, client_cert,
+                 tls_insecure, protocol):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -240,8 +307,13 @@ class MQTT(object):
 
         if username is not None:
             self._mqttc.username_pw_set(username, password)
+
         if certificate is not None:
-            self._mqttc.tls_set(certificate)
+            self._mqttc.tls_set(certificate, certfile=client_cert,
+                                keyfile=client_key)
+
+        if tls_insecure is not None:
+            self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
