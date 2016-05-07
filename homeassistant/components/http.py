@@ -12,11 +12,11 @@ import ssl
 import threading
 import time
 from datetime import timedelta
-import voluptuous as vol
 from http import cookies
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from urllib.parse import parse_qs, urlparse
+import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
@@ -66,6 +66,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
     }),
 }, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
@@ -376,8 +377,9 @@ class RequestHandler(SimpleHTTPRequestHandler):
         cors_check = (self.headers.get("Origin") in self.server.cors_origins)
 
         cors_headers = ", ".join([HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                                 HTTP_HEADER_X_REQUESTED_WITH,
-                                 HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_HA_AUTH])
+                                  HTTP_HEADER_X_REQUESTED_WITH,
+                                  HTTP_HEADER_CONTENT_TYPE,
+                                  HTTP_HEADER_HA_AUTH])
 
         if len(self.server.cors_origins) > 0 and cors_check:
             self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
