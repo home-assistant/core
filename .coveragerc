@@ -14,6 +14,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/dweet.py
+    homeassistant/components/*/dweet.py
+
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
@@ -143,7 +146,6 @@ omit =
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
-    homeassistant/components/sensor/dweet.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/forecast.py
