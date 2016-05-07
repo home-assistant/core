@@ -56,6 +56,7 @@ def render(hass, template, variables=None, **kwargs):
             'now': dt_util.as_local(utcnow),
             'states': AllStates(hass),
             'utcnow': utcnow,
+            'as_timestamp': dt_util.as_timestamp,
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
