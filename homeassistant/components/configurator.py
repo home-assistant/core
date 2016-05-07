@@ -21,7 +21,6 @@ STATE_CONFIGURED = "configured"
 
 ATTR_CONFIGURE_ID = "configure_id"
 ATTR_DESCRIPTION = "description"
-ATTR_DESCRIPTION_HTML = "description_html"
 ATTR_DESCRIPTION_IMAGE = "description_image"
 ATTR_SUBMIT_CAPTION = "submit_caption"
 ATTR_FIELDS = "fields"
@@ -34,8 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=too-many-arguments
 def request_config(
-        hass, name, callback, description=None, description_html=None,
-        description_image=None, submit_caption=None, fields=None):
+        hass, name, callback, description=None, description_image=None,
+        submit_caption=None, fields=None):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -44,8 +43,7 @@ def request_config(
 
     request_id = instance.request_config(
         name, callback,
-        description, description_html,
-        description_image, submit_caption, fields)
+        description, description_image, submit_caption, fields)
 
     _REQUESTS[request_id] = instance
 
@@ -102,8 +100,7 @@ class Configurator(object):
     # pylint: disable=too-many-arguments
     def request_config(
             self, name, callback,
-            description, description_html,
-            description_image, submit_caption, fields):
+            description, description_image, submit_caption, fields):
         """Setup a request for configuration."""
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
@@ -122,7 +119,6 @@ class Configurator(object):
         data.update({
             key: value for key, value in [
                 (ATTR_DESCRIPTION, description),
-                (ATTR_DESCRIPTION_HTML, description_html),
                 (ATTR_DESCRIPTION_IMAGE, description_image),
                 (ATTR_SUBMIT_CAPTION, submit_caption),
             ] if value is not None
