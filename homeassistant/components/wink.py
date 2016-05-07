@@ -9,13 +9,13 @@ import logging
 from homeassistant import bootstrap
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, CONF_ACCESS_TOKEN,
-    EVENT_PLATFORM_DISCOVERED)
+    EVENT_PLATFORM_DISCOVERED, ATTR_BATTERY_LEVEL)
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.5']
+REQUIREMENTS = ['python-wink==0.7.6']
 
 DISCOVER_LIGHTS = "wink.lights"
 DISCOVER_SWITCHES = "wink.switches"
@@ -68,6 +68,7 @@ class WinkToggleDevice(ToggleEntity):
     def __init__(self, wink):
         """Initialize the Wink device."""
         self.wink = wink
+        self._battery = self.wink.battery_level
 
     @property
     def unique_id(self):
@@ -100,3 +101,16 @@ class WinkToggleDevice(ToggleEntity):
     def update(self):
         """Update state of the device."""
         self.wink.update_state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._battery:
+            return {
+                ATTR_BATTERY_LEVEL: self._battery_level,
+            }
+
+    @property
+    def _battery_level(self):
+        """Return the battery level."""
+        return self.wink.battery_level * 100
