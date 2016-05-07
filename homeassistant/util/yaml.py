@@ -64,6 +64,17 @@ def _ordered_dict(loader, node):
 
     return OrderedDict(nodes)
 
+
+def _env_var_yaml(loader, node):
+    """Load environment variables and embed it into the configuration YAML."""
+    if node.value in os.environ:
+        return os.environ[node.value]
+    else:
+        _LOGGER.error("Environment variable %s not defined.", node.value)
+        raise HomeAssistantError(node.value)
+
+
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
+yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)

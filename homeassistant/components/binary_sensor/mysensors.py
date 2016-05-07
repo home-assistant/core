@@ -6,10 +6,10 @@ https://home-assistant.io/components/binary_sensor.mysensors/
 """
 import logging
 
+from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (SENSOR_CLASSES,
                                                     BinarySensorDevice)
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
-from homeassistant.loader import get_component
+from homeassistant.const import STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
@@ -21,8 +21,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Otherwise gateway is not setup.
     if discovery_info is None:
         return
-
-    mysensors = get_component('mysensors')
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
@@ -48,81 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             map_sv_types, devices, add_devices, MySensorsBinarySensor))
 
 
-class MySensorsBinarySensor(BinarySensorDevice):
-    """Represent the value of a MySensors child node."""
-
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
-
-    def __init__(
-            self, gateway, node_id, child_id, name, value_type, child_type):
-        """
-        Setup class attributes on instantiation.
-
-        Args:
-        gateway (GatewayWrapper): Gateway object.
-        node_id (str): Id of node.
-        child_id (str): Id of child.
-        name (str): Entity name.
-        value_type (str): Value type of child. Value is entity state.
-        child_type (str): Child type of child.
-
-        Attributes:
-        gateway (GatewayWrapper): Gateway object.
-        node_id (str): Id of node.
-        child_id (str): Id of child.
-        _name (str): Entity name.
-        value_type (str): Value type of child. Value is entity state.
-        child_type (str): Child type of child.
-        battery_level (int): Node battery level.
-        _values (dict): Child values. Non state values set as state attributes.
-        mysensors (module): Mysensors main component module.
-        """
-        self.gateway = gateway
-        self.node_id = node_id
-        self.child_id = child_id
-        self._name = name
-        self.value_type = value_type
-        self.child_type = child_type
-        self.battery_level = 0
-        self._values = {}
-        self.mysensors = get_component('mysensors')
-
-    @property
-    def should_poll(self):
-        """Mysensor gateway pushes its state to HA."""
-        return False
-
-    @property
-    def name(self):
-        """The name of this entity."""
-        return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        address = getattr(self.gateway, 'server_address', None)
-        if address:
-            device = '{}:{}'.format(address[0], address[1])
-        else:
-            device = self.gateway.port
-        attr = {
-            self.mysensors.ATTR_DEVICE: device,
-            self.mysensors.ATTR_NODE_ID: self.node_id,
-            self.mysensors.ATTR_CHILD_ID: self.child_id,
-            ATTR_BATTERY_LEVEL: self.battery_level,
-        }
-
-        set_req = self.gateway.const.SetReq
-
-        for value_type, value in self._values.items():
-            if value_type != self.value_type:
-                try:
-                    attr[set_req(value_type).name] = value
-                except ValueError:
-                    _LOGGER.error('value_type %s is not valid for mysensors '
-                                  'version %s', value_type,
-                                  self.gateway.version)
-        return attr
+class MySensorsBinarySensor(
+        mysensors.MySensorsDeviceEntity, BinarySensorDevice):
+    """Represent the value of a MySensors Binary Sensor child node."""
 
     @property
     def is_on(self):
@@ -150,23 +76,3 @@ class MySensorsBinarySensor(BinarySensorDevice):
             })
         if class_map.get(self.child_type) in SENSOR_CLASSES:
             return class_map.get(self.child_type)
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.value_type in self._values
-
-    def update(self):
-        """Update the controller with the latest values from a sensor."""
-        node = self.gateway.sensors[self.node_id]
-        child = node.children[self.child_id]
-        for value_type, value in child.values.items():
-            _LOGGER.debug(
-                "%s: value_type %s, value = %s", self._name, value_type, value)
-            if value_type == self.gateway.const.SetReq.V_TRIPPED:
-                self._values[value_type] = STATE_ON if int(
-                    value) == 1 else STATE_OFF
-            else:
-                self._values[value_type] = value
-
-        self.battery_level = node.battery_level
