@@ -53,6 +53,9 @@ evohomeclient==0.2.5
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
+# homeassistant.components.sensor.fitbit
+fitbit==0.2.2
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.0
 
