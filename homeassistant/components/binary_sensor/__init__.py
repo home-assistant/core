@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components import (
-    bloomsky, mysensors, zwave, vera, wemo, wink)
+    bloomsky, mysensors, zwave, vera, wemo, wink, google_calendar)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 DOMAIN = 'binary_sensor'
@@ -42,7 +42,8 @@ DISCOVERY_PLATFORMS = {
     zwave.DISCOVER_BINARY_SENSORS: 'zwave',
     vera.DISCOVER_BINARY_SENSORS: 'vera',
     wemo.DISCOVER_BINARY_SENSORS: 'wemo',
-    wink.DISCOVER_BINARY_SENSORS: 'wink'
+    wink.DISCOVER_BINARY_SENSORS: 'wink',
+    google_calendar.DISCOVER_BINARY_SENSORS: 'google_calendar'
 }
 
 
