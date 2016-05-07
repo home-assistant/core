@@ -290,3 +290,28 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert mock_track.called
         assert [0, 30] == list(mock_track.call_args[1]['second'])
+
+    def test_set_entity_namespace_via_config(self):
+        """Test setting an entity namespace."""
+        def platform_setup(hass, config, add_devices, discovery_info=None):
+            """Test the platform setup."""
+            add_devices([
+                EntityTest(name='beer'),
+                EntityTest(name=None),
+            ])
+
+        platform = MockPlatform(platform_setup)
+
+        loader.set_component('test_domain.platform', platform)
+
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        component.setup({
+            DOMAIN: {
+                'platform': 'platform',
+                'entity_namespace': 'yummy'
+            }
+        })
+
+        assert sorted(self.hass.states.entity_ids()) == \
+            ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']
