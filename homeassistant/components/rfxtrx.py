@@ -39,7 +39,9 @@ DATA_TYPES = OrderedDict([
     ('Wind direction', ''),
     ('Rain rate', ''),
     ('Energy usage', 'W'),
-    ('Total usage', 'W')])
+    ('Total usage', 'W'),
+    ('Sensor Status', ''),
+    ('Unknown', '')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
