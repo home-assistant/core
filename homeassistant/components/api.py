@@ -181,6 +181,7 @@ def _handle_get_api_config(handler, path_match, data):
     """Return the Home Assistant configuration."""
     handler.write_json(handler.server.hass.config.as_dict())
 
+
 def _handle_get_api_discovery_info(handler, path_match, data):
     needs_auth = (handler.server.hass.config.api.api_password is not None)
     params = {
@@ -190,6 +191,7 @@ def _handle_get_api_discovery_info(handler, path_match, data):
         'version': __version__
     }
     handler.write_json(params)
+
 
 def _handle_get_api_states(handler, path_match, data):
     """Return a dict containing all entity ids and their state."""
