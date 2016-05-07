@@ -1,5 +1,5 @@
 flake8>=2.5.1
-pylint>=1.5.3
+pylint>=1.5.5
 coveralls>=1.1
 pytest>=2.8.0
 pytest-cov>=2.2.0
