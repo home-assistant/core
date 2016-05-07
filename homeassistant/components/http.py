@@ -12,6 +12,7 @@ import ssl
 import threading
 import time
 from datetime import timedelta
+import voluptuous as vol
 from http import cookies
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -22,6 +23,7 @@ import homeassistant.core as ha
 import homeassistant.remote as rem
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_CONTENT_ENCODING,
@@ -52,6 +54,18 @@ SESSION_KEY = 'sessionId'
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_SSL_KEY): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
