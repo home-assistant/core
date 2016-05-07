@@ -73,7 +73,7 @@ def setup(hass, config):
                                                 HTTP_HEADER_X_REQUESTED_WITH,
                                                 HTTP_HEADER_CONTENT_TYPE,
                                                 HTTP_HEADER_HA_AUTH])
-    cors_origins = conf.get(CONF_CORS_ORIGINS, ['*'])
+    cors_origins = conf.get(CONF_CORS_ORIGINS)
 
     try:
         server = HomeAssistantHTTPServer(
@@ -370,12 +370,11 @@ class RequestHandler(SimpleHTTPRequestHandler):
 
         self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(content)))
 
-        cors_check = (self.headers.get("Origin") in self.server.cors_origins or
-                      (self.server.cors_origins[0] == "*"))
+        cors_check = (self.headers.get("Origin") in self.server.cors_origins)
 
         if self.server.allow_cors and cors_check:
             self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
-                             self.headers.get("Origin", "*"))
+                             self.headers.get("Origin"))
             self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
                              ", ".join(self.server.cors_headers))
         self.end_headers()
