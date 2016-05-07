@@ -6,7 +6,10 @@ at https://home-assistant.io/components/input_slider/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -28,6 +31,11 @@ ATTR_MAX = 'max'
 ATTR_STEP = 'step'
 
 SERVICE_SELECT_VALUE = 'select_value'
+
+SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): vol.Coerce(int),
+})
 
 
 def select_value(hass, entity_id, value):
@@ -81,10 +89,11 @@ def setup(hass, config):
         target_inputs = component.extract_from_service(call)
 
         for input_slider in target_inputs:
-            input_slider.select_value(call.data.get(ATTR_VALUE))
+            input_slider.select_value(call.data[ATTR_VALUE])
 
     hass.services.register(DOMAIN, SERVICE_SELECT_VALUE,
-                           select_value_service)
+                           select_value_service,
+                           schema=SERVICE_SELECT_VALUE_SCHEMA)
 
     component.add_entities(entities)
 

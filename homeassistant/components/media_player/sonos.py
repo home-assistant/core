@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.sonos/
 """
 import datetime
 import logging
+import socket
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
@@ -13,7 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -36,11 +37,13 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
-    import socket
 
     if discovery_info:
-        add_devices([SonosDevice(hass, soco.SoCo(discovery_info))])
-        return True
+        player = soco.SoCo(discovery_info)
+        if player.is_visible:
+            add_devices([SonosDevice(hass, player)])
+            return True
+        return False
 
     players = None
     hosts = config.get('hosts', None)
@@ -138,9 +141,14 @@ class SonosDevice(MediaPlayerDevice):
         """Retrieve latest state."""
         self._name = self._player.get_speaker_info()['zone_name'].replace(
             ' (R)', '').replace(' (L)', '')
-        self._status = self._player.get_current_transport_info().get(
-            'current_transport_state')
-        self._trackinfo = self._player.get_current_track_info()
+
+        if self.available:
+            self._status = self._player.get_current_transport_info().get(
+                'current_transport_state')
+            self._trackinfo = self._player.get_current_track_info()
+        else:
+            self._status = STATE_OFF
+            self._trackinfo = {}
 
     @property
     def volume_level(self):
@@ -253,3 +261,15 @@ class SonosDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id):
         """Send the play_media command to the media player."""
         self._player.play_uri(media_id)
+
+    @property
+    def available(self):
+        """Return True if player is reachable, False otherwise."""
+        try:
+            sock = socket.create_connection(
+                address=(self._player.ip_address, 1443),
+                timeout=3)
+            sock.close()
+            return True
+        except socket.error:
+            return False

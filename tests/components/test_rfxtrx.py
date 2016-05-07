@@ -37,10 +37,10 @@ class TestRFXTRX(unittest.TestCase):
                        'automatic_add': True,
                        'devices': {}}}))
 
-        while len(rfxtrx.RFX_DEVICES) < 2:
+        while len(rfxtrx.RFX_DEVICES) < 1:
             time.sleep(0.1)
 
-        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
+        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 1)
 
     def test_valid_config(self):
         """Test configuration."""
@@ -82,9 +82,8 @@ class TestRFXTRX(unittest.TestCase):
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'213c7f216': {
+                           {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               'packetid': '0b1100cd0213c7f210010f51',
                                rfxtrx.ATTR_FIREEVENT: True}
                             }}}))
 

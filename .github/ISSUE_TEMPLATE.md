@@ -1,4 +1,4 @@
-Feature requests should go in the forum: https://community.home-assistant.io/c/feature-requests
+Make sure you run the latest version before reporting an issue. Feature requests should go in the forum: https://community.home-assistant.io/c/feature-requests
 
 **Home Assistant release (`hass --version`):**
 

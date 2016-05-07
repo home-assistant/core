@@ -4,12 +4,13 @@ Support for Nest Thermostat Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
-import logging
-import socket
+import voluptuous as vol
 
 import homeassistant.components.nest as nest
-from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL, CONF_MONITORED_CONDITIONS
+)
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
@@ -19,49 +20,42 @@ SENSOR_TYPES = ['humidity',
                 'last_connection',
                 'battery_level']
 
-WEATHER_VARIABLES = ['weather_condition', 'weather_temperature',
-                     'weather_humidity',
-                     'wind_speed', 'wind_direction']
-
-JSON_VARIABLE_NAMES = {'weather_humidity': 'humidity',
-                       'weather_temperature': 'temperature',
-                       'weather_condition': 'condition',
-                       'wind_speed': 'kph',
-                       'wind_direction': 'direction'}
+WEATHER_VARS = {'weather_humidity': 'humidity',
+                'weather_temperature': 'temperature',
+                'weather_condition': 'condition',
+                'wind_speed': 'kph',
+                'wind_direction': 'direction'}
 
 SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
                 'kph': 'kph', 'temperature': '°C'}
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
+_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + \
+                      list(WEATHER_VARS.keys())
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Required(CONF_MONITORED_CONDITIONS): [vol.In(_VALID_SENSOR_TYPES)],
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
-    logger = logging.getLogger(__name__)
-    try:
-        for structure in nest.NEST.structures:
-            for device in structure.devices:
-                for variable in config['monitored_conditions']:
-                    if variable in SENSOR_TYPES:
-                        add_devices([NestBasicSensor(structure,
-                                                     device,
-                                                     variable)])
-                    elif variable in SENSOR_TEMP_TYPES:
-                        add_devices([NestTempSensor(structure,
-                                                    device,
-                                                    variable)])
-                    elif variable in WEATHER_VARIABLES:
-                        json_variable = JSON_VARIABLE_NAMES.get(variable, None)
-                        add_devices([NestWeatherSensor(structure,
-                                                       device,
-                                                       json_variable)])
-                    else:
-                        logger.error('Nest sensor type: "%s" does not exist',
-                                     variable)
-    except socket.error:
-        logger.error(
-            "Connection error logging into the nest web service."
-        )
+    for structure, device in nest.devices():
+        sensors = [NestBasicSensor(structure, device, variable)
+                   for variable in config[CONF_MONITORED_CONDITIONS]
+                   if variable in SENSOR_TYPES]
+        sensors += [NestTempSensor(structure, device, variable)
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in SENSOR_TEMP_TYPES]
+        sensors += [NestWeatherSensor(structure, device,
+                                      WEATHER_VARS[variable])
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in WEATHER_VARS]
+        add_devices(sensors)
 
 
 class NestSensor(Entity):
@@ -109,7 +103,7 @@ class NestTempSensor(NestSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def state(self):

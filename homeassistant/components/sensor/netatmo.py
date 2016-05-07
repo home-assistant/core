@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
-    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS)
+    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -22,7 +22,7 @@ REQUIREMENTS = [
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', TEMP_CELCIUS, 'mdi:thermometer'],
+    'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'co2':         ['CO2', 'ppm', 'mdi:cloud'],
     'pressure':    ['Pressure', 'mbar', 'mdi:gauge'],
     'noise':       ['Noise', 'dB', 'mdi:volume-high'],

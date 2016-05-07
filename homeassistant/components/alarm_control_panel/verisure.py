@@ -49,6 +49,11 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
+
+    @property
     def code_format(self):
         """The code format as regex."""
         return '^\\d{%s}$' % self._digits

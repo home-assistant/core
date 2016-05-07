@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.18.0.dev0"
+__version__ = "0.19.0.dev0"
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
@@ -12,27 +12,46 @@ MATCH_ALL = '*'
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
-# #### CONFIG ####
-CONF_ICON = "icon"
-CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
-CONF_TEMPERATURE_UNIT = "temperature_unit"
-CONF_NAME = "name"
-CONF_TIME_ZONE = "time_zone"
-CONF_CUSTOMIZE = "customize"
+WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
-CONF_PLATFORM = "platform"
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_HOSTS = "hosts"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_API_KEY = "api_key"
-CONF_ACCESS_TOKEN = "access_token"
-CONF_FILENAME = "filename"
+SUN_EVENT_SUNSET = 'sunset'
+SUN_EVENT_SUNRISE = 'sunrise'
+
+# #### CONFIG ####
+CONF_ABOVE = 'above'
+CONF_ACCESS_TOKEN = 'access_token'
+CONF_AFTER = 'after'
+CONF_ALIAS = 'alias'
+CONF_API_KEY = 'api_key'
+CONF_BEFORE = 'before'
+CONF_BELOW = 'below'
+CONF_CONDITION = 'condition'
+CONF_CUSTOMIZE = 'customize'
+CONF_ELEVATION = 'elevation'
+CONF_ENTITY_ID = 'entity_id'
+CONF_ENTITY_NAMESPACE = 'entity_namespace'
+CONF_EVENT = 'event'
+CONF_FILENAME = 'filename'
+CONF_HOST = 'host'
+CONF_HOSTS = 'hosts'
+CONF_ICON = 'icon'
+CONF_LATITUDE = 'latitude'
+CONF_LONGITUDE = 'longitude'
+CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+CONF_NAME = 'name'
+CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
-CONF_SCAN_INTERVAL = "scan_interval"
-CONF_VALUE_TEMPLATE = "value_template"
+CONF_PASSWORD = 'password'
+CONF_PLATFORM = 'platform'
+CONF_PORT = 'port'
+CONF_SCAN_INTERVAL = 'scan_interval'
+CONF_STATE = 'state'
+CONF_TEMPERATURE_UNIT = 'temperature_unit'
+CONF_TIME_ZONE = 'time_zone'
+CONF_USERNAME = 'username'
+CONF_VALUE_TEMPLATE = 'value_template'
+CONF_WEEKDAY = 'weekday'
+CONF_ZONE = 'zone'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -96,6 +115,7 @@ ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
 TEMP_CELCIUS = "°C"
+TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Contains the information that is discovered
@@ -151,6 +171,7 @@ SERVICE_VOLUME_SET = "volume_set"
 SERVICE_MEDIA_PLAY_PAUSE = "media_play_pause"
 SERVICE_MEDIA_PLAY = "media_play"
 SERVICE_MEDIA_PAUSE = "media_pause"
+SERVICE_MEDIA_STOP = "media_stop"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
