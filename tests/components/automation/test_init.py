@@ -51,7 +51,10 @@ class TestAutomation(unittest.TestCase):
                 },
                 'action': {
                     'service': 'test.automation',
-                    'data': {'some': 'data'}
+                    'data_template': {
+                        'some': '{{ trigger.platform }} - '
+                                '{{ trigger.event.event_type }}'
+                    },
                 }
             }
         })
@@ -59,7 +62,7 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
-        self.assertEqual('data', self.calls[0].data['some'])
+        self.assertEqual('event - test_event', self.calls[0].data['some'])
 
     def test_service_specify_entity_id(self):
         """Test service data."""
@@ -143,12 +146,12 @@ class TestAutomation(unittest.TestCase):
                 ],
                 'condition': [
                     {
-                        'platform': 'state',
+                        'condition': 'state',
                         'entity_id': entity_id,
                         'state': '100'
                     },
                     {
-                        'platform': 'numeric_state',
+                        'condition': 'numeric_state',
                         'entity_id': entity_id,
                         'below': 150
                     }
@@ -228,6 +231,7 @@ class TestAutomation(unittest.TestCase):
                     {
                         'platform': 'state',
                         'entity_id': entity_id,
+                        'from': '120',
                         'state': '100'
                     },
                     {
@@ -245,9 +249,13 @@ class TestAutomation(unittest.TestCase):
 
         self.hass.states.set(entity_id, 100)
         self.hass.pool.block_till_done()
-        self.assertEqual(2, len(self.calls))
+        self.assertEqual(1, len(self.calls))
 
         self.hass.states.set(entity_id, 120)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
+        self.hass.states.set(entity_id, 100)
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
 
@@ -313,3 +321,29 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event_2')
         self.hass.pool.block_till_done()
         self.assertEqual(2, len(self.calls))
+
+    def test_automation_calling_two_actions(self):
+        """Test if we can call two actions from automation definition."""
+        self.assertTrue(_setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+
+                'action': [{
+                    'service': 'test.automation',
+                    'data': {'position': 0},
+                }, {
+                    'service': 'test.automation',
+                    'data': {'position': 1},
+                }],
+            }
+        }))
+
+        self.hass.bus.fire('test_event')
+        self.hass.pool.block_till_done()
+
+        assert len(self.calls) == 2
+        assert self.calls[0].data['position'] == 0
+        assert self.calls[1].data['position'] == 1

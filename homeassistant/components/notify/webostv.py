@@ -10,6 +10,10 @@ from homeassistant.components.notify import (BaseNotificationService, DOMAIN)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.helpers import validate_config
 
+REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
+                '/archive/v0.1.2.zip'
+                '#pylgtv==0.1.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -35,7 +39,7 @@ def get_service(hass, config):
     except PyLGTVPairException:
         _LOGGER.error('Pairing failed.')
         return None
-    except ConnectionRefusedError:
+    except OSError:
         _LOGGER.error('Host unreachable.')
         return None
 
@@ -58,5 +62,5 @@ class LgWebOSNotificationService(BaseNotificationService):
             self._client.send_message(message)
         except PyLGTVPairException:
             _LOGGER.error('Pairing failed.')
-        except ConnectionRefusedError:
+        except OSError:
             _LOGGER.error('Host unreachable.')
