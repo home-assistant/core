@@ -107,6 +107,19 @@ class TestDateUtil(unittest.TestCase):
             datetime(1986, 7, 9, tzinfo=dt_util.UTC),
             dt_util.utc_from_timestamp(521251200))
 
+    def test_as_timestamp(self):
+        """Test as_timestamp method."""
+        ts = 1462401234
+        utc_dt = dt_util.utc_from_timestamp(ts)
+        self.assertEqual(ts, dt_util.as_timestamp(utc_dt))
+        utc_iso = utc_dt.isoformat()
+        self.assertEqual(ts, dt_util.as_timestamp(utc_iso))
+
+        # confirm the ability to handle a string passed in
+        delta = dt_util.as_timestamp("2016-01-01 12:12:12")
+        delta -= dt_util.as_timestamp("2016-01-01 12:12:11")
+        self.assertEquals(1, delta)
+
     def test_parse_datetime_converts_correctly(self):
         """Test parse_datetime converts strings."""
         assert \
