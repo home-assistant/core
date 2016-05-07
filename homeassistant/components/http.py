@@ -80,7 +80,7 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
-    cors_origins = conf.get(CONF_CORS_ORIGINS)
+    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
 
     try:
         server = HomeAssistantHTTPServer(
