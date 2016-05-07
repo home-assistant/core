@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.helpers import validate_config
 
 DOMAIN = "arduino"
-REQUIREMENTS = ['PyMata==2.07a']
+REQUIREMENTS = ['PyMata==2.12']
 BOARD = None
 _LOGGER = logging.getLogger(__name__)
 
