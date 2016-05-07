@@ -1,11 +1,9 @@
 """
 Support for monitoring OctoPrint binary sensors.
 
-Uses OctoPrint REST JSON API to query for monitored variables.
-For more details about this component, please refer to the documentation at
-http://docs.octoprint.org/en/master/api/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.octoprint/
 """
-
 import logging
 import requests
 
@@ -51,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class OctoPrintBinarySensor(BinarySensorDevice):
-    """Represents an OctoPrint binary sensor."""
+    """Representation an OctoPrint binary sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, api, condition, sensor_type, sensor_name,
@@ -71,7 +69,7 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         self.api_tool = tool
         # Set initial state
         self.update()
-        _LOGGER.debug("created OctoPrint binary sensor %r", self)
+        _LOGGER.debug("Created OctoPrint binary sensor %r", self)
 
     @property
     def name(self):
@@ -108,4 +106,4 @@ class OctoPrintBinarySensor(BinarySensorDevice):
             return
 
         if self._state is None:
-            _LOGGER.warning("unable to locate value for %s", self.sensor_type)
+            _LOGGER.warning("Unable to locate value for %s", self.sensor_type)

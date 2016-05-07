@@ -1,10 +1,9 @@
 """
 Support for monitoring OctoPrint 3D printers.
 
-Uses OctoPrint REST JSON API to query for monitored variables.
-http://docs.octoprint.org/en/master/api/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/octoprint/
 """
-
 import logging
 
 import time
@@ -52,7 +51,7 @@ def setup(hass, config):
 
 
 class OctoPrintAPI(object):
-    """Simple json wrapper for OctoPrint's api."""
+    """Simple JSON wrapper for OctoPrint's API."""
 
     def __init__(self, api_url, key):
         """Initialize OctoPrint API and set headers needed later."""
@@ -109,7 +108,7 @@ class OctoPrintAPI(object):
 
 # pylint: disable=unused-variable
 def get_value_from_json(json_dict, sensor_type, group, tool):
-    """Return the value for sensor_type from the provided json."""
+    """Return the value for sensor_type from the JSON."""
     if group in json_dict:
         if sensor_type in json_dict[group]:
             if sensor_type == "target" and json_dict[sensor_type] is None:
