@@ -63,7 +63,7 @@ fuzzywuzzy==0.8.0
 gntp==1.0.3
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.6.3
+hbmqtt==0.7.1
 
 # homeassistant.components.thermostat.heatmiser
 heatmiserV3==0.9.1
