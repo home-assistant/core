@@ -16,9 +16,10 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN, EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_HEADER_CONTENT_TYPE, HTTP_NOT_FOUND,
     HTTP_OK, HTTP_UNPROCESSABLE_ENTITY, MATCH_ALL, URL_API, URL_API_COMPONENTS,
-    URL_API_CONFIG, URL_API_ERROR_LOG, URL_API_EVENT_FORWARD, URL_API_EVENTS,
-    URL_API_LOG_OUT, URL_API_SERVICES, URL_API_STATES, URL_API_STATES_ENTITY,
-    URL_API_STREAM, URL_API_TEMPLATE, __version__)
+    URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG,
+    URL_API_EVENT_FORWARD, URL_API_EVENTS, URL_API_LOG_OUT, URL_API_SERVICES,
+    URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM, URL_API_TEMPLATE,
+    __version__)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.state import TrackStates
 from homeassistant.helpers import template
@@ -38,7 +39,11 @@ def setup(hass, config):
     hass.http.register_path('GET', URL_API, _handle_get_api)
 
     # /api/config
-    hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config,
+    hass.http.register_path('GET', URL_API_CONFIG, _handle_get_api_config)
+
+    # /api/discovery_info
+    hass.http.register_path('GET', URL_API_DISCOVERY_INFO,
+                            _handle_get_api_discovery_info,
                             require_auth=False)
 
     # /api/stream
@@ -174,18 +179,17 @@ def _handle_get_api_stream(handler, path_match, data):
 
 def _handle_get_api_config(handler, path_match, data):
     """Return the Home Assistant configuration."""
-    if handler.authenticated:
-        handler.write_json(handler.server.hass.config.as_dict())
-    else:
-        needs_auth = (handler.server.hass.config.api.api_password is not None)
-        params = {
-            'base_url': handler.server.hass.config.api.base_url,
-            'location_name': handler.server.hass.config.location_name,
-            'requires_api_password': needs_auth,
-            'version': __version__
-        }
-        handler.write_json(params)
+    handler.write_json(handler.server.hass.config.as_dict())
 
+def _handle_get_api_discovery_info(handler, path_match, data):
+    needs_auth = (handler.server.hass.config.api.api_password is not None)
+    params = {
+        'base_url': handler.server.hass.config.api.base_url,
+        'location_name': handler.server.hass.config.location_name,
+        'requires_api_password': needs_auth,
+        'version': __version__
+    }
+    handler.write_json(params)
 
 def _handle_get_api_states(handler, path_match, data):
     """Return a dict containing all entity ids and their state."""
