@@ -49,7 +49,8 @@ class GPMDP(MediaPlayerDevice):
         """Get the latest details from the player."""
         import socket
         try:
-            self._ws = self._connection(("ws://" + self._address + ":5672"), timeout=1)
+            self._ws = self._connection(("ws://" + self._address + ":5672"),
+                                        timeout=1)
             state = self._ws.recv()
             if ((json.loads(state))['payload']) is True:
                 self._ws.recv()
