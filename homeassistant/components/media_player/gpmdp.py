@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Missing address in config")
         return False
 
-    add_devices([GPMDP(name, address, create_connection, json)])
+    add_devices([GPMDP(name, address, create_connection)])
 
 
 class GPMDP(MediaPlayerDevice):
@@ -37,10 +37,9 @@ class GPMDP(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, address, create_connection, json):
+    def __init__(self, name, address, create_connection):
         """Initialize."""
         self._connection = create_connection
-        self._json = json
         self._address = address
         self._name = name
         self._status = STATE_OFF
@@ -52,14 +51,16 @@ class GPMDP(MediaPlayerDevice):
         try:
             self._ws = self._connection(("ws://" + self._address + ":5672"), timeout=1)
             state = self._ws.recv()
-            if ((self._json.loads(state))['payload']) is True:
+            if ((json.loads(state))['payload']) is True:
+                shufflestate = self._ws.recv()
+                repeatstate = self._ws.recv()
                 song = self._ws.recv()
-                self._title = ((self._json.loads(song))['payload']['title'])
-                self._artist = ((self._json.loads(song))['payload']['artist'])
-                self._albumart = ((self._json.loads(song))['payload']
+                self._title = ((json.loads(song))['payload']['title'])
+                self._artist = ((json.loads(song))['payload']['artist'])
+                self._albumart = ((json.loads(song))['payload']
                                   ['albumArt'])
                 self._status = STATE_PLAYING
-            elif ((self._json.loads(state))['payload']) is False:
+            elif ((json.loads(state))['payload']) is False:
                 self._status = STATE_PAUSED
         except (socket.timeout, ConnectionRefusedError):
             self._status = STATE_OFF
