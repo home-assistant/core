@@ -52,8 +52,8 @@ class GPMDP(MediaPlayerDevice):
             self._ws = self._connection(("ws://" + self._address + ":5672"), timeout=1)
             state = self._ws.recv()
             if ((json.loads(state))['payload']) is True:
-                shufflestate = self._ws.recv()
-                repeatstate = self._ws.recv()
+                self._ws.recv()
+                self._ws.recv()
                 song = self._ws.recv()
                 self._title = ((json.loads(song))['payload']['title'])
                 self._artist = ((json.loads(song))['payload']['artist'])
