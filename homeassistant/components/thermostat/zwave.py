@@ -46,10 +46,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
                 _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
                 return
-    else:
-        add_devices([ZWaveThermostat(value)])
-        _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
-                      discovery_info, zwave.NETWORK)
+       else:
+           add_devices([ZWaveThermostat(value)])
+           _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
+                         discovery_info, zwave.NETWORK)
 
 
 # pylint: disable=too-many-arguments
