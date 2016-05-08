@@ -17,7 +17,7 @@ DEFAULT_NAME = 'ZWave Thermostat'
 
 REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
-REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120, 0)
+REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 
 WORKAROUND_IGNORE = 'ignore'
 
@@ -40,16 +40,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if (value.node.manufacturer_id.strip() and
             value.node.product_id.strip()):
         specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                               int(value.node.product_id, 16),
-                               value.index)
+                               int(value.node.product_id, 16))
         if specific_sensor_key in DEVICE_MAPPINGS:
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
                 _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
                 return
-    else:
-        add_devices([ZWaveThermostat(value)])
-        _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
-                      discovery_info, zwave.NETWORK)
+
+    add_devices([ZWaveThermostat(value)])
+    _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
+                  discovery_info, zwave.NETWORK)
 
 
 # pylint: disable=too-many-arguments
