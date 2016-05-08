@@ -143,7 +143,7 @@ def _process_if(hass, config, p_config, action):
 
     # Deprecated since 0.19 - 5/5/2016
     if cond_type != DEFAULT_CONDITION_TYPE:
-        _LOGGER.warning('Using condition_type: %s is deprecated. Please use '
+        _LOGGER.warning('Using condition_type: "or" is deprecated. Please use '
                         '"condition: or" instead.')
 
     if_configs = p_config.get(CONF_CONDITION)
