@@ -118,7 +118,7 @@ class DemoHvac(HvacDevice):
         self._target_humidity = humidity
         self.update_ha_state()
 
-    def set_swing(self, swing_mode):
+    def set_swing_mode(self, swing_mode):
         """Set new target temperature."""
         self._current_swing_mode = swing_mode
         self.update_ha_state()
@@ -128,7 +128,7 @@ class DemoHvac(HvacDevice):
         self._current_fan_mode = fan
         self.update_ha_state()
 
-    def set_operation(self, operation_mode):
+    def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self._current_operation = operation_mode
         self.update_ha_state()
