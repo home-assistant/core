@@ -7,14 +7,12 @@ https://home-assistant.io/components/sensor.speedtest/
 import logging
 import re
 import sys
-from datetime import timedelta
 from subprocess import check_output
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +30,6 @@ SENSOR_TYPES = {
     'download': ['Download', 'Mbit/s'],
     'upload': ['Upload', 'Mbit/s'],
 }
-
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -105,14 +100,11 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
-        self.hass = hass
-        self.path = hass.config.path
-        track_time_change(self.hass, self.update,
+        track_time_change(hass, self.update,
                           minute=config.get(CONF_MINUTE, 0),
                           hour=config.get(CONF_HOUR, None),
                           day=config.get(CONF_DAY, None))
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, now):
         """Get the latest data from speedtest.net."""
         import speedtest_cli
