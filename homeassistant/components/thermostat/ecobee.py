@@ -55,7 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def send_message_service(service):
         """Send message to thermostats."""
-
         message = service.data['message']
         for thermostat in thermostats:
             thermostat.send_message(message)
@@ -67,6 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class Thermostat(ThermostatDevice):
     """A thermostat class for Ecobee."""
+
     def __init__(self, data, thermostat_index, hold_temp):
         """Initialize the thermostat."""
         self.data = data
