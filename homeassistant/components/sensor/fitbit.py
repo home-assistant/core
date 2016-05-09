@@ -153,7 +153,8 @@ def request_app_setup(hass, config, add_devices, config_path,
         else:
             setup_platform(hass, config, add_devices, discovery_info)
 
-    start_url = "{}{}".format(hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH)
+    start_url = "{}{}".format(hass.config.api.base_url,
+                              FITBIT_AUTH_CALLBACK_PATH)
 
     description = """Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
@@ -301,7 +302,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             setup_platform(hass, config, add_devices, discovery_info=None)
 
-        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth, require_auth=False)
+        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth,
+                                require_auth=False)
         hass.http.register_path("GET", FITBIT_AUTH_CALLBACK_PATH,
                                 _finish_fitbit_auth, require_auth=False)
 
