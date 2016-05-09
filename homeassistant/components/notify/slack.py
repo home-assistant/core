@@ -51,7 +51,7 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        channel = kwargs.get('target', self._default_channel)
+        channel = kwargs.get('target') or self._default_channel
         try:
             self.slack.chat.post_message(channel, message)
         except slacker.Error:
