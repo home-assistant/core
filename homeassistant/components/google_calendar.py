@@ -1,17 +1,22 @@
 """
-Support for custom shell commands to to retrieve values.
+Support for Google Calendar Search binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.command/
+https://home-assistant.io/components/binary_sensor.google_calendar/
 """
-# pylint: disable=import-error
+import os
 import logging
+import socket
 from datetime import timedelta
+import yaml
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.const import HTTP_OK
+from homeassistant.util import get_local_ip, convert, dt
+from homeassistant.loader import get_component
+from homeassistant.config import load_yaml_config_file
+from homeassistant.components.discovery import discover
 
 REQUIREMENTS = [
     'google-api-python-client',
@@ -26,7 +31,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_FQDN = 'fqdn'
 CONF_TRACK_NEW = 'track_new_calendar'
-CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_CAL_ID = 'cal_id'
 CONF_NAME = 'name'
 CONF_ENTITIES = 'entities'
@@ -35,7 +39,6 @@ CONF_SEARCH = 'search'
 CONF_OFFSET = 'offset'
 
 DEFAULT_CONF_TRACK_NEW = True
-DEFAULT_CONF_SCAN_INTERVAL = 60
 DEFAULT_CONF_OFFSET = '#-'
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
@@ -62,7 +65,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_FQDN): cv.string,
     vol.Optional(CONF_TRACK_NEW): cv.boolean,
-    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
 })
 
 _SINGLE_CALSEARCH_CONFIG = vol.Schema({
@@ -72,14 +74,19 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Optional(CONF_OFFSET): cv.string,
 })
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_CAL_ID): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ENTITIES, None):
+        vol.All(cv.ensure_list, [_SINGLE_CALSEARCH_CONFIG]),
+}, extra=vol.ALLOW_EXTRA)
+
 _CALENDARS = {}
 _OAUTH_PATH_SETUP = False
 
 
 def get_fqdn():
     """Get system fqdn or None."""
-    import socket
-    from homeassistant.util import get_local_ip
     hostname = 'PLEASE_SET_FQDN_IN_CONFIGURATION'
     try:
         hostname = socket.gethostbyaddr(get_local_ip())[0]
@@ -90,39 +97,16 @@ def get_fqdn():
     return hostname
 
 
-def _calsearch_dict(value):
-    """Validate a dictionary of group definitions."""
-    config = []
-    for calsearch in value:
-        try:
-            config.append(_SINGLE_CALSEARCH_CONFIG(calsearch))
-        except vol.MultipleInvalid as ex:
-            raise vol.Invalid('Google Calendar Entity is invalid: {}: {}'.
-                              format(calsearch, ex))
-    return config
-
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_CAL_ID): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ENTITIES, None): vol.All(list, _calsearch_dict),
-}, extra=vol.ALLOW_EXTRA)
-
-
 def setup_oauth_paths(hass, config):
     """Start setup of app with Google Oauth."""
-    # pylint disable=import-error,global-statement
-    base_url = "{}://{}:{}".format(
-        'https' if hass.http.use_ssl else 'http',
-        config.get(CONF_FQDN, get_fqdn()),
-        hass.http.server_address[1])
+    # pylint disable=global-statement
+    from oauth2client import client
+    base_url = hass.http.base_url
 
     global _OAUTH_PATH_SETUP
     if _OAUTH_PATH_SETUP:
         return
 
-    from homeassistant.const import HTTP_OK
-    from oauth2client import client
     flow = client.flow_from_clientsecrets(
         hass.config.path(CONFIG_FILE),
         scope=SCOPES,
@@ -158,7 +142,8 @@ def setup_oauth_paths(hass, config):
         html_response = """<html><head><title>Google Calendar Search</title>
                 </head><body><h1>{}</h1>
                 You can now close this window and restart Home-Assistant</br>
-                Restarting is not essential it will just cleanup the
+                Restarting is not essential it will just cleanup the Oauth
+                callback urls.
                 </body>
                 </html>""".format(response_message)
         html_response = html_response.encode("utf-8")
@@ -180,7 +165,6 @@ def setup_oauth_paths(hass, config):
 
 def request_oauth_setup(hass, config):
     """Request completion of oauth setup."""
-    from homeassistant.loader import get_component
     configurator = get_component('configurator')
     if DOMAIN in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[DOMAIN],
@@ -194,7 +178,6 @@ def request_oauth_setup(hass, config):
 
 def request_api_setup(hass, config):
     """Request completion of oauth setup."""
-    from homeassistant.loader import get_component
     configurator = get_component('configurator')
     if DOMAIN in _CONFIGURING:
         return False
@@ -205,7 +188,6 @@ def request_api_setup(hass, config):
     def _configuration_callback(callback_data):
         """What actions to do when user clicks button."""
         # pylint disable=unused-argument
-        import os
         config_file = hass.config.path(CONFIG_FILE)
         if not os.path.isfile(config_file):
             configurator.notify_errors(_CONFIGURING[DOMAIN],
@@ -227,8 +209,6 @@ def request_api_setup(hass, config):
 
 def do_setup_check(hass, config):
     """Verify that we have both the Google Api setup and Oauth."""
-    import os
-
     config_file = hass.config.path(CONFIG_FILE)
     if not os.path.isfile(config_file):
         # we don't have a setup yet
@@ -247,15 +227,12 @@ def do_setup_check(hass, config):
 
 def setup(hass, config):
     """Setup the platform."""
-    config = dict(config)  # copy it so we can modify
-
     config = config.get(DOMAIN, {})
     if isinstance(config, list) and len(config) > 0:
         config = config[0]
 
     def _scan_for_calendars(service):
         """Scan for new calendars."""
-        from homeassistant.util import convert
         track_new = convert(config.get(CONF_TRACK_NEW),
                             bool, DEFAULT_CONF_TRACK_NEW)
         service = get_calendar_service(hass)
@@ -277,8 +254,6 @@ def setup(hass, config):
 def do_setup(hass, config):
     """Run the setup after we have everything configured."""
     # pylint disable=global-statement
-    from homeassistant.loader import get_component
-
     if DOMAIN in _CONFIGURING:
         get_component('configurator').request_done(_CONFIGURING.pop(DOMAIN))
 
@@ -288,10 +263,9 @@ def do_setup(hass, config):
     calendars = load_config(hass.config.path(YAML_DEVICES))
     for calendar_hash, calendar in calendars.items():
         _CALENDARS.update({calendar_hash: calendar})
-        platform_discovered(hass, calendar_hash)
+        discover(hass, DISCOVER_BINARY_SENSORS, _CALENDARS[calendar_hash])
 
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
-    setup_scanner_platform(hass, config)
     return True
 
 
@@ -299,7 +273,6 @@ def found_calendar(hass, calendar, track_new):
     """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
     # since we could just use the global and not assign it
     import hashlib
-
     calendar_hash = hashlib.sha224(
         calendar['id'].encode('utf-8')).hexdigest()
 
@@ -323,22 +296,11 @@ def found_calendar(hass, calendar, track_new):
         _CALENDARS[calendar_hash]
     )
 
-    platform_discovered(hass, calendar_hash)
-
-
-def platform_discovered(hass, calendar_hash):
-    """Fire platform_discovered event."""
-    # Fire thermostat discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_BINARY_SENSORS,
-        ATTR_DISCOVERED: _CALENDARS[calendar_hash]
-    })
+    discover(hass, DISCOVER_BINARY_SENSORS, _CALENDARS[calendar_hash])
 
 
 def get_next_event(hass, calendar_id, search=None):
     """Get the latest data."""
-    from homeassistant.util import dt
-
     service = get_calendar_service(hass)
     params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
     params['timeMin'] = dt.utcnow().isoformat('T')
@@ -356,7 +318,7 @@ def get_next_event(hass, calendar_id, search=None):
 
 def get_calendar_service(hass):
     """Get the calendar service from the storage file token."""
-    # pylint disable=no-name-in-module,import-error
+    # pylint disable=no-name-in-module
     import httplib2
     from oauth2client.file import Storage
     from googleapiclient import discovery
@@ -367,34 +329,8 @@ def get_calendar_service(hass):
     return service
 
 
-def setup_scanner_platform(hass, config):
-    """Setup the scanner to look for new calendars."""
-    from homeassistant.util import convert
-    from homeassistant.helpers.event import track_utc_time_change
-    interval = convert(config.get(CONF_SCAN_INTERVAL), int, 0)
-
-    if interval == 0:
-        return
-
-    def calendar_tracker_scan(now):
-        """Call up service and get list of calendars.
-
-        Then call see_calendar() on each.
-
-        """
-        # pylint disable=unused-argument
-        hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
-
-    track_utc_time_change(hass,
-                          calendar_tracker_scan,
-                          minute=range(0, 60, interval),
-                          second=0)
-
-
 def load_config(path):
     """Load the google_calendar_devices.yaml."""
-    import os
-    from homeassistant.config import load_yaml_config_file
     calendars = {}
     if not os.path.isfile(path):
         return calendars
@@ -405,6 +341,5 @@ def load_config(path):
 
 def update_config(path, calendar_hash, calendar):
     """Write the google_calendar_devices.yaml."""
-    import yaml
     with open(path, 'a') as out:
         yaml.dump({calendar_hash: calendar}, out, default_flow_style=False)
