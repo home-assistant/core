@@ -50,8 +50,11 @@ def _ordered_dict(loader, node):
     nodes = loader.construct_pairs(node)
 
     seen = {}
+    min_line = None
     for (key, _), (node, _) in zip(nodes, node.value):
         line = getattr(node, '__line__', 'unknown')
+        if line != 'unknown' and (min_line is None or line < min_line):
+            min_line = line
         if key in seen:
             fname = getattr(loader.stream, 'name', '')
             first_mark = yaml.Mark(fname, 0, seen[key], -1, None, None)
@@ -62,8 +65,22 @@ def _ordered_dict(loader, node):
             )
         seen[key] = line
 
-    return OrderedDict(nodes)
+    processed = OrderedDict(nodes)
+    processed.__config_file__ = loader.name
+    processed.__line__ = min_line
+    return processed
+
+
+def _env_var_yaml(loader, node):
+    """Load environment variables and embed it into the configuration YAML."""
+    if node.value in os.environ:
+        return os.environ[node.value]
+    else:
+        _LOGGER.error("Environment variable %s not defined.", node.value)
+        raise HomeAssistantError(node.value)
+
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
+yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)

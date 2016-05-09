@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
@@ -140,6 +140,12 @@ def _process_if(hass, config, p_config, action):
     """Process if checks."""
     cond_type = p_config.get(CONF_CONDITION_TYPE,
                              DEFAULT_CONDITION_TYPE).lower()
+
+    # Deprecated since 0.19 - 5/5/2016
+    if cond_type != DEFAULT_CONDITION_TYPE:
+        _LOGGER.warning('Using condition_type: "or" is deprecated. Please use '
+                        '"condition: or" instead.')
+
     if_configs = p_config.get(CONF_CONDITION)
     use_trigger = if_configs == CONDITION_USE_TRIGGER_VALUES
 
@@ -148,12 +154,20 @@ def _process_if(hass, config, p_config, action):
 
     checks = []
     for if_config in if_configs:
+        # Deprecated except for used by use_trigger_values
+        # since 0.19 - 5/5/2016
         if CONF_PLATFORM in if_config:
             if not use_trigger:
                 _LOGGER.warning("Please switch your condition configuration "
                                 "to use 'condition' instead of 'platform'.")
             if_config = dict(if_config)
             if_config[CONF_CONDITION] = if_config.pop(CONF_PLATFORM)
+
+            # To support use_trigger_values with state trigger accepting
+            # multiple entity_ids to monitor.
+            if_entity_id = if_config.get(ATTR_ENTITY_ID)
+            if isinstance(if_entity_id, list) and len(if_entity_id) == 1:
+                if_config[ATTR_ENTITY_ID] = if_entity_id[0]
 
         try:
             checks.append(condition.from_config(if_config))
