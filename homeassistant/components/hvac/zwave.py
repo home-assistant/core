@@ -1,5 +1,9 @@
-"""ZWave Hvac device."""
+"""
+Support for ZWave HVAC devices.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/hvac.zwave/
+"""
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
