@@ -52,7 +52,7 @@ def listen(hass, service, callback):
 
     def discovery_event_listener(event):
         """Listen for discovery events."""
-        if event.data[ATTR_SERVICE] in service:
+        if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
             callback(event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED))
 
     hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
