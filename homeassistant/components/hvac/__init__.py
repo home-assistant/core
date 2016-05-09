@@ -457,12 +457,12 @@ class HvacDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._convert_for_display(7)
+        return convert(7, TEMP_CELCIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._convert_for_display(35)
+        return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
 
     @property
     def min_humidity(self):
