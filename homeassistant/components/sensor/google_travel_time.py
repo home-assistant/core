@@ -26,6 +26,7 @@ CONF_TRAVEL_MODE = 'travel_mode'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required('platform'): 'google_travel_time',
+    vol.Optional('name'): vol.Coerce(str),
     vol.Required(CONF_API_KEY): vol.Coerce(str),
     vol.Required(CONF_ORIGIN): vol.Coerce(str),
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
@@ -37,14 +38,14 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the travel time platform."""
     # pylint: disable=too-many-locals
-
+    name = config.get("name", "Google Travel time")
     is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
     api_key = config.get(CONF_API_KEY)
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     travel_mode = config.get(CONF_TRAVEL_MODE)
 
-    sensor = GoogleTravelTimeSensor(api_key, origin, destination,
+    sensor = GoogleTravelTimeSensor(name, api_key, origin, destination,
                                     travel_mode, is_metric)
 
     if sensor.valid_api_connection:
@@ -55,8 +56,9 @@ class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, api_key, origin, destination, travel_mode, is_metric):
+    def __init__(self, name, api_key, origin, destination, travel_mode, is_metric):
         """Initialize the sensor."""
+        self._name = name
         if is_metric:
             self._unit = 'metric'
         else:
@@ -84,7 +86,7 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return "Google Travel time"
+        return self._name
 
     @property
     def device_state_attributes(self):
