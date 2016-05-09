@@ -85,7 +85,7 @@ FITBIT_MEASUREMENTS = {
         "liquids": "fl. oz.",
         "blood glucose": "mg/dL",
     },
-    "en_UK": {
+    "en_GB": {
         "duration": "milliseconds",
         "distance": "kilometers",
         "elevation": "meters",
