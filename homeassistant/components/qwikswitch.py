@@ -6,6 +6,10 @@ https://home-assistant.io/components/qwikswitch
 """
 
 import logging
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.discovery import load_platform
 
 REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip'
                 '#pyqwikswitch==0.1']
@@ -14,10 +18,6 @@ DEPENDENCIES = []
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'qwikswitch'
-DISCOVER_LIGHTS = 'qwikswitch.light'
-DISCOVER_SWITCHES = 'qwikswitch.switch'
-
-ADD_DEVICES = None
 
 
 class QSToggleEntity(object):
@@ -31,9 +31,9 @@ class QSToggleEntity(object):
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
      - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
 
-    [1] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/helpers/entity.py  # NOQA
-    [2] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/light/__init__.py  # NOQA
-    [3] https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/switch/__init__.py  # NOQA
+    [1] /home-assistant/home-assistant/blob/dev/homeassistant/helpers/entity.py
+    [2] /home-assistant/home-assistant/blob/dev/homeassistant/components/light/__init__.py  # NOQA
+    [3] /home-assistant/home-assistant/blob/dev/homeassistant/components/switch/__init__.py  # NOQA
     """
 
     def __init__(self, qsitem, qsusb):
@@ -75,7 +75,6 @@ class QSToggleEntity(object):
     # pylint: disable=unused-argument
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        from homeassistant.components.light import ATTR_BRIGHTNESS
         if ATTR_BRIGHTNESS in kwargs:
             self._value = kwargs[ATTR_BRIGHTNESS]
         else:
@@ -92,10 +91,6 @@ class QSToggleEntity(object):
 def setup(hass, config):
     """Setup the QSUSB component."""
     from pyqwikswitch import QSUsb
-    from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-    from homeassistant.components.light import Light
-    from homeassistant.components.switch import SwitchDevice
-    from homeassistant.components.discovery import discover
 
     try:
         url = config[DOMAIN].get('url', 'http://127.0.0.1:2020')
@@ -108,26 +103,23 @@ def setup(hass, config):
         _LOGGER.error(str(val_err))
         return False
 
-    global ADD_DEVICES  # pylint: disable=global-statement
-    ADD_DEVICES = {}
+    add_devices = {}
     qs_devices = {}
 
     # Register add_device callbacks onto the gloabl ADD_DEVICES
     for comp_name in ('switch', 'light'):
-        discover(hass, 'qwikswitch.'+comp_name, component=comp_name)
-        # discover method seems to wrap these commands -- simplify
-        # bootstrap.setup_component(hass, component.DOMAIN, config)
-        # hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-        #              {ATTR_SERVICE: '{}.qwikswitch'.format(comp_name),
-        #               ATTR_DISCOVERED: {}})
+        load_platform(hass, comp_name, 'qwikswitch',
+                      {'add_devices': add_devices}, config)
 
     def add_device(platform, qs_id, device):
         """Add a new QS device, using add_devices from the platforms.
 
         Platforms will store add_devices in ADD_DEVICES
         """
-        if platform in ADD_DEVICES:
-            ADD_DEVICES[platform]([device])
+        print(add_devices)
+        print(add_devices.keys())
+        if platform in add_devices:
+            add_devices[platform]([device])
         else:
             _LOGGER.error('Platform %s/qwikswitch was not discovered',
                           platform)
