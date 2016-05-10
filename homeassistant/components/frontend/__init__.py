@@ -3,15 +3,25 @@ import re
 import os
 import logging
 
+from jinja2 import FileSystemLoader, Environment
+from werkzeug.wrappers import Response
+
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
 from homeassistant.components import api
+from homeassistant.components.wsgi import HomeAssistantView
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
 
 INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index.html.template')
+
+TEMPLATES = Environment(
+    loader=FileSystemLoader(
+        os.path.join(os.path.dirname(__file__), 'templates/')
+    )
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +59,59 @@ def setup(hass, config):
         'GET', re.compile(r'/local/(?P<file>[a-zA-Z\._\-0-9/]+)'),
         _handle_get_local, False)
 
+    hass.wsgi.register_view(IndexView)
+    hass.wsgi.register_view(BootstrapView)
+
+    www_static_path = os.path.join(os.path.dirname(__file__), 'www_static')
+    if hass.wsgi.development:
+        sw_path = "home-assistant-polymer/build/service_worker.js"
+    else:
+        sw_path = "service_worker.js"
+
+    hass.wsgi.register_static_path(
+        "/service_worker.js",
+        os.path.join(www_static_path, sw_path)
+    )
+    hass.wsgi.register_static_path("/static", www_static_path)
+    hass.wsgi.register_static_path("/local", hass.config.path('www'))
+
     return True
+
+
+class BootstrapView(HomeAssistantView):
+    url = URL_API_BOOTSTRAP
+    name = "api:bootstrap"
+
+    def get(self, request):
+        """Return all data needed to bootstrap Home Assistant."""
+
+        return {
+            'config': self.hass.config.as_dict(),
+            'states': self.hass.states.all(),
+            'events': api.events_json(self.hass),
+            'services': api.services_json(self.hass),
+        }
+
+
+class IndexView(HomeAssistantView):
+    url = URL_ROOT
+    name = "frontend:index"
+    extra_urls = ['/logbook', '/history', '/map', '/devService', '/devState',
+                  '/devEvent', '/devInfo', '/devTemplate', '/states/<entity>']
+
+    def get(self, request):
+        app_url = "frontend-{}.html".format(version.VERSION)
+
+        # auto login if no password was set, else check api_password param
+        auth = ('no_password_set' if request.api_password is None
+                else request.values.get('api_password', ''))
+
+        template = TEMPLATES.get_template('index.html')
+
+        resp = template.render(app_url=app_url, auth=auth,
+                               icons=mdi_version.VERSION)
+
+        return Response(resp, mimetype="text/html")
 
 
 def _handle_get_api_bootstrap(handler, path_match, data):
