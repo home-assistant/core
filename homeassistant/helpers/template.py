@@ -6,8 +6,6 @@ import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-import humanize
-
 from homeassistant.components import group
 from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
@@ -42,7 +40,7 @@ def render_with_possible_json_value(hass, template, value,
 
 def relative_time(end_time):
     """Return a relative (human readable) timestamp for the given time."""
-    return humanize.naturaltime(dt_util.now() - end_time)
+    return dt_util.get_age(end_time)
 
 
 def render(hass, template, variables=None, **kwargs):
