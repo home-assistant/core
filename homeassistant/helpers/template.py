@@ -6,6 +6,8 @@ import logging
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
+import humanize
+
 from homeassistant.components import group
 from homeassistant.const import STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import State
@@ -38,6 +40,11 @@ def render_with_possible_json_value(hass, template, value,
         return value if error_value is _SENTINEL else error_value
 
 
+def relative_time(end_time):
+    """Return a relative (human readable) timestamp for the given time."""
+    return humanize.naturaltime(dt_util.now() - end_time)
+
+
 def render(hass, template, variables=None, **kwargs):
     """Render given template."""
     if variables is not None:
@@ -57,6 +64,7 @@ def render(hass, template, variables=None, **kwargs):
             'states': AllStates(hass),
             'utcnow': utcnow,
             'as_timestamp': dt_util.as_timestamp,
+            'relative_time': relative_time
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
