@@ -103,13 +103,20 @@ def setup(hass, config):
                             _handle_post_api_template)
 
     hass.wsgi.register_view(APIStatusView)
+    hass.wsgi.register_view(APIEventStream)
     hass.wsgi.register_view(APIConfigView)
     hass.wsgi.register_view(APIDiscoveryView)
-    hass.wsgi.register_view(APIEntityStateView)
     hass.wsgi.register_view(APIStatesView)
+    hass.wsgi.register_view(APIEntityStateView)
     hass.wsgi.register_view(APIEventListenersView)
+    hass.wsgi.register_view(APIEventView)
     hass.wsgi.register_view(APIServicesView)
     hass.wsgi.register_view(APIDomainServicesView)
+    hass.wsgi.register_view(APIEventForwardingView)
+    hass.wsgi.register_view(APIComponentsView)
+    hass.wsgi.register_view(APIErrorLogView)
+    hass.wsgi.register_view(APILogOutView)
+    hass.wsgi.register_view(APITemplateView)
 
     return True
 
