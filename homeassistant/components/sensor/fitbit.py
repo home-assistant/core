@@ -92,8 +92,8 @@ FITBIT_MEASUREMENTS = {
         "height": "centimeters",
         "weight": "stone",
         "body": "centimeters",
-        "liquids": "millileters",
-        "blood glucose": "mmol/l"
+        "liquids": "milliliters",
+        "blood glucose": "mmol/L"
     },
     "metric": {
         "duration": "milliseconds",
@@ -102,8 +102,8 @@ FITBIT_MEASUREMENTS = {
         "height": "centimeters",
         "weight": "kilograms",
         "body": "centimeters",
-        "liquids": "millileters",
-        "blood glucose": "mmol/l"
+        "liquids": "milliliters",
+        "blood glucose": "mmol/L"
     }
 }
 
