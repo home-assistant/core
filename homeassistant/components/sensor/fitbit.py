@@ -85,15 +85,15 @@ FITBIT_MEASUREMENTS = {
         "liquids": "fl. oz.",
         "blood glucose": "mg/dL",
     },
-    "en_UK": {
+    "en_GB": {
         "duration": "milliseconds",
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",
         "weight": "stone",
         "body": "centimeters",
-        "liquids": "millileters",
-        "blood glucose": "mmol/l"
+        "liquids": "milliliters",
+        "blood glucose": "mmol/L"
     },
     "metric": {
         "duration": "milliseconds",
@@ -102,8 +102,8 @@ FITBIT_MEASUREMENTS = {
         "height": "centimeters",
         "weight": "kilograms",
         "body": "centimeters",
-        "liquids": "millileters",
-        "blood glucose": "mmol/l"
+        "liquids": "milliliters",
+        "blood glucose": "mmol/L"
     }
 }
 
@@ -153,7 +153,8 @@ def request_app_setup(hass, config, add_devices, config_path,
         else:
             setup_platform(hass, config, add_devices, discovery_info)
 
-    start_url = "{}{}".format(hass.config.api.base_url, FITBIT_AUTH_START)
+    start_url = "{}{}".format(hass.config.api.base_url,
+                              FITBIT_AUTH_CALLBACK_PATH)
 
     description = """Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
@@ -222,8 +223,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     access_token = config_file.get("access_token")
     refresh_token = config_file.get("refresh_token")
     if None not in (access_token, refresh_token):
-        authd_client = fitbit.Fitbit(config.get("client_id"),
-                                     config.get("client_secret"),
+        authd_client = fitbit.Fitbit(config_file.get("client_id"),
+                                     config_file.get("client_secret"),
                                      access_token=access_token,
                                      refresh_token=refresh_token)
 
@@ -239,8 +240,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices(dev)
 
     else:
-        oauth = fitbit.api.FitbitOauth2Client(config.get("client_id"),
-                                              config.get("client_secret"))
+        oauth = fitbit.api.FitbitOauth2Client(config_file.get("client_id"),
+                                              config_file.get("client_secret"))
 
         redirect_uri = "{}{}".format(hass.config.api.base_url,
                                      FITBIT_AUTH_CALLBACK_PATH)
@@ -301,9 +302,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             setup_platform(hass, config, add_devices, discovery_info=None)
 
-        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth)
+        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth,
+                                require_auth=False)
         hass.http.register_path("GET", FITBIT_AUTH_CALLBACK_PATH,
-                                _finish_fitbit_auth)
+                                _finish_fitbit_auth, require_auth=False)
 
         request_oauth_completion(hass)
 
