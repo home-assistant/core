@@ -7,8 +7,7 @@ https://home-assistant.io/components/qwikswitch
 
 import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS)
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.discovery import load_platform
 
 REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip'
@@ -103,70 +102,32 @@ def setup(hass, config):
         _LOGGER.error(str(val_err))
         return False
 
-    add_devices = {}
-    qs_devices = {}
+    qsusb.ha_devices = qsusb.devices()
+    qsusb.ha_objects = {}
 
     # Register add_device callbacks onto the gloabl ADD_DEVICES
+    # Switch called first since they are [type=rel] and end with ' switch'
     for comp_name in ('switch', 'light'):
-        load_platform(hass, comp_name, 'qwikswitch',
-                      {'add_devices': add_devices}, config)
-
-    def add_device(platform, qs_id, device):
-        """Add a new QS device, using add_devices from the platforms.
-
-        Platforms will store add_devices in ADD_DEVICES
-        """
-        print(add_devices)
-        print(add_devices.keys())
-        if platform in add_devices:
-            add_devices[platform]([device])
-        else:
-            _LOGGER.error('Platform %s/qwikswitch was not discovered',
-                          platform)
-        qs_devices[qs_id] = device
-
-    class QSLight(QSToggleEntity, Light):
-        """Light based on a Qwikswitch relay/dimmer module."""
-
-    class QSSwitch(QSToggleEntity, SwitchDevice):
-        """Switch based on a Qwikswitch relay module."""
+        load_platform(hass, comp_name, 'qwikswitch', {'qsusb': qsusb}, config)
 
     def qs_callback(item):
         """Typically a btn press or update signal."""
         from pyqwikswitch import CMD_BUTTONS
 
+        # If button pressed, fire a hass event
         if item.get('type', '') in CMD_BUTTONS:
-            # Button press, fire a hass event
             _LOGGER.info('qwikswitch.button.%s', item['id'])
             hass.bus.fire('qwikswitch.button.{}'.format(item['id']))
             return
 
-        # Perform a normal update of all devices
+        # Update all ha_objects
         qsreply = qsusb.devices()
         if qsreply is False:
             return
         for item in qsreply:
             item_id = item.get('id', '')
-
-            # Add this device if it is not known
-            if item_id not in qs_devices:
-                _LOGGER.info('Add QS device %s', item['name'])
-                if item['type'] == 'dim':
-                    add_device('light', item_id, QSLight(item, qsusb))
-                elif item['type'] == 'rel':
-                    if item['name'].lower().endswith(' switch'):
-                        # Remove the ' Switch' name postfix for HA
-                        item['name'] = item['name'][:-7]
-                        add_device('switch', item_id, QSSwitch(item, qsusb))
-                    else:
-                        add_device('light', item_id, QSLight(item, qsusb))
-                else:
-                    qs_devices[item_id] = None
-                    _LOGGER.error('QwikSwitch: type=%s not supported',
-                                  item['type'])
-
-            if qs_devices.get(item_id, '') is not None:
-                qs_devices[item_id].update_value(item['value'])
+            if item_id in qsusb.ha_objects:
+                qsusb.ha_objects[item_id].update_value(item['value'])
 
     qsusb.listen(callback=qs_callback, timeout=10)
     return True
