@@ -56,7 +56,8 @@ class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, api_key, origin, destination, travel_mode, is_metric):
+    def __init__(self, name, api_key, origin, destination,
+                 travel_mode, is_metric):
         """Initialize the sensor."""
         self._name = name
         if is_metric:
