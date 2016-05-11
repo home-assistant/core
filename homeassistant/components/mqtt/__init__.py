@@ -388,6 +388,8 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
+        _LOGGER.debug("received message on %s: %s",
+                      msg.topic, msg.payload.decode('utf-8'))
         self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
             ATTR_TOPIC: msg.topic,
             ATTR_QOS: msg.qos,
