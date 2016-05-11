@@ -40,7 +40,6 @@ class Thermostat(ThermostatDevice):
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
         self._name = self.thermostat['name']
-        self._away = 'away' in self.thermostat['program']['currentClimateRef']
         self.hold_temp = hold_temp
 
     def update(self):
@@ -121,9 +120,7 @@ class Thermostat(ThermostatDevice):
     @property
     def mode(self):
         """Return current mode ie. home, away, sleep."""
-        mode = self.thermostat['program']['currentClimateRef']
-        self._away = 'away' in mode
-        return mode
+        return self.thermostat['program']['currentClimateRef']
 
     @property
     def hvac_mode(self):
@@ -144,11 +141,16 @@ class Thermostat(ThermostatDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        return self._away
+        mode = self.mode
+        events = self.thermostat['events']
+        for event in events:
+            if event['running']:
+                mode = event['holdClimateRef']
+                break
+        return 'away' in mode
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self._away = True
         if self.hold_temp:
             self.data.ecobee.set_climate_hold(self.thermostat_index,
                                               "away", "indefinite")
@@ -157,7 +159,6 @@ class Thermostat(ThermostatDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self._away = False
         self.data.ecobee.resume_program(self.thermostat_index)
 
     def set_temperature(self, temperature):
@@ -180,20 +181,16 @@ class Thermostat(ThermostatDevice):
 
     # def turn_home_mode_on(self):
     #     """ Turns home mode on. """
-    #     self._away = False
     #     self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
 
     # def turn_home_mode_off(self):
     #     """ Turns home mode off. """
-    #     self._away = False
     #     self.data.ecobee.resume_program(self.thermostat_index)
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """
-    #     self._away = False
     #     self.data.ecobee.set_climate_hold(self.thermostat_index, "sleep")
 
     # def turn_sleep_mode_off(self):
     #     """ Turns sleep mode off. """
-    #     self._away = False
     #     self.data.ecobee.resume_program(self.thermostat_index)
