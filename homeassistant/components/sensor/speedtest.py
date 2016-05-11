@@ -34,6 +34,7 @@ SENSOR_TYPES = {
 }
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Speedtest sensor."""
     data = SpeedtestData(hass, config)
