@@ -6,36 +6,15 @@ https://home-assistant.io/components/thermostat.ecobee/
 """
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components import ecobee
 from homeassistant.components.thermostat import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import STATE_OFF, STATE_ON, TEMP_FAHRENHEIT
 
-
 DEPENDENCIES = ['ecobee']
-DOMAIN = "thermostat"
 _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
-
-ATTR_MESSAGE = 'message'
-SEND_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MESSAGE): vol.Coerce(str),
-})
-
-MESSAGE_DESCRIPTIONS = {
-    'send_message': {
-        'description': 'Send a message to the thermostat',
-        'fields': {
-            'message': {
-                'description': 'Messsage to send to thermostat(s)',
-                'example': 'Hello from Home Assistant!'
-            }
-        }
-    }
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -47,21 +26,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s",
         hold_temp)
-
-    thermostats = []
-    for index in range(len(data.ecobee.thermostats)):
-        thermostats.append(Thermostat(data, index, hold_temp))
-    add_devices(thermostats)
-
-    def send_message_service(service):
-        """Send message to thermostats."""
-        message = service.data['message']
-        for thermostat in thermostats:
-            thermostat.send_message(message)
-
-    hass.services.register(DOMAIN, 'send_message', send_message_service,
-                           MESSAGE_DESCRIPTIONS.get('send_message'),
-                           SEND_MESSAGE_SCHEMA)
+    add_devices(Thermostat(data, index, hold_temp)
+                for index in range(len(data.ecobee.thermostats)))
 
 
 class Thermostat(ThermostatDevice):
@@ -209,10 +175,6 @@ class Thermostat(ThermostatDevice):
     def set_hvac_mode(self, mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
-
-    def send_message(self, message):
-        """Send message to thermostat."""
-        self.data.ecobee.send_message(self.thermostat_index, message)
 
     # Home and Sleep mode aren't used in UI yet:
 
