@@ -17,10 +17,10 @@ DEPENDENCIES = []
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'qwikswitch'
+QSUSB = None
 
 
 class QSToggleEntity(object):
-    # pylint: disable=line-too-long
     """Representation of a Qwikswitch Entiry.
 
     Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
@@ -30,9 +30,9 @@ class QSToggleEntity(object):
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
      - QSSwitch extends QSToggleEntity and SwitchDevice[3] (ToggleEntity[1])
 
-    [1] /home-assistant/home-assistant/blob/dev/homeassistant/helpers/entity.py
-    [2] /home-assistant/home-assistant/blob/dev/homeassistant/components/light/__init__.py  # NOQA
-    [3] /home-assistant/home-assistant/blob/dev/homeassistant/components/switch/__init__.py  # NOQA
+    [1] /helpers/entity.py
+    [2] /components/light/__init__.py
+    [3] /components/switch/__init__.py
     """
 
     def __init__(self, qsitem, qsusb):
@@ -105,10 +105,16 @@ def setup(hass, config):
     qsusb.ha_devices = qsusb.devices()
     qsusb.ha_objects = {}
 
+    global QSUSB
+    if QSUSB is None:
+        QSUSB = {}
+    QSUSB[id(qsusb)] = qsusb
+
     # Register add_device callbacks onto the gloabl ADD_DEVICES
     # Switch called first since they are [type=rel] and end with ' switch'
     for comp_name in ('switch', 'light'):
-        load_platform(hass, comp_name, 'qwikswitch', {'qsusb': qsusb}, config)
+        load_platform(hass, comp_name, 'qwikswitch',
+                      {'qsusb_id': id(qsusb)}, config)
 
     def qs_callback(item):
         """Typically a btn press or update signal."""
