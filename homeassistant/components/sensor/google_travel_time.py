@@ -38,12 +38,13 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the travel time platform."""
     # pylint: disable=too-many-locals
-    name = config.get("name", "Google Travel time")
+    travel_mode = config.get(CONF_TRAVEL_MODE)
+    formatted_name = "Google Travel Time - {}".format(travel_mode.title())
+    name = config.get("name", formatted_name)
     is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
     api_key = config.get(CONF_API_KEY)
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
-    travel_mode = config.get(CONF_TRAVEL_MODE)
 
     sensor = GoogleTravelTimeSensor(name, api_key, origin, destination,
                                     travel_mode, is_metric)
