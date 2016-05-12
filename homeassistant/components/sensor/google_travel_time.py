@@ -95,6 +95,7 @@ class GoogleTravelTimeSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         res = self._matrix.copy()
+        res['mode'] = self._travel_mode
         del res['rows']
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
