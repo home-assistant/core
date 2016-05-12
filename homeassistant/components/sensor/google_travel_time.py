@@ -10,8 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,31 +25,81 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
 CONF_TRAVEL_MODE = 'travel_mode'
+CONF_OPTIONS = 'options'
+CONF_MODE = 'mode'
+CONF_NAME = 'name'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required('platform'): 'google_travel_time',
-    vol.Optional('name'): vol.Coerce(str),
+    vol.Optional(CONF_NAME): vol.Coerce(str),
     vol.Required(CONF_API_KEY): vol.Coerce(str),
     vol.Required(CONF_ORIGIN): vol.Coerce(str),
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
     vol.Optional(CONF_TRAVEL_MODE, default='driving'):
-        vol.In(["driving", "walking", "bicycling", "transit"])
+        vol.In(["driving", "walking", "bicycling", "transit"]),
+    vol.Optional(CONF_OPTIONS): vol.All(
+        dict, vol.Schema({
+            'mode': cv.string,
+            'language': cv.string,
+            'avoid': cv.string,
+            'units': cv.string,
+            'arrival_time': cv.string,
+            'departure_time': cv.string,
+            'traffic_model': cv.string,
+            'transit_mode': cv.string,
+            'transit_routing_preference': cv.string
+        }))
 })
+
+
+def convert_time_to_utc(timestr):
+    """Take a string like 08:00:00 and convert it to a unix timestamp"""
+    return dt_util.as_timestamp(datetime.combine(dt_util.start_of_local_day(),
+                                                 dt_util.parse_time(timestr)))
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the travel time platform."""
     # pylint: disable=too-many-locals
+    options = config.get(CONF_OPTIONS)
+    departure_time = options.get('departure_time')
+    arrival_time = options.get('arrival_time')
+    if departure_time is not None and departure_time is not 'now':
+        options['departure_time'] = convert_time_to_utc(departure_time)
+    else:
+        options['departure_time'] = 'now'
+
+    if arrival_time is not None and arrival_time is not 'now':
+        options['arrival_time'] = convert_time_to_utc(arrival_time)
+    else:
+        options['arrival_time'] = 'now'
+
+    departure_time = options.get('departure_time')
+    arrival_time = options.get('arrival_time')
+    if departure_time is not None and arrival_time is not None:
+        del options['arrival_time']
+
+    if options.get('units') is None:
+        if hass.config.temperature_unit is TEMP_CELSIUS:
+            options['units'] = 'metric'
+        elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
+            options['units'] = 'imperial'
+
     travel_mode = config.get(CONF_TRAVEL_MODE)
-    formatted_name = "Google Travel Time - {}".format(travel_mode.title())
-    name = config.get("name", formatted_name)
-    is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
+    mode = options.get(CONF_MODE)
+
+    if travel_mode is not None and mode is None:
+        options[CONF_MODE] = travel_mode
+
+    titled_mode = options[CONF_MODE].title()
+    formatted_name = "Google Travel Time - {}".format(titled_mode)
+    name = config.get(CONF_NAME, formatted_name)
     api_key = config.get(CONF_API_KEY)
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
 
     sensor = GoogleTravelTimeSensor(name, api_key, origin, destination,
-                                    travel_mode, is_metric)
+                                    options)
 
     if sensor.valid_api_connection:
         add_devices_callback([sensor])
@@ -58,17 +110,12 @@ class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, api_key, origin, destination,
-                 travel_mode, is_metric):
+    def __init__(self, name, api_key, origin, destination, options):
         """Initialize the sensor."""
         self._name = name
-        if is_metric:
-            self._unit = 'metric'
-        else:
-            self._unit = 'imperial'
+        self._options = options
         self._origin = origin
         self._destination = destination
-        self._travel_mode = travel_mode
         self._matrix = None
         self.valid_api_connection = True
 
@@ -95,7 +142,7 @@ class GoogleTravelTimeSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         res = self._matrix.copy()
-        res['mode'] = self._travel_mode
+        res.update(self._options)
         del res['rows']
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
@@ -114,10 +161,6 @@ class GoogleTravelTimeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
-        now = datetime.now()
         self._matrix = self._client.distance_matrix(self._origin,
                                                     self._destination,
-                                                    mode=self._travel_mode,
-                                                    units=self._unit,
-                                                    departure_time=now,
-                                                    traffic_model="optimistic")
+                                                    **self._options)
