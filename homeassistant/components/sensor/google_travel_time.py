@@ -156,6 +156,9 @@ class GoogleTravelTimeSensor(Entity):
         departure_time = self._options.get('departure_time')
         arrival_time = self._options.get('arrival_time')
         if departure_time is not None and arrival_time is not None:
+            estr = ("Google Travel Time: You can not provide both arrival",
+                    "and departure times! Clearing the arrival time...")
+            _LOGGER.warn(" ".join(estr))
             del self._options['arrival_time']
 
         self._matrix = self._client.distance_matrix(self._origin,
