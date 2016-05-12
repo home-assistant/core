@@ -3,9 +3,6 @@ import re
 import os
 import logging
 
-from jinja2 import FileSystemLoader, Environment
-from werkzeug.wrappers import Response
-
 from . import version, mdi_version
 import homeassistant.util as util
 from homeassistant.const import URL_ROOT, HTTP_OK
@@ -16,12 +13,6 @@ DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
 
 INDEX_PATH = os.path.join(os.path.dirname(__file__), 'index.html.template')
-
-TEMPLATES = Environment(
-    loader=FileSystemLoader(
-        os.path.join(os.path.dirname(__file__), 'templates/')
-    )
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,19 +90,31 @@ class IndexView(HomeAssistantView):
     extra_urls = ['/logbook', '/history', '/map', '/devService', '/devState',
                   '/devEvent', '/devInfo', '/devTemplate', '/states/<entity>']
 
+    def __init__(self, hass):
+        super().__init__(hass)
+
+        from jinja2 import FileSystemLoader, Environment
+
+        self.TEMPLATES = Environment(
+            loader=FileSystemLoader(
+                os.path.join(os.path.dirname(__file__), 'templates/')
+            )
+        )
+
     def get(self, request):
+        """Serve the index view."""
         app_url = "frontend-{}.html".format(version.VERSION)
 
         # auto login if no password was set, else check api_password param
         auth = ('no_password_set' if request.api_password is None
                 else request.values.get('api_password', ''))
 
-        template = TEMPLATES.get_template('index.html')
+        template = self.TEMPLATES.get_template('index.html')
 
         resp = template.render(app_url=app_url, auth=auth,
                                icons=mdi_version.VERSION)
 
-        return Response(resp, mimetype="text/html")
+        return self.Response(resp, mimetype="text/html")
 
 
 def _handle_get_api_bootstrap(handler, path_match, data):

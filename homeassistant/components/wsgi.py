@@ -7,38 +7,12 @@ import logging
 import threading
 import re
 
-from eventlet import wsgi
-import eventlet
-
 import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
     SERVER_PORT, HTTP_OK, HTTP_NOT_FOUND, HTTP_BAD_REQUEST
 )
-
-from static import Cling
-
-from werkzeug.wsgi import DispatcherMiddleware
-from werkzeug.wrappers import Response, BaseRequest, AcceptMixin
-from werkzeug.routing import Map, Rule
-from werkzeug.exceptions import (
-    MethodNotAllowed, NotFound, BadRequest, Unauthorized
-)
-
-
-class Request(BaseRequest, AcceptMixin):
-    pass
-
-
-class StaticFileServer(object):
-    def __call__(self, environ, start_response):
-        app = DispatcherMiddleware(self.base_app, self.extra_apps)
-        # Strip out any cachebusting MD% fingerprints
-        fingerprinted = _FINGERPRINT.match(environ['PATH_INFO'])
-        if fingerprinted:
-            environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
-        return app(environ, start_response)
 
 DOMAIN = "wsgi"
 REQUIREMENTS = ("eventlet==0.18.4", "static3==0.6.1", "Werkzeug==0.11.5",)
@@ -82,9 +56,27 @@ def setup(hass, config):
     return True
 
 
+class StaticFileServer(object):
+    def __call__(self, environ, start_response):
+        from werkzeug.wsgi import DispatcherMiddleware
+        app = DispatcherMiddleware(self.base_app, self.extra_apps)
+        # Strip out any cachebusting MD% fingerprints
+        fingerprinted = _FINGERPRINT.match(environ['PATH_INFO'])
+        if fingerprinted:
+            environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
+        return app(environ, start_response)
+
+
 class HomeAssistantWSGI(object):
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port):
+        from werkzeug.wrappers import BaseRequest, AcceptMixin
+        from werkzeug.routing import Map
+
+        class Request(BaseRequest, AcceptMixin):
+            pass
+
+        self.Request = Request
         self.url_map = Map()
         self.views = {}
         self.hass = hass
@@ -100,6 +92,8 @@ class HomeAssistantWSGI(object):
         The view argument must inherit from the HomeAssistantView class, and
         it must have (globally unique) 'url' and 'name' attributes.
         """
+        from werkzeug.routing import Rule
+
         if view.name in self.views:
             _LOGGER.warning("View '{}' is being overwritten".format(view.name))
         self.views[view.name] = view(self.hass)
@@ -111,10 +105,17 @@ class HomeAssistantWSGI(object):
             self.url_map.add(rule)
 
     def register_static_path(self, url_root, path):
+        """Register a folder to serve as a static path."""
+        from static import Cling
+
         # TODO Warn if we're overwriting an existing path
         self.extra_apps[url_root] = Cling(path)
 
     def start(self):
+        """Start the wsgi server."""
+        from eventlet import wsgi
+        import eventlet
+
         sock = eventlet.listen(('', 8090))
         if self.ssl_certificate:
             eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
@@ -122,6 +123,10 @@ class HomeAssistantWSGI(object):
         wsgi.server(sock, self)
 
     def dispatch_request(self, request):
+        """Handle incoming request."""
+        from werkzeug.exceptions import (
+            MethodNotAllowed, NotFound, BadRequest, Unauthorized
+        )
         adapter = self.url_map.bind_to_environ(request.environ)
         try:
             endpoint, values = adapter.match()
@@ -139,13 +144,15 @@ class HomeAssistantWSGI(object):
         # itself
 
     def base_app(self, environ, start_response):
-        request = Request(environ)
+        request = self.Request(environ)
         request.api_password = self.api_password
         request.development = self.development
         response = self.dispatch_request(request)
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
+        from werkzeug.wsgi import DispatcherMiddleware
+
         app = DispatcherMiddleware(self.base_app, self.extra_apps)
         # Strip out any cachebusting MD5 fingerprints
         fingerprinted = _FINGERPRINT.match(environ.get('PATH_INFO', ''))
@@ -154,6 +161,7 @@ class HomeAssistantWSGI(object):
         return app(environ, start_response)
 
     def _handle_error(self, request, message, status):
+        from werkzeug.wrappers import Response
         if request.accept_mimetypes.accept_json:
             message = json.dumps({
                 "result": "error",
@@ -170,9 +178,18 @@ class HomeAssistantView(object):
     requires_auth = True  # Views inheriting from this class can override this
 
     def __init__(self, hass):
+        from werkzeug.wrappers import Response
+        from werkzeug.exceptions import NotFound, BadRequest
+
         self.hass = hass
+        self.Response = Response
+        self.NotFound = NotFound
+        self.BadRequest = BadRequest
 
     def handle_request(self, request, **values):
+        """Handle request to url."""
+        from werkzeug.exceptions import MethodNotAllowed
+
         try:
             handler = getattr(self, request.method.lower())
         except AttributeError:
@@ -180,7 +197,7 @@ class HomeAssistantView(object):
         # TODO This would be a good place to check the auth if
         # self.requires_auth is true, and raise Unauthorized on a failure
         result = handler(request, **values)
-        if isinstance(result, Response):
+        if isinstance(result, self.Response):
             # The method handler returned a ready-made Response, how nice of it
             return result
         elif (isinstance(result, dict) or
@@ -197,5 +214,5 @@ class HomeAssistantView(object):
                 sort_keys=True,
                 cls=rem.JSONEncoder
             ).encode('UTF-8')
-            return Response(msg, mimetype="application/json",
-                            status_code=status_code)
+            return self.Response(msg, mimetype="application/json",
+                                 status_code=status_code)
