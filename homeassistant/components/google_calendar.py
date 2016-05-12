@@ -138,7 +138,7 @@ def setup_oauth_paths(hass, config):
 
     def _start_auth(handler, path_match, data):
         """URL for starting Oauth session setup."""
-        # pylint disable=unused-argument
+        # pylint: disable=unused-argument
         uri = flow.step1_get_authorize_url()
         handler.send_response(301)
         handler.send_header("Location", uri)
@@ -195,7 +195,7 @@ def request_oauth_setup(hass, config):
 
     def _configuration_callback(callback_data):
         """What actions to do when user clicks button."""
-        # pylint disable=unused-argument
+        # pylint: disable=unused-argument
         token_file = hass.config.path(TOKEN_FILE)
         if not os.path.isfile(token_file):
             configurator.notify_errors(_CONFIGURING[DOMAIN],
@@ -227,7 +227,7 @@ def request_api_setup(hass, config):
 
     def _configuration_callback(callback_data):
         """What actions to do when user clicks button."""
-        # pylint disable=unused-argument
+        # pylint: disable=unused-argument
         config_file = hass.config.path(CONFIG_FILE)
         if not os.path.isfile(config_file):
             configurator.notify_errors(_CONFIGURING[DOMAIN],
@@ -287,7 +287,7 @@ def setup(hass, config):
 
 def do_setup(hass, config):
     """Run the setup after we have everything configured."""
-    # pylint disable=global-statement
+    # pylint: disable=global-statement
     if DOMAIN in _CONFIGURING:
         get_component('configurator').request_done(_CONFIGURING.pop(DOMAIN))
 
@@ -296,7 +296,8 @@ def do_setup(hass, config):
         track_new = convert(config.get(CONF_TRACK_NEW),
                             bool, DEFAULT_CONF_TRACK_NEW)
         service = get_calendar_service(hass)
-        calendars = service.calendarList().list().execute()['items']
+        cal_list = service.calendarList()  # pylint: disable=no-member
+        calendars = cal_list.list().execute()['items']
         for calendar in calendars:
             found_calendar(hass, calendar, track_new)
 
@@ -318,7 +319,6 @@ def do_setup(hass, config):
 
 def found_calendar(hass, calendar, track_new):
     """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
-    # since we could just use the global and not assign it
     import hashlib
     calendar_hash = hashlib.sha224(
         calendar['id'].encode('utf-8')).hexdigest()
@@ -326,7 +326,6 @@ def found_calendar(hass, calendar, track_new):
     if _CALENDARS.get(calendar_hash, None) is not None:
         return
 
-    # seriously, FU pylint
     _CALENDARS.update({calendar_hash: {
         CONF_CAL_ID: calendar['id'],
         CONF_NAME: calendar['summary'],
@@ -355,7 +354,8 @@ def get_next_event(hass, calendar_id, search=None):
     if search:
         params['q'] = search
 
-    result = service.events().list(**params).execute()
+    events = service.events()  # pylint: disable=no-member
+    result = events.list(**params).execute()
 
     items = result.get('items', [])
     return items[0] if len(items) == 1 else None
@@ -363,7 +363,6 @@ def get_next_event(hass, calendar_id, search=None):
 
 def get_calendar_service(hass):
     """Get the calendar service from the storage file token."""
-    # pylint disable=no-name-in-module
     import httplib2
     from oauth2client.file import Storage
     from googleapiclient import discovery
