@@ -149,22 +149,24 @@ class GoogleTravelTimeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
-        dtime = self._options.get('departure_time')
-        atime = self._options.get('arrival_time')
+        options_copy = self._options.copy()
+        dtime = options_copy.get('departure_time')
+        atime = options_copy.get('arrival_time')
         if dtime is not None and ':' in dtime:
-            self._options['departure_time'] = convert_time_to_utc(dtime)
+            options_copy['departure_time'] = convert_time_to_utc(dtime)
 
         if atime is not None and ':' in atime:
-            self._options['arrival_time'] = convert_time_to_utc(atime)
+            options_copy['arrival_time'] = convert_time_to_utc(atime)
 
-        departure_time = self._options.get('departure_time')
-        arrival_time = self._options.get('arrival_time')
+        departure_time = options_copy.get('departure_time')
+        arrival_time = options_copy.get('arrival_time')
         if departure_time is not None and arrival_time is not None:
             wstr = ("Google Travel Time: You can not provide both arrival "
                     "and departure times! Deleting the arrival time...")
             _LOGGER.warning(wstr)
+            del options_copy['arrival_time']
             del self._options['arrival_time']
 
         self._matrix = self._client.distance_matrix(self._origin,
                                                     self._destination,
-                                                    **self._options)
+                                                    **options_copy)
