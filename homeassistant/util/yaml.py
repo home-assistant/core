@@ -3,8 +3,8 @@ import logging
 import os
 from collections import OrderedDict
 
-import yaml
 import glob
+import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -48,17 +48,17 @@ def _include_yaml(loader, node):
 def _include_dir_named_yaml(loader, node):
     """Load multiple files from dir."""
     mapping = OrderedDict()
-    dir = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    for file in glob.glob(dir):
-        filename = os.path.splitext(os.path.basename(file))[0]
-        mapping[filename] = load_yaml(file)
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    for fname in glob.glob(files):
+        filename = os.path.splitext(os.path.basename(fname))[0]
+        mapping[filename] = load_yaml(fname)
     return mapping
 
 
 def _include_dir_flat_yaml(loader, node):
     """Load multiple files from dir."""
-    dir = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    return [load_yaml(f) for f in glob.glob(dir)]
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    return [load_yaml(f) for f in glob.glob(files)]
 
 
 def _ordered_dict(loader, node):
