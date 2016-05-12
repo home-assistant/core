@@ -4,28 +4,27 @@ Support for Qwikswitch Relays as HA Switches.
 See the main component for more info
 """
 import logging
-from homeassistant.components.qwikswitch import QSToggleEntity, QSUSB
+import homeassistant.components.qwikswitch as qwikswitch
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['qwikswitch']
 
 
-class QSSwitch(QSToggleEntity, SwitchDevice):
+class QSSwitch(qwikswitch.QSToggleEntity, SwitchDevice):
     """Switch based on a Qwikswitch relay module."""
 
-
-_LOGGER = logging.getLogger(__name__)
+    pass
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Store add_devices for the 'switch' components."""
     if discovery_info is None or 'qsusb_id' not in discovery_info:
-        _LOGGER.error('Configure main Qwikswitch component')
+        logging.getLogger(__name__).error(
+            'Configure main Qwikswitch component')
         return False
 
-    _LOGGER.info('Qwikswitch switch setup_platform called')
-    qsusb = QSUSB[discovery_info['qsusb_id']]
+    qsusb = qwikswitch.QSUSB[discovery_info['qsusb_id']]
 
     for item in qsusb.ha_devices:
         if item['type'] == 'rel' and \
