@@ -52,6 +52,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         add_devices_callback([sensor])
 
 
+# pylint: disable=too-many-instance-attributes
 class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
