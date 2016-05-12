@@ -14,7 +14,7 @@ REQUIREMENTS = ['rpi-rf==0.9.5']
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, import-error
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
     import rpi_rf
