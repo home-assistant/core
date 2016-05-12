@@ -22,7 +22,7 @@ HOLD_TEMP = 'hold_temp'
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '92a2f330cbaf601d0618456fdd97e5a8c42c1c47.zip#python-ecobee==0.0.4']
+    '4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
