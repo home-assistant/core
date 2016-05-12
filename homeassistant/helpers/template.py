@@ -37,12 +37,6 @@ def render_with_possible_json_value(hass, template, value,
         _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
-
-def relative_time(end_time):
-    """Return a relative (human readable) timestamp for the given time."""
-    return dt_util.get_age(end_time)
-
-
 def render(hass, template, variables=None, **kwargs):
     """Render given template."""
     if variables is not None:
@@ -62,7 +56,7 @@ def render(hass, template, variables=None, **kwargs):
             'states': AllStates(hass),
             'utcnow': utcnow,
             'as_timestamp': dt_util.as_timestamp,
-            'relative_time': relative_time
+            'relative_time': dt_util.get_age
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
