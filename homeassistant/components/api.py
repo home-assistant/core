@@ -9,8 +9,6 @@ import logging
 import re
 import threading
 
-from werkzeug.exceptions import NotFound, BadRequest
-
 import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant.bootstrap import ERROR_LOG_FILENAME
@@ -266,13 +264,13 @@ class APIEntityStateView(HomeAssistantView):
         if state:
             return state
         else:
-            raise NotFound("State does not exist.")
+            raise self.NotFound("State does not exist.")
 
     def post(self, request, entity_id):
         try:
             new_state = request.values['state']
         except KeyError:
-            raise BadRequest("state not specified")
+            raise self.BadRequest("state not specified")
 
         attributes = request.values.get('attributes')
 
