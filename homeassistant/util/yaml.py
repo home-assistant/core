@@ -45,7 +45,7 @@ def _include_yaml(loader, node):
     return load_yaml(fname)
 
 
-def _include_dir_yaml(loader, node):
+def _include_dir_named_yaml(loader, node):
     """Load multiple files from dir."""
     mapping = OrderedDict()
     dir = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
@@ -53,6 +53,12 @@ def _include_dir_yaml(loader, node):
         filename = os.path.splitext(os.path.basename(file))[0]
         mapping[filename] = load_yaml(file)
     return mapping
+
+
+def _include_dir_flat_yaml(loader, node):
+    """Load multiple files from dir."""
+    dir = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    return [load_yaml(f) for f in glob.glob(dir)]
 
 
 def _ordered_dict(loader, node):
@@ -95,4 +101,5 @@ yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
-yaml.SafeLoader.add_constructor('!include_dir', _include_dir_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_flat', _include_dir_flat_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
