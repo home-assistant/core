@@ -54,8 +54,11 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
-    return dt_util.as_timestamp(datetime.combine(dt_util.start_of_local_day(),
-                                                 dt_util.parse_time(timestr)))
+    combined = datetime.combine(dt_util.start_of_local_day(),
+                                dt_util.parse_time(timestr))
+    if combined < datetime.now():
+      combined = combined + timedelta(days=1)
+    return dt_util.as_timestamp(combined)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
