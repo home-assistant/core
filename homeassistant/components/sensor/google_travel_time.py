@@ -57,7 +57,7 @@ def convert_time_to_utc(timestr):
     combined = datetime.combine(dt_util.start_of_local_day(),
                                 dt_util.parse_time(timestr))
     if combined < datetime.now():
-      combined = combined + timedelta(days=1)
+        combined = combined + timedelta(days=1)
     return dt_util.as_timestamp(combined)
 
 
