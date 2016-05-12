@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_API_KEY): vol.Coerce(str),
     vol.Required(CONF_ORIGIN): vol.Coerce(str),
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
-    vol.Optional(CONF_TRAVEL_MODE, default='driving'):
+    vol.Optional(CONF_TRAVEL_MODE):
         vol.In(["driving", "walking", "bicycling", "transit"]),
     vol.Optional(CONF_OPTIONS): vol.All(
         dict, vol.Schema({
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if mode is None:
             options[CONF_MODE] = travel_mode
 
-    titled_mode = mode.title()
+    titled_mode = options.get(CONF_MODE, 'driving').title()
     formatted_name = "Google Travel Time - {}".format(titled_mode)
     name = config.get(CONF_NAME, formatted_name)
     api_key = config.get(CONF_API_KEY)
