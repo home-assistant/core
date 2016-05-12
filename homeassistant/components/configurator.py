@@ -46,7 +46,7 @@ def request_config(
     request_id = instance.request_config(
         name, callback,
         description, description_image, submit_caption,
-        fields, link_name=None, link_url=None)
+        fields, link_name, link_url)
 
     _REQUESTS[request_id] = instance
 
