@@ -63,15 +63,14 @@ class EntityComponent(object):
                 self._setup_platform(self.discovery_platforms[service], {},
                                      info))
 
-            # Generic discovery listener for loading platform dynamically
-            # Refer to: homeassistant.components.discovery.load_platform()
-            def load_platform_callback(service, info):
-                """Callback to load a platform."""
-                platform = info.pop(discovery.LOAD_PLATFORM)
-                self._setup_platform(platform, {}, info if info else None)
-            discovery.listen(
-                self.hass, discovery.LOAD_PLATFORM + '.' + self.domain,
-                load_platform_callback)
+        # Generic discovery listener for loading platform dynamically
+        # Refer to: homeassistant.components.discovery.load_platform()
+        def load_platform_callback(service, info):
+            """Callback to load a platform."""
+            platform = info.pop(discovery.LOAD_PLATFORM)
+            self._setup_platform(platform, {}, info if info else None)
+        discovery.listen(self.hass, discovery.LOAD_PLATFORM + '.' +
+                         self.domain, load_platform_callback)
 
     def extract_from_service(self, service):
         """Extract all known entities from a service call.
