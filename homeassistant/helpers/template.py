@@ -37,6 +37,7 @@ def render_with_possible_json_value(hass, template, value,
         _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
+
 def render(hass, template, variables=None, **kwargs):
     """Render given template."""
     if variables is not None:
