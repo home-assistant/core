@@ -43,12 +43,13 @@ class TestRecorder(unittest.TestCase):
                 timestamp = now
                 state = 'dontpurgeme'
             recorder.query("INSERT INTO states ("
-                           "entity_id, domain, state, attributes, last_changed,"
-                           "last_updated, created, utc_offset, event_id)"
+                           "entity_id, domain, state, attributes,"
+                           "last_changed, last_updated, created,"
+                           "utc_offset, event_id)"
                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                            ('test.recorder2', 'sensor', state,
-                           json.dumps(attributes), timestamp, timestamp,
-                           timestamp, -18000, event_id + 1000))
+                            json.dumps(attributes), timestamp, timestamp,
+                            timestamp, -18000, event_id + 1000))
 
     def _add_test_events(self):
         """Adds a few events for testing."""
@@ -155,7 +156,6 @@ class TestRecorder(unittest.TestCase):
                                        'event_type LIKE "EVENT_TEST%"')
         self.assertEqual(len(events), 3)
 
-
     def test_purge_disabled(self):
         """Tests leaving purge_days disabled."""
         self._add_test_states()
@@ -166,7 +166,6 @@ class TestRecorder(unittest.TestCase):
                                        'event_type LIKE "EVENT_TEST%"')
         self.assertEqual(len(states), 5)
         self.assertEqual(len(events), 5)
-
 
         # run purge_old_data()
         recorder._INSTANCE.purge_days = None

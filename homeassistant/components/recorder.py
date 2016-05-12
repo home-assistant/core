@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.event import track_point_in_utc_time
 
 DOMAIN = "recorder"
 
@@ -33,8 +34,9 @@ RETURN_ONE_ROW = "one_row"
 
 CONF_PURGE_DAYS = "purge_days"
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(dict, {
-        CONF_PURGE_DAYS: int
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
+                                               vol.Range(min=1)),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -204,7 +206,10 @@ class Recorder(threading.Thread):
         """Start processing events to save."""
         self._setup_connection()
         self._setup_run()
-        self._purge_old_data()
+        if self.purge_days is not None:
+            track_point_in_utc_time(self.hass,
+                                    lambda now: self._purge_old_data(),
+                                    dt_util.utcnow() + timedelta(minutes=5))
 
         while True:
             event = self.queue.get()
