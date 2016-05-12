@@ -152,3 +152,49 @@ def parse_time(time_str):
     except ValueError:
         # ValueError if value cannot be converted to an int or not in range
         return None
+
+
+# Found in this gist: https://gist.github.com/zhangsen/1199964
+def get_age(date):
+    """
+    Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month or year. Only the
+    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
+    be returned.
+    Make sure date is not in the future, or else it won't work.
+    """
+    def formatn(number, unit):
+        """Add "unit" if it's plural."""
+        if number == 1:
+            return "1 %s" % unit
+        elif number > 1:
+            return "%d %ss" % (number, unit)
+
+    def q_n_r(first, second):
+        """Return quotient and remaining."""
+        return first // second, first % second
+
+    # pylint: disable=too-few-public-methods
+    class PrettyDelta:
+        """A class for relative times."""
+
+        def __init__(self, subDt):
+            delta = now() - subDt
+            self.day = delta.days
+            self.second = delta.seconds
+
+            self.year, self.day = q_n_r(self.day, 365)
+            self.month, self.day = q_n_r(self.day, 30)
+            self.hour, self.second = q_n_r(self.second, 3600)
+            self.minute, self.second = q_n_r(self.second, 60)
+
+        def format(self):
+            """Format a datetime to relative time string."""
+            for period in ['year', 'month', 'day', 'hour', 'minute', 'second']:
+                number = getattr(self, period)
+                if number > 0:
+                    return formatn(number, period)
+            return "0 second"
+
+    return PrettyDelta(date).format()
