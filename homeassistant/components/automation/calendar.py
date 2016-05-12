@@ -1,10 +1,8 @@
-"""
-Offer trigger state for calendar events with offset abilities.
-"""
-import voluptuous as vol
+"""Offer trigger state for calendar events with offset abilities."""
 import functools as fc
 from datetime import timedelta
 import logging
+import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.util import dt
@@ -28,7 +26,7 @@ def trigger(hass, config, action):
     """Listen for time change."""
     entity_id = config.get(CONF_ENTITY_ID)
     offset = config.get(CONF_OFFSET)
-   
+
     @fc.wraps(action)
     def calendar_automation_listener(event):
         """The listener that listens for time changes."""

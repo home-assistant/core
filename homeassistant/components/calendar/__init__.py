@@ -14,7 +14,7 @@ dict: {
     'start': date || dateTime as str,
     'end' date || dateTime as str,
 }  # can contain more but won't be used
-or 
+or
 None # if no events are found
 """
 import logging
@@ -38,6 +38,7 @@ DISCOVERY_PLATFORMS = {
     google_calendar.DISCOVER_CALENDARS: 'google_calendar',
 }
 
+
 def setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
@@ -53,6 +54,7 @@ DEFAULT_CONF_OFFSET = '#-'
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
+
 # pylint: disable=too-many-instance-attributes
 class CalendarEventDevice(Entity):
     """A calendar event device."""
@@ -60,12 +62,11 @@ class CalendarEventDevice(Entity):
     # pylint: disable=too-many-arguments
     def __init__(self, hass, calendar, data):
         """Create the Calendar Event Device.
-        
+
         hass = HA instance
         calendar = reference for subclasses to get main cal object
         data = dict of track/search/name/offset
         """
-
         from homeassistant.helpers.entity import generate_entity_id
         self.hass = hass
         self._state = False
@@ -96,12 +97,11 @@ class CalendarEventDevice(Entity):
     @property
     def offset_reached(self):
         """Have we reached the offset time specified in the event title."""
-        # TODO: FIX THIS
         if self._cal_data['offset_time'] > 0:
             start = self._cal_data['start']
             now = dt.now(start.tzinfo)
             offset = timedelta(minutes=self._cal_data['offset_time'])
-            return now + offset >= start 
+            return now + offset >= start
         return False
 
     @property
@@ -170,13 +170,12 @@ class CalendarEventDevice(Entity):
             self._end_listener = None
 
     def get_next_event(self):
-        """This needs to be implemented in child classes."""
+        """Raise an error so that subclasses implement this."""
         raise NotImplementedError()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Search for the next event."""
-        from homeassistant.util import dt
         from homeassistant.const import EVENT_TIME_CHANGED
         from homeassistant.helpers.event import track_point_in_time
 
@@ -252,7 +251,8 @@ class CalendarEventDevice(Entity):
             """What to do when the event end time is reached."""
             self._state = False
             self.cleanup()
-        self._end_listener = track_point_in_time(self.hass, _end, self._cal_data['end'])
+        self._end_listener = track_point_in_time(self.hass, _end,
+                                                 self._cal_data['end'])
 
     def value_changed(self, state):
         """If the state changed then update_ha_state."""

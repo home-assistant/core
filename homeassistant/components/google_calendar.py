@@ -1,8 +1,8 @@
 """
-Support for Google Calendar Search binary sensors.
+Support for Google - Calendar Event Devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.google_calendar/
+https://home-assistant.io/components/google_calendar/
 """
 import os
 import logging
@@ -85,23 +85,42 @@ _CALENDARS = {}
 _OAUTH_PATH_SETUP = False
 
 
-def get_fqdn():
-    """Get system fqdn or None."""
-    hostname = 'PLEASE_SET_FQDN_IN_CONFIGURATION'
+def validate_ip(host):
+    """Validate if a string is an ip."""
+    parts = host.split('.')
+    return all([len(parts) == 4] +
+               [p.isdigit() and int(p) < 256 and int(p) >= 0 for p in parts])
+
+
+def get_hostname(hass):
+    """Try to return a valid fully qualifed domain name."""
+    num_dots = len(hass.http.server_address[0].split('.'))
+    if not validate_ip(hass.http.server_address[0]) and num_dots > 1:
+        # we think we have a valid fqdn
+        return hass.http.server_address[0]
+
+    # last ditch effor, try to get it from socket
     try:
         hostname = socket.gethostbyaddr(get_local_ip())[0]
+        return hostname
     except socket.gaierror:
-        _LOGGER.error('Unable to get the hostname automatically, ' +
-                      'you need to set %s in the configuration',
-                      CONF_FQDN)
-    return hostname
+        _LOGGER.error('Please set your server_host')
+
+    raise Exception('Unable to get the hostname automatically, ' +
+                    'you need to set http:server_host: to a ' +
+                    'fully qualified domain name eg. ha.example.com' +
+                    'Please see setup instructions for component')
 
 
 def setup_oauth_paths(hass, config):
     """Start setup of app with Google Oauth."""
     # pylint disable=global-statement
     from oauth2client import client
-    base_url = hass.http.base_url
+    base_url = "{}://{}:{}".format(
+        'https' if hass.http.use_ssl else 'http',
+        get_hostname(hass),
+        hass.http.server_address[1])
+    _LOGGER.error(base_url)
 
     global _OAUTH_PATH_SETUP
     if _OAUTH_PATH_SETUP:
@@ -112,6 +131,7 @@ def setup_oauth_paths(hass, config):
         scope=SCOPES,
         redirect_uri="{}{}".format(base_url, CAL_SEARCH_CALLBACK)
     )
+
     # get a long term token with refresh_token
     flow.params['access_type'] = 'offline'
     flow.params['approval_prompt'] = 'force'
@@ -141,9 +161,7 @@ def setup_oauth_paths(hass, config):
 
         html_response = """<html><head><title>Google Calendar Search</title>
                 </head><body><h1>{}</h1>
-                You can now close this window and restart Home-Assistant</br>
-                Restarting is not essential it will just cleanup the Oauth
-                callback urls.
+                You can now close this window.
                 </body>
                 </html>""".format(response_message)
         html_response = html_response.encode("utf-8")
@@ -171,6 +189,8 @@ def request_oauth_setup(hass, config):
                                    "Failed to register, please try again.")
         return False
 
+    setup_oauth_paths(hass, config)
+
     description = """Authenticate your Google account: """
 
     def _configuration_callback(callback_data):
@@ -192,10 +212,9 @@ def request_oauth_setup(hass, config):
         _configuration_callback,
         description=description,
         submit_caption="I have created the JSON file",
-        link_name='Login to Google', 
+        link_name='Login to Google',
         link_url=CAL_SEARCH_START,
     )
-
 
 
 def request_api_setup(hass, config):
@@ -225,7 +244,7 @@ def request_api_setup(hass, config):
         _configuration_callback,
         description=description,
         submit_caption="I have created the JSON file",
-        link_name='Google Calendar Component Setup', 
+        link_name='Google Calendar Component Setup',
         link_url='https://home-assistant.io/components/google_calendar/',
     )
 
@@ -254,18 +273,10 @@ def setup(hass, config):
     if isinstance(config, list) and len(config) > 0:
         config = config[0]
 
-    def _scan_for_calendars(service):
-        """Scan for new calendars."""
-        track_new = convert(config.get(CONF_TRACK_NEW),
-                            bool, DEFAULT_CONF_TRACK_NEW)
-        service = get_calendar_service(hass)
-        calendars = service.calendarList().list().execute()['items']
-        for calendar in calendars:
-            found_calendar(hass, calendar, track_new)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars,
-        None, schema=None)
+    # this will raise an exception if it can't get a hostname
+    # this is a fatal exception since authentication can't happen
+    # unless we have a fully qualified domain name
+    get_hostname(hass)
 
     if not do_setup_check(hass, config):
         return False
@@ -279,6 +290,19 @@ def do_setup(hass, config):
     # pylint disable=global-statement
     if DOMAIN in _CONFIGURING:
         get_component('configurator').request_done(_CONFIGURING.pop(DOMAIN))
+
+    def _scan_for_calendars(service):
+        """Scan for new calendars."""
+        track_new = convert(config.get(CONF_TRACK_NEW),
+                            bool, DEFAULT_CONF_TRACK_NEW)
+        service = get_calendar_service(hass)
+        calendars = service.calendarList().list().execute()['items']
+        for calendar in calendars:
+            found_calendar(hass, calendar, track_new)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars,
+        None, schema=None)
 
     # Ensure component is loaded
     bootstrap.setup_component(hass, 'calendar', config)
@@ -319,7 +343,7 @@ def found_calendar(hass, calendar, track_new):
         _CALENDARS[calendar_hash]
     )
 
-    discover(hass, DISCOVER_BINARY_SENSORS, _CALENDARS[calendar_hash])
+    discover(hass, DISCOVER_CALENDARS, _CALENDARS[calendar_hash])
 
 
 def get_next_event(hass, calendar_id, search=None):
