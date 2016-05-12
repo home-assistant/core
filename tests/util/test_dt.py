@@ -133,3 +133,8 @@ class TestDateUtil(unittest.TestCase):
     def test_parse_datetime_returns_none_for_incorrect_format(self):
         """Test parse_datetime returns None if incorrect format."""
         self.assertIsNone(dt_util.parse_datetime("not a datetime string"))
+
+    def test_get_age(self):
+        """Test get_age returns 5 minutes."""
+        fiveminago = dt_util.now() - timedelta(minutes=5)
+        self.assertEqual(dt_util.get_age(fiveminago), "5 minutes")
