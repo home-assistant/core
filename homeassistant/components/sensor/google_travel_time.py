@@ -29,14 +29,14 @@ CONF_OPTIONS = 'options'
 CONF_MODE = 'mode'
 CONF_NAME = 'name'
 
-languages = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
-             'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
-             'it', 'iw', 'ja', 'kn', 'ko', 'lt', 'lv', 'ml', 'mr', 'nl',
-             'no', 'pl', 'pt', 'pt-BR', 'pt-PT', 'ro', 'ru', 'sk', 'sl',
-             'sr', 'sv', 'ta', 'te', 'th', 'tl', 'tr', 'uk', 'vi', 'zh-CN',
-             'zh-TW']
+ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
+                 'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
+                 'it', 'iw', 'ja', 'kn', 'ko', 'lt', 'lv', 'ml', 'mr', 'nl',
+                 'no', 'pl', 'pt', 'pt-BR', 'pt-PT', 'ro', 'ru', 'sk', 'sl',
+                 'sr', 'sv', 'ta', 'te', 'th', 'tl', 'tr', 'uk', 'vi',
+                 'zh-CN', 'zh-TW']
 
-transit_prefs = ['less_walking', 'fewer_transfers']
+TRANSIT_PREFS = ['less_walking', 'fewer_transfers']
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required('platform'): 'google_travel_time',
@@ -50,18 +50,18 @@ PLATFORM_SCHEMA = vol.Schema({
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'):
                 vol.In(["driving", "walking", "bicycling", "transit"]),
-            vol.Optional('language'): vol.In(languages),
+            vol.Optional('language'): vol.In(ALL_LANGUAGES),
             vol.Optional('avoid'): vol.In(['tolls', 'highways',
                                            'ferries', 'indoor']),
             vol.Optional('units'): vol.In(['metric', 'imperial']),
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
             vol.Optional('traffic_model'): vol.In(['best_guess',
-                                                  'pessimistic',
-                                                  'optimistic']),
+                                                   'pessimistic',
+                                                   'optimistic']),
             vol.Optional('transit_mode'): vol.In(['bus', 'subway', 'train',
                                                   'tram', 'rail']),
-            vol.Optional('transit_routing_preference'): vol.In(transit_prefs)
+            vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
 })
 
