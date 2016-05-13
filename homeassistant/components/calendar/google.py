@@ -11,7 +11,7 @@ from homeassistant.components.calendar import CalendarEventDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'google_calendar'
+DOMAIN = 'google'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_NAME = 'name'
@@ -39,6 +39,6 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
 
     def get_next_event(self):
         """Return the next event dict or None."""
-        from homeassistant.components.google_calendar import get_next_event
+        from homeassistant.components.google import get_next_event
         event = get_next_event(self.hass, self._calendar, self.search)
         return event

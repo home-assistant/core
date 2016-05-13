@@ -1,5 +1,5 @@
 """
-Support for Google Calendar Search binary sensors.
+Support for Google Calendar event device sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar/
@@ -18,6 +18,7 @@ or
 None # if no events are found
 """
 import logging
+import re
 
 from datetime import timedelta
 from homeassistant.util import dt
@@ -26,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.util import Throttle
 from homeassistant.components import (
-    google_calendar)
+    google)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DISCOVERY_PLATFORMS = {
-    google_calendar.DISCOVER_CALENDARS: 'google_calendar',
+    google.DISCOVER_CALENDARS: 'google',
 }
 
 
@@ -204,7 +205,6 @@ class CalendarEventDevice(Entity):
         summary = event['summary']
 
         # check if we have an offset tag in the message
-        import re
         search = re.search('{}([0-9]+)'.format(self._offset), summary)
         if search and search.group(1).isdigit():
             self._cal_data['offset_time'] = int(search.group(1))

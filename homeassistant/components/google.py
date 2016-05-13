@@ -2,7 +2,11 @@
 Support for Google - Calendar Event Devices.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/google_calendar/
+https://home-assistant.io/components/google/
+
+NOTE: IF YOU ADD MORE TO THIS THAN JUST CALENDAR THEN USERS WILL NEED TO
+DELETE THEIR TOKEN_FILE. THEY WILL LOSE THEIR REFRESH_TOKEN PIECE WHEN
+RE-AUTHENTICATING TO ADD MORE API ACCESS
 """
 import os
 import logging
@@ -19,14 +23,14 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.components.discovery import discover
 
 REQUIREMENTS = [
-    'google-api-python-client',
+    'google-api-python-client==1.5.0',
 ]
 DEPENDENCIES = ['http', 'calendar']
 
 _LOGGER = logging.getLogger(__name__)
 _CONFIGURING = {}
 
-DOMAIN = 'google_calendar'
+DOMAIN = 'google'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_FQDN = 'fqdn'
@@ -245,7 +249,7 @@ def request_api_setup(hass, config):
         description=description,
         submit_caption="I have created the JSON file",
         link_name='Google Calendar Component Setup',
-        link_url='https://home-assistant.io/components/google_calendar/',
+        link_url='https://home-assistant.io/components/google/',
     )
 
 
