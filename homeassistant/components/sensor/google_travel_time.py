@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if mode is None:
             options[CONF_MODE] = travel_mode
 
-    titled_mode = options.get(CONF_MODE, 'driving').title()
+    titled_mode = options.get(CONF_MODE).title()
     formatted_name = "Google Travel Time - {}".format(titled_mode)
     name = config.get(CONF_NAME, formatted_name)
     api_key = config.get(CONF_API_KEY)
