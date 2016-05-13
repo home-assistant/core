@@ -28,7 +28,7 @@ class TestRecorder(unittest.TestCase):
         recorder._INSTANCE.block_till_done()
 
     def _add_test_states(self):
-        """Adds multiple states to the db for testing."""
+        """Add multiple states to the db for testing."""
         now = int(time.time())
         five_days_ago = now - (60*60*24*5)
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
@@ -52,7 +52,7 @@ class TestRecorder(unittest.TestCase):
                             timestamp, -18000, event_id + 1000))
 
     def _add_test_events(self):
-        """Adds a few events for testing."""
+        """Add a few events for testing."""
         now = int(time.time())
         five_days_ago = now - (60*60*24*5)
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
@@ -126,7 +126,7 @@ class TestRecorder(unittest.TestCase):
             db_event.time_fired.replace(microsecond=0)
 
     def test_purge_old_states(self):
-        """Tests deleting old states."""
+        """Test deleting old states."""
         self._add_test_states()
         # make sure we start with 5 states
         states = recorder.query_states('SELECT * FROM states')
@@ -157,7 +157,7 @@ class TestRecorder(unittest.TestCase):
         self.assertEqual(len(events), 3)
 
     def test_purge_disabled(self):
-        """Tests leaving purge_days disabled."""
+        """Test leaving purge_days disabled."""
         self._add_test_states()
         self._add_test_events()
         # make sure we start with 5 states and events
