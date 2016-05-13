@@ -141,7 +141,7 @@ class TestRecorder(unittest.TestCase):
         self.assertEqual(len(states), 2)
 
     def test_purge_old_events(self):
-        """Tests deleting old events."""
+        """Test deleting old events."""
         self._add_test_events()
         events = recorder.query_events('SELECT * FROM events WHERE '
                                        'event_type LIKE "EVENT_TEST%"')
