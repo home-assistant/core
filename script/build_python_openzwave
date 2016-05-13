@@ -15,7 +15,7 @@ if [ -d python-openzwave ]; then
   git pull --recurse-submodules=yes
   git submodule update --init --recursive
 else
-  git clone --recursive https://github.com/OpenZWave/python-openzwave.git
+  git clone --recursive --depth 1 https://github.com/OpenZWave/python-openzwave.git
   cd python-openzwave
 fi
 
