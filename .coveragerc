@@ -38,6 +38,9 @@ omit =
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
+    homeassistant/components/qwikswitch.py
+    homeassistant/components/*/qwikswitch.py
+
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
