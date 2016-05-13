@@ -3,6 +3,8 @@
 from datetime import timedelta
 import unittest
 
+# Otherwise can't test just this file (import order issue)
+import homeassistant.components  # noqa
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers import script
 
@@ -216,3 +218,35 @@ class TestScriptHelper(unittest.TestCase):
         assert not script_obj.is_running
         assert len(calls) == 2
         assert calls[-1].data['hello'] == 'universe'
+
+    def test_condition(self):
+        """Test if we can use conditions in a script."""
+        event = 'test_event'
+        events = []
+
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('test.entity', 'hello')
+
+        script_obj = script.Script(self.hass, [
+            {'event': event},
+            {
+                'condition': 'template',
+                'value_template': '{{ states.test.entity.state == "hello" }}',
+            },
+            {'event': event},
+        ])
+
+        script_obj.run()
+        self.hass.pool.block_till_done()
+        assert len(events) == 2
+
+        self.hass.states.set('test.entity', 'goodbye')
+
+        script_obj.run()
+        self.hass.pool.block_till_done()
+        assert len(events) == 3

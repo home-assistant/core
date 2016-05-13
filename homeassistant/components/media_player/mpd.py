@@ -89,7 +89,13 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except mpd.ConnectionError:
+        except (mpd.ConnectionError, BrokenPipeError, ValueError):
+            # Cleanly disconnect in case connection is not in valid state
+            try:
+                self.client.disconnect()
+            except mpd.ConnectionError:
+                pass
+
             self.client.connect(self.server, self.port)
 
             if self.password is not None:

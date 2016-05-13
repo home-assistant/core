@@ -253,6 +253,7 @@ class TestAutomationNumericState(unittest.TestCase):
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': 'test.another_entity',
+                    'below': 100,
                 },
                 'action': {
                     'service': 'test.automation'
@@ -441,13 +442,11 @@ class TestAutomationNumericState(unittest.TestCase):
                     'data_template': {
                         'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
                                     'platform', 'entity_id', 'below', 'above',
-                                    'from_state.state', 'from_value',
-                                    'to_state.state', 'to_value'))
+                                    'from_state.state', 'to_state.state'))
                     },
                 }
             }
         })
-        # 9 is below 10
         self.hass.states.set('test.entity', 'test state 1',
                              {'test_attribute': '1.2'})
         self.hass.pool.block_till_done()
@@ -456,8 +455,8 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
         self.assertEqual(
-            'numeric_state - test.entity - 10 - None - test state 1 - 12.0 - '
-            'test state 2 - 9.0',
+            'numeric_state - test.entity - 10.0 - None - test state 1 - '
+            'test state 2',
             self.calls[0].data['some'])
 
     def test_not_fires_on_attr_change_with_attr_not_below_multiple_attr(self):
