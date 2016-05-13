@@ -55,7 +55,7 @@ def _include_dir_named_yaml(loader, node):
     return mapping
 
 
-def _include_dir_flat_yaml(loader, node):
+def _include_dir_list_yaml(loader, node):
     """Load multiple files from dir."""
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     return [load_yaml(f) for f in glob.glob(files)]
@@ -101,5 +101,5 @@ yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
-yaml.SafeLoader.add_constructor('!include_dir_flat', _include_dir_flat_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
