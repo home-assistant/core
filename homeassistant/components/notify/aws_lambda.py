@@ -34,7 +34,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def get_service(hass, config):
     """Get the AWS Lambda notification service."""
-
     # pylint: disable=import-error
     import boto3
 

@@ -33,7 +33,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def get_service(hass, config):
     """Get the AWS SNS notification service."""
-
     # pylint: disable=import-error
     import boto3
 
