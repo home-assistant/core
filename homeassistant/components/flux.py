@@ -6,7 +6,7 @@ flux:
     - light.desk
     - light.lamp
   bedtime: "22:00"
-  off_at_night: True
+  turn_off: True
 """
 from homeassistant.helpers.event import track_state_change, track_time_change
 from homeassistant.components.light import is_on, turn_on, turn_off
