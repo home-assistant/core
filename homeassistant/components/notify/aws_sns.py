@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.aws_sns/
 """
 import logging
+import json
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -28,6 +29,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, "credentials"): vol.Coerce(str),
     vol.Exclusive(CONF_PROFILE_NAME, "credentials"): vol.Coerce(str)
 })
+
 
 def get_service(hass, config):
     """Get the AWS SNS notification service."""
@@ -68,6 +70,13 @@ class AWSSNS(BaseNotificationService):
         if not isinstance(targets, list):
             targets = [targets]
 
+        cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
+        message_attributes = {}
+        for key, val in cleaned_kwargs.items():
+            message_attributes[key] = {'StringValue': json.dumps(val),
+                                       'DataType': 'String'}
+
         for target in targets:
             self.client.publish(TargetArn=target, Message=message,
-                                Subject=kwargs.get(ATTR_TITLE))
+                                Subject=kwargs.get(ATTR_TITLE),
+                                MessageAttributes=message_attributes)
