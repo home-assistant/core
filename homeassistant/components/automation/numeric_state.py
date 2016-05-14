@@ -41,7 +41,7 @@ def trigger(hass, config, action):
         variables = {
             'trigger': {
                 'platform': 'numeric_state',
-                'entity_id': entity_id,
+                'entity_id': entity,
                 'below': below,
                 'above': above,
             }
