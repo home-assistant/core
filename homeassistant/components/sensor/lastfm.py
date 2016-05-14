@@ -56,16 +56,16 @@ class LastfmSensor(Entity):
             self._state = "Not Scrobbling"
         else:
             now = self._user.get_now_playing()
-            self._state = (now.title + " - " + str(now.artist))
+            self._state = (str(now.artist) + " - " + now.title)
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = (last.track.title + " - " +
-                            str(last.track.artist))
+        self._lastplayed = (str(last.track.artist) + " - " +
+                            last.track.title)
         top = self._user.get_top_tracks(limit=1)
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = (toptitle.group(1) + " - " +
-                           topartist.group(1))
+        self._topplayed = (topartist.group(1) + " - " +
+                           toptitle.group(1))
 
     @property
     def device_state_attributes(self):
