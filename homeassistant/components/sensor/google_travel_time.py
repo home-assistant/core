@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
     vol.Optional(CONF_TRAVEL_MODE):
         vol.In(["driving", "walking", "bicycling", "transit"]),
-    vol.Optional(CONF_OPTIONS): vol.All(
+    vol.Optional(CONF_OPTIONS, default=dict()): vol.All(
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'):
                 vol.In(["driving", "walking", "bicycling", "transit"]),
@@ -136,7 +136,11 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._matrix['rows'][0]['elements'][0]['duration']['value']/60.0
+        try:
+            res = self._matrix['rows'][0]['elements'][0]['duration']['value']
+            return res/60.0
+        except KeyError:
+            return None
 
     @property
     def name(self):
@@ -174,15 +178,6 @@ class GoogleTravelTimeSensor(Entity):
 
         if atime is not None and ':' in atime:
             options_copy['arrival_time'] = convert_time_to_utc(atime)
-
-        departure_time = options_copy.get('departure_time')
-        arrival_time = options_copy.get('arrival_time')
-        if departure_time is not None and arrival_time is not None:
-            wstr = ("Google Travel Time: You can not provide both arrival "
-                    "and departure times! Deleting the arrival time...")
-            _LOGGER.warning(wstr)
-            del options_copy['arrival_time']
-            del self._options['arrival_time']
 
         self._matrix = self._client.distance_matrix(self._origin,
                                                     self._destination,
