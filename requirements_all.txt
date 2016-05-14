@@ -347,6 +347,9 @@ vsure==0.8.1
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
 
+# homeassistant.components.media_player.gpmdp
+websocket-client==0.35.0
+
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
 
