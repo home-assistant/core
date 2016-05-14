@@ -1,6 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access,too-many-public-methods
-# from contextlib import closing
+from contextlib import closing
 import json
 import tempfile
 import unittest
@@ -443,6 +443,9 @@ class TestAPI(unittest.TestCase):
 
     #         self.assertEqual(listen_count + 1, self._listen_count())
 
+    #         # eventlet.sleep(1)
+    #         print('firing event')
+
     #         hass.bus.fire('test_event')
     #         hass.pool.block_till_done()
 
@@ -476,20 +479,20 @@ class TestAPI(unittest.TestCase):
     #         data = self._stream_next_event(req)
     #         self.assertEqual('test_event3', data['event_type'])
 
-    # def _stream_next_event(self, stream):
-    #     """Test the stream for next event."""
-    #     data = b''
-    #     last_new_line = False
-    #     for dat in stream.iter_content(1):
-    #         if dat == b'\n' and last_new_line:
-    #             break
-    #         data += dat
-    #         last_new_line = dat == b'\n'
+    def _stream_next_event(self, stream):
+        """Test the stream for next event."""
+        data = b''
+        last_new_line = False
+        for dat in stream.iter_content(1):
+            if dat == b'\n' and last_new_line:
+                break
+            data += dat
+            last_new_line = dat == b'\n'
 
-    #     conv = data.decode('utf-8').strip()[6:]
+        conv = data.decode('utf-8').strip()[6:]
 
-    #     return conv if conv == 'ping' else json.loads(conv)
+        return conv if conv == 'ping' else json.loads(conv)
 
-    # def _listen_count(self):
-    #     """Return number of event listeners."""
-    #     return sum(hass.bus.listeners.values())
+    def _listen_count(self):
+        """Return number of event listeners."""
+        return sum(hass.bus.listeners.values())
