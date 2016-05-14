@@ -72,12 +72,12 @@ class AWSSQS(BaseNotificationService):
 
         for target in targets:
             cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-            message_body = {'message': message}
+            message_body = {"message": message}
             message_body.update(cleaned_kwargs)
             message_attributes = {}
             for key, val in cleaned_kwargs.items():
-                message_attributes[key] = {'StringValue': json.dumps(val),
-                                           'DataType': 'String'}
+                message_attributes[key] = {"StringValue": json.dumps(val),
+                                           "DataType": "String"}
             self.client.send_message(QueueUrl=target,
                                      MessageBody=json.dumps(message_body),
                                      MessageAttributes=message_attributes)

@@ -74,14 +74,14 @@ class AWSLambda(BaseNotificationService):
 
         for target in targets:
             cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-            payload = {'message': message}
+            payload = {"message": message}
             payload.update(cleaned_kwargs)
 
             context_str = json.dumps(self.hass_config)
-            context_b64 = base64.b64encode(context_str.encode('utf-8'))
+            context_b64 = base64.b64encode(context_str.encode("utf-8"))
             context = context_b64.decode("utf-8")
 
             self.client.invoke(FunctionName=target,
-                               InvocationType='Event',
+                               InvocationType="Event",
                                Payload=json.dumps(payload),
                                ClientContext=context)
