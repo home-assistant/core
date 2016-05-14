@@ -18,7 +18,7 @@ DEFAULT_NAME = 'REST Binary Sensor'
 DEFAULT_METHOD = 'GET'
 
 
-# pylint: disable=unused-variable
+# pylint: disable=unused-variable, logging-too-many-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the REST binary sensor."""
     resource = config.get('resource', None)
