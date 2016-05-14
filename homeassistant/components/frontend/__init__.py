@@ -70,7 +70,8 @@ class IndexView(HomeAssistantView):
     name = "frontend:index"
     requires_auth = False
     extra_urls = ['/logbook', '/history', '/map', '/devService', '/devState',
-                  '/devEvent', '/devInfo', '/devTemplate', '/states/<entity>']
+                  '/devEvent', '/devInfo', '/devTemplate',
+                  '/states', '/states/<entity_id>']
 
     def __init__(self, hass):
         """Initialize the frontend view."""
@@ -84,13 +85,18 @@ class IndexView(HomeAssistantView):
             )
         )
 
-    def get(self, request):
+    def get(self, request, entity_id=None):
         """Serve the index view."""
-        app_url = "frontend-{}.html".format(version.VERSION)
+        if self.hass.wsgi.development:
+            app_url = 'home-assistant-polymer/src/home-assistant.html'
+        else:
+            app_url = "frontend-{}.html".format(version.VERSION)
 
         # auto login if no password was set, else check api_password param
-        auth = ('no_password_set' if self.hass.config.api.api_password is None
-                else request.values.get('api_password', ''))
+        if self.hass.config.api.api_password is None:
+            auth = 'no_password_set'
+        else:
+            request.values.get('api_password', '')
 
         template = self.templates.get_template('index.html')
 
