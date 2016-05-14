@@ -57,28 +57,27 @@ class GPMDP(MediaPlayerDevice):
                 self._ws = self._connection(("ws://" + self._address + ":5672"),
                                             timeout=1)
             except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
-                self._status = STATE_OFF
-                self._ws is None
+                self._ws = None
         elif self._ws.connected is True:
             self._ws.close()
             try:
                 self._ws = self._connection(("ws://" + self._address + ":5672"),
                                             timeout=1)
             except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
-                self._status = STATE_OFF
-                self._ws is None
+                self._ws = None
         return self._ws
 
     def update(self):
         """Get the latest details from the player."""
-        ws = self.get_ws()
-        if ws is None:
+        websocket = self.get_ws()
+        if websocket is None:
+            self._status = STATE_OFF
             return
         else:
-            state = ws.recv()
+            state = websocket.recv()
             if ((json.loads(state))['payload']) is True:
-                ws.recv()
-                ws.recv()
+                websocket.recv()
+                websocket.recv()
                 song = self._ws.recv()
                 self._title = ((json.loads(song))['payload']['title'])
                 self._artist = ((json.loads(song))['payload']['artist'])
