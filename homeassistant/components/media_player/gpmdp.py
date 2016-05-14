@@ -54,16 +54,18 @@ class GPMDP(MediaPlayerDevice):
         """Check if the websocket is setup and connected."""
         if self._ws is None:
             try:
-                self._ws = self._connection(("ws://" + self._address + ":5672"),
-                                            timeout=1)
-            except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
+                self._ws = self._connection(("ws://" + self._address +
+                                            ":5672"), timeout=1)
+            except (socket.timeout, ConnectionRefusedError,
+                    ConnectionResetError):
                 self._ws = None
         elif self._ws.connected is True:
             self._ws.close()
             try:
-                self._ws = self._connection(("ws://" + self._address + ":5672"),
-                                            timeout=1)
-            except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
+                self._ws = self._connection(("ws://" + self._address +
+                                            ":5672"), timeout=1)
+            except (socket.timeout, ConnectionRefusedError,
+                ConnectionResetError):
                 self._ws = None
         return self._ws
 
@@ -124,20 +126,32 @@ class GPMDP(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send media_next command to media player."""
-        self._ws.send('{"namespace": "playback", "method": "forward"}')
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "playback", "method": "forward"}')
 
     def media_previous_track(self):
         """Send media_previous command to media player."""
-        self._ws.send('{"namespace": "playback", "method": "rewind"}')
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "playback", "method": "rewind"}')
 
     def media_play(self):
         """Send media_play command to media player."""
-        self._ws.send('{"namespace": "playback", "method": "playPause"}')
-        self._status = STATE_PLAYING
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "playback", "method": "playPause"}')
+        self._status = STATE_PAUSED
         self.update_ha_state()
 
     def media_pause(self):
         """Send media_pause command to media player."""
-        self._ws.send('{"namespace": "playback", "method": "playPause"}')
+        websocket = self.get_ws()
+        if websocket is None:
+            return
+        websocket.send('{"namespace": "playback", "method": "playPause"}')
         self._status = STATE_PAUSED
         self.update_ha_state()
