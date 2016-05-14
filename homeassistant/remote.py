@@ -21,7 +21,8 @@ import homeassistant.core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
-    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY)
+    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
+    HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
 METHOD_GET = "get"
@@ -59,7 +60,9 @@ class API(object):
         else:
             self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
-        self._headers = {}
+        self._headers = {
+            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
+        }
 
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
@@ -126,7 +129,7 @@ class HomeAssistant(ha.HomeAssistant):
     def start(self):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
-        if self.config.api is None:
+        if 'api' not in self.config.components:
             if not bootstrap.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
@@ -135,6 +138,10 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
+
+        # Give eventlet time to startup
+        import eventlet
+        eventlet.sleep(0.1)
 
         # Setup that events from remote_api get forwarded to local_api
         # Do this after we fire START, otherwise HTTP is not started
@@ -383,7 +390,7 @@ def fire_event(api, event_type, data=None):
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
         if req.status_code != 200:
-            _LOGGER.error("Error firing event: %d - %d",
+            _LOGGER.error("Error firing event: %d - %s",
                           req.status_code, req.text)
 
     except HomeAssistantError:

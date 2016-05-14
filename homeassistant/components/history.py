@@ -12,6 +12,7 @@ from itertools import groupby
 from homeassistant.components import recorder, script
 import homeassistant.util.dt as dt_util
 from homeassistant.const import HTTP_BAD_REQUEST
+from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
@@ -155,49 +156,51 @@ def get_state(utc_point_in_time, entity_id, run=None):
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the history hooks."""
-    hass.http.register_path(
-        'GET',
-        re.compile(
-            r'/api/history/entity/(?P<entity_id>[a-zA-Z\._0-9]+)/'
-            r'recent_states'),
-        _api_last_5_states)
-
-    hass.http.register_path('GET', URL_HISTORY_PERIOD, _api_history_period)
+    hass.wsgi.register_view(Last5StatesView)
+    hass.wsgi.register_view(HistoryPeriodView)
 
     return True
 
 
-# pylint: disable=unused-argument
-# pylint: disable=invalid-name
-def _api_last_5_states(handler, path_match, data):
-    """Return the last 5 states for an entity id as JSON."""
-    entity_id = path_match.group('entity_id')
+class Last5StatesView(HomeAssistantView):
+    """Handle last 5 state view requests."""
 
-    handler.write_json(last_5_states(entity_id))
+    url = '/api/history/entity/<entity_id>/recent_states'
+    name = 'api:history:entity-recent-states'
+
+    def get(self, request, entity_id):
+        """Retrieve last 5 states of entity."""
+        return self.json(last_5_states(entity_id))
 
 
-def _api_history_period(handler, path_match, data):
-    """Return history over a period of time."""
-    date_str = path_match.group('date')
-    one_day = timedelta(seconds=86400)
+class HistoryPeriodView(HomeAssistantView):
+    """Handle history period requests."""
 
-    if date_str:
-        start_date = dt_util.parse_date(date_str)
+    url = '/api/history/period'
+    name = 'api:history:entity-recent-states'
+    extra_urls = ['/api/history/period/<date>']
 
-        if start_date is None:
-            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
-            return
+    def get(self, request, date=None):
+        """Return history over a period of time."""
+        one_day = timedelta(seconds=86400)
 
-        start_time = dt_util.as_utc(dt_util.start_of_local_day(start_date))
-    else:
-        start_time = dt_util.utcnow() - one_day
+        if date:
+            start_date = dt_util.parse_date(date)
 
-    end_time = start_time + one_day
+            if start_date is None:
+                return self.json_message('Error parsing JSON',
+                                         HTTP_BAD_REQUEST)
 
-    entity_id = data.get('filter_entity_id')
+            start_time = dt_util.as_utc(dt_util.start_of_local_day(start_date))
+        else:
+            start_time = dt_util.utcnow() - one_day
 
-    handler.write_json(
-        get_significant_states(start_time, end_time, entity_id).values())
+        end_time = start_time + one_day
+
+        entity_id = request.args.get('filter_entity_id')
+
+        return self.json(
+            get_significant_states(start_time, end_time, entity_id).values())
 
 
 def _is_significant(state):
