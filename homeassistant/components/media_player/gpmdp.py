@@ -77,16 +77,17 @@ class GPMDP(MediaPlayerDevice):
             return
         else:
             state = websocket.recv()
-            if ((json.loads(state))['payload']) is True:
+            state = ((json.loads(state))['payload'])
+            if state is True:
                 websocket.recv()
                 websocket.recv()
-                song = self._ws.recv()
-                self._title = ((json.loads(song))['payload']['title'])
-                self._artist = ((json.loads(song))['payload']['artist'])
-                self._albumart = ((json.loads(song))['payload']
-                                  ['albumArt'])
+                song = websocket.recv()
+                song = json.loads(song)
+                self._title = (song['payload']['title'])
+                self._artist = (song['payload']['artist'])
+                self._albumart = (song['payload']['albumArt'])
                 self._status = STATE_PLAYING
-            elif ((json.loads(state))['payload']) is False:
+            elif state is False:
                 self._status = STATE_PAUSED
 
     @property
