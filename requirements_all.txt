@@ -23,7 +23,7 @@ SoCo==0.11.1
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.1
 
-# homeassistant.components.wsgi
+# homeassistant.components.http
 Werkzeug==0.11.5
 
 # homeassistant.components.apcupsd
@@ -56,7 +56,7 @@ dweepy==0.2.0
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.12
 
-# homeassistant.components.wsgi
+# homeassistant.components.http
 eventlet==0.18.4
 
 # homeassistant.components.thermostat.honeywell
@@ -337,7 +337,7 @@ somecomfort==0.2.1
 # homeassistant.components.sensor.speedtest
 speedtest-cli==0.3.4
 
-# homeassistant.components.wsgi
+# homeassistant.components.http
 static3==0.6.1
 
 # homeassistant.components.sensor.steam_online
