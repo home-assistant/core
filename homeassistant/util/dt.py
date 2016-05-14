@@ -156,6 +156,7 @@ def parse_time(time_str):
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
 def get_age(date):
+    # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
 
@@ -175,26 +176,28 @@ def get_age(date):
         """Return quotient and remaining."""
         return first // second, first % second
 
-    # pylint: disable=too-few-public-methods
-    class PrettyDelta:
-        """A class for relative times."""
+    delta = now() - date
+    day = delta.days
+    second = delta.seconds
 
-        def __init__(self, subDt):
-            delta = now() - subDt
-            self.day = delta.days
-            self.second = delta.seconds
+    year, day = q_n_r(day, 365)
+    if year > 0:
+        return formatn(year, 'year')
 
-            self.year, self.day = q_n_r(self.day, 365)
-            self.month, self.day = q_n_r(self.day, 30)
-            self.hour, self.second = q_n_r(self.second, 3600)
-            self.minute, self.second = q_n_r(self.second, 60)
+    month, day = q_n_r(day, 30)
+    if month > 0:
+        return formatn(month, 'month')
+    if day > 0:
+        return formatn(day, 'day')
 
-        def format(self):
-            """Format a datetime to relative time string."""
-            for period in ['year', 'month', 'day', 'hour', 'minute', 'second']:
-                number = getattr(self, period)
-                if number > 0:
-                    return formatn(number, period)
-            return "0 second"
+    hour, second = q_n_r(second, 3600)
+    if hour > 0:
+        return formatn(hour, 'hour')
 
-    return PrettyDelta(date).format()
+    minute, second = q_n_r(second, 60)
+    if minute > 0:
+        return formatn(minute, 'minute')
+    if second > 0:
+        return formatn(second, 'second')
+
+    return "0 second"
