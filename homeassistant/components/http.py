@@ -87,12 +87,11 @@ class HomeAssistantWSGI(object):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.exceptions import BadRequest
         from werkzeug.wrappers import BaseRequest, AcceptMixin
-        from werkzeug.contrib.wrappers import JSONRequestMixin
         from werkzeug.routing import Map
         from werkzeug.utils import cached_property
         from werkzeug.wrappers import Response
 
-        class Request(BaseRequest, AcceptMixin, JSONRequestMixin):
+        class Request(BaseRequest, AcceptMixin):
             """Base class for incoming requests."""
 
             @cached_property
@@ -100,8 +99,8 @@ class HomeAssistantWSGI(object):
                 """Get the result of json.loads if possible."""
                 if not self.data:
                     return None
-                elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
-                    raise BadRequest('Not a JSON request')
+                # elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
+                #     raise BadRequest('Not a JSON request')
                 try:
                     return json.loads(self.data.decode(
                         self.charset, self.encoding_errors))
