@@ -21,7 +21,7 @@ QSUSB = None
 
 
 class QSToggleEntity(object):
-    """Representation of a Qwikswitch Entiry.
+    """Representation of a Qwikswitch Entity.
 
     Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
     be used in a class that extends both QSToggleEntity *and* ToggleEntity.
@@ -36,7 +36,7 @@ class QSToggleEntity(object):
     """
 
     def __init__(self, qsitem, qsusb):
-        """Initialize the light."""
+        """Initialize the ToggleEntity."""
         self._id = qsitem['id']
         self._name = qsitem['name']
         self._qsusb = qsusb
@@ -66,34 +66,41 @@ class QSToggleEntity(object):
 
     def update_value(self, value):
         """Decode QSUSB value & update HA state."""
-        self._value = value
-        # pylint: disable=no-member
-        super().update_ha_state()  # Part of Entity/ToggleEntity
+        if value != self._value:
+            self._value = value
+            # pylint: disable=no-member
+            super().update_ha_state()  # Part of Entity/ToggleEntity
         return self._value
 
-    # pylint: disable=unused-argument
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._value = kwargs[ATTR_BRIGHTNESS]
+            self.update_value(kwargs[ATTR_BRIGHTNESS])
         else:
-            self._value = 100
-        return self._qsusb.set(self._id, self._value)
+            self.update_value(255)
+
+        return self._qsusb.set(self._id, round(min(self._value, 255)/2.55))
 
     # pylint: disable=unused-argument
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        self.update_value(0)
         return self._qsusb.set(self._id, 0)
 
 
-# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the QSUSB component."""
-    from pyqwikswitch import QSUsb
+    from pyqwikswitch import QSUsb, CMD_BUTTONS
+
+    # Override which cmd's in /&listen packets will fire events
+    # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
+    cmd_buttons = config[DOMAIN].get('button_events', ','.join(CMD_BUTTONS))
+    cmd_buttons = cmd_buttons.split(',')
 
     try:
         url = config[DOMAIN].get('url', 'http://127.0.0.1:2020')
-        qsusb = QSUsb(url, _LOGGER)
+        dimmer_adjust = float(config[DOMAIN].get('dimmer_adjust', '1'))
+        qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
 
         # Ensure qsusb terminates threads correctly
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
@@ -105,25 +112,27 @@ def setup(hass, config):
     qsusb.ha_devices = qsusb.devices()
     qsusb.ha_objects = {}
 
+    # Identify switches & remove ' Switch' postfix in name
+    for item in qsusb.ha_devices:
+        if item['type'] == 'rel' and item['name'].lower().endswith(' switch'):
+            item['type'] = 'switch'
+            item['name'] = item['name'][:-7]
+
     global QSUSB
     if QSUSB is None:
         QSUSB = {}
     QSUSB[id(qsusb)] = qsusb
 
-    # Register add_device callbacks onto the gloabl ADD_DEVICES
-    # Switch called first since they are [type=rel] and end with ' switch'
+    # Load sub-components for qwikswitch
     for comp_name in ('switch', 'light'):
         load_platform(hass, comp_name, 'qwikswitch',
                       {'qsusb_id': id(qsusb)}, config)
 
     def qs_callback(item):
         """Typically a btn press or update signal."""
-        from pyqwikswitch import CMD_BUTTONS
-
         # If button pressed, fire a hass event
-        if item.get('type', '') in CMD_BUTTONS:
-            _LOGGER.info('qwikswitch.button.%s', item['id'])
-            hass.bus.fire('qwikswitch.button.{}'.format(item['id']))
+        if item.get('cmd', '') in cmd_buttons:
+            hass.bus.fire('qwikswitch.button.' + item.get('id', '@no_id'))
             return
 
         # Update all ha_objects
@@ -133,7 +142,8 @@ def setup(hass, config):
         for item in qsreply:
             item_id = item.get('id', '')
             if item_id in qsusb.ha_objects:
-                qsusb.ha_objects[item_id].update_value(item['value'])
+                qsusb.ha_objects[item_id].update_value(
+                    round(min(item['value'], 100) * 2.55))
 
-    qsusb.listen(callback=qs_callback, timeout=10)
+    qsusb.listen(callback=qs_callback, timeout=30)
     return True
