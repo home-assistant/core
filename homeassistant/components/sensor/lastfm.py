@@ -59,16 +59,19 @@ class LastfmSensor(Entity):
             self._state = (now.title + " - " + str(now.artist))
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = (last.track.title + " - " + str(last.track.artist))
+        self._lastplayed = (last.track.title + " - " +
+                            str(last.track.artist))
         top = self._user.get_top_tracks(limit=1)
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = (toptitle.group(1) + " - " + topartist.group(1))
+        self._topplayed = (toptitle.group(1) + " - " +
+                           topartist.group(1))
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'Playcount': self._playcount, 'Last Played': self._lastplayed, 'Top Played': self._topplayed}
+        return {'Playcount': self._playcount, 'Last Played':
+                self._lastplayed, 'Top Played': self._topplayed}
 
     @property
     def entity_picture(self):
