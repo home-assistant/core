@@ -14,6 +14,7 @@ from homeassistant.const import HTTP_OK, TEMP_CELSIUS
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
+from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ["fitbit==0.2.2"]
@@ -248,68 +249,81 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         redirect_uri = "{}{}".format(hass.config.api.base_url,
                                      FITBIT_AUTH_CALLBACK_PATH)
 
-        def _start_fitbit_auth(handler, path_match, data):
-            """Start Fitbit OAuth2 flow."""
-            url, _ = oauth.authorize_token_url(redirect_uri=redirect_uri,
-                                               scope=["activity", "heartrate",
-                                                      "nutrition", "profile",
-                                                      "settings", "sleep",
-                                                      "weight"])
-            handler.send_response(301)
-            handler.send_header("Location", url)
-            handler.end_headers()
+        fitbit_auth_start_url, _ = oauth.authorize_token_url(
+            redirect_uri=redirect_uri,
+            scope=["activity", "heartrate", "nutrition", "profile",
+                   "settings", "sleep", "weight"])
 
-        def _finish_fitbit_auth(handler, path_match, data):
-            """Finish Fitbit OAuth2 flow."""
-            response_message = """Fitbit has been successfully authorized!
-            You can close this window now!"""
-            from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
-            from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-            if data.get("code") is not None:
-                try:
-                    oauth.fetch_access_token(data.get("code"), redirect_uri)
-                except MissingTokenError as error:
-                    _LOGGER.error("Missing token: %s", error)
-                    response_message = """Something went wrong when
-                    attempting authenticating with Fitbit. The error
-                    encountered was {}. Please try again!""".format(error)
-                except MismatchingStateError as error:
-                    _LOGGER.error("Mismatched state, CSRF error: %s", error)
-                    response_message = """Something went wrong when
-                    attempting authenticating with Fitbit. The error
-                    encountered was {}. Please try again!""".format(error)
-            else:
-                _LOGGER.error("Unknown error when authing")
-                response_message = """Something went wrong when
-                    attempting authenticating with Fitbit.
-                    An unknown error occurred. Please try again!
-                    """
-
-            html_response = """<html><head><title>Fitbit Auth</title></head>
-            <body><h1>{}</h1></body></html>""".format(response_message)
-
-            html_response = html_response.encode("utf-8")
-
-            handler.send_response(HTTP_OK)
-            handler.write_content(html_response, content_type="text/html")
-
-            config_contents = {
-                "access_token": oauth.token["access_token"],
-                "refresh_token": oauth.token["refresh_token"],
-                "client_id": oauth.client_id,
-                "client_secret": oauth.client_secret
-            }
-            if not config_from_file(config_path, config_contents):
-                _LOGGER.error("failed to save config file")
-
-            setup_platform(hass, config, add_devices, discovery_info=None)
-
-        hass.http.register_path("GET", FITBIT_AUTH_START, _start_fitbit_auth,
-                                require_auth=False)
-        hass.http.register_path("GET", FITBIT_AUTH_CALLBACK_PATH,
-                                _finish_fitbit_auth, require_auth=False)
+        hass.wsgi.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
+        hass.wsgi.register_view(FitbitAuthCallbackView(hass, config,
+                                                       add_devices, oauth))
 
         request_oauth_completion(hass)
+
+
+class FitbitAuthCallbackView(HomeAssistantView):
+    """Handle OAuth finish callback requests."""
+
+    requires_auth = False
+    url = '/auth/fitbit/callback'
+    name = 'auth:fitbit:callback'
+
+    def __init__(self, hass, config, add_devices, oauth):
+        """Initialize the OAuth callback view."""
+        super().__init__(hass)
+        self.config = config
+        self.add_devices = add_devices
+        self.oauth = oauth
+
+    def get(self, request):
+        """Finish OAuth callback request."""
+        from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
+        from oauthlib.oauth2.rfc6749.errors import MissingTokenError
+
+        data = request.args
+
+        response_message = """Fitbit has been successfully authorized!
+        You can close this window now!"""
+
+        if data.get("code") is not None:
+            redirect_uri = "{}{}".format(self.hass.config.api.base_url,
+                                         FITBIT_AUTH_CALLBACK_PATH)
+
+            try:
+                self.oauth.fetch_access_token(data.get("code"), redirect_uri)
+            except MissingTokenError as error:
+                _LOGGER.error("Missing token: %s", error)
+                response_message = """Something went wrong when
+                attempting authenticating with Fitbit. The error
+                encountered was {}. Please try again!""".format(error)
+            except MismatchingStateError as error:
+                _LOGGER.error("Mismatched state, CSRF error: %s", error)
+                response_message = """Something went wrong when
+                attempting authenticating with Fitbit. The error
+                encountered was {}. Please try again!""".format(error)
+        else:
+            _LOGGER.error("Unknown error when authing")
+            response_message = """Something went wrong when
+                attempting authenticating with Fitbit.
+                An unknown error occurred. Please try again!
+                """
+
+        html_response = """<html><head><title>Fitbit Auth</title></head>
+        <body><h1>{}</h1></body></html>""".format(response_message)
+
+        config_contents = {
+            "access_token": self.oauth.token["access_token"],
+            "refresh_token": self.oauth.token["refresh_token"],
+            "client_id": self.oauth.client_id,
+            "client_secret": self.oauth.client_secret
+        }
+        if not config_from_file(self.hass.config.path(FITBIT_CONFIG_FILE),
+                                config_contents):
+            _LOGGER.error("failed to save config file")
+
+        setup_platform(self.hass, self.config, self.add_devices)
+
+        return html_response
 
 
 # pylint: disable=too-few-public-methods
