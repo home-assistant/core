@@ -329,6 +329,9 @@ tellive-py==0.5.2
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.notify.twilio_sms
+twilio==5.4.0
+
 # homeassistant.components.sensor.uber
 uber_rides==0.2.1
 
