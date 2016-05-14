@@ -4,9 +4,9 @@ Sensor for Last.fm account status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.lastfm/
 """
+import re
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
-import re
 
 ICON = 'mdi:lastfm'
 
@@ -15,13 +15,13 @@ REQUIREMENTS = ['pylast==1.6.0']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Last.fm platform"""
+    """Setup the Last.fm platform."""
     import pylast as lastfm
-    network = lastfm.LastFMNetwork(api_key = config.get(CONF_API_KEY),
-        api_secret = config.get('api_secret'))
+    network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY),
+                                   api_secret=config.get('api_secret'))
     add_devices(
         [LastfmSensor(username,
-            network) for username in config.get('users', [])])
+                      network) for username in config.get('users', [])])
 
 
 class LastfmSensor(Entity):
@@ -52,6 +52,7 @@ class LastfmSensor(Entity):
 
     # pylint: disable=no-member
     def update(self):
+        """Update device state."""
         if self._user.get_now_playing() is None:
             self._state = "Not Scrobbling"
         else:
