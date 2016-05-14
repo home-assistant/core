@@ -70,7 +70,7 @@ class LastfmSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'Playcount': self._playcount, 'Last Played':
+        return {'Play Count': self._playcount, 'Last Played':
                 self._lastplayed, 'Top Played': self._topplayed}
 
     @property
