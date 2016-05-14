@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.gpm_dp/
 """
 import logging
 import json
+import socket
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
@@ -43,18 +44,41 @@ class GPMDP(MediaPlayerDevice):
         self._address = address
         self._name = name
         self._status = STATE_OFF
+        self._ws = None
+        self._title = None
+        self._artist = None
+        self._albumart = None
         self.update()
+
+    def get_ws(self):
+        """Check if the websocket is setup and connected."""
+        if self._ws is None:
+            try:
+                self._ws = self._connection(("ws://" + self._address + ":5672"),
+                                            timeout=1)
+            except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
+                self._status = STATE_OFF
+                self._ws is None
+        elif self._ws.connected is True:
+            self._ws.close()
+            try:
+                self._ws = self._connection(("ws://" + self._address + ":5672"),
+                                            timeout=1)
+            except (socket.timeout, ConnectionRefusedError, ConnectionResetError):
+                self._status = STATE_OFF
+                self._ws is None
+        return self._ws
 
     def update(self):
         """Get the latest details from the player."""
-        import socket
-        try:
-            self._ws = self._connection(("ws://" + self._address + ":5672"),
-                                        timeout=1)
-            state = self._ws.recv()
+        ws = self.get_ws()
+        if ws is None:
+            return
+        else:
+            state = ws.recv()
             if ((json.loads(state))['payload']) is True:
-                self._ws.recv()
-                self._ws.recv()
+                ws.recv()
+                ws.recv()
                 song = self._ws.recv()
                 self._title = ((json.loads(song))['payload']['title'])
                 self._artist = ((json.loads(song))['payload']['artist'])
@@ -63,8 +87,6 @@ class GPMDP(MediaPlayerDevice):
                 self._status = STATE_PLAYING
             elif ((json.loads(state))['payload']) is False:
                 self._status = STATE_PAUSED
-        except (socket.timeout, ConnectionRefusedError):
-            self._status = STATE_OFF
 
     @property
     def media_content_type(self):
@@ -106,7 +128,7 @@ class GPMDP(MediaPlayerDevice):
         self._ws.send('{"namespace": "playback", "method": "forward"}')
 
     def media_previous_track(self):
-        """Send media_previous command media player."""
+        """Send media_previous command to media player."""
         self._ws.send('{"namespace": "playback", "method": "rewind"}')
 
     def media_play(self):
