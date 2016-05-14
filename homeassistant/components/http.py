@@ -127,14 +127,16 @@ class HomeAssistantWSGI(object):
     def register_view(self, view):
         """Register a view with the WSGI server.
 
-        The view argument must inherit from the HomeAssistantView class, and
-        it must have (globally unique) 'url' and 'name' attributes.
+        The view argument must be a class that inherits from HomeAssistantView.
+        It is optional to instantiate it before registering; this method will
+        handle it either way.
         """
         from werkzeug.routing import Rule
 
         if view.name in self.views:
             _LOGGER.warning("View '%s' is being overwritten", view.name)
         if isinstance(view, type):
+            # Instantiate the view, if needed
             view = view(self.hass)
 
         self.views[view.name] = view
