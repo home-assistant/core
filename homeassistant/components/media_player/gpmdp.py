@@ -55,7 +55,7 @@ class GPMDP(MediaPlayerDevice):
         if self._ws is None:
             try:
                 self._ws = self._connection(("ws://" + self._address +
-                                            ":5672"), timeout=1)
+                                             ":5672"), timeout=1)
             except (socket.timeout, ConnectionRefusedError,
                     ConnectionResetError):
                 self._ws = None
@@ -63,9 +63,9 @@ class GPMDP(MediaPlayerDevice):
             self._ws.close()
             try:
                 self._ws = self._connection(("ws://" + self._address +
-                                            ":5672"), timeout=1)
+                                             ":5672"), timeout=1)
             except (socket.timeout, ConnectionRefusedError,
-                ConnectionResetError):
+                    ConnectionResetError):
                 self._ws = None
         return self._ws
 
