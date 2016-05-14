@@ -27,10 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     qsusb = qwikswitch.QSUSB[discovery_info['qsusb_id']]
 
     for item in qsusb.ha_devices:
-        if item['type'] == 'rel' and \
-           item['name'].lower().endswith(' switch'):
-            # Remove the ' Switch' name postfix for HA
-            item['name'] = item['name'][:-7]
+        if item['type'] == 'switch':
             dev = QSSwitch(item, qsusb)
             add_devices([dev])
             qsusb.ha_objects[item['id']] = dev
