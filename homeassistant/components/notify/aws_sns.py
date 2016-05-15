@@ -69,12 +69,9 @@ class AWSSNS(BaseNotificationService):
         if not isinstance(targets, list):
             targets = [targets]
 
-        cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-        message_attributes = {}
-        for key, val in cleaned_kwargs.items():
-            message_attributes[key] = {"StringValue": json.dumps(val),
-                                       "DataType": "String"}
-
+        message_attributes = {k: {"StringValue": json.dumps(v),
+                                  "DataType": "String"}
+                              for k, v in kwargs.items() if v}
         for target in targets:
             self.client.publish(TargetArn=target, Message=message,
                                 Subject=kwargs.get(ATTR_TITLE),
