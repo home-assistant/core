@@ -172,5 +172,5 @@ def color_temperature_kelvin_to_mired(kelvin_temperature):
 
 
 def color_name_to_rgb(color_name):
-    """Convert a human readable color name to an RGB 3-tuple"""
+    """Convert a human readable color name to an RGB 3-tuple."""
     return webcolors.name_to_rgb(color_name)
