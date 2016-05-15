@@ -129,6 +129,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
                 kwargs[ATTR_RGB_COLOR] != self._rgb:
             rgb = kwargs[ATTR_RGB_COLOR]
             if white is not None and hex_template == '%02x%02x%02x%02x':
+                # pylint: disable=no-member
                 rgb.append(white)
             hex_color = hex_template % tuple(rgb)
             self.gateway.set_child_value(
@@ -138,6 +139,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
                 (color_name_to_rgb(kwargs[ATTR_COLOR_NAME]) != self._rgb):
             rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
             if white is not None and hex_template == '%02x%02x%02x%02x':
+                # pylint: disable=no-member
                 rgb.append(white)
             hex_color = hex_template % tuple(rgb)
             self.gateway.set_child_value(
