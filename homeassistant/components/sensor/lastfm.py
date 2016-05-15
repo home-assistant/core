@@ -17,11 +17,10 @@ REQUIREMENTS = ['pylast==1.6.0']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Last.fm platform."""
     import pylast as lastfm
-    network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY),
-                                   api_secret=config.get('api_secret'))
+    network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
     add_devices(
         [LastfmSensor(username,
-                      network) for username in config.get('users', [])])
+                      network) for username in config.get("users", [])])
 
 
 class LastfmSensor(Entity):
@@ -33,6 +32,11 @@ class LastfmSensor(Entity):
         self._user = lastfm.get_user(user)
         self._name = user
         self._lastfm = lastfm
+        self._state = "Not Scrobbling"
+        self._playcount = None
+        self._lastplayed = None
+        self._topplayed = None
+        self._cover = None
         self.update()
 
     @property
@@ -53,20 +57,19 @@ class LastfmSensor(Entity):
     # pylint: disable=no-member
     def update(self):
         """Update device state."""
-        if self._user.get_now_playing() is None:
-            self._state = "Not Scrobbling"
-        else:
-            now = self._user.get_now_playing()
-            self._state = (str(now.artist) + " - " + now.title)
+        self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = (str(last.track.artist) + " - " +
-                            last.track.title)
-        top = self._user.get_top_tracks(limit=1)
+        self._lastplayed = "{} - {}".format(last.track.artist, last.track.title)
+        top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = (topartist.group(1) + " - " +
-                           toptitle.group(1))
+        self._topplayed = "{} - {}".format(topartist.group(1), toptitle.group(1))
+        if self._user.get_now_playing() is None:
+            self._state = "Not Scrobbling"
+            return
+        now = self._user.get_now_playing()
+        self._state = "{} - {}".format(now.artist, now.title)
 
     @property
     def device_state_attributes(self):
@@ -77,7 +80,7 @@ class LastfmSensor(Entity):
     @property
     def entity_picture(self):
         """Avatar of the user."""
-        return self._user.get_image()
+        return self._cover
 
     @property
     def icon(self):
