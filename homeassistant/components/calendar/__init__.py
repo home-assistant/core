@@ -108,12 +108,17 @@ class CalendarEventDevice(Entity):
     @property
     def state_attributes(self):
         """State Attributes for HA."""
+        start = self._cal_data.get('start', None)
+        end = self._cal_data.get('end', None)
+        start = start.isoformat() if start is not None else None
+        end = end.isoformat() if end is not None else None
+
         return {
             'message': self._cal_data.get('message', ''),
             'all_day': self._cal_data.get('all_day', False),
             'offset_reached': self.offset_reached,
-            'start_time': self._cal_data.get('start', None),
-            'end_time': self._cal_data.get('end', None),
+            'start_time': start,
+            'end_time': end,
             'location': self._cal_data.get('location', None),
             'description': self._cal_data.get('description', None),
         }
