@@ -59,7 +59,7 @@ class TestColorUtil(unittest.TestCase):
                          color_util.rgb_hex_to_rgb_list('3399ff00'))
 
     def test_color_name_to_rgb(self):
-        self.assertEqual([192, 0, 0],
+        self.assertEqual((192, 0, 0),
                          color_util.color_name_to_rgb('chucknorris'))
 
 
