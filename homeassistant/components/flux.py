@@ -1,50 +1,45 @@
 """
 Flux for Home-Assistant.
 
-The primary functions in this component were taken from:
-    https://github.com/KpaBap/hue-flux/blob/master/hue-flux.py
+The primary functions in this component were taken from
+https://github.com/KpaBap/hue-flux/
 
-This component will change the temperature of your lights similar to
-the way flux works on your computer.
-
-You might give a list of light entities to control in the
-configuration.yaml.  You should also provide a 'bedtime', or the last
-time of day the lights will be on.  You can use the 'turn_off' param
-to tell flux whether or not to turn off the lights at night.
-
-The 'auto' param will make this component turn on the lights in the morning,
-and change them accordingly every 10 seconds throughout the day.
-
-If you don't wish to run the auto program, you can create your own
-automation rules that call the service flux.update whenever you want
-the lights updated.
-
-example configuration.yaml:
-
-flux:
-  lights:
-    - light.desk
-    - light.lamp
-  bedtime: "22:00"          # optional, default 22:00
-  turn_off: True            # optional, default False
-  auto: True                # optional, default False
-  day_colortemp: 4000       # optional, default 4000
-  sunset_colortemp: 3000    # optional, default 3000
-  bedtime_colortemp: 1900   # optional, default 1900
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/ecobee/
 """
 from datetime import timedelta
 import logging
 import math
+import voluptuous as vol
 
 from homeassistant.helpers.event import track_time_change
 from homeassistant.components.light import is_on, turn_on, turn_off
 from homeassistant.components.sun import next_setting, next_rising
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ['sun', 'light']
 DOMAIN = "flux"
 SUN = "sun.sun"
 _LOGGER = logging.getLogger(__name__)
+
+CONF_LIGHTS = 'lights'
+CONF_BEDTIME = 'bedtime'
+CONF_TURNOFF = 'turn_off'
+CONF_AUTO = 'auto'
+CONF_DAY_CT = 'day_colortemp'
+CONF_SUNSET_CT = 'sunset_colortemp'
+CONF_BEDTIME_CT = 'bedtime_colortemp'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_LIGHTS): [cv.string],
+    vol.Optional(CONF_BEDTIME, default="22:00"): vol.Coerce(str),
+    vol.Optional(CONF_TURNOFF, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_AUTO, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_DAY_CT, default=4000): vol.Coerce(int),
+    vol.Optional(CONF_SUNSET_CT, default=3000): vol.Coerce(int),
+    vol.Optional(CONF_BEDTIME_CT, default=1900): vol.Coerce(int)
+})
 
 
 def set_lights_xy(hass, lights, x_value, y_value):
@@ -141,23 +136,25 @@ def setup(hass, config):
     return True
 
 
+# pylint: disable=too-few-public-methods
 class Flux(object):
     """Class for Flux."""
 
     def __init__(self, hass, config):
         """Initialize Flux class."""
-        self.lights = config[DOMAIN].get('lights')
+        self.lights = config[DOMAIN][0].get(CONF_LIGHTS)
         self.hass = hass
-        self.bedtime = config[DOMAIN].get('bedtime', '22:00')
-        self.turn_off = config[DOMAIN].get('turn_off', False)
-        self.day_colortemp = config[DOMAIN].get('day_colortemp', 4000)
-        self.sunset_colortemp = config[DOMAIN].get('sunset_colortemp', 3000)
-        self.bedtime_colortemp = config[DOMAIN].get('bedtime_colortemp', 1900)
-        if config[DOMAIN].get('auto', False):
+        self.bedtime = config[DOMAIN][0].get(CONF_BEDTIME)
+        self.turn_off = config[DOMAIN][0].get(CONF_TURNOFF)
+        self.day_colortemp = config[DOMAIN][0].get(CONF_DAY_CT)
+        self.sunset_colortemp = config[DOMAIN][0].get(CONF_SUNSET_CT)
+        self.bedtime_colortemp = config[DOMAIN][0].get(CONF_BEDTIME_CT)
+        if config[DOMAIN][0].get(CONF_AUTO):
             track_time_change(hass, self.update,
                               second=[0, 10, 20, 30, 40, 50])
             self.update(dt_util.now())
 
+    # pylint: disable=too-many-locals
     def update(self, now=dt_util.now()):
         """Update all the lights."""
         current = now
