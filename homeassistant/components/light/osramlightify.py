@@ -20,12 +20,18 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     Light,
     ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR
+    ATTR_COLOR_TEMP,
+    ATTR_RGB_COLOR,
+    ATTR_TRANSITION
 )
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['lightify==1.0.3']
 
+TEMP_MIN = 2000               # lightify minimum temperature
+TEMP_MAX = 6500               # lightify maximum temperature
+TEMP_MIN_HASS = 154           # home assistant minimum temperature
+TEMP_MAX_HASS = 500           # home assistant maximum temperature
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -93,9 +99,17 @@ class OsramLightifyLight(Light):
         return self._light.rgb()
 
     @property
+    def color_temp(self):
+        """Return the color temperature"""
+        o_temp = self._light.temp()
+        temperature = int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS) *
+                          (o_temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
+        return temperature
+
+    @property
     def brightness(self):
         """ Brightness of this light between 0..255. """
-        return (self._light.lum() * 2.55)
+        return int(self._light.lum() * 2.55)
 
     @property
     def is_on(self):
@@ -107,20 +121,39 @@ class OsramLightifyLight(Light):
 
     def turn_on(self, **kwargs):
         """ Turn the device on. """
-        self._light.set_onoff(1)
+
+        brightness = 100
+        if self.brightness:
+            brightness = int(self.brightness / 2.55)
+
+        if ATTR_TRANSITION in kwargs:
+            fade = kwargs[ATTR_TRANSITION] * 10
+        else:
+            fade = 0
 
         if ATTR_RGB_COLOR in kwargs:
             r, g, b = kwargs[ATTR_RGB_COLOR]
-            self._light.set_rgb(r, g, b, 0)
+            self._light.set_rgb(r, g, b, fade)
 
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            self._light.set_luminance(int(brightness / 2.55), 0)
+            brightness = int(kwargs[ATTR_BRIGHTNESS] / 2.55)
+
+        if ATTR_COLOR_TEMP in kwargs:
+            ct = kwargs[ATTR_COLOR_TEMP]
+            kelvin = int(((TEMP_MAX - TEMP_MIN) * (ct - TEMP_MIN_HASS) /
+                          (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+            self._light.set_temperature(kelvin, fade)
+
+        self._light.set_luminance(brightness, fade)
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """ Turn the device off. """
-        self._light.set_onoff(0)
+        if ATTR_TRANSITION in kwargs:
+            fade = kwargs[ATTR_TRANSITION] * 10
+        else:
+            fade = 0
+        self._light.set_luminance(0, fade)
         self.update_ha_state()
 
     def update(self):
