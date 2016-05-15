@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
 import voluptuous as vol
+from itertools import chain
 
 import homeassistant.components.nest as nest
 from homeassistant.helpers.entity import Entity
@@ -29,9 +30,13 @@ WEATHER_VARS = {'weather_humidity': 'humidity',
 SENSOR_UNITS = {'humidity': '%', 'battery_level': 'V',
                 'kph': 'kph', 'temperature': '°C'}
 
+PROTECT_VARS = ['co_status',
+                'smoke_status',
+                'battery_level']
+
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
-_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + \
+_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS + \
                       list(WEATHER_VARS.keys())
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -44,18 +49,41 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
-    for structure, device in nest.devices():
+
+    for structure, device in chain(nest.devices(), nest.protect_devices()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in config[CONF_MONITORED_CONDITIONS]
-                   if variable in SENSOR_TYPES]
+                   if variable in SENSOR_TYPES and is_thermostat(device)]
         sensors += [NestTempSensor(structure, device, variable)
                     for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in SENSOR_TEMP_TYPES]
+                    if variable in SENSOR_TEMP_TYPES and is_thermostat(device)]
         sensors += [NestWeatherSensor(structure, device,
                                       WEATHER_VARS[variable])
                     for variable in config[CONF_MONITORED_CONDITIONS]
-                    if variable in WEATHER_VARS]
+                    if variable in WEATHER_VARS and is_thermostat(device)]
+        sensors += [NestProtectSensor(structure, device, variable)
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in PROTECT_VARS and is_protect(device)]
+
         add_devices(sensors)
+
+
+def is_thermostat(device):
+    """Target devices that are Nest Thermostats"""
+
+    if device.__class__.__name__ == 'Device':
+        return True
+    else:
+        return False
+
+
+def is_protect(device):
+    """Target devices that are Nest Protect Smoke Alarms"""
+
+    if device.__class__.__name__ == 'ProtectDevice':
+        return True
+    else:
+        return False
 
 
 class NestSensor(Entity):
@@ -130,3 +158,29 @@ class NestWeatherSensor(NestSensor):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_UNITS.get(self.variable, None)
+
+
+class NestProtectSensor(NestSensor):
+    """Return the state of nest protect"""
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        state = getattr(self.device, self.variable)
+        if self.variable == 'battery_level':
+            return getattr(self.device, self.variable)
+        else:
+            if state == 0:
+                return 'Ok'
+            if state == 1 or state == 2:
+                return 'Warning'
+            if state == 3:
+                return 'Emergency'
+
+        return 'Unknown'
+
+    @property
+    def name(self):
+        """Return the name of the nest, if any."""
+
+        return "{} {}".format(self.device.where.capitalize(), self.variable)

@@ -1,5 +1,5 @@
 """
-Support for Nest thermostats.
+Support for Nest thermostats and protect smoke alarms.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-REQUIREMENTS = ['python-nest==2.6.0']
+REQUIREMENTS = ['python-nest==2.9.1']
 DOMAIN = 'nest'
 
 NEST = None
@@ -36,6 +36,15 @@ def devices():
         _LOGGER.error("Connection error logging into the nest web service.")
 
 
+def protect_devices():
+    try:
+        for structure in NEST.structures:
+            for device in structure.protectdevices:
+                yield(structure, device)
+    except socket.error:
+        _LOGGER.error("Connection error logging into the nest web service.")
+
+
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Nest thermostat component."""
@@ -48,5 +57,6 @@ def setup(hass, config):
     import nest
 
     NEST = nest.Nest(username, password)
+
 
     return True
