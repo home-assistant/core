@@ -165,7 +165,7 @@ def setup(hass, config):
 class Last5StatesView(HomeAssistantView):
     """Handle last 5 state view requests."""
 
-    url = '/api/history/entity/<entity_id>/recent_states'
+    url = '/api/history/entity/<entity:entity_id>/recent_states'
     name = 'api:history:entity-recent-states'
 
     def get(self, request, entity_id):
@@ -178,7 +178,7 @@ class HistoryPeriodView(HomeAssistantView):
 
     url = '/api/history/period'
     name = 'api:history:entity-recent-states'
-    extra_urls = ['/api/history/period/<date>']
+    extra_urls = ['/api/history/period/<date:date>']
 
     def get(self, request, date=None):
         """Return history over a period of time."""

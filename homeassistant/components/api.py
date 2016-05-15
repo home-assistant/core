@@ -214,7 +214,7 @@ class APIStatesView(HomeAssistantView):
 class APIEntityStateView(HomeAssistantView):
     """View to handle EntityState requests."""
 
-    url = "/api/states/<entity_id>"
+    url = "/api/states/<entity(exist=False):entity_id>"
     name = "api:entity-state"
 
     def get(self, request, entity_id):

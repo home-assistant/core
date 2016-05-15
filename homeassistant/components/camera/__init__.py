@@ -147,7 +147,7 @@ class CameraView(HomeAssistantView):
 class CameraImageView(CameraView):
     """Camera view to serve an image."""
 
-    url = "/api/camera_proxy/<entity_id>"
+    url = "/api/camera_proxy/<entity(domain=camera):entity_id>"
     name = "api:camera:image"
 
     def get(self, request, entity_id):
@@ -168,7 +168,7 @@ class CameraImageView(CameraView):
 class CameraMjpegStream(CameraView):
     """Camera View to serve an MJPEG stream."""
 
-    url = "/api/camera_proxy_stream/<entity_id>"
+    url = "/api/camera_proxy_stream/<entity(domain=camera):entity_id>"
     name = "api:camera:stream"
 
     def get(self, request, entity_id):
