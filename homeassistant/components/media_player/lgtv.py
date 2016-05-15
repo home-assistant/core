@@ -284,7 +284,8 @@ class LgTVROAPClient(object):
         """Get the session key for the TV connection.
 
         If a pair key is defined the session id is requested otherwise display
-        the pair key on TV."""
+        the pair key on TV.
+        """
         if not self.access_token:
             self._display_pair_key()
             return
