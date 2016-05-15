@@ -244,6 +244,18 @@ class HomeAssistantView(object):
         """Initilalize the base view."""
         from werkzeug.wrappers import Response
 
+        if not hasattr(self, 'url'):
+            class_name = self.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "url"'.format(class_name)
+            )
+
+        if not hasattr(self, 'name'):
+            class_name = self.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "name"'.format(class_name)
+            )
+
         self.hass = hass
         # pylint: disable=invalid-name
         self.Response = Response
