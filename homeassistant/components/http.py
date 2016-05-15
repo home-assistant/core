@@ -2,6 +2,7 @@
 import hmac
 import json
 import logging
+import mimetypes
 import threading
 import re
 
@@ -333,7 +334,7 @@ class HomeAssistantView(object):
         """Return a JSON message response."""
         return self.json({'message': error}, status_code)
 
-    def file(self, request, fil, content_type=None):
+    def file(self, request, fil, mimetype=None):
         """Return a file."""
         from werkzeug.wsgi import wrap_file
         from werkzeug.exceptions import NotFound
@@ -344,9 +345,8 @@ class HomeAssistantView(object):
             except IOError:
                 raise NotFound()
 
-        # TODO mimetypes, etc
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(fil)[0]
 
-        resp = self.Response(wrap_file(request.environ, fil))
-        if content_type is not None:
-            resp.mimetype = content_type
-        return resp
+        return self.Response(wrap_file(request.environ, fil),
+                             mimetype=mimetype, direct_passthrough=True)

@@ -29,9 +29,6 @@ STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
 
-MULTIPART_BOUNDARY = '--jpgboundary'
-MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
-
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
@@ -87,10 +84,8 @@ class Camera(Entity):
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from camera images."""
         import eventlet
-        response.mimetype = ('multipart/x-mixed-replace; '
-                             'boundary={}'.format(MULTIPART_BOUNDARY))
-
-        boundary = bytes('\r\n{}\r\n'.format(MULTIPART_BOUNDARY), 'utf-8')
+        response.content_type = ('multipart/x-mixed-replace; '
+                                 'boundary=--jpegboundary')
 
         def stream():
             """Stream images as mjpeg stream."""
@@ -99,16 +94,14 @@ class Camera(Entity):
                 while True:
                     img_bytes = self.camera_image()
 
-                    if img_bytes is None:
-                        continue
-                    elif img_bytes == last_image:
-                        eventlet.sleep(0.5)
+                    if img_bytes is not None and img_bytes != last_image:
+                        yield bytes(
+                            '--jpegboundary\r\n'
+                            'Content-Type: image/jpeg\r\n'
+                            'Content-Length: {}\r\n\r\n'.format(
+                                len(img_bytes)), 'utf-8') + img_bytes + b'\r\n'
 
-                    yield bytes('Content-length: {}'.format(len(img_bytes)) +
-                                '\r\nContent-type: image/jpeg\r\n\r\n',
-                                'utf-8')
-                    yield img_bytes
-                    yield boundary
+                        last_image = img_bytes
 
                     eventlet.sleep(0.5)
             except GeneratorExit:
