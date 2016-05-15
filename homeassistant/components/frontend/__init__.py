@@ -96,7 +96,7 @@ class IndexView(HomeAssistantView):
         if self.hass.config.api.api_password is None:
             auth = 'no_password_set'
         else:
-            request.values.get('api_password', '')
+            auth = request.values.get('api_password', '')
 
         template = self.templates.get_template('index.html')
 
