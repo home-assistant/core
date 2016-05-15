@@ -37,6 +37,7 @@ def devices():
 
 
 def protect_devices():
+    """Generator returning list of protect devices."""
     try:
         for structure in NEST.structures:
             for device in structure.protectdevices:
@@ -57,6 +58,5 @@ def setup(hass, config):
     import nest
 
     NEST = nest.Nest(username, password)
-
 
     return True

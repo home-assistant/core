@@ -4,8 +4,9 @@ Support for Nest Thermostat Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
-import voluptuous as vol
 from itertools import chain
+
+import voluptuous as vol
 
 import homeassistant.components.nest as nest
 from homeassistant.helpers.entity import Entity
@@ -49,7 +50,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest Sensor."""
-
     for structure, device in chain(nest.devices(), nest.protect_devices()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in config[CONF_MONITORED_CONDITIONS]
@@ -69,21 +69,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def is_thermostat(device):
-    """Target devices that are Nest Thermostats"""
-
-    if device.__class__.__name__ == 'Device':
-        return True
-    else:
-        return False
+    """Target devices that are Nest Thermostats."""
+    return bool(device.__class__.__name__ == 'Device')
 
 
 def is_protect(device):
-    """Target devices that are Nest Protect Smoke Alarms"""
-
-    if device.__class__.__name__ == 'ProtectDevice':
-        return True
-    else:
-        return False
+    """Target devices that are Nest Protect Smoke Alarms."""
+    return bool(device.__class__.__name__ == 'ProtectDevice')
 
 
 class NestSensor(Entity):
@@ -161,7 +153,7 @@ class NestWeatherSensor(NestSensor):
 
 
 class NestProtectSensor(NestSensor):
-    """Return the state of nest protect"""
+    """Return the state of nest protect."""
 
     @property
     def state(self):
@@ -182,5 +174,4 @@ class NestProtectSensor(NestSensor):
     @property
     def name(self):
         """Return the name of the nest, if any."""
-
         return "{} {}".format(self.device.where.capitalize(), self.variable)
