@@ -39,6 +39,7 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_COLOR_NAME = "color_name"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"

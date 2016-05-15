@@ -16,8 +16,8 @@ import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, Light)
+    ATTR_COLOR_NAME, ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP,
+    EFFECT_RANDOM, FLASH_LONG, FLASH_SHORT, Light)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.loader import get_component
 
@@ -243,6 +243,10 @@ class HueLight(Light):
         elif ATTR_RGB_COLOR in kwargs:
             command['xy'] = color_util.color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+        elif ATTR_COLOR_NAME in kwargs:
+            rgb = color_util.color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
+            command['xy'] = color_util.color_RGB_to_xy(
+                *(int(val) for val in rgb))
 
         if ATTR_COLOR_TEMP in kwargs:
             command['ct'] = kwargs[ATTR_COLOR_TEMP]

@@ -8,9 +8,9 @@ import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            ATTR_COLOR_NAME, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import rgb_hex_to_rgb_list
+from homeassistant.util.color import rgb_hex_to_rgb_list, color_name_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_RGB_WHITE = 'rgb_white'
@@ -128,6 +128,15 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         if ATTR_RGB_COLOR in kwargs and \
                 kwargs[ATTR_RGB_COLOR] != self._rgb:
             rgb = kwargs[ATTR_RGB_COLOR]
+            if white is not None and hex_template == '%02x%02x%02x%02x':
+                rgb.append(white)
+            hex_color = hex_template % tuple(rgb)
+            self.gateway.set_child_value(
+                self.node_id, self.child_id, self.value_type, hex_color)
+
+        if ATTR_COLOR_NAME in kwargs and \
+                (color_name_to_rgb(kwargs[ATTR_COLOR_NAME]) != self._rgb):
+            rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
             if white is not None and hex_template == '%02x%02x%02x%02x':
                 rgb.append(white)
             hex_color = hex_template % tuple(rgb)

@@ -8,8 +8,10 @@ import json
 import logging
 import socket
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
+from homeassistant.components.light import (ATTR_RGB_COLOR, ATTR_COLOR_NAME,
+                                            Light)
 from homeassistant.const import CONF_HOST
+from homeassistant.util.color import color_name_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = []
@@ -58,6 +60,9 @@ class Hyperion(Light):
         if self._is_available:
             if ATTR_RGB_COLOR in kwargs:
                 self._rgb_color = kwargs[ATTR_RGB_COLOR]
+            elif ATTR_COLOR_NAME in kwargs:
+                rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
+                self._rgb_color = rgb
 
             self.json_request({"command": "color", "priority": 128,
                                "color": self._rgb_color})

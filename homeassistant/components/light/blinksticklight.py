@@ -6,7 +6,9 @@ https://home-assistant.io/components/light.blinksticklight/
 """
 import logging
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
+from homeassistant.components.light import (ATTR_RGB_COLOR, ATTR_COLOR_NAME,
+                                            Light)
+from homeassistant.util.color import color_name_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +64,9 @@ class BlinkStickLight(Light):
         """Turn the device on."""
         if ATTR_RGB_COLOR in kwargs:
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        elif ATTR_COLOR_NAME in kwargs:
+            rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
+            self._rgb_color = rgb
         else:
             self._rgb_color = [255, 255, 255]
 

@@ -11,12 +11,13 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_NAME, Light)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import render_with_possible_json_value
+from homeassistant.util.color import color_name_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,6 +202,18 @@ class MqttLight(Light):
 
             if self._optimistic_rgb:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
+                should_update = True
+
+        if ATTR_COLOR_NAME in kwargs and \
+           self._topic["rgb_command_topic"] is not None:
+
+            rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
+            mqtt.publish(self._hass, self._topic["rgb_command_topic"],
+                         "{},{},{}".format(*rgb),
+                         self._qos, self._retain)
+
+            if self._optimistic_rgb:
+                self._rgb = rgb
                 should_update = True
 
         if ATTR_BRIGHTNESS in kwargs and \

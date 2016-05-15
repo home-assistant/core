@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.wink/
 import logging
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    Light, ATTR_RGB_COLOR
+    Light, ATTR_RGB_COLOR, ATTR_COLOR_NAME
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
@@ -92,12 +92,17 @@ class WinkLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         rgb_color = kwargs.get(ATTR_RGB_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
+        color_name = kwargs.get(ATTR_COLOR_NAME)
 
         state_kwargs = {
         }
 
         if rgb_color:
             state_kwargs['color_xy'] = color_util.color_RGB_to_xy(*rgb_color)
+
+        if color_name:
+            rgb = color_util.color_name_to_rgb(color_name)
+            state_kwargs['color_xy'] = color_util.color_RGB_to_xy(*rgb)
 
         if color_temp_mired:
             state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)
