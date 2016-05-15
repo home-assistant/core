@@ -222,6 +222,9 @@ pyfttt==0.3
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.8.3
 
+# homeassistant.components.sensor.lastfm
+pylast==1.6.0
+
 # homeassistant.components.sensor.loopenergy
 pyloopenergy==0.0.10
 
