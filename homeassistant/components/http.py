@@ -9,12 +9,13 @@ import re
 import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
-from homeassistant.const import SERVER_PORT, HTTP_HEADER_HA_AUTH
-from homeassistant.helpers.entity import valid_entity_id, split_entity_id
+from homeassistant.const import (
+    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL)
+from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "http"
-REQUIREMENTS = ("eventlet==0.18.4", "static3==0.6.1", "Werkzeug==0.11.5",)
+REQUIREMENTS = ("eventlet==0.18.4", "static3==0.7.0", "Werkzeug==0.11.5",)
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -64,19 +65,6 @@ def setup(hass, config):
                               ssl_certificate is not None)
 
     return True
-
-
-# class StaticFileServer(object):
-#     """Static file serving middleware."""
-
-#     def __call__(self, environ, start_response):
-#         from werkzeug.wsgi import DispatcherMiddleware
-#         app = DispatcherMiddleware(self.base_app, self.extra_apps)
-#         # Strip out any cachebusting MD% fingerprints
-#         fingerprinted = _FINGERPRINT.match(environ['PATH_INFO'])
-#         if fingerprinted:
-#             environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
-#         return app(environ, start_response)
 
 
 def request_class():
@@ -227,7 +215,20 @@ class HomeAssistantWSGI(object):
 
         if url_root in self.extra_apps:
             _LOGGER.warning("Static path '%s' is being overwritten", path)
-        self.extra_apps[url_root] = Cling(path)
+
+        headers = []
+
+        if not self.development:
+            # 1 year in seconds
+            cache_time = 365 * 86400
+
+            headers.append({
+                'prefix': '',
+                HTTP_HEADER_CACHE_CONTROL:
+                "public, max-age={}".format(cache_time)
+            })
+
+        self.extra_apps[url_root] = Cling(path, headers=headers)
 
     def start(self):
         """Start the wsgi server."""
