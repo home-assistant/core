@@ -328,7 +328,10 @@ class FitbitSensor(Entity):
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type]
         if unit_type == "":
             split_resource = self.resource_type.split("/")
-            measurement_system = FITBIT_MEASUREMENTS[self.client.system]
+            try:
+                measurement_system = FITBIT_MEASUREMENTS[self.client.system]
+            except KeyError:
+                measurement_system = FITBIT_MEASUREMENTS["metric"]
             unit_type = measurement_system[split_resource[-1]]
         self._unit_of_measurement = unit_type
         self._state = 0
