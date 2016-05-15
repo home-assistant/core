@@ -89,7 +89,7 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<date>']
+    extra_urls = ['/api/logbook/<date:date>']
 
     def get(self, request, date=None):
         """Retrieve logbook entries."""

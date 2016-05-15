@@ -10,6 +10,8 @@ import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import SERVER_PORT, HTTP_HEADER_HA_AUTH
+from homeassistant.helpers.entity import valid_entity_id, split_entity_id
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "http"
 REQUIREMENTS = ("eventlet==0.18.4", "static3==0.6.1", "Werkzeug==0.11.5",)
@@ -77,6 +79,85 @@ def setup(hass, config):
 #         return app(environ, start_response)
 
 
+def request_class():
+    """Generate request class.
+
+    Done in method because of imports."""
+    from werkzeug.exceptions import BadRequest
+    from werkzeug.wrappers import BaseRequest, AcceptMixin
+    from werkzeug.utils import cached_property
+
+    class Request(BaseRequest, AcceptMixin):
+        """Base class for incoming requests."""
+
+        @cached_property
+        def json(self):
+            """Get the result of json.loads if possible."""
+            if not self.data:
+                return None
+            # elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
+            #     raise BadRequest('Not a JSON request')
+            try:
+                return json.loads(self.data.decode(
+                    self.charset, self.encoding_errors))
+            except (TypeError, ValueError):
+                raise BadRequest('Unable to read JSON request')
+
+    return Request
+
+
+def routing_map(hass):
+    """Generate empty routing map with HA validators."""
+    from werkzeug.routing import Map, BaseConverter, ValidationError
+
+    class EntityValidator(BaseConverter):
+        """Validate entity_id in urls."""
+        regex = r"(\w+)\.(\w+)"
+
+        def __init__(self, url_map, exist=True, domain=None):
+            """Initilalize entity validator."""
+            super().__init__(url_map)
+            self._exist = exist
+            self._domain = domain
+
+        def to_python(self, value):
+            """Validate entity id."""
+            if self._exist and hass.states.get(value) is None:
+                raise ValidationError()
+            if self._domain is not None and \
+               split_entity_id(value)[0] != self._domain:
+                raise ValidationError()
+
+            return value
+
+        def to_url(self, value):
+            """Convert entity_id for a url."""
+            return value
+
+    class DateValidator(BaseConverter):
+        """Validate dates in urls."""
+
+        regex = r'\d{4}-(0[1-9])|(1[012])-((0[1-9])|([12]\d)|(3[01]))'
+
+        def to_python(self, value):
+            """Validate and convert date."""
+            parsed = dt_util.parse_date(value)
+
+            if value is None:
+                raise ValidationError()
+
+            return parsed
+
+        def to_url(self, value):
+            """Convert date to url value."""
+            return value.isoformat()
+
+    return Map(converters={
+        'entity': EntityValidator,
+        'date': DateValidator,
+    })
+
+
 class HomeAssistantWSGI(object):
     """WSGI server for Home Assistant."""
 
@@ -86,33 +167,13 @@ class HomeAssistantWSGI(object):
     def __init__(self, hass, development, api_password, ssl_certificate,
                  ssl_key, server_host, server_port):
         """Initilalize the WSGI Home Assistant server."""
-        from werkzeug.exceptions import BadRequest
-        from werkzeug.wrappers import BaseRequest, AcceptMixin
-        from werkzeug.routing import Map
-        from werkzeug.utils import cached_property
         from werkzeug.wrappers import Response
-
-        class Request(BaseRequest, AcceptMixin):
-            """Base class for incoming requests."""
-
-            @cached_property
-            def json(self):
-                """Get the result of json.loads if possible."""
-                if not self.data:
-                    return None
-                # elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
-                #     raise BadRequest('Not a JSON request')
-                try:
-                    return json.loads(self.data.decode(
-                        self.charset, self.encoding_errors))
-                except (TypeError, ValueError):
-                    raise BadRequest('Unable to read JSON request')
 
         Response.mimetype = 'text/html'
 
         # pylint: disable=invalid-name
-        self.Request = Request
-        self.url_map = Map()
+        self.Request = request_class()
+        self.url_map = routing_map(hass)
         self.views = {}
         self.hass = hass
         self.extra_apps = {}
@@ -340,13 +401,13 @@ class HomeAssistantView(object):
         from werkzeug.exceptions import NotFound
 
         if isinstance(fil, str):
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(fil)[0]
+
             try:
                 fil = open(fil)
             except IOError:
                 raise NotFound()
-
-            if mimetype is None:
-                mimetype = mimetypes.guess_type(fil)[0]
 
         return self.Response(wrap_file(request.environ, fil),
                              mimetype=mimetype, direct_passthrough=True)
