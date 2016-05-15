@@ -53,6 +53,11 @@ class Camera(Entity):
         self.is_streaming = False
 
     @property
+    def access_token(self):
+        """Access token for this camera."""
+        return str(id(self))
+
+    @property
     def should_poll(self):
         """No need to poll cameras."""
         return False
@@ -124,7 +129,9 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """Camera state attributes."""
-        attr = {}
+        attr = {
+            'access_token': self.access_token,
+        }
 
         if self.model:
             attr['model_name'] = self.model
@@ -138,10 +145,31 @@ class Camera(Entity):
 class CameraView(HomeAssistantView):
     """Base CameraView."""
 
+    requires_auth = False
+
     def __init__(self, hass, entities):
         """Initialize a basic camera view."""
         super().__init__(hass)
         self.entities = entities
+
+    def get(self, request, entity_id):
+        """Start a get request."""
+        camera = self.entities.get(entity_id)
+
+        if camera is None:
+            return self.Response(status=404)
+
+        authenticated = (request.authenticated or
+                         request.args.get('token') == camera.access_token)
+
+        if not authenticated:
+            return self.Response(status=401)
+
+        return self.handle(camera)
+
+    def handle(self, camera):
+        """Hanlde the camera request."""
+        raise NotImplementedError()
 
 
 class CameraImageView(CameraView):
@@ -150,13 +178,8 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/<entity(domain=camera):entity_id>"
     name = "api:camera:image"
 
-    def get(self, request, entity_id):
+    def handle(self, camera):
         """Serve camera image."""
-        camera = self.entities.get(entity_id)
-
-        if camera is None:
-            return self.Response(status=404)
-
         response = camera.camera_image()
 
         if response is None:
@@ -171,11 +194,6 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/<entity(domain=camera):entity_id>"
     name = "api:camera:stream"
 
-    def get(self, request, entity_id):
+    def handle(self, camera):
         """Serve camera image."""
-        camera = self.entities.get(entity_id)
-
-        if camera is None:
-            return self.Response(status=404)
-
         return camera.mjpeg_stream(self.Response())

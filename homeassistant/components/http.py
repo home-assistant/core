@@ -339,10 +339,7 @@ class HomeAssistantView(object):
         # Auth code verbose on purpose
         authenticated = False
 
-        if not self.requires_auth:
-            authenticated = True
-
-        elif self.hass.wsgi.api_password is None:
+        if self.hass.wsgi.api_password is None:
             authenticated = True
 
         elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
@@ -366,8 +363,10 @@ class HomeAssistantView(object):
             except BadRequest:
                 pass
 
-        if not authenticated:
+        if self.requires_auth and not authenticated:
             raise Unauthorized()
+
+        request.authenticated = authenticated
 
         result = handler(request, **values)
 
