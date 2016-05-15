@@ -60,11 +60,13 @@ class LastfmSensor(Entity):
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = "{} - {}".format(last.track.artist, last.track.title)
+        self._lastplayed = "{} - {}".format(last.track.artist,
+                                            last.track.title)
         top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = "{} - {}".format(topartist.group(1), toptitle.group(1))
+        self._topplayed = "{} - {}".format(topartist.group(1),
+                                           toptitle.group(1))
         if self._user.get_now_playing() is None:
             self._state = "Not Scrobbling"
             return
