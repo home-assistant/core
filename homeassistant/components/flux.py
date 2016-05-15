@@ -150,8 +150,15 @@ class Flux(object):
         self.sunset_colortemp = config[DOMAIN][0].get(CONF_SUNSET_CT)
         self.bedtime_colortemp = config[DOMAIN][0].get(CONF_BEDTIME_CT)
         if config[DOMAIN][0].get(CONF_AUTO):
+            sunrise = next_rising(self.hass, SUN)
             track_time_change(hass, self.update,
-                              second=[0, 10, 20, 30, 40, 50])
+                              second=[0, 10, 20, 30, 40, 50],
+                              minute=[range(sunrise.minute, 59)],
+                              hour=sunrise.hour)
+            bedtime_hour = int(1 + self.bedtime.split(":")[0])
+            track_time_change(hass, self.update,
+                              second=[0, 10, 20, 30, 40, 50],
+                              hour=list(range(sunrise.hour + 1, bedtime_hour)))
             self.update(dt_util.now())
 
     # pylint: disable=too-many-locals
@@ -176,7 +183,7 @@ class Flux(object):
             temp = self.day_colortemp - temp_offset
             x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
             set_lights_xy(self.hass, self.lights, x_value, y_value)
-            _LOGGER.info("Flux: Daytime lights updated! x:%s y:%s",
+            _LOGGER.info("Lights updated during the day, x:%s y:%s",
                          x_value, y_value)
         elif sunset < current < bedtime:
             # Nightime
@@ -188,12 +195,12 @@ class Flux(object):
             temp = self.sunset_colortemp - temp_offset
             x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
             set_lights_xy(self.hass, self.lights, x_value, y_value)
-            _LOGGER.info("Flux: Nighttime lights updated! x:%s y:%s",
+            _LOGGER.info("Lights updated at night, x:%s y:%s",
                          x_value, y_value)
         else:
             # Asleep
             if self.turn_off:
                 for light in self.lights:
                     if is_on(self.hass, light):
-                        _LOGGER.info("Flux: Lights off!")
+                        _LOGGER.info("Lights off")
                         turn_off(self.hass, light, transition=10)
