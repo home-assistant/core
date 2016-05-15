@@ -6,7 +6,6 @@ https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 import re
-import telnetlib
 import threading
 from datetime import timedelta
 
@@ -19,6 +18,7 @@ from homeassistant.util import Throttle
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['pexpect==4.0.1']
 
 _LEASES_REGEX = re.compile(
     r'\w+\s' +
@@ -102,24 +102,19 @@ class AsusWrtDeviceScanner(object):
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
+        from pexpect import pxssh
         try:
-            telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'login: ')
-            telnet.write((self.username + '\n').encode('ascii'))
-            telnet.read_until(b'Password: ')
-            telnet.write((self.password + '\n').encode('ascii'))
-            prompt_string = telnet.read_until(b'#').split(b'\n')[-1]
-            telnet.write('ip neigh\n'.encode('ascii'))
-            neighbors = telnet.read_until(prompt_string).split(b'\n')[1:-1]
-            telnet.write('cat /var/lib/misc/dnsmasq.leases\n'.encode('ascii'))
-            leases_result = telnet.read_until(prompt_string).split(b'\n')[1:-1]
-            telnet.write('exit\n'.encode('ascii'))
-        except EOFError:
-            _LOGGER.exception("Unexpected response from router")
-            return
-        except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router," +
-                              " is telnet enabled?")
+            ssh = pxssh.pxssh()
+            ssh.login(self.host, self.username, self.password)
+            ssh.sendline('ip neigh')
+            ssh.prompt()
+            neighbors = ssh.before.split(b'\n')[1:-1]
+            ssh.sendline('cat /var/lib/misc/dnsmasq.leases')
+            ssh.prompt()
+            leases_result = ssh.before.split(b'\n')[1:-1]
+            ssh.logout()
+        except pxssh.ExceptionPxssh as exc:
+            _LOGGER.exception('Unexpected response from router: %s', exc)
             return
 
         devices = {}
