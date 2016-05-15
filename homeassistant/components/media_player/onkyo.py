@@ -18,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 KNOWN_HOSTS = []
-DEFAULT_SOURCES = {"TV":"tv", "Bluray":"bd", "Game": "game", "Aux1": "aux1",
-                   "Video 1":"video1", "Video 2":"video2", "Video 3":"video3",
-                   "Video 4":"video4", "Video 5":"video5", "Video 6":"video6",
-                   "Video 7":"video7"}
+DEFAULT_SOURCES = {"TV": "tv", "Bluray": "bd", "Game": "game", "Aux1": "aux1",
+                   "Video 1": "video1", "Video 2": "video2", "Video 3": "video3",
+                   "Video 4": "video4", "Video 5": "video5", "Video 6": "video6",
+                   "Video 7": "video7"}
 CONFIG_SOURCE_LIST = "sources"
 
 
@@ -80,7 +80,6 @@ class OnkyoDevice(MediaPlayerDevice):
         for source in current_source_raw[1]:
             if source in self._reverse_mapping:
                 self._current_source = self._reverse_mapping[source]
-                break
             else:
                 self._current_source = '_'.join(
                     [i for i in current_source_raw[1]])
