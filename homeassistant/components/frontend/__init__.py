@@ -71,7 +71,7 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/logbook', '/history', '/map', '/devService', '/devState',
                   '/devEvent', '/devInfo', '/devTemplate',
-                  '/states', '/states/<entity_id>']
+                  '/states', '/states/<entity:entity_id>']
 
     def __init__(self, hass):
         """Initialize the frontend view."""
