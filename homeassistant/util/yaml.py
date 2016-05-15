@@ -60,7 +60,9 @@ def _include_dir_merge_named_yaml(loader, node):
     mapping = OrderedDict()
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
-        mapping.update(load_yaml(fname))
+        loaded_yaml = load_yaml(fname)
+        if isinstance(loaded_yaml, dict):
+            mapping.update(loaded_yaml)
     return mapping
 
 
@@ -75,7 +77,9 @@ def _include_dir_merge_list_yaml(loader, node):
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     merged_list = []
     for fname in glob.glob(files):
-        merged_list += load_yaml(fname)
+        loaded_yaml = load_yaml(fname)
+        if isinstance(loaded_yaml, list):
+            merged_list.extend(loaded_yaml)
     return merged_list
 
 
