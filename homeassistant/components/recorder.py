@@ -13,7 +13,8 @@ import logging
 import queue
 import sqlite3
 import threading
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
@@ -21,6 +22,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.event import track_point_in_utc_time
 
 DOMAIN = "recorder"
 
@@ -29,6 +31,15 @@ DB_FILE = 'home-assistant.db'
 RETURN_ROWCOUNT = "rowcount"
 RETURN_LASTROWID = "lastrowid"
 RETURN_ONE_ROW = "one_row"
+
+CONF_PURGE_DAYS = "purge_days"
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
+                                               vol.Range(min=1)),
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 _INSTANCE = None
 _LOGGER = logging.getLogger(__name__)
@@ -102,14 +113,14 @@ def setup(hass, config):
     """Setup the recorder."""
     # pylint: disable=global-statement
     global _INSTANCE
-
-    _INSTANCE = Recorder(hass)
+    purge_days = config.get(DOMAIN, {}).get(CONF_PURGE_DAYS)
+    _INSTANCE = Recorder(hass, purge_days=purge_days)
 
     return True
 
 
 class RecorderRun(object):
-    """Representation of arecorder run."""
+    """Representation of a recorder run."""
 
     def __init__(self, row=None):
         """Initialize the recorder run."""
@@ -169,11 +180,12 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass):
+    def __init__(self, hass, purge_days):
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
+        self.purge_days = purge_days
         self.conn = None
         self.queue = queue.Queue()
         self.quit_object = object()
@@ -194,6 +206,10 @@ class Recorder(threading.Thread):
         """Start processing events to save."""
         self._setup_connection()
         self._setup_run()
+        if self.purge_days is not None:
+            track_point_in_utc_time(self.hass,
+                                    lambda now: self._purge_old_data(),
+                                    dt_util.utcnow() + timedelta(minutes=5))
 
         while True:
             event = self.queue.get()
@@ -474,6 +490,32 @@ class Recorder(threading.Thread):
         self.query(
             "UPDATE recorder_runs SET end=? WHERE start=?",
             (dt_util.utcnow(), self.recording_start))
+
+    def _purge_old_data(self):
+        """Purge events and states older than purge_days ago."""
+        if not self.purge_days or self.purge_days < 1:
+            _LOGGER.debug("purge_days set to %s, will not purge any old data.",
+                          self.purge_days)
+            return
+
+        purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
+
+        _LOGGER.info("Purging events created before %s", purge_before)
+        deleted_rows = self.query(
+            sql_query="DELETE FROM events WHERE created < ?;",
+            data=(int(purge_before.timestamp()),),
+            return_value=RETURN_ROWCOUNT)
+        _LOGGER.debug("Deleted %s events", deleted_rows)
+
+        _LOGGER.info("Purging states created before %s", purge_before)
+        deleted_rows = self.query(
+            sql_query="DELETE FROM states WHERE created < ?;",
+            data=(int(purge_before.timestamp()),),
+            return_value=RETURN_ROWCOUNT)
+        _LOGGER.debug("Deleted %s states", deleted_rows)
+
+        # Execute sqlite vacuum command to free up space on disk
+        self.query("VACUUM;")
 
 
 def _adapt_datetime(datetimestamp):
