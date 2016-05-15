@@ -5,7 +5,7 @@ The primary functions in this component were taken from
 https://github.com/KpaBap/hue-flux/
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/ecobee/
+https://home-assistant.io/components/flux/
 """
 from datetime import timedelta
 import logging
