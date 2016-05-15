@@ -19,8 +19,9 @@ SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 KNOWN_HOSTS = []
 DEFAULT_SOURCES = {"TV": "tv", "Bluray": "bd", "Game": "game", "Aux1": "aux1",
-                   "Video 1": "video1", "Video 2": "video2", "Video 3": "video3",
-                   "Video 4": "video4", "Video 5": "video5", "Video 6": "video6",
+                   "Video 1": "video1", "Video 2": "video2",
+                   "Video 3": "video3", "Video 4": "video4",
+                   "Video 5": "video5", "Video 6": "video6",
                    "Video 7": "video7"}
 CONFIG_SOURCE_LIST = "sources"
 
@@ -33,19 +34,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config and config[CONF_HOST] not in KNOWN_HOSTS:
         hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
-                                          config[CONF_NAME],
-                                          config.get(CONFIG_SOURCE_LIST,
-                                                DEFAULT_SOURCES)))
+                                 config[CONF_NAME],
+                                 config.get(CONFIG_SOURCE_LIST,
+                                            DEFAULT_SOURCES)))
         KNOWN_HOSTS.append(config[CONF_HOST])
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver,
-                    sources=config[CONFIG_SOURCE_LIST]))
+                                         sources=config[CONFIG_SOURCE_LIST]))
                 KNOWN_HOSTS.append(receiver.host)
     add_devices(hosts)
 
 
+#pylint: disable=too-many-instance-attributes
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
@@ -56,14 +58,13 @@ class OnkyoDevice(MediaPlayerDevice):
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
-        self._source_list = sources or DEFAULT_SOURCES
         self._name = name or '{}_{}'.format(
             receiver.info['model_name'], receiver.info['identifier'])
         self._current_source = None
-        self._source_list = list(sources.keys())
+        self._source_list = list(sources.keys() or DEFAULT_SOURCES.keys())
         self._source_mapping = sources
-        self._reverse_mapping = {sources[source] : source 
-                                    for source in sources}
+        self._reverse_mapping = {sources[source]: source
+                                 for source in sources}
         self.update()
 
     def update(self):
@@ -80,6 +81,7 @@ class OnkyoDevice(MediaPlayerDevice):
         for source in current_source_raw[1]:
             if source in self._reverse_mapping:
                 self._current_source = self._reverse_mapping[source]
+                break
             else:
                 self._current_source = '_'.join(
                     [i for i in current_source_raw[1]])
