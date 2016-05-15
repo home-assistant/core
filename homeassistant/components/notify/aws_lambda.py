@@ -21,6 +21,7 @@ CONF_REGION = "region_name"
 CONF_ACCESS_KEY_ID = "aws_access_key_id"
 CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
 CONF_PROFILE_NAME = "profile_name"
+CONF_CONTEXT = "context"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "aws_lambda",
@@ -28,12 +29,18 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_REGION, default="us-east-1"): vol.Coerce(str),
     vol.Inclusive(CONF_ACCESS_KEY_ID, "credentials"): vol.Coerce(str),
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, "credentials"): vol.Coerce(str),
-    vol.Exclusive(CONF_PROFILE_NAME, "credentials"): vol.Coerce(str)
+    vol.Exclusive(CONF_PROFILE_NAME, "credentials"): vol.Coerce(str),
+    vol.Optional(CONF_CONTEXT, default=dict()): vol.Coerce(dict)
 })
 
 
 def get_service(hass, config):
     """Get the AWS Lambda notification service."""
+    context_str = json.dumps({'hass': hass.config.as_dict(),
+                              'custom': config[CONF_CONTEXT]})
+    context_b64 = base64.b64encode(context_str.encode("utf-8"))
+    context = context_b64.decode("utf-8")
+
     # pylint: disable=import-error
     import boto3
 
@@ -41,6 +48,7 @@ def get_service(hass, config):
 
     del aws_config[CONF_PLATFORM]
     del aws_config[CONF_NAME]
+    del aws_config[CONF_CONTEXT]
 
     if aws_config[CONF_PROFILE_NAME]:
         boto3.setup_default_session(profile_name=aws_config[CONF_PROFILE_NAME])
@@ -48,17 +56,17 @@ def get_service(hass, config):
 
     lambda_client = boto3.client("lambda", **aws_config)
 
-    return AWSLambda(lambda_client, hass.config.as_dict())
+    return AWSLambda(lambda_client, context)
 
 
 # pylint: disable=too-few-public-methods
 class AWSLambda(BaseNotificationService):
     """Implement the notification service for the AWS Lambda service."""
 
-    def __init__(self, lambda_client, hass_config):
+    def __init__(self, lambda_client, context):
         """Initialize the service."""
         self.client = lambda_client
-        self.hass_config = hass_config
+        self.context = context
 
     def send_message(self, message="", **kwargs):
         """Send notification to specified LAMBDA ARN."""
@@ -76,11 +84,6 @@ class AWSLambda(BaseNotificationService):
             payload = {"message": message}
             payload.update(cleaned_kwargs)
 
-            context_str = json.dumps(self.hass_config)
-            context_b64 = base64.b64encode(context_str.encode("utf-8"))
-            context = context_b64.decode("utf-8")
-
             self.client.invoke(FunctionName=target,
-                               InvocationType="Event",
                                Payload=json.dumps(payload),
-                               ClientContext=context)
+                               ClientContext=self.context)
