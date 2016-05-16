@@ -173,6 +173,19 @@ class Thermostat(ThermostatDevice):
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp)
 
+    def set_target_temps(self, target_temp_low, target_temp_high):
+        """Set new target temperatures."""
+        target_temp_low = int(target_temp_low)
+        target_temp_high = int(target_temp_high)
+        low_temp = target_temp_low
+        high_temp = target_temp_high
+        if self.hold_temp:
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp, "indefinite")
+        else:
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp)
+
     def set_hvac_mode(self, mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
