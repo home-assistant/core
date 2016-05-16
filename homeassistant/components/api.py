@@ -73,102 +73,94 @@ class APIEventStream(HomeAssistantView):
 
     def get(self, request):
         """Provide a streaming interface for the event bus."""
+        from eventlet.queue import Empty
         import eventlet
-        from eventlet import queue as eventlet_queue
-        import queue as thread_queue
-        from threading import Event
-        from time import time
+        import homeassistant.util.eventlet as eventlet_util
 
-        to_write = thread_queue.Queue()
-        # to_write = eventlet.Queue()
+        cur_hub = eventlet.hubs.get_hub()
+        request.environ['eventlet.minimum_write_chunk_size'] = 0
+
+        to_write = eventlet.Queue()
         stop_obj = object()
-        hass = self.hass
-        connection_closed = Event()
+        attached_ping = None
 
         restrict = request.args.get('restrict')
         if restrict:
             restrict = restrict.split(',')
 
-        restrict = False
+        def thread_ping(now):
+            """Called from time thread to add ping to queue."""
+            _LOGGER.debug('STREAM %s PING', id(stop_obj))
+            eventlet_util.spawn(cur_hub, to_write.put, STREAM_PING_PAYLOAD)
 
-        def ping(now):
-            """Add a ping message to queue."""
-            print(id(stop_obj), 'ping')
-            to_write.put(STREAM_PING_PAYLOAD)
-
-        def forward_events(event):
+        def thread_forward_events(event):
             """Forward events to the open request."""
-            print(id(stop_obj), 'forwarding', event)
             if event.event_type == EVENT_TIME_CHANGED:
-                pass
-            elif event.event_type == EVENT_HOMEASSISTANT_STOP:
-                to_write.put(stop_obj)
+                return
+
+            _LOGGER.debug('STREAM %s FORWARDING %s', id(stop_obj), event)
+
+            if event.event_type == EVENT_HOMEASSISTANT_STOP:
+                data = stop_obj
             else:
-                to_write.put(json.dumps(event, cls=rem.JSONEncoder))
+                data = json.dumps(event, cls=rem.JSONEncoder)
+
+            eventlet_util.spawn(cur_hub, to_write.put, data)
+
+        def cleanup():
+            """Clean up HA listeners."""
+            _LOGGER.debug("STREAM %s CLEANING UP", id(stop_obj))
+            self.hass.bus.remove_listener(EVENT_TIME_CHANGED, attached_ping)
+
+            if restrict:
+                for event in restrict:
+                    self.hass.bus.remove_listener(event, thread_forward_events)
+            else:
+                self.hass.bus.remove_listener(MATCH_ALL, thread_forward_events)
 
         def stream():
             """Stream events to response."""
+            nonlocal attached_ping
+
             if restrict:
                 for event_type in restrict:
-                    hass.bus.listen(event_type, forward_events)
+                    self.hass.bus.listen(event_type, thread_forward_events)
             else:
-                hass.bus.listen(MATCH_ALL, forward_events)
+                self.hass.bus.listen(MATCH_ALL, thread_forward_events)
 
             attached_ping = track_utc_time_change(
-                hass, ping, second=(0, 30))
+                self.hass, thread_ping, second=range(0, 60, 3)) #(0, 30))
 
-            print(id(stop_obj), 'attached goodness')
+            _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
-            while not connection_closed.is_set():
+            while True:
                 try:
-                    print(id(stop_obj), "Try getting obj")
-                    payload = to_write.get(False)
+                    # Somehow our queue.get takes too long to
+                    # be notified of arrival of object. Probably
+                    # because of our spawning on hub in other thread
+                    # hack. Because current goal is to get this out,
+                    # We just timeout every second because it will
+                    # return right away if qsize() > 0.
+                    # So yes, we're basically polling :(
+                    # socket.io anyone?
+                    payload = to_write.get(timeout=1)
 
                     if payload is stop_obj:
                         break
 
                     msg = "data: {}\n\n".format(payload)
-                    print(id(stop_obj), msg)
+                    _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
+                                  msg.strip())
                     yield msg.encode("UTF-8")
-                except eventlet_queue.Empty:
-                    print(id(stop_obj), "queue empty, sleep 0.5")
-                    eventlet.sleep(.5)
-                except GeneratorExit:
+                except Empty:
                     pass
+                except GeneratorExit:
+                    _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
+                    break
 
-            print(id(stop_obj), "cleaning up")
+            cleanup()
 
-            hass.bus.remove_listener(EVENT_TIME_CHANGED, attached_ping)
-
-            if restrict:
-                for event in restrict:
-                    hass.bus.remove_listener(event, forward_events)
-            else:
-                hass.bus.remove_listener(MATCH_ALL, forward_events)
-
-        resp = self.Response(stream(), mimetype='text/event-stream')
-
-        def closing():
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print(id(stop_obj), "CLOSING RESPONSE")
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            print()
-            connection_closed.set()
-
-        resp.call_on_close(closing)
-        return resp
+        return self.Response(stream(), mimetype='text/event-stream')
 
 
 class APIConfigView(HomeAssistantView):
