@@ -138,7 +138,7 @@ class GoogleTravelTimeSensor(Entity):
         """Return the state of the sensor."""
         try:
             res = self._matrix['rows'][0]['elements'][0]['duration']['value']
-            return res/60.0
+            return round(res/60)
         except KeyError:
             return None
 
