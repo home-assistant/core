@@ -15,7 +15,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
     HTTP_UNPROCESSABLE_ENTITY, MATCH_ALL, URL_API, URL_API_COMPONENTS,
     URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG,
-    URL_API_EVENT_FORWARD, URL_API_EVENTS, URL_API_LOG_OUT, URL_API_SERVICES,
+    URL_API_EVENT_FORWARD, URL_API_EVENTS, URL_API_SERVICES,
     URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM, URL_API_TEMPLATE,
     __version__)
 from homeassistant.exceptions import TemplateError
@@ -48,7 +48,6 @@ def setup(hass, config):
     hass.wsgi.register_view(APIEventForwardingView)
     hass.wsgi.register_view(APIComponentsView)
     hass.wsgi.register_view(APIErrorLogView)
-    hass.wsgi.register_view(APILogOutView)
     hass.wsgi.register_view(APITemplateView)
 
     return True
@@ -129,7 +128,7 @@ class APIEventStream(HomeAssistantView):
                 self.hass.bus.listen(MATCH_ALL, thread_forward_events)
 
             attached_ping = track_utc_time_change(
-                self.hass, thread_ping, second=range(0, 60, 3)) #(0, 30))
+                self.hass, thread_ping, second=(0, 30))
 
             _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
@@ -399,18 +398,6 @@ class APIErrorLogView(HomeAssistantView):
     def get(self, request):
         """Serve error log."""
         return self.file(request, self.hass.config.path(ERROR_LOG_FILENAME))
-
-
-class APILogOutView(HomeAssistantView):
-    """View to handle Log Out requests."""
-
-    url = URL_API_LOG_OUT
-    name = "api:log-out"
-
-    def post(self, request):
-        """Handle log out."""
-        # TODO kill session
-        return {}
 
 
 class APITemplateView(HomeAssistantView):
