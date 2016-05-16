@@ -8,8 +8,11 @@ import sys
 
 COMMENT_REQUIREMENTS = [
     'RPi.GPIO',
+    'rpi-rf',
     'Adafruit_Python_DHT',
     'fritzconnection',
+    'pybluez',
+    'bluepy',
 ]
 
 

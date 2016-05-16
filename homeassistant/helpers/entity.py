@@ -5,7 +5,7 @@ from collections import defaultdict
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
-    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELCIUS, TEMP_FAHRENHEIT,
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -27,7 +27,7 @@ def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
         current_ids = hass.states.entity_ids()
 
     return ensure_unique_string(
-        entity_id_format.format(slugify(name.lower())), current_ids)
+        entity_id_format.format(slugify(name)), current_ids)
 
 
 def split_entity_id(entity_id):
@@ -173,7 +173,7 @@ class Entity(object):
             attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
-        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
+        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELSIUS,
                                                   TEMP_FAHRENHEIT):
 
             state, attr[ATTR_UNIT_OF_MEASUREMENT] = \

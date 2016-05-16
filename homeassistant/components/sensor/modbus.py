@@ -8,7 +8,7 @@ import logging
 
 import homeassistant.components.modbus as modbus
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    STATE_OFF, STATE_ON, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ class ModbusSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self._unit == "C":
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif self._unit == "F":
             return TEMP_FAHRENHEIT
         else:

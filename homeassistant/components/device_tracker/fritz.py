@@ -12,7 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['fritzconnection==0.4.6']
+REQUIREMENTS = ['https://github.com/deisi/fritzconnection/archive/'
+                'b5c14515e1c8e2652b06b6316a7f3913df942841.zip'
+                '#fritzconnection==0.4.6']
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)

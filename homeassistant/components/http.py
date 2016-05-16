@@ -5,6 +5,7 @@ For more details about the RESTful API, please refer to the documentation at
 https://home-assistant.io/developers/api/
 """
 import gzip
+import hmac
 import json
 import logging
 import ssl
@@ -15,19 +16,24 @@ from http import cookies
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from urllib.parse import parse_qs, urlparse
+import voluptuous as vol
 
 import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
 import homeassistant.remote as rem
 import homeassistant.util as util
 import homeassistant.util.dt as date_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_ACCEPT_ENCODING,
     HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_CONTENT_ENCODING,
     HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
-    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
+    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
-    SERVER_PORT)
+    ALLOWED_CORS_HEADERS,
+    SERVER_PORT, URL_ROOT, URL_API_EVENT_FORWARD)
 
 DOMAIN = "http"
 
@@ -37,6 +43,7 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
+CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -46,6 +53,19 @@ SESSION_TIMEOUT_SECONDS = 1800
 SESSION_KEY = 'sessionId'
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_SSL_KEY): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -60,11 +80,12 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
+    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
 
     try:
         server = HomeAssistantHTTPServer(
             (server_host, server_port), RequestHandler, hass, api_password,
-            development, ssl_certificate, ssl_key)
+            development, ssl_certificate, ssl_key, cors_origins)
     except OSError:
         # If address already in use
         _LOGGER.exception("Error setting up HTTP server")
@@ -95,7 +116,8 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
 
     # pylint: disable=too-many-arguments
     def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development, ssl_certificate, ssl_key):
+                 hass, api_password, development, ssl_certificate, ssl_key,
+                 cors_origins):
         """Initialize the server."""
         super().__init__(server_address, request_handler_class)
 
@@ -106,6 +128,7 @@ class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
         self.paths = []
         self.sessions = SessionStore()
         self.use_ssl = ssl_certificate is not None
+        self.cors_origins = cors_origins
 
         # We will lazy init this one if needed
         self.event_forwarder = None
@@ -200,12 +223,26 @@ class RequestHandler(SimpleHTTPRequestHandler):
                     "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
                 return
 
-        self.authenticated = (self.server.api_password is None or
-                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password or
-                              data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password or
-                              self.verify_session())
+        if self.verify_session():
+            # The user has a valid session already
+            self.authenticated = True
+        elif self.server.api_password is None:
+            # No password is set, so everyone is authenticated
+            self.authenticated = True
+        elif hmac.compare_digest(self.headers.get(HTTP_HEADER_HA_AUTH, ''),
+                                 self.server.api_password):
+            # A valid auth header has been set
+            self.authenticated = True
+        elif hmac.compare_digest(data.get(DATA_API_PASSWORD, ''),
+                                 self.server.api_password):
+            # A valid password has been specified
+            self.authenticated = True
+        else:
+            self.authenticated = False
+
+        # we really shouldn't need to forward the password from here
+        if url.path not in [URL_ROOT, URL_API_EVENT_FORWARD]:
+            data.pop(DATA_API_PASSWORD, None)
 
         if '_METHOD' in data:
             method = data.pop('_METHOD')
@@ -336,6 +373,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
 
         self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(content)))
+
+        cors_check = (self.headers.get("Origin") in self.server.cors_origins)
+
+        cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
+
+        if self.server.cors_origins and cors_check:
+            self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+                             self.headers.get("Origin"))
+            self.send_header(HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS,
+                             cors_headers)
         self.end_headers()
 
         if self.command == 'HEAD':

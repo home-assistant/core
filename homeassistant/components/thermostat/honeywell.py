@@ -9,9 +9,9 @@ import socket
 
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['evohomeclient==0.2.4',
+REQUIREMENTS = ['evohomeclient==0.2.5',
                 'somecomfort==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class RoundThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -203,7 +203,7 @@ class HoneywellUSThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return (TEMP_CELCIUS if self._device.temperature_unit == 'C'
+        return (TEMP_CELSIUS if self._device.temperature_unit == 'C'
                 else TEMP_FAHRENHEIT)
 
     @property

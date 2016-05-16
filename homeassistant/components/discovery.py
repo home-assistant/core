@@ -15,9 +15,11 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.6.1']
+REQUIREMENTS = ['netdisco==0.6.6']
 
 SCAN_INTERVAL = 300  # seconds
+
+LOAD_PLATFORM = 'load_platform'
 
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HUE = 'philips_hue'
@@ -52,7 +54,7 @@ def listen(hass, service, callback):
 
     def discovery_event_listener(event):
         """Listen for discovery events."""
-        if event.data[ATTR_SERVICE] in service:
+        if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
             callback(event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED))
 
     hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
@@ -71,6 +73,32 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
         data[ATTR_DISCOVERED] = discovered
 
     hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
+
+
+def load_platform(hass, component, platform, info=None, hass_config=None):
+    """Helper method for generic platform loading.
+
+    This method allows a platform to be loaded dynamically without it being
+    known at runtime (in the DISCOVERY_PLATFORMS list of the component).
+    Advantages of using this method:
+    - Any component & platforms combination can be dynamically added
+    - A component (i.e. light) does not have to import every component
+      that can dynamically add a platform (e.g. wemo, wink, insteon_hub)
+    - Custom user components can take advantage of discovery/loading
+
+    Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
+    fired to load the platform. The event will contain:
+        { ATTR_SERVICE = LOAD_PLATFORM + '.' + <<component>>
+          ATTR_DISCOVERED = {LOAD_PLATFORM: <<platform>>} }
+
+    * dev note: This listener can be found in entity_component.py
+    """
+    if info is None:
+        info = {LOAD_PLATFORM: platform}
+    else:
+        info[LOAD_PLATFORM] = platform
+    discover(hass, LOAD_PLATFORM + '.' + component, info, component,
+             hass_config)
 
 
 def setup(hass, config):

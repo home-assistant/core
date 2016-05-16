@@ -8,7 +8,7 @@ import logging
 from binascii import hexlify
 
 from homeassistant.components import zigbee
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import JobPriority
 from homeassistant.helpers.entity import Entity
 
@@ -59,7 +59,7 @@ class ZigBeeTemperatureSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit the value is expressed in."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     def update(self, *args):
         """Get the latest data."""

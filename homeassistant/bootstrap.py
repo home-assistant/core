@@ -14,6 +14,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 import homeassistant.config as config_util
 import homeassistant.core as core
+import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 import homeassistant.util.dt as date_util
 import homeassistant.util.location as loc_util
@@ -21,7 +22,8 @@ import homeassistant.util.package as pkg_util
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
@@ -64,7 +66,7 @@ def _handle_requirements(hass, component, name):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('lib')):
+        if not pkg_util.install_package(req, target=hass.config.path('deps')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -102,7 +104,7 @@ def _setup_component(hass, domain, config):
             try:
                 config = component.CONFIG_SCHEMA(config)
             except vol.MultipleInvalid as ex:
-                _LOGGER.error('Invalid config for [%s]: %s', domain, ex)
+                cv.log_exception(_LOGGER, ex, domain, config)
                 return False
 
         elif hasattr(component, 'PLATFORM_SCHEMA'):
@@ -112,12 +114,11 @@ def _setup_component(hass, domain, config):
                 try:
                     p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
-                    _LOGGER.error('Invalid platform config for [%s]: %s. %s',
-                                  domain, ex, p_config)
+                    cv.log_exception(_LOGGER, ex, domain, p_config)
                     return False
 
                 # Not all platform components follow same pattern for platforms
-                # Sof if p_name is None we are not going to validate platform
+                # So if p_name is None we are not going to validate platform
                 # (the automation component is one of them)
                 if p_name is None:
                     platforms.append(p_validated)
@@ -134,9 +135,8 @@ def _setup_component(hass, domain, config):
                     try:
                         p_validated = platform.PLATFORM_SCHEMA(p_validated)
                     except vol.MultipleInvalid as ex:
-                        _LOGGER.error(
-                            'Invalid platform config for [%s.%s]: %s. %s',
-                            domain, p_name, ex, p_config)
+                        cv.log_exception(_LOGGER, ex, '{}.{}'
+                                         .format(domain, p_name), p_validated)
                         return False
 
                 platforms.append(p_validated)
@@ -210,7 +210,7 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 def mount_local_lib_path(config_dir):
     """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'lib'))
+    sys.path.insert(0, os.path.join(config_dir, 'deps'))
 
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
@@ -228,11 +228,13 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    core_config = config.get(core.DOMAIN, {})
+
     try:
         process_ha_core_config(hass, config_util.CORE_CONFIG_SCHEMA(
-            config.get(core.DOMAIN, {})))
+            core_config))
     except vol.MultipleInvalid as ex:
-        _LOGGER.error('Invalid config for [homeassistant]: %s', ex)
+        cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
         return None
 
     process_ha_config_upgrade(hass)
@@ -293,7 +295,10 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
 
     enable_logging(hass, verbose, daemon, log_rotate_days)
 
-    config_dict = config_util.load_yaml_config_file(config_path)
+    try:
+        config_dict = config_util.load_yaml_config_file(config_path)
+    except HomeAssistantError:
+        return None
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
@@ -368,7 +373,13 @@ def process_ha_config_upgrade(hass):
     _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
                  __version__)
 
+    # This was where dependencies were installed before v0.18
+    # Probably should keep this around until ~v0.20.
     lib_path = hass.config.path('lib')
+    if os.path.isdir(lib_path):
+        shutil.rmtree(lib_path)
+
+    lib_path = hass.config.path('deps')
     if os.path.isdir(lib_path):
         shutil.rmtree(lib_path)
 
@@ -430,7 +441,7 @@ def process_ha_core_config(hass, config):
         if info.use_fahrenheit:
             hac.temperature_unit = TEMP_FAHRENHEIT
         else:
-            hac.temperature_unit = TEMP_CELCIUS
+            hac.temperature_unit = TEMP_CELSIUS
 
     if hac.location_name is None:
         hac.location_name = info.city

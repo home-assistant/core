@@ -2,39 +2,64 @@
 
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
+import logging
 from homeassistant.components.thermostat import DOMAIN
 from homeassistant.components.thermostat import (
     ThermostatDevice,
     STATE_IDLE)
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID, NETWORK,
-    ZWaveDeviceEntity)
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELCIUS)
+from homeassistant.components import zwave
+from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_NAME = 'name'
 DEFAULT_NAME = 'ZWave Thermostat'
 
+REMOTEC = 0x5254
+REMOTEC_ZXT_120 = 0x8377
+REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
+
+WORKAROUND_IGNORE = 'ignore'
+
+DEVICE_MAPPINGS = {
+    REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_IGNORE
+}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZWave thermostats."""
-    if discovery_info is None or NETWORK is None:
+    if discovery_info is None or zwave.NETWORK is None:
+        _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
+                      discovery_info, zwave.NETWORK)
         return
 
-    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
     value.set_change_verified(False)
+    # Make sure that we have values for the key before converting to int
+    if (value.node.manufacturer_id.strip() and
+            value.node.product_id.strip()):
+        specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                               int(value.node.product_id, 16))
+        if specific_sensor_key in DEVICE_MAPPINGS:
+            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+                _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
+                return
+
     add_devices([ZWaveThermostat(value)])
+    _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
+                  discovery_info, zwave.NETWORK)
 
 
 # pylint: disable=too-many-arguments
-class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
+class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 
     def __init__(self, value):
         """Initialize the zwave thermostat."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
         self._target_temperature = None
         self._current_temperature = None
@@ -84,7 +109,7 @@ class ZWaveThermostat(ZWaveDeviceEntity, ThermostatDevice):
         """Return the unit of measurement."""
         unit = self._unit
         if unit == 'C':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:

@@ -5,7 +5,6 @@ import time
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.components import rfxtrx as rfxtrx
-from homeassistant.components.sensor import rfxtrx as rfxtrx_sensor
 from tests.common import get_test_home_assistant
 
 
@@ -33,21 +32,15 @@ class TestRFXTRX(unittest.TestCase):
                 'dummy': True}
         }))
 
-        config = {'devices': {}}
-        devices = []
+        self.assertTrue(_setup_component(self.hass, 'sensor', {
+            'sensor': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices': {}}}))
 
-        def add_dev_callback(devs):
-            """Add a callback to add devices."""
-            for dev in devs:
-                devices.append(dev)
-
-        rfxtrx_sensor.setup_platform(self.hass, config, add_dev_callback)
-
-        while len(rfxtrx.RFX_DEVICES) < 2:
+        while len(rfxtrx.RFX_DEVICES) < 1:
             time.sleep(0.1)
 
-        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
-        self.assertEqual(len(devices), 2)
+        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 1)
 
     def test_valid_config(self):
         """Test configuration."""
@@ -89,9 +82,8 @@ class TestRFXTRX(unittest.TestCase):
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'213c7f216': {
+                           {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               'packetid': '0b1100cd0213c7f210010f51',
                                rfxtrx.ATTR_FIREEVENT: True}
                             }}}))
 

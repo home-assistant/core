@@ -1,4 +1,4 @@
-"""The tests fr the Command line Binary sensor platform."""
+"""The tests for the Command line Binary sensor platform."""
 import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
@@ -60,7 +60,8 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         data = command_line.CommandSensorData('echo 10')
 
         entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', '1.0', '0', '{{ value | multiply(0.1) }}')
+            self.hass, data, 'test', None, '1.0', '0',
+            '{{ value | multiply(0.1) }}')
 
         self.assertEqual(STATE_ON, entity.state)
 
@@ -69,6 +70,6 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
         data = command_line.CommandSensorData('echo 0')
 
         entity = command_line.CommandBinarySensor(
-            self.hass, data, 'test', '1', '0', None)
+            self.hass, data, 'test', None, '1', '0', None)
 
         self.assertEqual(STATE_OFF, entity.state)
