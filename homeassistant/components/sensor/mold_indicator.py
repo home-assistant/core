@@ -147,7 +147,7 @@ class MoldIndicator(Entity):
         return hum
 
     def update(self):
-        """Calculate latest state"""
+        """Calculate latest state."""
         # check all sensors
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
             return
