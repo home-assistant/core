@@ -274,6 +274,9 @@ python-nmap==0.6.0
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.socket_io
+python-socketio==1.3
+
 # homeassistant.components.statsd
 python-statsd==1.7.2
 
@@ -338,7 +341,7 @@ somecomfort==0.2.1
 speedtest-cli==0.3.4
 
 # homeassistant.components.http
-static3==0.6.1
+static3==0.7.0
 
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
