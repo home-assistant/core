@@ -213,9 +213,6 @@ class HomeAssistantWSGI(object):
         """Register a folder to serve as a static path."""
         from static import Cling
 
-        if url_root in self.extra_apps:
-            _LOGGER.warning("Static path '%s' is being overwritten", path)
-
         headers = []
 
         if not self.development:
@@ -228,7 +225,14 @@ class HomeAssistantWSGI(object):
                 "public, max-age={}".format(cache_time)
             })
 
-        self.extra_apps[url_root] = Cling(path, headers=headers)
+        self.register_wsgi_app(url_root, Cling(path, headers=headers))
+
+    def register_wsgi_app(self, url_root, app):
+        """Register a path to serve a WSGI app."""
+        if url_root in self.extra_apps:
+            _LOGGER.warning("Url root '%s' is being overwritten", url_root)
+
+        self.extra_apps[url_root] = app
 
     def start(self):
         """Start the wsgi server."""
@@ -248,20 +252,21 @@ class HomeAssistantWSGI(object):
         )
         from werkzeug.routing import RequestRedirect
 
-        adapter = self.url_map.bind_to_environ(request.environ)
-        try:
-            endpoint, values = adapter.match()
-            return self.views[endpoint].handle_request(request, **values)
-        except RequestRedirect as ex:
-            return ex
-        except BadRequest as ex:
-            return self._handle_error(request, str(ex), 400)
-        except NotFound as ex:
-            return self._handle_error(request, str(ex), 404)
-        except MethodNotAllowed as ex:
-            return self._handle_error(request, str(ex), 405)
-        except Unauthorized as ex:
-            return self._handle_error(request, str(ex), 401)
+        with request:
+            adapter = self.url_map.bind_to_environ(request.environ)
+            try:
+                endpoint, values = adapter.match()
+                return self.views[endpoint].handle_request(request, **values)
+            except RequestRedirect as ex:
+                return ex
+            except BadRequest as ex:
+                return self._handle_error(request, str(ex), 400)
+            except NotFound as ex:
+                return self._handle_error(request, str(ex), 404)
+            except MethodNotAllowed as ex:
+                return self._handle_error(request, str(ex), 405)
+            except Unauthorized as ex:
+                return self._handle_error(request, str(ex), 401)
         # TODO This long chain of except blocks is silly. _handle_error should
         # just take the exception as an argument and parse the status code
         # itself
