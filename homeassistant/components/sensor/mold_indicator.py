@@ -148,6 +148,10 @@ class MoldIndicator(Entity):
 
     def update(self):
         """Calculate latest state"""
+        # check all sensors
+        if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
+            return
+
         # re-calculate dewpoint and mold indicator
         self._calc_dewpoint()
         self._calc_moldindicator()
@@ -169,10 +173,6 @@ class MoldIndicator(Entity):
             # update humidity
             self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
 
-        # check all sensors
-        if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
-            return
-
         self.update()
         self.update_ha_state()
 
@@ -183,7 +183,7 @@ class MoldIndicator(Entity):
         beta = MAGNUS_K2 * MAGNUS_K3 / (MAGNUS_K3 + self._indoor_temp)
 
         if self._indoor_hum == 0:
-            self._dewpoint = -50  #not defined, assume very low value
+            self._dewpoint = -50  # not defined, assume very low value
         else:
             self._dewpoint = \
                 MAGNUS_K3 * (alpha + math.log(self._indoor_hum / 100.0)) / \
