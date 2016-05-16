@@ -28,7 +28,9 @@ SCAN_INTERVAL = 60
 
 SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
+SERVICE_SET_TARGET_TEMPS = "set_target_temps"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
+SERVICE_SET_HVAC_MODE = "set_hvac_mode"
 
 STATE_HEAT = "heat"
 STATE_COOL = "cool"
@@ -42,6 +44,7 @@ ATTR_MIN_TEMP = "min_temp"
 ATTR_TEMPERATURE_LOW = "target_temp_low"
 ATTR_TEMPERATURE_HIGH = "target_temp_high"
 ATTR_OPERATION = "current_operation"
+ATTR_HVAC_MODE = "hvac_mode"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,9 +61,18 @@ SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
 })
+SET_TARGET_TEMPS_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TEMPERATURE_LOW): vol.Coerce(float),
+    vol.Required(ATTR_TEMPERATURE_HIGH): vol.Coerce(float),
+})
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN): cv.boolean,
+})
+SET_HVAC_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_HVAC_MODE): cv.string,
 })
 
 
@@ -85,6 +97,14 @@ def set_temperature(hass, temperature, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, data)
 
+def set_target_temps(hass, target_temp_low, target_temp_high, entity_id=None):
+    """Set new low target temperature."""
+    data = {ATTR_TEMPERATURE_LOW: target_temp_low, ATTR_TEMPERATURE_HIGH: target_temp_high}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_TARGET_TEMPS, data)
 
 def set_fan_mode(hass, fan_mode, entity_id=None):
     """Turn all or specified thermostat fan mode on."""
@@ -96,6 +116,17 @@ def set_fan_mode(hass, fan_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
+
+def set_hvac_mode(hass, hvac_mode, entity_id=None):
+    """Turn all or specified thermostat fan mode on."""
+    data = {
+        ATTR_HVAC_MODE: hvac_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_HVAC_MODE, data)
 
 
 # pylint: disable=too-many-branches
@@ -145,6 +176,27 @@ def setup(hass, config):
         descriptions.get(SERVICE_SET_TEMPERATURE),
         schema=SET_TEMPERATURE_SCHEMA)
 
+    def temps_target_set_service(service):
+        """Set low temperature on the target thermostats."""
+        target_thermostats = component.extract_from_service(service)
+
+        target_temp_low = service.data[ATTR_TEMPERATURE_LOW]
+        target_temp_high = service.data[ATTR_TEMPERATURE_HIGH]
+
+        for thermostat in target_thermostats:
+            thermostat.set_target_temps(convert(
+                target_temp_low, hass.config.temperature_unit,
+                thermostat.unit_of_measurement), convert(
+                target_temp_high, hass.config.temperature_unit,
+                thermostat.unit_of_measurement))
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TARGET_TEMPS, temps_target_set_service,
+        descriptions.get(SERVICE_SET_TARGET_TEMPS),
+        schema=SET_TARGET_TEMPS_SCHEMA)
+
     def fan_mode_set_service(service):
         """Set fan mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
@@ -163,6 +215,22 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_FAN_MODE, fan_mode_set_service,
         descriptions.get(SERVICE_SET_FAN_MODE),
         schema=SET_FAN_MODE_SCHEMA)
+
+    def hvac_mode_set_service(service):
+        """Set fan mode on target thermostats."""
+        target_thermostats = component.extract_from_service(service)
+
+        hvac_mode = service.data[ATTR_HVAC_MODE]
+
+        for thermostat in target_thermostats:
+            thermostat.set_hvac_mode(hvac_mode)
+
+            thermostat.update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_HVAC_MODE, hvac_mode_set_service,
+        descriptions.get(SERVICE_SET_HVAC_MODE),
+        schema=SET_HVAC_MODE_SCHEMA)
 
     return True
 
@@ -246,8 +314,12 @@ class ThermostatDevice(Entity):
         """Return true if the fan is on."""
         return None
 
-    def set_temperate(self, temperature):
+    def set_temperature(self, temperature):
         """Set new target temperature."""
+        pass
+
+    def set_target_temps(self, target_temp_low, target_temp_high):
+        """Set new target temperatures."""
         pass
 
     def turn_away_mode_on(self):
@@ -264,6 +336,10 @@ class ThermostatDevice(Entity):
 
     def turn_fan_off(self):
         """Turn fan off."""
+        pass
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set hvac mode."""
         pass
 
     @property
