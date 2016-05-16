@@ -11,7 +11,7 @@ import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT,
-                                 TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,14 +59,13 @@ class MoldIndicator(Entity):
     def __init__(self, hass, name, indoor_temp_sensor, outdoor_temp_sensor,
                  indoor_humidity_sensor, calib_factor):
         """Initialize the sensor."""
-        self._state = "-"
-        self._hass = hass
+        self._state = None
         self._name = name
         self._indoor_temp_sensor = indoor_temp_sensor
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
         self._calib_factor = calib_factor
-        self._is_metric = (hass.config.temperature_unit == TEMP_CELCIUS)
+        self._is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
 
         self._dewpoint = None
         self._indoor_temp = None
@@ -79,12 +78,23 @@ class MoldIndicator(Entity):
         track_state_change(hass, indoor_humidity_sensor, self._sensor_changed)
 
         # Read initial state
-        self._sensor_changed(indoor_temp_sensor,
-                             None, hass.states.get(indoor_temp_sensor))
-        self._sensor_changed(outdoor_temp_sensor,
-                             None, hass.states.get(outdoor_temp_sensor))
-        self._sensor_changed(indoor_humidity_sensor,
-                             None, hass.states.get(indoor_humidity_sensor))
+        indoor_temp = hass.states.get(indoor_temp_sensor)
+        outdoor_temp = hass.states.get(outdoor_temp_sensor)
+        indoor_hum = hass.states.get(indoor_humidity_sensor)
+
+        if indoor_temp:
+            self._indoor_temp = \
+                MoldIndicator._update_temp_sensor(indoor_temp)
+
+        if outdoor_temp:
+            self._outdoor_temp = \
+                MoldIndicator._update_temp_sensor(outdoor_temp)
+
+        if indoor_hum:
+            self._indoor_hum = \
+                MoldIndicator._update_hum_sensor(indoor_hum)
+
+        self.update()
 
     @staticmethod
     def _update_temp_sensor(state):
@@ -100,12 +110,12 @@ class MoldIndicator(Entity):
         # convert to celsius if necessary
         if unit == TEMP_FAHRENHEIT:
             return util.temperature.fahrenheit_to_celcius(temp)
-        elif unit == TEMP_CELCIUS:
+        elif unit == TEMP_CELSIUS:
             return temp
         else:
             _LOGGER.error("Temp sensor has unsupported unit: %s"
                           " (allowed: %s, %s)",
-                          unit, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                          unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
         return None
 
@@ -136,6 +146,12 @@ class MoldIndicator(Entity):
 
         return hum
 
+    def update(self):
+        """Calculate latest state"""
+        # re-calculate dewpoint and mold indicator
+        self._calc_dewpoint()
+        self._calc_moldindicator()
+
     def _sensor_changed(self, entity_id, old_state, new_state):
         """Called when sensor values change."""
         if new_state is None:
@@ -157,9 +173,7 @@ class MoldIndicator(Entity):
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
             return
 
-        # re-calculate dewpoint and mold indicator
-        self._calc_dewpoint()
-        self._calc_moldindicator()
+        self.update()
         self.update_ha_state()
 
     def _calc_dewpoint(self):
@@ -168,10 +182,13 @@ class MoldIndicator(Entity):
         alpha = MAGNUS_K2 * self._indoor_temp / (MAGNUS_K3 + self._indoor_temp)
         beta = MAGNUS_K2 * MAGNUS_K3 / (MAGNUS_K3 + self._indoor_temp)
 
-        self._dewpoint = \
-            MAGNUS_K3 * (alpha + math.log(self._indoor_hum / 100.0)) / \
-            (beta - math.log(self._indoor_hum / 100.0))
-        _LOGGER.debug("Dewpoint: %f " + TEMP_CELCIUS, self._dewpoint)
+        if self._indoor_hum == 0:
+            self._dewpoint = -50  #not defined, assume very low value
+        else:
+            self._dewpoint = \
+                MAGNUS_K3 * (alpha + math.log(self._indoor_hum / 100.0)) / \
+                (beta - math.log(self._indoor_hum / 100.0))
+        _LOGGER.debug("Dewpoint: %f " + TEMP_CELSIUS, self._dewpoint)
 
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
@@ -191,7 +208,7 @@ class MoldIndicator(Entity):
 
         _LOGGER.debug(
             "Estimated Critical Temperature: %f " +
-            TEMP_CELCIUS, self._crit_temp)
+            TEMP_CELSIUS, self._crit_temp)
 
         # Then calculate the humidity at this point
         alpha = MAGNUS_K2 * self._crit_temp / (MAGNUS_K3 + self._crit_temp)
@@ -235,19 +252,17 @@ class MoldIndicator(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self._dewpoint and self._crit_temp:
-
-            if self._is_metric:
-                return {
-                    ATTR_DEWPOINT: '{0:.1f}'.format(self._dewpoint),
-                    ATTR_CRITICAL_TEMP: '{0:.1f}'.format(self._crit_temp),
-                }
-            else:
-                return {
-                    ATTR_DEWPOINT: '{0:.1f}'.format(
-                        util.temperature.celcius_to_fahrenheit(
-                            self._dewpoint)),
-                    ATTR_CRITICAL_TEMP: '{0:.1f}'.format(
-                        util.temperature.celcius_to_fahrenheit(
-                            self._crit_temp)),
-                }
+        if self._is_metric:
+            return {
+                ATTR_DEWPOINT: self._dewpoint,
+                ATTR_CRITICAL_TEMP: self._crit_temp,
+            }
+        else:
+            return {
+                ATTR_DEWPOINT:
+                    util.temperature.celcius_to_fahrenheit(
+                        self._dewpoint),
+                ATTR_CRITICAL_TEMP:
+                    util.temperature.celcius_to_fahrenheit(
+                        self._crit_temp),
+            }
