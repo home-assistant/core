@@ -10,7 +10,7 @@ import logging
 import datetime
 import time
 
-from homeassistant.const import HTTP_OK
+from homeassistant.const import HTTP_OK, TEMP_CELSIUS
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
@@ -236,7 +236,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev = []
         for resource in config.get("monitored_resources",
                                    FITBIT_DEFAULT_RESOURCE_LIST):
-            dev.append(FitbitSensor(authd_client, config_path, resource))
+            dev.append(FitbitSensor(authd_client, config_path, resource,
+                                    hass.config.temperature_unit))
         add_devices(dev)
 
     else:
@@ -314,8 +315,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
-    def __init__(self, client, config_path, resource_type):
-        """Initialize the Uber sensor."""
+    def __init__(self, client, config_path, resource_type, temperature_unit):
+        """Initialize the Fitbit sensor."""
+        self.is_metric = temperature_unit
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
@@ -331,7 +333,10 @@ class FitbitSensor(Entity):
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
-                measurement_system = FITBIT_MEASUREMENTS["metric"]
+                if self.is_metric is TEMP_CELSIUS:
+                    measurement_system = FITBIT_MEASUREMENTS["metric"]
+                else:
+                    measurement_system = FITBIT_MEASUREMENTS["en_US"]
             unit_type = measurement_system[split_resource[-1]]
         self._unit_of_measurement = unit_type
         self._state = 0
