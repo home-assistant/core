@@ -97,9 +97,11 @@ def set_temperature(hass, temperature, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, data)
 
+
 def set_target_temps(hass, target_temp_low, target_temp_high, entity_id=None):
     """Set new low target temperature."""
-    data = {ATTR_TEMPERATURE_LOW: target_temp_low, ATTR_TEMPERATURE_HIGH: target_temp_high}
+    data = {ATTR_TEMPERATURE_LOW: target_temp_low,
+            ATTR_TEMPERATURE_HIGH: target_temp_high}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
@@ -116,6 +118,7 @@ def set_fan_mode(hass, fan_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
+
 
 def set_hvac_mode(hass, hvac_mode, entity_id=None):
     """Turn all or specified thermostat fan mode on."""
