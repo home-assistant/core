@@ -100,6 +100,8 @@ class IndexView(HomeAssistantView):
 
         template = self.templates.get_template('index.html')
 
+        # pylint is wrong
+        # pylint: disable=no-member
         resp = template.render(app_url=app_url, auth=auth,
                                icons=mdi_version.VERSION)
 
