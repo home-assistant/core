@@ -70,7 +70,8 @@ def setup(hass, config):
 def request_class():
     """Generate request class.
 
-    Done in method because of imports."""
+    Done in method because of imports.
+    """
     from werkzeug.exceptions import BadRequest
     from werkzeug.wrappers import BaseRequest, AcceptMixin
     from werkzeug.utils import cached_property
@@ -100,6 +101,7 @@ def routing_map(hass):
 
     class EntityValidator(BaseConverter):
         """Validate entity_id in urls."""
+
         regex = r"(\w+)\.(\w+)"
 
         def __init__(self, url_map, exist=True, domain=None):
@@ -259,17 +261,16 @@ class HomeAssistantWSGI(object):
                 return self.views[endpoint].handle_request(request, **values)
             except RequestRedirect as ex:
                 return ex
-            except BadRequest as ex:
-                return self._handle_error(request, str(ex), 400)
-            except NotFound as ex:
-                return self._handle_error(request, str(ex), 404)
-            except MethodNotAllowed as ex:
-                return self._handle_error(request, str(ex), 405)
-            except Unauthorized as ex:
-                return self._handle_error(request, str(ex), 401)
-        # TODO This long chain of except blocks is silly. _handle_error should
-        # just take the exception as an argument and parse the status code
-        # itself
+            except (BadRequest, NotFound, MethodNotAllowed,
+                    Unauthorized) as ex:
+                resp = ex.get_response(request.environ)
+                if request.accept_mimetypes.accept_json:
+                    resp.data = json.dumps({
+                        "result": "error",
+                        "message": str(ex),
+                    })
+                    resp.mimetype = "application/json"
+                return resp
 
     def base_app(self, environ, start_response):
         """WSGI Handler of requests to base app."""
@@ -287,19 +288,6 @@ class HomeAssistantWSGI(object):
         if fingerprinted:
             environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
         return app(environ, start_response)
-
-    def _handle_error(self, request, message, status):
-        """Handle a WSGI request error."""
-        from werkzeug.wrappers import Response
-        if request.accept_mimetypes.accept_json:
-            message = json.dumps({
-                "result": "error",
-                "message": message,
-            })
-            mimetype = "application/json"
-        else:
-            mimetype = "text/plain"
-        return Response(message, status=status, mimetype=mimetype)
 
 
 class HomeAssistantView(object):
@@ -338,8 +326,6 @@ class HomeAssistantView(object):
             handler = getattr(self, request.method.lower())
         except AttributeError:
             raise MethodNotAllowed
-
-        # TODO: session support + uncomment session test
 
         # Auth code verbose on purpose
         authenticated = False

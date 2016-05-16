@@ -88,15 +88,6 @@ class TestAPI(unittest.TestCase):
 
         self.assertEqual(200, req.status_code)
 
-    # def test_access_via_session(self):
-    #     """Test access wia session."""
-    #     session = requests.Session()
-    #     req = session.get(_url(const.URL_API), headers=HA_HEADERS)
-    #     self.assertEqual(200, req.status_code)
-
-    #     req = session.get(_url(const.URL_API))
-    #     self.assertEqual(200, req.status_code)
-
     def test_api_list_state_entities(self):
         """Test if the debug interface allows us to list state entities."""
         req = requests.get(_url(const.URL_API_STATES),
