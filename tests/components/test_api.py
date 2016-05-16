@@ -435,63 +435,61 @@ class TestAPI(unittest.TestCase):
             headers=HA_HEADERS)
         self.assertEqual(200, req.status_code)
 
-    # def test_stream(self):
-    #     """Test the stream."""
-    #     listen_count = self._listen_count()
-    #     with closing(requests.get(_url(const.URL_API_STREAM),
-    #                               stream=True, headers=HA_HEADERS)) as req:
+    def test_stream(self):
+        """Test the stream."""
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM),
+                                  stream=True, headers=HA_HEADERS)) as req:
 
-    #         self.assertEqual(listen_count + 1, self._listen_count())
+            self.assertEqual(listen_count + 2, self._listen_count())
 
-    #         # eventlet.sleep(1)
-    #         print('firing event')
+            hass.bus.fire('test_event')
+            hass.pool.block_till_done()
 
-    #         hass.bus.fire('test_event')
-    #         hass.pool.block_till_done()
+            data = self._stream_next_event(req)
 
-    #         data = self._stream_next_event(req)
+            self.assertEqual('test_event', data['event_type'])
 
-    #         self.assertEqual('test_event', data['event_type'])
+    def test_stream_with_restricted(self):
+        """Test the stream with restrictions."""
+        listen_count = self._listen_count()
+        url = _url('{}?restrict=test_event1,test_event3'.format(
+            const.URL_API_STREAM))
 
-    # def test_stream_with_restricted(self):
-    #     """Test the stream with restrictions."""
-    #     listen_count = self._listen_count()
-    #     with closing(requests.get(_url(const.URL_API_STREAM),
-    #                               data=json.dumps({
-    #                                   'restrict':
-    #                                   'test_event1,test_event3'}),
-    #                               stream=True, headers=HA_HEADERS)) as req:
+        with closing(requests.get(url, stream=True,
+                                  headers=HA_HEADERS)) as req:
 
-    #         data = self._stream_next_event(req)
-    #         self.assertEqual('ping', data)
+            self.assertEqual(listen_count + 3, self._listen_count())
 
-    #         self.assertEqual(listen_count + 2, self._listen_count())
+            hass.bus.fire('test_event1')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event2')
+            hass.pool.block_till_done()
+            hass.bus.fire('test_event3')
+            hass.pool.block_till_done()
 
-    #         hass.bus.fire('test_event1')
-    #         hass.pool.block_till_done()
-    #         hass.bus.fire('test_event2')
-    #         hass.pool.block_till_done()
-    #         hass.bus.fire('test_event3')
-    #         hass.pool.block_till_done()
-
-    #         data = self._stream_next_event(req)
-    #         self.assertEqual('test_event1', data['event_type'])
-    #         data = self._stream_next_event(req)
-    #         self.assertEqual('test_event3', data['event_type'])
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event1', data['event_type'])
+            data = self._stream_next_event(req)
+            self.assertEqual('test_event3', data['event_type'])
 
     def _stream_next_event(self, stream):
-        """Test the stream for next event."""
-        data = b''
-        last_new_line = False
-        for dat in stream.iter_content(1):
-            if dat == b'\n' and last_new_line:
+        """Read the stream for next event while ignoring ping."""
+        while True:
+            data = b''
+            last_new_line = False
+            for dat in stream.iter_content(1):
+                if dat == b'\n' and last_new_line:
+                    break
+                data += dat
+                last_new_line = dat == b'\n'
+
+            conv = data.decode('utf-8').strip()[6:]
+
+            if conv != 'ping':
                 break
-            data += dat
-            last_new_line = dat == b'\n'
 
-        conv = data.decode('utf-8').strip()[6:]
-
-        return conv if conv == 'ping' else json.loads(conv)
+        return json.loads(conv)
 
     def _listen_count(self):
         """Return number of event listeners."""
