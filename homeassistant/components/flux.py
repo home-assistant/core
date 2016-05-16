@@ -49,9 +49,10 @@ PLATFORM_SCHEMA = vol.Schema({
 def set_lights_xy(hass, lights, x_value, y_value, brightness):
     """Set color of array of lights."""
     for light in lights:
-        turn_on(hass, light,
-                xy_color=[x_value, y_value],
-                brightness=brightness)
+        if is_on(hass, light):
+            turn_on(hass, light,
+                    xy_color=[x_value, y_value],
+                    brightness=brightness)
 
 
 # https://github.com/KpaBap/hue-flux/blob/master/hue-flux.py
