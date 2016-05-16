@@ -24,28 +24,34 @@ SUN = "sun.sun"
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LIGHTS = 'lights'
+CONF_WAKETIME = 'waketime'
 CONF_BEDTIME = 'bedtime'
 CONF_TURNOFF = 'turn_off'
 CONF_AUTO = 'auto'
 CONF_DAY_CT = 'day_colortemp'
 CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_BEDTIME_CT = 'bedtime_colortemp'
+CONF_BRIGHTNESS = 'brightness'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_LIGHTS): [cv.string],
+    vol.Optional(CONF_WAKETIME): vol.Coerce(str),
     vol.Optional(CONF_BEDTIME, default="22:00"): vol.Coerce(str),
     vol.Optional(CONF_TURNOFF, default=False): vol.Coerce(bool),
     vol.Optional(CONF_AUTO, default=False): vol.Coerce(bool),
     vol.Optional(CONF_DAY_CT, default=4000): vol.Coerce(int),
     vol.Optional(CONF_SUNSET_CT, default=3000): vol.Coerce(int),
-    vol.Optional(CONF_BEDTIME_CT, default=1900): vol.Coerce(int)
+    vol.Optional(CONF_BEDTIME_CT, default=1900): vol.Coerce(int),
+    vol.Optional(CONF_BRIGHTNESS, default=90): vol.Coerce(int)
 })
 
 
-def set_lights_xy(hass, lights, x_value, y_value):
+def set_lights_xy(hass, lights, x_value, y_value, brightness):
     """Set color of array of lights."""
     for light in lights:
-        turn_on(hass, light, xy_color=[x_value, y_value])
+        turn_on(hass, light,
+                xy_color=[x_value, y_value],
+                brightness=brightness)
 
 
 # https://github.com/KpaBap/hue-flux/blob/master/hue-flux.py
@@ -136,7 +142,7 @@ def setup(hass, config):
     return True
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,too-many-instance-attributes
 class Flux(object):
     """Class for Flux."""
 
@@ -144,18 +150,20 @@ class Flux(object):
         """Initialize Flux class."""
         self.lights = config[DOMAIN][0].get(CONF_LIGHTS)
         self.hass = hass
+        self.waketime = config[DOMAIN][0].get(CONF_WAKETIME)
         self.bedtime = config[DOMAIN][0].get(CONF_BEDTIME)
         self.turn_off = config[DOMAIN][0].get(CONF_TURNOFF)
         self.day_colortemp = config[DOMAIN][0].get(CONF_DAY_CT)
         self.sunset_colortemp = config[DOMAIN][0].get(CONF_SUNSET_CT)
         self.bedtime_colortemp = config[DOMAIN][0].get(CONF_BEDTIME_CT)
+        self.brightness = config[DOMAIN][0].get(CONF_BRIGHTNESS)
         if config[DOMAIN][0].get(CONF_AUTO):
-            sunrise = next_rising(self.hass, SUN)
+            sunrise = self.sunrise()
             track_time_change(hass, self.update,
                               second=[0, 10, 20, 30, 40, 50],
-                              minute=[range(sunrise.minute, 59)],
+                              minute=list(range(sunrise.minute, 59)),
                               hour=sunrise.hour)
-            bedtime_hour = int(1 + self.bedtime.split(":")[0])
+            bedtime_hour = 1 + int(self.bedtime.split(":")[0])
             track_time_change(hass, self.update,
                               second=[0, 10, 20, 30, 40, 50],
                               hour=list(range(sunrise.hour + 1, bedtime_hour)))
@@ -164,37 +172,37 @@ class Flux(object):
     # pylint: disable=too-many-locals
     def update(self, now=dt_util.now()):
         """Update all the lights."""
-        current = now
         sunset = next_setting(self.hass, SUN)
-        sunrise = next_rising(self.hass, SUN)
-        if sunset.day > current.day:
+        sunrise = self.sunrise()
+        if sunset.day > now.day:
             sunset = sunset - timedelta(days=1)
-        if sunrise.day > current.day:
-            sunrise = sunrise - timedelta(days=1)
         bedtime = dt_util.now().replace(hour=int(self.bedtime.split(":")[0]),
-                                        minute=int(self.bedtime.split(":")[1]))
-        if sunrise < current < sunset:
+                                        minute=int(self.bedtime.split(":")[1]),
+                                        second=0)
+        if sunrise < now < sunset:
             # Daytime
             temp_range = abs(self.day_colortemp - self.sunset_colortemp)
             day_length = int(sunset.timestamp() - sunrise.timestamp())
-            current_secs = int(current.timestamp() - sunrise.timestamp())
-            percentage_of_day_complete = current_secs / day_length
+            now_secs = int(now.timestamp() - sunrise.timestamp())
+            percentage_of_day_complete = now_secs / day_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self.day_colortemp - temp_offset
             x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
-            set_lights_xy(self.hass, self.lights, x_value, y_value)
+            set_lights_xy(self.hass, self.lights, x_value,
+                          y_value, self.brightness)
             _LOGGER.info("Lights updated during the day, x:%s y:%s",
                          x_value, y_value)
-        elif sunset < current < bedtime:
+        elif sunset < now < bedtime:
             # Nightime
             temp_range = abs(self.sunset_colortemp - self.bedtime_colortemp)
             night_length = int(bedtime.timestamp() - sunset.timestamp())
-            current_secs = int(current.timestamp() - sunset.timestamp())
-            percentage_of_day_complete = current_secs / night_length
+            now_secs = int(now.timestamp() - sunset.timestamp())
+            percentage_of_day_complete = now_secs / night_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self.sunset_colortemp - temp_offset
             x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
-            set_lights_xy(self.hass, self.lights, x_value, y_value)
+            set_lights_xy(self.hass, self.lights, x_value,
+                          y_value, self.brightness)
             _LOGGER.info("Lights updated at night, x:%s y:%s",
                          x_value, y_value)
         else:
@@ -204,3 +212,16 @@ class Flux(object):
                     if is_on(self.hass, light):
                         _LOGGER.info("Lights off")
                         turn_off(self.hass, light, transition=10)
+
+    def sunrise(self):
+        """Return sunrise or waketime if given."""
+        now = dt_util.now()
+        if self.waketime:
+            sunrise = now.replace(hour=int(self.waketime.split(":")[0]),
+                                  minute=int(self.waketime.split(":")[1]),
+                                  second=0)
+        else:
+            sunrise = next_rising(self.hass, SUN)
+        if sunrise.day > now.day:
+            sunrise = sunrise - timedelta(days=1)
+        return sunrise
