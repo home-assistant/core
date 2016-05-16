@@ -435,7 +435,6 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(listen_count + 2, self._listen_count())
 
             hass.bus.fire('test_event')
-            hass.pool.block_till_done()
 
             data = self._stream_next_event(req)
 
@@ -453,14 +452,12 @@ class TestAPI(unittest.TestCase):
             self.assertEqual(listen_count + 3, self._listen_count())
 
             hass.bus.fire('test_event1')
-            hass.pool.block_till_done()
-            hass.bus.fire('test_event2')
-            hass.pool.block_till_done()
-            hass.bus.fire('test_event3')
-            hass.pool.block_till_done()
-
             data = self._stream_next_event(req)
             self.assertEqual('test_event1', data['event_type'])
+
+            hass.bus.fire('test_event2')
+            hass.bus.fire('test_event3')
+
             data = self._stream_next_event(req)
             self.assertEqual('test_event3', data['event_type'])
 
