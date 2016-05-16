@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(hosts)
 
 
-#pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
