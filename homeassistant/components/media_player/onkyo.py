@@ -33,11 +33,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hosts = []
 
     if CONF_HOST in config and config[CONF_HOST] not in KNOWN_HOSTS:
-        hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
-                                 config[CONF_NAME],
-                                 config.get(CONFIG_SOURCE_LIST,
-                                            DEFAULT_SOURCES)))
-        KNOWN_HOSTS.append(config[CONF_HOST])
+        try:
+            hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
+                                     config[CONF_NAME],
+                                     config.get(CONFIG_SOURCE_LIST,
+                                                DEFAULT_SOURCES)))
+            KNOWN_HOSTS.append(config[CONF_HOST])
+        except OSError:
+            _LOGGER.error('Unable to connect to receiver at %s.',
+                          config[CONF_HOST])
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
