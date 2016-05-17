@@ -34,10 +34,10 @@ def color_RGB_to_xy(R, G, B):
     Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy
-    cx = X / (X + Y + Z)
-    cy = Y / (X + Y + Z)
+    x = X / (X + Y + Z)
+    y = Y / (X + Y + Z)
 
-    return round(cx, 3), round(cy, 3)
+    return round(x, 3), round(y, 3)
 
 
 # taken from
