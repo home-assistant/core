@@ -173,12 +173,23 @@ class Thermostat(ThermostatDevice):
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp)
 
-    def set_target_temps(self, target_temp_low, target_temp_high):
-        """Set new target temperatures."""
+    def set_target_temp_low(self, target_temp_low):
+        """Set new low target temperature."""
         target_temp_low = int(target_temp_low)
-        target_temp_high = int(target_temp_high)
         low_temp = target_temp_low
+        high_temp = target_temp_low + 5
+        if self.hold_temp:
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp, "indefinite")
+        else:
+            self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
+                                           high_temp)
+
+    def set_target_temp_high(self, target_temp_high):
+        """Set new low target temperature."""
+        target_temp_high = int(target_temp_high)
         high_temp = target_temp_high
+        low_temp = target_temp_high - 5
         if self.hold_temp:
             self.data.ecobee.set_hold_temp(self.thermostat_index, low_temp,
                                            high_temp, "indefinite")
