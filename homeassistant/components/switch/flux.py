@@ -1,0 +1,227 @@
+"""
+Flux for Home-Assistant.
+
+The idea was taken from https://github.com/KpaBap/hue-flux/
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch/flux/
+"""
+from datetime import timedelta
+import logging
+import voluptuous as vol
+
+from homeassistant.components.light import is_on, turn_on
+from homeassistant.components.sun import next_setting, next_rising
+from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.util.color import color_temperature_to_rgb, color_RGB_to_xy
+from homeassistant.util.dt import now as dt_now
+import homeassistant.helpers.config_validation as cv
+
+DEPENDENCIES = ['sun', 'light']
+SUN = "sun.sun"
+_LOGGER = logging.getLogger(__name__)
+
+CONF_LIGHTS = 'lights'
+CONF_START_TIME = 'start_time'
+COCONF_STOP_TIME = 'stop_time'
+CONF_START_CT = 'start_colortemp'
+CONF_SUNSET_CT = 'sunset_colortemp'
+CONF_STOP_CT = 'stop_colortemp'
+CONF_BRIGHTNESS = 'brightness'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'flux',
+    vol.Required(CONF_LIGHTS): [cv.string],
+    vol.Optional(CONF_NAME, default="Flux"): cv.string,
+    vol.Optional(CONF_START_TIME, default=None): cv.time,
+    vol.Optional(COCONF_STOP_TIME,
+                 default=dt_now().replace(hour=22, minute=0)): cv.time,
+    vol.Optional(CONF_START_CT, default=4000):
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.Optional(CONF_SUNSET_CT, default=3000):
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.Optional(CONF_STOP_CT, default=1900):
+        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+    vol.Optional(CONF_BRIGHTNESS, default=90):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
+})
+
+
+def set_lights_xy(hass, lights, x_val, y_val, brightness):
+    """Set color of array of lights."""
+    for light in lights:
+        if is_on(hass, light):
+            turn_on(hass, light,
+                    xy_color=[x_val, y_val],
+                    brightness=brightness)
+
+
+# pylint: disable=unused-argument
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the demo switches."""
+    name = config[CONF_NAME]
+    lights = config[CONF_LIGHTS]
+    start_time = config[CONF_START_TIME]
+    stop_time = config[COCONF_STOP_TIME]
+    start_colortemp = config[CONF_START_CT]
+    sunset_colortemp = config[CONF_SUNSET_CT]
+    stop_colortemp = config[CONF_STOP_CT]
+    brightness = config[CONF_BRIGHTNESS]
+    flux = FluxSwitch(name, hass, False, None, lights, start_time, stop_time,
+                      start_colortemp, sunset_colortemp, stop_colortemp,
+                      brightness)
+    add_devices([flux])
+
+    def update(call=None):
+        """Update lights."""
+        flux.flux_update()
+
+    hass.services.register(DOMAIN, 'flux_update', update)
+
+
+# pylint: disable=too-many-instance-attributes
+class FluxSwitch(SwitchDevice):
+    """Flux switch."""
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, name, hass, state, icon, lights, start_time, stop_time,
+                 start_colortemp, sunset_colortemp, stop_colortemp,
+                 brightness):
+        """Initialize the Flux switch."""
+        self._name = name
+        self.hass = hass
+        self._state = state
+        self._icon = icon
+        self._assumed = False
+        self._lights = lights
+        self._start_time = start_time
+        self._stop_time = stop_time
+        self._start_colortemp = start_colortemp
+        self._sunset_colortemp = sunset_colortemp
+        self._stop_colortemp = stop_colortemp
+        self._brightness = brightness
+
+    @property
+    def should_poll(self):
+        """No polling needed for a demo switch."""
+        return True
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._name
+
+    @property
+    def icon(self):
+        """Return the icon to use for device if any."""
+        return self._icon
+
+    @property
+    def assumed_state(self):
+        """Return if the state is based on assumptions."""
+        return self._assumed
+
+    @property
+    def is_on(self):
+        """Return true if switch is on."""
+        return self._state
+
+    @property
+    def start_time(self):
+        """Return flux start time."""
+        return self._start_time
+
+    @property
+    def stop_time(self):
+        """Return flux stop time."""
+        return self._stop_time
+
+    @property
+    def start_colortemp(self):
+        """Return flux start color temperature."""
+        return self._start_colortemp
+
+    @property
+    def sunset_colortemp(self):
+        """Return flux sunset color temperature."""
+        return self._sunset_colortemp
+
+    @property
+    def stop_colortemp(self):
+        """Return flux stop color temperature."""
+        return self._stop_colortemp
+
+    @property
+    def brightness(self):
+        """Return flux brightness."""
+        return self._brightness
+
+    def turn_on(self, **kwargs):
+        """Turn on flux."""
+        self._state = True
+        self.update_ha_state()
+
+    def turn_off(self, **kwargs):
+        """Turn off flux."""
+        self._state = False
+        self.update_ha_state()
+
+    # pylint: disable=too-many-locals
+    def update(self):
+        """Update the lights if switch is on."""
+        if self._state:
+            self.flux_update()
+
+    def flux_update(self, now=dt_now()):
+        """Update all the lights using flux."""
+        sunset = next_setting(self.hass, SUN)
+        sunrise = self.sunrise()
+        if sunset.day > dt_now().day:
+            sunset = sunset - timedelta(days=1)
+        _LOGGER.info("Bedtime: %s", self._stop_time)
+        stop_time = dt_now().replace(hour=int(self._stop_time.hour),
+                                     minute=int(self._stop_time.minute),
+                                     second=0)
+        if sunrise < dt_now() < sunset:
+            # Daytime
+            temp_range = abs(self._start_colortemp -
+                             self._sunset_colortemp)
+            day_length = int(sunset.timestamp() -
+                             sunrise.timestamp())
+            seconds_from_sunrise = int(dt_now().timestamp() -
+                                       sunrise.timestamp())
+            percentage_of_day_complete = seconds_from_sunrise / day_length
+            temp_offset = temp_range * percentage_of_day_complete
+            temp = self._start_colortemp - temp_offset
+            x_val, y_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+            set_lights_xy(self.hass, self._lights, x_val,
+                          y_val, self._brightness)
+            _LOGGER.info("Lights updated during the day, x:%s y:%s",
+                         x_val, y_val)
+        elif sunset < dt_now() < stop_time:
+            # Nightime
+            temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
+            night_length = int(stop_time.timestamp() - sunset.timestamp())
+            seconds_from_sunset = int(dt_now().timestamp() -
+                                      sunset.timestamp())
+            percentage_of_day_complete = seconds_from_sunset / night_length
+            temp_offset = temp_range * percentage_of_day_complete
+            temp = self._sunset_colortemp - temp_offset
+            x_val, y_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+            set_lights_xy(self.hass, self._lights, x_val,
+                          y_val, self._brightness)
+            _LOGGER.info("Lights updated at night, x:%s y:%s",
+                         x_val, y_val)
+
+    def sunrise(self):
+        """Return sunrise or start_time if given."""
+        if self._start_time:
+            sunrise = dt_now().replace(hour=int(self._start_time.hour),
+                                       minute=int(self._start_time.minute),
+                                       second=0)
+        else:
+            sunrise = next_rising(self.hass, SUN)
+        if sunrise.day > dt_now().day:
+            sunrise = sunrise - timedelta(days=1)
+        return sunrise
