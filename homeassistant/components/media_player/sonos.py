@@ -74,16 +74,26 @@ def only_if_coordinator(func):
 
     If used as decorator, avoid calling the decorated method if player is not
     a coordinator. If not, a grouped speaker (not in coordinator role) will
-    throw soco.exceptions.SoCoSlaveException
+    throw soco.exceptions.SoCoSlaveException.
+
+    Also, partially catch exceptions like:
+
+    soco.exceptions.SoCoUPnPException: UPnP Error 701 received:
+    Transition not available from <player ip address>
     """
     def wrapper(*args, **kwargs):
         """Decorator wrapper."""
         if args[0].is_coordinator:
-            return func(*args, **kwargs)
+            from soco.exceptions import SoCoUPnPException
+            try:
+                func(*args, **kwargs)
+            except SoCoUPnPException:
+                _LOGGER.error('command "%s" for Sonos device "%s" '
+                              'not available in this mode',
+                              func.__name__, args[0].name)
         else:
-            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" '
-                          '(not coordinator)',
-                          func.__name__, args[0].name)
+            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" (%s)',
+                          func.__name__, args[0].name, 'not coordinator')
 
     return wrapper
 
