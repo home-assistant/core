@@ -39,6 +39,7 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_COLOR_NAME = "color_name"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
@@ -87,6 +88,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: cv.byte,
+    ATTR_COLOR_NAME: str,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
@@ -122,7 +124,7 @@ def is_on(hass, entity_id=None):
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None):
+            flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -135,6 +137,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_COLOR_TEMP, color_temp),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
+            (ATTR_COLOR_NAME, color_name),
         ] if value is not None
     }
 
@@ -227,6 +230,11 @@ def setup(hass, config):
         if profile:
             params.setdefault(ATTR_XY_COLOR, profile[:2])
             params.setdefault(ATTR_BRIGHTNESS, profile[2])
+
+        color_name = params.pop(ATTR_COLOR_NAME, None)
+
+        if color_name is not None:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
         for light in target_lights:
             light.turn_on(**params)
