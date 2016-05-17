@@ -58,6 +58,7 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual([51, 153, 255, 0],
                          color_util.rgb_hex_to_rgb_list('3399ff00'))
 
+
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):
     """Test color_temperature_mired_to_kelvin."""
 
