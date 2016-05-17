@@ -231,6 +231,11 @@ def setup(hass, config):
             params.setdefault(ATTR_XY_COLOR, profile[:2])
             params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
+        color_name = params.pop(ATTR_COLOR_NAME, None)
+
+        if color_name is not None:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
         for light in target_lights:
             light.turn_on(**params)
 
