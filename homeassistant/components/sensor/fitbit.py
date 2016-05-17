@@ -237,7 +237,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for resource in config.get("monitored_resources",
                                    FITBIT_DEFAULT_RESOURCE_LIST):
             dev.append(FitbitSensor(authd_client, config_path, resource,
-                                    hass.config.temperature_unit))
+                                    hass.config.temperature_unit ==
+                                    TEMP_CELSIUS))
         add_devices(dev)
 
     else:
@@ -315,9 +316,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
-    def __init__(self, client, config_path, resource_type, temperature_unit):
+    def __init__(self, client, config_path, resource_type, is_metric):
         """Initialize the Fitbit sensor."""
-        self.is_metric = temperature_unit
         self.client = client
         self.config_path = config_path
         self.resource_type = resource_type
@@ -333,7 +333,7 @@ class FitbitSensor(Entity):
             try:
                 measurement_system = FITBIT_MEASUREMENTS[self.client.system]
             except KeyError:
-                if self.is_metric is TEMP_CELSIUS:
+                if is_metric:
                     measurement_system = FITBIT_MEASUREMENTS["metric"]
                 else:
                     measurement_system = FITBIT_MEASUREMENTS["en_US"]
