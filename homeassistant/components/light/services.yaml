@@ -16,6 +16,10 @@ turn_on:
       description: Color for the light in RGB-format
       example: '[255, 100, 100]'
 
+    color_name:
+      description: A human readable color name
+      example: 'red'
+
     xy_color:
       description: Color for the light in XY-format
       example: '[0.52, 0.43]'
