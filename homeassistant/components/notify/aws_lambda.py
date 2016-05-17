@@ -50,8 +50,10 @@ def get_service(hass, config):
     del aws_config[CONF_NAME]
     del aws_config[CONF_CONTEXT]
 
-    if aws_config[CONF_PROFILE_NAME]:
-        boto3.setup_default_session(profile_name=aws_config[CONF_PROFILE_NAME])
+    profile = aws_config.get(CONF_PROFILE_NAME)
+
+    if profile is not None:
+        boto3.setup_default_session(profile_name=profile)
         del aws_config[CONF_PROFILE_NAME]
 
     lambda_client = boto3.client("lambda", **aws_config)
