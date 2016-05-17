@@ -33,7 +33,7 @@ DEFAULT_NAME = 'LG TV Remote'
 DEFAULT_PORT = 8080
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "lgtv",
+    vol.Required(CONF_PLATFORM): "lg_netcast",
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
