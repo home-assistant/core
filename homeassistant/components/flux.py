@@ -1,20 +1,19 @@
 """
 Flux for Home-Assistant.
 
-The primary functions in this component were taken from
-https://github.com/KpaBap/hue-flux/
+The RGB to XY function was taken from https://github.com/KpaBap/hue-flux/
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/flux/
 """
 from datetime import timedelta
 import logging
-import math
 import voluptuous as vol
 
 from homeassistant.helpers.event import track_time_change
 from homeassistant.components.light import is_on, turn_on, turn_off
 from homeassistant.components.sun import next_setting, next_rising
+from homeassistant.util.color import color_temperature_to_rgb
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -33,26 +32,23 @@ CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_BEDTIME_CT = 'bedtime_colortemp'
 CONF_BRIGHTNESS = 'brightness'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_LIGHTS): [cv.string],
-    vol.Optional(CONF_WAKETIME): vol.Coerce(str),
-    vol.Optional(CONF_BEDTIME, default="22:00"): vol.Coerce(str),
-    vol.Optional(CONF_TURNOFF, default=False): vol.Coerce(bool),
-    vol.Optional(CONF_AUTO, default=False): vol.Coerce(bool),
-    vol.Optional(CONF_DAY_CT, default=4000): vol.Coerce(int),
-    vol.Optional(CONF_SUNSET_CT, default=3000): vol.Coerce(int),
-    vol.Optional(CONF_BEDTIME_CT, default=1900): vol.Coerce(int),
-    vol.Optional(CONF_BRIGHTNESS, default=90): vol.Coerce(int)
-})
-
-
-def set_lights_xy(hass, lights, x_value, y_value, brightness):
-    """Set color of array of lights."""
-    for light in lights:
-        if is_on(hass, light):
-            turn_on(hass, light,
-                    xy_color=[x_value, y_value],
-                    brightness=brightness)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_LIGHTS): [cv.string],
+        vol.Optional(CONF_WAKETIME, default=None): cv.time,
+        vol.Optional(CONF_BEDTIME, default="22:00"): cv.time,
+        vol.Optional(CONF_TURNOFF, default=False): cv.boolean,
+        vol.Optional(CONF_AUTO, default=False): cv.boolean,
+        vol.Optional(CONF_DAY_CT, default=4000):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_SUNSET_CT, default=3000):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_BEDTIME_CT, default=1900):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_BRIGHTNESS, default=90):
+            vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 # https://github.com/KpaBap/hue-flux/blob/master/hue-flux.py
@@ -93,47 +89,18 @@ def rgb_to_xy(red, green, blue):
     return round(x_value, 3), round(y_value, 3)
 
 
-# https://github.com/KpaBap/hue-flux/blob/master/hue-flux.py
-def colortemp_k_to_rgb(temp):
-    """Convert temp to RGB."""
-    temp = temp / 100
-
-    if temp <= 66:
-        red = 255
-    else:
-        red = temp - 60
-        red = 329.698727446 * (red ** -0.1332047592)
-        red = 0 if red < 0 else red
-        red = 255 if red > 255 else red
-
-    if temp <= 66:
-        green = temp
-        green = 99.4708025861 * math.log(green) - 161.1195681661
-        green = 0 if green < 0 else green
-        green = 255 if green > 255 else green
-    else:
-        green = temp - 60
-        green = 288.1221695283 * (green ** -0.0755148492)
-        green = 0 if green < 0 else green
-        green = 255 if green > 255 else green
-
-    if temp >= 66:
-        blue = 255
-    else:
-        if temp <= 19:
-            blue = 0
-        else:
-            blue = temp - 10
-            blue = 138.5177312231 * math.log(blue) - 305.0447927307
-            blue = 0 if blue < 0 else blue
-            blue = 255 if blue > 255 else blue
-
-    return red, green, blue
+def set_lights_xy(hass, lights, x_value, y_value, brightness):
+    """Set color of array of lights."""
+    for light in lights:
+        if is_on(hass, light):
+            turn_on(hass, light,
+                    xy_color=[x_value, y_value],
+                    brightness=brightness)
 
 
 def setup(hass, config):
     """Flux setup."""
-    flux = Flux(hass, config)
+    flux = Flux(hass, config.get(DOMAIN))
 
     def update(call=None):
         """Update lights."""
@@ -149,22 +116,22 @@ class Flux(object):
 
     def __init__(self, hass, config):
         """Initialize Flux class."""
-        self.lights = config[DOMAIN][0].get(CONF_LIGHTS)
+        self.lights = config[CONF_LIGHTS]
         self.hass = hass
-        self.waketime = config[DOMAIN][0].get(CONF_WAKETIME)
-        self.bedtime = config[DOMAIN][0].get(CONF_BEDTIME)
-        self.turn_off = config[DOMAIN][0].get(CONF_TURNOFF)
-        self.day_colortemp = config[DOMAIN][0].get(CONF_DAY_CT)
-        self.sunset_colortemp = config[DOMAIN][0].get(CONF_SUNSET_CT)
-        self.bedtime_colortemp = config[DOMAIN][0].get(CONF_BEDTIME_CT)
-        self.brightness = config[DOMAIN][0].get(CONF_BRIGHTNESS)
-        if config[DOMAIN][0].get(CONF_AUTO):
+        self.waketime = config[CONF_WAKETIME]
+        self.bedtime = config[CONF_BEDTIME]
+        self.turn_off = config[CONF_TURNOFF]
+        self.day_colortemp = config[CONF_DAY_CT]
+        self.sunset_colortemp = config[CONF_SUNSET_CT]
+        self.bedtime_colortemp = config[CONF_BEDTIME_CT]
+        self.brightness = config[CONF_BRIGHTNESS]
+        if config[CONF_AUTO]:
             sunrise = self.sunrise()
             track_time_change(hass, self.update,
                               second=[0, 10, 20, 30, 40, 50],
                               minute=list(range(sunrise.minute, 59)),
                               hour=sunrise.hour)
-            bedtime_hour = 1 + int(self.bedtime.split(":")[0])
+            bedtime_hour = 1 + self.bedtime.hour
             track_time_change(hass, self.update,
                               second=[0, 10, 20, 30, 40, 50],
                               hour=list(range(sunrise.hour + 1, bedtime_hour)))
@@ -177,8 +144,8 @@ class Flux(object):
         sunrise = self.sunrise()
         if sunset.day > now.day:
             sunset = sunset - timedelta(days=1)
-        bedtime = dt_util.now().replace(hour=int(self.bedtime.split(":")[0]),
-                                        minute=int(self.bedtime.split(":")[1]),
+        bedtime = dt_util.now().replace(hour=int(self.bedtime.hour),
+                                        minute=int(self.bedtime.minute),
                                         second=0)
         if sunrise < now < sunset:
             # Daytime
@@ -188,7 +155,7 @@ class Flux(object):
             percentage_of_day_complete = now_secs / day_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self.day_colortemp - temp_offset
-            x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
+            x_value, y_value = rgb_to_xy(*color_temperature_to_rgb(temp))
             set_lights_xy(self.hass, self.lights, x_value,
                           y_value, self.brightness)
             _LOGGER.info("Lights updated during the day, x:%s y:%s",
@@ -201,7 +168,7 @@ class Flux(object):
             percentage_of_day_complete = now_secs / night_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self.sunset_colortemp - temp_offset
-            x_value, y_value = rgb_to_xy(*colortemp_k_to_rgb(temp))
+            x_value, y_value = rgb_to_xy(*color_temperature_to_rgb(temp))
             set_lights_xy(self.hass, self.lights, x_value,
                           y_value, self.brightness)
             _LOGGER.info("Lights updated at night, x:%s y:%s",
