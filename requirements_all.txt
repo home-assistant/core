@@ -100,9 +100,6 @@ https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip#pylgtv==0.1.2
 # homeassistant.components.switch.thinkingcleaner
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
 
-# homeassistant.components.media_player.lg_netcast
-https://github.com/wokar/pylgnetcast/archive/v0.1.0.zip#pylgnetcast==0.1.0
-
 # homeassistant.components.alarm_control_panel.alarmdotcom
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
@@ -144,6 +141,9 @@ https://github.com/theolind/pymysensors/archive/cc5d0b325e13c2b623fa934f69eea7cd
 
 # homeassistant.components.notify.googlevoice
 https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753fe9f20e3ffa3f7c.zip#pygooglevoice-sms==0.0.1
+
+# homeassistant.components.media_player.lg_netcast
+https://github.com/wokar/pylgnetcast/archive/v0.1.0.zip#pylgnetcast==0.1.0
 
 # homeassistant.components.influxdb
 influxdb==2.12.0
