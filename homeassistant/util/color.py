@@ -1,7 +1,7 @@
 """Color util methods."""
 import math
-# pylint: disable=import-error
-import webcolors
+# pylint: disable=unused-import
+from webcolors import html5_parse_legacy_color as color_name_to_rgb  # noqa
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154
@@ -169,8 +169,3 @@ def color_temperature_mired_to_kelvin(mired_temperature):
 def color_temperature_kelvin_to_mired(kelvin_temperature):
     """Convert degrees kelvin to mired shift."""
     return 1000000 / kelvin_temperature
-
-
-def color_name_to_rgb(color_name):
-    """Convert a human readable color name to an RGB 3-tuple."""
-    return webcolors.html5_parse_legacy_color(color_name)
