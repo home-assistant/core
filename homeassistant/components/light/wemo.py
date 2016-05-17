@@ -10,8 +10,8 @@ from datetime import timedelta
 import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_COLOR_NAME,
-    ATTR_TRANSITION, ATTR_XY_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_XY_COLOR)
 
 DEPENDENCIES = ['wemo']
 
@@ -105,10 +105,6 @@ class WemoLight(Light):
         elif ATTR_RGB_COLOR in kwargs:
             xycolor = color_util.color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-        elif ATTR_COLOR_NAME in kwargs:
-            rgb = color_util.color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
-            xycolor = color_util.color_RGB_to_xy(
-                *(int(val) for val in rgb))
         else:
             xycolor = None
 

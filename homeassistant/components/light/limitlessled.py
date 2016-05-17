@@ -8,9 +8,7 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_COLOR_NAME, ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE,
-    FLASH_LONG, Light)
-from homeassistant.util.color import color_name_to_rgb
+    ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG, Light)
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['limitlessled==1.0.0']
@@ -213,9 +211,6 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
         if ATTR_RGB_COLOR in kwargs:
             self._color = kwargs[ATTR_RGB_COLOR]
-        elif ATTR_COLOR_NAME in kwargs:
-            rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
-            self._color = rgb
         # White is a special case.
         if min(self._color) > 256 - RGB_BOUNDARY:
             pipeline.white()

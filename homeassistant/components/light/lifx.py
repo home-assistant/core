@@ -10,10 +10,8 @@ import colorsys
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_COLOR_NAME,
-    ATTR_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util.color import color_name_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,9 +198,6 @@ class LIFXLight(Light):
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
                 convert_rgb_to_hsv(kwargs[ATTR_RGB_COLOR])
-        elif ATTR_COLOR_NAME in kwargs:
-            rgb = color_name_to_rgb(kwargs[ATTR_COLOR_NAME])
-            hue, saturation, brightness = convert_rgb_to_hsv(rgb)
         else:
             hue = self._hue
             saturation = self._sat
