@@ -29,13 +29,13 @@ def color_RGB_to_xy(R, G, B):
             2.4) if (B > 0.04045) else (B / 12.92)
 
     # Wide RGB D65 conversion formula
-    x = R * 0.664511 + G * 0.154324 + B * 0.162028
-    y = R * 0.313881 + G * 0.668433 + B * 0.047685
-    z = R * 0.000088 + G * 0.072310 + B * 0.986039
+    X = R * 0.664511 + G * 0.154324 + B * 0.162028
+    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy
-    cx = x / (x + y + z)
-    cy = y / (x + y + z)
+    cx = X / (X + Y + Z)
+    cy = Y / (X + Y + Z)
 
     return round(cx, 3), round(cy, 3)
 
