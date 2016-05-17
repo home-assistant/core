@@ -100,6 +100,9 @@ https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip#pylgtv==0.1.2
 # homeassistant.components.switch.thinkingcleaner
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
 
+# homeassistant.components.media_player.lg_netcast
+https://github.com/wokar/pylgnetcast/archive/v0.1.0.zip#pylgnetcast==0.1.0
+
 # homeassistant.components.alarm_control_panel.alarmdotcom
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 

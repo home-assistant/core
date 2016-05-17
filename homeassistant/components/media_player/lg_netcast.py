@@ -1,13 +1,11 @@
 """
-Support for LG TV (Netcast 3 or 4).
+Support for LG TV running on NetCast 3 or 4.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.lgtv/
+https://home-assistant.io/components/media_player.lg_netcast/
 """
 from datetime import timedelta
-from http.client import HTTPConnection
 import logging
-from xml.etree import ElementTree
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +18,11 @@ from homeassistant.const import (
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
 import homeassistant.util as util
 
+
 _LOGGER = logging.getLogger(__name__)
+
+REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
+                'v0.1.0.zip#pylgnetcast==0.1.0']
 
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -30,7 +32,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 DEFAULT_NAME = 'LG TV Remote'
-DEFAULT_PORT = 8080
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "lg_netcast",
@@ -43,7 +44,9 @@ PLATFORM_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LG TV platform."""
-    add_devices([LgTVDevice(config)])
+    from pylgnetcast.pylgnetcast import LgNetCastClient
+    client = LgNetCastClient(config[CONF_HOST], config[CONF_ACCESS_TOKEN])
+    add_devices([LgTVDevice(client, config[CONF_NAME])])
 
 
 # pylint: disable=too-many-public-methods, abstract-method
@@ -51,11 +54,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LgTVDevice(MediaPlayerDevice):
     """Representation of a LG TV."""
 
-    def __init__(self, config):
+    def __init__(self, client, name):
         """Initialize the LG TV device."""
-        self._client = LgTVROAPClient(config)
-
-        self._name = config[CONF_NAME]
+        self._client = client
+        self._name = name
         self._muted = False
         # Assume that the TV is in Play mode
         self._playing = True
@@ -80,25 +82,25 @@ class LgTVDevice(MediaPlayerDevice):
         """Retrieve the latest data from the LG TV."""
         try:
             self._state = STATE_PLAYING
-            volume_info = self._client.query_data(LG_QUERY_VOLUME_INFO)
+            volume_info = self._client.query_data('volume_info')
             if volume_info:
                 volume_info = volume_info[0]
-                self._volume = float(volume_info.find(LG_DAT_LEVEL).text)
-                self._muted = volume_info.find(LG_DAT_MUTE).text == 'true'
+                self._volume = float(volume_info.find('level').text)
+                self._muted = volume_info.find('mute').text == 'true'
 
-            channel_info = self._client.query_data(LG_QUERY_CUR_CHANNEL)
+            channel_info = self._client.query_data('cur_channel')
             if channel_info:
                 channel_info = channel_info[0]
-                self._channel_name = channel_info.find(LG_DAT_CH_NAME).text
-                self._program_name = channel_info.find(LG_DAT_PROG_NAME).text
+                self._channel_name = channel_info.find('chname').text
+                self._program_name = channel_info.find('progName').text
 
-            channel_list = self._client.query_data(LG_QUERY_CHANNEL_LIST)
+            channel_list = self._client.query_data('channel_list')
             if channel_list:
-                channel_names = [str(c.find(LG_DAT_CH_NAME).text) for
+                channel_names = [str(c.find('chname').text) for
                                  c in channel_list]
                 self._sources = dict(zip(channel_names, channel_list))
                 # sort source names by the major channel number
-                source_tuples = [(k, self._sources[k].find(LG_DAT_MAJOR).text)
+                source_tuples = [(k, self._sources[k].find('major').text)
                                  for k in self._sources.keys()]
                 sorted_sources = sorted(source_tuples,
                                         key=lambda channel: int(channel[1]))
@@ -158,19 +160,19 @@ class LgTVDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_command(LG_CMD_POWER)
+        self.send_command(1)
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_command(LG_CMD_VOL_UP)
+        self.send_command(24)
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_command(LG_CMD_VOL_DOWN)
+        self.send_command(25)
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_command(LG_CMD_VOL_MUTE)
+        self.send_command(26)
 
     def select_source(self, source):
         """Select input source."""
@@ -187,129 +189,18 @@ class LgTVDevice(MediaPlayerDevice):
         """Send play command."""
         self._playing = True
         self._state = STATE_PLAYING
-        self.send_command(LG_CMD_PLAY)
+        self.send_command(33)
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
         self._state = STATE_PAUSED
-        self.send_command(LG_CMD_PAUSE)
+        self.send_command(34)
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_command(LG_CMD_FAST_FORWARD)
+        self.send_command(36)
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_command(LG_CMD_REWIND)
-
-
-# LG TV remote control commands
-LG_CMD_POWER = 1
-LG_CMD_VOL_UP = 24
-LG_CMD_VOL_DOWN = 25
-LG_CMD_VOL_MUTE = 26
-LG_CMD_PLAY = 33
-LG_CMD_PAUSE = 34
-LG_CMD_FAST_FORWARD = 36
-LG_CMD_REWIND = 37
-# LG TV data queries
-LG_QUERY_VOLUME_INFO = 'volume_info'
-LG_QUERY_CUR_CHANNEL = 'cur_channel'
-LG_QUERY_CHANNEL_LIST = 'channel_list'
-# LG TV data fields
-# volume
-LG_DAT_MUTE = 'mute'
-LG_DAT_LEVEL = 'level'
-# channels
-LG_DAT_MAJOR = 'major'
-LG_DAT_CH_NAME = 'chname'
-LG_DAT_PROG_NAME = 'progName'
-
-
-class LgTVROAPClient(object):
-    """LG TV client using the ROAP protocol.
-
-    The client is inspired by the work of
-    https://github.com/ubaransel/lgcommander
-    """
-
-    HEADER = {"Content-Type": "application/atom+xml"}
-    XML = '<?xml version=\"1.0\" encoding=\"utf-8\"?>'
-    KEY = XML + '<auth><type>AuthKeyReq</type></auth>'
-    AUTH = XML + '<auth><type>%s</type><value>%s</value></auth>'
-    COMMAND = XML + '<command><session>%s</session><type>%s</type>%s</command>'
-
-    def __init__(self, config):
-        """Initialize the LG TV client."""
-        self.host = config[CONF_HOST]
-        self.access_token = config[CONF_ACCESS_TOKEN] if \
-            CONF_ACCESS_TOKEN in config else None
-        self.session = None
-
-    def send_command(self, command):
-        """Send remote control commands to the TV."""
-        if not self.session:
-            self.session = self._get_session_id()
-        if self.session:
-            message = self.COMMAND % (self.session, 'HandleKeyInput',
-                                      '<value>%s</value>' % command)
-            self._send_to_tv(message, 'command')
-
-    def change_channel(self, channel):
-        """Send change channel command to the TV."""
-        if not self.session:
-            self.session = self._get_session_id()
-        if self.session:
-            message = self.COMMAND % (self.session, 'HandleChannelChange',
-                                      ElementTree.tostring(channel,
-                                                           encoding="unicode"))
-            self._send_to_tv(message, 'command')
-
-    def query_data(self, query):
-        """Query status information from the TV."""
-        if not self.session:
-            self.session = self._get_session_id()
-        if self.session:
-            http_response = self._send_to_tv(None, 'data?target=%s' % query)
-            if http_response and http_response.reason == 'OK':
-                data = http_response.read()
-                tree = ElementTree.XML(data)
-                data_list = []
-                for data in tree.iter('data'):
-                    data_list.append(data)
-                return data_list
-
-    def _get_session_id(self):
-        """Get the session key for the TV connection.
-
-        If a pair key is defined the session id is requested otherwise display
-        the pair key on TV.
-        """
-        if not self.access_token:
-            self._display_pair_key()
-            return
-        message = self.AUTH % ('AuthReq', self.access_token)
-        http_response = self._send_to_tv(message, 'auth')
-        if http_response and http_response.reason != "OK":
-            return
-        data = http_response.read()
-        tree = ElementTree.XML(data)
-        session = tree.find('session').text
-        if len(session) >= 8:
-            return session
-
-    def _display_pair_key(self):
-        """Send message to display the pair key on TV screen."""
-        self._send_to_tv(self.KEY, 'auth')
-
-    def _send_to_tv(self, message, message_type):
-        """Send message of given type to the tv."""
-        conn = HTTPConnection(self.host, port=DEFAULT_PORT, timeout=3)
-        if message:
-            conn.request("POST", "/roap/api/%s" % message_type, message,
-                         headers=self.HEADER)
-        else:
-            conn.request("GET", "/roap/api/%s" % message_type,
-                         headers=self.HEADER)
-        return conn.getresponse()
+        self.send_command(37)
