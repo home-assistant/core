@@ -1,10 +1,10 @@
 """The tests for the Logentries component."""
+
 import unittest
 from unittest import mock
 
 import homeassistant.components.logentries as logentries
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
-
 
 class TestLogentries(unittest.TestCase):
     """Test the Logentries component."""
@@ -15,7 +15,6 @@ class TestLogentries(unittest.TestCase):
             'logentries': {
                 'host': 'host',
                 'token': 'secret',
-                'use_ssl': 'False',
             }
         }
         hass = mock.MagicMock()
@@ -79,7 +78,7 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'http://localhost/token/',
+            payload = {'host': 'https://host/noformat/logs/secret',
                        'event': body}
             self.handler_method(event)
             self.mock_post.assert_called_once_with(
