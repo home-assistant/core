@@ -79,7 +79,7 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'https://webhook.logentries.com/noformat/'\
+            payload = {'host': 'https://webhook.logentries.com/noformat/'
                        'logs/token',
                        'event': body}
             self.handler_method(event)
