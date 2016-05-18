@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, EVENT_TIME_CHANGED
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util.color import color_temperature_to_rgb, color_RGB_to_xy
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_LIGHTS = 'lights'
 CONF_START_TIME = 'start_time'
-COCONF_STOP_TIME = 'stop_time'
+CONF_STOP_TIME = 'stop_time'
 CONF_START_CT = 'start_colortemp'
 CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
@@ -32,10 +33,10 @@ CONF_BRIGHTNESS = 'brightness'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'flux',
-    vol.Required(CONF_LIGHTS): [cv.string],
+    vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
     vol.Optional(CONF_START_TIME, default=None): cv.time,
-    vol.Optional(COCONF_STOP_TIME,
+    vol.Optional(CONF_STOP_TIME,
                  default=dt_now().replace(hour=22, minute=0)): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
@@ -54,7 +55,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
         if is_on(hass, light):
             turn_on(hass, light,
                     xy_color=[x_val, y_val],
-                    brightness=brightness)
+                    brightness=brightness,
+                    transition=30)
 
 
 # pylint: disable=unused-argument
@@ -63,12 +65,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config[CONF_NAME]
     lights = config[CONF_LIGHTS]
     start_time = config[CONF_START_TIME]
-    stop_time = config[COCONF_STOP_TIME]
+    stop_time = config[CONF_STOP_TIME]
     start_colortemp = config[CONF_START_CT]
     sunset_colortemp = config[CONF_SUNSET_CT]
     stop_colortemp = config[CONF_STOP_CT]
     brightness = config[CONF_BRIGHTNESS]
-    flux = FluxSwitch(name, hass, False, None, lights, start_time, stop_time,
+    flux = FluxSwitch(name, hass, False, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness)
     add_devices([flux])
@@ -85,27 +87,22 @@ class FluxSwitch(SwitchDevice):
     """Flux switch."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, hass, state, icon, lights, start_time, stop_time,
+    def __init__(self, name, hass, state, lights, start_time, stop_time,
                  start_colortemp, sunset_colortemp, stop_colortemp,
                  brightness):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
         self._state = state
-        self._icon = icon
-        self._assumed = False
         self._lights = lights
-        self._start_time = start_time
+        self._start_time = start_time or None
+        self._start_time = self.sunrise()
         self._stop_time = stop_time
         self._start_colortemp = start_colortemp
         self._sunset_colortemp = sunset_colortemp
         self._stop_colortemp = stop_colortemp
         self._brightness = brightness
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo switch."""
-        return True
+        self.tracker = None
 
     @property
     def name(self):
@@ -113,65 +110,24 @@ class FluxSwitch(SwitchDevice):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def assumed_state(self):
-        """Return if the state is based on assumptions."""
-        return self._assumed
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self._state
 
-    @property
-    def start_time(self):
-        """Return flux start time."""
-        return self._start_time
-
-    @property
-    def stop_time(self):
-        """Return flux stop time."""
-        return self._stop_time
-
-    @property
-    def start_colortemp(self):
-        """Return flux start color temperature."""
-        return self._start_colortemp
-
-    @property
-    def sunset_colortemp(self):
-        """Return flux sunset color temperature."""
-        return self._sunset_colortemp
-
-    @property
-    def stop_colortemp(self):
-        """Return flux stop color temperature."""
-        return self._stop_colortemp
-
-    @property
-    def brightness(self):
-        """Return flux brightness."""
-        return self._brightness
-
     def turn_on(self, **kwargs):
         """Turn on flux."""
         self._state = True
+        self.flux_update()
+        self.tracker = track_time_change(self.hass,
+                                         self.flux_update,
+                                         second=[0, 30])
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
         self._state = False
+        self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self.tracker)
         self.update_ha_state()
-
-    # pylint: disable=too-many-locals
-    def update(self):
-        """Update the lights if switch is on."""
-        if self._state:
-            self.flux_update()
 
     def flux_update(self, now=dt_now()):
         """Update all the lights using flux."""
@@ -179,7 +135,6 @@ class FluxSwitch(SwitchDevice):
         sunrise = self.sunrise()
         if sunset.day > dt_now().day:
             sunset = sunset - timedelta(days=1)
-        _LOGGER.info("Bedtime: %s", self._stop_time)
         stop_time = dt_now().replace(hour=int(self._stop_time.hour),
                                      minute=int(self._stop_time.minute),
                                      second=0)
