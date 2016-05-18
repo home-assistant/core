@@ -79,8 +79,8 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'https://webhook.logentries.com/noformat/\
-            logs/token',
+            payload = {'host': 'https://webhook.logentries.com/noformat/'\
+                       'logs/token',
                        'event': body}
             self.handler_method(event)
             self.mock_post.assert_called_once_with(
