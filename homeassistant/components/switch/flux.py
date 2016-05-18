@@ -14,7 +14,7 @@ from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, EVENT_TIME_CHANGED
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.color import color_temperature_to_rgb, color_RGB_to_xy
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
@@ -118,9 +118,9 @@ class FluxSwitch(SwitchDevice):
         """Turn on flux."""
         self._state = True
         self.flux_update()
-        self.tracker = track_time_change(self.hass,
-                                         self.flux_update,
-                                         second=[0, 30])
+        self.tracker = track_utc_time_change(self.hass,
+                                             self.flux_update,
+                                             second=[0, 30])
         self.update_ha_state()
 
     def turn_off(self, **kwargs):
