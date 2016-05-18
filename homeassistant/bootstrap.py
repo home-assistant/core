@@ -14,6 +14,7 @@ import homeassistant.components as core_components
 import homeassistant.components.group as group
 import homeassistant.config as config_util
 import homeassistant.core as core
+import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 import homeassistant.util.dt as date_util
 import homeassistant.util.location as loc_util
@@ -103,7 +104,7 @@ def _setup_component(hass, domain, config):
             try:
                 config = component.CONFIG_SCHEMA(config)
             except vol.MultipleInvalid as ex:
-                _LOGGER.error('Invalid config for [%s]: %s', domain, ex)
+                cv.log_exception(_LOGGER, ex, domain, config)
                 return False
 
         elif hasattr(component, 'PLATFORM_SCHEMA'):
@@ -113,12 +114,11 @@ def _setup_component(hass, domain, config):
                 try:
                     p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
-                    _LOGGER.error('Invalid platform config for [%s]: %s. %s',
-                                  domain, ex, p_config)
+                    cv.log_exception(_LOGGER, ex, domain, p_config)
                     return False
 
                 # Not all platform components follow same pattern for platforms
-                # Sof if p_name is None we are not going to validate platform
+                # So if p_name is None we are not going to validate platform
                 # (the automation component is one of them)
                 if p_name is None:
                     platforms.append(p_validated)
@@ -135,9 +135,8 @@ def _setup_component(hass, domain, config):
                     try:
                         p_validated = platform.PLATFORM_SCHEMA(p_validated)
                     except vol.MultipleInvalid as ex:
-                        _LOGGER.error(
-                            'Invalid platform config for [%s.%s]: %s. %s',
-                            domain, p_name, ex, p_config)
+                        cv.log_exception(_LOGGER, ex, '{}.{}'
+                                         .format(domain, p_name), p_validated)
                         return False
 
                 platforms.append(p_validated)
@@ -229,11 +228,13 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
+    core_config = config.get(core.DOMAIN, {})
+
     try:
         process_ha_core_config(hass, config_util.CORE_CONFIG_SCHEMA(
-            config.get(core.DOMAIN, {})))
+            core_config))
     except vol.MultipleInvalid as ex:
-        _LOGGER.error('Invalid config for [homeassistant]: %s', ex)
+        cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
         return None
 
     process_ha_config_upgrade(hass)

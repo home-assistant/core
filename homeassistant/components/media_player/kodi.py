@@ -9,7 +9,7 @@ import urllib
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
@@ -19,7 +19,7 @@ REQUIREMENTS = ['jsonrpc-requests==0.2']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -228,6 +228,13 @@ class KodiDevice(MediaPlayerDevice):
     def media_pause(self):
         """Pause the media player."""
         self._set_play_state(False)
+
+    def media_stop(self):
+        """Stop the media player."""
+        players = self._get_players()
+
+        if len(players) != 0:
+            self._server.Player.Stop(players[0]['playerid'])
 
     def _goto(self, direction):
         """Helper method used for previous/next track."""

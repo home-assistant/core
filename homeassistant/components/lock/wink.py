@@ -7,9 +7,9 @@ https://home-assistant.io/components/lock.wink/
 import logging
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 
-REQUIREMENTS = ['python-wink==0.7.5']
+REQUIREMENTS = ['python-wink==0.7.6']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,6 +36,7 @@ class WinkLockDevice(LockDevice):
     def __init__(self, wink):
         """Initialize the lock."""
         self.wink = wink
+        self._battery = self.wink.battery_level
 
     @property
     def unique_id(self):
@@ -68,3 +69,16 @@ class WinkLockDevice(LockDevice):
     def unlock(self, **kwargs):
         """Unlock the device."""
         self.wink.set_state(False)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._battery:
+            return {
+                ATTR_BATTERY_LEVEL: self._battery_level,
+            }
+
+    @property
+    def _battery_level(self):
+        """Return the battery level."""
+        return self.wink.battery_level * 100

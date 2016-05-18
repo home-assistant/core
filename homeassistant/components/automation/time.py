@@ -8,14 +8,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_change
 
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"
-CONF_AFTER = "after"
 
 _LOGGER = logging.getLogger(__name__)
 

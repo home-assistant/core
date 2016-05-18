@@ -8,7 +8,8 @@ from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE)
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    SUN_EVENT_SUNRISE)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -25,6 +26,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 
 
 # Adapted from:
@@ -142,6 +144,23 @@ def time_period_str(value):
 
 
 time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+
+
+def log_exception(logger, ex, domain, config):
+    """Generate log exception for config validation."""
+    message = 'Invalid config for [{}]: '.format(domain)
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join('%s' % m for m in ex.path))
+    else:
+        message += str(ex)
+
+    if hasattr(config, '__line__'):
+        message += " (See {}:{})".format(config.__config_file__,
+                                         config.__line__ or '?')
+
+    logger.error(message)
 
 
 def match_all(value):
@@ -298,7 +317,7 @@ STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
 
 SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'sun',
-    vol.Optional('before'): vol.Any('sunset', 'sunrise'),
+    vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
     vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
     vol.Optional('after_offset'): time_period,
@@ -350,6 +369,8 @@ CONDITION_SCHEMA = vol.Any(
     TEMPLATE_CONDITION_SCHEMA,
     TIME_CONDITION_SCHEMA,
     ZONE_CONDITION_SCHEMA,
+    AND_CONDITION_SCHEMA,
+    OR_CONDITION_SCHEMA,
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({

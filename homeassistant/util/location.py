@@ -63,10 +63,11 @@ def distance(lat1, lon1, lat2, lon2):
 
 def elevation(latitude, longitude):
     """Return elevation for given latitude and longitude."""
-    req = requests.get(ELEVATION_URL, params={
-        'locations': '{},{}'.format(latitude, longitude),
-        'sensor': 'false',
-    })
+    req = requests.get(ELEVATION_URL,
+                       params={'locations': '{},{}'.format(latitude,
+                                                           longitude),
+                               'sensor': 'false'},
+                       timeout=10)
 
     if req.status_code != 200:
         return 0

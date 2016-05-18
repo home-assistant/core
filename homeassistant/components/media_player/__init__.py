@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
+    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
@@ -36,6 +36,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
     discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
+    discovery.SERVICE_ROKU: 'roku',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -82,6 +83,7 @@ SUPPORT_TURN_OFF = 256
 SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
+SUPPORT_STOP = 4096
 
 # simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
@@ -93,6 +95,7 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
     SERVICE_MEDIA_PLAY: 'media_play',
     SERVICE_MEDIA_PAUSE: 'media_pause',
+    SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
     SERVICE_SELECT_SOURCE: 'select_source'
@@ -226,6 +229,12 @@ def media_pause(hass, entity_id=None):
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
+
+
+def media_stop(hass, entity_id=None):
+    """Send the media player the stop command."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
 
 
 def media_next_track(hass, entity_id=None):
@@ -510,6 +519,10 @@ class MediaPlayerDevice(Entity):
         """Send pause command."""
         raise NotImplementedError()
 
+    def media_stop(self):
+        """Send stop command."""
+        raise NotImplementedError()
+
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
@@ -535,6 +548,11 @@ class MediaPlayerDevice(Entity):
     def support_pause(self):
         """Boolean if pause is supported."""
         return bool(self.supported_media_commands & SUPPORT_PAUSE)
+
+    @property
+    def support_stop(self):
+        """Boolean if stop is supported."""
+        return bool(self.supported_media_commands & SUPPORT_STOP)
 
     @property
     def support_seek(self):

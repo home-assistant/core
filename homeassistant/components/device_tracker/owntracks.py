@@ -101,7 +101,7 @@ def setup_scanner(hass, config, see):
             """Execute enter event."""
             zone = hass.states.get("zone.{}".format(location))
             with LOCK:
-                if zone is None and data['t'] == 'b':
+                if zone is None and data.get('t') == 'b':
                     # Not a HA zone, and a beacon so assume mobile
                     beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                     if location not in beacons:

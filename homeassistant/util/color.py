@@ -1,5 +1,7 @@
 """Color util methods."""
 import math
+# pylint: disable=unused-import
+from webcolors import html5_parse_legacy_color as color_name_to_rgb  # noqa
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154

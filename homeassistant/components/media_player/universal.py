@@ -25,7 +25,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON)
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON,
+    SERVICE_MEDIA_STOP)
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.service import call_from_config
 
@@ -383,6 +384,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def media_pause(self):
         """Send pause command."""
         self._call_service(SERVICE_MEDIA_PAUSE)
+
+    def media_stop(self):
+        """Send stop command."""
+        self._call_service(SERVICE_MEDIA_STOP)
 
     def media_previous_track(self):
         """Send previous track command."""

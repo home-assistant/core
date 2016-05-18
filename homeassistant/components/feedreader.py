@@ -7,6 +7,7 @@ https://home-assistant.io/components/feedreader/
 from datetime import datetime
 from logging import getLogger
 import voluptuous as vol
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.event import track_utc_time_change
 
 REQUIREMENTS = ['feedparser==5.2.1']
@@ -19,6 +20,7 @@ CONFIG_SCHEMA = vol.Schema({
         'urls': [vol.Url()],
     }
 }, extra=vol.ALLOW_EXTRA)
+MAX_ENTRIES = 20
 
 
 # pylint: disable=too-few-public-methods
@@ -33,17 +35,17 @@ class FeedManager(object):
         self._firstrun = True
         # Initialize last entry timestamp as epoch time
         self._last_entry_timestamp = datetime.utcfromtimestamp(0).timetuple()
-        _LOGGER.debug('Loading feed %s', self._url)
-        self._update()
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                             lambda _: self._update())
         track_utc_time_change(hass, lambda now: self._update(),
                               minute=0, second=0)
 
     def _log_no_entries(self):
         """Send no entries log at debug level."""
-        _LOGGER.debug('No new entries in feed %s', self._url)
+        _LOGGER.debug('No new entries in feed "%s"', self._url)
 
     def _update(self):
-        """Update the feed and publish new entries in the event bus."""
+        """Update the feed and publish new entries to the event bus."""
         import feedparser
         _LOGGER.info('Fetching new data from feed "%s"', self._url)
         self._feed = feedparser.parse(self._url,
@@ -52,16 +54,20 @@ class FeedManager(object):
                                       modified=None if not self._feed
                                       else self._feed.get('modified'))
         if not self._feed:
-            _LOGGER.error('Error fetching feed data from %s', self._url)
+            _LOGGER.error('Error fetching feed data from "%s"', self._url)
         else:
             if self._feed.bozo != 0:
-                _LOGGER.error('Error parsing feed %s', self._url)
+                _LOGGER.error('Error parsing feed "%s"', self._url)
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
             elif len(self._feed.entries) > 0:
-                _LOGGER.debug('%s entri(es) available in feed %s',
+                _LOGGER.debug('%s entri(es) available in feed "%s"',
                               len(self._feed.entries),
                               self._url)
+                if len(self._feed.entries) > MAX_ENTRIES:
+                    _LOGGER.debug('Publishing only the first %s entries '
+                                  'in feed "%s"', MAX_ENTRIES, self._url)
+                    self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
                 self._publish_new_entries()
             else:
                 self._log_no_entries()
@@ -91,7 +97,7 @@ class FeedManager(object):
                 self._update_and_fire_entry(entry)
                 new_entries = True
             else:
-                _LOGGER.debug('Entry %s already processed', entry.title)
+                _LOGGER.debug('Entry "%s" already processed', entry.title)
         if not new_entries:
             self._log_no_entries()
         self._firstrun = False

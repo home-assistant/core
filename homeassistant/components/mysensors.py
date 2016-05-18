@@ -8,10 +8,12 @@ import logging
 import socket
 
 import homeassistant.bootstrap as bootstrap
-from homeassistant.const import (ATTR_DISCOVERED, ATTR_SERVICE,
-                                 CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
+from homeassistant.const import (ATTR_BATTERY_LEVEL, ATTR_DISCOVERED,
+                                 ATTR_SERVICE, CONF_OPTIMISTIC,
+                                 EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 EVENT_PLATFORM_DISCOVERED, TEMP_CELSIUS)
+                                 EVENT_PLATFORM_DISCOVERED, STATE_OFF,
+                                 STATE_ON, TEMP_CELSIUS)
 from homeassistant.helpers import validate_config
 
 CONF_GATEWAYS = 'gateways'
@@ -170,6 +172,8 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
 class GatewayWrapper(object):
     """Gateway wrapper class."""
 
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, gateway, version, optimistic):
         """Setup class attributes on instantiation.
 
@@ -182,14 +186,12 @@ class GatewayWrapper(object):
         _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
         version (str): Version of mysensors API.
         platform_callbacks (list): Callback functions, one per platform.
-        const (module): Mysensors API constants.
         optimistic (bool): Send values to actuators without feedback state.
         __initialised (bool): True if GatewayWrapper is initialised.
         """
         self._wrapped_gateway = gateway
         self.version = version
         self.platform_callbacks = []
-        self.const = self.get_const()
         self.optimistic = optimistic
         self.__initialised = True
 
@@ -197,9 +199,9 @@ class GatewayWrapper(object):
         """See if this object has attribute name."""
         # Do not use hasattr, it goes into infinite recurrsion
         if name in self.__dict__:
-            # this object has it
+            # This object has the attribute.
             return getattr(self, name)
-        # proxy to the wrapped object
+        # The wrapped object has the attribute.
         return getattr(self._wrapped_gateway, name)
 
     def __setattr__(self, name, value):
@@ -211,14 +213,6 @@ class GatewayWrapper(object):
         else:
             object.__setattr__(self._wrapped_gateway, name, value)
 
-    def get_const(self):
-        """Get mysensors API constants."""
-        if self.version == '1.5':
-            import mysensors.const_15 as const
-        else:
-            import mysensors.const_14 as const
-        return const
-
     def callback_factory(self):
         """Return a new callback function."""
         def node_update(update_type, node_id):
@@ -228,3 +222,99 @@ class GatewayWrapper(object):
                 callback(self, node_id)
 
         return node_update
+
+
+class MySensorsDeviceEntity(object):
+    """Represent a MySensors entity."""
+
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
+
+    def __init__(
+            self, gateway, node_id, child_id, name, value_type, child_type):
+        """
+        Setup class attributes on instantiation.
+
+        Args:
+        gateway (GatewayWrapper): Gateway object.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        name (str): Entity name.
+        value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
+
+        Attributes:
+        gateway (GatewayWrapper): Gateway object.
+        node_id (str): Id of node.
+        child_id (str): Id of child.
+        _name (str): Entity name.
+        value_type (str): Value type of child. Value is entity state.
+        child_type (str): Child type of child.
+        battery_level (int): Node battery level.
+        _values (dict): Child values. Non state values set as state attributes.
+        mysensors (module): Mysensors main component module.
+        """
+        self.gateway = gateway
+        self.node_id = node_id
+        self.child_id = child_id
+        self._name = name
+        self.value_type = value_type
+        self.child_type = child_type
+        self.battery_level = 0
+        self._values = {}
+
+    @property
+    def should_poll(self):
+        """Mysensor gateway pushes its state to HA."""
+        return False
+
+    @property
+    def name(self):
+        """The name of this entity."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        address = getattr(self.gateway, 'server_address', None)
+        if address:
+            device = '{}:{}'.format(address[0], address[1])
+        else:
+            device = self.gateway.port
+        attr = {
+            ATTR_DEVICE: device,
+            ATTR_NODE_ID: self.node_id,
+            ATTR_CHILD_ID: self.child_id,
+            ATTR_BATTERY_LEVEL: self.battery_level,
+        }
+
+        set_req = self.gateway.const.SetReq
+
+        for value_type, value in self._values.items():
+            try:
+                attr[set_req(value_type).name] = value
+            except ValueError:
+                _LOGGER.error('value_type %s is not valid for mysensors '
+                              'version %s', value_type,
+                              self.gateway.version)
+        return attr
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.value_type in self._values
+
+    def update(self):
+        """Update the controller with the latest value from a sensor."""
+        node = self.gateway.sensors[self.node_id]
+        child = node.children[self.child_id]
+        self.battery_level = node.battery_level
+        set_req = self.gateway.const.SetReq
+        for value_type, value in child.values.items():
+            _LOGGER.debug(
+                "%s: value_type %s, value = %s", self._name, value_type, value)
+            if value_type in (set_req.V_ARMED, set_req.V_LIGHT,
+                              set_req.V_LOCK_STATUS, set_req.V_TRIPPED):
+                self._values[value_type] = (
+                    STATE_ON if int(value) == 1 else STATE_OFF)
+            else:
+                self._values[value_type] = value

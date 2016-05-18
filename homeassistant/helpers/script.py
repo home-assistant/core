@@ -118,7 +118,7 @@ class Script():
     def _check_condition(self, action, variables):
         """Test if condition is matching."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
-        check = condition.from_config(action)(self.hass, False)
+        check = condition.from_config(action)(self.hass, variables)
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 

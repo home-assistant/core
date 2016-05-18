@@ -86,6 +86,14 @@ media_pause:
       description: Name(s) of entities to pause on
       example: 'media_player.living_room_sonos'
 
+media_stop:
+  description: Send the media player the stop command.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to stop on
+      example: 'media_player.living_room_sonos'
+
 media_next_track:
   description: Send the media player the command for next track.
 

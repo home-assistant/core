@@ -39,6 +39,9 @@ CONF_KEEPALIVE = 'keepalive'
 CONF_USERNAME = 'username'
 CONF_PASSWORD = 'password'
 CONF_CERTIFICATE = 'certificate'
+CONF_CLIENT_KEY = 'client_key'
+CONF_CLIENT_CERT = 'client_cert'
+CONF_TLS_INSECURE = 'tls_insecure'
 CONF_PROTOCOL = 'protocol'
 
 CONF_STATE_TOPIC = 'state_topic'
@@ -78,6 +81,9 @@ def valid_publish_topic(value):
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 _HBMQTT_CONFIG_SCHEMA = vol.Schema(dict)
 
+CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
+                      'the mqtt broker config'
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_CLIENT_ID): cv.string,
@@ -89,6 +95,11 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
+                      msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
+        vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): _HBMQTT_CONFIG_SCHEMA,
@@ -192,19 +203,26 @@ def setup(hass, config):
 
     broker_config = _setup_server(hass, config)
 
+    broker_in_conf = True if CONF_BROKER in conf else False
+
     # Only auto config if no server config was passed in
     if broker_config and CONF_EMBEDDED not in conf:
         broker, port, username, password, certificate, protocol = broker_config
+        # Embedded broker doesn't have some ssl variables
+        client_key, client_cert, tls_insecure = None, None, None
     elif not broker_config and CONF_BROKER not in conf:
         _LOGGER.error('Unable to start broker and auto-configure MQTT.')
         return False
 
-    if CONF_BROKER in conf:
+    if broker_in_conf:
         broker = conf[CONF_BROKER]
         port = conf[CONF_PORT]
         username = conf.get(CONF_USERNAME)
         password = conf.get(CONF_PASSWORD)
         certificate = conf.get(CONF_CERTIFICATE)
+        client_key = conf.get(CONF_CLIENT_KEY)
+        client_cert = conf.get(CONF_CLIENT_CERT)
+        tls_insecure = conf.get(CONF_TLS_INSECURE)
         protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
@@ -215,8 +233,9 @@ def setup(hass, config):
 
     global MQTT_CLIENT
     try:
-        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive, username,
-                           password, certificate, protocol)
+        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
+                           username, password, certificate, client_key,
+                           client_cert, tls_insecure, protocol)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker "
@@ -267,7 +286,8 @@ class MQTT(object):
     """Home Assistant MQTT client."""
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
-                 password, certificate, protocol):
+                 password, certificate, client_key, client_cert,
+                 tls_insecure, protocol):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -287,8 +307,13 @@ class MQTT(object):
 
         if username is not None:
             self._mqttc.username_pw_set(username, password)
+
         if certificate is not None:
-            self._mqttc.tls_set(certificate)
+            self._mqttc.tls_set(certificate, certfile=client_cert,
+                                keyfile=client_key)
+
+        if tls_insecure is not None:
+            self._mqttc.tls_insecure_set(tls_insecure)
 
         self._mqttc.on_subscribe = self._mqtt_on_subscribe
         self._mqttc.on_unsubscribe = self._mqtt_on_unsubscribe
@@ -363,6 +388,8 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
+        _LOGGER.debug("received message on %s: %s",
+                      msg.topic, msg.payload.decode('utf-8'))
         self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
             ATTR_TOPIC: msg.topic,
             ATTR_QOS: msg.qos,

@@ -8,20 +8,15 @@ from homeassistant.components import (
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
-    WEEKDAYS)
+    WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
+    CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
+    CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import render
 import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = '{}_from_config'
-CONF_BELOW = 'below'
-CONF_ABOVE = 'above'
-CONF_STATE = 'state'
-CONF_ZONE = 'zone'
-
-EVENT_SUNRISE = 'sunrise'
-EVENT_SUNSET = 'sunset'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +42,15 @@ def and_from_config(config, config_validation=True):
 
     def if_and_condition(hass, variables=None):
         """Test and condition."""
-        return all(check(hass, variables) for check in checks)
+        for check in checks:
+            try:
+                if not check(hass, variables):
+                    return False
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.warning('Error during and-condition: %s', ex)
+                return False
+
+        return True
 
     return if_and_condition
 
@@ -60,7 +63,14 @@ def or_from_config(config, config_validation=True):
 
     def if_or_condition(hass, variables=None):
         """Test and condition."""
-        return any(check(hass, variables) for check in checks)
+        for check in checks:
+            try:
+                if check(hass, variables):
+                    return True
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.warning('Error during or-condition: %s', ex)
+
+        return False
 
     return if_or_condition
 
@@ -91,8 +101,6 @@ def numeric_state(hass, entity, below=None, above=None, value_template=None,
     except ValueError:
         _LOGGER.warning("Value cannot be processed as a number: %s", value)
         return False
-
-    print(below, value, above)
 
     if below is not None and value > below:
         return False
@@ -157,20 +165,20 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    if before == EVENT_SUNRISE and now > (sun_cmp.next_rising(hass) +
-                                          before_offset).time():
+    if before == SUN_EVENT_SUNRISE and now > (sun_cmp.next_rising(hass) +
+                                              before_offset).time():
         return False
 
-    elif before == EVENT_SUNSET and now > (sun_cmp.next_setting(hass) +
-                                           before_offset).time():
+    elif before == SUN_EVENT_SUNSET and now > (sun_cmp.next_setting(hass) +
+                                               before_offset).time():
         return False
 
-    if after == EVENT_SUNRISE and now < (sun_cmp.next_rising(hass) +
-                                         after_offset).time():
+    if after == SUN_EVENT_SUNRISE and now < (sun_cmp.next_rising(hass) +
+                                             after_offset).time():
         return False
 
-    elif after == EVENT_SUNSET and now < (sun_cmp.next_setting(hass) +
-                                          after_offset).time():
+    elif after == SUN_EVENT_SUNSET and now < (sun_cmp.next_setting(hass) +
+                                              after_offset).time():
         return False
 
     return True
@@ -241,9 +249,9 @@ def time_from_config(config, config_validation=True):
     """Wrap action method with time based condition."""
     if config_validation:
         config = cv.TIME_CONDITION_SCHEMA(config)
-    before = config.get('before')
-    after = config.get('after')
-    weekday = config.get('weekday')
+    before = config.get(CONF_BEFORE)
+    after = config.get(CONF_AFTER)
+    weekday = config.get(CONF_WEEKDAY)
 
     def time_if(hass, variables=None):
         """Validate time based if-condition."""
@@ -281,7 +289,7 @@ def zone_from_config(config, config_validation=True):
     if config_validation:
         config = cv.ZONE_CONDITION_SCHEMA(config)
     entity_id = config.get(CONF_ENTITY_ID)
-    zone_entity_id = config.get('zone')
+    zone_entity_id = config.get(CONF_ZONE)
 
     def if_in_zone(hass, variables=None):
         """Test if condition."""

@@ -83,3 +83,5 @@ venv
 # vimmy stuff
 *.swp
 *.swo
+
+ctags.tmp
