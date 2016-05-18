@@ -151,6 +151,13 @@ def daemonize():
     if pid > 0:
         sys.exit(0)
 
+    # redirect standard file descriptors to devnull
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.dup2(open(os.devnull, 'r').fileno(), sys.stdin.fileno())
+    os.dup2(open(os.devnull, 'a+').fileno(), sys.stdout.fileno())
+    os.dup2(open(os.devnull, 'a+').fileno(), sys.stderr.fileno())
+
 
 def check_pid(pid_file):
     """Check that HA is not already running."""
@@ -234,15 +241,14 @@ def setup_and_run_hass(config_dir, args, top_process=False):
             'demo': {}
         }
         hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, daemon=args.daemon,
-            verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days)
+            config, config_dir=config_dir, verbose=args.verbose,
+            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
-            config_file, daemon=args.daemon, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
+            config_file, verbose=args.verbose, skip_pip=args.skip_pip,
+            log_rotate_days=args.log_rotate_days)
 
     if hass is None:
         return
