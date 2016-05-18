@@ -21,6 +21,7 @@ DEFAULT_HOST = 'https://webhook.logentries.com/noformat/logs/'
 
 CONF_TOKEN = 'token'
 
+
 def setup(hass, config):
     """Setup the Logentries component."""
     if not validate_config(config, {DOMAIN: ['token']}, _LOGGER):

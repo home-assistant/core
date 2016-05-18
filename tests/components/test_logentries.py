@@ -6,6 +6,7 @@ from unittest import mock
 import homeassistant.components.logentries as logentries
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
+
 class TestLogentries(unittest.TestCase):
     """Test the Logentries component."""
 
@@ -28,7 +29,7 @@ class TestLogentries(unittest.TestCase):
         config = {
             'logentries': {
                 'host': 'host',
-                'token': 'secret',
+                'token': 'token',
             }
         }
         hass = mock.MagicMock()
@@ -44,8 +45,8 @@ class TestLogentries(unittest.TestCase):
         mock_requests.exceptions.RequestException = self.mock_request_exception
         config = {
             'logentries': {
-                'host': 'host',
-                'token': '37fdde77-530c-4ec1-b998-7021b8cf1be0'
+                'host': 'https://webhook.logentries.com/noformat/logs/token',
+                'token': 'token'
             }
         }
         self.hass = mock.MagicMock()
@@ -78,9 +79,10 @@ class TestLogentries(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
-            payload = {'host': 'https://host/noformat/logs/',
+            payload = {'host': 'https://webhook.logentries.com/noformat/ \
+                        logs/token',
                        'event': body}
             self.handler_method(event)
             self.mock_post.assert_called_once_with(
-                payload['host'], data=payload)
+                payload['host'], data=payload, timeout=10)
             self.mock_post.reset_mock()
