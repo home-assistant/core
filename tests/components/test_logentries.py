@@ -45,7 +45,7 @@ class TestLogentries(unittest.TestCase):
         config = {
             'logentries': {
                 'host': 'host',
-                'token': 'secret',
+                'token': '37fdde77-530c-4ec1-b998-7021b8cf1be0'
             }
         }
         self.hass = mock.MagicMock()
