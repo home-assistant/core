@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, EVENT_TIME_CHANGED
+from homeassistant.const import CONF_NAME, EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.color import color_temperature_to_rgb as temp_to_rgb
 from homeassistant.util.color import color_RGB_to_xy
@@ -32,22 +32,21 @@ CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'flux',
-    vol.Required(CONF_LIGHTS): cv.entity_ids,
-    vol.Optional(CONF_NAME, default="Flux"): cv.string,
-    vol.Optional(CONF_START_TIME, default=None): cv.time,
-    vol.Optional(CONF_STOP_TIME,
-                 default=dt_now().replace(hour=22, minute=0)): cv.time,
-    vol.Optional(CONF_START_CT, default=4000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_SUNSET_CT, default=3000):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_STOP_CT, default=1900):
-        vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_BRIGHTNESS, default=None):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
-})
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_LIGHTS): cv.entity_ids,
+        vol.Optional(CONF_START_TIME): cv.time,
+        vol.Optional(CONF_STOP_TIME): cv.time,
+        vol.Optional(CONF_START_CT):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_SUNSET_CT):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_STOP_CT):
+            vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
+        vol.Optional(CONF_BRIGHTNESS):
+            vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def set_lights_xy(hass, lights, x_val, y_val, brightness):
@@ -63,14 +62,15 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the demo switches."""
-    name = config[CONF_NAME]
-    lights = config[CONF_LIGHTS]
-    start_time = config[CONF_START_TIME]
-    stop_time = config[CONF_STOP_TIME]
-    start_colortemp = config[CONF_START_CT]
-    sunset_colortemp = config[CONF_SUNSET_CT]
-    stop_colortemp = config[CONF_STOP_CT]
-    brightness = config[CONF_BRIGHTNESS]
+    name = config.get(CONF_NAME)
+    lights = config.get(CONF_LIGHTS)
+    start_time = config.get(CONF_START_TIME)
+    stop_time = config.get(CONF_STOP_TIME) or dt_now().replace(hour=22,
+                                                               minute=0)
+    start_colortemp = config.get(CONF_START_CT) or 4000
+    sunset_colortemp = config.get(CONF_SUNSET_CT) or 3000
+    stop_colortemp = config.get(CONF_STOP_CT) or 1900
+    brightness = config.get(CONF_BRIGHTNESS)
     flux = FluxSwitch(name, hass, False, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness)
