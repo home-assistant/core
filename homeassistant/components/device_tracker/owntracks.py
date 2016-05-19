@@ -53,6 +53,12 @@ def setup_scanner(hass, config, see):
                           'accuracy %s is not met: %s',
                           data_type, max_gps_accuracy, data)
             return None
+        if convert(data.get('acc'), float, 1.0) == 0.0:
+            _LOGGER.debug('Skipping %s update because GPS accuracy'
+                          'is zero',
+                          data_type)
+            return None
+
         return data
 
     def owntracks_location_update(topic, payload, qos):
