@@ -55,6 +55,21 @@ LOCATION_MESSAGE_INACCURATE = {
     'tst': 1,
     'vel': 0}
 
+LOCATION_MESSAGE_ZERO_ACCURACY = {
+    'batt': 92,
+    'cog': 248,
+    'tid': 'user',
+    'lon': 2.0,
+    't': 'u',
+    'alt': 27,
+    'acc': 0,
+    'p': 101.3977584838867,
+    'vac': 4,
+    'lat': 6.0,
+    '_type': 'location',
+    'tst': 1,
+    'vel': 0}
+
 REGION_ENTER_MESSAGE = {
     'lon': 1.0,
     'event': 'enter',
@@ -204,6 +219,14 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_latitude(2.0)
         self.assert_location_longitude(1.0)
 
+    def test_location_zero_accuracy_gps(self):
+        """Ignore the location for zero accuracy GPS information."""
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
+        self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE_ZERO_ACCURACY)
+
+        self.assert_location_latitude(2.0)
+        self.assert_location_longitude(1.0)
+
     def test_event_entry_exit(self):
         """Test the entry event."""
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
@@ -226,6 +249,20 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assert_location_latitude(2.0)
         self.assert_location_accuracy(60.0)
         self.assert_location_state('outer')
+
+        # Left clean zone state
+        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+
+    def test_event_with_spaces(self):
+        """Test the entry event."""
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "inner 2"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner_2')
+
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = "inner 2"
+        self.send_message(EVENT_TOPIC, message)
 
         # Left clean zone state
         self.assertFalse(owntracks.REGIONS_ENTERED[USER])
