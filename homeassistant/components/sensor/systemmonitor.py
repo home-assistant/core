@@ -10,7 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['psutil==4.1.0']
+REQUIREMENTS = ['psutil==4.2.0']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -24,9 +24,9 @@ SENSOR_TYPES = {
     'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
     'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
     'network_out': ['Sent', 'MiB', 'mdi:server-network'],
-    'network_in': ['Recieved', 'MiB', 'mdi:server-network'],
+    'network_in': ['Received', 'MiB', 'mdi:server-network'],
     'packets_out': ['Packets sent', '', 'mdi:server-network'],
-    'packets_in': ['Packets recieved', '', 'mdi:server-network'],
+    'packets_in': ['Packets received', '', 'mdi:server-network'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last Boot', '', 'mdi:clock'],

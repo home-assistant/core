@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED)
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.6.6']
+REQUIREMENTS = ['netdisco==0.6.7']
 
 SCAN_INTERVAL = 300  # seconds
 
@@ -29,6 +29,7 @@ SERVICE_SONOS = 'sonos'
 SERVICE_PLEX = 'plex_mediaserver'
 SERVICE_SQUEEZEBOX = 'logitech_mediaserver'
 SERVICE_PANASONIC_VIERA = 'panasonic_viera'
+SERVICE_ROKU = 'roku'
 
 SERVICE_HANDLERS = {
     SERVICE_WEMO: "wemo",
@@ -39,6 +40,7 @@ SERVICE_HANDLERS = {
     SERVICE_PLEX: 'media_player',
     SERVICE_SQUEEZEBOX: 'media_player',
     SERVICE_PANASONIC_VIERA: 'media_player',
+    SERVICE_ROKU: 'media_player',
 }
 
 
