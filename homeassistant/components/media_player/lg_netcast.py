@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player.lg_netcast/
 from datetime import timedelta
 import logging
 
+from requests import RequestException
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
@@ -71,15 +72,17 @@ class LgTVDevice(MediaPlayerDevice):
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
+        from pylgnetcast import LgNetCastError
         try:
             with self._client as client:
                 client.send_command(command)
-        except Exception:
+        except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
+        from pylgnetcast import LgNetCastError
         try:
             with self._client as client:
                 self._state = STATE_PLAYING
@@ -106,7 +109,7 @@ class LgTVDevice(MediaPlayerDevice):
                     sorted_sources = sorted(
                         source_tuples, key=lambda channel: int(channel[1]))
                     self._source_names = [n for n, k in sorted_sources]
-        except Exception:
+        except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
     @property
