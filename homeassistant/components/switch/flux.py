@@ -15,7 +15,8 @@ from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util.color import color_temperature_to_rgb, color_RGB_to_xy
+from homeassistant.util.color import color_temperature_to_rgb as temp_to_rgb
+from homeassistant.util.color import color_RGB_to_xy
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
@@ -44,7 +45,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_STOP_CT, default=1900):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
-    vol.Optional(CONF_BRIGHTNESS, default=90):
+    vol.Optional(CONF_BRIGHTNESS, default=None):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
 })
 
@@ -95,7 +96,7 @@ class FluxSwitch(SwitchDevice):
         self.hass = hass
         self._state = state
         self._lights = lights
-        self._start_time = start_time or None
+        self._start_time = start_time
         self._start_time = self.sunrise()
         self._stop_time = stop_time
         self._start_colortemp = start_colortemp
@@ -129,6 +130,7 @@ class FluxSwitch(SwitchDevice):
         self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self.tracker)
         self.update_ha_state()
 
+    # pylint: disable=too-many-locals
     def flux_update(self, now=dt_now()):
         """Update all the lights using flux."""
         sunset = next_setting(self.hass, SUN)
@@ -138,7 +140,9 @@ class FluxSwitch(SwitchDevice):
         stop_time = dt_now().replace(hour=int(self._stop_time.hour),
                                      minute=int(self._stop_time.minute),
                                      second=0)
-        if sunrise < dt_now() < sunset:
+        if dt_now() < sunrise:
+            stop_time = stop_time - timedelta(days=1)
+        if self._start_time < dt_now() < sunset:
             # Daytime
             temp_range = abs(self._start_colortemp -
                              self._sunset_colortemp)
@@ -149,23 +153,26 @@ class FluxSwitch(SwitchDevice):
             percentage_of_day_complete = seconds_from_sunrise / day_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self._start_colortemp - temp_offset
-            x_val, y_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+            x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
+            brightness = self._brightness if self._brightness else b_val
             set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, self._brightness)
+                          y_val, brightness)
             _LOGGER.info("Lights updated during the day, x:%s y:%s",
                          x_val, y_val)
-        elif sunset < dt_now() < stop_time:
+        else:
             # Nightime
+            now_time = dt_now() if dt_now() < stop_time else stop_time
             temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
             night_length = int(stop_time.timestamp() - sunset.timestamp())
-            seconds_from_sunset = int(dt_now().timestamp() -
+            seconds_from_sunset = int(now_time.timestamp() -
                                       sunset.timestamp())
             percentage_of_day_complete = seconds_from_sunset / night_length
             temp_offset = temp_range * percentage_of_day_complete
             temp = self._sunset_colortemp - temp_offset
-            x_val, y_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
+            x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
+            brightness = self._brightness if self._brightness else b_val
             set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, self._brightness)
+                          y_val, brightness)
             _LOGGER.info("Lights updated at night, x:%s y:%s",
                          x_val, y_val)
 
