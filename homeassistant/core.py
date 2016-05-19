@@ -98,6 +98,8 @@ class HomeAssistant(object):
         except ValueError:
             _LOGGER.warning(
                 'Could not bind to SIGHUP. Are you running in a thread?')
+        except AttributeError:
+            pass
         try:
             while not request_shutdown.isSet():
                 time.sleep(1)
