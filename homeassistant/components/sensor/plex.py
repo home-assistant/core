@@ -13,7 +13,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+        vol.Optional(CONF_PORT): vol.All(vol.Coerce(int),
+                                         vol.Range(min=1, max=65535))
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -21,10 +22,10 @@ CONFIG_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo sensors."""
-    plex_user = config[CONF_USERNAME]
-    plex_password = config[CONF_PASSWORD]
-    plex_host = config[CONF_HOST] if CONF_HOST in config else "localhost"
-    plex_port = config[CONF_PORT] if CONF_PORT in config else 32400
+    plex_user = config.get(CONF_USERNAME)
+    plex_password = config.get(CONF_PASSWORD)
+    plex_host = config.get(CONF_HOST) or "localhost"
+    plex_port = config.get(CONF_PORT) or 32400
     plex_url = 'http://' + plex_host + ':' + str(plex_port) + '/status/sessions'
     add_devices([PlexSensor('Plex', plex_user, plex_password, plex_url)])
 
@@ -38,6 +39,7 @@ class PlexSensor(Entity):
         self._user = plex_user
         self._auth_token = self.getAuthToken(plex_user, plex_password)
         self._url = plex_url
+        self.update()
 
     @property
     def name(self):
@@ -52,7 +54,8 @@ class PlexSensor(Entity):
     def getAuthToken(self, plex_user, plex_password):
         """Get Plex authorization token."""
         auth_url = 'https://my.plexapp.com/users/sign_in.xml'
-        auth_params = {'user[login]': plex_user,'user[password]': plex_password}
+        auth_params = {'user[login]': plex_user,
+                       'user[password]': plex_password}
 
         headers = {
             'X-Plex-Product': 'Plex API',
@@ -68,7 +71,8 @@ class PlexSensor(Entity):
 
 
     def update(self):
-        plex_response = requests.post(self._url + '?X-Plex-Token=' + self._auth_token)
+        plex_response = requests.post(self._url +
+                                      '?X-Plex-Token=' + self._auth_token)
         tree = ET.fromstring(plex_response.text)
 
         movie_title = []
@@ -79,10 +83,10 @@ class PlexSensor(Entity):
         for elem in tree.getiterator('MediaContainer'):
             for video_elem in elem.iter('Video'):
                 if video_elem.attrib['type'] == 'episode':
-                        movie_title.append(video_elem.attrib['grandparentTitle'] +
-                                           ' - ' + video_elem.attrib['title'])
+                    movie_title.append(video_elem.attrib['grandparentTitle'] +
+                                       ' - ' + video_elem.attrib['title'])
                 else:
-                        movie_title.append(video_elem.attrib['title'])
+                    movie_title.append(video_elem.attrib['title'])
                 movie_year.append(video_elem.attrib['year'])
                 for user_elem in video_elem.iter('User'):
                     user_list.append(user_elem.attrib['title'])
