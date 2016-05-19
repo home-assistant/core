@@ -13,6 +13,9 @@ HASS_COLOR_MIN = 154
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
     """Convert from RGB color to XY color."""
+    if R + G + B == 0:
+        return 0, 0, 0
+
     R = R / 255
     B = B / 255
     G = G / 255
@@ -31,11 +34,8 @@ def color_RGB_to_xy(R, G, B):
     Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy
-    try:
-        x = X / (X + Y + Z)
-        y = Y / (X + Y + Z)
-    except ZeroDivisionError:
-        x, y = 0, 0
+    x = X / (X + Y + Z)
+    y = Y / (X + Y + Z)
 
     # Brightness
     Y = 1 if Y > 1 else Y
