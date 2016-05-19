@@ -18,11 +18,10 @@ from homeassistant.const import (
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
 import homeassistant.util as util
 
-
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
-                'v0.1.0.zip#pylgnetcast==0.1.0']
+                'v0.2.0.zip#pylgnetcast==0.2.0']
 
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -44,7 +43,7 @@ PLATFORM_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the LG TV platform."""
-    from pylgnetcast.pylgnetcast import LgNetCastClient
+    from pylgnetcast import LgNetCastClient
     client = LgNetCastClient(config[CONF_HOST], config[CONF_ACCESS_TOKEN])
     add_devices([LgTVDevice(client, config[CONF_NAME])])
 
@@ -73,39 +72,41 @@ class LgTVDevice(MediaPlayerDevice):
     def send_command(self, command):
         """Send remote control commands to the TV."""
         try:
-            self._client.send_command(command)
-        except OSError:
+            with self._client as client:
+                client.send_command(command)
+        except Exception:
             self._state = STATE_OFF
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
         try:
-            self._state = STATE_PLAYING
-            volume_info = self._client.query_data('volume_info')
-            if volume_info:
-                volume_info = volume_info[0]
-                self._volume = float(volume_info.find('level').text)
-                self._muted = volume_info.find('mute').text == 'true'
+            with self._client as client:
+                self._state = STATE_PLAYING
+                volume_info = client.query_data('volume_info')
+                if volume_info:
+                    volume_info = volume_info[0]
+                    self._volume = float(volume_info.find('level').text)
+                    self._muted = volume_info.find('mute').text == 'true'
 
-            channel_info = self._client.query_data('cur_channel')
-            if channel_info:
-                channel_info = channel_info[0]
-                self._channel_name = channel_info.find('chname').text
-                self._program_name = channel_info.find('progName').text
+                channel_info = client.query_data('cur_channel')
+                if channel_info:
+                    channel_info = channel_info[0]
+                    self._channel_name = channel_info.find('chname').text
+                    self._program_name = channel_info.find('progName').text
 
-            channel_list = self._client.query_data('channel_list')
-            if channel_list:
-                channel_names = [str(c.find('chname').text) for
-                                 c in channel_list]
-                self._sources = dict(zip(channel_names, channel_list))
-                # sort source names by the major channel number
-                source_tuples = [(k, self._sources[k].find('major').text)
-                                 for k in self._sources.keys()]
-                sorted_sources = sorted(source_tuples,
-                                        key=lambda channel: int(channel[1]))
-                self._source_names = [n for n, k in sorted_sources]
-        except OSError:
+                channel_list = client.query_data('channel_list')
+                if channel_list:
+                    channel_names = [str(c.find('chname').text) for
+                                     c in channel_list]
+                    self._sources = dict(zip(channel_names, channel_list))
+                    # sort source names by the major channel number
+                    source_tuples = [(k, self._sources[k].find('major').text)
+                                     for k in self._sources.keys()]
+                    sorted_sources = sorted(
+                        source_tuples, key=lambda channel: int(channel[1]))
+                    self._source_names = [n for n, k in sorted_sources]
+        except Exception:
             self._state = STATE_OFF
 
     @property
