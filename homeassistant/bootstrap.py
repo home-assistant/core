@@ -240,7 +240,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     process_ha_config_upgrade(hass)
 
     if enable_log:
-        enable_logging(hass, verbose, daemon, log_rotate_days)
+        enable_logging(hass, verbose, daemon, log_rotate_days, skip_pip)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -293,7 +293,7 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
     hass.config.config_dir = config_dir
     mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, daemon, log_rotate_days)
+    enable_logging(hass, verbose, daemon, log_rotate_days, skip_pip)
 
     try:
         config_dict = config_util.load_yaml_config_file(config_path)
@@ -304,15 +304,29 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
                             skip_pip=skip_pip)
 
 
-def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
+def enable_logging(hass, verbose=False, daemon=False,
+                   log_rotate_days=None, skip_pip=False):
     """Setup the logging."""
     if not daemon:
         logging.basicConfig(level=logging.INFO)
-        fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-               "[%(name)s] %(message)s%(reset)s")
+        use_colorlog = False
         try:
             from colorlog import ColoredFormatter
-            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+            use_colorlog = True
+        except ImportError:
+            if not skip_pip:
+                _installer = pkg_util.install_package
+                _installer('colorlog', target=hass.config.path('deps'))
+                try:
+                    from colorlog import ColoredFormatter
+                    use_colorlog = True
+                except ImportError:
+                    pass
+
+        if use_colorlog:
+            fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
+                   "[%(name)s] %(message)s%(reset)s")
+            formatter = ColoredFormatter(
                 fmt,
                 datefmt='%y-%m-%d %H:%M:%S',
                 reset=True,
@@ -323,9 +337,13 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
                     'ERROR': 'red',
                     'CRITICAL': 'red',
                 }
-            ))
-        except ImportError:
-            pass
+            )
+        else:
+            fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
+                   "[%(name)s] %(message)s")
+            formatter = logging.Formatter(fmt=fmt, datefmt='%Y-%m-%d %H:%M:%S')
+
+        logging.getLogger().handlers[0].setFormatter(formatter)
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
