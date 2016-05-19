@@ -13,9 +13,6 @@ HASS_COLOR_MIN = 154
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
     """Convert from RGB color to XY color."""
-    if R + G + B == 0:
-        return 0, 0
-
     R = R / 255
     B = B / 255
     G = G / 255
@@ -29,15 +26,22 @@ def color_RGB_to_xy(R, G, B):
             2.4) if (B > 0.04045) else (B / 12.92)
 
     # Wide RGB D65 conversion formula
-    x = R * 0.664511 + G * 0.154324 + B * 0.162028
-    y = R * 0.313881 + G * 0.668433 + B * 0.047685
-    z = R * 0.000088 + G * 0.072310 + B * 0.986039
+    X = R * 0.664511 + G * 0.154324 + B * 0.162028
+    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy
-    cx = x / (x + y + z)
-    cy = y / (x + y + z)
+    try:
+        x = X / (X + Y + Z)
+        y = Y / (X + Y + Z)
+    except ZeroDivisionError:
+        x, y = 0, 0
 
-    return round(cx, 3), round(cy, 3)
+    # Brightness
+    Y = 1 if Y > 1 else Y
+    brightness = round(Y * 255)
+
+    return round(x, 3), round(y, 3), brightness
 
 
 # taken from
