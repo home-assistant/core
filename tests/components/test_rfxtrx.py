@@ -37,10 +37,10 @@ class TestRFXTRX(unittest.TestCase):
                        'automatic_add': True,
                        'devices': {}}}))
 
-        while len(rfxtrx.RFX_DEVICES) < 1:
+        while len(rfxtrx.RFX_DEVICES) < 2:
             time.sleep(0.1)
 
-        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 1)
+        self.assertEqual(len(rfxtrx.RFXOBJECT.sensors()), 2)
 
     def test_valid_config(self):
         """Test configuration."""
