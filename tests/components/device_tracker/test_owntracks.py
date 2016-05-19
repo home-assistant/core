@@ -230,6 +230,20 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         # Left clean zone state
         self.assertFalse(owntracks.REGIONS_ENTERED[USER])
 
+    def test_event_with_spaces(self):
+        """Test the entry event."""
+        message = REGION_ENTER_MESSAGE.copy()
+        message['desc'] = "inner 2"
+        self.send_message(EVENT_TOPIC, message)
+        self.assert_location_state('inner_2')
+
+        message = REGION_LEAVE_MESSAGE.copy()
+        message['desc'] = "inner 2"
+        self.send_message(EVENT_TOPIC, message)
+
+        # Left clean zone state
+        self.assertFalse(owntracks.REGIONS_ENTERED[USER])
+
     def test_event_entry_exit_inaccurate(self):
         """Test the event for inaccurate exit."""
         self.send_message(EVENT_TOPIC, REGION_ENTER_MESSAGE)
