@@ -92,9 +92,11 @@ class PlexSensor(Entity):
                     user_list.append(user_elem.attrib['title'])
                 for state_elem in video_elem.iter('Player'):
                     user_state.append(state_elem.attrib['state'])
+        now_playing = ""
         if len(user_list) > 0:
             for index in range(len(user_list)):
                 user = user_list[index] if user_list[index] else self._user
-                self._state = "{0} is watching {1} ({2})\tState: {3}\n".format(user, movie_title[index], movie_year[index], user_state[index])
+                now_playing += "{0} is watching {1} ({2})\tState: {3}\n".format(user, movie_title[index], movie_year[index], user_state[index])
         else:
-            self._state = 'Nobody is Watching Anything!'
+            now_playing = 'Nobody is Watching Anything!'
+        self._state = now_playing
