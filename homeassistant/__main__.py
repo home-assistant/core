@@ -174,6 +174,10 @@ def check_pid(pid_file):
         # PID File does not exist
         return
 
+    # If we just restarted, we just found our own pidfile.
+    if pid == os.getpid():
+        return
+
     try:
         os.kill(pid, 0)
     except OSError:
