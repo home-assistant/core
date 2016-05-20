@@ -71,6 +71,9 @@ fuzzywuzzy==0.8.0
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
+# homeassistant.components.google
+google-api-python-client==1.5.0
+
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.3
 
