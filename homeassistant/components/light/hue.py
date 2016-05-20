@@ -241,8 +241,10 @@ class HueLight(Light):
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            command['xy'] = color_util.color_RGB_to_xy(
+            xyb = color_util.color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+            command['xy'] = xyb[0], xyb[1]
+            command['bri'] = xyb[2]
 
         if ATTR_COLOR_TEMP in kwargs:
             command['ct'] = kwargs[ATTR_COLOR_TEMP]
