@@ -1,0 +1,57 @@
+"""
+Support for the NetAtmo Weather Service.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.netatmo/
+"""
+import logging
+from homeassistant.components import discovery
+from homeassistant.const import (
+    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.helpers import validate_config
+
+REQUIREMENTS = [
+    'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
+    '43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip'
+    '#lnetatmo==0.4.0']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_SECRET_KEY = 'secret_key'
+
+DOMAIN = "netatmo"
+NETATMO_AUTH = None
+
+_LOGGER = logging.getLogger(__name__)
+
+DISCOVER_SENSORS = 'netatmo.sensors'
+
+
+def setup(hass, config):
+    """Setup the NetAtmo sensor."""
+    if not validate_config(config,
+                           {DOMAIN: [CONF_API_KEY,
+                                     CONF_USERNAME,
+                                     CONF_PASSWORD,
+                                     CONF_SECRET_KEY]},
+                           _LOGGER):
+        return None
+
+    import lnetatmo
+
+    global NETATMO_AUTH
+    NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
+                                       config[DOMAIN][CONF_SECRET_KEY],
+                                       config[DOMAIN][CONF_USERNAME],
+                                       config[DOMAIN][CONF_PASSWORD])
+
+    if not NETATMO_AUTH:
+        _LOGGER.error(
+            "Connection error "
+            "Please check your settings for NetAtmo API.")
+        return False
+
+    discovery.discover(hass, DISCOVER_SENSORS, component='sensor',
+                           hass_config=config)
+
+    return True

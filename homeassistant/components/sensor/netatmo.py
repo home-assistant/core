@@ -6,13 +6,12 @@ https://home-assistant.io/components/sensor.netatmo/
 """
 import logging
 from datetime import timedelta
-
-from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import (
-    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS)
-from homeassistant.helpers import validate_config
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.loader import get_component
+
+DEPENDENCIES = ["netatmo"]
 
 REQUIREMENTS = [
     'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
@@ -32,7 +31,6 @@ SENSOR_TYPES = {
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
 }
 
-CONF_SECRET_KEY = 'secret_key'
 CONF_STATION = 'station'
 ATTR_MODULE = 'modules'
 
@@ -43,28 +41,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NetAtmo sensor."""
-    if not validate_config({DOMAIN: config},
-                           {DOMAIN: [CONF_API_KEY,
-                                     CONF_USERNAME,
-                                     CONF_PASSWORD,
-                                     CONF_SECRET_KEY]},
-                           _LOGGER):
-        return None
-
-    import lnetatmo
-
-    authorization = lnetatmo.ClientAuth(config.get(CONF_API_KEY, None),
-                                        config.get(CONF_SECRET_KEY, None),
-                                        config.get(CONF_USERNAME, None),
-                                        config.get(CONF_PASSWORD, None))
-
-    if not authorization:
-        _LOGGER.error(
-            "Connection error "
-            "Please check your settings for NatAtmo API.")
-        return False
-
+    """Setup the available NetAtmo weather sensors."""
+    netatmo = get_component('netatmo')
     data = NetAtmoData(authorization, config.get(CONF_STATION, None))
 
     dev = []
