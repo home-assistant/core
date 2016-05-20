@@ -29,7 +29,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         result = template.setup_platform(hass, config, add_devices)
         self.assertTrue(result)
         mock_template.assert_called_once_with(hass, 'test', 'virtual thingy',
-                                              'motion', '{{ foo }}')
+                                              'motion', '{{ foo }}', True)
         add_devices.assert_called_once_with([mock_template.return_value])
 
     def test_setup_no_sensors(self):
@@ -77,7 +77,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         """"Test the attributes."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
-                                           'motion', '{{ 1 > 1 }}')
+                                           'motion', '{{ 1 > 1 }}',
+                                           True)
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.sensor_class)
         self.assertEqual('Parent', vs.name)
@@ -93,7 +94,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         """"Test the event."""
         hass = get_test_home_assistant()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
-                                           'motion', '{{ 1 > 1 }}')
+                                           'motion', '{{ 1 > 1 }}',
+                                           True)
         vs.update_ha_state()
         hass.pool.block_till_done()
 
@@ -110,7 +112,8 @@ class TestBinarySensorTemplate(unittest.TestCase):
         """"Test the template update error."""
         hass = mock.MagicMock()
         vs = template.BinarySensorTemplate(hass, 'parent', 'Parent',
-                                           'motion', '{{ 1 > 1 }}')
+                                           'motion', '{{ 1 > 1 }}',
+                                           True)
         mock_render.side_effect = TemplateError('foo')
         vs.update()
         mock_render.side_effect = TemplateError(
