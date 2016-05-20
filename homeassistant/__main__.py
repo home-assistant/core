@@ -395,7 +395,10 @@ def main():
 
     # Create new process group if we can
     if hasattr(os, 'setpgid'):
-        os.setpgid(0, 0)
+        try:
+            os.setpgid(0, 0)
+        except PermissionError:
+            pass
 
     exit_code = setup_and_run_hass(config_dir, args)
     if exit_code == RESTART_EXIT_CODE and not args.runner:
