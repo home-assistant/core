@@ -174,6 +174,10 @@ def check_pid(pid_file):
         # PID File does not exist
         return
 
+    # If we just restarted, we just found our own pidfile.
+    if pid == os.getpid():
+        return
+
     try:
         os.kill(pid, 0)
     except OSError:
@@ -253,6 +257,9 @@ def closefds_osx(min_fd, max_fd):
 
 def cmdline():
     """Collect path and arguments to re-execute the current hass instance."""
+    if sys.argv[0].endswith('/__main__.py'):
+        modulepath = os.path.dirname(sys.argv[0])
+        os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
     return [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
 
 
@@ -395,7 +402,10 @@ def main():
 
     # Create new process group if we can
     if hasattr(os, 'setpgid'):
-        os.setpgid(0, 0)
+        try:
+            os.setpgid(0, 0)
+        except PermissionError:
+            pass
 
     exit_code = setup_and_run_hass(config_dir, args)
     if exit_code == RESTART_EXIT_CODE and not args.runner:
