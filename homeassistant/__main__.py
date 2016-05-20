@@ -3,11 +3,12 @@ from __future__ import print_function
 
 import argparse
 import os
+import platform
 import signal
+import subprocess
 import sys
 import threading
 import time
-from multiprocessing import Process
 
 from homeassistant.const import (
     __version__,
@@ -87,8 +88,7 @@ def get_arguments():
     parser.add_argument(
         '--debug',
         action='store_true',
-        help='Start Home Assistant in debug mode. Runs in single process to '
-        'enable use of interactive debuggers.')
+        help='Start Home Assistant in debug mode')
     parser.add_argument(
         '--open-ui',
         action='store_true',
@@ -123,15 +123,20 @@ def get_arguments():
         '--restart-osx',
         action='store_true',
         help='Restarts on OS X.')
-    if os.name != "nt":
+    parser.add_argument(
+        '--runner',
+        action='store_true',
+        help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
+    if os.name == "posix":
         parser.add_argument(
             '--daemon',
             action='store_true',
             help='Run Home Assistant as daemon')
 
     arguments = parser.parse_args()
-    if os.name == "nt":
+    if os.name != "posix" or arguments.debug or arguments.runner:
         arguments.daemon = False
+
     return arguments
 
 
@@ -144,7 +149,6 @@ def daemonize():
 
     # Decouple fork
     os.setsid()
-    os.umask(0)
 
     # Create second fork
     pid = os.fork()
@@ -227,13 +231,43 @@ def uninstall_osx():
     print("Home Assistant has been uninstalled.")
 
 
-def setup_and_run_hass(config_dir, args, top_process=False):
-    """Setup HASS and run.
+def closefds_osx(min_fd, max_fd):
+    """Make sure file descriptors get closed when we restart.
 
-    Block until stopped. Will assume it is running in a subprocess unless
-    top_process is set to true.
+    We cannot call close on guarded fds, and we cannot easily test which fds
+    are guarded. But we can set the close-on-exec flag on everything we want to
+    get rid of.
     """
+    from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
+
+    for _fd in range(min_fd, max_fd):
+        try:
+            val = fcntl(_fd, F_GETFD)
+            if not val & FD_CLOEXEC:
+                fcntl(_fd, F_SETFD, val | FD_CLOEXEC)
+        except IOError:
+            pass
+
+
+def cmdline():
+    """Collect path and arguments to re-execute the current hass instance."""
+    return [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
+
+
+def setup_and_run_hass(config_dir, args):
+    """Setup HASS and run."""
     from homeassistant import bootstrap
+
+    # Run a simple daemon runner process on Windows to handle restarts
+    if os.name == 'nt' and '--runner' not in sys.argv:
+        args = cmdline() + ['--runner']
+        while True:
+            try:
+                subprocess.check_call(args)
+                sys.exit(0)
+            except subprocess.CalledProcessError as exc:
+                if exc.returncode != RESTART_EXIT_CODE:
+                    sys.exit(exc.returncode)
 
     if args.demo_mode:
         config = {
@@ -262,42 +296,68 @@ def setup_and_run_hass(config_dir, args, top_process=False):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
+    print('Starting Home-Assistant')
     hass.start()
     exit_code = int(hass.block_till_stopped())
 
-    if not top_process:
-        sys.exit(exit_code)
     return exit_code
 
 
-def run_hass_process(hass_proc):
-    """Run a child hass process. Returns True if it should be restarted."""
-    requested_stop = threading.Event()
-    hass_proc.daemon = True
+def try_to_restart():
+    """Attempt to clean up state and start a new homeassistant instance."""
+    # Things should be mostly shut down already at this point, now just try
+    # to clean up things that may have been left behind.
+    sys.stderr.write('Home Assistant attempting to restart.\n')
 
-    def request_stop(*args):
-        """Request hass stop, *args is for signal handler callback."""
-        requested_stop.set()
-        hass_proc.terminate()
+    # Count remaining threads, ideally there should only be one non-daemonized
+    # thread left (which is us). Nothing we really do with it, but it might be
+    # useful when debugging shutdown/restart issues.
+    nthreads = sum(thread.isAlive() and not thread.isDaemon()
+                   for thread in threading.enumerate())
+    if nthreads > 1:
+        sys.stderr.write("Found {} non-daemonic threads.\n".format(nthreads))
 
-    try:
-        signal.signal(signal.SIGTERM, request_stop)
-    except ValueError:
-        print('Could not bind to SIGTERM. Are you running in a thread?')
+    # Send terminate signal to all processes in our process group which
+    # should be any children that have not themselves changed the process
+    # group id. Don't bother if couldn't even call setpgid.
+    if hasattr(os, 'setpgid'):
+        sys.stderr.write("Signalling child processes to terminate...\n")
+        os.kill(0, signal.SIGTERM)
 
-    hass_proc.start()
-    try:
-        hass_proc.join()
-    except KeyboardInterrupt:
-        request_stop()
+        # wait for child processes to terminate
         try:
-            hass_proc.join()
-        except KeyboardInterrupt:
-            return False
+            while True:
+                time.sleep(1)
+                if os.waitpid(0, os.WNOHANG) == (0, 0):
+                    break
+        except OSError:
+            pass
 
-    return (not requested_stop.isSet() and
-            hass_proc.exitcode == RESTART_EXIT_CODE,
-            hass_proc.exitcode)
+    elif os.name == 'nt':
+        # Maybe one of the following will work, but how do we indicate which
+        # processes are our children if there is no process group?
+        # os.kill(0, signal.CTRL_C_EVENT)
+        # os.kill(0, signal.CTRL_BREAK_EVENT)
+        pass
+
+    # Try to not leave behind open filedescriptors with the emphasis on try.
+    try:
+        max_fd = os.sysconf("SC_OPEN_MAX")
+    except ValueError:
+        max_fd = 256
+
+    if platform.system() == 'Darwin':
+        closefds_osx(3, max_fd)
+    else:
+        os.closerange(3, max_fd)
+
+    # Now launch into a new instance of Home-Assistant. If this fails we
+    # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
+    # systemd will restart us when RestartForceExitStatus=100 is set in the
+    # systemd.service file.
+    sys.stderr.write("Restarting Home-Assistant\n")
+    args = cmdline()
+    os.execv(args[0], args)
 
 
 def main():
@@ -331,21 +391,14 @@ def main():
     if args.pid_file:
         write_pid(args.pid_file)
 
-    # Run hass in debug mode if requested
-    if args.debug:
-        sys.stderr.write('Running in debug mode. '
-                         'Home Assistant will not be able to restart.\n')
-        exit_code = setup_and_run_hass(config_dir, args, top_process=True)
-        if exit_code == RESTART_EXIT_CODE:
-            sys.stderr.write('Home Assistant requested a '
-                             'restart in debug mode.\n')
-        return exit_code
+    # Create new process group if we can
+    if hasattr(os, 'setpgid'):
+        os.setpgid(0, 0)
 
-    # Run hass as child process. Restart if necessary.
-    keep_running = True
-    while keep_running:
-        hass_proc = Process(target=setup_and_run_hass, args=(config_dir, args))
-        keep_running, exit_code = run_hass_process(hass_proc)
+    exit_code = setup_and_run_hass(config_dir, args)
+    if exit_code == RESTART_EXIT_CODE and not args.runner:
+        try_to_restart()
+
     return exit_code
 
 
