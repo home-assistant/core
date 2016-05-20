@@ -212,7 +212,7 @@ class MpdDevice(MediaPlayerDevice):
         """Service to send the MPD the command for previous track."""
         self.client.previous()
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.info(str.format("Playing playlist: {0}", media_id))
         if media_type == MEDIA_TYPE_PLAYLIST:

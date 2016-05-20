@@ -9,10 +9,9 @@ import logging
 import socket
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    ATTR_MEDIA_ENQUEUE, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
 
@@ -268,9 +267,22 @@ class SonosDevice(MediaPlayerDevice):
         self._player.play()
 
     @only_if_coordinator
-    def play_media(self, media_type, media_id):
-        """Send the play_media command to the media player."""
-        self._player.play_uri(media_id)
+    def play_media(self, media_type, media_id, **kwargs):
+        """
+        Send the play_media command to the media player.
+
+        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
+        """
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            from soco.exceptions import SoCoUPnPException
+            try:
+                self._player.add_uri_to_queue(media_id)
+            except SoCoUPnPException:
+                _LOGGER.error('Error parsing media uri "%s", '
+                              "please check it's a valid media resource "
+                              'supported by Sonos', media_id)
+        else:
+            self._player.play_uri(media_id)
 
     @property
     def available(self):
