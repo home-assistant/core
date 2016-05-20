@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
                 "bc766176358ff2762710b762bd1608428e24674a.zip#"
-                "pygtfs==0.1.2"]
+                "pygtfs==0.1.3"]
 
 ICON = "mdi:train"
 
