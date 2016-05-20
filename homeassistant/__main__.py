@@ -158,9 +158,9 @@ def daemonize():
     # redirect standard file descriptors to devnull
     sys.stdout.flush()
     sys.stderr.flush()
-    os.dup2(open(os.devnull, 'r').fileno(), sys.stdin.fileno())
-    os.dup2(open(os.devnull, 'a+').fileno(), sys.stdout.fileno())
-    os.dup2(open(os.devnull, 'a+').fileno(), sys.stderr.fileno())
+    os.dup2(sys.stdin.fileno(), open(os.devnull, 'r').fileno())
+    os.dup2(sys.stdout.fileno(), open(os.devnull, 'a+').fileno())
+    os.dup2(sys.stderr.fileno(), open(os.devnull, 'a+').fileno())
 
 
 def check_pid(pid_file):
