@@ -117,6 +117,7 @@ omit =
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
+    homeassistant/components/media_player/lg_netcast.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/panasonic_viera.py
