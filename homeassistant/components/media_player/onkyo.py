@@ -18,11 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 KNOWN_HOSTS = []
-DEFAULT_SOURCES = {"TV": "tv", "Bluray": "bd", "Game": "game", "Aux1": "aux1",
-                   "Video 1": "video1", "Video 2": "video2",
-                   "Video 3": "video3", "Video 4": "video4",
-                   "Video 5": "video5", "Video 6": "video6",
-                   "Video 7": "video7"}
+DEFAULT_SOURCES = {"tv": "TV", "bd": "Bluray", "game": "Game", "aux1": "Aux1",
+                   "video1": "Video 1", "video2": "Video 2",
+                   "video3": "Video 3", "video4": "Video 4",
+                   "video5": "Video 5", "video6": "Video 6",
+                   "video7": "Video 7"}
 CONFIG_SOURCE_LIST = "sources"
 
 
@@ -35,9 +35,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if CONF_HOST in config and config[CONF_HOST] not in KNOWN_HOSTS:
         try:
             hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
-                                     config[CONF_NAME],
                                      config.get(CONFIG_SOURCE_LIST,
-                                                DEFAULT_SOURCES)))
+                                                DEFAULT_SOURCES),
+                                     name=config[CONF_NAME]))
             KNOWN_HOSTS.append(config[CONF_HOST])
         except OSError:
             _LOGGER.error('Unable to connect to receiver at %s.',
@@ -46,7 +46,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver,
-                                         sources=config[CONFIG_SOURCE_LIST]))
+                                         config.get(CONFIG_SOURCE_LIST,
+                                                    DEFAULT_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
     add_devices(hosts)
 
@@ -56,7 +57,7 @@ class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, receiver, name=None, sources=None):
+    def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -65,10 +66,9 @@ class OnkyoDevice(MediaPlayerDevice):
         self._name = name or '{}_{}'.format(
             receiver.info['model_name'], receiver.info['identifier'])
         self._current_source = None
-        self._source_list = list(sources.keys() or DEFAULT_SOURCES.keys())
+        self._source_list = list(sources.values())
         self._source_mapping = sources
-        self._reverse_mapping = {sources[source]: source
-                                 for source in sources}
+        self._reverse_mapping = {value: key for key, value in sources.items()}
         self.update()
 
     def update(self):
@@ -83,8 +83,8 @@ class OnkyoDevice(MediaPlayerDevice):
         mute_raw = self._receiver.command('audio-muting query')
         current_source_raw = self._receiver.command('input-selector query')
         for source in current_source_raw[1]:
-            if source in self._reverse_mapping:
-                self._current_source = self._reverse_mapping[source]
+            if source in self._source_mapping:
+                self._current_source = self._source_mapping[source]
                 break
             else:
                 self._current_source = '_'.join(
@@ -149,5 +149,5 @@ class OnkyoDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_list:
-            source = self._source_mapping[source]
+            source = self._reverse_mapping[source]
         self._receiver.command('input-selector {}'.format(source))
