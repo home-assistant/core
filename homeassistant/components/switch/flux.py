@@ -65,12 +65,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the demo switches."""
     name = config[CONF_NAME]
     lights = config[CONF_LIGHTS]
-    start_time = config[CONF_START_TIME]
-    stop_time = config[CONF_STOP_TIME]
-    start_colortemp = config[CONF_START_CT]
-    sunset_colortemp = config[CONF_SUNSET_CT]
-    stop_colortemp = config[CONF_STOP_CT]
-    brightness = config[CONF_BRIGHTNESS]
+    start_time = config.get(CONF_START_TIME)
+    stop_time = config.get(CONF_STOP_TIME) or dt_now().replace(hour=22, minute=0)
+    start_colortemp = config.get(CONF_START_CT) or 4000
+    sunset_colortemp = config.get(CONF_SUNSET_CT) or 3000
+    stop_colortemp = config.get(CONF_STOP_CT) or 1900
+    brightness = config.get(CONF_BRIGHTNESS)
     flux = FluxSwitch(name, hass, False, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness)
