@@ -14,8 +14,8 @@ from homeassistant.loader import get_component
 DEPENDENCIES = ["netatmo"]
 
 REQUIREMENTS = [
-    'https://github.com/HydrelioxGitHub/netatmo-api-python/archive/'
-    '43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip'
+    'https://github.com/jabesq/netatmo-api-python/archive/'
+    'master.zip'
     '#lnetatmo==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)

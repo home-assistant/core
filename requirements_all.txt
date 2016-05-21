@@ -95,7 +95,7 @@ hikvision==0.4
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
 # homeassistant.components.sensor.netatmo
-https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
+https://github.com/jabesq/netatmo-api-python/archive/master.zip#lnetatmo==0.4.0
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
