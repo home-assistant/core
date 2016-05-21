@@ -1,10 +1,9 @@
 """
-Support for Qwikswitch lights and switches.
+Support for Qwikswitch devices.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/qwikswitch
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/qwikswitch/
 """
-
 import logging
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -51,7 +50,7 @@ class QSToggleEntity(object):
     # pylint: disable=no-self-use
     @property
     def should_poll(self):
-        """State Polling needed."""
+        """No polling needed."""
         return False
 
     @property
@@ -61,11 +60,11 @@ class QSToggleEntity(object):
 
     @property
     def is_on(self):
-        """Check if On (non-zero)."""
+        """Check if device is on (non-zero)."""
         return self._value > 0
 
     def update_value(self, value):
-        """Decode QSUSB value & update HA state."""
+        """Decode the QSUSB value and update the Home assistant state."""
         if value != self._value:
             self._value = value
             # pylint: disable=no-member
@@ -129,7 +128,7 @@ def setup(hass, config):
                       {'qsusb_id': id(qsusb)}, config)
 
     def qs_callback(item):
-        """Typically a btn press or update signal."""
+        """Typically a button press or update signal."""
         # If button pressed, fire a hass event
         if item.get('cmd', '') in cmd_buttons:
             hass.bus.fire('qwikswitch.button.' + item.get('id', '@no_id'))
