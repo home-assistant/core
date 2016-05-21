@@ -10,7 +10,7 @@ import logging
 import datetime
 import time
 
-from homeassistant.const import HTTP_OK, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
