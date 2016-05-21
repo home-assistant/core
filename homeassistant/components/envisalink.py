@@ -23,6 +23,7 @@ CONF_EVL_HOST = 'host'
 CONF_EVL_PORT = 'port'
 CONF_PANEL_TYPE = 'panel_type'
 CONF_EVL_VERSION = 'evl_version'
+CONF_CODE = 'code'
 CONF_USERNAME = 'user_name'
 CONF_PASS = 'password'
 CONF_EVL_KEEPALIVE = 'keepalive_interval'
@@ -37,6 +38,7 @@ DEFAULT_ZONEDUMP_INTERVAL = 30
 
 SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
+SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
@@ -74,6 +76,7 @@ def setup(hass, base_config):
 
     _host = config.get(CONF_EVL_HOST)
     _port = convert(config.get(CONF_EVL_PORT), int, DEFAULT_PORT)
+    _code = config.get(CONF_CODE)
     _panelType = config.get(CONF_PANEL_TYPE)
     _version = convert(config.get(CONF_EVL_VERSION), int, DEFAULT_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
@@ -90,6 +93,16 @@ def setup(hass, base_config):
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
         dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None)
 
+    def alarm_data_updated_callback(data):
+        """Handles non-alarm based info updates."""
+        _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
+        dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE, sender=None)
+
+    def partition_updated_callback(data):
+        """Handles partition changes thrown by envisalink (including alarm trips)."""
+        _LOGGER.info("The envisalink sent a partition update event.")
+        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None) 
+
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
         _LOGGER.info("Shutting down envisalink.")
@@ -102,12 +115,14 @@ def setup(hass, base_config):
 
     EVL_CONTROLLER.callback_zone_timer_dump = zones_updated_callback
     EVL_CONTROLLER.callback_zone_state_change = zones_updated_callback 
+    EVL_CONTROLLER.callback_partition_state_change = partition_updated_callback
+    EVL_CONTROLLER.callback_keypad_update = alarm_data_updated_callback
     start_envisalink(None) 
 
     # Load sub-components for envisalink
-    for comp_name in (['binary_sensor', 'alarm_control_panel']):
+    for comp_name in (['binary_sensor', 'alarm_control_panel', 'sensor']):
         load_platform(hass, comp_name, 'envisalink',
-                      {'zones': _zones, 'partitions': _partitions}, config)
+                      {'zones': _zones, 'partitions': _partitions, 'code': _code}, config)
 
     return True
 

@@ -1,5 +1,5 @@
 """
-Support for Envisalink binary sensors.
+Support for Envisalink zone states- represented as binary sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.envisalink/
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         for zoneNum in _configuredZones)
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
-    """Representation of a Vera Binary Sensor."""
+    """Representation of an envisalink Binary Sensor."""
     
     def __init__(self, zoneNumber, zoneName, zoneType, info, controller):
         """Initialize the binary_sensor."""
