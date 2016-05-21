@@ -1,4 +1,4 @@
-"""The tests for the MoldIndicator sensor"""
+"""The tests for the MoldIndicator sensor."""
 import unittest
 
 import homeassistant.components.sensor as sensor
@@ -29,7 +29,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         self.hass.stop()
 
     def test_setup(self):
-        """Test the mold indicator sensor setup"""
+        """Test the mold indicator sensor setup."""
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'mold_indicator',
@@ -45,7 +45,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert '%' == moldind.attributes.get('unit_of_measurement')
 
     def test_invalidhum(self):
-        """Test invalid sensor values"""
+        """Test invalid sensor values."""
         self.hass.states.set('test.indoortemp', '10',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.states.set('test.outdoortemp', '10',
@@ -69,7 +69,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert moldind.state == '0'
 
     def test_calculation(self):
-        """Test the mold indicator internal calculations"""
+        """Test the mold indicator internal calculations."""
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'mold_indicator',
@@ -101,7 +101,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
         assert state == '68'
 
     def test_sensor_changed(self):
-        """Test the sensor_changed function"""
+        """Test the sensor_changed function."""
         self.assertTrue(sensor.setup(self.hass, {
             'sensor': {
                 'platform': 'mold_indicator',
