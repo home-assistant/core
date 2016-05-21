@@ -1,6 +1,5 @@
 """This module provides WSGI application to serve the Home Assistant API."""
 import hmac
-import gzip
 import json
 import logging
 import mimetypes
@@ -259,16 +258,7 @@ class HomeAssistantWSGI(object):
             adapter = self.url_map.bind_to_environ(request.environ)
             try:
                 endpoint, values = adapter.match()
-                resp = self.views[endpoint].handle_request(request, **values)
-
-                if resp.is_streamed or 200 > resp.status_code >= 300 or \
-                   'gzip' not in request.accept_encodings:
-                    return resp
-
-                resp.headers.extend([('Content-Encoding', 'gzip'),
-                                     ('Vary', 'Accept-Encoding')])
-                resp.data = gzip.compress(b''.join(resp.iter_encoded()))
-                return resp
+                return self.views[endpoint].handle_request(request, **values)
             except RequestRedirect as ex:
                 return ex
             except (BadRequest, NotFound, MethodNotAllowed,
