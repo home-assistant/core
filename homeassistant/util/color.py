@@ -1,48 +1,47 @@
 """Color util methods."""
 import math
+# pylint: disable=unused-import
+from webcolors import html5_parse_legacy_color as color_name_to_rgb  # noqa
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154
 
 
-# Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
+# Taken from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
     """Convert from RGB color to XY color."""
     if R + G + B == 0:
-        return 0, 0
+        return 0, 0, 0
 
-    var_R = (R / 255.)
-    var_G = (G / 255.)
-    var_B = (B / 255.)
+    R = R / 255
+    B = B / 255
+    G = G / 255
 
-    if var_R > 0.04045:
-        var_R = ((var_R + 0.055) / 1.055) ** 2.4
-    else:
-        var_R /= 12.92
+    # Gamma correction
+    R = pow((R + 0.055) / (1.0 + 0.055),
+            2.4) if (R > 0.04045) else (R / 12.92)
+    G = pow((G + 0.055) / (1.0 + 0.055),
+            2.4) if (G > 0.04045) else (G / 12.92)
+    B = pow((B + 0.055) / (1.0 + 0.055),
+            2.4) if (B > 0.04045) else (B / 12.92)
 
-    if var_G > 0.04045:
-        var_G = ((var_G + 0.055) / 1.055) ** 2.4
-    else:
-        var_G /= 12.92
+    # Wide RGB D65 conversion formula
+    X = R * 0.664511 + G * 0.154324 + B * 0.162028
+    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
-    if var_B > 0.04045:
-        var_B = ((var_B + 0.055) / 1.055) ** 2.4
-    else:
-        var_B /= 12.92
+    # Convert XYZ to xy
+    x = X / (X + Y + Z)
+    y = Y / (X + Y + Z)
 
-    var_R *= 100
-    var_G *= 100
-    var_B *= 100
+    # Brightness
+    Y = 1 if Y > 1 else Y
+    brightness = round(Y * 255)
 
-    # Observer. = 2 deg, Illuminant = D65
-    X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
-    Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-    Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
-
-    # Convert XYZ to xy, see CIE 1931 color space on wikipedia
-    return X / (X + Y + Z), Y / (X + Y + Z)
+    return round(x, 3), round(y, 3), brightness
 
 
 # taken from
