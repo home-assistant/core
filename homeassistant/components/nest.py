@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-REQUIREMENTS = ['python-nest==2.9.1']
+REQUIREMENTS = ['python-nest==2.9.2']
 DOMAIN = 'nest'
 
 NEST = None
