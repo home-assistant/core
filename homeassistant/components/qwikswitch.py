@@ -88,6 +88,7 @@ class QSToggleEntity(object):
             self.update_value(0)
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the QSUSB component."""
     from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
