@@ -219,14 +219,14 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
             if value.command_class == 68 and value.index == 0:
                 value.data = bytes(fan, 'utf-8')
 
-    def set_operation(self, operation_mode):
+    def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
             if value.command_class == 64 and value.index == 0:
                 value.data = bytes(operation_mode, 'utf-8')
 
-    def set_swing(self, swing_mode):
+    def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
             for value in self._node.get_values(
