@@ -29,7 +29,7 @@ SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"
-SERVICE_SET_SWING = "set_swing_mode"
+SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
 STATE_HEAT = "heat"
@@ -40,17 +40,17 @@ STATE_DRY = "dry"
 STATE_FAN_ONLY = "fan_only"
 
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
-ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_HUMIDITY = "humidity"
-ATTR_AWAY_MODE = "away_mode"
-ATTR_AUX_HEAT = "aux_heat"
-ATTR_FAN = "fan"
-ATTR_FAN_LIST = "fan_list"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
+ATTR_AWAY_MODE = "away_mode"
+ATTR_AUX_HEAT = "aux_heat"
+ATTR_FAN_MODE = "fan_mode"
+ATTR_FAN_LIST = "fan_list"
+ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
-ATTR_OPERATION = "operation_mode"
+ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
 ATTR_SWING_LIST = "swing_list"
@@ -108,7 +108,7 @@ def set_humidity(hass, humidity, entity_id=None):
 
 def set_fan_mode(hass, fan, entity_id=None):
     """Turn all or specified hvac fan mode on."""
-    data = {ATTR_FAN: fan}
+    data = {ATTR_FAN_MODE: fan}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -118,7 +118,7 @@ def set_fan_mode(hass, fan, entity_id=None):
 
 def set_operation_mode(hass, operation_mode, entity_id=None):
     """Set new target operation mode."""
-    data = {ATTR_OPERATION: operation_mode}
+    data = {ATTR_OPERATION_MODE: operation_mode}
 
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
@@ -133,7 +133,7 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_SET_SWING, data)
+    hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
 
 
 # pylint: disable=too-many-branches
@@ -247,12 +247,12 @@ def setup(hass, config):
         """Set fan mode on target hvacs."""
         target_hvacs = component.extract_from_service(service)
 
-        fan = service.data.get(ATTR_FAN)
+        fan = service.data.get(ATTR_FAN_MODE)
 
         if fan is None:
             _LOGGER.error(
                 "Received call to %s without attribute %s",
-                SERVICE_SET_FAN_MODE, ATTR_FAN)
+                SERVICE_SET_FAN_MODE, ATTR_FAN_MODE)
             return
 
         for hvac in target_hvacs:
@@ -269,16 +269,16 @@ def setup(hass, config):
         """Set operating mode on the target hvacs."""
         target_hvacs = component.extract_from_service(service)
 
-        operation_mode = service.data.get(ATTR_OPERATION)
+        operation_mode = service.data.get(ATTR_OPERATION_MODE)
 
         if operation_mode is None:
             _LOGGER.error(
                 "Received call to %s without attribute %s",
-                SERVICE_SET_OPERATION_MODE, ATTR_OPERATION)
+                SERVICE_SET_OPERATION_MODE, ATTR_OPERATION_MODE)
             return
 
         for hvac in target_hvacs:
-            hvac.set_operation(operation_mode)
+            hvac.set_operation_mode(operation_mode)
 
             if hvac.should_poll:
                 hvac.update_ha_state(True)
@@ -296,18 +296,18 @@ def setup(hass, config):
         if swing_mode is None:
             _LOGGER.error(
                 "Received call to %s without attribute %s",
-                SERVICE_SET_SWING, ATTR_SWING_MODE)
+                SERVICE_SET_SWING_MODE, ATTR_SWING_MODE)
             return
 
         for hvac in target_hvacs:
-            hvac.set_swing(swing_mode)
+            hvac.set_swing_mode(swing_mode)
 
             if hvac.should_poll:
                 hvac.update_ha_state(True)
 
     hass.services.register(
-        DOMAIN, SERVICE_SET_SWING, swing_set_service,
-        descriptions.get(SERVICE_SET_SWING))
+        DOMAIN, SERVICE_SET_SWING_MODE, swing_set_service,
+        descriptions.get(SERVICE_SET_SWING_MODE))
     return True
 
 
@@ -330,18 +330,29 @@ class HvacDevice(Entity):
             ATTR_MAX_TEMP: self._convert_for_display(self.max_temp),
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
-            ATTR_HUMIDITY: self.target_humidity,
-            ATTR_CURRENT_HUMIDITY: self.current_humidity,
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
-            ATTR_FAN_LIST: self.fan_list,
-            ATTR_OPERATION_LIST: self.operation_list,
-            ATTR_SWING_LIST: self.swing_list,
-            ATTR_OPERATION: self.current_operation,
-            ATTR_FAN: self.current_fan_mode,
-            ATTR_SWING_MODE: self.current_swing_mode,
-
         }
+
+        humidity = self.target_humidity
+        if humidity is not None:
+            data[ATTR_HUMIDITY] = humidity
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+            data[ATTR_MIN_HUMIDITY] = self.min_humidity
+            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+
+        fan_mode = self.current_fan_mode
+        if fan_mode is not None:
+            data[ATTR_FAN_MODE] = fan_mode
+            data[ATTR_FAN_LIST] = self.fan_list
+
+        operation_mode = self.current_operation
+        if operation_mode is not None:
+            data[ATTR_OPERATION_MODE] = operation_mode
+            data[ATTR_OPERATION_LIST] = self.operation_list
+
+        swing_mode = self.current_swing_mode
+        if swing_mode is not None:
+            data[ATTR_SWING_MODE] = swing_mode
+            data[ATTR_SWING_LIST] = self.swing_list
 
         is_away = self.is_away_mode_on
         if is_away is not None:
@@ -430,11 +441,11 @@ class HvacDevice(Entity):
         """Set new target fan mode."""
         pass
 
-    def set_operation(self, operation_mode):
+    def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         pass
 
-    def set_swing(self, swing_mode):
+    def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         pass
 
@@ -457,12 +468,12 @@ class HvacDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._convert_for_display(7)
+        return convert(7, TEMP_CELCIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._convert_for_display(35)
+        return convert(35, TEMP_CELCIUS, self.unit_of_measurement)
 
     @property
     def min_humidity(self):

@@ -152,3 +152,52 @@ def parse_time(time_str):
     except ValueError:
         # ValueError if value cannot be converted to an int or not in range
         return None
+
+
+# Found in this gist: https://gist.github.com/zhangsen/1199964
+def get_age(date):
+    # pylint: disable=too-many-return-statements
+    """
+    Take a datetime and return its "age" as a string.
+
+    The age can be in second, minute, hour, day, month or year. Only the
+    biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
+    be returned.
+    Make sure date is not in the future, or else it won't work.
+    """
+    def formatn(number, unit):
+        """Add "unit" if it's plural."""
+        if number == 1:
+            return "1 %s" % unit
+        elif number > 1:
+            return "%d %ss" % (number, unit)
+
+    def q_n_r(first, second):
+        """Return quotient and remaining."""
+        return first // second, first % second
+
+    delta = now() - date
+    day = delta.days
+    second = delta.seconds
+
+    year, day = q_n_r(day, 365)
+    if year > 0:
+        return formatn(year, 'year')
+
+    month, day = q_n_r(day, 30)
+    if month > 0:
+        return formatn(month, 'month')
+    if day > 0:
+        return formatn(day, 'day')
+
+    hour, second = q_n_r(second, 3600)
+    if hour > 0:
+        return formatn(hour, 'hour')
+
+    minute, second = q_n_r(second, 60)
+    if minute > 0:
+        return formatn(minute, 'minute')
+    if second > 0:
+        return formatn(second, 'second')
+
+    return "0 second"

@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME
 
 REQUIREMENTS = ['https://github.com/danieljkemp/onkyo-eiscp/archive/'
                 'python3.zip#onkyo-eiscp==0.9.2']
@@ -17,29 +17,59 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+KNOWN_HOSTS = []
+DEFAULT_SOURCES = {"tv": "TV", "bd": "Bluray", "game": "Game", "aux1": "Aux1",
+                   "video1": "Video 1", "video2": "Video 2",
+                   "video3": "Video 3", "video4": "Video 4",
+                   "video5": "Video 5", "video6": "Video 6",
+                   "video7": "Video 7"}
+CONFIG_SOURCE_LIST = "sources"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
+    import eiscp
     from eiscp import eISCP
-    add_devices(OnkyoDevice(receiver)
-                for receiver in eISCP.discover())
+    hosts = []
+
+    if CONF_HOST in config and config[CONF_HOST] not in KNOWN_HOSTS:
+        try:
+            hosts.append(OnkyoDevice(eiscp.eISCP(config[CONF_HOST]),
+                                     config.get(CONFIG_SOURCE_LIST,
+                                                DEFAULT_SOURCES),
+                                     name=config[CONF_NAME]))
+            KNOWN_HOSTS.append(config[CONF_HOST])
+        except OSError:
+            _LOGGER.error('Unable to connect to receiver at %s.',
+                          config[CONF_HOST])
+    else:
+        for receiver in eISCP.discover():
+            if receiver.host not in KNOWN_HOSTS:
+                hosts.append(OnkyoDevice(receiver,
+                                         config.get(CONFIG_SOURCE_LIST,
+                                                    DEFAULT_SOURCES)))
+                KNOWN_HOSTS.append(receiver.host)
+    add_devices(hosts)
 
 
+# pylint: disable=too-many-instance-attributes
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of a Onkyo device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, receiver):
+    def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
-        self.update()
-        self._name = '{}_{}'.format(
+        self._name = name or '{}_{}'.format(
             receiver.info['model_name'], receiver.info['identifier'])
         self._current_source = None
+        self._source_list = list(sources.values())
+        self._source_mapping = sources
+        self._reverse_mapping = {value: key for key, value in sources.items()}
+        self.update()
 
     def update(self):
         """Get the latest details from the device."""
@@ -52,8 +82,13 @@ class OnkyoDevice(MediaPlayerDevice):
         volume_raw = self._receiver.command('volume query')
         mute_raw = self._receiver.command('audio-muting query')
         current_source_raw = self._receiver.command('input-selector query')
-        self._current_source = '_'.join('_'.join(
-            [i for i in current_source_raw[1]]))
+        for source in current_source_raw[1]:
+            if source in self._source_mapping:
+                self._current_source = self._source_mapping[source]
+                break
+            else:
+                self._current_source = '_'.join(
+                    [i for i in current_source_raw[1]])
         self._muted = bool(mute_raw[1] == 'on')
         self._volume = int(volume_raw[1], 16)/80.0
 
@@ -87,6 +122,11 @@ class OnkyoDevice(MediaPlayerDevice):
         """"Return the current input source of the device."""
         return self._current_source
 
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._source_list
+
     def turn_off(self):
         """Turn off media player."""
         self._receiver.command('system-power standby')
@@ -108,4 +148,6 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Set the input source."""
+        if source in self._source_list:
+            source = self._reverse_mapping[source]
         self._receiver.command('input-selector {}'.format(source))

@@ -3,6 +3,7 @@ import logging
 import os
 from collections import OrderedDict
 
+import glob
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
@@ -42,6 +43,44 @@ def _include_yaml(loader, node):
     """
     fname = os.path.join(os.path.dirname(loader.name), node.value)
     return load_yaml(fname)
+
+
+def _include_dir_named_yaml(loader, node):
+    """Load multiple files from dir as a dict."""
+    mapping = OrderedDict()
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    for fname in glob.glob(files):
+        filename = os.path.splitext(os.path.basename(fname))[0]
+        mapping[filename] = load_yaml(fname)
+    return mapping
+
+
+def _include_dir_merge_named_yaml(loader, node):
+    """Load multiple files from dir as a merged dict."""
+    mapping = OrderedDict()
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    for fname in glob.glob(files):
+        loaded_yaml = load_yaml(fname)
+        if isinstance(loaded_yaml, dict):
+            mapping.update(loaded_yaml)
+    return mapping
+
+
+def _include_dir_list_yaml(loader, node):
+    """Load multiple files from dir as a list."""
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    return [load_yaml(f) for f in glob.glob(files)]
+
+
+def _include_dir_merge_list_yaml(loader, node):
+    """Load multiple files from dir as a merged list."""
+    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
+    merged_list = []
+    for fname in glob.glob(files):
+        loaded_yaml = load_yaml(fname)
+        if isinstance(loaded_yaml, list):
+            merged_list.extend(loaded_yaml)
+    return merged_list
 
 
 def _ordered_dict(loader, node):
@@ -84,3 +123,9 @@ yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_merge_list',
+                                _include_dir_merge_list_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
+yaml.SafeLoader.add_constructor('!include_dir_merge_named',
+                                _include_dir_merge_named_yaml)
