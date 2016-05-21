@@ -19,15 +19,8 @@ RUN script/build_python_openzwave && \
   ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
 
 COPY requirements_all.txt requirements_all.txt
-RUN pip3 install --no-cache-dir -r requirements_all.txt
-
-RUN wget http://www.openssl.org/source/openssl-1.0.2h.tar.gz && \
-    tar -xvzf openssl-1.0.2h.tar.gz && \
-    cd openssl-1.0.2h && \
-    ./config --prefix=/usr/ && \
-    make && \
-    make install && \
-    rm -rf openssl-1.0.2h*
+# certifi breaks Debian based installs
+RUN pip3 install --no-cache-dir -r requirements_all.txt && pip3 uninstall certifi
 
 # Copy source
 COPY . .
