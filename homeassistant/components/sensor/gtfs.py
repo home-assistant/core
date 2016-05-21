@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
-                "bc766176358ff2762710b762bd1608428e24674a.zip#"
+                "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
                 "pygtfs==0.1.3"]
 
 ICON = "mdi:train"
