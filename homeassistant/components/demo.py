@@ -21,6 +21,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     'camera',
     'device_tracker',
     'garage_door',
+    'hvac',
     'light',
     'lock',
     'media_player',
