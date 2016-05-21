@@ -120,7 +120,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.http = MockHTTP()
+    hass.wsgi = mock.MagicMock()
     hass.config.components.append('http')
 
 
@@ -133,14 +133,6 @@ def mock_mqtt_component(hass, mock_mqtt):
         }
     })
     return mock_mqtt
-
-
-class MockHTTP(object):
-    """Mock the HTTP module."""
-
-    def register_path(self, method, url, callback, require_auth=True):
-        """Register a path."""
-        pass
 
 
 class MockModule(object):

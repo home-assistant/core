@@ -186,8 +186,8 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 def track_time_change(hass, action, year=None, month=None, day=None,
                       hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""
-    track_utc_time_change(hass, action, year, month, day, hour, minute, second,
-                          local=True)
+    return track_utc_time_change(hass, action, year, month, day, hour, minute,
+                                 second, local=True)
 
 
 def _process_match_param(parameter):
