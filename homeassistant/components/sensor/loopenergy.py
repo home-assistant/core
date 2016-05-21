@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "loopenergy"
 
-REQUIREMENTS = ['pyloopenergy==0.0.10']
+REQUIREMENTS = ['pyloopenergy==0.0.12']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

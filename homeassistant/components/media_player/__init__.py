@@ -36,6 +36,7 @@ DISCOVERY_PLATFORMS = {
     discovery.SERVICE_PLEX: 'plex',
     discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
     discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
+    discovery.SERVICE_ROKU: 'roku',
 }
 
 SERVICE_PLAY_MEDIA = 'play_media'
@@ -62,6 +63,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
+ATTR_MEDIA_ENQUEUE = 'enqueue'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -144,6 +146,7 @@ MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    ATTR_MEDIA_ENQUEUE: cv.boolean,
 })
 
 MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -255,13 +258,16 @@ def media_seek(hass, position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
 
 
-def play_media(hass, media_type, media_id, entity_id=None):
+def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
             ATTR_MEDIA_CONTENT_ID: media_id}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
+    if enqueue:
+        data[ATTR_MEDIA_ENQUEUE] = enqueue
 
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
 
@@ -363,9 +369,14 @@ def setup(hass, config):
         """Play specified media_id on the media player."""
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
         media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
+        enqueue = service.data.get(ATTR_MEDIA_ENQUEUE)
+
+        kwargs = {
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        }
 
         for player in component.extract_from_service(service):
-            player.play_media(media_type, media_id)
+            player.play_media(media_type, media_id, **kwargs)
 
             if player.should_poll:
                 player.update_ha_state(True)

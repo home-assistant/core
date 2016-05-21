@@ -89,7 +89,13 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except mpd.ConnectionError:
+        except (mpd.ConnectionError, BrokenPipeError, ValueError):
+            # Cleanly disconnect in case connection is not in valid state
+            try:
+                self.client.disconnect()
+            except mpd.ConnectionError:
+                pass
+
             self.client.connect(self.server, self.port)
 
             if self.password is not None:
@@ -206,7 +212,7 @@ class MpdDevice(MediaPlayerDevice):
         """Service to send the MPD the command for previous track."""
         self.client.previous()
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""
         _LOGGER.info(str.format("Playing playlist: {0}", media_id))
         if media_type == MEDIA_TYPE_PLAYLIST:

@@ -7,14 +7,15 @@ https://home-assistant.io/components/media_player.sonos/
 import datetime
 import logging
 import socket
+from os import path
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
+from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -31,6 +32,8 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA |\
     SUPPORT_SEEK
+
+SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 
 
 # pylint: disable=unused-argument
@@ -63,8 +66,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning('No Sonos speakers found.')
         return False
 
-    add_devices(SonosDevice(hass, p) for p in players)
+    devices = [SonosDevice(hass, p) for p in players]
+    add_devices(devices)
     _LOGGER.info('Added %s Sonos speakers', len(players))
+
+    def group_players_service(service):
+        """Group media players, use player as coordinator."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.group_players()
+            device.update_ha_state(True)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
+                           group_players_service,
+                           descriptions.get(SERVICE_GROUP_PLAYERS))
 
     return True
 
@@ -74,16 +99,26 @@ def only_if_coordinator(func):
 
     If used as decorator, avoid calling the decorated method if player is not
     a coordinator. If not, a grouped speaker (not in coordinator role) will
-    throw soco.exceptions.SoCoSlaveException
+    throw soco.exceptions.SoCoSlaveException.
+
+    Also, partially catch exceptions like:
+
+    soco.exceptions.SoCoUPnPException: UPnP Error 701 received:
+    Transition not available from <player ip address>
     """
     def wrapper(*args, **kwargs):
         """Decorator wrapper."""
         if args[0].is_coordinator:
-            return func(*args, **kwargs)
+            from soco.exceptions import SoCoUPnPException
+            try:
+                func(*args, **kwargs)
+            except SoCoUPnPException:
+                _LOGGER.error('command "%s" for Sonos device "%s" '
+                              'not available in this mode',
+                              func.__name__, args[0].name)
         else:
-            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" '
-                          '(not coordinator)',
-                          func.__name__, args[0].name)
+            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" (%s)',
+                          func.__name__, args[0].name, 'not coordinator')
 
     return wrapper
 
@@ -104,7 +139,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Polling needed."""
         return True
 
     def update_sonos(self, now):
@@ -258,9 +293,27 @@ class SonosDevice(MediaPlayerDevice):
         self._player.play()
 
     @only_if_coordinator
-    def play_media(self, media_type, media_id):
-        """Send the play_media command to the media player."""
-        self._player.play_uri(media_id)
+    def play_media(self, media_type, media_id, **kwargs):
+        """
+        Send the play_media command to the media player.
+
+        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
+        """
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            from soco.exceptions import SoCoUPnPException
+            try:
+                self._player.add_uri_to_queue(media_id)
+            except SoCoUPnPException:
+                _LOGGER.error('Error parsing media uri "%s", '
+                              "please check it's a valid media resource "
+                              'supported by Sonos', media_id)
+        else:
+            self._player.play_uri(media_id)
+
+    @only_if_coordinator
+    def group_players(self):
+        """Group all players under this coordinator."""
+        self._player.partymode()
 
     @property
     def available(self):
