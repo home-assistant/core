@@ -260,7 +260,7 @@ python-forecastio==1.3.4
 python-mpd2==0.5.5
 
 # homeassistant.components.nest
-python-nest==2.9.1
+python-nest==2.9.2
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.0
