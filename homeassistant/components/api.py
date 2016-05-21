@@ -109,6 +109,8 @@ class APIEventStream(HomeAssistantView):
             _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
             last_msg = time()
+            # Fire off one message right away to have browsers fire open event
+            to_write.put(STREAM_PING_PAYLOAD)
 
             while True:
                 try:
