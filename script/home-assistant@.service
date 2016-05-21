@@ -12,8 +12,9 @@ User=%i
 # Enable the following line if you get network-related HA errors during boot
 #ExecStartPre=/usr/bin/sleep 60
 # Use `whereis hass` to determine the path of hass
-ExecStart=/usr/bin/hass
+ExecStart=/usr/bin/hass --runner
 SendSIGKILL=no
+RestartForceExitStatus=100
 
 [Install]
 WantedBy=multi-user.target
