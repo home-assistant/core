@@ -18,7 +18,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 LIRC = None
 
-REQUIREMENTS = ['python-lirc==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
 
