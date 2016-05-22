@@ -321,10 +321,18 @@ def try_to_restart():
     # Count remaining threads, ideally there should only be one non-daemonized
     # thread left (which is us). Nothing we really do with it, but it might be
     # useful when debugging shutdown/restart issues.
-    nthreads = sum(thread.isAlive() and not thread.isDaemon()
-                   for thread in threading.enumerate())
-    if nthreads > 1:
-        sys.stderr.write("Found {} non-daemonic threads.\n".format(nthreads))
+    try:
+        nthreads = sum(thread.isAlive() and not thread.isDaemon()
+                       for thread in threading.enumerate())
+        if nthreads > 1:
+            sys.stderr.write(
+                "Found {} non-daemonic threads.\n".format(nthreads))
+
+    # Somehow we sometimes seem to trigger an assertion in the python threading
+    # module. It seems we find threads that have no associated OS level thread
+    # which are not marked as stopped at the python level.
+    except AssertionError:
+        sys.stderr.write("Failed to count non-daemonic threads.\n")
 
     # Send terminate signal to all processes in our process group which
     # should be any children that have not themselves changed the process
