@@ -432,7 +432,7 @@ class TestAPI(unittest.TestCase):
     #     with closing(requests.get(_url(const.URL_API_STREAM), timeout=3,
     #                               stream=True, headers=HA_HEADERS)) as req:
 
-    #         self.assertEqual(listen_count + 2, self._listen_count())
+    #         self.assertEqual(listen_count + 1, self._listen_count())
 
     #         hass.bus.fire('test_event')
 
@@ -447,7 +447,7 @@ class TestAPI(unittest.TestCase):
     #         const.URL_API_STREAM))
     #     with closing(requests.get(url, stream=True, timeout=3,
     #                               headers=HA_HEADERS)) as req:
-    #         self.assertEqual(listen_count + 3, self._listen_count())
+    #         self.assertEqual(listen_count + 1, self._listen_count())
 
     #         hass.bus.fire('test_event1')
     #         data = self._stream_next_event(req)

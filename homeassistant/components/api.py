@@ -89,6 +89,9 @@ class APIEventStream(HomeAssistantView):
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
+            if restrict and event.event_type not in restrict:
+                return
+
             _LOGGER.debug('STREAM %s FORWARDING %s', id(stop_obj), event)
 
             if event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -100,11 +103,7 @@ class APIEventStream(HomeAssistantView):
 
         def stream():
             """Stream events to response."""
-            if restrict:
-                for event_type in restrict:
-                    self.hass.bus.listen(event_type, thread_forward_events)
-            else:
-                self.hass.bus.listen(MATCH_ALL, thread_forward_events)
+            self.hass.bus.listen(MATCH_ALL, thread_forward_events)
 
             _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
@@ -139,11 +138,7 @@ class APIEventStream(HomeAssistantView):
                     _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
                     break
 
-            if restrict:
-                for event in restrict:
-                    self.hass.bus.remove_listener(event, thread_forward_events)
-            else:
-                self.hass.bus.remove_listener(MATCH_ALL, thread_forward_events)
+            self.hass.bus.remove_listener(MATCH_ALL, thread_forward_events)
 
         return self.Response(stream(), mimetype='text/event-stream')
 
