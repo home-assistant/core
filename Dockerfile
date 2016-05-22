@@ -20,7 +20,7 @@ RUN script/build_python_openzwave && \
 
 COPY requirements_all.txt requirements_all.txt
 # certifi breaks Debian based installs
-RUN pip3 install --no-cache-dir -r requirements_all.txt && pip3 uninstall certifi
+RUN pip3 install --no-cache-dir -r requirements_all.txt && pip3 uninstall -y certifi
 
 # Copy source
 COPY . .
