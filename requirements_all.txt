@@ -219,7 +219,7 @@ pushetta==1.0.15
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.7.0
+pyRFXtrx==0.8.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
