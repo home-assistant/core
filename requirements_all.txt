@@ -9,7 +9,7 @@ voluptuous==0.8.9
 webcolors==1.5
 
 # homeassistant.components.isy994
-PyISY==1.0.5
+PyISY==1.0.6
 
 # homeassistant.components.arduino
 PyMata==2.12
