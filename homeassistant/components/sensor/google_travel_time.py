@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
     vol.Optional(CONF_TRAVEL_MODE):
         vol.In(["driving", "walking", "bicycling", "transit"]),
-    vol.Optional(CONF_OPTIONS, default=dict()): vol.All(
+    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'):
                 vol.In(["driving", "walking", "bicycling", "transit"]),
