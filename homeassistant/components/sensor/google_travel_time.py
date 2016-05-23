@@ -175,9 +175,15 @@ class GoogleTravelTimeSensor(Entity):
         atime = options_copy.get('arrival_time')
         if dtime is not None and ':' in dtime:
             options_copy['departure_time'] = convert_time_to_utc(dtime)
+        elif dtime is not None:
+            options_copy['departure_time'] = dtime
+        else:
+            options_copy['departure_time'] = 'now'
 
         if atime is not None and ':' in atime:
             options_copy['arrival_time'] = convert_time_to_utc(atime)
+        elif atime is not None:
+            options_copy['arrival_time'] = atime
 
         self._matrix = self._client.distance_matrix(self._origin,
                                                     self._destination,
