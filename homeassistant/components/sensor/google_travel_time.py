@@ -136,11 +136,12 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        try:
-            res = self._matrix['rows'][0]['elements'][0]['duration']['value']
-            return round(res/60)
-        except KeyError:
-            return None
+        _data = self._matrix['rows'][0]['elements'][0]
+        if 'duration_in_traffic' in _data:
+            return round(_data['duration_in_traffic']['value']/60)
+        if 'duration' in _data:
+            return round(_data['duration']['value']/60)
+        return None
 
     @property
     def name(self):
