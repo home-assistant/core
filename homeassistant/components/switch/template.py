@@ -8,7 +8,8 @@ import logging
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON)
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
+    ATTR_ENTITY_ID)
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
@@ -58,6 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "Missing action for switch %s", device)
             continue
 
+        entity_ids = device_config.get(ATTR_ENTITY_ID)
+
         switches.append(
             SwitchTemplate(
                 hass,
@@ -65,7 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 friendly_name,
                 state_template,
                 on_action,
-                off_action)
+                off_action,
+                entity_ids)
             )
     if not switches:
         _LOGGER.error("No switches added")
@@ -79,7 +83,7 @@ class SwitchTemplate(SwitchDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 on_action, off_action):
+                 on_action, off_action, entity_ids):
         """Initialize the Template switch."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
@@ -96,8 +100,16 @@ class SwitchTemplate(SwitchDevice):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        hass.bus.listen(EVENT_STATE_CHANGED,
-                        template_switch_event_listener)
+        def template_switch_state_listener(self, entity, old_state, new_state):
+            """Called when the target device changes state."""
+            self.update_ha_state(True)
+
+        if entity_ids is None:
+            hass.bus.listen(EVENT_STATE_CHANGED,
+                            template_switch_event_listener)
+        else:
+            track_state_change(hass, entity_ids,
+                               template_switch_state_listener)
 
     @property
     def name(self):
