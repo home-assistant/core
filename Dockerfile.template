@@ -1,4 +1,4 @@
-FROM resin/raspberrypi2-python:3.4
+FROM resin/%%RESIN_MACHINE_NAME%%-python:3.4
 MAINTAINER Gareth Jeanne <contact@garethjeanne.co.uk>
 
 VOLUME /config
