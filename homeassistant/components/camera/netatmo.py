@@ -12,11 +12,6 @@ from homeassistant.loader import get_component
 
 DEPENDENCIES = ["netatmo"]
 
-REQUIREMENTS = [
-    'https://github.com/jabesq/netatmo-api-python/archive/'
-    'master.zip'
-    '#lnetatmo==0.4.0']
-
 _LOGGER = logging.getLogger(__name__)
 
 
