@@ -15,6 +15,7 @@ from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers import template
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util import slugify
 
 CONF_SENSORS = 'sensors'
