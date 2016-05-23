@@ -6,9 +6,9 @@ in the .lintrc file which can be interpreted in home-assistant to
 trigger various actions.
 
 Sending signals to other IR receivers can be accomplished with the
-shell_command component and the irsend command.
+shell_command component and the irsend command for now.
 """
-
+# pylint: disable=import-error
 import threading
 import time
 import logging
@@ -16,8 +16,7 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-LIRC = None
-
+REQUIREMENTS = ['python-lirc>=1.2.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
 
@@ -27,13 +26,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Perform safe import of third-party python-lirc module
     try:
         import lirc
-        global LIRC
-        LIRC = lirc
     except ImportError:
         _LOGGER.error("You are missing a required dependency: python-lirc.")
         return False
 
-    LIRC.init('home-assistant', blocking=False)
+    # blocking=True gives unexpected behavior (multiple responses for 1 press)
+    lirc.init('home-assistant', blocking=False)
     sensor = LircSensor()
     add_devices([sensor])
 
@@ -44,7 +42,7 @@ class LircSensor(Entity):
     """Sensor entity for LIRC."""
 
     def __init__(self, *args, **kwargs):
-        """Contruct a LircSensor entity."""
+        """Construct a LircSensor entity."""
         _LOGGER.info('Initializing LIRC sensor')
         Entity.__init__(self, *args, **kwargs)
         self.last_key_pressed = ''
@@ -66,7 +64,7 @@ class LircSensor(Entity):
         self.last_key_pressed = new_state
         self.update_ha_state()
 
-    def stop(self, event):
+    def stop(self, _event):
         """Kill the helper thread on stop."""
         _LOGGER.info('Ending LIRC interface thread')
         self._lirc_interface.stopped.set()
@@ -89,8 +87,9 @@ class LircInterface(threading.Thread):
 
     def run(self):
         """Main loop of LIRC interface thread."""
+        import lirc
         while not self.stopped.isSet():
-            code = LIRC.nextcode()  # list; empty if no buttons pressed
+            code = lirc.nextcode()  # list; empty if no buttons pressed
 
             # interpret result from python-lirc
             if code:
