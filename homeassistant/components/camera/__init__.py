@@ -6,17 +6,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
 import logging
-import re
-import time
-
-import requests
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.components import bloomsky
-from homeassistant.const import HTTP_OK, HTTP_NOT_FOUND, ATTR_ENTITY_ID
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-
+from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
@@ -34,9 +29,6 @@ STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
 
-MULTIPART_BOUNDARY = '--jpgboundary'
-MJPEG_START_HEADER = 'Content-type: {0}\r\n\r\n'
-
 
 # pylint: disable=too-many-branches
 def setup(hass, config):
@@ -45,56 +37,10 @@ def setup(hass, config):
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
         DISCOVERY_PLATFORMS)
 
+    hass.wsgi.register_view(CameraImageView(hass, component.entities))
+    hass.wsgi.register_view(CameraMjpegStream(hass, component.entities))
+
     component.setup(config)
-
-    def _proxy_camera_image(handler, path_match, data):
-        """Serve the camera image via the HA server."""
-        entity_id = path_match.group(ATTR_ENTITY_ID)
-        camera = component.entities.get(entity_id)
-
-        if camera is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        response = camera.camera_image()
-
-        if response is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        handler.send_response(HTTP_OK)
-        handler.write_content(response)
-
-    hass.http.register_path(
-        'GET',
-        re.compile(r'/api/camera_proxy/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_image)
-
-    def _proxy_camera_mjpeg_stream(handler, path_match, data):
-        """Proxy the camera image as an mjpeg stream via the HA server."""
-        entity_id = path_match.group(ATTR_ENTITY_ID)
-        camera = component.entities.get(entity_id)
-
-        if camera is None:
-            handler.send_response(HTTP_NOT_FOUND)
-            handler.end_headers()
-            return
-
-        try:
-            camera.is_streaming = True
-            camera.update_ha_state()
-            camera.mjpeg_stream(handler)
-
-        except (requests.RequestException, IOError):
-            camera.is_streaming = False
-            camera.update_ha_state()
-
-    hass.http.register_path(
-        'GET',
-        re.compile(r'/api/camera_proxy_stream/(?P<entity_id>[a-zA-Z\._0-9]+)'),
-        _proxy_camera_mjpeg_stream)
 
     return True
 
@@ -105,6 +51,11 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
+
+    @property
+    def access_token(self):
+        """Access token for this camera."""
+        return str(id(self))
 
     @property
     def should_poll(self):
@@ -135,32 +86,35 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    def mjpeg_stream(self, handler):
+    def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from camera images."""
-        def write_string(text):
-            """Helper method to write a string to the stream."""
-            handler.request.sendall(bytes(text + '\r\n', 'utf-8'))
+        import eventlet
+        response.content_type = ('multipart/x-mixed-replace; '
+                                 'boundary=--jpegboundary')
 
-        write_string('HTTP/1.1 200 OK')
-        write_string('Content-type: multipart/x-mixed-replace; '
-                     'boundary={}'.format(MULTIPART_BOUNDARY))
-        write_string('')
-        write_string(MULTIPART_BOUNDARY)
+        def stream():
+            """Stream images as mjpeg stream."""
+            try:
+                last_image = None
+                while True:
+                    img_bytes = self.camera_image()
 
-        while True:
-            img_bytes = self.camera_image()
+                    if img_bytes is not None and img_bytes != last_image:
+                        yield bytes(
+                            '--jpegboundary\r\n'
+                            'Content-Type: image/jpeg\r\n'
+                            'Content-Length: {}\r\n\r\n'.format(
+                                len(img_bytes)), 'utf-8') + img_bytes + b'\r\n'
 
-            if img_bytes is None:
-                continue
+                        last_image = img_bytes
 
-            write_string('Content-length: {}'.format(len(img_bytes)))
-            write_string('Content-type: image/jpeg')
-            write_string('')
-            handler.request.sendall(img_bytes)
-            write_string('')
-            write_string(MULTIPART_BOUNDARY)
+                    eventlet.sleep(0.5)
+            except GeneratorExit:
+                pass
 
-            time.sleep(0.5)
+        response.response = stream()
+
+        return response
 
     @property
     def state(self):
@@ -175,7 +129,9 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """Camera state attributes."""
-        attr = {}
+        attr = {
+            'access_token': self.access_token,
+        }
 
         if self.model:
             attr['model_name'] = self.model
@@ -184,3 +140,60 @@ class Camera(Entity):
             attr['brand'] = self.brand
 
         return attr
+
+
+class CameraView(HomeAssistantView):
+    """Base CameraView."""
+
+    requires_auth = False
+
+    def __init__(self, hass, entities):
+        """Initialize a basic camera view."""
+        super().__init__(hass)
+        self.entities = entities
+
+    def get(self, request, entity_id):
+        """Start a get request."""
+        camera = self.entities.get(entity_id)
+
+        if camera is None:
+            return self.Response(status=404)
+
+        authenticated = (request.authenticated or
+                         request.args.get('token') == camera.access_token)
+
+        if not authenticated:
+            return self.Response(status=401)
+
+        return self.handle(camera)
+
+    def handle(self, camera):
+        """Hanlde the camera request."""
+        raise NotImplementedError()
+
+
+class CameraImageView(CameraView):
+    """Camera view to serve an image."""
+
+    url = "/api/camera_proxy/<entity(domain=camera):entity_id>"
+    name = "api:camera:image"
+
+    def handle(self, camera):
+        """Serve camera image."""
+        response = camera.camera_image()
+
+        if response is None:
+            return self.Response(status=500)
+
+        return self.Response(response)
+
+
+class CameraMjpegStream(CameraView):
+    """Camera View to serve an MJPEG stream."""
+
+    url = "/api/camera_proxy_stream/<entity(domain=camera):entity_id>"
+    name = "api:camera:stream"
+
+    def handle(self, camera):
+        """Serve camera image."""
+        return camera.mjpeg_stream(self.Response())

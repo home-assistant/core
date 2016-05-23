@@ -12,7 +12,7 @@ from homeassistant.components import logbook
 from tests.common import mock_http_component, get_test_home_assistant
 
 
-class TestComponentHistory(unittest.TestCase):
+class TestComponentLogbook(unittest.TestCase):
     """Test the History component."""
 
     def setUp(self):

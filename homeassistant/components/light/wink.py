@@ -97,7 +97,9 @@ class WinkLight(Light):
         }
 
         if rgb_color:
-            state_kwargs['color_xy'] = color_util.color_RGB_to_xy(*rgb_color)
+            xyb = color_util.color_RGB_to_xy(*rgb_color)
+            state_kwargs['color_xy'] = xyb[0], xyb[1]
+            state_kwargs['brightness'] = xyb[2]
 
         if color_temp_mired:
             state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)

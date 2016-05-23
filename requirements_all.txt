@@ -23,6 +23,9 @@ SoCo==0.11.1
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.1
 
+# homeassistant.components.http
+Werkzeug==0.11.5
+
 # homeassistant.components.apcupsd
 apcaccess==0.0.4
 
@@ -52,6 +55,9 @@ dweepy==0.2.0
 
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.12
+
+# homeassistant.components.http
+eventlet==0.19.0
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.5
@@ -119,7 +125,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
 # homeassistant.components.qwikswitch
-https://github.com/kellerza/pyqwikswitch/archive/v0.1.zip#pyqwikswitch==0.1
+https://github.com/kellerza/pyqwikswitch/archive/v0.3.zip#pyqwikswitch==0.3
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5
@@ -131,7 +137,7 @@ https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f
 https://github.com/rkabadi/temper-python/archive/3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip#temperusb==1.2.3
 
 # homeassistant.components.sensor.gtfs
-https://github.com/robbiet480/pygtfs/archive/432414b720c580fb2667a0a48f539118a2d95969.zip#pygtfs==0.1.2
+https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
 
 # homeassistant.components.scene.hunterdouglas_powerview
 https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
@@ -260,7 +266,7 @@ python-forecastio==1.3.4
 python-mpd2==0.5.5
 
 # homeassistant.components.nest
-python-nest==2.9.1
+python-nest==2.9.2
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.0
@@ -330,6 +336,9 @@ somecomfort==0.2.1
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==0.3.4
+
+# homeassistant.components.http
+static3==0.7.0
 
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
