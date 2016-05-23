@@ -113,14 +113,13 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    # Somehow our queue.get takes too long to
-                    # be notified of arrival of object. Probably
+                    # Somehow our queue.get sometimes takes too long to
+                    # be notified of arrival of data. Probably
                     # because of our spawning on hub in other thread
                     # hack. Because current goal is to get this out,
                     # We just timeout every second because it will
                     # return right away if qsize() > 0.
                     # So yes, we're basically polling :(
-                    # socket.io anyone?
                     payload = to_write.get(timeout=1)
 
                     if payload is stop_obj:
