@@ -1,5 +1,5 @@
-FROM python:3.4
-MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
+FROM resin/raspberrypi2-python:3.4
+MAINTAINER Gareth Jeanne <contact@garethjeanne.co.uk>
 
 VOLUME /config
 
