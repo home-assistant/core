@@ -1,4 +1,4 @@
-FROM python:3.4
+FROM python:3.4-alpine
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
 VOLUME /config
@@ -6,21 +6,32 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir colorlog cython
+RUN apk update && apk upgrade && apk add git coreutils perl openssl nmap net-tools cython sudo
 
-# For the nmap tracker, bluetooth tracker, Z-Wave
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends nmap net-tools cython3 libudev-dev sudo libglib2.0-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN cd / && \
+    mkdir build && \
+    cd build && \
+    git clone --recursive https://github.com/OpenZWave/python-openzwave.git && \
+    cd python-openzwave && \
+    git checkout python3 && \
+    git clone git://github.com/OpenZWave/open-zwave.git openzwave
 
-COPY script/build_python_openzwave script/build_python_openzwave
-RUN script/build_python_openzwave && \
-  mkdir -p /usr/local/share/python-openzwave && \
-  ln -sf /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
+RUN apk add build-base linux-headers eudev-dev glib-dev
+
+RUN pip3 install --upgrade --no-cache-dir colorlog cython pip
+
+RUN cd /build/python-openzwave && \
+    PYTHON_EXEC=`which python3` make build && \
+    PYTHON_EXEC=`which python3` make install
+
+RUN mkdir -p /usr/local/share/python-openzwave && \
+    ln -sf /build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
 
 COPY requirements_all.txt requirements_all.txt
-# certifi breaks Debian based installs
-RUN pip3 install --no-cache-dir -r requirements_all.txt && pip3 uninstall -y certifi
+RUN pip3 install --no-cache-dir -r requirements_all.txt
+
+RUN apk del build-base linux-headers eudev-dev glib-dev && \
+    rm -rf /tmp/* /var/tmp/*
 
 # Copy source
 COPY . .
