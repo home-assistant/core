@@ -82,7 +82,7 @@ class APIEventStream(HomeAssistantView):
 
         restrict = request.args.get('restrict')
         if restrict:
-            restrict = restrict.split(',')
+            restrict = set(restrict.split(','))
 
         def thread_forward_events(event):
             """Forward events to the open request."""
