@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "http"
-REQUIREMENTS = ("eventlet==0.18.4", "static3==0.7.0", "Werkzeug==0.11.5",)
+REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
