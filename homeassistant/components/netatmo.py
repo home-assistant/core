@@ -44,7 +44,8 @@ def setup(hass, config):
     NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
                                        config[DOMAIN][CONF_SECRET_KEY],
                                        config[DOMAIN][CONF_USERNAME],
-                                       config[DOMAIN][CONF_PASSWORD])
+                                       config[DOMAIN][CONF_PASSWORD],
+                                       "read_station read_camera access_camera")
 
     if not NETATMO_AUTH:
         _LOGGER.error(

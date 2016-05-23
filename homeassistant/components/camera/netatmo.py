@@ -26,29 +26,39 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WelcomeCamera(Camera):
-    """Representation of the images published from the Netatmo Welcome camera."""
+    """
+    Representation of the images published from the Netatmo Welcome camera.
+    """
 
     def __init__(self, data, camera_name):
         """Setup for access to the BloomSky camera images."""
         super(WelcomeCamera, self).__init__()
         self._data = data
         self._name = camera_name
-        self._url = self._data.welcomedata.cameraUrl(camera=camera_name)
+        self._vpnurl, self._localurl = self._data.welcomedata.cameraUrls(
+            camera=camera_name
+            )
 
     def camera_image(self):
         """Return a still image response from the camera."""
         try:
-            response = requests.get('{0}/live/snapshot_720.jpg'.format(self._url))
+            if self._localurl:
+                response = requests.get('{0}/live/snapshot_720.jpg'.format(
+                    self._localurl))
+            else:
+                response = requests.get('{0}/live/snapshot_720.jpg'.format(
+                    self._vpnurl))
         except requests.exceptions.RequestException as error:
             _LOGGER.error('Welcome VPN url changed: %s', error)
             self._data.update()
-            self._url = self._data.welcomedata.cameraUrl(camera=self._name)
+            (self._vpnurl, self._localurl) = \
+                self._data.welcomedata.cameraUrls(camera=self._name)
             return None
         return response.content
 
     @property
     def name(self):
-        """Return the name of this BloomSky device."""
+        """Return the name of this Netatmo Welcome device."""
         return self._name
 
 
@@ -64,8 +74,9 @@ class WelcomeData(object):
     def get_camera_names(self):
         """Return all module available on the API as a list."""
         self.update()
-        for camera in self.welcomedata.cameras:
-            self.camera_names.append(camera['name'])
+        for home in self.welcomedata.cameras.keys():
+            for camera in self.welcomedata.cameras[home].values():
+                self.camera_names.append(camera['name'])
         return self.camera_names
 
     def update(self):
