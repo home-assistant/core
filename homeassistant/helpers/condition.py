@@ -224,15 +224,34 @@ def template_from_config(config, config_validation=True):
     return template_if
 
 
+def _in_time_window(now, before=None, after=None):
+    """Test if 'now' falls between 'after' and 'before'.
+
+    Handle the fact that time is continuous and we may be testing for
+    a period that crosses midnight. In that case it is easier to test
+    for the opposite. "(23:59 <= now < 00:01)" would be the same as
+    "not (00:01 <= now < 23:59)".
+    """
+    in_window = True
+    if before is not None and after is not None:
+        if before > after:
+            before, after = after, before
+            in_window = False
+
+    if before is not None and now >= before:
+        return not in_window
+
+    if after is not None and now < after:
+        return not in_window
+
+    return in_window
+
+
 def time(before=None, after=None, weekday=None):
     """Test if local time condition matches."""
     now = dt_util.now()
-    now_time = now.time()
 
-    if before is not None and now_time > before:
-        return False
-
-    if after is not None and now_time < after:
+    if not _in_time_window(now.time(), before, after):
         return False
 
     if weekday is not None:

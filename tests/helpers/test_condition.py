@@ -1,5 +1,6 @@
 """Test the condition helper."""
 from homeassistant.helpers import condition
+from homeassistant.util import dt
 
 from tests.common import get_test_home_assistant
 
@@ -66,3 +67,12 @@ class TestConditionHelper:
 
         self.hass.states.set('sensor.temperature', 100)
         assert test(self.hass)
+
+    def test_time_window(self):
+        """Test time condition windows."""
+        sixam = dt.parse_time("06:00:00")
+        sixpm = dt.parse_time("18:00:00")
+
+        day = condition.time(after=sixam, before=sixpm)
+        night = condition.time(after=sixpm, before=sixam)
+        assert (day and not night) or (night and not day)
