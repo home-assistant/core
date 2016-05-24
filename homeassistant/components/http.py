@@ -243,7 +243,7 @@ class HomeAssistantWSGI(object):
 
         sock = eventlet.listen((self.server_host, self.server_port))
         if self.ssl_certificate:
-            eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
+            sock = eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
                               keyfile=self.ssl_key, server_side=True)
         wsgi.server(sock, self)
 
