@@ -334,29 +334,6 @@ def try_to_restart():
     except AssertionError:
         sys.stderr.write("Failed to count non-daemonic threads.\n")
 
-    # Send terminate signal to all processes in our process group which
-    # should be any children that have not themselves changed the process
-    # group id. Don't bother if couldn't even call setpgid.
-    if hasattr(os, 'setpgid'):
-        sys.stderr.write("Signalling child processes to terminate...\n")
-        os.kill(0, signal.SIGTERM)
-
-        # wait for child processes to terminate
-        try:
-            while True:
-                time.sleep(1)
-                if os.waitpid(0, os.WNOHANG) == (0, 0):
-                    break
-        except OSError:
-            pass
-
-    elif os.name == 'nt':
-        # Maybe one of the following will work, but how do we indicate which
-        # processes are our children if there is no process group?
-        # os.kill(0, signal.CTRL_C_EVENT)
-        # os.kill(0, signal.CTRL_BREAK_EVENT)
-        pass
-
     # Try to not leave behind open filedescriptors with the emphasis on try.
     try:
         max_fd = os.sysconf("SC_OPEN_MAX")
@@ -407,13 +384,6 @@ def main():
         daemonize()
     if args.pid_file:
         write_pid(args.pid_file)
-
-    # Create new process group if we can
-    if hasattr(os, 'setpgid'):
-        try:
-            os.setpgid(0, 0)
-        except PermissionError:
-            pass
 
     exit_code = setup_and_run_hass(config_dir, args)
     if exit_code == RESTART_EXIT_CODE and not args.runner:
