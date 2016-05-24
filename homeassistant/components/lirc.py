@@ -15,6 +15,7 @@ import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
+DOMAIN = "lirc"
 REQUIREMENTS = ['python-lirc>=1.2.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
@@ -22,7 +23,7 @@ EVENT_BUTTON_PRESSED = 'button_pressed'
 BUTTON_NAME = 'button_name'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup(hass, config):
     """Setup LIRC capability."""
     # Perform safe import of third-party python-lirc module
     try:
