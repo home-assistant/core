@@ -67,16 +67,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if self._code:
-            EVL_CONTROLLER.keypresses_to_partition(self._partitionNumber, (code + '1'))
+            EVL_CONTROLLER.disarm_partition(str(code), self._partitionNumber)
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if self._code:
-            EVL_CONTROLLER.keypresses_to_partition(self._partitionNumber, (code + '3'))
+            EVL_CONTROLLER.arm_stay_partition(str(code), self._partitionNumber)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if self._code:
-            EVL_CONTROLLER.keypresses_to_partition(self._partitionNumber, (code + '2'))
+            EVL_CONTROLLER.arm_away_partition(str(code), self._partitionNumber)
 
     def alarm_trigger(self, code=None):
         """Alarm trigger command. Not possible for us."""

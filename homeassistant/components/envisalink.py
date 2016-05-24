@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/envisalink/
 """
 import logging
+import time
 from homeassistant.const import (
     ATTR_SERVICE, ATTR_DISCOVERED,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
@@ -12,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 from homeassistant.util import convert
 
-REQUIREMENTS = ['pyenvisalink==0.2', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==0.3', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -85,8 +86,20 @@ def setup(hass, base_config):
     _zoneDump = convert(config.get(CONF_ZONEDUMP_INTERVAL), int, DEFAULT_ZONEDUMP_INTERVAL)
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
-
+    _connectStatus = {}
     EVL_CONTROLLER = EnvisalinkAlarmPanel(_host, _port, _panelType, _version, _user, _pass, _zoneDump, _keepAlive)
+
+    def login_fail_callback(data):
+        _LOGGER.error("The envisalink rejected your credentials.")
+        _connectStatus['fail'] = 1
+
+    def connection_fail_callback(data):
+        _LOGGER.error("Could not establish a connection with the envisalink.")
+        _connectStatus['fail'] = 1
+
+    def connection_success_callback(data):
+        _LOGGER.info("Successfully established a connection with the envisalink.")
+        _connectStatus['success'] = 1
 
     def zones_updated_callback(data):
         """This will handle zone timer updates. Basically just an update of all zones."""
@@ -111,20 +124,34 @@ def setup(hass, base_config):
     def start_envisalink(event):
         """Startup process for the envisalink."""
         EVL_CONTROLLER.start()
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
+        for i in range(10):
+            if 'success' in _connectStatus:
+                hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
+                return True
+            elif 'fail' in _connectStatus:
+                return False
+            else:
+                time.sleep(1)
+
+        _LOGGER.error("Timeout occurred waiting to establish connection with the envisalink.")
+        return False
 
     EVL_CONTROLLER.callback_zone_timer_dump = zones_updated_callback
     EVL_CONTROLLER.callback_zone_state_change = zones_updated_callback 
     EVL_CONTROLLER.callback_partition_state_change = partition_updated_callback
     EVL_CONTROLLER.callback_keypad_update = alarm_data_updated_callback
-    start_envisalink(None) 
+    EVL_CONTROLLER.callback_login_failure = login_fail_callback
+    EVL_CONTROLLER.callback_login_timeout = connection_fail_callback
+    EVL_CONTROLLER.callback_login_success = connection_success_callback
+    
+    _result = start_envisalink(None) 
+    if _result:
+        # Load sub-components for envisalink
+        for comp_name in (['binary_sensor', 'alarm_control_panel', 'sensor']):
+            load_platform(hass, comp_name, 'envisalink',
+                          {'zones': _zones, 'partitions': _partitions, 'code': _code}, config)
 
-    # Load sub-components for envisalink
-    for comp_name in (['binary_sensor', 'alarm_control_panel', 'sensor']):
-        load_platform(hass, comp_name, 'envisalink',
-                      {'zones': _zones, 'partitions': _partitions, 'code': _code}, config)
-
-    return True
+    return _result 
 
 
 class EnvisalinkDevice(Entity):
