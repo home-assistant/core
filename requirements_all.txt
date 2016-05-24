@@ -130,7 +130,7 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5
+https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
