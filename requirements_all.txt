@@ -9,7 +9,7 @@ voluptuous==0.8.9
 webcolors==1.5
 
 # homeassistant.components.isy994
-PyISY==1.0.5
+PyISY==1.0.6
 
 # homeassistant.components.arduino
 PyMata==2.12
@@ -30,7 +30,7 @@ Werkzeug==0.11.5
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==1.0
+astral==1.1
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
@@ -57,7 +57,7 @@ dweepy==0.2.0
 eliqonline==1.0.12
 
 # homeassistant.components.http
-eventlet==0.18.4
+eventlet==0.19.0
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.5
