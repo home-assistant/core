@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "http"
-REQUIREMENTS = ("eventlet==0.18.4", "static3==0.7.0", "Werkzeug==0.11.5",)
+REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -31,8 +31,29 @@ _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 _LOGGER = logging.getLogger(__name__)
 
 
+class HideSensitiveFilter(logging.Filter):
+    """Filter API password calls."""
+
+    # pylint: disable=too-few-public-methods
+    def __init__(self, hass):
+        """Initialize sensitive data filter."""
+        super().__init__()
+        self.hass = hass
+
+    def filter(self, record):
+        """Hide sensitive data in messages."""
+        if self.hass.wsgi.api_password is None:
+            return True
+
+        record.msg = record.msg.replace(self.hass.wsgi.api_password, '*******')
+
+        return True
+
+
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
+    _LOGGER.addFilter(HideSensitiveFilter(hass))
+
     conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
@@ -202,7 +223,7 @@ class HomeAssistantWSGI(object):
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
-        callable it’s called with the url adapter that triggered the match and
+        callable it's called with the url adapter that triggered the match and
         the values of the URL as keyword arguments and has to return the target
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
@@ -243,9 +264,9 @@ class HomeAssistantWSGI(object):
 
         sock = eventlet.listen((self.server_host, self.server_port))
         if self.ssl_certificate:
-            eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
-                              keyfile=self.ssl_key, server_side=True)
-        wsgi.server(sock, self)
+            sock = eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
+                                     keyfile=self.ssl_key, server_side=True)
+        wsgi.server(sock, self, log=_LOGGER)
 
     def dispatch_request(self, request):
         """Handle incoming request."""
@@ -318,9 +339,7 @@ class HomeAssistantView(object):
 
     def handle_request(self, request, **values):
         """Handle request to url."""
-        from werkzeug.exceptions import (
-            MethodNotAllowed, Unauthorized, BadRequest,
-        )
+        from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 
         try:
             handler = getattr(self, request.method.lower())
@@ -341,18 +360,6 @@ class HomeAssistantView(object):
         elif hmac.compare_digest(request.args.get(DATA_API_PASSWORD, ''),
                                  self.hass.wsgi.api_password):
             authenticated = True
-
-        else:
-            # Do we still want to support passing it in as post data?
-            try:
-                json_data = request.json
-                if (json_data is not None and
-                        hmac.compare_digest(
-                            json_data.get(DATA_API_PASSWORD, ''),
-                            self.hass.wsgi.api_password)):
-                    authenticated = True
-            except BadRequest:
-                pass
 
         if self.requires_auth and not authenticated:
             raise Unauthorized()
