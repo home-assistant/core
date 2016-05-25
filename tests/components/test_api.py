@@ -1,4 +1,4 @@
-"""The tests for the Home Assistant HTTP component."""
+"""The tests for the Home Assistant API component."""
 # pylint: disable=protected-access,too-many-public-methods
 # from contextlib import closing
 import json
@@ -65,28 +65,6 @@ class TestAPI(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         hass.pool.block_till_done()
-
-    # TODO move back to http component and test with use_auth.
-    def test_access_denied_without_password(self):
-        """Test access without password."""
-        req = requests.get(_url(const.URL_API))
-
-        self.assertEqual(401, req.status_code)
-
-    def test_access_denied_with_wrong_password(self):
-        """Test ascces with wrong password."""
-        req = requests.get(
-            _url(const.URL_API),
-            headers={const.HTTP_HEADER_HA_AUTH: 'wrongpassword'})
-
-        self.assertEqual(401, req.status_code)
-
-    def test_access_with_password_in_url(self):
-        """Test access with password in URL."""
-        req = requests.get(
-            "{}?api_password={}".format(_url(const.URL_API), API_PASSWORD))
-
-        self.assertEqual(200, req.status_code)
 
     def test_api_list_state_entities(self):
         """Test if the debug interface allows us to list state entities."""
