@@ -32,14 +32,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HideSensitiveFilter(logging.Filter):
-    """Filter API password calls"""
+    """Filter API password calls."""
 
+    # pylint: disable=too-few-public-methods
     def __init__(self, hass):
         """Initialize sensitive data filter."""
+        super().__init__()
         self.hass = hass
 
     def filter(self, record):
         """Hide sensitive data in messages."""
+        if self.hass.wsgi.api_password is None:
+            return True
+
         record.msg = record.msg.replace(self.hass.wsgi.api_password, '*******')
 
         return True
@@ -218,7 +223,7 @@ class HomeAssistantWSGI(object):
         """Register a redirect with the server.
 
         If given this must be either a string or callable. In case of a
-        callable it’s called with the url adapter that triggered the match and
+        callable it's called with the url adapter that triggered the match and
         the values of the URL as keyword arguments and has to return the target
         for the redirect, otherwise it has to be a string with placeholders in
         rule syntax.
@@ -334,9 +339,7 @@ class HomeAssistantView(object):
 
     def handle_request(self, request, **values):
         """Handle request to url."""
-        from werkzeug.exceptions import (
-            MethodNotAllowed, Unauthorized, BadRequest,
-        )
+        from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 
         try:
             handler = getattr(self, request.method.lower())
@@ -357,18 +360,6 @@ class HomeAssistantView(object):
         elif hmac.compare_digest(request.args.get(DATA_API_PASSWORD, ''),
                                  self.hass.wsgi.api_password):
             authenticated = True
-
-        else:
-            # Do we still want to support passing it in as post data?
-            try:
-                json_data = request.json
-                if (json_data is not None and
-                        hmac.compare_digest(
-                            json_data.get(DATA_API_PASSWORD, ''),
-                            self.hass.wsgi.api_password)):
-                    authenticated = True
-            except BadRequest:
-                pass
 
         if self.requires_auth and not authenticated:
             raise Unauthorized()
