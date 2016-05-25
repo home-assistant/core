@@ -31,8 +31,24 @@ _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 _LOGGER = logging.getLogger(__name__)
 
 
+class HideSensitiveFilter(logging.Filter):
+    """Filter API password calls"""
+
+    def __init__(self, hass):
+        """Initialize sensitive data filter."""
+        self.hass = hass
+
+    def filter(self, record):
+        """Hide sensitive data in messages."""
+        record.msg = record.msg.replace(self.hass.wsgi.api_password, '*******')
+
+        return True
+
+
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
+    _LOGGER.addFilter(HideSensitiveFilter(hass))
+
     conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
@@ -245,7 +261,7 @@ class HomeAssistantWSGI(object):
         if self.ssl_certificate:
             sock = eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
                                      keyfile=self.ssl_key, server_side=True)
-        wsgi.server(sock, self)
+        wsgi.server(sock, self, log=_LOGGER)
 
     def dispatch_request(self, request):
         """Handle incoming request."""
