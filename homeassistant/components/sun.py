@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util import location as location_util
 from homeassistant.const import CONF_ELEVATION
 
-REQUIREMENTS = ['astral==1.0']
+REQUIREMENTS = ['astral==1.1']
 DOMAIN = "sun"
 ENTITY_ID = "sun.sun"
 
