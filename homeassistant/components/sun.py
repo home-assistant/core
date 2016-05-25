@@ -127,10 +127,12 @@ class Sun(Entity):
     entity_id = ENTITY_ID
 
     def __init__(self, hass, location):
-        """Initialize the Sun."""
+        """Initialize the sun."""
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
+        self.solar_elevation = self.solar_azimuth = 0
+
         track_utc_time_change(hass, self.timer_update, second=30)
 
     @property
@@ -161,24 +163,6 @@ class Sun(Entity):
         """Datetime when the next change to the state is."""
         return min(self.next_rising, self.next_setting)
 
-    @property
-    def solar_elevation(self):
-        """Angle the sun is above the horizon."""
-        from astral import Astral
-        return Astral().solar_elevation(
-            dt_util.utcnow(),
-            self.location.latitude,
-            self.location.longitude)
-
-    @property
-    def solar_azimuth(self):
-        """Angle the sun is clockwise from North."""
-        from astral import Astral
-        return Astral().solar_azimuth(
-            dt_util.utcnow(),
-            self.location.latitude,
-            self.location.longitude)
-
     def update_as_of(self, utc_point_in_time):
         """Calculate sun state at a point in UTC time."""
         mod = -1
@@ -200,6 +184,20 @@ class Sun(Entity):
         self.next_rising = next_rising_dt
         self.next_setting = next_setting_dt
 
+    def update_sun_position(self, utc_point_in_time):
+        """Calculate the position of the sun."""
+        from astral import Astral
+
+        self.solar_azimuth = Astral().solar_azimuth(
+            utc_point_in_time,
+            self.location.latitude,
+            self.location.longitude)
+
+        self.solar_elevation = Astral().solar_elevation(
+            utc_point_in_time,
+            self.location.latitude,
+            self.location.longitude)
+
     def point_in_time_listener(self, now):
         """Called when the state of the sun has changed."""
         self.update_as_of(now)
@@ -211,5 +209,6 @@ class Sun(Entity):
             self.next_change + timedelta(seconds=1))
 
     def timer_update(self, time):
-        """Needed to update solar elevation."""
+        """Needed to update solar elevation and azimuth."""
+        self.update_sun_position(time)
         self.update_ha_state()
