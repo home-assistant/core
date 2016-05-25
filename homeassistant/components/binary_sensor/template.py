@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     ENTITY_ID_FORMAT,
                                                     SENSOR_CLASSES)
 from homeassistant.const import (ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
-                                 ATTR_ENTITY_ID)
+                                 ATTR_ENTITY_ID, MATCH_ALL)
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
@@ -41,8 +41,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           device)
             continue
 
-        entity_ids = device_config.get(ATTR_ENTITY_ID)
-
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         sensor_class = device_config.get('sensor_class')
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
@@ -55,6 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(
                 'Missing %s for sensor %s', CONF_VALUE_TEMPLATE, device)
             continue
+
+        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
 
         sensors.append(
             BinarySensorTemplate(
@@ -90,21 +90,13 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         self.update()
 
-        def template_bsensor_event_listener(event):
-            """Called when the target device changes state."""
-            self.update_ha_state(True)
-
         def template_bsensor_state_listener(self, entity, old_state,
                                             new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        if entity_ids is None:
-            hass.bus.listen(EVENT_STATE_CHANGED,
-                            template_bsensor_event_listener)
-        else:
-            track_state_change(hass, entity_ids,
-                               template_bsensor_state_listener)
+        track_state_change(hass, entity_ids,
+                           template_bsensor_state_listener)
 
     @property
     def name(self):
