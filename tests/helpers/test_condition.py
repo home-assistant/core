@@ -1,4 +1,6 @@
 """Test the condition helper."""
+from unittest.mock import patch
+
 from homeassistant.helpers import condition
 from homeassistant.util import dt
 
@@ -73,6 +75,22 @@ class TestConditionHelper:
         sixam = dt.parse_time("06:00:00")
         sixpm = dt.parse_time("18:00:00")
 
-        day = condition.time(after=sixam, before=sixpm)
-        night = condition.time(after=sixpm, before=sixam)
-        assert (day and not night) or (night and not day)
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=3)):
+            assert not condition.time(after=sixam, before=sixpm)
+            assert condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=9)):
+            assert condition.time(after=sixam, before=sixpm)
+            assert not condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=15)):
+            assert condition.time(after=sixam, before=sixpm)
+            assert not condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=21)):
+            assert not condition.time(after=sixam, before=sixpm)
+            assert condition.time(after=sixpm, before=sixam)
