@@ -7,9 +7,7 @@ example.
 Uses: https://github.com/aneumeier/python-lightify for the Osram light interface.
 
 Todo:
-Need to add support for Non RGBW lights.
-Need to add polling support (If lights are switched on from Android App etc).
-
+Add support for Non RGBW lights.
 """
 
 import logging
