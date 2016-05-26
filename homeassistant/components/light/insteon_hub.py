@@ -40,7 +40,7 @@ class InsteonToggleDevice(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._value / 100 * 256
+        return self._value / 100 * 255
 
     def update(self):
         """Update state of the sensor."""
@@ -58,7 +58,7 @@ class InsteonToggleDevice(Light):
     def turn_on(self, **kwargs):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._value = kwargs[ATTR_BRIGHTNESS] / 256 * 100
+            self._value = kwargs[ATTR_BRIGHTNESS] / 255 * 100
             self.node.send_command('on', self._value)
         else:
             self._value = 100
