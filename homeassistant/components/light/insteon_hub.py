@@ -5,12 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
 from homeassistant.components.insteon_hub import INSTEON
-
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, Light)
-
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
