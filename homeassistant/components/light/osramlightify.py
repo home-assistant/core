@@ -6,6 +6,12 @@ Osram Lightify platform that implements lights. Largely built off the demo
 example.
 Uses: https://github.com/aneumeier/python-lightify for the Osram light interface.
 
+In order to use the platform just add the following to the configuration.yaml:
+
+light:
+  platform: osramlightify
+  host: hostname or ip
+
 Todo:
 Add support for Non RGBW lights.
 """
