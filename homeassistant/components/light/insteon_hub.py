@@ -58,8 +58,10 @@ class InsteonToggleDevice(Light):
     def turn_on(self, **kwargs):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
-            self.node.send_command('on', kwargs[ATTR_BRIGHTNESS] / 256 * 100)
+            self._value = kwargs[ATTR_BRIGHTNESS] / 256 * 100
+            self.node.send_command('on', self._value)
         else:
+            self._value = 100
             self.node.send_command('on')
 
     def turn_off(self, **kwargs):
