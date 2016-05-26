@@ -13,35 +13,34 @@ import threading
 import time
 import logging
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
+                                 EVENT_HOMEASSISTANT_START)
 
 DOMAIN = "lirc"
 REQUIREMENTS = ['python-lirc>=1.2.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
-EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_IR_COMMAND_RECEIVED = 'ir_command_received'
 BUTTON_NAME = 'button_name'
 
 
 def setup(hass, config):
     """Setup LIRC capability."""
-    # Perform safe import of third-party python-lirc module
-    try:
-        import lirc
-    except ImportError:
-        _LOGGER.error("You are missing a required dependency: python-lirc.")
-        return False
+    import lirc
 
     # blocking=True gives unexpected behavior (multiple responses for 1 press)
     # also by not blocking, we allow hass to shut down the thread gracefully
     # on exit.
     lirc.init('home-assistant', blocking=False)
     lirc_interface = LircInterface(hass)
-    lirc_interface.start()
+
+    def _start_lirc(_event):
+        lirc_interface.start()
 
     def _stop_lirc(_event):
         lirc_interface.stopped.set()
 
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_lirc)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_lirc)
 
     return True
@@ -59,6 +58,7 @@ class LircInterface(threading.Thread):
     def __init__(self, hass):
         """Construct a LIRC interface object."""
         threading.Thread.__init__(self)
+        self.daemon = True
         self.stopped = threading.Event()
         self.hass = hass
 
@@ -71,8 +71,8 @@ class LircInterface(threading.Thread):
             if code:
                 code = code[0]
                 _LOGGER.info('Got new LIRC code %s', code)
-                self.hass.bus.fire(EVENT_BUTTON_PRESSED, {BUTTON_NAME: code})
+                self.hass.bus.fire(EVENT_IR_COMMAND_RECEIVED,
+                                   {BUTTON_NAME: code})
             else:
-                time.sleep(0.1)  # avoid high CPU in this thread
-
+                time.sleep(0.2)
         _LOGGER.info('LIRC interface thread stopped')
