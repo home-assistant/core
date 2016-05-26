@@ -17,7 +17,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP,
                                  EVENT_HOMEASSISTANT_START)
 
 DOMAIN = "lirc"
-REQUIREMENTS = ['python-lirc>=1.2.1']
+REQUIREMENTS = ['python-lirc==1.2.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
 EVENT_IR_COMMAND_RECEIVED = 'ir_command_received'
