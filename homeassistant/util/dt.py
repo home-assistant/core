@@ -41,6 +41,18 @@ def utcnow():
     return dt.datetime.now(UTC)
 
 
+def beatsnow():
+    """Return time of the day in .beats (Swatch Internet Time)."""
+    bmt_now = dt.datetime.utcnow() + dt.timedelta(hours=1)
+    delta = dt.timedelta(
+        hours=bmt_now.hour,
+        minutes=bmt_now.minute,
+        seconds=bmt_now.second,
+        microseconds=bmt_now.microsecond
+    )
+    return (delta.seconds + delta.microseconds / 1000000.0) / 86.4
+
+
 def now(time_zone=None):
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)

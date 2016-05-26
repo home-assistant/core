@@ -15,7 +15,7 @@ OPTION_TYPES = {
     'date': 'Date',
     'date_time': 'Date & Time',
     'time_date': 'Time & Date',
-    'beat': 'Time (beat)',
+    'beat': 'Internet Time',
     'time_utc': 'Time (UTC)',
 }
 
@@ -75,11 +75,7 @@ class TimeDateSensor(Entity):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
-
-        # Calculate the beat (Swatch Internet Time) time without date.
-        hours, minutes, seconds = time_date.strftime('%H:%M:%S').split(':')
-        beat = ((int(seconds) + (int(minutes) * 60) + ((int(hours) + 1) *
-                                                       3600)) / 86.4)
+        beats = dt_util.beatsnow()
 
         if self.type == 'time':
             self._state = time
@@ -92,4 +88,4 @@ class TimeDateSensor(Entity):
         elif self.type == 'time_utc':
             self._state = time_utc
         elif self.type == 'beat':
-            self._state = '{0:.2f}'.format(beat)
+            self._state = '@{0:03d}'.format(int(beats))
