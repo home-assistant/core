@@ -43,3 +43,13 @@ class TestHelpersEntity(unittest.TestCase):
         """Test split_entity_id."""
         self.assertEqual(['domain', 'object_id'],
                          entity.split_entity_id('domain.object_id'))
+
+    def test_valid_entity_id(self):
+        """Test valid_entity_id."""
+        self.assertTrue(entity.valid_entity_id("foo.bar"))
+        self.assertTrue(entity.valid_entity_id("foo.bar_buzz"))
+        self.assertTrue(entity.valid_entity_id("foo.bar-buzz"))
+        self.assertTrue(entity.valid_entity_id("foo.9"))
+        self.assertTrue(entity.valid_entity_id("foo-bar.buzz"))
+        self.assertTrue(entity.valid_entity_id("foo_bar.buzz"))
+        self.assertTrue(entity.valid_entity_id("9.buzz"))
