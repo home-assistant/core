@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
+from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['psutil==4.2.0']
 SENSOR_TYPES = {
@@ -34,6 +36,8 @@ SENSOR_TYPES = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+# Return cached results if last scan was less then this time ago.
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 
 # pylint: disable=unused-argument
@@ -84,6 +88,7 @@ class SystemMonitorSensor(Entity):
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest system information."""
         import psutil
