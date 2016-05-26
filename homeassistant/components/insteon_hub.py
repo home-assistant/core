@@ -11,7 +11,6 @@ from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME,
     EVENT_PLATFORM_DISCOVERED)
 from homeassistant.helpers import validate_config
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"

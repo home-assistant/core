@@ -7,6 +7,7 @@ https://home-assistant.io/components/insteon_hub/
 from homeassistant.components.insteon_hub import INSTEON
 from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
     devs = []
