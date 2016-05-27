@@ -56,11 +56,11 @@ dweepy==0.2.0
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.12
 
-# homeassistant.components.http
-eventlet==0.19.0
-
 # homeassistant.components.enocean
 enocean==0.31
+
+# homeassistant.components.http
+eventlet==0.19.0
 
 # homeassistant.components.thermostat.honeywell
 evohomeclient==0.2.5
