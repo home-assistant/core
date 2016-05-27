@@ -27,7 +27,7 @@ STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
-ENTITY_IMAGE_URL = '/api/camera_proxy/{0}'
+ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
 # pylint: disable=too-many-branches
@@ -65,7 +65,7 @@ class Camera(Entity):
     @property
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
-        return ENTITY_IMAGE_URL.format(self.entity_id)
+        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
 
     @property
     def is_recording(self):
