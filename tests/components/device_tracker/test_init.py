@@ -210,3 +210,13 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0), 0)
         assert len(config) == 2
+
+    def test_not_allow_invalid_dev_id(self):
+        """Test that the device tracker will not allow invalid dev ids."""
+        self.assertTrue(device_tracker.setup(self.hass, {}))
+
+        device_tracker.see(self.hass, dev_id='hello-world')
+
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0), 0)
+        assert len(config) == 0
