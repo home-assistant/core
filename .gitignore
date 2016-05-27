@@ -85,3 +85,5 @@ venv
 *.swo
 
 ctags.tmp
+
+.vagrant
