@@ -14,7 +14,7 @@ from homeassistant.util import ensure_unique_string, slugify
 _OVERWRITE = defaultdict(dict)
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+ENTITY_ID_PATTERN = re.compile(r"^([\w-]+)\.([\w-]+)$")
 
 
 def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
