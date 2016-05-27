@@ -17,7 +17,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 
@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 DOMAIN = "device_tracker"
 DEPENDENCIES = ['zone']
 
@@ -193,7 +194,7 @@ class DeviceTracker(object):
                 if not device:
                     dev_id = util.slugify(host_name or '') or util.slugify(mac)
             else:
-                dev_id = str(dev_id).lower()
+                dev_id = cv.slug(str(dev_id).lower())
                 device = self.devices.get(dev_id)
 
             if device:

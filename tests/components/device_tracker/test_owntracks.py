@@ -203,6 +203,13 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         state = self.hass.states.get(REGION_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
+    def test_location_invalid_devid(self):
+        """Test the update of a location."""
+        self.send_message('owntracks/paulus/nexus-5x', LOCATION_MESSAGE)
+
+        state = self.hass.states.get('device_tracker.paulus_nexus5x')
+        assert state.state == 'outer'
+
     def test_location_update(self):
         """Test the update of a location."""
         self.send_message(LOCATION_TOPIC, LOCATION_MESSAGE)
