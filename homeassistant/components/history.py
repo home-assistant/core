@@ -11,7 +11,6 @@ from itertools import groupby
 
 from homeassistant.components import recorder, script
 import homeassistant.util.dt as dt_util
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
