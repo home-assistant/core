@@ -28,20 +28,55 @@
         left: 0;
         right: 0;
         bottom: 0;
-        margin-bottom: 123px;
+        margin-bottom: 97px;
+        font-family: Roboto, sans-serif;
+        font-size: 0pt;
+        transition: font-size 2s;
+      }
+
+      #ha-init-skeleton paper-spinner {
+        height: 28px;
+      }
+
+      #ha-init-skeleton a {
+        color: #03A9F4;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      #ha-init-skeleton.error {
+        font-size: 16px;
+      }
+
+      #ha-init-skeleton.error img,
+      #ha-init-skeleton.error paper-spinner {
+        display: none;
       }
     </style>
-    <link rel='import' href='/static/{{ app_url }}' async>
+    <script>
+      function initError() {
+        document
+          .getElementById('ha-init-skeleton')
+          .classList.add('error');
+      }
+    </script>
+    <link rel='import' href='/static/{{ app_url }}' onerror='initError()' async>
   </head>
   <body fullbleed>
-    <div id='ha-init-skeleton'><img src='/static/favicon-192x192.png' height='192'></div>
+    <div id='ha-init-skeleton'>
+      <img src='/static/favicon-192x192.png' height='192'>
+      <paper-spinner active></paper-spinner>
+      Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
+    </div>
     <script>
-      var webComponentsSupported = ('registerElement' in document &&
-                                    'import' in document.createElement('link') &&
-                                    'content' in document.createElement('template'))
+      var webComponentsSupported = (
+        'registerElement' in document &&
+        'import' in document.createElement('link') &&
+        'content' in document.createElement('template'));
       if (!webComponentsSupported) {
         var script = document.createElement('script')
         script.async = true
+        script.onerror = initError;
         script.src = '/static/webcomponents-lite.min.js'
         document.head.appendChild(script)
       }
