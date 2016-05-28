@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers.script import call_from_config
 from homeassistant.helpers import template
 from homeassistant.util import slugify
 
