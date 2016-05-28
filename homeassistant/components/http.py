@@ -148,13 +148,13 @@ def routing_map(hass):
     class DateValidator(BaseConverter):
         """Validate dates in urls."""
 
-        regex = r'\d{4}-(0[1-9])|(1[012])-((0[1-9])|([12]\d)|(3[01]))'
+        regex = r'\d{4}-\d{1,2}-\d{1,2}'
 
         def to_python(self, value):
             """Validate and convert date."""
             parsed = dt_util.parse_date(value)
 
-            if value is None:
+            if parsed is None:
                 raise ValidationError()
 
             return parsed
