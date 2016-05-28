@@ -9,7 +9,10 @@ dedicated to Isabel
 import logging
 import os
 from homeassistant.loader import get_component
-import urllib.request, base64
+import base64
+import uuid
+import requests
+from requests.adapters import HTTPAdapter
 import json
 import socket
 import struct
@@ -26,14 +29,15 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
-CLIENTID = 'HomeAssistant'
+CLIENTID_PREFIX = 'HomeAssistant'
 NICKNAME = 'Home Assistant'
-_TIMEOUT = 10
+TIMEOUT = 10
 
 # Map ip to request id for configuring
 _CONFIGURING = {}
 
 _LOGGER = logging.getLogger(__name__)
+
 
 SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                  SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_PREVIOUS_TRACK | \
@@ -83,6 +87,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     """Setup the Sony Bravia TV platform."""
     pin = None
+    uniq_id = None
     bravia_config = config_from_file(hass.config.path(BRAVIA_CONFIG_FILE))
     while len(bravia_config):
         # Setup a configured PlexServer
@@ -90,23 +95,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if host_ip == host:
             pin = host_config['pin']
             mac = host_config['mac']
+            uniq_id = host_config['uniq_id']
             name = config.get(CONF_NAME)
-            add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
+            add_devices_callback([BraviaTVDevice(host, mac, name, pin, uniq_id)])
             return
 
-    setup_bravia(config, pin, hass, add_devices_callback)
+    setup_bravia(config, pin, hass, add_devices_callback, uniq_id)
 
 # pylint: disable=too-many-branches
-def setup_bravia(config, pin, hass, add_devices_callback):
+def setup_bravia(config, pin, hass, add_devices_callback, uniq_id):
     """Setup a sony bravia based on host parameter."""
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     if name is None:
-        name = get_bravia_model(host)
-        if name is None:
-            _LOGGER.error("Sony bravia " + host + " is shutted down. Please turn on before configuring it...")
-            name = "Sony Bravia TV"
+        name = "Sony Bravia TV"
 
     if pin is None:
         request_configuration(config, hass, add_devices_callback)
@@ -125,10 +128,10 @@ def setup_bravia(config, pin, hass, add_devices_callback):
         # Save config
         if not config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'mac': mac}}):
+                {host: {'pin': pin, 'mac': mac, 'uniq_id': uniq_id}}):
             _LOGGER.error('failed to save config file')
 
-        add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
+        add_devices_callback([BraviaTVDevice(host, mac, name, pin, uniq_id)])
 
 
 def request_configuration(config, hass, add_devices_callback):
@@ -149,15 +152,16 @@ def request_configuration(config, hass, add_devices_callback):
 
     def bravia_configuration_callback(data):
         pin = data.get('pin')
-        cookie = bravia_auth(host, "80", "sony/accessControl", pin)
+        uniq_id = str(uuid.uuid4())
+        cookie = bravia_auth(host, pin, uniq_id)
         if not cookie:
             request_configuration(config, hass, add_devices_callback)
         else:
-            setup_bravia(config, pin, hass, add_devices_callback)
+            setup_bravia(config, pin, hass, add_devices_callback, uniq_id)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, name, bravia_configuration_callback,
-        description=('Enter the Pin shown on your Sony Bravia TV'),
+        description=('Enter the Pin shown on your Sony Bravia TV. If no Pin is shown, enter 0000 to let TV show you a Pin.'),
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
@@ -212,13 +216,13 @@ def wakeonlan(ethernet_address):
     s.sendto(msg, ('<broadcast>', 9))
     s.close()
 
-def bravia_auth ( ip, port, url, pin ):
+def bravia_auth ( ip, pin, uniq_id ):
 
     authorization = json.dumps(
         {	"method":"actRegister",
              "params":[
                  {
-                     "clientid": CLIENTID,
+                     "clientid": CLIENTID_PREFIX ,
                      "nickname": NICKNAME,
                      "level":"private"},[
                      {
@@ -230,51 +234,29 @@ def bravia_auth ( ip, port, url, pin ):
              "version":"1.0"}
     ).encode('utf-8')
 
-    req = urllib.request.Request('http://'+ip+':'+port+'/'+url, authorization)
-    cookie = None
-    response = None
-
+    headers = {}
     if pin:
         username = ''
         base64string = base64.encodebytes(('%s:%s' % (username, pin)).encode()).decode().replace('\n', '')
-        req.add_header("Authorization", "Basic %s" % base64string)
-        req.add_header("Connection", "keep-alive")
+        headers['Authorization'] = "Basic %s" % base64string
+        headers['Connection'] = "keep-alive"
 
     try:
-        response = urllib.request.urlopen(req, None, _TIMEOUT)
+        response = requests.post('http://'+ip+'/sony/accessControl', data=authorization, headers=headers, timeout=TIMEOUT)
 
-    except urllib.request.HTTPError as e:
-        print ("[W] HTTPError: " + str(e.code))
+    except requests.exceptions.HTTPError as e:
+        _LOGGER.error ("[W] HTTPError: " + str(e.code))
         return None
 
-    except urllib.request.URLError as e:
-        print ("[W] URLError: " + str(e.reason))
+    except Exception as e:
+        _LOGGER.error ("[W] Exception: " + str(e))
         return None
 
     else:
-        for h in response.headers:
-            if h.find("Set-Cookie") > -1:
-                cookie=h
-        if cookie:
-            cookie = response.headers['Set-Cookie']
-            return cookie
-        return None
+        _LOGGER.info(json.dumps(response.json(), indent=4))
+        return response.cookies
 
-def get_bravia_model( ip ):
-    try:
-        req = urllib.request.Request('http://'+ip+':52323/dmr.xml')
-        response = urllib.request.urlopen(req, None, _TIMEOUT)
-
-    except urllib.request.HTTPError as e:
-        print ("[W] HTTPError: " + str(e.code))
-
-    except urllib.request.URLError as e:
-        print ("[W] URLError: " + str(e.reason))
-
-    else:
-        data = response.read()
-
-        return data
+    return None
 
 def get_mac_address( ip ):
     pid = Popen(["arp", "-n", ip], stdout=PIPE)
@@ -286,13 +268,14 @@ def get_mac_address( ip ):
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
-    def __init__(self, host, mac, name, pin):
+    def __init__(self, host, mac, name, pin, uniq_id):
         """Initialize the sony bravia device."""
 
         self._host = host
         self._name = name
         self._mac = mac
         self._pin = pin
+        self._uniq_id = uniq_id
         self._muted = False
         self._program_name = None
         self._channel_name = None
@@ -310,25 +293,25 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._max_volume = None
         self._volume = None
         self._commands = [] #it is initialized by the update method
-        self._cookie = None
+        self._cookies = None
 
-        cookie = bravia_auth(host, "80", "sony/accessControl", pin)
+        cookie = bravia_auth(host, pin, uniq_id)
         if not cookie:
             self._state = STATE_OFF
             return
         else:
-            self._cookie = cookie
+            self._cookies = cookie
             #update the state first of all
             self.update()
 
     def update(self):
 
-        if self._cookie is None:
-            cookie = bravia_auth(self._host, "80", "sony/accessControl", self._pin)
+        if self._cookies is None:
+            cookie = bravia_auth(self._host, self._pin, self._uniq_id)
             if not cookie:
                 return
             else:
-                self._cookie = cookie
+                self._cookies = cookie
 
         """Retrieve the latest data."""
         try:
@@ -372,7 +355,7 @@ class BraviaTVDevice(MediaPlayerDevice):
                     if not resp.get('error'):
                         self._commands = resp.get('result')[1]
                     else:
-                        print ("JSON request error", json.dumps(resp, indent=4))
+                        _LOGGER.error ("JSON request error", json.dumps(resp, indent=4))
 
                 resp = self.bravia_req_json("sony/audio", self.jdata_build("getVolumeInformation", None))
                 if not resp.get('error'):
@@ -384,14 +367,15 @@ class BraviaTVDevice(MediaPlayerDevice):
                             self._max_volume = result.get('maxVolume')
                             self._muted = result.get('mute')
                 else:
-                    print ("JSON request error", json.dumps(resp, indent=4))
+                    _LOGGER.error ("JSON request error", json.dumps(resp, indent=4))
 
-                resp = self.bravia_req_json("sony/avContent", self.jdata_build("getSourceList", {"scheme":"tv"}))
-                if not resp.get('error'):
-                    self._original_content_list = []
-                    results = resp.get('result')[0]
-                    for result in results:
-                        """
+                if len(self._source_list) == 0:
+                    resp = self.bravia_req_json("sony/avContent", self.jdata_build("getSourceList", {"scheme":"tv"}))
+                    if not resp.get('error'):
+                        self._original_content_list = []
+                        results = resp.get('result')[0]
+                        for result in results:
+                            """
                         [
 {
 "programMediaType": "tv",
@@ -411,34 +395,28 @@ class BraviaTVDevice(MediaPlayerDevice):
 },
 ..."""
 
-                        if result['source'] == 'tv:dvbc': #via cable
-                            resp = self.bravia_req_json("sony/avContent", self.jdata_build("getContentList", {"source": "tv:dvbc"}))
-                            if not resp.get('error'):
-                                self._original_content_list.extend(resp.get('result')[0])
-                        elif result['source'] == 'tv:dvbt': #via DTT
-                            resp = self.bravia_req_json("sony/avContent", self.jdata_build("getContentList", {"source": "tv:dvbt"}))
-                            if not resp.get('error'):
-                                self._original_content_list.extend(resp.get('result')[0])
+                            if result['source'] == 'tv:dvbc': #via cable
+                                resp = self.bravia_req_json("sony/avContent", self.jdata_build("getContentList", {"source": "tv:dvbc"}))
+                                if not resp.get('error'):
+                                    self._original_content_list.extend(resp.get('result')[0])
+                            elif result['source'] == 'tv:dvbt': #via DTT
+                                resp = self.bravia_req_json("sony/avContent", self.jdata_build("getContentList", {"source": "tv:dvbt"}))
+                                if not resp.get('error'):
+                                    self._original_content_list.extend(resp.get('result')[0])
 
-                    source_list = []
-                    for content_item in self._original_content_list:
-                        title = content_item['title']
-                        source_list.append( title )
-                        self._content_mapping[title] = content_item['uri']
-                    self._source_list = source_list
+                        source_list = []
+                        for content_item in self._original_content_list:
+                            title = content_item['title']
+                            source_list.append( title )
+                            self._content_mapping[title] = content_item['uri']
+                        self._source_list = source_list
 
-
-#                resp = self.bravia_req_json("sony/avContent", self.jdata_build("getContentList", {"source":"tv:dvbt"}))
-#                if not resp.get('error'):
-#                    print (json.dumps(resp, indent=4))
-#                else:
-#                    print ("JSON request error", json.dumps(resp, indent=4))
 
             else:
                 self._state = STATE_OFF
 
         except Exception as e:
-            print(e)
+            _LOGGER.error(e)
             self._state = STATE_OFF
 
     def getCommandCode(self, command_name):
@@ -533,10 +511,6 @@ class BraviaTVDevice(MediaPlayerDevice):
         if source in self._content_mapping:
             uri = self._content_mapping[source]
             resp = self.bravia_req_json("sony/avContent", self.jdata_build("setPlayContent", {"uri": uri}))
-            if not resp.get('error'):
-                print (json.dumps(resp, indent=4))
-            else:
-                print ("JSON request error", json.dumps(resp, indent=4))
 
     def media_play_pause(self):
         """Simulate play pause media player."""
@@ -566,35 +540,31 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def send_req_ircc( self, params ):
         """ Send an IRCC command via HTTP to Sony Bravia """
-        req = urllib.request.Request('http://' + self._host + ':80/sony/IRCC', ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:X_SendIRCC xmlns:u=\"urn:schemas-sony-com:service:IRCC:1\"><IRCCCode>"+params+"</IRCCCode></u:X_SendIRCC></s:Body></s:Envelope>").encode("UTF-8"))
-        req.add_header('SOAPACTION', 'urn:schemas-sony-com:service:IRCC:1#X_SendIRCC')
-        req.add_header('Cookie', self._cookie)
 
+        headers = {'SOAPACTION' : 'urn:schemas-sony-com:service:IRCC:1#X_SendIRCC'}
+        data = ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:X_SendIRCC xmlns:u=\"urn:schemas-sony-com:service:IRCC:1\"><IRCCCode>"+params+"</IRCCCode></u:X_SendIRCC></s:Body></s:Envelope>").encode("UTF-8")
         try:
-            response = urllib.request.urlopen(req, None, _TIMEOUT)
-        except urllib.request.HTTPError as e:
-            print ("[W] HTTPError: " + str(e.code))
+            response = requests.post('http://' + self._host + '/sony/IRCC', headers=headers, cookies=self._cookies, data=data, timeout=TIMEOUT)
+        except requests.exceptions.HTTPError as e:
+            _LOGGER.error ("[W] HTTPError: " + str(e.code))
 
-        except urllib.request.URLError as e:
-            print ("[W] URLError: " + str(e.reason))
+        except Exception as e:
+            _LOGGER.error ("[W] Exception: " + str(e))
         else:
-            tree = response.read()
-            return tree
+            content = response.content
+            return content
 
     def bravia_req_json( self, url, params ):
-        req = urllib.request.Request('http://'+ self._host +':80/'+url, params.encode("UTF-8"))
-        req.add_header('Cookie', self._cookie)
         try:
-            response = urllib.request.urlopen(req, None, _TIMEOUT)
+            response = requests.post('http://'+ self._host +'/'+url, data=params.encode("UTF-8"), cookies=self._cookies, timeout=TIMEOUT)
+        except requests.exceptions.HTTPError as e:
+            _LOGGER.error ("[W] HTTPError: " + str(e.code))
 
-        except urllib.request.HTTPError as e:
-            print ("[W] HTTPError: " + str(e.code))
-
-        except urllib.request.URLError as e:
-            print ("[W] URLError: " + str(e.reason))
+        except Exception as e:
+            _LOGGER.error ("[W] Exception: " + str(e))
 
         else:
-            html = json.loads(response.readall().decode('utf-8'))
+            html = json.loads(response.content.decode('utf-8'))
             return html
 
     def jdata_build(self, method, params):
