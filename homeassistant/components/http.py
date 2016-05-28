@@ -232,15 +232,18 @@ class HomeAssistantWSGI(object):
 
         self.url_map.add(Rule(url, redirect_to=redirect_to))
 
-    def register_static_path(self, url_root, path):
-        """Register a folder to serve as a static path."""
+    def register_static_path(self, url_root, path, cache_length=31):
+        """Register a folder to serve as a static path.
+
+        Specify optional cache length of asset in days.
+        """
         from static import Cling
 
         headers = []
 
-        if not self.development:
+        if cache_length and not self.development:
             # 1 year in seconds
-            cache_time = 365 * 86400
+            cache_time = cache_length * 86400
 
             headers.append({
                 'prefix': '',
