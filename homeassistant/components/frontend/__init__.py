@@ -72,21 +72,26 @@ class IndexView(HomeAssistantView):
     def get(self, request, entity_id=None):
         """Serve the index view."""
         if self.hass.wsgi.development:
-            app_url = 'home-assistant-polymer/src/home-assistant.html'
+            core_url = 'home-assistant-polymer/build/_core_compiled.js'
+            ui_url = 'home-assistant-polymer/src/home-assistant.html'
         else:
-            app_url = "frontend-{}.html".format(version.VERSION)
+            core_url = 'core-{}.js'.format(version.CORE)
+            ui_url = 'frontend-{}.html'.format(version.UI)
 
         # auto login if no password was set
         if self.hass.config.api.api_password is None:
-            auth = 'no_password_set'
+            auth = 'true'
         else:
-            auth = ''
+            auth = 'false'
+
+        icons_url = 'mdi-{}.html'.format(mdi_version.VERSION)
 
         template = self.templates.get_template('index.html')
 
         # pylint is wrong
         # pylint: disable=no-member
-        resp = template.render(app_url=app_url, auth=auth,
-                               icons=mdi_version.VERSION)
+        resp = template.render(
+            core_url=core_url, ui_url=ui_url, auth=auth,
+            icons_url=icons_url, icons=mdi_version.VERSION)
 
-        return self.Response(resp, mimetype="text/html")
+        return self.Response(resp, mimetype='text/html')
