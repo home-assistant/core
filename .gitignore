@@ -85,3 +85,8 @@ venv
 *.swo
 
 ctags.tmp
+
+# vagrant stuff
+virtualization/vagrant/setup_done
+virtualization/vagrant/.vagrant
+virtualization/vagrant/config
