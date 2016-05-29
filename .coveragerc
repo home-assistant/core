@@ -75,6 +75,9 @@ omit =
     homeassistant/components/zwave.py
     homeassistant/components/*/zwave.py
 
+    homeassistant/components/enocean.py
+    homeassistant/components/*/enocean.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/binary_sensor/arest.py
