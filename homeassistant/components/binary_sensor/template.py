@@ -9,11 +9,13 @@ import logging
 from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     ENTITY_ID_FORMAT,
                                                     SENSOR_CLASSES)
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE
+from homeassistant.const import (ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
+                                 ATTR_ENTITY_ID, MATCH_ALL)
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers import template
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util import slugify
 
 CONF_SENSORS = 'sensors'
@@ -52,13 +54,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 'Missing %s for sensor %s', CONF_VALUE_TEMPLATE, device)
             continue
 
+        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+
         sensors.append(
             BinarySensorTemplate(
                 hass,
                 device,
                 friendly_name,
                 sensor_class,
-                value_template)
+                value_template,
+                entity_ids)
             )
     if not sensors:
         _LOGGER.error('No sensors added')
@@ -73,7 +78,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device, friendly_name, sensor_class,
-                 value_template):
+                 value_template, entity_ids):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device,
@@ -85,12 +90,13 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         self.update()
 
-        def template_bsensor_event_listener(event):
+        def template_bsensor_state_listener(self, entity, old_state,
+                                            new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        hass.bus.listen(EVENT_STATE_CHANGED,
-                        template_bsensor_event_listener)
+        track_state_change(hass, entity_ids,
+                           template_bsensor_state_listener)
 
     @property
     def name(self):

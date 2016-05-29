@@ -8,11 +8,13 @@ import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
+    ATTR_ENTITY_ID, MATCH_ALL)
 from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers import template
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,13 +47,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "Missing %s for sensor %s", CONF_VALUE_TEMPLATE, device)
             continue
 
+        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+
         sensors.append(
             SensorTemplate(
                 hass,
                 device,
                 friendly_name,
                 unit_of_measurement,
-                state_template)
+                state_template,
+                entity_ids)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -65,7 +70,7 @@ class SensorTemplate(Entity):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
-                 state_template):
+                 state_template, entity_ids):
         """Initialize the sensor."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
@@ -77,11 +82,12 @@ class SensorTemplate(Entity):
 
         self.update()
 
-        def template_sensor_event_listener(event):
+        def template_sensor_state_listener(self, entity, old_state, new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        hass.bus.listen(EVENT_STATE_CHANGED, template_sensor_event_listener)
+        track_state_change(hass, entity_ids,
+                           template_sensor_state_listener)
 
     @property
     def name(self):
