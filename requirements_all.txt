@@ -165,6 +165,9 @@ jsonrpc-requests==0.2
 # homeassistant.components.light.lifx
 liffylights==0.9.4
 
+# homeassistant.components.light.osramlightify
+lightify==1.0.3
+
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
