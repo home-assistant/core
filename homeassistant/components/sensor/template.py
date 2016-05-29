@@ -17,6 +17,7 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 CONF_SENSORS = 'sensors'
+CONF_WARNNGS = 'warnings'
 
 
 # pylint: disable=unused-argument
@@ -40,6 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
+        warnings = device_config.get(CONF_WARNNGS, True)
         if state_template is None:
             _LOGGER.error(
                 "Missing %s for sensor %s", CONF_VALUE_TEMPLATE, device)
@@ -51,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device,
                 friendly_name,
                 unit_of_measurement,
-                state_template)
+                state_template,
+                warnings)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -65,7 +68,7 @@ class SensorTemplate(Entity):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, unit_of_measurement,
-                 state_template):
+                 state_template, warnings):
         """Initialize the sensor."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
@@ -74,6 +77,7 @@ class SensorTemplate(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._template = state_template
         self._state = None
+        self._warnings = warnings
 
         self.update()
 
@@ -111,7 +115,8 @@ class SensorTemplate(Entity):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning(ex)
+                if self._warnings:
+                    _LOGGER.warning(ex)
                 return
             self._state = None
             _LOGGER.error(ex)

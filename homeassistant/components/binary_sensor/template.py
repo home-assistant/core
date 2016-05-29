@@ -17,6 +17,7 @@ from homeassistant.helpers import template
 from homeassistant.util import slugify
 
 CONF_SENSORS = 'sensors'
+CONF_WARNNGS = 'warnings'
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -42,6 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         sensor_class = device_config.get('sensor_class')
         value_template = device_config.get(CONF_VALUE_TEMPLATE)
+        warnings = device_config.get(CONF_WARNNGS, True)
 
         if sensor_class not in SENSOR_CLASSES:
             _LOGGER.error('Sensor class is not valid')
@@ -58,7 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device,
                 friendly_name,
                 sensor_class,
-                value_template)
+                value_template,
+                warnings)
             )
     if not sensors:
         _LOGGER.error('No sensors added')
@@ -73,7 +76,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device, friendly_name, sensor_class,
-                 value_template):
+                 value_template, warnings):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device,
@@ -82,6 +85,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._sensor_class = sensor_class
         self._template = value_template
         self._state = None
+        self._warnings = warnings
 
         self.update()
 
@@ -121,7 +125,8 @@ class BinarySensorTemplate(BinarySensorDevice):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning(ex)
+                if self._warnings:
+                    _LOGGER.warning(ex)
                 return
             _LOGGER.error(ex)
             self._state = False
