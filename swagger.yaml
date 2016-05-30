@@ -378,6 +378,12 @@ paths:
         - Events
       produces:
         - text/event-stream
+      parameters:
+        - name: restrict
+          in: query
+          description: comma-separated list of event_types to filter
+          required: false
+          type: string
       responses:
         default:
           description: Stream of events
