@@ -487,7 +487,7 @@ class BraviaTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         wakeonlan(self._mac)
-        self._state = STATE_OFF
+        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
