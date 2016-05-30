@@ -10,7 +10,6 @@ from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     ATTR_ENTITY_ID, MATCH_ALL)
-from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers import template
