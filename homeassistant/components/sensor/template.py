@@ -81,7 +81,7 @@ class SensorTemplate(Entity):
 
         self.update()
 
-        def template_sensor_state_listener(self, entity, old_state, new_state):
+        def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
