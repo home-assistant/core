@@ -394,3 +394,6 @@ xmltodict
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.5
+
+# homeassistant.components.switch.netio
+pynetio>=0.1.6
