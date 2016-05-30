@@ -96,7 +96,7 @@ class SwitchTemplate(SwitchDevice):
 
         self.update()
 
-        def template_switch_state_listener(self, entity, old_state, new_state):
+        def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
