@@ -10,7 +10,6 @@ from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
     ATTR_ENTITY_ID, MATCH_ALL)
-from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.service import call_from_config

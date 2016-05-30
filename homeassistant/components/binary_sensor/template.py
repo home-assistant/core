@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     SENSOR_CLASSES)
 from homeassistant.const import (ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
                                  ATTR_ENTITY_ID, MATCH_ALL)
-from homeassistant.core import EVENT_STATE_CHANGED
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers import template
