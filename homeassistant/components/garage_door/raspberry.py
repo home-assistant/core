@@ -96,3 +96,4 @@ class RaspberryGarageDoor(GarageDoorDevice):
         _LOGGER.error('state='+str(self._state))
         if self.is_closed:
             self._click()
+
