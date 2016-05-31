@@ -6,7 +6,6 @@ The idea was taken from https://github.com/KpaBap/hue-flux/
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch/flux/
 """
-from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -66,7 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config[CONF_NAME]
     lights = config[CONF_LIGHTS]
     start_time = config.get(CONF_START_TIME)
-    stop_time = config.get(CONF_STOP_TIME) or dt_now().replace(hour=22, minute=0)
+    stop_time = config.get(CONF_STOP_TIME) or dt_now().replace(hour=22,
+                                                               minute=0)
     start_colortemp = config.get(CONF_START_CT) or 4000
     sunset_colortemp = config.get(CONF_SUNSET_CT) or 3000
     stop_colortemp = config.get(CONF_STOP_CT) or 1900
@@ -97,7 +97,7 @@ class FluxSwitch(SwitchDevice):
         self._state = state
         self._lights = lights
         self._start_time = start_time
-        self._start_time = self.sunrise()
+        self._start_time = self.sunrise(dt_now())
         self._stop_time = stop_time
         self._start_colortemp = start_colortemp
         self._sunset_colortemp = sunset_colortemp
@@ -133,22 +133,24 @@ class FluxSwitch(SwitchDevice):
     # pylint: disable=too-many-locals
     def flux_update(self, now=dt_now()):
         """Update all the lights using flux."""
-        sunset = next_setting(self.hass, SUN)
-        sunrise = self.sunrise()
-        if sunset.day > dt_now().day:
-            sunset = sunset - timedelta(days=1)
-        stop_time = dt_now().replace(hour=int(self._stop_time.hour),
-                                     minute=int(self._stop_time.minute),
-                                     second=0)
-        if dt_now() < sunrise:
-            stop_time = stop_time - timedelta(days=1)
-        if self._start_time < dt_now() < sunset:
+        sunset = next_setting(self.hass, SUN).replace(day=now.day,
+                                                      month=now.month,
+                                                      year=now.year)
+        sunrise = self.sunrise(now)
+        start_time = self._start_time.replace(day=now.day,
+                                              month=now.month,
+                                              year=now.year)
+        stop_time = now.replace(hour=int(self._stop_time.hour),
+                                minute=int(self._stop_time.minute),
+                                second=0)
+
+        if start_time < now < sunset:
             # Daytime
             temp_range = abs(self._start_colortemp -
                              self._sunset_colortemp)
             day_length = int(sunset.timestamp() -
                              sunrise.timestamp())
-            seconds_from_sunrise = int(dt_now().timestamp() -
+            seconds_from_sunrise = int(now.timestamp() -
                                        sunrise.timestamp())
             percentage_of_day_complete = seconds_from_sunrise / day_length
             temp_offset = temp_range * percentage_of_day_complete
@@ -161,7 +163,10 @@ class FluxSwitch(SwitchDevice):
                          x_val, y_val)
         else:
             # Nightime
-            now_time = dt_now() if dt_now() < stop_time else stop_time
+            if now < stop_time and now > start_time:
+                now_time = now
+            else:
+                now_time = stop_time
             temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
             night_length = int(stop_time.timestamp() - sunset.timestamp())
             seconds_from_sunset = int(now_time.timestamp() -
@@ -176,14 +181,14 @@ class FluxSwitch(SwitchDevice):
             _LOGGER.info("Lights updated at night, x:%s y:%s",
                          x_val, y_val)
 
-    def sunrise(self):
+    def sunrise(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
-            sunrise = dt_now().replace(hour=int(self._start_time.hour),
-                                       minute=int(self._start_time.minute),
-                                       second=0)
+            sunrise = now.replace(hour=int(self._start_time.hour),
+                                  minute=int(self._start_time.minute),
+                                  second=0)
         else:
-            sunrise = next_rising(self.hass, SUN)
-        if sunrise.day > dt_now().day:
-            sunrise = sunrise - timedelta(days=1)
+            sunrise = next_rising(self.hass, SUN).replace(day=now.day,
+                                                          month=now.month,
+                                                          year=now.year)
         return sunrise
