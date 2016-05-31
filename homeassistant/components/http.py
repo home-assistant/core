@@ -5,6 +5,7 @@ import logging
 import mimetypes
 import threading
 import re
+import voluptuous as vol
 
 import homeassistant.core as ha
 import homeassistant.remote as rem
@@ -13,6 +14,7 @@ from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL)
 from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
 REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
@@ -29,6 +31,18 @@ DATA_API_PASSWORD = 'api_password'
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_SSL_KEY): cv.isfile,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 class HideSensitiveFilter(logging.Filter):
