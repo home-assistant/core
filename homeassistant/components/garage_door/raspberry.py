@@ -14,8 +14,6 @@ from homeassistant.components.garage_door import GarageDoorDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['requests>=2,<3']
-
 # Get returns
 # {"timestamp": 1464627981, "update": [["left", "open", 1464627945.459889]]}
 GD_GET = '{}/upd'
