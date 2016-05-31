@@ -304,7 +304,6 @@ def setup_and_run_hass(config_dir, args):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
-    print('Starting Home-Assistant')
     hass.start()
     exit_code = int(hass.block_till_stopped())
 
