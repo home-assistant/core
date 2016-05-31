@@ -1,4 +1,3 @@
-
 """
 Support for Raspberry Pi garage door opener.
 
