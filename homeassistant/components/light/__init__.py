@@ -22,7 +22,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
+# OVERWRITE contains customize attributes from the config
+from homeassistant.helpers.entity import _OVERWRITE as OVERWRITE
 
 DOMAIN = "light"
 SCAN_INTERVAL = 30
@@ -79,6 +80,11 @@ PROP_TO_ATTR = {
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
 }
+
+# Attributes that will use OVERWRITE as default if not in turn_on
+TURN_ON_OVERWRITE_DEFAULTS = [
+    ATTR_TRANSITION, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_XY_COLOR,
+    ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_COLOR_NAME]
 
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
@@ -237,6 +243,13 @@ def setup(hass, config):
             params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
         for light in target_lights:
+            print('**params original '+str(params))  # debug
+            # Add default attributes for light's using OVERWRITE
+            for key, value in OVERWRITE.get(light.entity_id, {}).items():
+                if key in TURN_ON_OVERWRITE_DEFAULTS and key not in params:
+                    params[key] = value
+            print('**params with defaults '+str(params))  # debug
+
             light.turn_on(**params)
 
         for light in target_lights:
