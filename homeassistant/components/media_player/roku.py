@@ -66,13 +66,18 @@ class RokuDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self.roku_name = "roku_" + self.roku.device_info.sernum
-        self.ip_address = self.roku.host
-        self.channels = self.get_source_list()
+        import requests.exceptions
 
-        if self.roku.current_app is not None:
-            self.current_app = self.roku.current_app
-        else:
+        try:
+            self.roku_name = "roku_" + self.roku.device_info.sernum
+            self.ip_address = self.roku.host
+            self.channels = self.get_source_list()
+
+            if self.roku.current_app is not None:
+                self.current_app = self.roku.current_app
+            else:
+                self.current_app = None
+        except requests.exceptions.ConnectionError:
             self.current_app = None
 
     def get_source_list(self):
@@ -92,6 +97,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self.current_app is None:
+            return STATE_UNKNOWN
+
         if self.current_app.name in ["Power Saver", "Default screensaver"]:
             return STATE_IDLE
         elif self.current_app.name == "Roku":
@@ -137,17 +145,20 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def app_name(self):
         """Name of the current running app."""
-        return self.current_app.name
+        if self.current_app is not None:
+            return self.current_app.name
 
     @property
     def app_id(self):
         """Return the ID of the current running app."""
-        return self.current_app.id
+        if self.current_app is not None:
+            return self.current_app.id
 
     @property
     def source(self):
         """Return the current input source."""
-        return self.current_app.name
+        if self.current_app is not None:
+            return self.current_app.name
 
     @property
     def source_list(self):
@@ -156,32 +167,39 @@ class RokuDevice(MediaPlayerDevice):
 
     def media_play_pause(self):
         """Send play/pause command."""
-        self.roku.play()
+        if self.current_app is not None:
+            self.roku.play()
 
     def media_previous_track(self):
         """Send previous track command."""
-        self.roku.reverse()
+        if self.current_app is not None:
+            self.roku.reverse()
 
     def media_next_track(self):
         """Send next track command."""
-        self.roku.forward()
+        if self.current_app is not None:
+            self.roku.forward()
 
     def mute_volume(self, mute):
         """Mute the volume."""
-        self.roku.volume_mute()
+        if self.current_app is not None:
+            self.roku.volume_mute()
 
     def volume_up(self):
         """Volume up media player."""
-        self.roku.volume_up()
+        if self.current_app is not None:
+            self.roku.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        self.roku.volume_down()
+        if self.current_app is not None:
+            self.roku.volume_down()
 
     def select_source(self, source):
         """Select input source."""
-        if source == "Home":
-            self.roku.home()
-        else:
-            channel = self.roku[source]
-            channel.launch()
+        if self.current_app is not None:
+            if source == "Home":
+                self.roku.home()
+            else:
+                channel = self.roku[source]
+                channel.launch()

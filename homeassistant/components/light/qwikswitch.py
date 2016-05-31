@@ -1,7 +1,8 @@
 """
-Support for Qwikswitch Relays and Dimmers as HA Lights.
+Support for Qwikswitch Relays and Dimmers.
 
-See the main component for more info
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.qwikswitch/
 """
 import logging
 import homeassistant.components.qwikswitch as qwikswitch
@@ -18,7 +19,7 @@ class QSLight(qwikswitch.QSToggleEntity, Light):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Store add_devices for the 'light' components."""
+    """Store add_devices for the light components."""
     if discovery_info is None or 'qsusb_id' not in discovery_info:
         logging.getLogger(__name__).error(
             'Configure main Qwikswitch component')

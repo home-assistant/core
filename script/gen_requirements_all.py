@@ -13,6 +13,7 @@ COMMENT_REQUIREMENTS = [
     'fritzconnection',
     'pybluez',
     'bluepy',
+    'python-lirc',
 ]
 
 

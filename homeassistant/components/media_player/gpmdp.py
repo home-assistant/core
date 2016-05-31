@@ -2,7 +2,7 @@
 Support for Google Play Music Desktop Player.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.gpm_dp/
+https://home-assistant.io/components/media_player.gpmdp/
 """
 import logging
 import json
@@ -39,7 +39,7 @@ class GPMDP(MediaPlayerDevice):
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
     def __init__(self, name, address, create_connection):
-        """Initialize."""
+        """Initialize the media player."""
         self._connection = create_connection
         self._address = address
         self._name = name

@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_DESTINATION): vol.Coerce(str),
     vol.Optional(CONF_TRAVEL_MODE):
         vol.In(["driving", "walking", "bicycling", "transit"]),
-    vol.Optional(CONF_OPTIONS, default=dict()): vol.All(
+    vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'):
                 vol.In(["driving", "walking", "bicycling", "transit"]),
@@ -136,11 +136,12 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        try:
-            res = self._matrix['rows'][0]['elements'][0]['duration']['value']
-            return round(res/60)
-        except KeyError:
-            return None
+        _data = self._matrix['rows'][0]['elements'][0]
+        if 'duration_in_traffic' in _data:
+            return round(_data['duration_in_traffic']['value']/60)
+        if 'duration' in _data:
+            return round(_data['duration']['value']/60)
+        return None
 
     @property
     def name(self):
@@ -175,9 +176,15 @@ class GoogleTravelTimeSensor(Entity):
         atime = options_copy.get('arrival_time')
         if dtime is not None and ':' in dtime:
             options_copy['departure_time'] = convert_time_to_utc(dtime)
+        elif dtime is not None:
+            options_copy['departure_time'] = dtime
+        else:
+            options_copy['departure_time'] = 'now'
 
         if atime is not None and ':' in atime:
             options_copy['arrival_time'] = convert_time_to_utc(atime)
+        elif atime is not None:
+            options_copy['arrival_time'] = atime
 
         self._matrix = self._client.distance_matrix(self._origin,
                                                     self._destination,

@@ -28,7 +28,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        margin-bottom: 97px;
+        margin-bottom: 83px;
         font-family: Roboto, sans-serif;
         font-size: 0pt;
         transition: font-size 2s;
@@ -36,6 +36,7 @@
 
       #ha-init-skeleton paper-spinner {
         height: 28px;
+        margin-top: 16px;
       }
 
       #ha-init-skeleton a {
@@ -59,8 +60,8 @@
           .getElementById('ha-init-skeleton')
           .classList.add('error');
       }
+      window.noAuth = {{ auth }}
     </script>
-    <link rel='import' href='/static/{{ app_url }}' onerror='initError()' async>
   </head>
   <body fullbleed>
     <div id='ha-init-skeleton'>
@@ -68,6 +69,10 @@
       <paper-spinner active></paper-spinner>
       Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
     </div>
+    <home-assistant icons='{{ icons }}'></home-assistant>
+    <script src='/static/{{ core_url }}'></script>
+    <link rel='import' href='/static/{{ ui_url }}' onerror='initError()' async>
+    <link rel='import' href='/static/{{ icons_url }}' async>
     <script>
       var webComponentsSupported = (
         'registerElement' in document &&
@@ -81,6 +86,5 @@
         document.head.appendChild(script)
       }
     </script>
-    <home-assistant auth='{{ auth }}' icons='{{ icons }}'></home-assistant>
   </body>
 </html>
