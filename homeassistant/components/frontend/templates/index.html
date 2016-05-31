@@ -69,6 +69,10 @@
       <paper-spinner active></paper-spinner>
       Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
     </div>
+    <home-assistant icons='{{ icons }}'></home-assistant>
+    <script src='/static/{{ core_url }}'></script>
+    <link rel='import' href='/static/{{ ui_url }}' onerror='initError()' async>
+    <link rel='import' href='/static/{{ icons_url }}' async>
     <script>
       var webComponentsSupported = (
         'registerElement' in document &&
@@ -82,9 +86,5 @@
         document.head.appendChild(script)
       }
     </script>
-    <home-assistant icons='{{ icons }}'></home-assistant>
-    <script src='/static/{{ core_url }}'></script>
-    <link rel='import' href='/static/{{ ui_url }}' onerror='initError()' async>
-    <link rel='import' href='/static/{{ icons_url }}' async>
   </body>
 </html>
