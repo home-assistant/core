@@ -1,5 +1,6 @@
 """
 Support for Raspberry Pi garage door opener.
+
 Developed by Johann 'KellerZA' Kellerman
 
 https://github.com/andrewshilliday/garage-door-controller
@@ -7,6 +8,7 @@ https://github.com/andrewshilliday/garage-door-controller
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/garage_door.raspberry/
 """
+
 
 import logging
 _LOGGER = logging.getLogger(__name__)
