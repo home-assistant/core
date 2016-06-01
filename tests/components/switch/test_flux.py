@@ -3,7 +3,7 @@ import unittest
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.bootstrap import _setup_component
+from homeassistant.bootstrap import _setup_component, setup_component
 from homeassistant.components import switch, light
 from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
 import homeassistant.loader as loader
@@ -30,7 +30,22 @@ class TestSwitchFlux(unittest.TestCase):
             'switch': {
                 'platform': 'flux',
                 'name': 'flux',
-                'lights': ['light.desk', 'light.lamp']
+                'lights': ['light.desk', 'light.lamp'],
+            }
+        })
+
+    def test_valid_config_with_info(self):
+        """Test configuration."""
+        assert _setup_component(self.hass, 'switch', {
+            'switch': {
+                'platform': 'flux',
+                'name': 'flux',
+                'lights': ['light.desk', 'light.lamp'],
+                'stop_time': '22:59',
+                'start_time': '7:22',
+                'start_colortemp': '1000',
+                'sunset_colortemp': '2000',
+                'stop_colortemp': '4000'
             }
         })
 
@@ -78,7 +93,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -117,7 +132,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -161,7 +176,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -205,7 +220,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -249,7 +264,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -293,7 +308,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -339,7 +354,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
@@ -355,8 +370,53 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 147)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.514, 0.4])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 167)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.461, 0.389])
+
+    # pylint: disable=invalid-name
+    def test_flux_with_custom_brightness(self):
+        """Test the flux with custom start and stop colortemps."""
+        platform = loader.get_component('light.test')
+        platform.init()
+        self.assertTrue(
+            light.setup(self.hass, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
+
+        dev1 = platform.DEVICES[0]
+
+        # Verify initial state of light
+        state = self.hass.states.get(dev1.entity_id)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertIsNone(state.attributes.get('xy_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
+
+        test_time = dt_util.now().replace(hour=17, minute=30, second=0)
+        sunset_time = test_time.replace(hour=17, minute=0, second=0)
+        sunrise_time = test_time.replace(hour=5,
+                                         minute=0,
+                                         second=0) + timedelta(days=1)
+
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            with patch('homeassistant.components.sun.next_rising',
+                       return_value=sunrise_time):
+                with patch('homeassistant.components.sun.next_setting',
+                           return_value=sunset_time):
+                    assert setup_component(self.hass, switch.DOMAIN, {
+                        switch.DOMAIN: {
+                            'platform': 'flux',
+                            'name': 'flux',
+                            'lights': [dev1.entity_id],
+                            'brightness': 255
+                        }
+                    })
+                    turn_on_calls = mock_service(
+                        self.hass, light.DOMAIN, SERVICE_TURN_ON)
+                    switch.turn_on(self.hass, 'switch.flux')
+                    self.hass.pool.block_till_done()
+                    fire_time_changed(self.hass, test_time)
+                    self.hass.pool.block_till_done()
+        call = turn_on_calls[-1]
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
 
     def test_flux_with_multiple_lights(self):
         """Test the flux switch with multiple light entities."""
@@ -397,7 +457,7 @@ class TestSwitchFlux(unittest.TestCase):
                        return_value=sunrise_time):
                 with patch('homeassistant.components.sun.next_setting',
                            return_value=sunset_time):
-                    assert switch.setup(self.hass, {
+                    assert setup_component(self.hass, switch.DOMAIN, {
                         switch.DOMAIN: {
                             'platform': 'flux',
                             'name': 'flux',
