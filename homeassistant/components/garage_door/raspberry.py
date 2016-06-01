@@ -23,7 +23,7 @@ GD_SET = '{}/clk'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink garage door platform."""
+    """Setup the garage door platform."""
     import requests
 
     url = config.get('url', 'http://127.0.0.1:8080')
@@ -47,7 +47,7 @@ class RaspberryGarageDoor(GarageDoorDevice):
 
     @property
     def unique_id(self):
-        """Return the ID of this wink garage door."""
+        """Return the ID of this garage door."""
         return "{}.{}".format(self.__class__, self._name)
 
     @property
