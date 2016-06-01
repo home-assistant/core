@@ -131,26 +131,38 @@ class ForeCastSensor(Entity):
         """Return the unit system of this entity."""
         return self._unit_system
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
         import forecastio
 
         self.forecast_client.update()
-        data = self.forecast_client.data.currently()
-        data_minutely = self.forecast_client.data.minutely()
-        data_hourly = self.forecast_client.data.hourly()
-        data_daily = self.forecast_client.data.daily()
+
+        try:
+            if self.type == 'minutely_summary':
+                self.forecast_client.update_minutely()
+                self._state = self.forecast_client.data_minutely.summary
+                return
+
+            elif self.type == 'hourly_summary':
+                self.forecast_client.update_hourly()
+                self._state = self.forecast_client.data_hourly.summary
+                return
+
+            elif self.type == 'daily_summary':
+                self.forecast_client.update_daily()
+                self._state = self.forecast_client.data_daily.summary
+                return
+
+        except forecastio.utils.PropertyUnavailable:
+            return
+
+        self.forecast_client.update_currently()
+        data = self.forecast_client.data_currently
 
         try:
             if self.type == 'summary':
                 self._state = data.summary
-            elif self.type == 'minutely_summary':
-                self._state = data_minutely.summary
-            elif self.type == 'hourly_summary':
-                self._state = data_hourly.summary
-            elif self.type == 'daily_summary':
-                self._state = data_daily.summary
             elif self.type == 'icon':
                 self._state = data.icon
             elif self.type == 'nearest_storm_distance':
@@ -191,14 +203,22 @@ class ForeCastSensor(Entity):
 class ForeCastData(object):
     """Gets the latest data from Forecast.io."""
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, api_key, latitude, longitude, units):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
+        self.units = units
+
         self.data = None
         self.unit_system = None
-        self.units = units
+        self.data_currently = None
+        self.data_minutely = None
+        self.data_hourly = None
+        self.data_daily = None
+
         self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -206,9 +226,28 @@ class ForeCastData(object):
         """Get the latest data from Forecast.io."""
         import forecastio
 
-        forecast = forecastio.load_forecast(self._api_key,
-                                            self.latitude,
-                                            self.longitude,
-                                            units=self.units)
-        self.data = forecast
-        self.unit_system = forecast.json['flags']['units']
+        self.data = forecastio.load_forecast(self._api_key,
+                                             self.latitude,
+                                             self.longitude,
+                                             units=self.units)
+        self.unit_system = self.data.json['flags']['units']
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_currently(self):
+        """Update currently data."""
+        self.data_currently = self.data.currently()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_minutely(self):
+        """Update minutely data."""
+        self.data_minutely = self.data.minutely()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_hourly(self):
+        """Update hourly data."""
+        self.data_hourly = self.data.hourly()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update_daily(self):
+        """Update daily data."""
+        self.data_daily = self.data.daily()
