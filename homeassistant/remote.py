@@ -55,7 +55,8 @@ class API(object):
         self.host = host
         self.port = port or SERVER_PORT
         self.api_password = api_password
-        if use_ssl:
+        self.use_ssl = use_ssl
+        if self.use_ssl:
             self.base_url = "https://{}:{}".format(host, self.port)
         else:
             self.base_url = "http://{}:{}".format(host, self.port)
