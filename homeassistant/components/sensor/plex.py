@@ -77,8 +77,8 @@ class PlexSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         data = {}
-        for idx, content in enumerate(self._now_playing):
-            data[str(idx + 1)] = content
+        for content in self._now_playing:
+            data[content[0]] = content[1]
         return data
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -97,8 +97,6 @@ class PlexSensor(Entity):
                 user = self._user
             video = data['movie_title'][index]
             year = data['movie_year'][index]
-            now_playing.append("{0} is watching {1} ({2})".format(user,
-                                                                  video,
-                                                                  year))
+            now_playing.append((user, "{0} ({1})".format(video, year)))
         self._state = len(data['user_list'])
         self._now_playing = now_playing
