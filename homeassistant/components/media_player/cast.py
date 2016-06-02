@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.cast/
 """
 # pylint: disable=import-error
 import logging
+import time
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
@@ -267,3 +268,13 @@ class CastDevice(MediaPlayerDevice):
         """Called when a new media status is received."""
         self.media_status = status
         self.update_ha_state()
+
+        # Temporary workaround for cast status. Status is not updated when
+        # paused with current pychromecast. If current status is playing,
+        # request an update every 5 seconds to check for paused status.
+        #
+        # See https://github.com/balloob/pychromecast/issues/73
+
+        if self.media_status.player_is_playing:
+            time.sleep(5)
+            self.cast.media_controller.update_status()
