@@ -187,6 +187,7 @@ pexpect==4.0.1
 phue==0.8
 
 # homeassistant.components.media_player.plex
+# homeassistant.components.sensor.plex
 plexapi==1.1.0
 
 # homeassistant.components.thermostat.proliphix
