@@ -71,7 +71,7 @@ from homeassistant.components.switch import SwitchDevice
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['pynetio>=0.1.6']
+REQUIREMENTS = ['pynetio==0.1.6']
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PORT = 1234
 URL_API_NETIO_EP = "/api/netio/<host>"
@@ -102,8 +102,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     config.get(CONF_PORT, DEFAULT_PORT),
                     config.get(CONF_USERNAME, DEFAULT_USERNAME),
                     config.get(CONF_PASSWORD, DEFAULT_USERNAME))
-        # if not dev.telnet:
-        #     return False
 
         DEVICES[config[CONF_HOST]] = Device(dev, [])
 
