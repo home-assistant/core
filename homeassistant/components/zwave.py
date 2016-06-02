@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
     ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
 DOMAIN = "zwave"
@@ -24,6 +25,8 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
+CONF_AUTOHEAL = "autoheal"
+DEFAULT_CONF_AUTOHEAL = True
 
 # How long to wait for the zwave network to be ready.
 NETWORK_READY_WAIT_SECS = 30
@@ -202,6 +205,7 @@ def setup(hass, config):
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
     customize = config[DOMAIN].get(CONF_CUSTOMIZE, {})
+    autoheal = config[DOMAIN].get(CONF_AUTOHEAL, DEFAULT_CONF_AUTOHEAL)
 
     # Setup options
     options = ZWaveOption(
@@ -209,6 +213,12 @@ def setup(hass, config):
         user_path=hass.config.config_dir,
         config_path=config[DOMAIN].get('config_path',
                                        default_zwave_config_path),)
+
+    # Setup autoheal
+    if autoheal:
+        _LOGGER.debug("ZWave network autoheal is enabled.")
+        track_time_change(hass, lambda: heal_network(None),
+                          hour=0, minute=0, second=0)
 
     options.set_console_output(use_debug)
     options.lock()
