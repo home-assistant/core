@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, ATTR_INPUT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME
 
 REQUIREMENTS = ['https://github.com/danieljkemp/onkyo-eiscp/archive/'
@@ -142,9 +142,11 @@ class OnkyoDevice(MediaPlayerDevice):
         else:
             self._receiver.command('audio-muting off')
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the media player on."""
         self._receiver.power_on()
+        if ATTR_INPUT_SOURCE in kwargs:
+            self.select_source(kwargs[ATTR_INPUT_SOURCE])
 
     def select_source(self, source):
         """Set the input source."""

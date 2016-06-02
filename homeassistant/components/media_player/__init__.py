@@ -88,7 +88,6 @@ SUPPORT_STOP = 4096
 
 # simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: 'turn_on',
     SERVICE_TURN_OFF: 'turn_off',
     SERVICE_TOGGLE: 'toggle',
     SERVICE_VOLUME_UP: 'volume_up',
@@ -126,9 +125,16 @@ ATTR_TO_PROPERTY = [
 ]
 
 # Service call validation schemas
+
 MEDIA_PLAYER_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
 })
+
+MEDIA_PLAYER_TURN_ON_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_INPUT_SOURCE: str,
+})
+
 
 MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
@@ -165,9 +171,14 @@ def is_on(hass, entity_id=None):
                for entity_id in entity_ids)
 
 
-def turn_on(hass, entity_id=None):
+def turn_on(hass, entity_id=None, source=None):
     """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_INPUT_SOURCE, source),
+        ] if value is not None
+    }
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
@@ -308,6 +319,22 @@ def setup(hass, config):
                                descriptions.get(service),
                                schema=MEDIA_PLAYER_SCHEMA)
 
+    def turn_on_service(service):
+        """Set specified volume on the media player."""
+        source = service.data.get(ATTR_INPUT_SOURCE)
+
+        for player in component.extract_from_service(service):
+            player.turn_on()
+            if source:
+                player.select_source(source)
+
+                if player.should_poll:
+                    player.update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
+                           descriptions.get(SERVICE_TURN_ON),
+                           schema=MEDIA_PLAYER_TURN_ON_SCHEMA)
+
     def volume_set_service(service):
         """Set specified volume on the media player."""
         volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
@@ -332,6 +359,9 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
+    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
+                           descriptions.get(SERVICE_VOLUME_SET),
+                           schema=MEDIA_PLAYER_SET_VOLUME_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
                            descriptions.get(SERVICE_VOLUME_MUTE),
                            schema=MEDIA_PLAYER_MUTE_VOLUME_SCHEMA)
