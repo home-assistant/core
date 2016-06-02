@@ -167,7 +167,8 @@ class APIDiscoveryView(HomeAssistantView):
             'base_url': self.hass.config.api.base_url,
             'location_name': self.hass.config.location_name,
             'requires_api_password': needs_auth,
-            'version': __version__
+            'version': __version__,
+            'use_ssl': self.hass.config.api.use_ssl
         })
 
 
