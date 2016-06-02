@@ -23,9 +23,9 @@ COLORS = {
 
 def color_name_to_rgb(color_name):
     """Convert color name to RGB hex value."""
-    try:
-        hex_value = COLORS[color_name.lower()]
-    except KeyError:
+    hex_value = COLORS.get(color_name.lower())
+
+    if not hex_value:
         _LOGGER.error('unknown color supplied %s default to white', color_name)
         hex_value = COLORS['white']
 
