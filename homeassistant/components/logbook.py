@@ -11,26 +11,22 @@ from itertools import groupby
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON)
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+                                 STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
-from homeassistant.helpers.entity import split_entity_id
 from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
 
 URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
-
-QUERY_EVENTS_BETWEEN = """
-    SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
-"""
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,9 +96,11 @@ class LogbookView(HomeAssistantView):
 
         end_day = start_day + timedelta(days=1)
 
-        events = recorder.query_events(
-            QUERY_EVENTS_BETWEEN,
-            (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
+        events = recorder.get_model('Events')
+        query = recorder.query('Events').filter(
+            (events.time_fired > start_day) &
+            (events.time_fired < end_day))
+        events = recorder.query_to_events(query)
 
         return self.json(humanify(events))
 

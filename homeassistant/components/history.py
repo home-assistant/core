@@ -9,8 +9,8 @@ from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
 
-from homeassistant.components import recorder, script
 import homeassistant.util.dt as dt_util
+from homeassistant.components import recorder, script
 from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
@@ -27,13 +27,12 @@ def last_5_states(entity_id):
     """Return the last 5 states for entity_id."""
     entity_id = entity_id.lower()
 
-    query = """
-        SELECT * FROM states WHERE entity_id=? AND
-        last_changed=last_updated
-        ORDER BY state_id DESC LIMIT 0, 5
-    """
-
-    return recorder.query_states(query, (entity_id, ))
+    states = recorder.get_model('States')
+    return recorder.query_to_states(
+        recorder.query('States').filter(
+            (states.entity_id == entity_id) &
+            (states.last_changed == states.last_updated)
+        ).order_by(states.state_id.desc()).limit(5))
 
 
 def get_significant_states(start_time, end_time=None, entity_id=None):
@@ -44,48 +43,42 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
-    where = """
-        (domain IN ({}) OR last_changed=last_updated)
-        AND domain NOT IN ({}) AND last_updated > ?
-    """.format(",".join("'%s'" % x for x in SIGNIFICANT_DOMAINS),
-               ",".join("'%s'" % x for x in IGNORE_DOMAINS))
-
-    data = [start_time]
+    states = recorder.get_model('States')
+    query = recorder.query('States').filter(
+        (states.domain.in_(SIGNIFICANT_DOMAINS) |
+         (states.last_changed == states.last_updated)) &
+        ((~states.domain.in_(IGNORE_DOMAINS)) &
+         (states.last_updated > start_time)))
 
     if end_time is not None:
-        where += "AND last_updated < ? "
-        data.append(end_time)
+        query = query.filter(states.last_updated < end_time)
 
     if entity_id is not None:
-        where += "AND entity_id = ? "
-        data.append(entity_id.lower())
+        query = query.filter_by(entity_id=entity_id.lower())
 
-    query = ("SELECT * FROM states WHERE {} "
-             "ORDER BY entity_id, last_updated ASC").format(where)
-
-    states = (state for state in recorder.query_states(query, data)
-              if _is_significant(state))
+    states = (
+        state for state in recorder.query_to_states(
+            query.order_by(states.entity_id, states.last_updated))
+        if _is_significant(state))
 
     return states_to_json(states, start_time, entity_id)
 
 
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-    where = "last_changed=last_updated AND last_changed > ? "
-    data = [start_time]
+    states = recorder.get_model('States')
+    query = recorder.query('States').filter(
+        (states.last_changed == states.last_updated) &
+        (states.last_changed > start_time))
 
     if end_time is not None:
-        where += "AND last_changed < ? "
-        data.append(end_time)
+        query = query.filter(states.last_updated < end_time)
 
     if entity_id is not None:
-        where += "AND entity_id = ? "
-        data.append(entity_id.lower())
+        query = query.filter_by(entity_id=entity_id.lower())
 
-    query = ("SELECT * FROM states WHERE {} "
-             "ORDER BY entity_id, last_changed ASC").format(where)
-
-    states = recorder.query_states(query, data)
+    states = recorder.query_to_states(
+        query.order_by(states.entity_id, states.last_updated))
 
     return states_to_json(states, start_time, entity_id)
 
@@ -99,24 +92,27 @@ def get_states(utc_point_in_time, entity_ids=None, run=None):
         if run is None:
             return []
 
-    where = run.where_after_start_run + "AND created < ? "
-    where_data = [utc_point_in_time]
+    from sqlalchemy import and_, func
+
+    states = recorder.get_model('States')
+    most_recent_state_ids = recorder.query(
+        func.max(states.state_id).label('max_state_id')
+    ).filter(
+        (states.created >= run.start) &
+        (states.created < utc_point_in_time)
+    )
 
     if entity_ids is not None:
-        where += "AND entity_id IN ({}) ".format(
-            ",".join(['?'] * len(entity_ids)))
-        where_data.extend(entity_ids)
+        most_recent_state_ids = most_recent_state_ids.filter(
+            states.entity_id.in_(entity_ids))
 
-    query = """
-        SELECT * FROM states
-        INNER JOIN (
-            SELECT max(state_id) AS max_state_id
-            FROM states WHERE {}
-            GROUP BY entity_id)
-        WHERE state_id = max_state_id
-    """.format(where)
+    most_recent_state_ids = most_recent_state_ids.group_by(
+        states.entity_id).subquery()
 
-    return recorder.query_states(query, where_data)
+    query = recorder.query('States').join(most_recent_state_ids, and_(
+        states.state_id == most_recent_state_ids.c.max_state_id))
+
+    return recorder.query_to_states(query)
 
 
 def states_to_json(states, start_time, entity_id):
