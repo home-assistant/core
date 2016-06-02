@@ -1,22 +1,50 @@
+"""
+Support for Plex media server monitoring.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.plex/
+"""
+from datetime import timedelta
+import xml.etree.cElementTree as ET
 import requests
 import voluptuous as vol
-import xml.etree.cElementTree as ET
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_HOST, CONF_PORT
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = 'plex'
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): vol.All(vol.Coerce(int),
-                                         vol.Range(min=1, max=65535))
-    })
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'plex',
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_HOST, default='localhost'): cv.string,
+    vol.Optional(CONF_PORT, default=32400): vol.All(vol.Coerce(int),
+                                                    vol.Range(min=1,
+                                                              max=65535))
+})
+
+
+def get_auth_token(plex_user, plex_password):
+    """Get Plex authorization token."""
+    auth_url = 'https://my.plexapp.com/users/sign_in.xml'
+    auth_params = {'user[login]': plex_user,
+                   'user[password]': plex_password}
+
+    headers = {
+        'X-Plex-Product': 'Plex API',
+        'X-Plex-Version': "2.0",
+        'X-Plex-Client-Identifier': '012286'
+    }
+
+    response = requests.post(auth_url, data=auth_params, headers=headers)
+    auth_tree = ET.fromstring(response.text)
+    for auth_elem in auth_tree.getiterator():
+        if auth_elem.tag == 'authentication-token':
+            return auth_elem.text.strip()
 
 
 # pylint: disable=unused-argument
@@ -24,10 +52,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo sensors."""
     plex_user = config.get(CONF_USERNAME)
     plex_password = config.get(CONF_PASSWORD)
-    plex_host = config.get(CONF_HOST) or "localhost"
-    plex_port = config.get(CONF_PORT) or 32400
-    plex_url = 'http://' + plex_host + ':' + str(plex_port) + '/status/sessions'
-    add_devices([PlexSensor('Plex', plex_user, plex_password, plex_url)])
+    plex_host = config.get(CONF_HOST)
+    plex_port = config.get(CONF_PORT)
+    url = 'http://' + plex_host + ':' + str(plex_port) + '/status/sessions'
+    add_devices([PlexSensor('Plex', plex_user, plex_password, url)])
+
 
 class PlexSensor(Entity):
     """Plex now playing sensor."""
@@ -35,9 +64,9 @@ class PlexSensor(Entity):
     def __init__(self, name, plex_user, plex_password, plex_url):
         """Initialize the sensor."""
         self._name = name
-        self._state = None
+        self._now_playing = []
         self._user = plex_user
-        self._auth_token = self.getAuthToken(plex_user, plex_password)
+        self._auth_token = get_auth_token(plex_user, plex_password)
         self._url = plex_url
         self.update()
 
@@ -51,26 +80,22 @@ class PlexSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def getAuthToken(self, plex_user, plex_password):
-        """Get Plex authorization token."""
-        auth_url = 'https://my.plexapp.com/users/sign_in.xml'
-        auth_params = {'user[login]': plex_user,
-                       'user[password]': plex_password}
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "Watching"
 
-        headers = {
-            'X-Plex-Product': 'Plex API',
-            'X-Plex-Version': "2.0",
-            'X-Plex-Client-Identifier': '012286'
-        }
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        data = {}
+        for idx, content in enumerate(self._now_playing):
+            data[str(idx + 1)] = content
+        return data
 
-        response = requests.post(auth_url, data=auth_params, headers=headers)
-        auth_tree = ET.fromstring(response.text)
-        for auth_elem in auth_tree.getiterator():
-            if 'authentication-token' == auth_elem.tag:
-                return auth_elem.text.strip()
-
-
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
+        """Update method for plex sensor."""
         plex_response = requests.post(self._url +
                                       '?X-Plex-Token=' + self._auth_token)
         tree = ET.fromstring(plex_response.text)
@@ -92,11 +117,12 @@ class PlexSensor(Entity):
                     user_list.append(user_elem.attrib['title'])
                 for state_elem in video_elem.iter('Player'):
                     user_state.append(state_elem.attrib['state'])
-        now_playing = ""
-        if len(user_list) > 0:
-            for index in range(len(user_list)):
-                user = user_list[index] if user_list[index] else self._user
-                now_playing += "{0} is watching {1} ({2})\tState: {3}\n".format(user, movie_title[index], movie_year[index], user_state[index])
-        else:
-            now_playing = 'Nobody is Watching Anything!'
-        self._state = now_playing
+        self._now_playing = []
+        for index, user in enumerate(user_list):
+            user = user_list[index] if user_list[index] else self._user
+            video = movie_title[index]
+            year = movie_year[index]
+            self._now_playing.append("{0} is watching {1} ({2})".format(user,
+                                                                        video,
+                                                                        year))
+        self._state = len(user_list)
