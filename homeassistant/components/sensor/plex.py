@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.plex/
 """
 from datetime import timedelta
-import xml.etree.cElementTree as ET
-import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_USERNAME
@@ -15,7 +13,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+REQUIREMENTS = [
+    'https://github.com/nkgilley/python-plex-api/archive/'
+    '22a3279bce552122afac694e481a3064a8ab9b0f.zip#python-plex-api==0.0.1']
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'plex',
@@ -28,25 +30,6 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-def get_auth_token(plex_user, plex_password):
-    """Get Plex authorization token."""
-    auth_url = 'https://my.plexapp.com/users/sign_in.xml'
-    auth_params = {'user[login]': plex_user,
-                   'user[password]': plex_password}
-
-    headers = {
-        'X-Plex-Product': 'Plex API',
-        'X-Plex-Version': "2.0",
-        'X-Plex-Client-Identifier': '012286'
-    }
-
-    response = requests.post(auth_url, data=auth_params, headers=headers)
-    auth_tree = ET.fromstring(response.text)
-    for auth_elem in auth_tree.getiterator():
-        if auth_elem.tag == 'authentication-token':
-            return auth_elem.text.strip()
-
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo sensors."""
@@ -54,20 +37,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_password = config.get(CONF_PASSWORD)
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
-    url = 'http://' + plex_host + ':' + str(plex_port) + '/status/sessions'
-    add_devices([PlexSensor('Plex', plex_user, plex_password, url)])
+    add_devices([PlexSensor('Plex', plex_user, plex_password,
+                            (plex_host, plex_port))])
 
 
 class PlexSensor(Entity):
     """Plex now playing sensor."""
 
-    def __init__(self, name, plex_user, plex_password, plex_url):
+    def __init__(self, name, plex_user, plex_password, plex_server):
         """Initialize the sensor."""
         self._name = name
+        self._state = 0
         self._now_playing = []
         self._user = plex_user
+        self._host = plex_server[0]
+        self._port = plex_server[1]
+
+        from pyplex import get_auth_token
         self._auth_token = get_auth_token(plex_user, plex_password)
-        self._url = plex_url
+
         self.update()
 
     @property
@@ -96,33 +84,21 @@ class PlexSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for plex sensor."""
-        plex_response = requests.post(self._url +
-                                      '?X-Plex-Token=' + self._auth_token)
-        tree = ET.fromstring(plex_response.text)
-
-        movie_title = []
-        movie_year = []
-        user_list = []
-        user_state = []
-
-        for elem in tree.getiterator('MediaContainer'):
-            for video_elem in elem.iter('Video'):
-                if video_elem.attrib['type'] == 'episode':
-                    movie_title.append(video_elem.attrib['grandparentTitle'] +
-                                       ' - ' + video_elem.attrib['title'])
-                else:
-                    movie_title.append(video_elem.attrib['title'])
-                movie_year.append(video_elem.attrib['year'])
-                for user_elem in video_elem.iter('User'):
-                    user_list.append(user_elem.attrib['title'])
-                for state_elem in video_elem.iter('Player'):
-                    user_state.append(state_elem.attrib['state'])
-        self._now_playing = []
-        for index, user in enumerate(user_list):
-            user = user_list[index] if user_list[index] else self._user
-            video = movie_title[index]
-            year = movie_year[index]
-            self._now_playing.append("{0} is watching {1} ({2})".format(user,
-                                                                        video,
-                                                                        year))
-        self._state = len(user_list)
+        from pyplex import get_now_playing
+        data = get_now_playing(auth_token=self._auth_token,
+                               plex_user=self._user,
+                               plex_host=self._host,
+                               plex_port=self._port)
+        now_playing = []
+        for index, user in enumerate(data['user_list']):
+            if data['user_list'][index]:
+                user = data['user_list'][index]
+            else:
+                user = self._user
+            video = data['movie_title'][index]
+            year = data['movie_year'][index]
+            now_playing.append("{0} is watching {1} ({2})".format(user,
+                                                                  video,
+                                                                  year))
+        self._state = len(data['user_list'])
+        self._now_playing = now_playing
