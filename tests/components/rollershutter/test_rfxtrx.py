@@ -148,8 +148,8 @@ class TestRollershutterRfxtrx(unittest.TestCase):
                               'devices': {}}}))
 
         event = rfxtrx_core.get_rfx_object('0a1400adf394ab010d0060')
-        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
-                                0xAB, 0x01, 0x0D, 0x00, 0x60])
+        event.data = bytearray([0x0A, 0x14, 0x00, 0x02, 0xF3, 0x8C,
+                                0xAE, 0x01, 0x0F, 0x00, 0x70])
 
         for evt_sub in rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS:
             evt_sub(event)
