@@ -147,7 +147,7 @@ class TestRollershutterRfxtrx(unittest.TestCase):
                               'automatic_add': True,
                               'devices': {}}}))
 
-        event = rfxtrx_core.get_rfx_object('0a1400adf394ab010d0060')
+        event = rfxtrx_core.get_rfx_object('0a140002f38cae010f0070')
         event.data = bytearray([0x0A, 0x14, 0x00, 0x02, 0xF3, 0x8C,
                                 0xAE, 0x01, 0x0F, 0x00, 0x70])
 
