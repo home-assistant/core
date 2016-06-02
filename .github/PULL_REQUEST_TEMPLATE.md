@@ -1,7 +1,7 @@
 **Description:**
 
 
-**Related issue (if applicable):** fixes #,#
+**Related issue (if applicable):** fixes #
 
 **Pull request in [home-assistant.io](https://github.com/home-assistant/home-assistant.io) with documentation (if applicable):** home-assistant/home-assistant.io#
 
