@@ -33,7 +33,8 @@ def setup(hass, config):
 
     requires_api_password = (hass.config.api.api_password is not None)
     params = {"version": __version__, "base_url": hass.config.api.base_url,
-              "requires_api_password": requires_api_password}
+              "requires_api_password": requires_api_password,
+              "use_ssl": hass.config.api.use_ssl}
 
     info = ServiceInfo(ZEROCONF_TYPE, zeroconf_name,
                        socket.inet_aton(hass.config.api.host),
