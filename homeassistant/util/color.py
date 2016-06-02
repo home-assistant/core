@@ -10,8 +10,7 @@ HASS_COLOR_MIN = 154
 
 
 def color_name_to_rgb(color_name):
-    """ Converts color name to RGB hex value. """
-
+    """Convert color name to RGB hex value."""
     colors = {
         'white': (255, 255, 255), 'beige': (245, 245, 220),
         'tan': (210, 180, 140), 'gray': (128, 128, 128),
