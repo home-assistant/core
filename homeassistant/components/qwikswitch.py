@@ -9,8 +9,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.3.zip'
-                '#pyqwikswitch==0.3']
+REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
+                '#pyqwikswitch==0.4']
 DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
