@@ -127,7 +127,7 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
 # homeassistant.components.qwikswitch
-https://github.com/kellerza/pyqwikswitch/archive/v0.3.zip#pyqwikswitch==0.3
+https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5
