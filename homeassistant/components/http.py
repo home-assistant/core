@@ -11,7 +11,9 @@ import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL)
+    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS)
 from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +27,7 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
+CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
@@ -41,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVELOPMENT): cv.string,
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -76,6 +80,7 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
+    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
 
     server = HomeAssistantWSGI(
         hass,
@@ -85,6 +90,7 @@ def setup(hass, config):
         api_password=api_password,
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
+        cors_origins=cors_origins
     )
 
     hass.bus.listen_once(
@@ -190,7 +196,7 @@ class HomeAssistantWSGI(object):
     # pylint: disable=too-many-arguments
 
     def __init__(self, hass, development, api_password, ssl_certificate,
-                 ssl_key, server_host, server_port):
+                 ssl_key, server_host, server_port, cors_origins):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.wrappers import Response
 
@@ -208,6 +214,7 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.cors_origins = cors_origins
         self.event_forwarder = None
 
     def register_view(self, view):
@@ -314,6 +321,16 @@ class HomeAssistantWSGI(object):
         """WSGI Handler of requests to base app."""
         request = self.Request(environ)
         response = self.dispatch_request(request)
+
+        if self.cors_origins:
+            cors_check = (environ.get("HTTP_ORIGIN") in self.cors_origins)
+            cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
+            if cors_check:
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
+                    environ.get("HTTP_ORIGIN")
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
+                    cors_headers
+
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
