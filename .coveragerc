@@ -175,6 +175,7 @@ omit =
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/speedtest.py
