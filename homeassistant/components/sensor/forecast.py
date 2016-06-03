@@ -9,7 +9,9 @@ from datetime import timedelta
 from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -50,9 +52,12 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Forecast.io sensor."""
-    api_key = config.get(CONF_API_KEY, None)
-    if None in (hass.config.latitude, hass.config.longitude, api_key):
-        _LOGGER.error("Latitude, longitude, or API key missing from config")
+    # Validate the configuration
+    if None in (hass.config.latitude, hass.config.longitude):
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
+        return False
+    elif not validate_config({DOMAIN: config},
+                             {DOMAIN: [CONF_API_KEY]}, _LOGGER):
         return False
 
     if 'units' in config:
@@ -62,18 +67,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         units = 'us'
 
+    # Create a data fetcher to support all of the configured sensors. Then make
+    # the first call to init the data and confirm we can connect.
     try:
-        data = ForeCastData(api_key, hass.config.latitude,
-                            hass.config.longitude, units)
-        data.update_currently()
+        forecast_data = ForeCastData(
+            config.get(CONF_API_KEY, None), hass.config.latitude,
+            hass.config.longitude, units)
+        forecast_data.update_currently()
     except ValueError as error:
         _LOGGER.error(error)
         return False
 
+    # Initialize and add all of the sensors.
     sensors = []
     for variable in config['monitored_conditions']:
         if variable in SENSOR_TYPES:
-            sensors.append(ForeCastSensor(data, variable))
+            sensors.append(ForeCastSensor(forecast_data, variable))
         else:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
 
@@ -84,11 +93,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
 
-    def __init__(self, weather_data, sensor_type):
+    def __init__(self, forecast_data, sensor_type):
         """Initialize the sensor."""
         self.client_name = 'Weather'
         self._name = SENSOR_TYPES[sensor_type][0]
-        self.sdk = weather_data
+        self.forecast_data = forecast_data
         self.type = sensor_type
         self._state = None
 
@@ -107,79 +116,78 @@ class ForeCastSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        self.sdk.update_unit_of_measurement(self.type)
-        return self.sdk.unit_of_measurement
+        self.forecast_data.update_unit_of_measurement(self.type)
+        return self.forecast_data.unit_of_measurement
 
     @property
     def unit_system(self):
         """Return the unit system of this entity."""
-        return self.sdk.unit_system
+        return self.forecast_data.unit_system
 
     # pylint: disable=too-many-branches,too-many-statements
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
         import forecastio
 
-        self.sdk.update()
+        # Call the API for new forecast data. Each sensor will re-trigger this
+        # same exact call, but thats fine. We cache results for a short period
+        # of time to prevent hitting API limits. Note that forecast.io will
+        # charge users for too many calls in 1 day, so take care when updating.
+        self.forecast_data.update()
+
+        self.forecast_data.update_currently()
+        data = self.forecast_data.data_currently
 
         try:
             if self.type == 'minutely_summary':
-                self.sdk.update_minutely()
-                self._state = self.sdk.data_minutely.summary
+                self.forecast_data.update_minutely()
+                self._state = self.forecast_data.data_minutely.summary
                 return
 
             elif self.type == 'hourly_summary':
-                self.sdk.update_hourly()
-                self._state = self.sdk.data_hourly.summary
+                self.forecast_data.update_hourly()
+                self._state = self.forecast_data.data_hourly.summary
                 return
 
             elif self.type == 'daily_summary':
-                self.sdk.update_daily()
-                self._state = self.sdk.data_daily.summary
+                self.forecast_data.update_daily()
+                self._state = self.forecast_data.data_daily.summary
                 return
-
-        except forecastio.utils.PropertyUnavailable:
-            return
-
-        self.sdk.update_currently()
-        data = self.sdk.data_currently
-
-        try:
-            if self.type == 'summary':
-                self._state = data.summary
-            elif self.type == 'icon':
-                self._state = data.icon
-            elif self.type == 'nearest_storm_distance':
-                self._state = data.nearestStormDistance
-            elif self.type == 'nearest_storm_bearing':
-                self._state = data.nearestStormBearing
-            elif self.type == 'precip_intensity':
-                self._state = data.precipIntensity
-            elif self.type == 'precip_type':
-                self._state = data.precipType
-            elif self.type == 'precip_probability':
-                self._state = round(data.precipProbability * 100, 1)
-            elif self.type == 'dew_point':
-                self._state = round(data.dewPoint, 1)
-            elif self.type == 'temperature':
-                self._state = round(data.temperature, 1)
-            elif self.type == 'apparent_temperature':
-                self._state = round(data.apparentTemperature, 1)
-            elif self.type == 'wind_speed':
-                self._state = data.windSpeed
-            elif self.type == 'wind_bearing':
-                self._state = data.windBearing
-            elif self.type == 'cloud_cover':
-                self._state = round(data.cloudCover * 100, 1)
-            elif self.type == 'humidity':
-                self._state = round(data.humidity * 100, 1)
-            elif self.type == 'pressure':
-                self._state = round(data.pressure, 1)
-            elif self.type == 'visibility':
-                self._state = data.visibility
-            elif self.type == 'ozone':
-                self._state = round(data.ozone, 1)
-
+            else:
+                if self.type == 'summary':
+                    self._state = data.summary
+                elif self.type == 'icon':
+                    self._state = data.icon
+                elif self.type == 'nearest_storm_distance':
+                    self._state = data.nearestStormDistance
+                elif self.type == 'nearest_storm_bearing':
+                    self._state = data.nearestStormBearing
+                elif self.type == 'precip_intensity':
+                    self._state = data.precipIntensity
+                elif self.type == 'precip_type':
+                    self._state = data.precipType
+                elif self.type == 'precip_probability':
+                    self._state = round(data.precipProbability * 100, 1)
+                elif self.type == 'dew_point':
+                    self._state = round(data.dewPoint, 1)
+                elif self.type == 'temperature':
+                    self._state = round(data.temperature, 1)
+                elif self.type == 'apparent_temperature':
+                    self._state = round(data.apparentTemperature, 1)
+                elif self.type == 'wind_speed':
+                    self._state = data.windSpeed
+                elif self.type == 'wind_bearing':
+                    self._state = data.windBearing
+                elif self.type == 'cloud_cover':
+                    self._state = round(data.cloudCover * 100, 1)
+                elif self.type == 'humidity':
+                    self._state = round(data.humidity * 100, 1)
+                elif self.type == 'pressure':
+                    self._state = round(data.pressure, 1)
+                elif self.type == 'visibility':
+                    self._state = data.visibility
+                elif self.type == 'ozone':
+                    self._state = round(data.ozone, 1)
         except forecastio.utils.PropertyUnavailable:
             pass
 
