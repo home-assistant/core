@@ -167,9 +167,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         unit = self._unit
-        if unit == 'C':
+        if 'C' in unit:
             return TEMP_CELSIUS
-        elif unit == 'F':
+        elif 'F' in unit:
             return TEMP_FAHRENHEIT
         else:
             _LOGGER.exception("unit_of_measurement=%s is not valid",
