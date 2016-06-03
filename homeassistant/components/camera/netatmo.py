@@ -14,14 +14,21 @@ DEPENDENCIES = ["netatmo"]
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_HOME = 'home'
+ATTR_CAMERAS = 'cameras'
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup access to Netatmo Welcome cameras."""
     netatmo = get_component('netatmo')
-    data = WelcomeData(netatmo.NETATMO_AUTH)
+    home = config.get(CONF_HOME, None)
+    data = WelcomeData(netatmo.NETATMO_AUTH, home)
 
     for camera_name in data.get_camera_names():
+        if config[ATTR_CAMERAS]:
+            if camera_name not in config[ATTR_CAMERAS].items():
+                continue
         add_devices_callback([WelcomeCamera(data, camera_name)])
 
 
@@ -65,17 +72,22 @@ class WelcomeCamera(Camera):
 class WelcomeData(object):
     """Get the latest data from NetAtmo."""
 
-    def __init__(self, auth):
+    def __init__(self, auth, home=None):
         """Initialize the data object."""
         self.auth = auth
         self.welcomedata = None
         self.camera_names = []
+        self.home = home
 
     def get_camera_names(self):
         """Return all module available on the API as a list."""
         self.update()
-        for home in self.welcomedata.cameras.keys():
-            for camera in self.welcomedata.cameras[home].values():
+        if not self.home:
+            for home in self.welcomedata.cameras.keys():
+                for camera in self.welcomedata.cameras[home].values():
+                    self.camera_names.append(camera['name'])
+        else:
+            for camera in self.welcomedata.cameras[self.home].values():
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
