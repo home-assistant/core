@@ -1,8 +1,11 @@
 """This module provides WSGI application to serve the Home Assistant API."""
+import hashlib
 import hmac
 import json
 import logging
 import mimetypes
+import random
+import string
 import threading
 import re
 import voluptuous as vol
@@ -20,6 +23,7 @@ DOMAIN = "http"
 REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
 
 CONF_API_PASSWORD = "api_password"
+CONF_API_HASH = 'api_hash'
 CONF_SERVER_HOST = "server_host"
 CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
@@ -27,6 +31,8 @@ CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
 
 DATA_API_PASSWORD = 'api_password'
+
+SALT_LENGTH = 8
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
@@ -43,6 +49,63 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SSL_KEY): cv.isfile,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+def collect_hash(config):
+    """
+    find the password/hash information in http configuration.
+
+    Args:
+        config: configuration['http']
+
+    Returns:
+        '$<algorithm>$<salt>$<hash>'
+        or
+        None if password or hash are not configured
+    """
+    if CONF_API_HASH in config:
+        hash_ = config[CONF_API_HASH]
+    elif CONF_API_PASSWORD in config:
+        hash_ = new_hash(config[CONF_API_PASSWORD])
+    else:
+        return None
+    return split_hash(hash_)
+
+
+def new_hash(password, salt=None):
+    """
+    create new sha512 hash from password and random salt.
+
+    Args:
+        password: password string
+        salt: arbitrary string
+
+    Returns: '$<algorithm>$<salt>$<hash>'
+
+    """
+    if not salt:
+        alpha_numeric = string.ascii_letters + string.digits
+        salt = ''.join(random.sample(alpha_numeric, SALT_LENGTH))
+    assert '$' not in salt, 'salt contains "$"'
+    hasher = hashlib.sha512()
+    hasher.update((salt + password).encode('utf-8'))
+    return '$sha512${}${}'.format(salt, hasher.hexdigest())
+
+
+def split_hash(hash_string):
+    """
+    split a hash string into (alg, salt, hash).
+
+    Args:
+        hash_string: '$<algorithm>$<salt>$<hash>'
+
+    Returns: (alg, salt, hash)
+
+    """
+    assert hash_string.count('$') == 3, \
+        'there should be exactly three "$" in hash, but I counted {}'\
+        .format(hash_string.count('$'))
+    return tuple(hash_string.split('$')[1:])
 
 
 class HideSensitiveFilter(logging.Filter):
@@ -374,8 +437,10 @@ class HomeAssistantView(object):
             # A valid auth header has been set
             authenticated = True
 
-        elif hmac.compare_digest(request.args.get(DATA_API_PASSWORD, ''),
-                                 self.hass.wsgi.api_password):
+        elif hmac.compare_digest(
+                request.args.get(DATA_API_PASSWORD, ''),
+                self.hass.wsgi.api_password
+        ):
             authenticated = True
 
         if self.requires_auth and not authenticated:

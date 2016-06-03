@@ -1,6 +1,9 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access,too-many-public-methods
+import hashlib
 import logging
+import unittest
+from unittest import mock
 
 import eventlet
 import requests
@@ -50,6 +53,77 @@ def setUpModule():   # pylint: disable=invalid-name
 def tearDownModule():   # pylint: disable=invalid-name
     """Stop the Home Assistant server."""
     hass.stop()
+
+
+class TestCollectHash(unittest.TestCase):
+    """tests for http.collect_hash()."""
+
+    def setUp(self):
+        """docstring."""
+        self.hash = '$a$b$c'
+        self.password = 'pass'
+
+    def test_hash_is_prefered_if_both_hash_and_password_are_present(self):
+        """docstring."""
+        hash_ = '$1$2$3'
+        config = {
+            http.CONF_API_PASSWORD: 'pass',
+            http.CONF_API_HASH: hash_,
+        }
+        self.assertEqual(http.split_hash(hash_), http.collect_hash(config))
+
+    def test_returns_new_hash_tuple_if_password_is_present(self):
+        """docstring."""
+        salt, password = '2', 'pass'
+        config = {http.CONF_API_PASSWORD: password}
+        hash_ = http.split_hash(http.new_hash(password, salt))
+        with mock.patch('random.sample', return_value=['2']):
+            self.assertEqual(http.collect_hash(config), hash_)
+
+    def test_returns_none_if_no_password_or_hash(self):
+        """docstring."""
+        self.assertIs(http.collect_hash({}), None)
+
+    def test_returns_hash_tuple_if_hash_is_present(self):
+        """docstring."""
+        config = {http.CONF_API_HASH: self.hash}
+        self.assertEqual(http.collect_hash(config), ('a', 'b', 'c'))
+
+
+class TestNewHash(unittest.TestCase):
+    """docstring."""
+
+    def setUp(self):
+        """docstring."""
+        self.password = 'password'
+        self.new_hash = http.new_hash(self.password, 'aaa')
+        self.alg, self.salt, self.hash = http.split_hash(self.new_hash)
+
+    def test_new_hash_returns_random_hash(self):
+        """docstring."""
+        hashes = [http.new_hash(self.password)]
+        for _ in range(100):
+            h = http.new_hash(self.password)
+            self.assertNotIn(h, hashes)
+            hashes.append(h)
+
+    def test_new_hash_string_has_hash(self):
+        """docstring."""
+        hasher = hashlib.sha512()
+        hasher.update((self.salt + self.password).encode('utf-8'))
+        self.assertEqual(self.hash, hasher.hexdigest())
+
+    def test_new_hash_string_has_salt(self):
+        """docstring."""
+        self.assertEqual(self.salt, 'aaa')
+
+    def test_new_hash_string_has_hash_algorithm(self):
+        """docstring."""
+        self.assertEqual(self.alg, 'sha512')
+
+    def test_new_hash_returns_dollar_sign_delimited_string(self):
+        """docstring."""
+        self.assertEqual(self.new_hash.count('$'), 3)
 
 
 class TestHttp:
