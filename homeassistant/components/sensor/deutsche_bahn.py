@@ -10,7 +10,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['schiene==0.15']
+REQUIREMENTS = ['schiene==0.17']
 ICON = 'mdi:train'
 
 # Return cached results if last scan was less then this time ago.
