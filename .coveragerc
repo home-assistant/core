@@ -78,6 +78,9 @@ omit =
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
+    homeassistant/components/netatmo.py
+    homeassistant/components/*/netatmo.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/binary_sensor/arest.py
@@ -170,7 +173,6 @@ omit =
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
-    homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/onewire.py

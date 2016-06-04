@@ -94,9 +94,6 @@ hikvision==0.4
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
-# homeassistant.components.sensor.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
-
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
@@ -122,6 +119,9 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 
 # homeassistant.components.device_tracker.fritz
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
+
+# homeassistant.components.netatmo
+https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1

@@ -33,9 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class WelcomeCamera(Camera):
-    """
-    Representation of the images published from the Netatmo Welcome camera.
-    """
+    """Representation of the images published from Welcome camera."""
 
     def __init__(self, data, camera_name, home):
         """Setup for access to the BloomSky camera images."""
