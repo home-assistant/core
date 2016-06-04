@@ -26,10 +26,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     data = WelcomeData(netatmo.NETATMO_AUTH, home)
 
     for camera_name in data.get_camera_names():
-        if config[ATTR_CAMERAS]:
-            if camera_name not in config[ATTR_CAMERAS].items():
+        if ATTR_CAMERAS in config:
+            if camera_name not in config[ATTR_CAMERAS]:
                 continue
-        add_devices_callback([WelcomeCamera(data, camera_name)])
+        add_devices_callback([WelcomeCamera(data, camera_name, home)])
 
 
 class WelcomeCamera(Camera):
@@ -37,11 +37,14 @@ class WelcomeCamera(Camera):
     Representation of the images published from the Netatmo Welcome camera.
     """
 
-    def __init__(self, data, camera_name):
+    def __init__(self, data, camera_name, home):
         """Setup for access to the BloomSky camera images."""
         super(WelcomeCamera, self).__init__()
         self._data = data
-        self._name = camera_name
+        if home:
+            self._name = home + ' / ' + camera_name
+        else:
+            self._name = camera_name
         self._vpnurl, self._localurl = self._data.welcomedata.cameraUrls(
             camera=camera_name
             )
