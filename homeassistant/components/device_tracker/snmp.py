@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pysnmp==4.2.5']
+REQUIREMENTS = ['pysnmp==4.3.2']
 
 CONF_COMMUNITY = "community"
 CONF_BASEOID = "baseoid"
@@ -72,7 +72,7 @@ class SnmpScanner(object):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Ensure the information from the WAP is up to date.
+        """Ensure the information from the device is up to date.
 
         Return boolean if scanning successful.
         """
@@ -88,7 +88,7 @@ class SnmpScanner(object):
             return True
 
     def get_snmp_data(self):
-        """Fetch MAC addresses from WAP via SNMP."""
+        """Fetch MAC addresses from access point via SNMP."""
         devices = []
 
         errindication, errstatus, errindex, restable = self.snmp.nextCmd(
