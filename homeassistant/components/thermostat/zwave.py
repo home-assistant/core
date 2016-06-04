@@ -19,6 +19,12 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120)
 
+COMMAND_CLASS_SENSOR_MULTILEVEL = 0x31
+COMMAND_CLASS_THERMOSTAT_MODE = 0x40
+COMMAND_CLASS_THERMOSTAT_OPERATING_STATE = 0x42
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 0x43
+COMMAND_CLASS_THERMOSTAT_FAN_MODE = 0x44
+
 WORKAROUND_IGNORE = 'ignore'
 
 DEVICE_MAPPINGS = {
@@ -79,19 +85,23 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
-        # set point
-        for _, value in self._node.get_values(class_id=0x43).items():
+        # Set point
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0:
                 self._target_temperature = int(value.data)
         # Operation
-        for _, value in self._node.get_values(class_id=0x40).items():
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_MODE).items():
             self._current_operation = value.data_as_string
         # Current Temp
-        for _, value in self._node.get_values_for_command_class(0x31).items():
+        for _, value in self._node.get_values_for_command_class(
+                COMMAND_CLASS_SENSOR_MULTILEVEL).items():
             self._current_temperature = int(value.data)
             self._unit = value.units
-        # COMMAND_CLASS_THERMOSTAT_OPERATING_STATE
-        for _, value in self._node.get_values(class_id=0x42).items():
+        # Thermostat mode
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_OPERATING_STATE).items():
             self._current_operation_state = value.data_as_string
 
     @property
@@ -134,6 +144,12 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     def set_temperature(self, temperature):
         """Set new target temperature."""
         # set point
-        for _, value in self._node.get_values_for_command_class(0x43).items():
+        for _, value in self._node.get_values_for_command_class(
+                COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0:
                 value.data = temperature
+
+    @property
+    def thermostat_mode(self):
+        """Return the current thermostat mode (e.g. heating/cooling)"""
+        return self._current_operation_state
