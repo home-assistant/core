@@ -41,6 +41,7 @@ ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
 ATTR_TEMPERATURE_LOW = "target_temp_low"
 ATTR_TEMPERATURE_HIGH = "target_temp_high"
+ATTR_THERMOSTAT_MODE = "thermostat_mode"
 ATTR_OPERATION = "current_operation"
 
 _LOGGER = logging.getLogger(__name__)
@@ -196,6 +197,10 @@ class ThermostatDevice(Entity):
         if operation is not None:
             data[ATTR_OPERATION] = operation
 
+        mode = self.thermostat_mode
+        if mode is not None:
+            data[ATTR_THERMOSTAT_MODE] = self.thermostat_mode
+
         is_away = self.is_away_mode_on
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
@@ -244,6 +249,11 @@ class ThermostatDevice(Entity):
     @property
     def is_fan_on(self):
         """Return true if the fan is on."""
+        return None
+
+    @property
+    def thermostat_mode(self):
+        """Return the current thermostat mode (e.g. heating/cooling)."""
         return None
 
     def set_temperate(self, temperature):
