@@ -175,7 +175,7 @@ class SonosDevice(MediaPlayerDevice):
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
-        self.socoSnapshot = Snapshot(self._player)
+        self.soco_snapshot = Snapshot(self._player)
 
     @property
     def should_poll(self):
@@ -358,12 +358,12 @@ class SonosDevice(MediaPlayerDevice):
     @only_if_coordinator
     def snapshot(self, service):
         """Snapshot the player."""
-        self.socoSnapshot.snapshot()
+        self.soco_snapshot.snapshot()
 
     @only_if_coordinator
     def restore(self, service):
         """Restore snapshot for the player."""
-        self.socoSnapshot.restore(True)
+        self.soco_snapshot.restore(True)
 
     @property
     def available(self):
