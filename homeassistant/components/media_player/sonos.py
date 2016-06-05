@@ -8,7 +8,6 @@ import datetime
 import logging
 import socket
 from os import path
-from soco.snapshot import Snapshot
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
@@ -175,6 +174,7 @@ class SonosDevice(MediaPlayerDevice):
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
+        from soco.snapshot import Snapshot
         self.soco_snapshot = Snapshot(self._player)
 
     @property
