@@ -97,9 +97,10 @@ class SnmpScanner(object):
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
             return
+        # pylint: disable=no-member
         if errstatus:
             _LOGGER.error('SNMP error: %s at %s', errstatus.prettyPrint(),
-                          errindex and restable[-1][int(errindex)-1] or '?')
+                          errindex and restable[int(errindex) - 1][0] or '?')
             return
 
         for resrow in restable:
