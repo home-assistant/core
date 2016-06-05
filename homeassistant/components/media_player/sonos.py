@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device.update_ha_state(True)
 
     def restore(service):
-        """Restore a snapshot. """
+        """Restore a snapshot."""
         entity_id = service.data.get('entity_id')
 
         if entity_id:
@@ -357,10 +357,12 @@ class SonosDevice(MediaPlayerDevice):
 
     @only_if_coordinator
     def snapshot(self, service):
+        """Snapshot the player."""
         self.socoSnapshot.snapshot()
 
     @only_if_coordinator
     def restore(self, service):
+        """Restore snapshot for the player."""
         self.socoSnapshot.restore(True)
 
     @property
