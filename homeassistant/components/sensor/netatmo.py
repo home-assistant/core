@@ -36,7 +36,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available NetAtmo weather sensors."""
+    """Setup the available Netatmo weather sensors."""
     netatmo = get_component('netatmo')
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 

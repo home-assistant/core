@@ -1,10 +1,11 @@
 """
-Support for the NetAtmo Weather Service.
+Support for the Netatmo devices (Weather Station and Welcome camera).
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netatmo/
+https://home-assistant.io/components/netatmo/
 """
 import logging
+from urllib.error import HTTPError
 from homeassistant.components import discovery
 from homeassistant.const import (
     CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
@@ -28,7 +29,7 @@ DISCOVER_CAMERAS = 'netatmo.cameras'
 
 
 def setup(hass, config):
-    """Setup the NetAtmo sensor."""
+    """Setup the Netatmo devices."""
     if not validate_config(config,
                            {DOMAIN: [CONF_API_KEY,
                                      CONF_USERNAME,
@@ -40,17 +41,17 @@ def setup(hass, config):
     import lnetatmo
 
     global NETATMO_AUTH
-    NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
-                                       config[DOMAIN][CONF_SECRET_KEY],
-                                       config[DOMAIN][CONF_USERNAME],
-                                       config[DOMAIN][CONF_PASSWORD],
-                                       "read_station read_camera "
-                                       "access_camera")
-
-    if not NETATMO_AUTH:
+    try:
+        NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
+                                           config[DOMAIN][CONF_SECRET_KEY],
+                                           config[DOMAIN][CONF_USERNAME],
+                                           config[DOMAIN][CONF_PASSWORD],
+                                           "read_station read_camera "
+                                           "access_camera")
+    except HTTPError:
         _LOGGER.error(
             "Connection error "
-            "Please check your settings for NetAtmo API.")
+            "Please check your settings for NatAtmo API.")
         return False
 
     for component, discovery_service in (

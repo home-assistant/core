@@ -1,8 +1,8 @@
 """
-Support for the NetAtmo Weather Service.
+Support for the Netatmo Welcome camera.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.netatmo/
+https://home-assistant.io/components/camera.netatmo/
 """
 import logging
 import requests
