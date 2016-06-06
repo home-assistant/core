@@ -233,17 +233,3 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     value.data = int(swing_mode)
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        if 'F' in self.unit_of_measurement:
-            return 66.2
-        return 19
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        if 'F' in self.unit_of_measurement:
-            return 86
-        return 30
