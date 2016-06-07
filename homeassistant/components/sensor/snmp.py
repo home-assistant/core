@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_HOST, CONF_PLATFORM, CONF_NAME,
-                                 CONF_PORT)
+                                 CONF_PORT, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pysnmp==4.3.2']
@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_PORT): vol.Coerce(int),
     vol.Optional(CONF_COMMUNITY): vol.Coerce(str),
     vol.Required(CONF_BASEOID): vol.Coerce(str),
-    vol.Optional('unit_of_measurement'): vol.Coerce(str),
+    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): vol.Coerce(str),
 })
 
 # Return cached results if last scan was less then this time ago.
