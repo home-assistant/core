@@ -38,6 +38,19 @@ HASS running => http://localhost:8123/
 '
 }
 
+setup_error() {
+    echo '############################################################
+Something is off... maybe setup did not complete properly?
+Please ensure setup did run correctly at least once.
+
+To run setup again:
+
+`rm setup_done; vagrant provision`
+
+############################################################'
+    exit 1
+}
+
 setup() {
     local hass_path='/root/venv/bin/hass'
     local systemd_bin_path='/usr/bin/hass'
@@ -63,7 +76,9 @@ setup() {
 }
 
 run_tests() {
-    systemctl stop home-assistant
+    if ! systemctl stop home-assistant; then
+        setup_error
+    fi
     source ~/venv/bin/activate
     rsync -a --delete \
         --exclude='*.tox' \
@@ -74,7 +89,9 @@ run_tests() {
 }
 
 restart() {
-    systemctl restart home-assistant
+    if ! systemctl restart home-assistant; then
+        setup_error
+    fi
     rm $RESTART
 }
 
@@ -82,7 +99,9 @@ main() {
     if ! [ -f $SETUP_DONE ]; then setup; fi
     if [ -f $RUN_TESTS ]; then run_tests; fi
     if [ -f $RESTART ]; then restart; fi
-    systemctl start home-assistant
+    if ! systemctl start home-assistant; then
+        setup_error
+    fi
 }
 
 main
