@@ -121,11 +121,11 @@ class SwitchTemplate(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Fire the on action."""
-        self._on_script.run(True)
+        self._on_script.run()
 
     def turn_off(self, **kwargs):
         """Fire the off action."""
-        self._off_script.run(True)
+        self._off_script.run()
 
     def update(self):
         """Update the state from the template."""
