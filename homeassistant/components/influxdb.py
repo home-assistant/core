@@ -77,7 +77,7 @@ def setup(hass, config):
             return
 
         try:
-            _state = state_helper.state_as_number(state)
+            _state = float(state.state)
         except ValueError:
             _state = state.state
 
