@@ -15,12 +15,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -76,34 +77,34 @@ def setup(hass, config):
         message = template.render(hass, message)
         log_entry(hass, name, message, domain, entity_id)
 
-    hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
+    hass.wsgi.register_view(LogbookView)
+
     hass.services.register(DOMAIN, 'log', log_message,
                            schema=LOG_MESSAGE_SCHEMA)
     return True
 
 
-def _handle_get_logbook(handler, path_match, data):
-    """Return logbook entries."""
-    date_str = path_match.group('date')
+class LogbookView(HomeAssistantView):
+    """Handle logbook view requests."""
 
-    if date_str:
-        start_date = dt_util.parse_date(date_str)
+    url = '/api/logbook'
+    name = 'api:logbook'
+    extra_urls = ['/api/logbook/<date:date>']
 
-        if start_date is None:
-            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
-            return
+    def get(self, request, date=None):
+        """Retrieve logbook entries."""
+        if date:
+            start_day = dt_util.start_of_local_day(date)
+        else:
+            start_day = dt_util.start_of_local_day()
 
-        start_day = dt_util.start_of_local_day(start_date)
-    else:
-        start_day = dt_util.start_of_local_day()
+        end_day = start_day + timedelta(days=1)
 
-    end_day = start_day + timedelta(days=1)
+        events = recorder.query_events(
+            QUERY_EVENTS_BETWEEN,
+            (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
 
-    events = recorder.query_events(
-        QUERY_EVENTS_BETWEEN,
-        (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
-
-    handler.write_json(humanify(events))
+        return self.json(humanify(events))
 
 
 class Entry(object):

@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 
+import eventlet
 import requests
 
 from homeassistant import bootstrap, const
@@ -45,6 +46,7 @@ def setUpModule():   # pylint: disable=invalid-name
     })
 
     hass.start()
+    eventlet.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
