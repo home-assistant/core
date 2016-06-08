@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.script import call_from_config
+from homeassistant.helpers.script import Script
 from homeassistant.helpers import template
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util import slugify
@@ -90,8 +90,8 @@ class SwitchTemplate(SwitchDevice):
                                             hass=hass)
         self._name = friendly_name
         self._template = state_template
-        self._on_action = on_action
-        self._off_action = off_action
+        self._on_script = Script(hass, on_action)
+        self._off_script = Script(hass, off_action)
         self._state = False
 
         self.update()
@@ -125,11 +125,11 @@ class SwitchTemplate(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Fire the on action."""
-        call_from_config(self.hass, self._on_action, True)
+        self._on_script.run()
 
     def turn_off(self, **kwargs):
         """Fire the off action."""
-        call_from_config(self.hass, self._off_action, True)
+        self._off_script.run()
 
     def update(self):
         """Update the state from the template."""
