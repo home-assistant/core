@@ -192,6 +192,10 @@ class MqttLight(Light):
         """Turn the device on."""
         should_update = False
 
+        if not self._state:
+            mqtt.publish(self._hass, self._topic["command_topic"],
+                         self._payload["on"], self._qos, self._retain)
+
         if ATTR_RGB_COLOR in kwargs and \
            self._topic["rgb_command_topic"] is not None:
 
@@ -213,9 +217,6 @@ class MqttLight(Light):
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
-
-        mqtt.publish(self._hass, self._topic["command_topic"],
-                     self._payload["on"], self._qos, self._retain)
 
         if self._optimistic:
             # Optimistically assume that switch has changed state.
