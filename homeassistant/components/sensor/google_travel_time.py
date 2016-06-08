@@ -178,7 +178,7 @@ class GoogleTravelTimeSensor(Entity):
             options_copy['departure_time'] = convert_time_to_utc(dtime)
         elif dtime is not None:
             options_copy['departure_time'] = dtime
-        else:
+        elif atime is None:
             options_copy['departure_time'] = 'now'
 
         if atime is not None and ':' in atime:
