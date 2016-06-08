@@ -31,39 +31,52 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
-    'summary': ['Summary', None, None, None, None, None],
-    'minutely_summary': ['Minutely Summary', None, None, None, None, None],
-    'hourly_summary': ['Hourly Summary', None, None, None, None, None],
-    'daily_summary': ['Daily Summary', None, None, None, None, None],
-    'icon': ['Icon', None, None, None, None, None],
+    'summary': ['Summary', None, None, None, None, None, None],
+    'minutely_summary': ['Minutely Summary',
+                         None, None, None, None, None, None],
+    'hourly_summary': ['Hourly Summary', None, None, None, None, None, None],
+    'daily_summary': ['Daily Summary', None, None, None, None, None, None],
+    'icon': ['Icon', None, None, None, None, None, None],
     'nearest_storm_distance': ['Nearest Storm Distance',
-                               'km', 'm', 'km', 'km', 'm'],
+                               'km', 'm', 'km', 'km', 'm',
+                               'mdi:weather-lightning'],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
-                              '°', '°', '°', '°', '°'],
-    'precip_type': ['Precip', None, None, None, None, None],
-    'precip_intensity': ['Precip Intensity', 'mm', 'in', 'mm', 'mm', 'mm'],
-    'precip_probability': ['Precip Probability', '%', '%', '%', '%', '%'],
-    'temperature': ['Temperature', '°C', '°F', '°C', '°C', '°C'],
+                              '°', '°', '°', '°', '°',
+                              'mdi:weather-lightning'],
+    'precip_type': ['Precip', None, None, None, None, None,
+                    'mdi:weather-pouring'],
+    'precip_intensity': ['Precip Intensity',
+                         'mm', 'in', 'mm', 'mm', 'mm', 'mdi:weather-rainy'],
+    'precip_probability': ['Precip Probability',
+                           '%', '%', '%', '%', '%', 'mdi:water-percent'],
+    'temperature': ['Temperature',
+                    '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
     'apparent_temperature': ['Apparent Temperature',
-                             '°C', '°F', '°C', '°C', '°C'],
-    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C'],
-    'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph'],
-    'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°'],
-    'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%'],
-    'humidity': ['Humidity', '%', '%', '%', '%', '%'],
-    'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar'],
-    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
-    'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
+                             '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
+    'dew_point': ['Dew point', '°C', '°F', '°C', '°C', '°C',
+                  'mdi:thermometer'],
+    'wind_speed': ['Wind Speed', 'm/s', 'mph', 'km/h', 'mph', 'mph',
+                   'mdi:weather-windy'],
+    'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°', 'mdi:compass'],
+    'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%',
+                    'mdi:weather-partlycloudy'],
+    'humidity': ['Humidity', '%', '%', '%', '%', '%', 'mdi:water-percent'],
+    'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar',
+                 'mdi:gauge'],
+    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm', 'mdi:eye'],
+    'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU', 'mdi:eye'],
     'apparent_temperature_max': ['Daily High Apparent Temperature',
-                                 '°C', '°F', '°C', '°C', '°C'],
+                                 '°C', '°F', '°C', '°C', '°C',
+                                 'mdi:thermometer'],
     'apparent_temperature_min': ['Daily Low Apparent Temperature',
-                                 '°C', '°F', '°C', '°C', '°C'],
+                                 '°C', '°F', '°C', '°C', '°C',
+                                 'mdi:thermometer'],
     'temperature_max': ['Daily High Temperature',
-                        '°C', '°F', '°C', '°C', '°C'],
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
     'temperature_min': ['Daily Low Temperature',
-                        '°C', '°F', '°C', '°C', '°C'],
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer'],
     'precip_intensity_max': ['Daily Max Precip Intensity',
-                             'mm', 'in', 'mm', 'mm', 'mm'],
+                             'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -155,6 +168,12 @@ class ForeCastSensor(Entity):
         }.get(self.unit_system, 1)
         self._unit_of_measurement = SENSOR_TYPES[self.type][unit_index]
 
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return SENSOR_TYPES[self.type][6]
+
+    # pylint: disable=too-many-branches,too-many-statements
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
