@@ -7,7 +7,12 @@ https://home-assistant.io/components/sensor.openweathermap/
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT
+import voluptuous as vol
+
+from homeassistant.const import (CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+                                 CONF_PLATFORM, CONF_LATITUDE, CONF_LONGITUDE,
+                                 CONF_MONITORED_CONDITIONS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -23,6 +28,15 @@ SENSOR_TYPES = {
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm']
 }
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'openweathermap',
+    vol.Required(CONF_API_KEY): vol.Coerce(str),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        [vol.In(SENSOR_TYPES.keys())],
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude
+})
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)

@@ -37,7 +37,7 @@ SENSOR_TYPES = {
     'wind_bearing': ['Wind Bearing', '°', '°', '°', '°', '°'],
     'cloud_cover': ['Cloud Coverage', '%', '%', '%', '%', '%'],
     'humidity': ['Humidity', '%', '%', '%', '%', '%'],
-    'pressure': ['Pressure', 'mBar', 'mBar', 'mBar', 'mBar', 'mBar'],
+    'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar'],
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
 }

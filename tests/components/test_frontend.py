@@ -3,6 +3,7 @@
 import re
 import unittest
 
+import eventlet
 import requests
 
 import homeassistant.bootstrap as bootstrap
@@ -42,6 +43,10 @@ def setUpModule():   # pylint: disable=invalid-name
 
     hass.start()
 
+    # Give eventlet time to start
+    # TODO fix this
+    eventlet.sleep(0.05)
+
 
 def tearDownModule():   # pylint: disable=invalid-name
     """Stop everything that was started."""
@@ -71,17 +76,6 @@ class TestFrontend(unittest.TestCase):
         req = requests.head(_url(frontendjs.groups(0)[0]))
 
         self.assertEqual(200, req.status_code)
-
-    def test_auto_filling_in_api_password(self):
-        """Test for auto filling of API password."""
-        req = requests.get(
-            _url("?{}={}".format(http.DATA_API_PASSWORD, API_PASSWORD)))
-
-        self.assertEqual(200, req.status_code)
-
-        auth_text = re.search(r"auth='{}'".format(API_PASSWORD), req.text)
-
-        self.assertIsNotNone(auth_text)
 
     def test_404(self):
         """Test for HTTP 404 error."""
