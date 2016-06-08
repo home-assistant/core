@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.6.5']
+REQUIREMENTS = ['pyRFXtrx==0.8.0']
 
 DOMAIN = "rfxtrx"
 
@@ -310,6 +310,7 @@ class RfxtrxDevice(Entity):
         self.update_ha_state()
 
     def _send_command(self, command, brightness=0):
+        # pylint: disable=too-many-return-statements,too-many-branches
         if not self._event:
             return
 
@@ -329,5 +330,17 @@ class RfxtrxDevice(Entity):
                 self._event.device.send_off(RFXOBJECT.transport)
             self._state = False
             self._brightness = 0
+
+        elif command == "roll_up":
+            for _ in range(self.signal_repetitions):
+                self._event.device.send_open(RFXOBJECT.transport)
+
+        elif command == "roll_down":
+            for _ in range(self.signal_repetitions):
+                self._event.device.send_close(RFXOBJECT.transport)
+
+        elif command == "stop_roll":
+            for _ in range(self.signal_repetitions):
+                self._event.device.send_stop(RFXOBJECT.transport)
 
         self.update_ha_state()

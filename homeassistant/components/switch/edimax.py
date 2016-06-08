@@ -61,6 +61,8 @@ class SmartPlugSwitch(SwitchDevice):
             return float(self.smartplug.now_power) / 1000000.0
         except ValueError:
             return None
+        except TypeError:
+            return None
 
     @property
     def today_power_mw(self):
@@ -68,6 +70,8 @@ class SmartPlugSwitch(SwitchDevice):
         try:
             return float(self.smartplug.now_energy_day) / 1000.0
         except ValueError:
+            return None
+        except TypeError:
             return None
 
     @property

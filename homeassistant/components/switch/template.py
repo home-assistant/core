@@ -8,12 +8,13 @@ import logging
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON)
-from homeassistant.core import EVENT_STATE_CHANGED
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
+    ATTR_ENTITY_ID, MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.service import call_from_config
+from homeassistant.helpers.script import Script
 from homeassistant.helpers import template
+from homeassistant.helpers.event import track_state_change
 from homeassistant.util import slugify
 
 CONF_SWITCHES = 'switches'
@@ -58,6 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 "Missing action for switch %s", device)
             continue
 
+        entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
+
         switches.append(
             SwitchTemplate(
                 hass,
@@ -65,7 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 friendly_name,
                 state_template,
                 on_action,
-                off_action)
+                off_action,
+                entity_ids)
             )
     if not switches:
         _LOGGER.error("No switches added")
@@ -79,25 +83,25 @@ class SwitchTemplate(SwitchDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, device_id, friendly_name, state_template,
-                 on_action, off_action):
+                 on_action, off_action, entity_ids):
         """Initialize the Template switch."""
         self.hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
                                             hass=hass)
         self._name = friendly_name
         self._template = state_template
-        self._on_action = on_action
-        self._off_action = off_action
+        self._on_script = Script(hass, on_action)
+        self._off_script = Script(hass, off_action)
         self._state = False
 
         self.update()
 
-        def template_switch_event_listener(event):
+        def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
             self.update_ha_state(True)
 
-        hass.bus.listen(EVENT_STATE_CHANGED,
-                        template_switch_event_listener)
+        track_state_change(hass, entity_ids,
+                           template_switch_state_listener)
 
     @property
     def name(self):
@@ -121,11 +125,11 @@ class SwitchTemplate(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Fire the on action."""
-        call_from_config(self.hass, self._on_action, True)
+        self._on_script.run()
 
     def turn_off(self, **kwargs):
         """Fire the off action."""
-        call_from_config(self.hass, self._off_action, True)
+        self._off_script.run()
 
     def update(self):
         """Update the state from the template."""

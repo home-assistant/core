@@ -10,7 +10,7 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['blockchain==1.3.1']
+REQUIREMENTS = ['blockchain==1.3.3']
 _LOGGER = logging.getLogger(__name__)
 OPTION_TYPES = {
     'exchangerate': ['Exchange rate (1 BTC)', None],
