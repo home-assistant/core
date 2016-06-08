@@ -186,7 +186,7 @@ def setup_scanner(hass, config, see):
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects."""
     parts = topic.split('/')
-    dev_id = '{}_{}'.format(parts[1], parts[2])
+    dev_id = slugify('{}_{}'.format(parts[1], parts[2]))
     host_name = parts[1]
     kwargs = {
         'dev_id': dev_id,

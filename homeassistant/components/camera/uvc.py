@@ -12,7 +12,7 @@ import requests
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['uvcclient==0.8']
+REQUIREMENTS = ['uvcclient==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,13 +45,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Unable to connect to NVR: %s', str(ex))
         return False
 
+    identifier = nvrconn.server_version >= (3, 2, 0) and 'id' or 'uuid'
     # Filter out airCam models, which are not supported in the latest
     # version of UnifiVideo and which are EOL by Ubiquiti
-    cameras = [camera for camera in cameras
-               if 'airCam' not in nvrconn.get_camera(camera['uuid'])['model']]
+    cameras = [
+        camera for camera in cameras
+        if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']]
 
     add_devices([UnifiVideoCamera(nvrconn,
-                                  camera['uuid'],
+                                  camera[identifier],
                                   camera['name'])
                  for camera in cameras])
     return True
@@ -110,12 +112,17 @@ class UnifiVideoCamera(Camera):
                           dict(name=self._name))
             password = 'ubnt'
 
+        if self._nvr.server_version >= (3, 2, 0):
+            client_cls = uvc_camera.UVCCameraClientV320
+        else:
+            client_cls = uvc_camera.UVCCameraClient
+
         camera = None
         for addr in addrs:
             try:
-                camera = uvc_camera.UVCCameraClient(addr,
-                                                    caminfo['username'],
-                                                    password)
+                camera = client_cls(addr,
+                                    caminfo['username'],
+                                    password)
                 camera.login()
                 _LOGGER.debug('Logged into UVC camera %(name)s via %(addr)s',
                               dict(name=self._name, addr=addr))

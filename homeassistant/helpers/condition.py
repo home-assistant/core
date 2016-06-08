@@ -225,15 +225,27 @@ def template_from_config(config, config_validation=True):
 
 
 def time(before=None, after=None, weekday=None):
-    """Test if local time condition matches."""
+    """Test if local time condition matches.
+
+    Handle the fact that time is continuous and we may be testing for
+    a period that crosses midnight. In that case it is easier to test
+    for the opposite. "(23:59 <= now < 00:01)" would be the same as
+    "not (00:01 <= now < 23:59)".
+    """
     now = dt_util.now()
     now_time = now.time()
 
-    if before is not None and now_time > before:
-        return False
+    if after is None:
+        after = dt_util.dt.time(0)
+    if before is None:
+        before = dt_util.dt.time(23, 59, 59, 999999)
 
-    if after is not None and now_time < after:
-        return False
+    if after < before:
+        if not after <= now_time < before:
+            return False
+    else:
+        if before <= now_time < after:
+            return False
 
     if weekday is not None:
         now_weekday = WEEKDAYS[now.weekday()]

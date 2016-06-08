@@ -1,5 +1,8 @@
 """Test the condition helper."""
+from unittest.mock import patch
+
 from homeassistant.helpers import condition
+from homeassistant.util import dt
 
 from tests.common import get_test_home_assistant
 
@@ -66,3 +69,28 @@ class TestConditionHelper:
 
         self.hass.states.set('sensor.temperature', 100)
         assert test(self.hass)
+
+    def test_time_window(self):
+        """Test time condition windows."""
+        sixam = dt.parse_time("06:00:00")
+        sixpm = dt.parse_time("18:00:00")
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=3)):
+            assert not condition.time(after=sixam, before=sixpm)
+            assert condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=9)):
+            assert condition.time(after=sixam, before=sixpm)
+            assert not condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=15)):
+            assert condition.time(after=sixam, before=sixpm)
+            assert not condition.time(after=sixpm, before=sixam)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=dt.now().replace(hour=21)):
+            assert not condition.time(after=sixam, before=sixpm)
+            assert condition.time(after=sixpm, before=sixam)

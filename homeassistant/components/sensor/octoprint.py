@@ -93,7 +93,11 @@ class OctoPrintSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        sensor_unit = self.unit_of_measurement
+        if sensor_unit == TEMP_CELSIUS or sensor_unit == "%":
+            return round(self._state, 2)
+        else:
+            return self._state
 
     @property
     def unit_of_measurement(self):
