@@ -6,14 +6,12 @@ https://home-assistant.io/components/envisalink/
 """
 import logging
 import time
-from homeassistant.const import (
-    ATTR_SERVICE, ATTR_DISCOVERED,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 from homeassistant.util import convert
 
-REQUIREMENTS = ['pyenvisalink==0.3', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==0.5', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -41,6 +39,9 @@ SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
 SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
 
+REQ_VAR_ERR="Missing required variable: {0}"
+INVALID_PANEL_ERR=REQ_VAR_ERR + " Valid values are HONEYWELL/DSC."
+
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Common setup for Envisalink devices."""
@@ -52,27 +53,27 @@ def setup(hass, base_config):
     config = base_config.get(DOMAIN)
 
     if config.get(CONF_EVL_HOST) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}", CONF_EVL_HOST))
+        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_EVL_HOST))
         return False
 
     if config.get(CONF_PANEL_TYPE) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}. Valid values are HONEYWELL/DSC.", CONF_PANEL_TYPE))
+        _LOGGER.error(str.format(INVALID_PANEL_ERR, CONF_PANEL_TYPE))
         return False
 
     if config.get(CONF_USERNAME) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}", CONF_USERNAME))
+        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_USERNAME))
         return False
 
     if config.get(CONF_PASS) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}", CONF_PASS))
+        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_PASS))
         return False
 
     if config.get(CONF_ZONES) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}", CONF_ZONES))
+        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_ZONES))
         return False
 
     if config.get(CONF_PARTITIONS) is None:
-        _LOGGER.error(str.format("Missing required variable: {0}", CONF_PARTITIONS))
+        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_PARTITIONS))
         return False
 
     _host = config.get(CONF_EVL_HOST)
@@ -83,11 +84,20 @@ def setup(hass, base_config):
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
     _keepAlive = convert(config.get(CONF_EVL_KEEPALIVE), int, DEFAULT_KEEPALIVE)
-    _zoneDump = convert(config.get(CONF_ZONEDUMP_INTERVAL), int, DEFAULT_ZONEDUMP_INTERVAL)
+    _zoneDump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
+                        int,
+                        DEFAULT_ZONEDUMP_INTERVAL)
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
     _connectStatus = {}
-    EVL_CONTROLLER = EnvisalinkAlarmPanel(_host, _port, _panelType, _version, _user, _pass, _zoneDump, _keepAlive)
+    EVL_CONTROLLER = EnvisalinkAlarmPanel(_host,
+                                          _port,
+                                          _panelType,
+                                          _version,
+                                          _user,
+                                          _pass,
+                                          _zoneDump,
+                                          _keepAlive)
 
     def login_fail_callback(data):
         _LOGGER.error("The envisalink rejected your credentials.")
@@ -98,11 +108,11 @@ def setup(hass, base_config):
         _connectStatus['fail'] = 1
 
     def connection_success_callback(data):
-        _LOGGER.info("Successfully established a connection with the envisalink.")
+        _LOGGER.info("Established a connection with the envisalink.")
         _connectStatus['success'] = 1
 
     def zones_updated_callback(data):
-        """This will handle zone timer updates. Basically just an update of all zones."""
+        """This will handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
         dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None)
 
@@ -112,9 +122,9 @@ def setup(hass, base_config):
         dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE, sender=None)
 
     def partition_updated_callback(data):
-        """Handles partition changes thrown by envisalink (including alarm trips)."""
+        """Handles partition changes thrown by envisalink (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
-        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None) 
+        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None)
 
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
@@ -133,25 +143,26 @@ def setup(hass, base_config):
             else:
                 time.sleep(1)
 
-        _LOGGER.error("Timeout occurred waiting to establish connection with the envisalink.")
+        _LOGGER.error("Timeout occurred while establishing evl connection.")
         return False
 
     EVL_CONTROLLER.callback_zone_timer_dump = zones_updated_callback
-    EVL_CONTROLLER.callback_zone_state_change = zones_updated_callback 
+    EVL_CONTROLLER.callback_zone_state_change = zones_updated_callback
     EVL_CONTROLLER.callback_partition_state_change = partition_updated_callback
     EVL_CONTROLLER.callback_keypad_update = alarm_data_updated_callback
     EVL_CONTROLLER.callback_login_failure = login_fail_callback
     EVL_CONTROLLER.callback_login_timeout = connection_fail_callback
     EVL_CONTROLLER.callback_login_success = connection_success_callback
-    
-    _result = start_envisalink(None) 
+ 
+    _result = start_envisalink(None)
     if _result:
         # Load sub-components for envisalink
         for comp_name in (['binary_sensor', 'alarm_control_panel', 'sensor']):
             load_platform(hass, comp_name, 'envisalink',
-                          {'zones': _zones, 'partitions': _partitions, 'code': _code}, config)
+                          {'zones': _zones, 'partitions': _partitions,
+                           'code': _code}, config)
 
-    return _result 
+    return _result
 
 
 class EnvisalinkDevice(Entity):
