@@ -28,6 +28,21 @@ _LEASES_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
     r'(?P<host>([^\s]+))')
 
+# command to get both 5GHz and 2.4GHz clients
+_WL_CMD = '{ wl -i eth2 assoclist & wl -i eth1 assoclist ; }'
+_WL_REGEX = re.compile(
+    r'\w+\s' +
+    r'(?P<mac>(([0-9A-F]{2}[:-]){5}([0-9A-F]{2})))')
+
+_ARP_CMD = 'arp -n'
+_ARP_REGEX = re.compile(
+    r'.+\s' +
+    r'\((?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\)\s' +
+    r'.+\s' +
+    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))' +
+    r'\s' +
+    r'.*')
+
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
@@ -53,12 +68,16 @@ def get_scanner(hass, config):
 class AsusWrtDeviceScanner(object):
     """This class queries a router running ASUSWRT firmware."""
 
+    # pylint: disable=too-many-instance-attributes, too-many-branches
+    # Eighth attribute needed for mode (AP mode vs router mode)
+
     def __init__(self, config):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
         self.password = str(config[CONF_PASSWORD])
         self.protocol = config.get('protocol')
+        self.mode = config.get('mode')
 
         self.lock = threading.Lock()
 
@@ -113,11 +132,20 @@ class AsusWrtDeviceScanner(object):
             ssh.sendline(_IP_NEIGH_CMD)
             ssh.prompt()
             neighbors = ssh.before.split(b'\n')[1:-1]
-            ssh.sendline(_LEASES_CMD)
-            ssh.prompt()
-            leases_result = ssh.before.split(b'\n')[1:-1]
+            if self.mode == 'ap':
+                ssh.sendline(_ARP_CMD)
+                ssh.prompt()
+                arp_result = ssh.before.split(b'\n')[1:-1]
+                ssh.sendline(_WL_CMD)
+                ssh.prompt()
+                leases_result = ssh.before.split(b'\n')[1:-1]
+            else:
+                arp_result = ['']
+                ssh.sendline(_LEASES_CMD)
+                ssh.prompt()
+                leases_result = ssh.before.split(b'\n')[1:-1]
             ssh.logout()
-            return (neighbors, leases_result)
+            return (neighbors, leases_result, arp_result)
         except pxssh.ExceptionPxssh as exc:
             _LOGGER.exception('Unexpected response from router: %s', exc)
             return ('', '')
@@ -133,10 +161,20 @@ class AsusWrtDeviceScanner(object):
             prompt_string = telnet.read_until(b'#').split(b'\n')[-1]
             telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
             neighbors = telnet.read_until(prompt_string).split(b'\n')[1:-1]
-            telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
-            leases_result = telnet.read_until(prompt_string).split(b'\n')[1:-1]
+            if self.mode == 'ap':
+                telnet.write('{}\n'.format(_ARP_CMD).encode('ascii'))
+                arp_result = (telnet.read_until(prompt_string).
+                              split(b'\n')[1:-1])
+                telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
+                leases_result = (telnet.read_until(prompt_string).
+                                 split(b'\n')[1:-1])
+            else:
+                arp_result = ['']
+                telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
+                leases_result = (telnet.read_until(prompt_string).
+                                 split(b'\n')[1:-1])
             telnet.write('exit\n'.encode('ascii'))
-            return (neighbors, leases_result)
+            return (neighbors, leases_result, arp_result)
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
             return ('', '')
@@ -148,30 +186,56 @@ class AsusWrtDeviceScanner(object):
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
         if self.protocol == 'telnet':
-            neighbors, leases_result = self.telnet_connection()
+            neighbors, leases_result, arp_result = self.telnet_connection()
         else:
-            neighbors, leases_result = self.ssh_connection()
+            neighbors, leases_result, arp_result = self.ssh_connection()
 
         devices = {}
-        for lease in leases_result:
-            match = _LEASES_REGEX.search(lease.decode('utf-8'))
+        if self.mode == 'ap':
+            _LOGGER.info("Wireless AP does not have DHCP leases; using wl")
+            for lease in leases_result:
+                match = _WL_REGEX.search(lease.decode('utf-8'))
 
-            if not match:
-                _LOGGER.warning("Could not parse lease row: %s", lease)
-                continue
+                if not match:
+                    _LOGGER.warning("Could not parse wl row: %s", lease)
+                    continue
 
-            # For leases where the client doesn't set a hostname, ensure it is
-            # blank and not '*', which breaks the entity_id down the line.
-            host = match.group('host')
-            if host == '*':
                 host = ''
 
-            devices[match.group('ip')] = {
-                'host': host,
-                'status': '',
-                'ip': match.group('ip'),
-                'mac': match.group('mac').upper(),
-                }
+                # match mac addresses to IP addresses in ARP table
+                for arp in arp_result:
+                    if match.group('mac').lower() in arp.decode('utf-8'):
+                        arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
+                        if not arp_match:
+                            _LOGGER.warning("Could not parse arp row: %s", arp)
+                            continue
+
+                        devices[arp_match.group('ip')] = {
+                            'host': host,
+                            'status': '',
+                            'ip': arp_match.group('ip'),
+                            'mac': match.group('mac').upper(),
+                            }
+        else:
+            for lease in leases_result:
+                match = _LEASES_REGEX.search(lease.decode('utf-8'))
+
+                if not match:
+                    _LOGGER.warning("Could not parse lease row: %s", lease)
+                    continue
+
+                # For leases where the client doesn't set a hostname, ensure it
+                # is blank and not '*', which breaks entity_id down the line.
+                host = match.group('host')
+                if host == '*':
+                    host = ''
+
+                devices[match.group('ip')] = {
+                    'host': host,
+                    'status': '',
+                    'ip': match.group('ip'),
+                    'mac': match.group('mac').upper(),
+                    }
 
         for neighbor in neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
