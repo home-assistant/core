@@ -105,6 +105,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         DEVICES[config[CONF_HOST]] = Device(dev, [])
 
+        # Throttle the update for all NetioSwitches of one Netio
+        dev.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(dev.update)
+
         for key in config[CONF_OUTLETS]:
             switch = NetioSwitch(DEVICES[config[CONF_HOST]].netio, key,
                                  config[CONF_OUTLETS][key])
@@ -165,10 +168,6 @@ class NetioSwitch(SwitchDevice):
         self._name = name
         self.outlet = outlet
         self.netio = netio
-
-        if self.netio.update.__name__ != 'wrapper':
-            self.netio.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(
-                self.netio.update)
 
     @property
     def name(self):
