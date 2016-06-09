@@ -27,6 +27,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.secrets as secrets
 
 _LOGGER = logging.getLogger(__name__)
 _SETUP_LOCK = RLock()
@@ -297,6 +298,7 @@ def from_config_file(config_path, hass=None, verbose=False, skip_pip=True,
 
     try:
         config_dict = config_util.load_yaml_config_file(config_path)
+        config_dict = secrets.decode(config_dict, config_path, hass)
     except HomeAssistantError:
         return None
 
