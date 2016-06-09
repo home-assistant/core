@@ -1,4 +1,4 @@
-"""The tests for the forecast.io component."""
+"""The tests for the forecast.io platform."""
 import json
 import re
 import os
@@ -15,8 +15,10 @@ from homeassistant import core as ha
 
 
 class TestForecastSetup(unittest.TestCase):
-    """Test the forecast.io module."""
+    """Test the forecast.io platform."""
+
     def setUp(self):
+        """Initialize values for this testcase class."""
         self.hass = ha.HomeAssistant()
         self.key = 'foo'
         self.config = {
@@ -36,7 +38,6 @@ class TestForecastSetup(unittest.TestCase):
     @patch('forecastio.api.get_forecast')
     def test_setup_bad_api_key(self, mock_get_forecast):
         """Test for handling a bad API key."""
-
         # The forecast API wrapper that we use raises an HTTP error
         # when you try to use a bad (or no) API key.
         url = 'https://api.forecast.io/forecast/{}/{},{}?units=auto'.format(
@@ -51,7 +52,7 @@ class TestForecastSetup(unittest.TestCase):
     @httpretty.activate
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
     def test_setup(self, mock_get_forecast):
-        """Test for successfully setting up the forecast.io component."""
+        """Test for successfully setting up the forecast.io platform."""
         def load_fixture_from_json():
             cwd = os.path.dirname(__file__)
             fixture_path = os.path.join(cwd, '..', 'fixtures', 'forecast.json')
