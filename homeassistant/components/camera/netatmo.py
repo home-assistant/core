@@ -5,7 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.netatmo/
 """
 import logging
+from datetime import timedelta
 import requests
+from homeassistant.util import Throttle
 
 from homeassistant.components.camera import Camera
 from homeassistant.loader import get_component
@@ -16,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
 ATTR_CAMERAS = 'cameras'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 
 # pylint: disable=unused-argument
@@ -39,6 +43,7 @@ class WelcomeCamera(Camera):
         """Setup for access to the BloomSky camera images."""
         super(WelcomeCamera, self).__init__()
         self._data = data
+        self._camera_name = camera_name
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -60,7 +65,7 @@ class WelcomeCamera(Camera):
             _LOGGER.error('Welcome VPN url changed: %s', error)
             self._data.update()
             (self._vpnurl, self._localurl) = \
-                self._data.welcomedata.cameraUrls(camera=self._name)
+                self._data.welcomedata.cameraUrls(camera=self._camera_name)
             return None
         return response.content
 
@@ -92,6 +97,7 @@ class WelcomeData(object):
                 self.camera_names.append(camera['name'])
         return self.camera_names
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
         import lnetatmo
