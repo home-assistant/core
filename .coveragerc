@@ -178,6 +178,7 @@ omit =
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
