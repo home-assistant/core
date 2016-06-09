@@ -39,7 +39,7 @@ def _conf_preprocess(value):
     return value
 
 _SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
-    vol.Optional(CONF_ENTITIES): vol.Any(None, cv.entity_ids),
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
     CONF_VIEW: bool,
     CONF_NAME: str,
     CONF_ICON: cv.icon,
