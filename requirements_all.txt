@@ -29,7 +29,7 @@ Werkzeug==0.11.5
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==1.1
+astral==1.2
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
