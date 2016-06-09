@@ -158,7 +158,7 @@ class NZBGetSensor(Entity):
             return
 
         if "DownloadRate" in self.type and value > 0:
-            # Convert download rate from bytes/s to mb/s
-            self._state = value / 1024 / 1024
+            # Convert download rate from Bytes/s to MBytes/s
+            self._state = round(value / 1024 / 1024, 2)
         else:
             self._state = value
