@@ -171,7 +171,7 @@ class NetioSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """NEtio device's name."""
+        """Netio device's name."""
         return self._name
 
     @property
