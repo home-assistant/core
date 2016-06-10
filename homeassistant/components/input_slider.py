@@ -103,7 +103,7 @@ def setup(hass, config):
 class InputSlider(Entity):
     """Represent an slider."""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, object_id, name, state, minimum, maximum, step, icon,
                  unit):
         """Initialize a select input."""
@@ -138,6 +138,7 @@ class InputSlider(Entity):
 
     @property
     def unit_of_measurement(self):
+        """Unit of measurement of slider."""
         return self._unit
 
     @property
