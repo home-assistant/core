@@ -14,6 +14,7 @@ from homeassistant.util import convert
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configuredPartitions = discovery_info['partitions']
@@ -21,8 +22,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             EnvisalinkSensor(convert(_configuredPartitions[partNum]['name'],
                                      str,
                                      str.format("Partition #{0}", partNum)),
-                                     EVL_CONTROLLER.alarm_state['partition'][partNum],
-                                     EVL_CONTROLLER)
+                             EVL_CONTROLLER.alarm_state['partition'][partNum],
+                             EVL_CONTROLLER)
             for partNum in _configuredPartitions)
 
 
@@ -34,7 +35,11 @@ class EnvisalinkSensor(EnvisalinkDevice):
         from pydispatch import dispatcher
         self._icon = 'mdi:alarm'
         _LOGGER.info('Setting up sensor for partition: ' + partitionName)
-        EnvisalinkDevice.__init__(self, partitionName + ' Keypad', info, controller)
+        EnvisalinkDevice.__init__(self,
+                                  partitionName + ' Keypad',
+                                  info,
+                                  controller)
+
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_KEYPAD_UPDATE,
                            sender=dispatcher.Any)

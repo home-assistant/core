@@ -19,24 +19,27 @@ from homeassistant.const import (
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
-
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     _configuredPartitions = discovery_info['partitions']
     _code = discovery_info['code']
-    add_devices_callback(EnvisalinkAlarm(partNum,
-                                         convert(_configuredPartitions[partNum]['name'],
-                                                 str,
-                                                 str.format("Partition #{0}", partNum)),
-                                         _code,
-                                         EVL_CONTROLLER.alarm_state['partition'][partNum], 
-                                         EVL_CONTROLLER)
-                         for partNum in _configuredPartitions)
+    add_devices_callback(
+        EnvisalinkAlarm(partNum,
+                        convert(_configuredPartitions[partNum]['name'],
+                                str,
+                                str.format("Partition #{0}", partNum)),
+                        _code,
+                        EVL_CONTROLLER.alarm_state['partition'][partNum],
+                        EVL_CONTROLLER)
+        for partNum in _configuredPartitions)
     return True
+
 
 class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Represents the Envisalink-based alarm panel."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, partitionNumber, alarmName, code, info, controller):
         """Initialize the alarm panel."""
         from pydispatch import dispatcher

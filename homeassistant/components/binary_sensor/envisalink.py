@@ -32,14 +32,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                EVL_CONTROLLER)
         for zoneNum in _configuredZones)
 
+
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an envisalink Binary Sensor."""
-    
+
+    #pylint disable=too-many-arguments
     def __init__(self, zoneNumber, zoneName, zoneType, info, controller):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher
         self._zoneType = zoneType
- 
+
         _LOGGER.info('Setting up zone: ' + zoneName)
         EnvisalinkDevice.__init__(self, zoneName, info, controller)
         dispatcher.connect(self._update_callback,

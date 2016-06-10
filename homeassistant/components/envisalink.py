@@ -39,10 +39,12 @@ SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
 SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
 
-REQ_VAR_ERR="Missing required variable: {0}"
-INVALID_PANEL_ERR=REQ_VAR_ERR + " Valid values are HONEYWELL/DSC."
+REQ_VAR_ERR = "Missing required variable: {0}"
+INVALID_PANEL_ERR = REQ_VAR_ERR + " Valid values are HONEYWELL/DSC."
 
-# pylint: disable=unused-argument, too-many-function-args
+
+# pylint: disable=unused-argument, too-many-function-args, too-many-locals
+# pylint: disable=too-many-return-statements
 def setup(hass, base_config):
     """Common setup for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
@@ -83,7 +85,9 @@ def setup(hass, base_config):
     _version = convert(config.get(CONF_EVL_VERSION), int, DEFAULT_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
-    _keepAlive = convert(config.get(CONF_EVL_KEEPALIVE), int, DEFAULT_KEEPALIVE)
+    _keepAlive = convert(config.get(CONF_EVL_KEEPALIVE),
+                         int,
+                         DEFAULT_KEEPALIVE)
     _zoneDump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
                         int,
                         DEFAULT_ZONEDUMP_INTERVAL)
@@ -100,29 +104,32 @@ def setup(hass, base_config):
                                           _keepAlive)
 
     def login_fail_callback(data):
+        """This is the callback for when the evl rejects our login."""
         _LOGGER.error("The envisalink rejected your credentials.")
         _connectStatus['fail'] = 1
 
     def connection_fail_callback(data):
+        """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the envisalink.")
         _connectStatus['fail'] = 1
 
     def connection_success_callback(data):
+        """Callback for a successful connection."""
         _LOGGER.info("Established a connection with the envisalink.")
         _connectStatus['success'] = 1
 
     def zones_updated_callback(data):
-        """This will handle zone timer updates."""
+        """handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
         dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None)
 
     def alarm_data_updated_callback(data):
-        """Handles non-alarm based info updates."""
+        """Handle non-alarm based info updates."""
         _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
         dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE, sender=None)
 
     def partition_updated_callback(data):
-        """Handles partition changes thrown by envisalink (including alarms)."""
+        """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
         dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None)
 
@@ -153,7 +160,7 @@ def setup(hass, base_config):
     EVL_CONTROLLER.callback_login_failure = login_fail_callback
     EVL_CONTROLLER.callback_login_timeout = connection_fail_callback
     EVL_CONTROLLER.callback_login_success = connection_success_callback
- 
+
     _result = start_envisalink(None)
     if _result:
         # Load sub-components for envisalink

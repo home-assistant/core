@@ -373,3 +373,9 @@ xmltodict
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.5
+
+# homeassistant.components.envisalink
+# homeassistant.components.sensor.envisalink
+# homeassistant.components.binary_sensor.envisalink
+# homeassistant.components.alarm_panel.envisalink
+pyenvisalink==0.5
