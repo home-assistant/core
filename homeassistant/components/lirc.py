@@ -69,7 +69,8 @@ class LircInterface(threading.Thread):
             try:
                 code = lirc.nextcode()  # list; empty if no buttons pressed
             except lirc.NextCodeError:
-                _LOGGER.warning('Encountered error reading next code from LIRC')
+                _LOGGER.warning('Encountered error reading '
+                                'next code from LIRC')
                 code = None
             # interpret result from python-lirc
             if code:
