@@ -120,7 +120,7 @@ def decode(config_dict, config_path=None, hass=None):
     return config_dict
 
 
-def check_stale_secrets():
+def check_stale_secrets(log_warning=True):
     """Check is SECRET_DICT contains unused secrets."""
     if not SECRET_DICT:
         return
@@ -128,5 +128,6 @@ def check_stale_secrets():
     for key in SECRET_DICT.keys():
         if key not in HISTORY:
             stale.append(key)
-    if len(stale) > 0:
+    if log_warning and len(stale) > 0:
         _LOGGER.warning('Stale secrets: ' + ', '.join(stale))
+    return stale
