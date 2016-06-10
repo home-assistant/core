@@ -15,9 +15,9 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'pytz>=2016.4',
     'pip>=7.0.0',
-    'vincenty==0.1.4',
     'jinja2>=2.8',
     'voluptuous==0.8.9',
+    'eventlet==0.19.0',
 ]
 
 setup(

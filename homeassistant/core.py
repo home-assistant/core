@@ -79,6 +79,7 @@ class HomeAssistant(object):
 
         def restart_homeassistant(*args):
             """Reset Home Assistant."""
+            _LOGGER.warning('Home Assistant requested a restart.')
             request_restart.set()
             request_shutdown.set()
 
@@ -92,14 +93,21 @@ class HomeAssistant(object):
         except ValueError:
             _LOGGER.warning(
                 'Could not bind to SIGTERM. Are you running in a thread?')
-
-        while not request_shutdown.isSet():
-            try:
+        try:
+            signal.signal(signal.SIGHUP, restart_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGHUP. Are you running in a thread?')
+        except AttributeError:
+            pass
+        try:
+            while not request_shutdown.isSet():
                 time.sleep(1)
-            except KeyboardInterrupt:
-                break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.stop()
 
-        self.stop()
         return RESTART_EXIT_CODE if request_restart.isSet() else 0
 
     def stop(self):

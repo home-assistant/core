@@ -11,7 +11,7 @@ from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
-from homeassistant.util import convert
+from homeassistant.util import convert, slugify
 
 DEPENDENCIES = ['mqtt']
 
@@ -53,6 +53,12 @@ def setup_scanner(hass, config, see):
                           'accuracy %s is not met: %s',
                           data_type, max_gps_accuracy, data)
             return None
+        if convert(data.get('acc'), float, 1.0) == 0.0:
+            _LOGGER.debug('Skipping %s update because GPS accuracy'
+                          'is zero',
+                          data_type)
+            return None
+
         return data
 
     def owntracks_location_update(topic, payload, qos):
@@ -91,7 +97,7 @@ def setup_scanner(hass, config, see):
             return
         # OwnTracks uses - at the start of a beacon zone
         # to switch on 'hold mode' - ignore this
-        location = data['desc'].lstrip("-")
+        location = slugify(data['desc'].lstrip("-"))
         if location.lower() == 'home':
             location = STATE_HOME
 
@@ -180,7 +186,7 @@ def setup_scanner(hass, config, see):
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects."""
     parts = topic.split('/')
-    dev_id = '{}_{}'.format(parts[1], parts[2])
+    dev_id = slugify('{}_{}'.format(parts[1], parts[2]))
     host_name = parts[1]
     kwargs = {
         'dev_id': dev_id,

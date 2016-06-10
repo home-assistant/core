@@ -23,6 +23,12 @@ REMOTEC = 0x5254
 REMOTEC_ZXT_120 = 0x8377
 REMOTEC_ZXT_120_THERMOSTAT = (REMOTEC, REMOTEC_ZXT_120, 0)
 
+COMMAND_CLASS_SENSOR_MULTILEVEL = 0x31
+COMMAND_CLASS_THERMOSTAT_MODE = 0x40
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 0x43
+COMMAND_CLASS_THERMOSTAT_FAN_MODE = 0x44
+COMMAND_CLASS_CONFIGURATION = 0x70
+
 WORKAROUND_ZXT_120 = 'zxt_120'
 
 DEVICE_MAPPINGS = {
@@ -100,22 +106,24 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Set point
-        for value in self._node.get_values(class_id=0x43).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
             if int(value.data) != 0:
                 self._target_temperature = int(value.data)
         # Operation Mode
-        for value in self._node.get_values(class_id=0x40).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
             self._current_operation = value.data
             self._operation_list = list(value.data_items)
             _LOGGER.debug("self._operation_list=%s", self._operation_list)
         # Current Temp
-        for value in self._node.get_values(class_id=0x31).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
             self._current_temperature = int(value.data)
             self._unit = value.units
         # Fan Mode
-        fan_class_id = 0x44 if self._zxt_120 else 0x42
-        _LOGGER.debug("fan_class_id=%s", fan_class_id)
-        for value in self._node.get_values(class_id=fan_class_id).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
             self._current_operation_state = value.data
             self._fan_list = list(value.data_items)
             _LOGGER.debug("self._fan_list=%s", self._fan_list)
@@ -123,7 +131,8 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                           self._current_operation_state)
         # Swing mode
         if self._zxt_120 == 1:
-            for value in self._node.get_values(class_id=0x70).values():
+            for value in self._node.get_values(
+                    class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     self._current_swing_mode = value.data
                     self._swing_list = [0, 1]
@@ -188,7 +197,8 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        for value in self._node.get_values(class_id=0x43).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
             if value.command_class != 67:
                 continue
             if self._zxt_120:
@@ -204,29 +214,22 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
-        for value in self._node.get_values(class_id=0x44).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
             if value.command_class == 68 and value.index == 0:
                 value.data = bytes(fan, 'utf-8')
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        for value in self._node.get_values(class_id=0x40).values():
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
             if value.command_class == 64 and value.index == 0:
                 value.data = bytes(operation_mode, 'utf-8')
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
-            for value in self._node.get_values(class_id=0x70).values():
+            for value in self._node.get_values(
+                    class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     value.data = int(swing_mode)
-
-    @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        return self._convert_for_display(19)
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return self._convert_for_display(30)

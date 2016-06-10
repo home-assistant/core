@@ -43,8 +43,8 @@ class TestDemoHvac(unittest.TestCase):
     def test_default_setup_params(self):
         """Test the setup with default parameters."""
         state = self.hass.states.get(ENTITY_HVAC)
-        self.assertEqual(7, state.attributes.get('min_temp'))
-        self.assertEqual(35, state.attributes.get('max_temp'))
+        self.assertEqual(19, state.attributes.get('min_temp'))
+        self.assertEqual(30, state.attributes.get('max_temp'))
         self.assertEqual(30, state.attributes.get('min_humidity'))
         self.assertEqual(99, state.attributes.get('max_humidity'))
 

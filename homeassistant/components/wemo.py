@@ -9,7 +9,7 @@ import logging
 from homeassistant.components import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.2']
+REQUIREMENTS = ['pywemo==0.4.3']
 
 DOMAIN = 'wemo'
 DISCOVER_LIGHTS = 'wemo.light'

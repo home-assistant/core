@@ -20,6 +20,7 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
@@ -80,17 +81,20 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if self._code:
-            EVL_CONTROLLER.disarm_partition(str(code), self._partition_number)
+            EVL_CONTROLLER.disarm_partition(str(code),
+                                            self._partition_number)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if self._code:
-            EVL_CONTROLLER.arm_stay_partition(str(code), self._partition_number)
+            EVL_CONTROLLER.arm_stay_partition(str(code),
+                                              self._partition_number)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if self._code:
-            EVL_CONTROLLER.arm_away_partition(str(code), self._partition_number)
+            EVL_CONTROLLER.arm_away_partition(str(code),
+                                              self._partition_number)
 
     def alarm_trigger(self, code=None):
         """Alarm trigger command. Not possible for us."""
