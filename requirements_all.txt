@@ -258,7 +258,17 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
+<<<<<<< 506645454783fc46cda14ceaee143676e407dc1c
 pyhomematic==0.1.6
+=======
+# homeassistant.components.binary_sensor.homematic
+# homeassistant.components.light.homematic
+# homeassistant.components.rollershutter.homematic
+# homeassistant.components.sensor.homematic
+# homeassistant.components.switch.homematic
+# homeassistant.components.thermostat.homematic
+pyhomematic==0.1.2
+>>>>>>> Added rest I just forgot
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.8.3
