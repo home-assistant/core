@@ -13,34 +13,35 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.util import convert
 
+REQUIREMENTS = ['pydispatcher==2.0.5']
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
-    _configuredZones = discovery_info['zones']
+    _configured_zones = discovery_info['zones']
     add_devices_callback(
         EnvisalinkBinarySensor(zoneNum,
-                               convert(_configuredZones[zoneNum]['name'],
+                               convert(_configured_zones[zoneNum]['name'],
                                        str,
                                        str.format("Zone #{0}", zoneNum)),
-                               convert(_configuredZones[zoneNum]['type'],
+                               convert(_configured_zones[zoneNum]['type'],
                                        str,
                                        "opening"),
                                EVL_CONTROLLER.alarm_state['zone'][zoneNum],
                                EVL_CONTROLLER)
-        for zoneNum in _configuredZones)
+        for zoneNum in _configured_zones)
 
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an envisalink Binary Sensor."""
 
-    #pylint disable=too-many-arguments
+    # pylint disable=too-many-arguments
     def __init__(self, zoneNumber, zoneName, zoneType, info, controller):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher
-        self._zoneType = zoneType
+        self._zone_type = zoneType
 
         _LOGGER.info('Setting up zone: ' + zoneName)
         EnvisalinkDevice.__init__(self, zoneName, info, controller)
@@ -63,7 +64,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     @property
     def sensor_class(self):
         """Return the class of this sensor, from SENSOR_CLASSES."""
-        return self._zoneType
+        return self._zone_type
 
     def _update_callback(self):
         self.update_ha_state()

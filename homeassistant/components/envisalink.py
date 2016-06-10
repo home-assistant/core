@@ -81,45 +81,45 @@ def setup(hass, base_config):
     _host = config.get(CONF_EVL_HOST)
     _port = convert(config.get(CONF_EVL_PORT), int, DEFAULT_PORT)
     _code = config.get(CONF_CODE)
-    _panelType = config.get(CONF_PANEL_TYPE)
+    _panel_type = config.get(CONF_PANEL_TYPE)
     _version = convert(config.get(CONF_EVL_VERSION), int, DEFAULT_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
-    _keepAlive = convert(config.get(CONF_EVL_KEEPALIVE),
+    _keep_alive = convert(config.get(CONF_EVL_KEEPALIVE),
                          int,
                          DEFAULT_KEEPALIVE)
-    _zoneDump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
+    _zone_dump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
                         int,
                         DEFAULT_ZONEDUMP_INTERVAL)
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
-    _connectStatus = {}
+    _connect_status = {}
     EVL_CONTROLLER = EnvisalinkAlarmPanel(_host,
                                           _port,
-                                          _panelType,
+                                          _panel_type,
                                           _version,
                                           _user,
                                           _pass,
-                                          _zoneDump,
-                                          _keepAlive)
+                                          _zone_dump,
+                                          _keep_alive)
 
     def login_fail_callback(data):
-        """This is the callback for when the evl rejects our login."""
+        """Callback for when the evl rejects our login."""
         _LOGGER.error("The envisalink rejected your credentials.")
-        _connectStatus['fail'] = 1
+        _connect_status['fail'] = 1
 
     def connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the envisalink.")
-        _connectStatus['fail'] = 1
+        _connect_status['fail'] = 1
 
     def connection_success_callback(data):
         """Callback for a successful connection."""
         _LOGGER.info("Established a connection with the envisalink.")
-        _connectStatus['success'] = 1
+        _connect_status['success'] = 1
 
     def zones_updated_callback(data):
-        """handle zone timer updates."""
+        """Handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
         dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None)
 
@@ -141,11 +141,11 @@ def setup(hass, base_config):
     def start_envisalink(event):
         """Startup process for the envisalink."""
         EVL_CONTROLLER.start()
-        for i in range(10):
-            if 'success' in _connectStatus:
+        for _ in range(10):
+            if 'success' in _connect_status:
                 hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
                 return True
-            elif 'fail' in _connectStatus:
+            elif 'fail' in _connect_status:
                 return False
             else:
                 time.sleep(1)
