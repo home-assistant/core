@@ -148,7 +148,7 @@ class AsusWrtDeviceScanner(object):
             return (neighbors, leases_result, arp_result)
         except pxssh.ExceptionPxssh as exc:
             _LOGGER.exception('Unexpected response from router: %s', exc)
-            return ('', '')
+            return ('', '', '')
 
     def telnet_connection(self):
         """Retrieve data from ASUSWRT via the telnet protocol."""
@@ -177,11 +177,11 @@ class AsusWrtDeviceScanner(object):
             return (neighbors, leases_result, arp_result)
         except EOFError:
             _LOGGER.exception("Unexpected response from router")
-            return ('', '')
+            return ('', '', '')
         except ConnectionRefusedError:
             _LOGGER.exception("Connection refused by router,"
                               " is telnet enabled?")
-            return ('', '')
+            return ('', '', '')
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
