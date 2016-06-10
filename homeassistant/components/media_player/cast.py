@@ -241,6 +241,10 @@ class CastDevice(MediaPlayerDevice):
         """Send pause command."""
         self.cast.media_controller.pause()
 
+    def media_stop(self):
+        """Send stop command."""
+        self.cast.media_controller.stop()
+
     def media_previous_track(self):
         """Send previous track command."""
         self.cast.media_controller.rewind()
