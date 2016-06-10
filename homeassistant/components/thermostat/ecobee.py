@@ -5,16 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.ecobee/
 """
 import logging
+from os import path
+import voluptuous as vol
 
 from homeassistant.components import ecobee
 from homeassistant.components.thermostat import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import STATE_OFF, STATE_ON, TEMP_FAHRENHEIT
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ecobee']
 _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
+
+ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
+SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
+SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,10 +38,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s",
         hold_temp)
-    add_devices(Thermostat(data, index, hold_temp)
-                for index in range(len(data.ecobee.thermostats)))
+    devices = [Thermostat(data, index, hold_temp)
+               for index in range(len(data.ecobee.thermostats))]
+    add_devices(devices)
+
+    def fan_min_on_time_set_service(service):
+        """Set the minimum fan on time on the target thermostats."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            target_thermostats = [device for device in devices
+                                  if device.entity_id == entity_id]
+        else:
+            target_thermostats = devices
+
+        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
+
+        for thermostat in target_thermostats:
+            thermostat.set_fan_min_on_time(str(fan_min_on_time))
+
+            thermostat.update_ha_state(True)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
+        descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
+        schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
 
+# pylint: disable=too-many-public-methods
 class Thermostat(ThermostatDevice):
     """A thermostat class for Ecobee."""
 
@@ -128,6 +167,11 @@ class Thermostat(ThermostatDevice):
         return self.thermostat['settings']['hvacMode']
 
     @property
+    def fan_min_on_time(self):
+        """Return current fan minimum on time."""
+        return self.thermostat['settings']['fanMinOnTime']
+
+    @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
@@ -135,7 +179,8 @@ class Thermostat(ThermostatDevice):
             "humidity": self.humidity,
             "fan": self.fan,
             "mode": self.mode,
-            "hvac_mode": self.hvac_mode
+            "hvac_mode": self.hvac_mode,
+            "fan_min_on_time": self.fan_min_on_time
         }
 
     @property
@@ -176,6 +221,11 @@ class Thermostat(ThermostatDevice):
     def set_hvac_mode(self, mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
+
+    def set_fan_min_on_time(self, fan_min_on_time):
+        """Set the minimum fan on time."""
+        self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
+                                             fan_min_on_time)
 
     # Home and Sleep mode aren't used in UI yet:
 
