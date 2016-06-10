@@ -86,11 +86,11 @@ def setup(hass, base_config):
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
     _keep_alive = convert(config.get(CONF_EVL_KEEPALIVE),
-                         int,
-                         DEFAULT_KEEPALIVE)
+                          int,
+                          DEFAULT_KEEPALIVE)
     _zone_dump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
-                        int,
-                        DEFAULT_ZONEDUMP_INTERVAL)
+                         int,
+                         DEFAULT_ZONEDUMP_INTERVAL)
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
     _connect_status = {}

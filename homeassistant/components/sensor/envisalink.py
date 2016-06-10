@@ -20,11 +20,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_partitions = discovery_info['partitions']
     add_devices_callback(
-        EnvisalinkSensor(convert(_configuredPartitions[partNum]['name'],
-                                     str,
-                                     str.format("Partition #{0}", partNum)),
-                             EVL_CONTROLLER.alarm_state['partition'][partNum],
-                             EVL_CONTROLLER)
+        EnvisalinkSensor(convert(_configured_partitions[partNum]['name'],
+                                 str,
+                                 str.format("Partition #{0}", partNum)),
+                         EVL_CONTROLLER.alarm_state['partition'][partNum],
+                         EVL_CONTROLLER)
         for partNum in _configured_partitions)
 
 

@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an envisalink Binary Sensor."""
 
-    # pylint disable=too-many-arguments
+    # pylint: disable=too-many-arguments
     def __init__(self, zoneNumber, zoneName, zoneType, info, controller):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher

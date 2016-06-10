@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     _code = discovery_info['code']
     add_devices_callback(
         EnvisalinkAlarm(partNum,
-                        convert(_configuredPartitions[partNum]['name'],
+                        convert(_configured_partitions[partNum]['name'],
                                 str,
                                 str.format("Partition #{0}", partNum)),
                         _code,
