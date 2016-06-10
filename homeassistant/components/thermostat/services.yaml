@@ -34,3 +34,15 @@ set_fan_mode:
     fan:
       description: New value of fan mode
       example: true
+
+ecobee_set_fan_min_on_time:
+  description: Set the minimum time, in minutes, to run the fan each hour
+
+  fields:
+    entity_id:
+      descriptions: Name(s) of entities to change
+      example: 'thermostat.ecobee'
+
+    fan_min_on_time:
+      description: New value of fan minimum on time
+      example: 5
