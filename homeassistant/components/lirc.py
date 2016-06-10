@@ -66,7 +66,11 @@ class LircInterface(threading.Thread):
         """Main loop of LIRC interface thread."""
         import lirc
         while not self.stopped.isSet():
-            code = lirc.nextcode()  # list; empty if no buttons pressed
+            try:
+                code = lirc.nextcode()  # list; empty if no buttons pressed
+            except lirc.NextCodeError:
+                _LOGGER.warning('Encountered error reading next code from LIRC')
+                code = None
             # interpret result from python-lirc
             if code:
                 code = code[0]
