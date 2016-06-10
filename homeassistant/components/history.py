@@ -11,7 +11,6 @@ from itertools import groupby
 
 from homeassistant.components import recorder, script
 import homeassistant.util.dt as dt_util
-from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
@@ -177,26 +176,19 @@ class HistoryPeriodView(HomeAssistantView):
     """Handle history period requests."""
 
     url = '/api/history/period'
-    name = 'api:history:entity-recent-states'
+    name = 'api:history:view-period'
     extra_urls = ['/api/history/period/<date:date>']
 
     def get(self, request, date=None):
         """Return history over a period of time."""
-        one_day = timedelta(seconds=86400)
+        one_day = timedelta(days=1)
 
         if date:
-            start_date = dt_util.parse_date(date)
-
-            if start_date is None:
-                return self.json_message('Error parsing JSON',
-                                         HTTP_BAD_REQUEST)
-
-            start_time = dt_util.as_utc(dt_util.start_of_local_day(start_date))
+            start_time = dt_util.as_utc(dt_util.start_of_local_day(date))
         else:
             start_time = dt_util.utcnow() - one_day
 
         end_time = start_time + one_day
-
         entity_id = request.args.get('filter_entity_id')
 
         return self.json(

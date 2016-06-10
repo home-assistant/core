@@ -25,6 +25,12 @@ DEVICE_MAPPINGS = {
     REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_IGNORE
 }
 
+COMMAND_CLASS_THERMOSTAT_FAN_STATE = 69  # 0x45
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
+COMMAND_CLASS_SENSOR_MULTILEVEL = 49  # 0x31
+COMMAND_CLASS_THERMOSTAT_OPERATING_STATE = 66  # 0x42
+COMMAND_CLASS_THERMOSTAT_MODE = 64  # 0x40
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ZWave thermostats."""
@@ -51,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, too-many-instance-attributes
 class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 
@@ -61,11 +67,12 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         from pydispatch import dispatcher
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
-        self._target_temperature = None
+        self._index = value.index
         self._current_temperature = None
-        self._current_operation = STATE_IDLE
-        self._current_operation_state = STATE_IDLE
         self._unit = None
+        self._current_operation_state = STATE_IDLE
+        self._target_temperature = None
+        self._current_fan_state = STATE_IDLE
         self.update_properties()
         # register listener
         dispatcher.connect(
@@ -79,30 +86,36 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
-        # set point
-        for _, value in self._node.get_values(class_id=0x43).items():
-            if int(value.data) != 0:
-                self._target_temperature = int(value.data)
-        # Operation
-        for _, value in self._node.get_values(class_id=0x40).items():
-            self._current_operation = value.data_as_string
-        # Current Temp
-        for _, value in self._node.get_values_for_command_class(0x31).items():
+        # current Temp
+        for _, value in self._node.get_values_for_command_class(
+                COMMAND_CLASS_SENSOR_MULTILEVEL).items():
             self._current_temperature = int(value.data)
             self._unit = value.units
-        # COMMAND_CLASS_THERMOSTAT_OPERATING_STATE
-        for _, value in self._node.get_values(class_id=0x42).items():
+
+        # operation state
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_OPERATING_STATE).items():
             self._current_operation_state = value.data_as_string
+
+        # target temperature
+        temps = []
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
+            temps.append(int(value.data))
+            if value.index == self._index:
+                self._target_temperature = value.data
+        self._target_temperature_high = max(temps)
+        self._target_temperature_low = min(temps)
+
+        # fan state
+        for _, value in self._node.get_values(
+                class_id=COMMAND_CLASS_THERMOSTAT_FAN_STATE).items():
+            self._current_fan_state = value.data_as_string
 
     @property
     def should_poll(self):
         """No polling on ZWave."""
         return False
-
-    @property
-    def is_fan_on(self):
-        """Return if the fan is not idle."""
-        return self._current_operation_state != 'Idle'
 
     @property
     def unit_of_measurement(self):
@@ -114,7 +127,6 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
             return TEMP_FAHRENHEIT
         else:
             return unit
-        return self.hass.config.temperature_unit
 
     @property
     def current_temperature(self):
@@ -123,17 +135,24 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     @property
     def operation(self):
-        """Return the operation mode."""
-        return self._current_operation
+        """Return current operation ie. heat, cool, idle."""
+        return self._current_operation_state
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
+    @property
+    def is_fan_on(self):
+        """Return true if the fan is on."""
+        return not (self._current_fan_state == 'Idle' or
+                    self._current_fan_state == STATE_IDLE)
+
     def set_temperature(self, temperature):
         """Set new target temperature."""
         # set point
-        for _, value in self._node.get_values_for_command_class(0x43).items():
-            if int(value.data) != 0:
+        for _, value in self._node.get_values_for_command_class(
+                COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
+            if int(value.data) != 0 and value.index == self._index:
                 value.data = temperature

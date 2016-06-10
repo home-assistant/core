@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
@@ -94,13 +94,7 @@ class LogbookView(HomeAssistantView):
     def get(self, request, date=None):
         """Retrieve logbook entries."""
         if date:
-            start_date = dt_util.parse_date(date)
-
-            if start_date is None:
-                return self.json_message('Error parsing JSON',
-                                         HTTP_BAD_REQUEST)
-
-            start_day = dt_util.start_of_local_day(start_date)
+            start_day = dt_util.start_of_local_day(date)
         else:
             start_day = dt_util.start_of_local_day()
 

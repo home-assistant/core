@@ -5,14 +5,18 @@ import logging
 import mimetypes
 import threading
 import re
+import voluptuous as vol
 
 import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
-    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL)
+    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS)
 from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
 REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
@@ -23,12 +27,26 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
+CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_SSL_KEY): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 class HideSensitiveFilter(logging.Filter):
@@ -62,6 +80,7 @@ def setup(hass, config):
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
+    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
 
     server = HomeAssistantWSGI(
         hass,
@@ -71,6 +90,7 @@ def setup(hass, config):
         api_password=api_password,
         ssl_certificate=ssl_certificate,
         ssl_key=ssl_key,
+        cors_origins=cors_origins
     )
 
     hass.bus.listen_once(
@@ -148,13 +168,13 @@ def routing_map(hass):
     class DateValidator(BaseConverter):
         """Validate dates in urls."""
 
-        regex = r'\d{4}-(0[1-9])|(1[012])-((0[1-9])|([12]\d)|(3[01]))'
+        regex = r'\d{4}-\d{1,2}-\d{1,2}'
 
         def to_python(self, value):
             """Validate and convert date."""
             parsed = dt_util.parse_date(value)
 
-            if value is None:
+            if parsed is None:
                 raise ValidationError()
 
             return parsed
@@ -176,7 +196,7 @@ class HomeAssistantWSGI(object):
     # pylint: disable=too-many-arguments
 
     def __init__(self, hass, development, api_password, ssl_certificate,
-                 ssl_key, server_host, server_port):
+                 ssl_key, server_host, server_port, cors_origins):
         """Initilalize the WSGI Home Assistant server."""
         from werkzeug.wrappers import Response
 
@@ -194,6 +214,7 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.cors_origins = cors_origins
         self.event_forwarder = None
 
     def register_view(self, view):
@@ -232,15 +253,18 @@ class HomeAssistantWSGI(object):
 
         self.url_map.add(Rule(url, redirect_to=redirect_to))
 
-    def register_static_path(self, url_root, path):
-        """Register a folder to serve as a static path."""
+    def register_static_path(self, url_root, path, cache_length=31):
+        """Register a folder to serve as a static path.
+
+        Specify optional cache length of asset in days.
+        """
         from static import Cling
 
         headers = []
 
-        if not self.development:
+        if cache_length and not self.development:
             # 1 year in seconds
-            cache_time = 365 * 86400
+            cache_time = cache_length * 86400
 
             headers.append({
                 'prefix': '',
@@ -297,6 +321,16 @@ class HomeAssistantWSGI(object):
         """WSGI Handler of requests to base app."""
         request = self.Request(environ)
         response = self.dispatch_request(request)
+
+        if self.cors_origins:
+            cors_check = (environ.get("HTTP_ORIGIN") in self.cors_origins)
+            cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
+            if cors_check:
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
+                    environ.get("HTTP_ORIGIN")
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
+                    cors_headers
+
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
