@@ -251,6 +251,9 @@ pyloopenergy==0.0.13
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
+# homeassistant.components.switch.netio
+pynetio==0.1.6
+
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.2
