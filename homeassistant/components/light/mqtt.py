@@ -32,12 +32,14 @@ CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
+CONF_NATURAL_BEHAVIOR = "natural_behavior"
 
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_NATURAL_BEHAVIOR = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -53,6 +55,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_NATURAL_BEHAVIOR, default=DEFAULT_NATURAL_BEHAVIOR):
+        cv.boolean,
 })
 
 
@@ -86,6 +90,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         },
         config[CONF_OPTIMISTIC],
         config[CONF_BRIGHTNESS_SCALE],
+        config[CONF_NATURAL_BEHAVIOR]
     )])
 
 
@@ -94,7 +99,7 @@ class MqttLight(Light):
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, hass, name, topic, templates, qos, retain, payload,
-                 optimistic, brightness_scale):
+                 optimistic, brightness_scale, natural_behavior):
         """Initialize MQTT light."""
         self._hass = hass
         self._name = name
@@ -108,6 +113,7 @@ class MqttLight(Light):
                                        topic["brightness_state_topic"] is None)
         self._brightness_scale = brightness_scale
         self._state = False
+        self._natural_behavior = natural_behavior
 
         templates = {key: ((lambda value: value) if tpl is None else
                            partial(render_with_possible_json_value, hass, tpl))
@@ -132,6 +138,14 @@ class MqttLight(Light):
             device_value = float(templates['brightness'](payload))
             percent_bright = device_value / self._brightness_scale
             self._brightness = int(percent_bright * 255)
+
+            if self._natural_behavior and not self._state and \
+                    self._brightness > 0:
+                self._state = True
+            elif self._natural_behavior and self._state and \
+                    self._brightness == 0:
+                self._state = False
+
             self.update_ha_state()
 
         if self._topic["brightness_state_topic"] is not None:
