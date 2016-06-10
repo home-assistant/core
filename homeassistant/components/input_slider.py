@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -68,18 +68,18 @@ def setup(hass, config):
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
-        state = cfg.get(CONF_INITIAL)
-        step = cfg.get(CONF_STEP)
+        state = cfg.get(CONF_INITIAL, minimum)
+        step = cfg.get(CONF_STEP, 1)
         icon = cfg.get(CONF_ICON)
+        unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if state < minimum:
             state = minimum
         if state > maximum:
             state = maximum
 
-        entities.append(
-            InputSlider(object_id, name, state, minimum, maximum, step, icon)
-            )
+        entities.append(InputSlider(object_id, name, state, minimum, maximum,
+                                    step, icon, unit))
 
     if not entities:
         return False
@@ -104,7 +104,8 @@ class InputSlider(Entity):
     """Represent an slider."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, object_id, name, state, minimum, maximum, step, icon):
+    def __init__(self, object_id, name, state, minimum, maximum, step, icon,
+                 unit):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -113,6 +114,7 @@ class InputSlider(Entity):
         self._maximum = maximum
         self._step = step
         self._icon = icon
+        self._unit = unit
 
     @property
     def should_poll(self):
@@ -133,6 +135,10 @@ class InputSlider(Entity):
     def state(self):
         """State of the component."""
         return self._current_value
+
+    @property
+    def unit_of_measurement(self):
+        return self._unit
 
     @property
     def state_attributes(self):
