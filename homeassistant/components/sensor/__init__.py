@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components import (
     wink, zwave, isy994, verisure, ecobee, tellduslive, mysensors,
-    bloomsky, vera)
+    bloomsky, vera, netatmo)
 
 DOMAIN = 'sensor'
 SCAN_INTERVAL = 30
@@ -28,6 +28,7 @@ DISCOVERY_PLATFORMS = {
     tellduslive.DISCOVER_SENSORS: 'tellduslive',
     mysensors.DISCOVER_SENSORS: 'mysensors',
     vera.DISCOVER_SENSORS: 'vera',
+    netatmo.DISCOVER_SENSORS: 'netatmo',
 }
 
 

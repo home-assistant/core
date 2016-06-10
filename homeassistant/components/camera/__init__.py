@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import bloomsky
+from homeassistant.components import bloomsky, netatmo
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView
 
@@ -21,6 +21,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
     bloomsky.DISCOVER_CAMERAS: 'bloomsky',
+    netatmo.DISCOVER_CAMERAS: 'netatmo',
 }
 
 STATE_RECORDING = 'recording'
