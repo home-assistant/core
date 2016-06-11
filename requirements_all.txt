@@ -195,6 +195,7 @@ panasonic_viera==0.2
 
 # homeassistant.components.device_tracker.aruba
 # homeassistant.components.device_tracker.asuswrt
+# homeassistant.components.media_player.pandora
 pexpect==4.0.1
 
 # homeassistant.components.light.hue
