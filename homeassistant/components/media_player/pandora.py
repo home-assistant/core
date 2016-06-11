@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the media player pandora platform."""
-
     pandora = PandoraMediaPlayer('Pandora')
 
     # make sure we end the pandora subprocess on exit in case user doesn't
@@ -103,7 +102,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     @property
     def supported_media_commands(self):
-        """Show what this supports"""
+        """Show what this supports."""
         return PANDORA_SUPPORT
 
     @property
@@ -143,8 +142,10 @@ class PianobarRemote(object):
     A light interface to the Pianobar remote control.
 
     pianobar has a FIFO remote control system that is challenging to
-    get work if pianobar is in a subprocess. Using pexpect is more stable
-    so this implementation uses pexpect."""
+    get working if pianobar is in a subprocess. Using pexpect is more stable
+    so this implementation uses pexpect.
+
+    """
     CMD_MAP = {SERVICE_MEDIA_NEXT_TRACK: 'n',
                SERVICE_MEDIA_PLAY_PAUSE: 'p',
                SERVICE_MEDIA_PLAY: 'p',
