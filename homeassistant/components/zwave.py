@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
     ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
 DOMAIN = "zwave"
@@ -24,6 +25,8 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
+CONF_AUTOHEAL = "autoheal"
+DEFAULT_CONF_AUTOHEAL = True
 
 # How long to wait for the zwave network to be ready.
 NETWORK_READY_WAIT_SECS = 30
@@ -202,6 +205,7 @@ def setup(hass, config):
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
     customize = config[DOMAIN].get(CONF_CUSTOMIZE, {})
+    autoheal = config[DOMAIN].get(CONF_AUTOHEAL, DEFAULT_CONF_AUTOHEAL)
 
     # Setup options
     options = ZWaveOption(
@@ -281,23 +285,24 @@ def setup(hass, config):
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
 
-    def add_node(event):
+    def add_node(service):
         """Switch into inclusion mode."""
         NETWORK.controller.begin_command_add_device()
 
-    def remove_node(event):
+    def remove_node(service):
         """Switch into exclusion mode."""
         NETWORK.controller.begin_command_remove_device()
 
-    def heal_network(event):
+    def heal_network(service):
         """Heal the network."""
+        _LOGGER.info("ZWave heal running.")
         NETWORK.heal()
 
-    def soft_reset(event):
+    def soft_reset(service):
         """Soft reset the controller."""
         NETWORK.controller.soft_reset()
 
-    def test_network(event):
+    def test_network(service):
         """Test the network by sending commands to all the nodes."""
         NETWORK.test()
 
@@ -313,7 +318,7 @@ def setup(hass, config):
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
         # to be ready.
         for i in range(NETWORK_READY_WAIT_SECS):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "network state: %d %s", NETWORK.state, NETWORK.state_str)
             if NETWORK.state >= NETWORK.STATE_AWAKED:
                 _LOGGER.info("zwave ready after %d seconds", i)
@@ -343,6 +348,11 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+
+    # Setup autoheal
+    if autoheal:
+        _LOGGER.info("ZWave network autoheal is enabled.")
+        track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 

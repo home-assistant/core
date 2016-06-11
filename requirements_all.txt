@@ -5,7 +5,7 @@ pytz>=2016.4
 pip>=7.0.0
 jinja2>=2.8
 voluptuous==0.8.9
-webcolors==1.5
+eventlet==0.19.0
 
 # homeassistant.components.isy994
 PyISY==1.0.6
@@ -29,13 +29,13 @@ Werkzeug==0.11.5
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==1.1
+astral==1.2
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
 
 # homeassistant.components.sensor.bitcoin
-blockchain==1.3.1
+blockchain==1.3.3
 
 # homeassistant.components.thermostat.eq3btsmart
 # bluepy_devices>=0.2.0
@@ -74,7 +74,7 @@ fitbit==0.2.2
 freesms==0.1.0
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.8.0
+fuzzywuzzy==0.10.0
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
@@ -93,9 +93,6 @@ hikvision==0.4
 
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
-
-# homeassistant.components.sensor.netatmo
-https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
@@ -123,14 +120,17 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # homeassistant.components.device_tracker.fritz
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
+# homeassistant.components.netatmo
+https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
+
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
 # homeassistant.components.qwikswitch
-https://github.com/kellerza/pyqwikswitch/archive/v0.3.zip#pyqwikswitch==0.3
+https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5
+https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
@@ -219,7 +219,7 @@ pushetta==1.0.15
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.6.5
+pyRFXtrx==0.8.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -246,10 +246,13 @@ pyicloud==0.8.3
 pylast==1.6.0
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.12
+pyloopenergy==0.0.13
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
+
+# homeassistant.components.switch.netio
+pynetio==0.1.6
 
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
@@ -262,7 +265,8 @@ pyowm==2.3.1
 pyserial<=3.0
 
 # homeassistant.components.device_tracker.snmp
-pysnmp==4.2.5
+# homeassistant.components.sensor.snmp
+pysnmp==4.3.2
 
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.4
@@ -286,7 +290,7 @@ python-pushover==0.2
 python-statsd==1.7.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==4.1.1
+python-telegram-bot==4.2.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
@@ -307,7 +311,7 @@ pyuserinput==0.1.9
 pyvera==0.2.10
 
 # homeassistant.components.wemo
-pywemo==0.4.2
+pywemo==0.4.3
 
 # homeassistant.components.thermostat.radiotherm
 radiotherm==1.2
@@ -322,7 +326,7 @@ rxv==0.1.11
 samsungctl==0.5.1
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.15
+schiene==0.17
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -331,7 +335,7 @@ scsgate==0.1.0
 sendgrid>=1.6.0,<1.7.0
 
 # homeassistant.components.notify.slack
-slacker==0.9.10
+slacker==0.9.16
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
@@ -375,7 +379,7 @@ unifi==1.2.5
 urllib3
 
 # homeassistant.components.camera.uvc
-uvcclient==0.8
+uvcclient==0.9.0
 
 # homeassistant.components.verisure
 vsure==0.8.1
