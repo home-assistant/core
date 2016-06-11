@@ -1,5 +1,3 @@
-import logging
-
 """
 The Homematic thermostat platform.
 
@@ -7,15 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.homematic/
 """
 
-REQUIREMENTS = ['pyhomematic==0.1.2']
-
-# List of component names (string) your component depends upon.
-DEPENDENCIES = ['homematic']
-
+import logging
 import homeassistant.components.homematic as homematic
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.helpers.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+
+REQUIREMENTS = ['pyhomematic==0.1.2']
+
+# List of component names (string) your component depends upon.
+DEPENDENCIES = ['homematic']
 
 PROPERTY_VALVE_STATE = 'VALVE_STATE'
 PROPERTY_CONTROL_MODE = 'CONTROL_MODE'
@@ -35,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMThermostat, config, add_callback_devices)
 
 
@@ -42,6 +42,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
     """Represents an Homematic Thermostat in Home Assistant."""
 
     def __init__(self, config):
+        """Re-Init the device."""
         super().__init__(config)
         self._battery = STATE_UNKNOWN
         self._rssi = STATE_UNKNOWN
@@ -58,7 +59,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             try:
                 return self._current_temperature
             except Exception as err:
-                _LOGGER.error("Exception getting current temperature: %s" % str(err))
+                _LOGGER.error("Exception getting current temperature: %s", str(err))
         else:
             return None
 
@@ -69,7 +70,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             try:
                 return self._set_temperature
             except Exception as err:
-                _LOGGER.error("Exception getting set temperature: %s" % str(err))
+                _LOGGER.error("Exception getting set temperature: %s", str(err))
         else:
             return None
 
@@ -79,7 +80,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             try:
                 self._hmdevice.set_temperature = temperature
             except Exception as err:
-                _LOGGER.error("Exception setting temperature: %s" % str(err))
+                _LOGGER.error("Exception setting temperature: %s", str(err))
 
     @property
     def device_state_attributes(self):
@@ -107,8 +108,9 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established"""
+        """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
+            """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'SET_TEMPERATURE':
                 self._set_temperature = value
@@ -136,7 +138,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
 
         super().connect_to_homematic()
         if self._is_available:
-            _LOGGER.debug("Setting up thermostat %s" % self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up thermostat %s", self._hmdevice._ADDRESS)
             try:
                 self._hmdevice.setEventCallback(event_received)
                 self._current_temperature = self._hmdevice.actual_temperature
@@ -154,5 +156,4 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
                 self._mode = None
                 self.update_ha_state()
             except Exception as err:
-                _LOGGER.error("Exception while connecting: %s" % str(err))
-
+                _LOGGER.error("Exception while connecting: %s", str(err))

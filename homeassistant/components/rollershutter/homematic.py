@@ -1,11 +1,11 @@
-import logging
-
 """
 The homematic custom rollershutter platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter.homematic/
 """
+
+import logging
 from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN)
 from homeassistant.components.rollershutter import RollershutterDevice, ATTR_CURRENT_POSITION
 import homeassistant.components.homematic as homematic
@@ -20,24 +20,27 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMRollershutter, config, add_callback_devices)
 
 
 class HMRollershutter(homematic.HMDevice, RollershutterDevice):
     """Represents an Homematic Rollershutter in Home Assistant."""
-    
+
     @property
     def current_position(self):
-        """Return current position of roller shutter.
+        """
+        Return current position of roller shutter.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         if self._is_connected:
             return int((1 - self._level) * 100)
         else:
             return None
-        
+
     def position(self, **kwargs):
-        """Move the roller shutter to a defined position between 0 (closed) and 100 (fully open)"""
+        """Move the roller shutter to a defined position between 0 (closed) and 100 (open)."""
         if self._is_connected:
             if ATTR_CURRENT_POSITION in kwargs:
                 position = float(kwargs[ATTR_CURRENT_POSITION])
@@ -70,8 +73,9 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
             self._hmdevice.stop()
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established"""
+        """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
+            """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'LEVEL':
                 self._level = float(value)
@@ -83,7 +87,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
         super().connect_to_homematic()
         if self._is_available:
-            _LOGGER.debug("Setting up rollershutter %s" % self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up rollershutter %s", self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
             self._level = self._hmdevice.level
             self.update_ha_state()

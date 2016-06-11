@@ -1,5 +1,3 @@
-import logging
-
 """
 The homematic sensor platform.
 
@@ -7,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
 """
 
+import logging
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.homematic as homematic
 
@@ -21,26 +20,28 @@ SENSOR_TYPES = {
     "HMWindowHandle": "handle",
 }
 
+
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMSensor, config, add_callback_devices)
 
 
 class HMSensor(homematic.HMDevice, Entity):
     """Represents diverse Homematic sensors in Home Assistant."""
+
     def __init__(self, config):
+        """Re-Init the device."""
         super().__init__(config)
         self._sabotage = None
         self._sensor_class = None
         self._battery_low = None
-    
+
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the state of the sensor (0=closed, 1=tilted, 2=open)."""
         if self.sensor_class == "handle":
-            """ (0=closed, 1=tilted, 2=open) """
-            HANDLE_STATE = {0 : "closed", 1 : "tilted", 2 : "open"} 
-            return HANDLE_STATE.get(self._state, None) 
-        
+            handle_state = {0: "closed", 1: "tilted", 2: "open"}
+            return handle_state.get(self._state, None)
         return self._state
 
     @property
@@ -63,8 +64,9 @@ class HMSensor(homematic.HMDevice, Entity):
         return attr
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established"""
+        """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
+            """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'STATE':
                 self._state = value
@@ -80,7 +82,7 @@ class HMSensor(homematic.HMDevice, Entity):
 
         super().connect_to_homematic()
 
-        self._sensor_class = SENSOR_TYPES.get(type(self._hmdevice).__name__, None) 
+        self._sensor_class = SENSOR_TYPES.get(type(self._hmdevice).__name__, None)
         if self._is_available:
             self._state = self._hmdevice.state
             self._sabotage = self._hmdevice.sabotage

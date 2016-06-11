@@ -1,5 +1,3 @@
-import logging
-
 """
 The homematic switch platform.
 
@@ -7,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.homematic/
 """
 
+import logging
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.components.homematic as homematic
 
@@ -19,12 +18,13 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMSwitch, config, add_callback_devices)
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
     """Represents an Homematic Switch in Home Assistant."""
-            
+
     @property
     def is_on(self):
         """Return True if switch is on."""
@@ -48,8 +48,9 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
             self._state = False
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established"""
+        """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
+            """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'LEVEL':
                 self._level = float(value)
@@ -64,11 +65,11 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         super().connect_to_homematic()
 
         if hasattr(self._hmdevice, 'level'):
-            self._dimmer = True 
+            self._dimmer = True
         else:
-            self._dimmer = False 
+            self._dimmer = False
         if self._is_available:
-            _LOGGER.debug("Setting up switch-device %s" % self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up switch-device %s", self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
             if self._dimmer:
                 self._level = self._hmdevice.level
