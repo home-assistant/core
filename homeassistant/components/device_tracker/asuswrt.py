@@ -192,7 +192,6 @@ class AsusWrtDeviceScanner(object):
 
         devices = {}
         if self.mode == 'ap':
-            _LOGGER.info("Wireless AP does not have DHCP leases; using wl")
             for lease in leases_result:
                 match = _WL_REGEX.search(lease.decode('utf-8'))
 
