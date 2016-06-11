@@ -258,13 +258,7 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
-# homeassistant.components.binary_sensor.homematic
-# homeassistant.components.light.homematic
-# homeassistant.components.rollershutter.homematic
-# homeassistant.components.sensor.homematic
-# homeassistant.components.switch.homematic
-# homeassistant.components.thermostat.homematic
-pyhomematic==0.1.2
+pyhomematic==0.1.6
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.8.3
