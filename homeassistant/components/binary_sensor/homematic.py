@@ -30,7 +30,9 @@ HMREMOTES = ["HM-RC-8"]
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    return homematic.setup_hmdevice_entity_helper(HMBinarySensor, config, add_callback_devices)
+    return homematic.setup_hmdevice_entity_helper(HMBinarySensor,
+                                                  config,
+                                                  add_callback_devices)
 
 
 class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
@@ -66,7 +68,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         return attributes
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established."""
+        """Configuration for device after connection with pyhomematic."""
         def event_received(device, caller, attribute, value):
             """Handler for received events."""
             attribute = str(attribute).upper()
@@ -97,16 +99,21 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         super().connect_to_homematic()
         # pylint: disable=protected-access
-        if (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMSHUTTERCONTACTS) \
-                or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMSHUTTERCONTACTS):
-            # pylint: disable=protected-access
-            _LOGGER.debug("Setting up HMShutterContact %s", self._hmdevice._ADDRESS)
+        if (not self._hmdevice._PARENT and
+                self._hmdevice._TYPE in HMSHUTTERCONTACTS) or \
+                (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
+                 in HMSHUTTERCONTACTS):
+            _LOGGER.debug("Setting up HMShutterContact %s",
+                          # pylint: disable=protected-access
+                          self._hmdevice._ADDRESS)
             self._sensor_class = 'opening'
             if self._is_available:
                 self._state = self._hmdevice.state
         # pylint: disable=protected-access
-        elif (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMREMOTES) \
-                or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMREMOTES):
+        elif (not self._hmdevice._PARENT and
+              self._hmdevice._TYPE in HMREMOTES) or \
+             (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
+              in HMREMOTES):
             # pylint: disable=protected-access
             _LOGGER.debug("Setting up HMRemote %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'remote button'

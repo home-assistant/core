@@ -19,7 +19,9 @@ DEPENDENCIES = ['homematic']
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    return homematic.setup_hmdevice_entity_helper(HMSwitch, config, add_callback_devices)
+    return homematic.setup_hmdevice_entity_helper(HMSwitch,
+                                                  config,
+                                                  add_callback_devices)
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
@@ -48,7 +50,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
             self._state = False
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established."""
+        """Configuration for device after connection with pyhomematic."""
         def event_received(device, caller, attribute, value):
             """Handler for received events."""
             attribute = str(attribute).upper()
@@ -69,8 +71,9 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         self._dimmer = bool(hasattr(self._hmdevice, 'level'))
 
         if self._is_available:
-            # pylint: disable=protected-access
-            _LOGGER.debug("Setting up switch-device %s", self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up switch-device %s",
+                          # pylint: disable=protected-access
+                          self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
             if self._dimmer:
                 # pylint: disable=attribute-defined-outside-init

@@ -63,13 +63,17 @@ def setup(hass, config):
     remote_port = config[DOMAIN].get(REMOTE_PORT)
     autodetect = str(config[DOMAIN].get(AUTODETECT, False)).upper() == 'TRUE'
 
-    if local_ip is None or local_port is None or remote_ip is None or remote_port is None:
+    if local_ip is None \
+            or local_port is None \
+            or remote_ip is None \
+            or remote_port is None:
         _LOGGER.error("Missing required configuration item %s, %s, %s or %s",
                       LOCAL_IP, LOCAL_PORT, REMOTE_IP, REMOTE_PORT)
         return
 
-    # Only required because there is no access on created entities and I lack the knowledge on
-    # a better way how to make the devices variable accessible in all homematic components
+    # Only required because there is no access on created entities.
+    # Any better way how to make the devices variable accessible in
+    # all homematic components?
 
     def system_callback_handler(src, *args):
         """Callback handler."""
@@ -80,7 +84,8 @@ def setup(hass, config):
             # Get list of all keys of the devices (ignoring channels)
             for dev in dev_descriptions:
                 key_dict[dev['ADDRESS'].split(':')[0]] = True
-            # Connect devices already created in HA to pyhomematic and add remaining devices to list
+            # Connect devices already created in HA to pyhomematic and
+            # add remaining devices to list
             devices_not_created = []
             for dev in key_dict:
                 try:
@@ -92,34 +97,46 @@ def setup(hass, config):
                 # pylint: disable=broad-except
                 except Exception as err:
                     # pylint: disable=logging-not-lazy
-                    _LOGGER.error("Failed to setup device %s: %s" % ((str(dev), str(err))))
+                    _LOGGER.error("Failed to setup device %s: %s" % (
+                        (str(dev), str(err))))
             # If configuration allows auto detection of devices,
             # all devices not configured are added.
             if autodetect and devices_not_created:
                 for component_name, func_get_devices, discovery_type in (
                         ('switch', get_switches, DISCOVER_SWITCHES),
                         ('light', get_lights, DISCOVER_LIGHTS),
-                        ('rollershutter', get_rollershutters, DISCOVER_ROLLERSHUTTER),
-                        ('binary_sensor', get_binary_sensors, DISCOVER_BINARY_SENSORS),
+                        ('rollershutter', get_rollershutters,
+                         DISCOVER_ROLLERSHUTTER),
+                        ('binary_sensor', get_binary_sensors,
+                         DISCOVER_BINARY_SENSORS),
                         ('sensor', get_sensors, DISCOVER_SENSORS),
                         ('thermostat', get_thermostats, DISCOVER_THERMOSTATS)):
                     # Get all devices of a specific type
                     found_devices = func_get_devices(devices_not_created)
 
-                    # Devices of this type are found they are setup in HA and a event is fired
+                    # When devices of this type are found
+                    # they are setup in HA and a event is fired
                     if found_devices:
                         component = get_component(component_name)
                         config = {component.DOMAIN: found_devices}
 
                         # Ensure component is loaded
-                        homeassistant.bootstrap.setup_component(hass, component.DOMAIN, config)
+                        homeassistant.bootstrap.setup_component(
+                            hass,
+                            component.DOMAIN,
+                            config)
 
                         # Fire discovery event
-                        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                            ATTR_SERVICE: discovery_type,
-                            ATTR_DISCOVERED: {ATTR_DISCOVER_DEVICES: found_devices,
-                                              ATTR_DISCOVER_CONFIG: ''}}
-                                     )
+                        hass.bus.fire(
+                            EVENT_PLATFORM_DISCOVERED, {
+                                ATTR_SERVICE: discovery_type,
+                                ATTR_DISCOVERED: {
+                                    ATTR_DISCOVER_DEVICES:
+                                    found_devices,
+                                    ATTR_DISCOVER_CONFIG: ''
+                                    }
+                                }
+                            )
                 for dev in devices_not_created:
                     if dev in HOMEMATIC_DEVICES:
                         HOMEMATIC_DEVICES[dev].connect_to_homematic()
@@ -192,11 +209,12 @@ def get_devices(device_types, keys):
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
     """Helper to setup Homematic devices."""
     if HOMEMATIC.Server is None:
-        _LOGGER.error('Error setting up Homematic Device: Homematic server not configured.')
+        _LOGGER.error('Error setting up hmevice: Server not configured.')
         return False
     address = config.get('address', None)
     if address is None:
-        _LOGGER.error("Error setting up Device '%s': 'address' missing in configuration.", address)
+        _LOGGER.error("Error setting up Device '%s': " +
+                      "'address' missing in configuration.", address)
         return False
     new_device = hmdevicetype(config)
     if address not in HOMEMATIC_DEVICES:
@@ -218,7 +236,6 @@ class HMDevice:
             self._name = self._address
         self._state = None
         self._hmdevice = None
-        # TODO: Check if _is_connected can be replaced by the usage of _hmdevice
         self._is_connected = False
         self._is_available = False
 
@@ -231,7 +248,7 @@ class HMDevice:
 
     @property
     def should_poll(self):
-        """Return False as Homematic states are pushed by the XML RPC Server."""
+        """Return False. Homematic states are pushed by the XML RPC Server."""
         return False
 
     @property

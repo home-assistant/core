@@ -91,9 +91,10 @@ def setup(hass, config):
                 rollershutter.stop()
             elif service.service == SERVICE_POSITION:
                 if ATTR_POSITION in dat:
-                    params[ATTR_POSITION] = util.convert(dat.get(ATTR_POSITION),
-                                                         int,
-                                                         params.get(ATTR_POSITION))
+                    params[ATTR_POSITION] = util.convert(
+                        dat.get(ATTR_POSITION),
+                        int,
+                        params.get(ATTR_POSITION))
                     rollershutter.position(**params)
 
             if rollershutter.should_poll:

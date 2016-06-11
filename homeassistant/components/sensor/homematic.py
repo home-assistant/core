@@ -23,7 +23,9 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    return homematic.setup_hmdevice_entity_helper(HMSensor, config, add_callback_devices)
+    return homematic.setup_hmdevice_entity_helper(HMSensor,
+                                                  config,
+                                                  add_callback_devices)
 
 
 class HMSensor(homematic.HMDevice, Entity):
@@ -64,7 +66,7 @@ class HMSensor(homematic.HMDevice, Entity):
         return attr
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established."""
+        """Configuration for device after connection with pyhomematic."""
         def event_received(device, caller, attribute, value):
             """Handler for received events."""
             attribute = str(attribute).upper()
@@ -82,7 +84,8 @@ class HMSensor(homematic.HMDevice, Entity):
 
         super().connect_to_homematic()
 
-        self._sensor_class = SENSOR_TYPES.get(type(self._hmdevice).__name__, None)
+        self._sensor_class = SENSOR_TYPES.get(type(self._hmdevice).__name__,
+                                              None)
         if self._is_available:
             self._state = self._hmdevice.state
             self._sabotage = self._hmdevice.sabotage

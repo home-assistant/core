@@ -17,6 +17,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
+# pylint: disable=abstract-method
 class DemoRollershutter(RollershutterDevice):
     """Representation of a demo roller shutter."""
 
