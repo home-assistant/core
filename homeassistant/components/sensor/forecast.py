@@ -124,72 +124,58 @@ class ForeCastSensor(Entity):
         """Return the unit system of this entity."""
         return self.forecast_data.unit_system
 
-    # pylint: disable=too-many-branches,too-many-statements
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
-        import forecastio
-
         # Call the API for new forecast data. Each sensor will re-trigger this
         # same exact call, but thats fine. We cache results for a short period
         # of time to prevent hitting API limits. Note that forecast.io will
         # charge users for too many calls in 1 day, so take care when updating.
         self.forecast_data.update()
 
-        self.forecast_data.update_currently()
-        data = self.forecast_data.data_currently
+        if self.type == 'minutely_summary':
+            self.forecast_data.update_minutely()
+            minutely = self.forecast_data.data_minutely
+            self._state = getattr(minutely, 'summary', '')
+        elif self.type == 'hourly_summary':
+            self.forecast_data.update_hourly()
+            hourly = self.forecast_data.data_hourly
+            self._state = getattr(hourly, 'summary', '')
+        elif self.type == 'daily_summary':
+            self.forecast_data.update_daily()
+            daily = self.forecast_data.data_daily
+            self._state = getattr(daily, 'summary', '')
+        else:
+            self.forecast_data.update_currently()
+            currently = self.forecast_data.data_currently
+            self._state = self.get_currently_state(currently)
 
-        try:
-            if self.type == 'minutely_summary':
-                self.forecast_data.update_minutely()
-                self._state = self.forecast_data.data_minutely.summary
-                return
+    def get_currently_state(self, data):
+        """
+        Helper function that returns a new state based on the type.
 
-            elif self.type == 'hourly_summary':
-                self.forecast_data.update_hourly()
-                self._state = self.forecast_data.data_hourly.summary
-                return
-
-            elif self.type == 'daily_summary':
-                self.forecast_data.update_daily()
-                self._state = self.forecast_data.data_daily.summary
-                return
-            else:
-                if self.type == 'summary':
-                    self._state = data.summary
-                elif self.type == 'icon':
-                    self._state = data.icon
-                elif self.type == 'nearest_storm_distance':
-                    self._state = data.nearestStormDistance
-                elif self.type == 'nearest_storm_bearing':
-                    self._state = data.nearestStormBearing
-                elif self.type == 'precip_intensity':
-                    self._state = data.precipIntensity
-                elif self.type == 'precip_type':
-                    self._state = data.precipType
-                elif self.type == 'precip_probability':
-                    self._state = round(data.precipProbability * 100, 1)
-                elif self.type == 'dew_point':
-                    self._state = round(data.dewPoint, 1)
-                elif self.type == 'temperature':
-                    self._state = round(data.temperature, 1)
-                elif self.type == 'apparent_temperature':
-                    self._state = round(data.apparentTemperature, 1)
-                elif self.type == 'wind_speed':
-                    self._state = data.windSpeed
-                elif self.type == 'wind_bearing':
-                    self._state = data.windBearing
-                elif self.type == 'cloud_cover':
-                    self._state = round(data.cloudCover * 100, 1)
-                elif self.type == 'humidity':
-                    self._state = round(data.humidity * 100, 1)
-                elif self.type == 'pressure':
-                    self._state = round(data.pressure, 1)
-                elif self.type == 'visibility':
-                    self._state = data.visibility
-                elif self.type == 'ozone':
-                    self._state = round(data.ozone, 1)
-        except forecastio.utils.PropertyUnavailable:
-            pass
+        If the sensor type is unknown, the current state is returned.
+        """
+        return {
+            'summary': getattr(data, 'summary', ''),
+            'icon': getattr(data, 'icon', ''),
+            'nearest_storm_distance': getattr(data, 'nearestStormDistance', 0),
+            'nearest_storm_bearing': getattr(data, 'nearestStormBearing', 0),
+            'precip_intensity': getattr(data, 'precipIntensity', 0),
+            'precip_type': getattr(data, 'precipType', ''),
+            'precip_probability': round(
+                getattr(data, 'precipProbability', 0) * 100, 1),
+            'dew_point': round(getattr(data, 'dewPoint', 0), 1),
+            'temperature': round(getattr(data, 'temperature', 0), 1),
+            'apparent_temperature': round(
+                getattr(data, 'apparentTemperature', 0), 1),
+            'wind_speed': getattr(data, 'windSpeed', 0),
+            'wind_bearing': getattr(data, 'windBearing', 0),
+            'cloud_cover': round(getattr(data, 'cloudCover', 0) * 100, 1),
+            'humidity': round(getattr(data, 'humidity', 0) * 100, 1),
+            'pressure': round(getattr(data, 'pressure', 0), 1),
+            'visibility': getattr(data, 'visibility', 0),
+            'ozone': round(getattr(data, 'ozone', 0), 1)
+        }.get(self.type, self._state)
 
 
 class ForeCastData(object):
