@@ -142,11 +142,9 @@ class OnkyoDevice(MediaPlayerDevice):
         else:
             self._receiver.command('audio-muting off')
 
-    def turn_on(self, **kwargs):
+    def turn_on(self)
         """Turn the media player on."""
         self._receiver.power_on()
-        if ATTR_INPUT_SOURCE in kwargs:
-            self.select_source(kwargs[ATTR_INPUT_SOURCE])
 
     def select_source(self, source):
         """Set the input source."""
