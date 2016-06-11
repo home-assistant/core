@@ -23,6 +23,14 @@ from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 REQUIREMENTS = ['pexpect==4.0.1']
 _LOGGER = logging.getLogger(__name__)
 
+# SUPPORT_VOLUME_SET is close to available but we need volume up/down
+# controls in the GUI.
+PANDORA_SUPPORT = \
+    SUPPORT_PAUSE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SELECT_SOURCE
+
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the media player pandora platform."""
@@ -35,13 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_pianobar)
     add_devices([pandora])
-
-# SUPPORT_VOLUME_SET is close to available but we need volume up/down
-# controls in the GUI.
-PANDORA_SUPPORT = \
-    SUPPORT_PAUSE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SELECT_SOURCE
 
 
 class PandoraMediaPlayer(MediaPlayerDevice):
@@ -146,6 +147,7 @@ class PianobarRemote(object):
     so this implementation uses pexpect.
 
     """
+
     CMD_MAP = {SERVICE_MEDIA_NEXT_TRACK: 'n',
                SERVICE_MEDIA_PLAY_PAUSE: 'p',
                SERVICE_MEDIA_PLAY: 'p',
