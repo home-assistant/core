@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
+import homeassistant.util as util
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
     STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
@@ -73,6 +74,8 @@ def setup(hass, config):
     def handle_rollershutter_service(service):
         """Handle calls to the roller shutter services."""
         target_rollershutters = component.extract_from_service(service)
+        dat = service.data
+        params = {}
 
         for rollershutter in target_rollershutters:
             if service.service == SERVICE_MOVE_UP:
@@ -81,9 +84,11 @@ def setup(hass, config):
                 rollershutter.move_down()
             elif service.service == SERVICE_STOP:
                 rollershutter.stop()
-            elif service.service == SERVICE_POSITION:
+            elif service.service == SERVICE_CURRENT_POSITION:
                 if ATTR_CURRENT_POSITION in dat:
-                    params[ATTR_CURRENT_POSITION] = util.convert(dat.get(ATTR_CURRENT_POSITION), int, params.get(ATTR_CURRENT_POSITION))
+                    params[ATTR_CURRENT_POSITION] = util.convert(dat.get(ATTR_CURRENT_POSITION),
+                                                                 int,
+                                                                 params.get(ATTR_CURRENT_POSITION))
                     rollershutter.position(**params)
 
             if rollershutter.should_poll:
