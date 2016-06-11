@@ -9,7 +9,6 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components import verisure
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY)
@@ -23,11 +22,6 @@ DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = 30
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    verisure.DISCOVER_ALARMS: 'verisure'
-}
 
 SERVICE_TO_METHOD = {
     SERVICE_ALARM_DISARM: 'alarm_disarm',
@@ -50,8 +44,7 @@ ALARM_SERVICE_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Track states and offer events for sensors."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     component.setup(config)
 

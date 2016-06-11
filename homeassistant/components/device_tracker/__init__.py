@@ -12,10 +12,11 @@ import os
 import threading
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import discovery, group, zone
+from homeassistant.components import group, zone
+from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -62,7 +63,7 @@ ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_NETGEAR: 'netgear',
+    SERVICE_NETGEAR: 'netgear',
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,8 +96,11 @@ def setup(hass, config):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     conf = config.get(DOMAIN, {})
-    if isinstance(conf, list) and len(conf) > 0:
-        conf = conf[0]
+
+    # Config can be an empty list. In that case, substitute a dict
+    if isinstance(conf, list):
+        conf = conf[0] if len(conf) > 0 else {}
+
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
                              DEFAULT_CONSIDER_HOME))

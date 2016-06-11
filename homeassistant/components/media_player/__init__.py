@@ -9,7 +9,6 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components import discovery
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -29,15 +28,6 @@ DOMAIN = 'media_player'
 SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_CAST: 'cast',
-    discovery.SERVICE_SONOS: 'sonos',
-    discovery.SERVICE_PLEX: 'plex',
-    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
-    discovery.SERVICE_PANASONIC_VIERA: 'panasonic_viera',
-    discovery.SERVICE_ROKU: 'roku',
-}
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -285,8 +275,7 @@ def select_source(hass, source, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     component.setup(config)
 
