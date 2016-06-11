@@ -35,7 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    return homematic.setup_hmdevice_entity_helper(HMThermostat, config, add_callback_devices)
+    return homematic.setup_hmdevice_entity_helper(HMThermostat,
+                                                  config,
+                                                  add_callback_devices)
 
 
 class HMThermostat(homematic.HMDevice, ThermostatDevice):
@@ -60,7 +62,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
                 return self._current_temperature
             # pylint: disable=broad-except
             except Exception as err:
-                _LOGGER.error("Exception getting current temperature: %s", str(err))
+                _LOGGER.error("Exception getting current temp.: %s", str(err))
         else:
             return None
 
@@ -72,7 +74,8 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
                 return self._set_temperature
             # pylint: disable=broad-except
             except Exception as err:
-                _LOGGER.error("Exception getting set temperature: %s", str(err))
+                _LOGGER.error("Exception getting set temperature: %s",
+                              str(err))
         else:
             return None
 
@@ -111,7 +114,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established."""
+        """Configuration for device after connection with pyhomematic."""
         def event_received(device, caller, attribute, value):
             """Handler for received events."""
             attribute = str(attribute).upper()

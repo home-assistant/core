@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     )])
 
 
-# pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint:disable=too-many-arguments,too-many-instance-attributes,abstract-method
 class MqttRollershutter(RollershutterDevice):
     """Representation of a roller shutter that can be controlled using MQTT."""
 
