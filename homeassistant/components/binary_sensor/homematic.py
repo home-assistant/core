@@ -1,5 +1,3 @@
-import logging
-
 """
 The homematic binary sensor platform.
 
@@ -7,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
 """
 
-from homeassistant.const import (STATE_CLOSED, STATE_OPEN, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+import logging
+from homeassistant.const import (STATE_UNKNOWN)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.components.homematic as homematic
 
@@ -30,18 +29,21 @@ HMREMOTES = ["HM-RC-8"]
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMBinarySensor, config, add_callback_devices)
 
 
 class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
     """Represents diverse binary Homematic units in Home Assistant."""
+
     def __init__(self, config):
+        """Re-Init the device."""
         super().__init__(config)
         self._sensor_class = None
         self._battery = STATE_UNKNOWN
         self._rssi = STATE_UNKNOWN
         self._sabotage = STATE_UNKNOWN
-    
+
     @property
     def is_on(self):
         """Return True if switch is on."""
@@ -55,17 +57,18 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        attributes = {"sensor_class" : self.sensor_class,
-                      "rssi" : self._rssi,
-                      "sabotage" : self._sabotage}
+        attributes = {"sensor_class": self.sensor_class,
+                      "rssi": self._rssi,
+                      "sabotage": self._sabotage}
         if self._battery:
             attributes['battery'] = self._battery
 
         return attributes
 
     def connect_to_homematic(self):
-        """Configuration specific to device after connection with pyhomematic is established"""
+        """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
+            """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'STATE':
                 self._state = bool(value)
@@ -76,7 +79,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                     self._battery = 4.6
             elif attribute == 'PRESS_LONG_RELEASE':
                 if int(device.split(':')[1]) == int(self._button):
-                        self._state = 0
+                    self._state = 0
             elif attribute == 'PRESS_SHORT' or attribute == 'PRESS_LONG':
                 if int(device.split(':')[1]) == int(self._button):
                     self._state = 1
@@ -99,17 +102,17 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         if (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMSHUTTERCONTACTS) \
                 or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMSHUTTERCONTACTS):
-            _LOGGER.debug("Setting up HMShutterContact %s" % self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up HMShutterContact %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'opening'
             if self._is_available:
                 self._state = self._hmdevice.state
         elif (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMREMOTES) \
                 or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMREMOTES):
-            _LOGGER.debug("Setting up HMRemote %s" % self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up HMRemote %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'remote button'
             self._button = self._config.get('button', None)
             if not self._button:
-                _LOGGER.error("No button defined for '%s'" %self._address)
+                _LOGGER.error("No button defined for '%s'", self._address)
                 self._is_available = False
         else:
             self._sensor_class = None
