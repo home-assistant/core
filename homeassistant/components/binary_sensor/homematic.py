@@ -3,6 +3,13 @@ The homematic binary sensor platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
+
+Configuration:
+
+binary_sensor:
+  - platform: homematic
+    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
+    name: "<User defined name>"
 """
 
 import logging

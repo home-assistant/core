@@ -4,6 +4,13 @@ Support for Homematic Devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 
+Configuration:
+
+homematic:
+  loacal_ip: "<IP of device running Home Assistant>"
+  local_port: <Port for connection with Home Assistant>
+  remote_ip: "<IP of Homegear / CCU>"
+  remote_port: <Port of Homegear / CCU XML-RPC Server>
 """
 
 import logging
