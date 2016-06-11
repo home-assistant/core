@@ -40,7 +40,11 @@ def config_per_platform(config, domain):
             platform_config = [platform_config]
 
         for item in platform_config:
-            platform = None if item is None else item.get(CONF_PLATFORM)
+            try:
+                platform = item.get(CONF_PLATFORM)
+            except AttributeError:
+                platform = None
+
             yield platform, item
 
 
