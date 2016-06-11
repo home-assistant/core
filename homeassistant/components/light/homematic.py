@@ -67,6 +67,7 @@ class HMLight(homematic.HMDevice, Light):
             """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'LEVEL':
+                # pylint: disable=attribute-defined-outside-init
                 self._level = float(value)
             elif attribute == 'STATE':
                 self._state = bool(value)
@@ -78,14 +79,15 @@ class HMLight(homematic.HMDevice, Light):
 
         super().connect_to_homematic()
 
-        if hasattr(self._hmdevice, 'level'):
-            self._dimmer = True
-        else:
-            self._dimmer = False
+        # pylint: disable=attribute-defined-outside-init
+        self._dimmer = bool(hasattr(self._hmdevice, 'level'))
+
         if self._is_available:
+            # pylint: disable=protected-access
             _LOGGER.debug("Setting up light device %s", self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
             if self._dimmer:
+                # pylint: disable=attribute-defined-outside-init
                 self._level = self._hmdevice.level
             else:
                 self._state = self._hmdevice.is_on

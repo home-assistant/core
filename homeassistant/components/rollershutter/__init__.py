@@ -33,11 +33,12 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
-SERVICE_CURRENT_POSITION = 'current_position'
+ATTR_POSITION = 'position'
+SERVICE_POSITION = 'position'
 
 ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    ATTR_CURRENT_POSITION: cv.byte,
+    ATTR_POSITION: cv.byte,
 })
 
 
@@ -84,11 +85,11 @@ def setup(hass, config):
                 rollershutter.move_down()
             elif service.service == SERVICE_STOP:
                 rollershutter.stop()
-            elif service.service == SERVICE_CURRENT_POSITION:
-                if ATTR_CURRENT_POSITION in dat:
-                    params[ATTR_CURRENT_POSITION] = util.convert(dat.get(ATTR_CURRENT_POSITION),
-                                                                 int,
-                                                                 params.get(ATTR_CURRENT_POSITION))
+            elif service.service == SERVICE_POSITION:
+                if ATTR_POSITION in dat:
+                    params[ATTR_POSITION] = util.convert(dat.get(ATTR_POSITION),
+                                                         int,
+                                                         params.get(ATTR_POSITION))
                     rollershutter.position(**params)
 
             if rollershutter.should_poll:
@@ -109,9 +110,9 @@ def setup(hass, config):
                            handle_rollershutter_service,
                            descriptions.get(SERVICE_STOP),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_CURRENT_POSITION,
+    hass.services.register(DOMAIN, SERVICE_POSITION,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_CURRENT_POSITION),
+                           descriptions.get(SERVICE_POSITION),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     return True
 
@@ -163,5 +164,5 @@ class RollershutterDevice(Entity):
         raise NotImplementedError()
 
     def position(self, **kwargs):
-        """Position."""
+        """Set position."""
         raise NotImplementedError()
