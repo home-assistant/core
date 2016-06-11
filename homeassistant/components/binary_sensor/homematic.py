@@ -88,10 +88,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             elif attribute == 'RSSI_DEVICE':
                 self._rssi = value
             elif attribute == 'ERROR':
-                if value == 7:
-                    self._sabotage = True
-                else:
-                    self._sabotage = False
+                self._sabotage = bool(value == 7)
             elif attribute == 'UNREACH':
                 self._is_available = not bool(value)
             else:
@@ -99,17 +96,21 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             self.update_ha_state()
 
         super().connect_to_homematic()
-
+        # pylint: disable=protected-access
         if (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMSHUTTERCONTACTS) \
                 or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMSHUTTERCONTACTS):
+            # pylint: disable=protected-access
             _LOGGER.debug("Setting up HMShutterContact %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'opening'
             if self._is_available:
                 self._state = self._hmdevice.state
+        # pylint: disable=protected-access
         elif (not self._hmdevice._PARENT and self._hmdevice._TYPE in HMREMOTES) \
                 or (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE in HMREMOTES):
+            # pylint: disable=protected-access
             _LOGGER.debug("Setting up HMRemote %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'remote button'
+            # pylint: disable=attribute-defined-outside-init
             self._button = self._config.get('button', None)
             if not self._button:
                 _LOGGER.error("No button defined for '%s'", self._address)

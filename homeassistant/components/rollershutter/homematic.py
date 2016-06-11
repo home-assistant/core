@@ -78,6 +78,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
             """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'LEVEL':
+                # pylint: disable=attribute-defined-outside-init
                 self._level = float(value)
             elif attribute == 'UNREACH':
                 self._is_available = not bool(value)
@@ -87,7 +88,9 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
         super().connect_to_homematic()
         if self._is_available:
+            # pylint: disable=protected-access
             _LOGGER.debug("Setting up rollershutter %s", self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
+            # pylint: disable=attribute-defined-outside-init
             self._level = self._hmdevice.level
             self.update_ha_state()

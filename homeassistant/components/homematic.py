@@ -18,10 +18,10 @@ import homeassistant.bootstrap
 DOMAIN = 'homematic'
 REQUIREMENTS = ['pyhomematic==0.1.2']
 
-import pyhomematic
+# pylint: disable=wrong-import-position, wrong-import-order
+import pyhomematic as HOMEMATIC
 
 HOMEMATIC_DEVICES = {}
-HOMEMATIC = pyhomematic
 
 HA_HOMEMATIC_DEVICES = None
 DEVICES_NOT_REGISTERED = []
@@ -74,6 +74,7 @@ def setup(hass, config):
     def system_callback_handler(src, *args):
         """Callback handler."""
         if src == 'newDevices':
+            # pylint: disable=unused-variable
             (interface_id, dev_descriptions) = args
             key_dict = {}
             # Get list of all keys of the devices (ignoring channels)
@@ -88,8 +89,10 @@ def setup(hass, config):
                             channel.connect_to_homematic()
                     else:
                         devices_not_created.append(dev)
+                # pylint: disable=broad-except
                 except Exception as err:
-                    _LOGGER.error("Failed to setup device %s: %s", (str(dev), str(err)))
+                    # pylint: disable=logging-not-lazy
+                    _LOGGER.error("Failed to setup device %s: %s" % ((str(dev), str(err))))
             # If configuration allows auto detection of devices,
             # all devices not configured are added.
             if autodetect and devices_not_created:
@@ -173,8 +176,6 @@ def get_thermostats(keys=None):
 
 def get_devices(device_types, keys):
     """Get devices."""
-    global HOMEMATIC
-
     device_arr = []
     if not keys:
         keys = HOMEMATIC.devices
@@ -190,7 +191,7 @@ def get_devices(device_types, keys):
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
     """Helper to setup Homematic devices."""
-    if pyhomematic.Server is None:
+    if HOMEMATIC.Server is None:
         _LOGGER.error('Error setting up Homematic Device: Homematic server not configured.')
         return False
     address = config.get('address', None)
@@ -223,8 +224,6 @@ class HMDevice:
 
     def connect_to_homematic(self):
         """Connect to Homematic."""
-        global HOMEMATIC
-
         if self._address in HOMEMATIC.devices:
             self._hmdevice = HOMEMATIC.devices[self._address]
             self._is_connected = True
