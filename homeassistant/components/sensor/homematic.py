@@ -3,6 +3,13 @@ The homematic sensor platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
+
+Configuration:
+
+sensor:
+  - platform: homematic
+    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
+    name: "<User defined name>"
 """
 
 import logging

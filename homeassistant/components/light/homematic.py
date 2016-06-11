@@ -1,8 +1,15 @@
 """
-The homematic custom light platform.
+The homematic light platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.homematic/
+
+Configuration:
+
+light:
+  - platform: homematic
+    addresss: "<Homematic addresss for device>" # e.g. "JEQ0XXXXXXX"
+    name: "<User defined name>"
 """
 
 import logging
