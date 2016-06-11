@@ -58,6 +58,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if self._is_connected:
             try:
                 return self._current_temperature
+            # pylint: disable=broad-except
             except Exception as err:
                 _LOGGER.error("Exception getting current temperature: %s", str(err))
         else:
@@ -69,6 +70,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if self._is_connected:
             try:
                 return self._set_temperature
+            # pylint: disable=broad-except
             except Exception as err:
                 _LOGGER.error("Exception getting set temperature: %s", str(err))
         else:
@@ -79,6 +81,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if self._is_connected:
             try:
                 self._hmdevice.set_temperature = temperature
+            # pylint: disable=broad-except
             except Exception as err:
                 _LOGGER.error("Exception setting temperature: %s", str(err))
 
@@ -113,12 +116,16 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'SET_TEMPERATURE':
+                # pylint: disable=attribute-defined-outside-init
                 self._set_temperature = value
             elif attribute == 'ACTUAL_TEMPERATURE':
+                # pylint: disable=attribute-defined-outside-init
                 self._current_temperature = value
             elif attribute == 'VALVE_STATE':
+                # pylint: disable=attribute-defined-outside-init
                 self._valve = float(value)
             elif attribute == 'CONTROL_MODE':
+                # pylint: disable=attribute-defined-outside-init
                 self._mode = value
             elif attribute == 'RSSI_DEVICE':
                 self._rssi = value
@@ -138,22 +145,31 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
 
         super().connect_to_homematic()
         if self._is_available:
+            # pylint: disable=protected-access
             _LOGGER.debug("Setting up thermostat %s", self._hmdevice._ADDRESS)
             try:
                 self._hmdevice.setEventCallback(event_received)
+                # pylint: disable=attribute-defined-outside-init
                 self._current_temperature = self._hmdevice.actual_temperature
+                # pylint: disable=attribute-defined-outside-init
                 self._set_temperature = self._hmdevice.set_temperature
                 self._battery = None
+                # pylint: disable=protected-access
                 if self._hmdevice._TYPE in VARIANTS:
+                    # pylint: disable=protected-access
                     if VARIANTS[self._hmdevice._TYPE] == HMCOMP:
                         self._battery = self._hmdevice.battery_state
+                    # pylint: disable=protected-access
                     elif VARIANTS[self._hmdevice._TYPE] == MAXCOMP:
                         if self._hmdevice.battery_state:
                             self._battery = 1.5
                         else:
                             self._battery = 4.6
+                # pylint: disable=attribute-defined-outside-init
                 self._valve = None
+                # pylint: disable=attribute-defined-outside-init
                 self._mode = None
                 self.update_ha_state()
+            # pylint: disable=broad-except
             except Exception as err:
                 _LOGGER.error("Exception while connecting: %s", str(err))
