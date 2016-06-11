@@ -30,15 +30,17 @@ ENTITY_ID_ALL_ROLLERSHUTTERS = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+# Maps discovered services to their platforms
+DISCOVERY_PLATFORMS = {}
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
-ATTR_POSITION = 'position'
-SERVICE_POSITION = 'position'
+SERVICE_CURRENT_POSITION = 'current_position'
 
 ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    ATTR_POSITION: cv.byte,
+    ATTR_CURRENT_POSITION: cv.byte,
 })
 
 
@@ -69,7 +71,8 @@ def stop(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for roller shutters."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_ROLLERSHUTTERS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
+        GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
     def handle_rollershutter_service(service):
@@ -85,11 +88,11 @@ def setup(hass, config):
                 rollershutter.move_down()
             elif service.service == SERVICE_STOP:
                 rollershutter.stop()
-            elif service.service == SERVICE_POSITION:
-                if ATTR_POSITION in dat:
-                    params[ATTR_POSITION] = util.convert(dat.get(ATTR_POSITION),
-                                                         int,
-                                                         params.get(ATTR_POSITION))
+            elif service.service == SERVICE_CURRENT_POSITION:
+                if ATTR_CURRENT_POSITION in dat:
+                    params[ATTR_CURRENT_POSITION] = util.convert(dat.get(ATTR_CURRENT_POSITION),
+                                                                 int,
+                                                                 params.get(ATTR_CURRENT_POSITION))
                     rollershutter.position(**params)
 
             if rollershutter.should_poll:
@@ -110,9 +113,9 @@ def setup(hass, config):
                            handle_rollershutter_service,
                            descriptions.get(SERVICE_STOP),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_POSITION,
+    hass.services.register(DOMAIN, SERVICE_CURRENT_POSITION,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_POSITION),
+                           descriptions.get(SERVICE_CURRENT_POSITION),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     return True
 
@@ -164,5 +167,5 @@ class RollershutterDevice(Entity):
         raise NotImplementedError()
 
     def position(self, **kwargs):
-        """Set position."""
+        """Position."""
         raise NotImplementedError()

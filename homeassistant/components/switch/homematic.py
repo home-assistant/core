@@ -1,8 +1,3 @@
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
-=======
-import logging
-
->>>>>>> Added Homematic implementation
 """
 The homematic switch platform.
 
@@ -10,10 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.homematic/
 """
 
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
 import logging
-=======
->>>>>>> Added Homematic implementation
 from homeassistant.components.switch import SwitchDevice
 import homeassistant.components.homematic as homematic
 
@@ -26,20 +18,13 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
     """Setup the platform."""
-=======
->>>>>>> Added Homematic implementation
     return homematic.setup_hmdevice_entity_helper(HMSwitch, config, add_callback_devices)
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
     """Represents an Homematic Switch in Home Assistant."""
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
 
-=======
-            
->>>>>>> Added Homematic implementation
     @property
     def is_on(self):
         """Return True if switch is on."""
@@ -63,19 +48,11 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
             self._state = False
 
     def connect_to_homematic(self):
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
         """Configuration specific to device after connection with pyhomematic is established."""
         def event_received(device, caller, attribute, value):
             """Handler for received events."""
             attribute = str(attribute).upper()
             if attribute == 'LEVEL':
-                # pylint: disable=attribute-defined-outside-init
-=======
-        """Configuration specific to device after connection with pyhomematic is established"""
-        def event_received(device, caller, attribute, value):
-            attribute = str(attribute).upper()
-            if attribute == 'LEVEL':
->>>>>>> Added Homematic implementation
                 self._level = float(value)
             elif attribute == 'STATE':
                 self._state = bool(value)
@@ -87,26 +64,14 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
 
         super().connect_to_homematic()
 
-<<<<<<< a28681b5c6dc2eefcd492192d5b82772b4a3d8cf
-        # pylint: disable=attribute-defined-outside-init
-        self._dimmer = bool(hasattr(self._hmdevice, 'level'))
-
+        if hasattr(self._hmdevice, 'level'):
+            self._dimmer = True
+        else:
+            self._dimmer = False
         if self._is_available:
-            # pylint: disable=protected-access
             _LOGGER.debug("Setting up switch-device %s", self._hmdevice._ADDRESS)
             self._hmdevice.setEventCallback(event_received)
             if self._dimmer:
-                # pylint: disable=attribute-defined-outside-init
-=======
-        if hasattr(self._hmdevice, 'level'):
-            self._dimmer = True 
-        else:
-            self._dimmer = False 
-        if self._is_available:
-            _LOGGER.debug("Setting up switch-device %s" % self._hmdevice._ADDRESS)
-            self._hmdevice.setEventCallback(event_received)
-            if self._dimmer:
->>>>>>> Added Homematic implementation
                 self._level = self._hmdevice.level
             else:
                 self._state = self._hmdevice.is_on
