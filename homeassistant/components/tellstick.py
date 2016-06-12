@@ -8,11 +8,8 @@ import logging
 import threading
 import voluptuous as vol
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE,
-    EVENT_PLATFORM_DISCOVERED, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.loader import get_component
+from homeassistant.helpers import discovery
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "tellstick"
@@ -23,11 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SIGNAL_REPETITIONS = "signal_repetitions"
 DEFAULT_SIGNAL_REPETITIONS = 1
-
-DISCOVER_SWITCHES = "tellstick.switches"
-DISCOVER_LIGHTS = "tellstick.lights"
-DISCOVERY_TYPES = {"switch": DISCOVER_SWITCHES,
-                   "light": DISCOVER_LIGHTS}
 
 ATTR_DISCOVER_DEVICES = "devices"
 ATTR_DISCOVER_CONFIG = "config"
@@ -57,17 +49,11 @@ def _discover(hass, config, found_devices, component_name):
     _LOGGER.info("discovered %d new %s devices",
                  len(found_devices), component_name)
 
-    component = get_component(component_name)
-    bootstrap.setup_component(hass, component.DOMAIN,
-                              config)
-
     signal_repetitions = config[DOMAIN].get(ATTR_SIGNAL_REPETITIONS)
 
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                  {ATTR_SERVICE: DISCOVERY_TYPES[component_name],
-                   ATTR_DISCOVERED: {ATTR_DISCOVER_DEVICES: found_devices,
-                                     ATTR_DISCOVER_CONFIG:
-                                         signal_repetitions}})
+    discovery.load_platform(hass, component_name, DOMAIN, {
+        ATTR_DISCOVER_DEVICES: found_devices,
+        ATTR_DISCOVER_CONFIG: signal_repetitions}, config)
 
 
 def setup(hass, config):

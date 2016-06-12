@@ -9,7 +9,6 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import bloomsky, netatmo
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView
 
@@ -17,12 +16,6 @@ DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = 30
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    bloomsky.DISCOVER_CAMERAS: 'bloomsky',
-    netatmo.DISCOVER_CAMERAS: 'netatmo',
-}
 
 STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
@@ -35,8 +28,7 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 def setup(hass, config):
     """Setup the camera component."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     hass.wsgi.register_view(CameraImageView(hass, component.entities))
     hass.wsgi.register_view(CameraMjpegStream(hass, component.entities))

@@ -9,11 +9,11 @@ import os.path
 import time
 from pprint import pprint
 
-from homeassistant import bootstrap
+from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
-    ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_LOCATION,
+    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
@@ -36,14 +36,6 @@ SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
-
-DISCOVER_SENSORS = "zwave.sensors"
-DISCOVER_SWITCHES = "zwave.switch"
-DISCOVER_LIGHTS = "zwave.light"
-DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
-DISCOVER_THERMOSTATS = 'zwave.thermostat'
-DISCOVER_HVAC = 'zwave.hvac'
-DISCOVER_LOCKS = 'zwave.lock'
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
@@ -71,39 +63,32 @@ TYPE_DECIMAL = "Decimal"
 # value type).
 DISCOVERY_COMPONENTS = [
     ('sensor',
-     DISCOVER_SENSORS,
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
       COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
      GENRE_USER),
     ('light',
-     DISCOVER_LIGHTS,
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
      GENRE_USER),
     ('switch',
-     DISCOVER_SWITCHES,
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
      GENRE_USER),
     ('binary_sensor',
-     DISCOVER_BINARY_SENSORS,
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
      GENRE_USER),
     ('thermostat',
-     DISCOVER_THERMOSTATS,
      [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
      GENRE_WHATEVER),
     ('hvac',
-     DISCOVER_HVAC,
      [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
      TYPE_WHATEVER,
      GENRE_WHATEVER),
     ('lock',
-     DISCOVER_LOCKS,
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
      GENRE_USER),
@@ -235,7 +220,6 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
-             discovery_service,
              command_ids,
              value_type,
              value_genre) in DISCOVERY_COMPONENTS:
@@ -246,9 +230,6 @@ def setup(hass, config):
                 continue
             if value_genre is not None and value_genre != value.genre:
                 continue
-
-            # Ensure component is loaded
-            bootstrap.setup_component(hass, component, config)
 
             # Configure node
             name = "{}.{}".format(component, _object_id(value))
@@ -261,14 +242,10 @@ def setup(hass, config):
             else:
                 value.disable_poll()
 
-            # Fire discovery event
-            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: discovery_service,
-                ATTR_DISCOVERED: {
-                    ATTR_NODE_ID: node.node_id,
-                    ATTR_VALUE_ID: value.value_id,
-                }
-            })
+            discovery.load_platform(hass, component, DOMAIN, {
+                ATTR_NODE_ID: node.node_id,
+                ATTR_VALUE_ID: value.value_id,
+            }, config)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
