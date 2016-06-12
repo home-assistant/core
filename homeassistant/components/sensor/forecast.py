@@ -132,7 +132,7 @@ class ForeCastSensor(Entity):
             'ca': 3,
             'uk': 4,
             'uk2': 5
-        }.get(self.unit_system, None)
+        }.get(self.unit_system, 1)
         self._unit_of_measurement = SENSOR_TYPES[self.type][unit_index]
 
     def update(self):
