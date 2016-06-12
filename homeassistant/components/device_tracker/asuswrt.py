@@ -56,8 +56,12 @@ _IP_NEIGH_REGEX = re.compile(
 def get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
     if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME]},
                            _LOGGER):
+        return None
+    elif CONF_PASSWORD not in config[DOMAIN] and \
+            'pub_key' not in config[DOMAIN]:
+        _LOGGER.error("Either a public key or password must be provided")
         return None
 
     scanner = AsusWrtDeviceScanner(config[DOMAIN])
@@ -75,7 +79,8 @@ class AsusWrtDeviceScanner(object):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
-        self.password = str(config[CONF_PASSWORD])
+        self.password = str(config.get(CONF_PASSWORD))
+        self.pub_key = str(config.get('pub_key'))
         self.protocol = config.get('protocol')
         self.mode = config.get('mode')
 
@@ -126,9 +131,16 @@ class AsusWrtDeviceScanner(object):
     def ssh_connection(self):
         """Retrieve data from ASUSWRT via the ssh protocol."""
         from pexpect import pxssh
+
         try:
             ssh = pxssh.pxssh()
-            ssh.login(self.host, self.username, self.password)
+            if self.pub_key:
+                ssh.login(self.host, self.username, ssh_key=self.pub_key)
+            elif self.password:
+                ssh.login(self.host, self.username, self.password)
+            else:
+                _LOGGER.error('No password or public key specified')
+                return('', '', '')
             ssh.sendline(_IP_NEIGH_CMD)
             ssh.prompt()
             neighbors = ssh.before.split(b'\n')[1:-1]
