@@ -155,27 +155,29 @@ class ForeCastSensor(Entity):
 
         If the sensor type is unknown, the current state is returned.
         """
-        return {
-            'summary': getattr(data, 'summary', ''),
-            'icon': getattr(data, 'icon', ''),
-            'nearest_storm_distance': getattr(data, 'nearestStormDistance', 0),
-            'nearest_storm_bearing': getattr(data, 'nearestStormBearing', 0),
-            'precip_intensity': getattr(data, 'precipIntensity', 0),
-            'precip_type': getattr(data, 'precipType', ''),
-            'precip_probability': round(
-                getattr(data, 'precipProbability', 0) * 100, 1),
-            'dew_point': round(getattr(data, 'dewPoint', 0), 1),
-            'temperature': round(getattr(data, 'temperature', 0), 1),
-            'apparent_temperature': round(
-                getattr(data, 'apparentTemperature', 0), 1),
-            'wind_speed': getattr(data, 'windSpeed', 0),
-            'wind_bearing': getattr(data, 'windBearing', 0),
-            'cloud_cover': round(getattr(data, 'cloudCover', 0) * 100, 1),
-            'humidity': round(getattr(data, 'humidity', 0) * 100, 1),
-            'pressure': round(getattr(data, 'pressure', 0), 1),
-            'visibility': getattr(data, 'visibility', 0),
-            'ozone': round(getattr(data, 'ozone', 0), 1)
-        }.get(self.type, self._state)
+        lookup_type = convert_to_camel(self.type)
+        state = getattr(data, lookup_type, 0)
+
+        # Some state data needs to be rounded to whole values or converted to
+        # percentages
+        if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
+            state = state * 100
+        if (self.type in ['precip_probability', 'dew_point', 'temperature',
+                          'apparent_temperature', 'cloud_cover', 'humidity',
+                          'pressure', 'ozone']):
+            state = round(state, 1)
+
+        return state
+
+
+def convert_to_camel(data):
+    """
+    Convert snake case (foo_bar_bat) to camel case (fooBarBat).
+
+    This is not pythonic, but needed for certain situations
+    """
+    components = data.split('_')
+    return components[0] + "".join(x.title() for x in components[1:])
 
 
 class ForeCastData(object):
