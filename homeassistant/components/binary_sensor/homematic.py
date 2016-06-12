@@ -127,6 +127,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         return attributes
 
+    # pylint: disable=too-many-statements
     def connect_to_homematic(self):
         """Configuration for device after connection with pyhomematic."""
         def event_received(device, caller, attribute, value):
@@ -184,11 +185,11 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                 self._is_available = False
         # pylint: disable=protected-access
         elif (not self._hmdevice._PARENT and
-                      self._hmdevice._TYPE in WALLBUTTONS) or \
-                (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
-                in WALLBUTTONS):
+              self._hmdevice._TYPE in WALLBUTTONS) or \
+             (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
+              in WALLBUTTONS):
             # pylint: disable=protected-access
-            _LOGGER.debug("Setting up HMWallbutton %s", self._hmdevice._ADDRESS)
+            _LOGGER.debug("Setting up Wallbutton %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'remote button'
             # pylint: disable=attribute-defined-outside-init
             self._button = self._config.get('button', None)
