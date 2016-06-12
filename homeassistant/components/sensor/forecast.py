@@ -100,6 +100,7 @@ class ForeCastSensor(Entity):
         self.forecast_data = forecast_data
         self.type = sensor_type
         self._state = None
+        self._unit_of_measurement = None
 
         self.update()
 
@@ -116,13 +117,23 @@ class ForeCastSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        self.forecast_data.update_unit_of_measurement(self.type)
-        return self.forecast_data.unit_of_measurement
+        return self._unit_of_measurement
 
     @property
     def unit_system(self):
         """Return the unit system of this entity."""
         return self.forecast_data.unit_system
+
+    def update_unit_of_measurement(self):
+        """Update units based on unit system."""
+        unit_index = {
+            'si': 1,
+            'us': 2,
+            'ca': 3,
+            'uk': 4,
+            'uk2': 5
+        }.get(self.unit_system, None)
+        self._unit_of_measurement = SENSOR_TYPES[self.type][unit_index]
 
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
@@ -131,6 +142,7 @@ class ForeCastSensor(Entity):
         # of time to prevent hitting API limits. Note that forecast.io will
         # charge users for too many calls in 1 day, so take care when updating.
         self.forecast_data.update()
+        self.update_unit_of_measurement()
 
         if self.type == 'minutely_summary':
             self.forecast_data.update_minutely()
@@ -161,12 +173,10 @@ class ForeCastSensor(Entity):
         # Some state data needs to be rounded to whole values or converted to
         # percentages
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
-            state = state * 100
-        if (self.type in ['precip_probability', 'dew_point', 'temperature',
-                          'apparent_temperature', 'cloud_cover', 'humidity',
-                          'pressure', 'ozone']):
-            state = round(state, 1)
-
+            return round(state * 100, 1)
+        elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                            'pressure', 'ozone']):
+            return round(state, 1)
         return state
 
 
@@ -194,7 +204,6 @@ class ForeCastData(object):
 
         self.data = None
         self.unit_system = None
-        self.unit_of_measurement = None
         self.data_currently = None
         self.data_minutely = None
         self.data_hourly = None
@@ -235,18 +244,3 @@ class ForeCastData(object):
     def update_daily(self):
         """Update daily data."""
         self.data_daily = self.data.daily()
-
-    def update_unit_of_measurement(self, sensor_type):
-        """Update units based on unit system."""
-        if self.unit_system == 'si':
-            self.unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        elif self.unit_system == 'us':
-            self.unit_of_measurement = SENSOR_TYPES[sensor_type][2]
-        elif self.unit_system == 'ca':
-            self.unit_of_measurement = SENSOR_TYPES[sensor_type][3]
-        elif self.unit_system == 'uk':
-            self.unit_of_measurement = SENSOR_TYPES[sensor_type][4]
-        elif self.unit_system == 'uk2':
-            self.unit_of_measurement = SENSOR_TYPES[sensor_type][5]
-        else:
-            self.unit_of_measurement = None
