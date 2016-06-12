@@ -4,12 +4,15 @@ The homematic sensor platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
 
+Important: For this platform to work the homematic component has to be
+properly configured.
+
 Configuration:
 
 sensor:
   - platform: homematic
     address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>"
+    name: "<User defined name>" (optional)
 """
 
 import logging
@@ -23,9 +26,10 @@ REQUIREMENTS = ['pyhomematic==0.1.2']
 # List of component names (string) your component depends upon.
 DEPENDENCIES = ['homematic']
 
-SENSOR_TYPES = {
-    "HMWindowHandle": "handle",
-}
+ROTARYHANDLESENSOR = ["HM-Sec-RHS",
+                      "ZEL STG RM FDK",
+                      "HM-Sec-RHS-2",
+                      "HM-Sec-xx"]
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
@@ -90,9 +94,13 @@ class HMSensor(homematic.HMDevice, Entity):
             self.update_ha_state()
 
         super().connect_to_homematic()
+        # pylint: disable=protected-access
+        if (not self._hmdevice._PARENT and self._hmdevice._TYPE
+                in ROTARYHANDLESENSOR) or \
+           (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
+            in ROTARYHANDLESENSOR):
+            self.sensor_class = 'handle'
 
-        self._sensor_class = SENSOR_TYPES.get(type(self._hmdevice).__name__,
-                                              None)
         if self._is_available:
             self._state = self._hmdevice.state
             self._sabotage = self._hmdevice.sabotage
