@@ -96,6 +96,9 @@ class AlexaView(HomeAssistantView):
         card = config.get(CONF_CARD)
         action = config.get(CONF_ACTION)
 
+        if action is not None:
+            action.run(response.variables)
+
         # pylint: disable=unsubscriptable-object
         if speech is not None:
             response.add_speech(SpeechType[speech['type']], speech['text'])
@@ -103,9 +106,6 @@ class AlexaView(HomeAssistantView):
         if card is not None:
             response.add_card(CardType[card['type']], card['title'],
                               card['content'])
-
-        if action is not None:
-            action.run(response.variables)
 
         return self.json(response)
 
