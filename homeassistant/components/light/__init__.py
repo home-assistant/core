@@ -10,9 +10,7 @@ import csv
 
 import voluptuous as vol
 
-from homeassistant.components import (
-    group, discovery, wemo, wink, isy994,
-    zwave, insteon_hub, mysensors, tellstick, vera)
+from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -59,19 +57,6 @@ EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
-
-# Maps discovered services to their platforms.
-DISCOVERY_PLATFORMS = {
-    wemo.DISCOVER_LIGHTS: 'wemo',
-    wink.DISCOVER_LIGHTS: 'wink',
-    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
-    isy994.DISCOVER_LIGHTS: 'isy994',
-    discovery.SERVICE_HUE: 'hue',
-    zwave.DISCOVER_LIGHTS: 'zwave',
-    mysensors.DISCOVER_LIGHTS: 'mysensors',
-    tellstick.DISCOVER_LIGHTS: 'tellstick',
-    vera.DISCOVER_LIGHTS: 'vera',
-}
 
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
@@ -172,8 +157,7 @@ def toggle(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """Expose light control via statemachine and services."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_LIGHTS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     component.setup(config)
 
     # Load built-in profiles and custom profiles

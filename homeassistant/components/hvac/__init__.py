@@ -14,7 +14,6 @@ import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components import zwave
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELCIUS)
@@ -56,10 +55,6 @@ ATTR_SWING_MODE = "swing_mode"
 ATTR_SWING_LIST = "swing_list"
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVERY_PLATFORMS = {
-    zwave.DISCOVER_HVAC: 'zwave'
-}
 
 
 def set_away_mode(hass, away_mode, entity_id=None):
@@ -139,8 +134,7 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """Setup hvacs."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass,
-                                SCAN_INTERVAL, DISCOVERY_PLATFORMS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 
     descriptions = load_yaml_config_file(

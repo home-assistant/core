@@ -8,15 +8,12 @@ import logging
 import os
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_API_KEY, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers import discovery
+from homeassistant.const import CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.util import Throttle
 
 DOMAIN = "ecobee"
-DISCOVER_THERMOSTAT = "ecobee.thermostat"
-DISCOVER_SENSORS = "ecobee.sensor"
 NETWORK = None
 HOLD_TEMP = 'hold_temp'
 
@@ -70,23 +67,11 @@ def setup_ecobee(hass, network, config):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    # Ensure component is loaded
-    bootstrap.setup_component(hass, 'thermostat', config)
-    bootstrap.setup_component(hass, 'sensor', config)
-
     hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
 
-    # Fire thermostat discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_THERMOSTAT,
-        ATTR_DISCOVERED: {'hold_temp': hold_temp}
-    })
-
-    # Fire sensor discovery event
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-        ATTR_SERVICE: DISCOVER_SENSORS,
-        ATTR_DISCOVERED: {}
-    })
+    discovery.load_platform(hass, 'thermostat', DOMAIN,
+                            {'hold_temp': hold_temp}, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, None, config)
 
 
 # pylint: disable=too-few-public-methods
