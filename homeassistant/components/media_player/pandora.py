@@ -170,7 +170,7 @@ class PianobarRemote(object):
     def start(self):
         """Start the pianobar subprocess."""
         import pexpect
-        self._pianobar = pexpect.spawn('sudo -u pi pianobar')
+        self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info('Started pianobar subprocess')
 
     def stop(self):
