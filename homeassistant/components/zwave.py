@@ -57,6 +57,7 @@ TYPE_WHATEVER = None
 TYPE_BYTE = "Byte"
 TYPE_BOOL = "Bool"
 TYPE_DECIMAL = "Decimal"
+TYPE_BUTTON = "Button"
 
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
@@ -91,6 +92,10 @@ DISCOVERY_COMPONENTS = [
     ('lock',
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
+     GENRE_USER),
+    ('rollershutter',
+     [COMMAND_CLASS_SWITCH_MULTILEVEL],
+     TYPE_BUTTON,
      GENRE_USER),
 ]
 

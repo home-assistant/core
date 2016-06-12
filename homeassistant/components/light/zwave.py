@@ -7,10 +7,22 @@ https://home-assistant.io/components/light.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from threading import Timer
-
+import logging
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.const import STATE_OFF, STATE_ON
+
+FIBARO = 0x010F
+FIBARO_FGRM_222 = 0x1000
+FIBARO_FGRM_222_ROLLERSHUTTER = (FIBARO, FIBARO_FGRM_222)
+
+WORKAROUND_IGNORE = 'ignore'
+
+DEVICE_MAPPINGS = {
+    FIBARO_FGRM_222_ROLLERSHUTTER: WORKAROUND_IGNORE
+}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -20,6 +32,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
+    # Make sure that we have values for the key before converting to int
+    if (value.node.manufacturer_id.strip() and
+            value.node.product_id.strip()):
+        specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                               int(value.node.product_id, 16))
+        if specific_sensor_key in DEVICE_MAPPINGS:
+            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
+                _LOGGER.debug("Fibaro FGRM-222 Rollershutter, ignoring")
+                return
 
     if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
