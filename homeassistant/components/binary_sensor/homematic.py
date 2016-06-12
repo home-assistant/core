@@ -4,12 +4,27 @@ The homematic binary sensor platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
 
-Configuration:
+Important: For this platform to work the homematic component has to be
+properly configured.
+
+Configuration (single channel):
 
 binary_sensor:
   - platform: homematic
     address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>"
+    name: "<User defined name>" (optional)
+
+
+Configuration (multiple channels):
+
+binary_sensor:
+  - platform: homematic
+    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
+    button: n (integer of channel to map, device-dependent)
+    name: "<User defined name>" (optional)
+binary_sensor:
+  - platform: homematic
+  ...
 """
 
 import logging
@@ -31,8 +46,46 @@ SENSOR_TYPES = {
     "loudness": "sound"
 }
 
-HMSHUTTERCONTACTS = ["HM-Sec-SC", "HM-Sec-SC-2", "ZEL STG RM FFK"]
-HMREMOTES = ["HM-RC-8"]
+HMSHUTTERCONTACTS = ["HM-Sec-SC",
+                     "HM-Sec-SC-2",
+                     "ZEL STG RM FFK",
+                     "HM-Sec-SCo"]
+HMREMOTES = ["BRC-H",
+             "HM-RC-2-PBU-FM",
+             "HM-RC-Dis-H-x-EU",
+             "HM-RC-4",
+             "HM-RC-4-B",
+             "HM-RC-4-2",
+             "HM-RC-4-3",
+             "HM-RC-4-3-D",
+             "HM-RC-8",
+             "HM-RC-12",
+             "HM-RC-12-B",
+             "HM-RC-12-SW",
+             "HM-RC-19",
+             "HM-RC-19-B",
+             "HM-RC-19-SW",
+             "HM-RC-Key3",
+             "HM-RC-Key3-B",
+             "HM-RC-Key4-2",
+             "HM-RC-Key4-3",
+             "HM-RC-Sec3",
+             "HM-RC-Sec3-B",
+             "HM-RC-Sec4-2",
+             "HM-RC-Sec4-3",
+             "HM-RC-P1",
+             "HM-RC-SB-X",
+             "HM-RC-X",
+             "HM-PB-2-WM",
+             "HM-PB-4-WM",
+             "HM-PB-6-WM55"
+             "RC-H",
+             "atent",
+             "ZEL STG RM HS 4"]
+WALLBUTTONS = ["HM-PB-2-WM55-2",
+               "HM-PB-2-WM55",
+               "ZEL STG RM WT 2",
+               "263 135"]
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
@@ -115,7 +168,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                           self._hmdevice._ADDRESS)
             self._sensor_class = 'opening'
             if self._is_available:
-                self._state = self._hmdevice.state
+                self._state = self._hmdevice.is_open
         # pylint: disable=protected-access
         elif (not self._hmdevice._PARENT and
               self._hmdevice._TYPE in HMREMOTES) or \
@@ -123,6 +176,19 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
               in HMREMOTES):
             # pylint: disable=protected-access
             _LOGGER.debug("Setting up HMRemote %s", self._hmdevice._ADDRESS)
+            self._sensor_class = 'remote button'
+            # pylint: disable=attribute-defined-outside-init
+            self._button = self._config.get('button', None)
+            if not self._button:
+                _LOGGER.error("No button defined for '%s'", self._address)
+                self._is_available = False
+        # pylint: disable=protected-access
+        elif (not self._hmdevice._PARENT and
+                      self._hmdevice._TYPE in WALLBUTTONS) or \
+                (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
+                in WALLBUTTONS):
+            # pylint: disable=protected-access
+            _LOGGER.debug("Setting up HMWallbutton %s", self._hmdevice._ADDRESS)
             self._sensor_class = 'remote button'
             # pylint: disable=attribute-defined-outside-init
             self._button = self._config.get('button', None)
