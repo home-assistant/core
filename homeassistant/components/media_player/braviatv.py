@@ -1,4 +1,3 @@
-# flake8: noqa
 """
 Support for interface with an Sony Bravia TV.
 
@@ -9,38 +8,48 @@ dedicated to Isabel
 """
 import logging
 import os
-import base64
 import json
-import socket
-import struct
 import re
-from subprocess import Popen, PIPE
 from io import StringIO
-import requests
 from homeassistant.loader import get_component
-
-
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
+
+REQUIREMENTS = [
+    'https://github.com/aparraga/braviarc/archive/0.2.zip'
+    '#braviarc==0.2']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
 NICKNAME = 'Home Assistant'
-TIMEOUT = 10
 
 # Map ip to request id for configuring
 _CONFIGURING = {}
 
 _LOGGER = logging.getLogger(__name__)
 
-
 SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-                 SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_PREVIOUS_TRACK | \
-                 SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+                 SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+                 SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+                 SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+
+
+def _jdata_build(method, params):
+    if params:
+        ret = json.dumps({"method": method,
+                          "params": [params],
+                          "id": 1,
+                          "version": "1.0"})
+    else:
+        ret = json.dumps({"method": method,
+                          "params": [],
+                          "id": 1,
+                          "version": "1.0"})
+    return ret
 
 
 def _config_from_file(filename, config=None):
@@ -88,7 +97,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     pin = None
     bravia_config = _config_from_file(hass.config.path(BRAVIA_CONFIG_FILE))
     while len(bravia_config):
-        # Setup a configured PlexServer
+        # Setup a configured TV
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config['pin']
@@ -148,8 +157,10 @@ def request_configuration(config, hass, add_devices_callback):
 
     def bravia_configuration_callback(data):
         """Callback after user enter PIN."""
+        from braviarc import braviarc
+
         pin = data.get('pin')
-        cookie = _bravia_auth(host, pin)
+        cookie = braviarc.bravia_auth(host, pin, CLIENTID_PREFIX, NICKNAME)
         if not cookie:
             request_configuration(config, hass, add_devices_callback)
         else:
@@ -165,82 +176,25 @@ def request_configuration(config, hass, add_devices_callback):
     )
 
 
-def _jdata_build(method, params):
-    if params:
-        ret = json.dumps({"method": method, "params": [params], "id": 1, "version": "1.0"})
-    else:
-        ret = json.dumps({"method": method, "params": [], "id": 1, "version": "1.0"})
-    return ret
-
-
-def _wakeonlan(ethernet_address):
-    addr_byte = ethernet_address.split(':')
-    hw_addr = struct.pack('BBBBBB', int(addr_byte[0], 16),
-                          int(addr_byte[1], 16),
-                          int(addr_byte[2], 16),
-                          int(addr_byte[3], 16),
-                          int(addr_byte[4], 16),
-                          int(addr_byte[5], 16))
-    msg = b'\xff' * 6 + hw_addr * 16
-    socket_instance = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    socket_instance.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    socket_instance.sendto(msg, ('<broadcast>', 9))
-    socket_instance.close()
-
-
-def _bravia_auth(ip_address, pin):
-
-    authorization = json.dumps(
-        {"method": "actRegister",
-         "params": [{"clientid": CLIENTID_PREFIX,
-                     "nickname": NICKNAME,
-                     "level": "private"},
-                    [{"value": "yes",
-                      "function": "WOL"}]],
-         "id": 1,
-         "version": "1.0"}
-    ).encode('utf-8')
-
-    headers = {}
-    if pin:
-        username = ''
-        base64string = base64.encodebytes(('%s:%s' % (username, pin)).encode())\
-            .decode().replace('\n', '')
-        headers['Authorization'] = "Basic %s" % base64string
-        headers['Connection'] = "keep-alive"
-
-    try:
-        response = requests.post('http://'+ip_address+'/sony/accessControl',
-                                 data=authorization, headers=headers, timeout=TIMEOUT)
-
-    except requests.exceptions.HTTPError as exception_instance:
-        _LOGGER.error("[W] HTTPError: " + str(exception_instance))
-        return None
-
-    except Exception as exception_instance:  # pylint: disable=broad-except
-        _LOGGER.error("[W] Exception: " + str(exception_instance))
-        return None
-
-    else:
-        _LOGGER.info(json.dumps(response.json(), indent=4))
-        return response.cookies
-
-    return None
-
-
 def _get_mac_address(ip_address):
+    from subprocess import Popen, PIPE
+
     pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
     pid_component = pid.communicate()[0]
-    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'), pid_component).groups()[0]
+    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
+                    pid_component).groups()[0]
     return mac
 
 
-# pylint: disable=abstract-method, too-many-public-methods, too-many-instance-attributes, too-many-arguments
+# pylint: disable=abstract-method, too-many-public-methods,
+# pylint: disable=too-many-instance-attributes, too-many-arguments
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
     def __init__(self, host, mac, name, pin):
         """Initialize the sony bravia device."""
+        from braviarc import braviarc
+
         self._host = host
         self._name = name
         self._mac = mac
@@ -264,8 +218,12 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._volume = None
         self._commands = []  # it is initialized by the update method
         self._cookies = None
+        self._braviarc = braviarc
 
-        cookie = _bravia_auth(host, pin)
+        cookie = self._braviarc.bravia_auth(host,
+                                            pin,
+                                            CLIENTID_PREFIX,
+                                            NICKNAME)
         if not cookie:
             self._state = STATE_OFF
             return
@@ -277,7 +235,10 @@ class BraviaTVDevice(MediaPlayerDevice):
     def update(self):
         """Update TV info."""
         if self._cookies is None:
-            cookie = _bravia_auth(self._host, self._pin)
+            cookie = self._braviarc.bravia_auth(self._host,
+                                                self._pin,
+                                                CLIENTID_PREFIX,
+                                                NICKNAME)
             if not cookie:
                 return
             else:
@@ -285,8 +246,13 @@ class BraviaTVDevice(MediaPlayerDevice):
 
         # Retrieve the latest data.
         try:
-            resp = self._bravia_req_json("sony/avContent", _jdata_build("getPlayingContentInfo",
-                                                                        None))
+            resp = self._braviarc.\
+                bravia_req_json(self._host,
+                                self._cookies,
+                                "sony/avContent",
+                                _jdata_build(
+                                    "getPlayingContentInfo",
+                                    None))
             if resp is None:
                 self._state = STATE_OFF
             elif not resp.get('error'):
@@ -294,24 +260,37 @@ class BraviaTVDevice(MediaPlayerDevice):
                 playing_content_data = resp.get('result')[0]
                 self._program_name = playing_content_data.get('programTitle')
                 self._channel_name = playing_content_data.get('title')
-                self._program_media_type = playing_content_data.get('programMediaType')
+                self._program_media_type = playing_content_data.get(
+                    'programMediaType')
                 self._channel_number = playing_content_data.get('dispNum')
                 self._source = playing_content_data.get('source')
                 self._content_uri = playing_content_data.get('uri')
                 self._duration = playing_content_data.get('durationSec')
-                self._start_date_time = playing_content_data.get('startDateTime')
+                self._start_date_time = playing_content_data.get(
+                    'startDateTime')
 
                 # update command data the very first time
                 if len(self._commands) == 0:
-                    resp = self._bravia_req_json("sony/system",
-                                                 _jdata_build("getRemoteControllerInfo", None))
+                    resp = self._braviarc.\
+                        bravia_req_json(self._host,
+                                        self._cookies,
+                                        "sony/system",
+                                        _jdata_build(
+                                            "getRemoteControllerInfo",
+                                            None))
                     if not resp.get('error'):
                         self._commands = resp.get('result')[1]
                     else:
-                        _LOGGER.error("JSON request error: " + json.dumps(resp, indent=4))
+                        _LOGGER.error("JSON request error: " +
+                                      json.dumps(resp, indent=4))
 
-                resp = self._bravia_req_json("sony/audio",
-                                             _jdata_build("getVolumeInformation", None))
+                resp = self.\
+                    _braviarc.bravia_req_json(self._host,
+                                              self._cookies,
+                                              "sony/audio",
+                                              _jdata_build(
+                                                  "getVolumeInformation",
+                                                  None))
                 if not resp.get('error'):
                     results = resp.get('result')[0]
                     for result in results:
@@ -321,43 +300,21 @@ class BraviaTVDevice(MediaPlayerDevice):
                             self._max_volume = result.get('maxVolume')
                             self._muted = result.get('mute')
                 else:
-                    _LOGGER.error("JSON request error:" + json.dumps(resp, indent=4))
+                    _LOGGER.error("JSON request error:" +
+                                  json.dumps(resp, indent=4))
 
                 if len(self._source_list) == 0:
-                    self._load_source_list()
+                    self._content_mapping = self._braviarc.\
+                        load_source_list(self._host, self._cookies)
+                    self._source_list = []
+                    for key in self._content_mapping:
+                        self._source_list.append(key)
             else:
                 self._state = STATE_OFF
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
-
-    def _load_source_list(self):
-        resp = self._bravia_req_json("sony/avContent",
-                                     _jdata_build("getSourceList", {"scheme": "tv"}))
-        if not resp.get('error'):
-            self._original_content_list = []
-            results = resp.get('result')[0]
-            for result in results:
-                if result['source'] == 'tv:dvbc':  # via cable
-                    resp = self._bravia_req_json("sony/avContent",
-                                                 _jdata_build("getContentList",
-                                                              {"source": "tv:dvbc"}))
-                    if not resp.get('error'):
-                        self._original_content_list.extend(resp.get('result')[0])
-                elif result['source'] == 'tv:dvbt':  # via DTT
-                    resp = self._bravia_req_json("sony/avContent",
-                                                 _jdata_build("getContentList",
-                                                              {"source": "tv:dvbt"}))
-                    if not resp.get('error'):
-                        self._original_content_list.extend(resp.get('result')[0])
-
-            source_list = []
-            for content_item in self._original_content_list:
-                title = content_item['title']
-                source_list.append(title)
-                self._content_mapping[title] = content_item['uri']
-            self._source_list = source_list
 
     def _get_command_code(self, command_name):
         for command_data in self._commands:
@@ -422,38 +379,53 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._bravia_req_json("sony/audio",
-                              _jdata_build("setAudioVolume",
-                                           {"target": "speaker", "volume": volume * 100}))
+        self._braviarc.\
+            bravia_req_json(self._host,
+                            self._cookies,
+                            "sony/audio",
+                            _jdata_build("setAudioVolume",
+                                         {"target": "speaker",
+                                          "volume": volume * 100}))
 
     def turn_on(self):
         """Turn the media player on."""
-        _wakeonlan(self._mac)
+        self._braviarc.wakeonlan(self._mac)
         self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
-        self._send_req_ircc(self._get_command_code('PowerOff'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('PowerOff'))
         self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
-        self._send_req_ircc(self._get_command_code('VolumeUp'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('VolumeUp'))
 
     def volume_down(self):
         """Volume down media player."""
-        self._send_req_ircc(self._get_command_code('VolumeDown'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('VolumeDown'))
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._send_req_ircc(self._get_command_code('Mute'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('Mute'))
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._content_mapping:
             uri = self._content_mapping[source]
-            self._bravia_req_json("sony/avContent",
-                                  _jdata_build("setPlayContent", {"uri": uri}))
+            self._braviarc.bravia_req_json(self._host,
+                                           self._cookies,
+                                           "sony/avContent",
+                                           _jdata_build("setPlayContent",
+                                                        {"uri": uri}))
 
     def media_play_pause(self):
         """Simulate play pause media player."""
@@ -465,57 +437,25 @@ class BraviaTVDevice(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         self._playing = True
-        self._send_req_ircc(self._get_command_code('Play'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('Play'))
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
-        self._send_req_ircc(self._get_command_code('Pause'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('Pause'))
 
     def media_next_track(self):
         """Send next track command."""
-        self._send_req_ircc(self._get_command_code('Next'))
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('Next'))
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self._send_req_ircc(self._get_command_code('Prev'))
-
-    def _send_req_ircc(self, params):
-        """Send an IRCC command via HTTP to Sony Bravia."""
-        headers = {'SOAPACTION': 'urn:schemas-sony-com:service:IRCC:1#X_SendIRCC'}
-        data = ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org" +
-                "/soap/envelope/\" " +
-                "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body>" +
-                "<u:X_SendIRCC " +
-                "xmlns:u=\"urn:schemas-sony-com:service:IRCC:1\"><IRCCCode>" +
-                params+"</IRCCCode></u:X_SendIRCC></s:Body></s:Envelope>").encode("UTF-8")
-        try:
-            response = requests.post('http://' + self._host + '/sony/IRCC',
-                                     headers=headers,
-                                     cookies=self._cookies,
-                                     data=data,
-                                     timeout=TIMEOUT)
-        except requests.exceptions.HTTPError as exception_instance:
-            _LOGGER.error("[W] HTTPError: " + str(exception_instance))
-
-        except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error("[W] Exception: " + str(exception_instance))
-        else:
-            content = response.content
-            return content
-
-    def _bravia_req_json(self, url, params):
-        try:
-            response = requests.post('http://'+self._host+'/'+url,
-                                     data=params.encode("UTF-8"),
-                                     cookies=self._cookies,
-                                     timeout=TIMEOUT)
-        except requests.exceptions.HTTPError as exception_instance:
-            _LOGGER.error("[W] HTTPError: " + str(exception_instance))
-
-        except Exception as exception_instance:  # pylint: disable=broad-except
-            _LOGGER.error("[W] Exception: " + str(exception_instance))
-
-        else:
-            html = json.loads(response.content.decode('utf-8'))
-            return html
+        self._braviarc.send_req_ircc(self._host,
+                                     self._cookies,
+                                     self._get_command_code('Prev'))
