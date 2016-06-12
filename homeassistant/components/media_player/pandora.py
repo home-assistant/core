@@ -60,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # pylint: disable=too-many-instance-attributes
 class PandoraMediaPlayer(MediaPlayerDevice):
     """A media player that uses the Pianobar interface to Pandora."""
+
     # pylint: disable=abstract-method
     def __init__(self, name):
         """Initialize the demo device."""
@@ -241,7 +242,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.warning('No station match. ')
 
     def _update_current_song(self, response):
-        """Updates info about current song."""
+        """Update info about current song."""
         song_match = re.search(CURRENT_SONG_PATTERN, response)
         if song_match:
             (self._media_title, self._media_artist,
@@ -273,7 +274,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._time_remaining = time_remaining
 
     def _log_match(self):
-        """Log grabbed values from console"""
+        """Log grabbed values from console."""
         _LOGGER.debug('Before: %s\nMatch: %s\nAfter: %s',
                       repr(self._pianobar.before),
                       repr(self._pianobar.match),
@@ -306,7 +307,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     def _clear_buffer(self):
         """
-        Clear buffer from pexpect
+        Clear buffer from pexpect.
 
         This is necessary because there are a bunch of 00:00 in the buffer
 
