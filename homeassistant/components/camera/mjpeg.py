@@ -70,9 +70,11 @@ class MjpegCamera(Camera):
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from the camera."""
         stream = self.camera_stream()
-        response.mimetype = stream.headers[CONTENT_TYPE_HEADER]
-        response.response = stream.iter_content(chunk_size=1024)
-        return response
+        return response(
+            stream.iter_content(chunk_size=1024),
+            mimetype=stream.headers[CONTENT_TYPE_HEADER],
+            direct_passthrough=True
+        )
 
     @property
     def name(self):
