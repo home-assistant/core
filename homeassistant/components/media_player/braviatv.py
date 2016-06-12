@@ -1,5 +1,5 @@
 """
-Support for interface with an Sony Bravia TV.
+Support for interface with a Sony Bravia TV.
 
 By Antonio Parraga Navarro
 
