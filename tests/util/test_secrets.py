@@ -3,7 +3,6 @@
 import unittest
 import os
 import collections
-import logging
 
 import homeassistant.config as config_util
 import homeassistant.util.secrets as secrets
