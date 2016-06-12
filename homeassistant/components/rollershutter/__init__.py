@@ -29,9 +29,6 @@ ENTITY_ID_ALL_ROLLERSHUTTERS = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {}
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
@@ -68,8 +65,7 @@ def stop(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for roller shutters."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_ROLLERSHUTTERS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
     def handle_rollershutter_service(service):

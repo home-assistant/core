@@ -15,7 +15,6 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
-from homeassistant.components import (ecobee, zwave)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
@@ -44,11 +43,6 @@ ATTR_TEMPERATURE_HIGH = "target_temp_high"
 ATTR_OPERATION = "current_operation"
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVERY_PLATFORMS = {
-    ecobee.DISCOVER_THERMOSTAT: 'ecobee',
-    zwave.DISCOVER_THERMOSTATS: 'zwave'
-}
 
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -101,8 +95,7 @@ def set_fan_mode(hass, fan_mode, entity_id=None):
 # pylint: disable=too-many-branches
 def setup(hass, config):
     """Setup thermostats."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass,
-                                SCAN_INTERVAL, DISCOVERY_PLATFORMS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     component.setup(config)
 
     descriptions = load_yaml_config_file(
