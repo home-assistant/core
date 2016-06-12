@@ -17,16 +17,18 @@ SENSOR_TYPES = ["Temperature",
                 "Humidity",
                 "Pressure",
                 "Luminance",
-                "UVIndex"]
+                "UVIndex",
+                "Voltage"]
 
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS = {"Temperature": TEMP_FAHRENHEIT,
                 "Humidity": "%",
                 "Pressure": "inHg",
-                "Luminance": "cd/m²"}
+                "Luminance": "cd/m²",
+                "Voltage": "mV"}
 
 # Which sensors to format numerically
-FORMAT_NUMBERS = ["Temperature", "Pressure"]
+FORMAT_NUMBERS = ["Temperature", "Pressure", "Voltage"]
 
 
 # pylint: disable=unused-argument
