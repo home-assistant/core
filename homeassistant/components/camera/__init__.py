@@ -89,8 +89,6 @@ class Camera(Entity):
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from camera images."""
         import eventlet
-        response.content_type = ('multipart/x-mixed-replace; '
-                                 'boundary=--jpegboundary')
 
         def stream():
             """Stream images as mjpeg stream."""
@@ -112,9 +110,11 @@ class Camera(Entity):
             except GeneratorExit:
                 pass
 
-        response.response = stream()
-
-        return response
+        return response(
+            stream(),
+            content_type=('multipart/x-mixed-replace; '
+                          'boundary=--jpegboundary')
+        )
 
     @property
     def state(self):
@@ -196,4 +196,4 @@ class CameraMjpegStream(CameraView):
 
     def handle(self, camera):
         """Serve camera image."""
-        return camera.mjpeg_stream(self.Response())
+        return camera.mjpeg_stream(self.Response)
