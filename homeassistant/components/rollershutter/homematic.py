@@ -4,12 +4,15 @@ The homematic rollershutter platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/rollershutter.homematic/
 
+Important: For this platform to work the homematic component has to be
+properly configured.
+
 Configuration:
 
 rollershutter:
   - platform: homematic
     address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>"
+    name: "<User defined name>" (optional)
 """
 
 import logging
