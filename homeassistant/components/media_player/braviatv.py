@@ -20,8 +20,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.2.zip'
-    '#braviarc==0.2']
+    'https://github.com/aparraga/braviarc/archive/0.2.1.zip'
+    '#braviarc==0.2.1']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
@@ -199,6 +199,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._name = name
         self._mac = mac
         self._pin = pin
+        self._state = STATE_OFF
         self._muted = False
         self._program_name = None
         self._channel_name = None
@@ -269,39 +270,12 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._start_date_time = playing_content_data.get(
                     'startDateTime')
 
+                # refresh volume info:
+                self._refresh_volume()
+
                 # update command data the very first time
                 if len(self._commands) == 0:
-                    resp = self._braviarc.\
-                        bravia_req_json(self._host,
-                                        self._cookies,
-                                        "sony/system",
-                                        _jdata_build(
-                                            "getRemoteControllerInfo",
-                                            None))
-                    if not resp.get('error'):
-                        self._commands = resp.get('result')[1]
-                    else:
-                        _LOGGER.error("JSON request error: " +
-                                      json.dumps(resp, indent=4))
-
-                resp = self.\
-                    _braviarc.bravia_req_json(self._host,
-                                              self._cookies,
-                                              "sony/audio",
-                                              _jdata_build(
-                                                  "getVolumeInformation",
-                                                  None))
-                if not resp.get('error'):
-                    results = resp.get('result')[0]
-                    for result in results:
-                        if result.get('target') == 'speaker':
-                            self._volume = result.get('volume')
-                            self._min_volume = result.get('minVolume')
-                            self._max_volume = result.get('maxVolume')
-                            self._muted = result.get('mute')
-                else:
-                    _LOGGER.error("JSON request error:" +
-                                  json.dumps(resp, indent=4))
+                    self._refresh_commands()
 
                 if len(self._source_list) == 0:
                     self._content_mapping = self._braviarc.\
@@ -309,12 +283,47 @@ class BraviaTVDevice(MediaPlayerDevice):
                     self._source_list = []
                     for key in self._content_mapping:
                         self._source_list.append(key)
+
             else:
                 self._state = STATE_OFF
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
+
+    def _refresh_volume(self):
+        resp = self. \
+            _braviarc.bravia_req_json(self._host,
+                                      self._cookies,
+                                      "sony/audio",
+                                      _jdata_build(
+                                          "getVolumeInformation",
+                                          None))
+        if not resp.get('error'):
+            results = resp.get('result')[0]
+            for result in results:
+                if result.get('target') == 'speaker':
+                    self._volume = result.get('volume')
+                    self._min_volume = result.get('minVolume')
+                    self._max_volume = result.get('maxVolume')
+                    self._muted = result.get('mute')
+        else:
+            _LOGGER.error("JSON request error:" +
+                          json.dumps(resp, indent=4))
+
+    def _refresh_commands(self):
+        resp = self._braviarc. \
+            bravia_req_json(self._host,
+                            self._cookies,
+                            "sony/system",
+                            _jdata_build(
+                                "getRemoteControllerInfo",
+                                None))
+        if not resp.get('error'):
+            self._commands = resp.get('result')[1]
+        else:
+            _LOGGER.error("JSON request error: " +
+                          json.dumps(resp, indent=4))
 
     def _get_command_code(self, command_name):
         for command_data in self._commands:
@@ -345,7 +354,10 @@ class BraviaTVDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume / 100
+        if self._volume is not None:
+            return self._volume / 100
+        else:
+            return None
 
     @property
     def is_volume_muted(self):
