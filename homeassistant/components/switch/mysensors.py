@@ -80,13 +80,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def send_ir_code_service(service):
         """Set IR code as device state attribute."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
         ir_code = service.data.get(ATTR_IR_CODE)
 
-        if entity_id:
+        if entity_ids:
             _devices = [device for device in devices.values()
                         if isinstance(device, MySensorsIRSwitch) and
-                        device.entity_id == entity_id]
+                        device.entity_id in entity_ids]
         else:
             _devices = [device for device in devices.values()
                         if isinstance(device, MySensorsIRSwitch)]
