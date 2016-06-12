@@ -72,7 +72,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data."""
         # Send an empty key to see if we are still connected
-        return self.send_key('KEY_POWER')
+        return self.send_key('KEY')
 
     def get_remote(self):
         """Create or return a remote control instance."""
