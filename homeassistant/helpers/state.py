@@ -12,6 +12,8 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE, SERVICE_NOTIFY)
 from homeassistant.components.sun import (
     STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
+from homeassistant.components.switch.mysensors import (
+    ATTR_IR_CODE, SERVICE_SEND_IR_CODE)
 from homeassistant.components.thermostat import (
     ATTR_AWAY_MODE, ATTR_FAN, SERVICE_SET_AWAY_MODE, SERVICE_SET_FAN_MODE,
     SERVICE_SET_TEMPERATURE)
@@ -55,6 +57,7 @@ SERVICE_ATTRIBUTES = {
     SERVICE_SET_OPERATION_MODE: [ATTR_OPERATION_MODE],
     SERVICE_SET_AUX_HEAT: [ATTR_AUX_HEAT],
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
+    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE]
 }
 
 # Update this dict when new services are added to HA.
