@@ -47,6 +47,8 @@ STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the media player pandora platform."""
+    if not _pianobar_exists():
+        return False
     pandora = PandoraMediaPlayer('Pandora')
 
     # make sure we end the pandora subprocess on exit in case user doesn't
@@ -76,7 +78,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._time_remaining = 0
         self._media_duration = 0
         self._pianobar = None
-        _verify_pianobar()
 
     @property
     def should_poll(self):
@@ -322,12 +323,15 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             pass
 
 
-def _verify_pianobar():
+def _pianobar_exists():
     """Verify that Pianobar is properly installed."""
     pianobar_exe = shutil.which('pianobar')
-    if not pianobar_exe:
-        raise RuntimeError('The Pandora component depends on the Pianobar '
-                           'client, which cannot be found. Please install '
-                           'using instructions at'
-                           'https://home-assistant.io'
-                           '/components/media_player.pandora/')
+    if pianobar_exe:
+        return True
+    else:
+        _LOGGER.warning('The Pandora component depends on the Pianobar '
+                        'client, which cannot be found. Please install '
+                        'using instructions at'
+                        'https://home-assistant.io'
+                        '/components/media_player.pandora/')
+        return False
