@@ -10,6 +10,7 @@ import re
 import os
 import signal
 from datetime import timedelta
+import shutil
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.media_player import (
@@ -75,6 +76,17 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._time_remaining = 0
         self._media_duration = 0
         self._pianobar = None
+        self._verify_pianobar()
+
+    def _verify_pianobar(self):
+        """Verify that Pianobar is properly installed."""
+        pianobar_exe = shutil.which('pianobar')
+        if not pianobar_exe:
+            raise RuntimeError('The Pandora component depends on the Pianobar '
+                               'client, which cannot be found. Please install '
+                               'using instructions at'
+                               'https://home-assistant.io'
+                               '/components/media_player.pandora/')
 
     @property
     def should_poll(self):
