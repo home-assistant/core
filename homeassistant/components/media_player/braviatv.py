@@ -76,10 +76,10 @@ def _config_from_file(filename, config=None):
         else:
             return {}
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Sony Bravia TV platform."""
-
     host = config.get(CONF_HOST)
 
     if host is None:
@@ -103,7 +103,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 # pylint: disable=too-many-branches
 def setup_bravia(config, pin, hass, add_devices_callback):
     """Setup a sony bravia based on host parameter."""
-
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     if name is None:
@@ -134,7 +133,6 @@ def setup_bravia(config, pin, hass, add_devices_callback):
 
 def request_configuration(config, hass, add_devices_callback):
     """Request configuration steps from the user."""
-
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     if name is None:
@@ -149,8 +147,7 @@ def request_configuration(config, hass, add_devices_callback):
         return
 
     def bravia_configuration_callback(data):
-        """ Callback after user enter PIN """
-
+        """Callback after user enter PIN."""
         pin = data.get('pin')
         cookie = _bravia_auth(host, pin)
         if not cookie:
@@ -244,7 +241,6 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, mac, name, pin):
         """Initialize the sony bravia device."""
-
         self._host = host
         self._name = name
         self._mac = mac
@@ -279,7 +275,7 @@ class BraviaTVDevice(MediaPlayerDevice):
             self.update()
 
     def update(self):
-
+        """Update TV info."""
         if self._cookies is None:
             cookie = _bravia_auth(self._host, self._pin)
             if not cookie:
@@ -485,8 +481,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._send_req_ircc(self._get_command_code('Prev'))
 
     def _send_req_ircc(self, params):
-        """ Send an IRCC command via HTTP to Sony Bravia """
-
+        """Send an IRCC command via HTTP to Sony Bravia."""
         headers = {'SOAPACTION': 'urn:schemas-sony-com:service:IRCC:1#X_SendIRCC'}
         data = ("<?xml version=\"1.0\"?><s:Envelope xmlns:s=\"http://schemas.xmlsoap.org" +
                 "/soap/envelope/\" " +
