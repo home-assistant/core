@@ -76,17 +76,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._time_remaining = 0
         self._media_duration = 0
         self._pianobar = None
-        self._verify_pianobar()
-
-    def _verify_pianobar(self):
-        """Verify that Pianobar is properly installed."""
-        pianobar_exe = shutil.which('pianobar')
-        if not pianobar_exe:
-            raise RuntimeError('The Pandora component depends on the Pianobar '
-                               'client, which cannot be found. Please install '
-                               'using instructions at'
-                               'https://home-assistant.io'
-                               '/components/media_player.pandora/')
+        _verify_pianobar()
 
     @property
     def should_poll(self):
@@ -330,3 +320,14 @@ class PandoraMediaPlayer(MediaPlayerDevice):
                 pass
         except pexpect.exceptions.TIMEOUT:
             pass
+
+
+def _verify_pianobar():
+    """Verify that Pianobar is properly installed."""
+    pianobar_exe = shutil.which('pianobar')
+    if not pianobar_exe:
+        raise RuntimeError('The Pandora component depends on the Pianobar '
+                           'client, which cannot be found. Please install '
+                           'using instructions at'
+                           'https://home-assistant.io'
+                           '/components/media_player.pandora/')
