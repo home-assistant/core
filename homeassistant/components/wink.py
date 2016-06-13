@@ -19,6 +19,9 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
 
     if not validate_config(config, {DOMAIN: [CONF_ACCESS_TOKEN]}, logger):
+        logger.error(
+            "Missing wink access_token - "
+            "get one at https://winkbearertoken.appspot.com/")
         return False
 
     import pywink

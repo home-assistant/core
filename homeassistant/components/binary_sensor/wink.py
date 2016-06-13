@@ -4,10 +4,8 @@ Support for Wink sensors.
 For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.wink/
 """
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-wink==0.7.6']
@@ -24,17 +22,6 @@ SENSOR_TYPES = {
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
-
-    if discovery_info is None:
-        token = config.get(CONF_ACCESS_TOKEN)
-
-        if token is None:
-            logging.getLogger(__name__).error(
-                "Missing wink access_token. "
-                "Get one at https://winkbearertoken.appspot.com/")
-            return
-
-        pywink.set_bearer_token(token)
 
     for sensor in pywink.get_sensors():
         if sensor.capability() in SENSOR_TYPES:
