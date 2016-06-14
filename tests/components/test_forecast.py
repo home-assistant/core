@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import forecastio
 import httpretty
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.sensor import forecast
@@ -46,8 +45,8 @@ class TestForecastSetup(unittest.TestCase):
         msg = '400 Client Error: Bad Request for url: {}'.format(url)
         mock_get_forecast.side_effect = HTTPError(msg,)
 
-        with pytest.raises(HTTPError):
-            forecast.setup_platform(self.hass, self.config, MagicMock())
+        response = forecast.setup_platform(self.hass, self.config, MagicMock())
+        self.assertFalse(response)
 
     @httpretty.activate
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
@@ -74,4 +73,4 @@ class TestForecastSetup(unittest.TestCase):
 
         forecast.setup_platform(self.hass, self.config, MagicMock())
         self.assertTrue(mock_get_forecast.called)
-        self.assertEqual(mock_get_forecast.call_count, 2)
+        self.assertEqual(mock_get_forecast.call_count, 1)
