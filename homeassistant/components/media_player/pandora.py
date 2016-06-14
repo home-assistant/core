@@ -280,7 +280,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
         if (time_remaining != self._time_remaining and
-            time_remaining != self._media_duration):
+                time_remaining != self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
             self._player_state = STATE_PAUSED
@@ -296,7 +296,6 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
-        _LOGGER.debug('Sending command: %s, %s', service_cmd, command)
         if command is None:
             _LOGGER.info('Command %s not supported yet', service_cmd)
         self._pianobar.sendline(command)
