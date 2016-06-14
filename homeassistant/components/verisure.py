@@ -127,7 +127,7 @@ class VerisureHub(object):
                 except AttributeError:
                     status[overview.deviceLabel] = overview
         except self._verisure.Error as ex:
-            _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
+            _LOGGER.info('Caught connection error %s, tries to reconnect', ex)
             self.reconnect()
 
     def reconnect(self):
