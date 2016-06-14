@@ -155,6 +155,9 @@ pydispatcher==2.0.5
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.homematic
+pyhomematic==0.1.3
+
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.7.2
 
