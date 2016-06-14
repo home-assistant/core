@@ -97,6 +97,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         import pexpect
+        if self._player_state != STATE_OFF:
+            return
         self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info('Started pianobar subprocess')
         mode = self._pianobar.expect(['Receiving new playlist',
@@ -301,8 +303,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
+        _LOGGER.debug('Sending pinaobar command %s for %s',
+                      command, service_cmd)
         if command is None:
             _LOGGER.info('Command %s not supported yet', service_cmd)
+        self._clear_buffer()
         self._pianobar.sendline(command)
 
     def _update_stations(self):
