@@ -95,7 +95,7 @@ class HMSensor(homematic.HMDevice, Entity):
         if (not self._hmdevice._PARENT and self._hmdevice._TYPE
                 in ROTARYHANDLESENSOR) or \
            (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
-            in ROTARYHANDLESENSOR):
+                in ROTARYHANDLESENSOR):
             self.sensor_class = 'handle'
 
         if self._is_available:
