@@ -21,9 +21,6 @@ import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyhomematic==0.1.2']
-
-# List of component names (string) your component depends upon.
 DEPENDENCIES = ['homematic']
 
 

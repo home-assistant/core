@@ -21,9 +21,6 @@ import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyhomematic==0.1.2']
-
-# List of component names (string) your component depends upon.
 DEPENDENCIES = ['homematic']
 
 ROTARYHANDLESENSOR = ["HM-Sec-RHS",
@@ -94,11 +91,11 @@ class HMSensor(homematic.HMDevice, Entity):
             self.update_ha_state()
 
         super().connect_to_homematic()
-        # pylint: disable=protected-access
+        # pylint: disable=protected-access,bad-continuation
         if (not self._hmdevice._PARENT and self._hmdevice._TYPE
                 in ROTARYHANDLESENSOR) or \
            (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
-            in ROTARYHANDLESENSOR):
+                in ROTARYHANDLESENSOR):
             self.sensor_class = 'handle'
 
         if self._is_available:
