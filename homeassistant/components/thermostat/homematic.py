@@ -21,9 +21,6 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.helpers.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = ['pyhomematic==0.1.2']
-
-# List of component names (string) your component depends upon.
 DEPENDENCIES = ['homematic']
 
 PROPERTY_VALVE_STATE = 'VALVE_STATE'
