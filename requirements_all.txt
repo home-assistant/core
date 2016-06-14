@@ -301,9 +301,10 @@ python-twitch==1.2.0
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
+# homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.6
+python-wink==0.7.7
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9

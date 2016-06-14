@@ -11,7 +11,7 @@ from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import ToggleEntity
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup(hass, config):
