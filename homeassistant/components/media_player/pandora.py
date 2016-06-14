@@ -14,7 +14,7 @@ import shutil
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
@@ -165,6 +165,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         """Title of current playing media."""
         self.update_playing_status()
         return self._media_title
+
+    @property
+    def media_content_type(self):
+        """Content type of current playing media."""
+        return MEDIA_TYPE_MUSIC
 
     @property
     def media_artist(self):
