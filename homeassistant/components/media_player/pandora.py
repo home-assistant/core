@@ -189,11 +189,22 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.warning('Station `%s` is not in list', source)
             return
         _LOGGER.info('Setting station %s, %d', source, station_index)
-        self._pianobar.send('s')
-        self._pianobar.expect('Select station')
+        self._send_station_list_command()
         self._pianobar.sendline('{}'.format(station_index))
         self._pianobar.expect('\r\n')
         self._player_state = STATE_PLAYING
+
+    def _send_station_list_command(self):
+        """Send a station list command."""
+        import pexpect
+        self._pianobar.send('s')
+        try:
+            self._pianobar.expect('Select station:', timeout=1)
+        except pexpect.exceptions.TIMEOUT:
+            # try again. Buffer was contaminated.
+            self._clear_buffer()
+            self._pianobar.send('s')
+            self._pianobar.expect('Select station:')
 
     def update_playing_status(self):
         """Query pianobar for info about current media_title, station."""
@@ -268,11 +279,10 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if time_remaining != self._time_remaining:
-            _LOGGER.debug('PLAYING')
+        if (time_remaining != self._time_remaining and
+            time_remaining != self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
-            _LOGGER.debug('PAUSED')
             self._player_state = STATE_PAUSED
         self._time_remaining = time_remaining
 
@@ -286,14 +296,14 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
+        _LOGGER.debug('Sending command: %s, %s', service_cmd, command)
         if command is None:
             _LOGGER.info('Command %s not supported yet', service_cmd)
         self._pianobar.sendline(command)
 
     def _update_stations(self):
         """List defined Pandora stations."""
-        self._pianobar.send('s')
-        self._pianobar.expect('Select station:')
+        self._send_station_list_command()
         station_lines = self._pianobar.before.decode('utf-8')
         _LOGGER.debug('Getting stations: %s', station_lines)
         self._stations = []
