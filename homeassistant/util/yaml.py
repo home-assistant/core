@@ -6,6 +6,7 @@ from collections import OrderedDict
 import glob
 import yaml
 
+import homeassistant.util.secrets as secrets
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,10 +120,15 @@ def _env_var_yaml(loader, node):
         raise HomeAssistantError(node.value)
 
 
+def _secret_yaml(loader, node):
+    """Load secrets and embed it into the configuration YAML."""
+    return secrets.get_secret(node.value) or ''
+
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
+yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_list',
                                 _include_dir_merge_list_yaml)
