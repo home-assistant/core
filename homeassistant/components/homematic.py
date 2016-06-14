@@ -25,11 +25,10 @@ import homeassistant.bootstrap
 DOMAIN = 'homematic'
 REQUIREMENTS = ['pyhomematic==0.1.2']
 
-# pylint: disable=wrong-import-position, wrong-import-order
-import pyhomematic as HOMEMATIC
 
 HOMEMATIC_DEVICES = {}
 
+HOMEMATIC = None
 HA_HOMEMATIC_DEVICES = None
 DEVICES_NOT_REGISTERED = []
 
@@ -64,6 +63,10 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Homematic component."""
+    global HOMEMATIC
+
+    from pyhomematic import HMConnection
+
     local_ip = config[DOMAIN].get(LOCAL_IP)
     local_port = config[DOMAIN].get(LOCAL_PORT)
     remote_ip = config[DOMAIN].get(REMOTE_IP)
@@ -149,21 +152,18 @@ def setup(hass, config):
                         HOMEMATIC_DEVICES[dev].connect_to_homematic()
 
     # Create server thread
-    HOMEMATIC.create_server(local=local_ip,
-                            localport=local_port,
-                            remote=remote_ip,
-                            remoteport=remote_port,
-                            systemcallback=system_callback_handler,
-                            interface_id='homeassistant')
+    HOMEMATIC = HMConnection(local=local_ip,
+                             localport=local_port,
+                             remote=remote_ip,
+                             remoteport=remote_port,
+                             systemcallback=system_callback_handler,
+                             interface_id='homeassistant')
     # Start server thread, connect to homegear, initialize to receive events
     HOMEMATIC.start()
 
     # Stops server when Homeassistant is shuting down
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, HOMEMATIC.stop)
     hass.config.components.append(DOMAIN)
-
-    # if not autodetect:
-    #    return True
 
     return True
 
