@@ -23,7 +23,7 @@ from homeassistant.loader import get_component
 import homeassistant.bootstrap
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.2']
+REQUIREMENTS = ['pyhomematic==0.1.3']
 
 
 HOMEMATIC_DEVICES = {}
