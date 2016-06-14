@@ -35,7 +35,7 @@ def setup(hass, config):
             ('garage_door', pywink.get_garage_doors)):
 
         if func_exists():
-            discovery.load_platform(hass, component_name, DOMAIN, None, config)
+            discovery.load_platform(hass, component_name, DOMAIN, {}, config)
 
     return True
 
