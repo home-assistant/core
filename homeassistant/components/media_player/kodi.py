@@ -9,17 +9,17 @@ import urllib
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['jsonrpc-requests==0.1']
+REQUIREMENTS = ['jsonrpc-requests==0.2']
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,7 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             url,
             auth=(
                 config.get('user', ''),
-                config.get('password', ''))),
+                config.get('password', '')),
+            turn_off_action=config.get('turn_off_action', 'none')),
     ])
 
 
@@ -44,7 +45,8 @@ class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
     # pylint: disable=too-many-public-methods, abstract-method
-    def __init__(self, name, url, auth=None):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, name, url, auth=None, turn_off_action=None):
         """Initialize the Kodi device."""
         import jsonrpc_requests
         self._name = name
@@ -52,6 +54,7 @@ class KodiDevice(MediaPlayerDevice):
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url),
             auth=auth)
+        self._turn_off_action = turn_off_action
         self._players = list()
         self._properties = None
         self._item = None
@@ -181,11 +184,29 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_KODI
+        supported_media_commands = SUPPORT_KODI
+
+        if self._turn_off_action in [
+                'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']:
+            supported_media_commands |= SUPPORT_TURN_OFF
+
+        return supported_media_commands
 
     def turn_off(self):
-        """Turn off media player."""
-        self._server.System.Shutdown()
+        """Execute turn_off_action to turn off media player."""
+        if self._turn_off_action == 'quit':
+            self._server.Application.Quit()
+        elif self._turn_off_action == 'hibernate':
+            self._server.System.Hibernate()
+        elif self._turn_off_action == 'suspend':
+            self._server.System.Suspend()
+        elif self._turn_off_action == 'reboot':
+            self._server.System.Reboot()
+        elif self._turn_off_action == 'shutdown':
+            self._server.System.Shutdown()
+        else:
+            _LOGGER.warning('turn_off requested but turn_off_action is none')
+
         self.update_ha_state()
 
     def volume_up(self):
@@ -229,6 +250,13 @@ class KodiDevice(MediaPlayerDevice):
         """Pause the media player."""
         self._set_play_state(False)
 
+    def media_stop(self):
+        """Stop the media player."""
+        players = self._get_players()
+
+        if len(players) != 0:
+            self._server.Player.Stop(players[0]['playerid'])
+
     def _goto(self, direction):
         """Helper method used for previous/next track."""
         players = self._get_players()
@@ -271,6 +299,6 @@ class KodiDevice(MediaPlayerDevice):
 
         self.update_ha_state()
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
         self._server.Player.Open({media_type: media_id}, {})

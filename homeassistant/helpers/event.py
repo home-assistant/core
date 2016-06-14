@@ -21,7 +21,9 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     to_state = _process_match_param(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
-    if isinstance(entity_ids, str):
+    if entity_ids == MATCH_ALL:
+        pass
+    elif isinstance(entity_ids, str):
         entity_ids = (entity_ids.lower(),)
     else:
         entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
@@ -29,23 +31,24 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     @ft.wraps(action)
     def state_change_listener(event):
         """The listener that listens for specific state changes."""
-        if event.data['entity_id'] not in entity_ids:
+        if entity_ids != MATCH_ALL and \
+           event.data.get('entity_id') not in entity_ids:
             return
 
-        if event.data['old_state'] is None:
-            old_state = None
-        else:
+        if event.data.get('old_state') is not None:
             old_state = event.data['old_state'].state
-
-        if event.data['new_state'] is None:
-            new_state = None
         else:
+            old_state = None
+
+        if event.data.get('new_state') is not None:
             new_state = event.data['new_state'].state
+        else:
+            new_state = None
 
         if _matcher(old_state, from_state) and _matcher(new_state, to_state):
-            action(event.data['entity_id'],
-                   event.data['old_state'],
-                   event.data['new_state'])
+            action(event.data.get('entity_id'),
+                   event.data.get('old_state'),
+                   event.data.get('new_state'))
 
     hass.bus.listen(EVENT_STATE_CHANGED, state_change_listener)
 
@@ -183,8 +186,8 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
 def track_time_change(hass, action, year=None, month=None, day=None,
                       hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""
-    track_utc_time_change(hass, action, year, month, day, hour, minute, second,
-                          local=True)
+    return track_utc_time_change(hass, action, year, month, day, hour, minute,
+                                 second, local=True)
 
 
 def _process_match_param(parameter):

@@ -1,5 +1,5 @@
-Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant|
-===========================================================================================================
+Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant| |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs|
+==============================================================================================================================================================================================
 
 Home Assistant is a home automation platform running on Python 3. The
 goal of Home Assistant is to be able to track and control all devices at
@@ -80,9 +80,9 @@ Built home automation on top of your devices:
 
 The system is built modular so support for other devices or actions can
 be implemented easily. See also the `section on
-architecture <https://home-assistant.io/developers/architecture.html>`__
+architecture <https://home-assistant.io/developers/architecture/>`__
 and the `section on creating your own
-components <https://home-assistant.io/developers/creating_components.html>`__.
+components <https://home-assistant.io/developers/creating_components/>`__.
 
 If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
@@ -92,7 +92,9 @@ section <https://home-assistant.io/help/>`__ how to reach us.
    :target: https://travis-ci.org/home-assistant/home-assistant
 .. |Coverage Status| image:: https://img.shields.io/coveralls/home-assistant/home-assistant.svg
    :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
-.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://badges.gitter.im/Join%20Chat.svg
+.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://img.shields.io/badge/gitter-general-blue.svg
    :target: https://gitter.im/home-assistant/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs| image:: https://img.shields.io/badge/gitter-development-yellowgreen.svg
+   :target: https://gitter.im/home-assistant/home-assistant/devs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/

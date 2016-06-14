@@ -52,6 +52,13 @@ class TestAutomationZone(unittest.TestCase):
                 },
                 'action': {
                     'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                                    'platform', 'entity_id',
+                                    'from_state.state', 'to_state.state',
+                                    'zone.name'))
+                    },
+
                 }
             }
         })
@@ -63,6 +70,9 @@ class TestAutomationZone(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'zone - test.entity - hello - hello - test',
+            self.calls[0].data['some'])
 
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""

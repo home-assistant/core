@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 
 DOMAIN = "isy994"
-REQUIREMENTS = ['PyISY==1.0.5']
+REQUIREMENTS = ['PyISY==1.0.6']
 DISCOVER_LIGHTS = "isy994.lights"
 DISCOVER_SWITCHES = "isy994.switches"
 DISCOVER_SENSORS = "isy994.sensors"

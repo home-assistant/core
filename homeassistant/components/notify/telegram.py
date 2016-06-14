@@ -14,7 +14,7 @@ from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==3.4']
+REQUIREMENTS = ['python-telegram-bot==4.2.0']
 
 
 def get_service(hass, config):

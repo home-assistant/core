@@ -7,10 +7,11 @@ at https://home-assistant.io/components/sensor.wink/
 import logging
 
 from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
-                                 STATE_OPEN, TEMP_CELSIUS)
+                                 STATE_OPEN, TEMP_CELSIUS,
+                                 ATTR_BATTERY_LEVEL)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.7.4']
+REQUIREMENTS = ['python-wink==0.7.6']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 
@@ -44,6 +45,7 @@ class WinkSensorDevice(Entity):
         """Initialize the sensor."""
         self.wink = wink
         self.capability = self.wink.capability()
+        self._battery = self.wink.battery_level
         if self.wink.UNIT == "°":
             self._unit_of_measurement = TEMP_CELSIUS
         else:
@@ -88,6 +90,19 @@ class WinkSensorDevice(Entity):
         """Return true if door is open."""
         return self.wink.state()
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._battery:
+            return {
+                ATTR_BATTERY_LEVEL: self._battery_level,
+            }
+
+    @property
+    def _battery_level(self):
+        """Return the battery level."""
+        return self.wink.battery_level * 100
+
 
 class WinkEggMinder(Entity):
     """Representation of a Wink Egg Minder."""
@@ -95,6 +110,7 @@ class WinkEggMinder(Entity):
     def __init__(self, wink):
         """Initialize the sensor."""
         self.wink = wink
+        self._battery = self.wink.battery_level
 
     @property
     def state(self):
@@ -114,3 +130,16 @@ class WinkEggMinder(Entity):
     def update(self):
         """Update state of the Egg Minder."""
         self.wink.update_state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._battery:
+            return {
+                ATTR_BATTERY_LEVEL: self._battery_level,
+            }
+
+    @property
+    def _battery_level(self):
+        """Return the battery level."""
+        return self.wink.battery_level * 100

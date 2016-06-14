@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.torque/
 
 import re
 
-from homeassistant.const import HTTP_OK
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'torque'
 DEPENDENCIES = ['http']
@@ -43,12 +43,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     email = config.get('email', None)
     sensors = {}
 
-    def _receive_data(handler, path_match, data):
-        """Received data from Torque."""
-        handler.send_response(HTTP_OK)
-        handler.end_headers()
+    hass.wsgi.register_view(TorqueReceiveDataView(hass, email, vehicle,
+                                                  sensors, add_devices))
+    return True
 
-        if email is not None and email != data[SENSOR_EMAIL_FIELD]:
+
+class TorqueReceiveDataView(HomeAssistantView):
+    """Handle data from Torque requests."""
+
+    url = API_PATH
+    name = 'api:torque'
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, hass, email, vehicle, sensors, add_devices):
+        """Initialize a Torque view."""
+        super().__init__(hass)
+        self.email = email
+        self.vehicle = vehicle
+        self.sensors = sensors
+        self.add_devices = add_devices
+
+    def get(self, request):
+        """Handle Torque data request."""
+        data = request.args
+
+        if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return
 
         names = {}
@@ -66,18 +85,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 units[pid] = decode(data[key])
             elif is_value:
                 pid = convert_pid(is_value.group(1))
-                if pid in sensors:
-                    sensors[pid].on_update(data[key])
+                if pid in self.sensors:
+                    self.sensors[pid].on_update(data[key])
 
         for pid in names:
-            if pid not in sensors:
-                sensors[pid] = TorqueSensor(
-                    ENTITY_NAME_FORMAT.format(vehicle, names[pid]),
+            if pid not in self.sensors:
+                self.sensors[pid] = TorqueSensor(
+                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
                     units.get(pid, None))
-                add_devices([sensors[pid]])
+                self.add_devices([self.sensors[pid]])
 
-    hass.http.register_path('GET', API_PATH, _receive_data)
-    return True
+        return None
 
 
 class TorqueSensor(Entity):

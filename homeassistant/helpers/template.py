@@ -33,8 +33,8 @@ def render_with_possible_json_value(hass, template, value,
 
     try:
         return render(hass, template, variables)
-    except TemplateError:
-        _LOGGER.exception('Error parsing value')
+    except TemplateError as ex:
+        _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
 
@@ -56,6 +56,8 @@ def render(hass, template, variables=None, **kwargs):
             'now': dt_util.as_local(utcnow),
             'states': AllStates(hass),
             'utcnow': utcnow,
+            'as_timestamp': dt_util.as_timestamp,
+            'relative_time': dt_util.get_age
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)

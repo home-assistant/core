@@ -1,7 +1,7 @@
 """The tests for the heat control thermostat."""
 import unittest
-from unittest import mock
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -11,7 +11,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.components import thermostat
-import homeassistant.components.thermostat.heat_control as heat_control
 
 from tests.common import get_test_home_assistant
 
@@ -41,9 +40,17 @@ class TestSetupThermostatHeatControl(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        add_devices = mock.MagicMock()
-        result = heat_control.setup_platform(self.hass, config, add_devices)
-        self.assertEqual(False, result)
+        self.assertFalse(_setup_component(self.hass, 'thermostat', {
+            'thermostat': config}))
+
+    def test_valid_conf(self):
+        """Test set up heat_control with valid config values."""
+        self.assertTrue(_setup_component(self.hass, 'thermostat',
+                        {'thermostat': {
+                            'platform': 'heat_control',
+                            'name': 'test',
+                            'heater': ENT_SWITCH,
+                            'target_sensor': ENT_SENSOR}}))
 
     def test_setup_with_sensor(self):
         """Test set up heat_control with sensor to trigger update at init."""

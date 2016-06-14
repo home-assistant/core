@@ -6,7 +6,6 @@ https://home-assistant.io/components/zwave/
 """
 import logging
 import os.path
-import sys
 import time
 from pprint import pprint
 
@@ -15,6 +14,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
     ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
 DOMAIN = "zwave"
@@ -25,8 +25,8 @@ DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
-DEFAULT_ZWAVE_CONFIG_PATH = os.path.join(sys.prefix, 'share',
-                                         'python-openzwave', 'config')
+CONF_AUTOHEAL = "autoheal"
+DEFAULT_CONF_AUTOHEAL = True
 
 # How long to wait for the zwave network to be ready.
 NETWORK_READY_WAIT_SECS = 30
@@ -42,18 +42,21 @@ DISCOVER_SWITCHES = "zwave.switch"
 DISCOVER_LIGHTS = "zwave.light"
 DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
 DISCOVER_THERMOSTATS = 'zwave.thermostat'
+DISCOVER_HVAC = 'zwave.hvac'
+DISCOVER_LOCKS = 'zwave.lock'
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
 COMMAND_CLASS_SWITCH_MULTILEVEL = 38
-
+COMMAND_CLASS_DOOR_LOCK = 98
 COMMAND_CLASS_SWITCH_BINARY = 37
 COMMAND_CLASS_SENSOR_BINARY = 48
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_METER = 50
 COMMAND_CLASS_BATTERY = 128
 COMMAND_CLASS_ALARM = 113  # 0x71
-COMMAND_CLASS_THERMOSTAT_MODE = 64  # 0x40
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
+COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68  # 0x44
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -91,9 +94,19 @@ DISCOVERY_COMPONENTS = [
      GENRE_USER),
     ('thermostat',
      DISCOVER_THERMOSTATS,
-     [COMMAND_CLASS_THERMOSTAT_MODE],
+     [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
      GENRE_WHATEVER),
+    ('hvac',
+     DISCOVER_HVAC,
+     [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
+     TYPE_WHATEVER,
+     GENRE_WHATEVER),
+    ('lock',
+     DISCOVER_LOCKS,
+     [COMMAND_CLASS_DOOR_LOCK],
+     TYPE_BOOL,
+     GENRE_USER),
 ]
 
 
@@ -175,20 +188,31 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global NETWORK
 
+    try:
+        import libopenzwave
+    except ImportError:
+        _LOGGER.error("You are missing required dependency Python Open "
+                      "Z-Wave. Please follow instructions at: "
+                      "https://home-assistant.io/components/zwave/")
+        return False
     from pydispatch import dispatcher
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
 
+    default_zwave_config_path = os.path.join(os.path.dirname(
+        libopenzwave.__file__), 'config')
+
     # Load configuration
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
     customize = config[DOMAIN].get(CONF_CUSTOMIZE, {})
+    autoheal = config[DOMAIN].get(CONF_AUTOHEAL, DEFAULT_CONF_AUTOHEAL)
 
     # Setup options
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH, DEFAULT_CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
         config_path=config[DOMAIN].get('config_path',
-                                       DEFAULT_ZWAVE_CONFIG_PATH),)
+                                       default_zwave_config_path),)
 
     options.set_console_output(use_debug)
     options.lock()
@@ -261,23 +285,24 @@ def setup(hass, config):
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
 
-    def add_node(event):
+    def add_node(service):
         """Switch into inclusion mode."""
         NETWORK.controller.begin_command_add_device()
 
-    def remove_node(event):
+    def remove_node(service):
         """Switch into exclusion mode."""
         NETWORK.controller.begin_command_remove_device()
 
-    def heal_network(event):
+    def heal_network(service):
         """Heal the network."""
+        _LOGGER.info("ZWave heal running.")
         NETWORK.heal()
 
-    def soft_reset(event):
+    def soft_reset(service):
         """Soft reset the controller."""
         NETWORK.controller.soft_reset()
 
-    def test_network(event):
+    def test_network(service):
         """Test the network by sending commands to all the nodes."""
         NETWORK.test()
 
@@ -293,7 +318,7 @@ def setup(hass, config):
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
         # to be ready.
         for i in range(NETWORK_READY_WAIT_SECS):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "network state: %d %s", NETWORK.state, NETWORK.state_str)
             if NETWORK.state >= NETWORK.STATE_AWAKED:
                 _LOGGER.info("zwave ready after %d seconds", i)
@@ -323,6 +348,11 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+
+    # Setup autoheal
+    if autoheal:
+        _LOGGER.info("ZWave network autoheal is enabled.")
+        track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 

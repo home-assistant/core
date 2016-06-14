@@ -1,7 +1,9 @@
 **Description:**
 
 
-**Related issue (if applicable):** #
+**Related issue (if applicable):** fixes #
+
+**Pull request in [home-assistant.io](https://github.com/home-assistant/home-assistant.io) with documentation (if applicable):** home-assistant/home-assistant.io#
 
 **Example entry for `configuration.yaml` (if applicable):**
 ```yaml
@@ -9,6 +11,9 @@
 ```
 
 **Checklist:**
+
+If user exposed functionality or configuration variables are added/changed:
+  - [ ] Documentation added/updated in [home-assistant.io](https://github.com/home-assistant/home-assistant.io)
 
 If code communicates with devices:
   - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**

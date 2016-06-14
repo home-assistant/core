@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub.update_smartplugs()
     switches = []
     switches.extend([
-        VerisureSmartplug(value.id)
+        VerisureSmartplug(value.deviceLabel)
         for value in hub.smartplug_status.values()])
     add_devices(switches)
 
@@ -41,6 +41,11 @@ class VerisureSmartplug(SwitchDevice):
     def is_on(self):
         """Return true if on."""
         return hub.smartplug_status[self._id].status == 'on'
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
 
     def turn_on(self):
         """Set smartplug status on."""

@@ -13,7 +13,7 @@ from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['python-wink==0.7.4']
+REQUIREMENTS = ['python-wink==0.7.6']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -97,7 +97,9 @@ class WinkLight(Light):
         }
 
         if rgb_color:
-            state_kwargs['color_xy'] = color_util.color_RGB_to_xy(*rgb_color)
+            xyb = color_util.color_RGB_to_xy(*rgb_color)
+            state_kwargs['color_xy'] = xyb[0], xyb[1]
+            state_kwargs['brightness'] = xyb[2]
 
         if color_temp_mired:
             state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)

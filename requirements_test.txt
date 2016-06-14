@@ -1,8 +1,9 @@
-flake8>=2.5.1
-pylint>=1.5.3
+flake8>=2.5.4
+pylint>=1.5.5
 coveralls>=1.1
-pytest>=2.8.0
+pytest>=2.9.1
 pytest-cov>=2.2.0
 pytest-timeout>=1.0.0
+pytest-capturelog>=0.7
 betamax==0.5.1
 pydocstyle>=1.0.0

@@ -29,9 +29,8 @@ class TestLightRfxtrx(unittest.TestCase):
             'light': {'platform': 'rfxtrx',
                       'automatic_add': True,
                       'devices':
-                      {'213c7f216': {
+                      {'0b1100cd0213c7f210010f51': {
                                'name': 'Test',
-                               'packetid': '0b1100cd0213c7f210010f51',
                                rfxtrx_core.ATTR_FIREEVENT: True}}}}))
 
         self.assertTrue(_setup_component(self.hass, 'light', {
@@ -62,7 +61,7 @@ class TestLightRfxtrx(unittest.TestCase):
                       'devices': {}}}))
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
-    def test_one_light(self):
+    def test_old_config(self):
         """Test with 1 light."""
         self.assertTrue(_setup_component(self.hass, 'light', {
             'light': {'platform': 'rfxtrx',
@@ -76,7 +75,50 @@ class TestLightRfxtrx(unittest.TestCase):
             rfxtrxmod.Core("", transport_protocol=rfxtrxmod.DummyTransport)
 
         self.assertEqual(1, len(rfxtrx_core.RFX_DEVICES))
-        entity = rfxtrx_core.RFX_DEVICES['123efab1']
+        entity = rfxtrx_core.RFX_DEVICES['213c7f216']
+        self.assertEqual('Test', entity.name)
+        self.assertEqual('off', entity.state)
+        self.assertTrue(entity.assumed_state)
+        self.assertEqual(entity.signal_repetitions, 1)
+        self.assertFalse(entity.should_fire_event)
+        self.assertFalse(entity.should_poll)
+
+        self.assertFalse(entity.is_on)
+
+        entity.turn_on()
+        self.assertTrue(entity.is_on)
+        self.assertEqual(entity.brightness, 255)
+
+        entity.turn_off()
+        self.assertFalse(entity.is_on)
+        self.assertEqual(entity.brightness, 0)
+
+        entity.turn_on(brightness=100)
+        self.assertTrue(entity.is_on)
+        self.assertEqual(entity.brightness, 100)
+
+        entity.turn_on(brightness=10)
+        self.assertTrue(entity.is_on)
+        self.assertEqual(entity.brightness, 10)
+
+        entity.turn_on(brightness=255)
+        self.assertTrue(entity.is_on)
+        self.assertEqual(entity.brightness, 255)
+
+    def test_one_light(self):
+        """Test with 1 light."""
+        self.assertTrue(_setup_component(self.hass, 'light', {
+            'light': {'platform': 'rfxtrx',
+                      'devices':
+                      {'0b1100cd0213c7f210010f51': {
+                               'name': 'Test'}}}}))
+
+        import RFXtrx as rfxtrxmod
+        rfxtrx_core.RFXOBJECT =\
+            rfxtrxmod.Core("", transport_protocol=rfxtrxmod.DummyTransport)
+
+        self.assertEqual(1, len(rfxtrx_core.RFX_DEVICES))
+        entity = rfxtrx_core.RFX_DEVICES['213c7f216']
         self.assertEqual('Test', entity.name)
         self.assertEqual('off', entity.state)
         self.assertTrue(entity.assumed_state)
@@ -112,15 +154,12 @@ class TestLightRfxtrx(unittest.TestCase):
             'light': {'platform': 'rfxtrx',
                       'signal_repetitions': 3,
                       'devices':
-                      {'123efab1': {
-                               'name': 'Test',
-                               'packetid': '0b1100cd0213c7f230010f71'},
-                        '118cdea2': {
-                            'name': 'Bath',
-                            'packetid': '0b1100100118cdea02010f70'},
-                        '213c7f216': {
-                            'name': 'Living',
-                            'packetid': '0b1100100118cdea02010f70'}}}}))
+                      {'0b1100cd0213c7f230010f71': {
+                               'name': 'Test'},
+                        '0b1100100118cdea02010f70': {
+                            'name': 'Bath'},
+                        '0b1100101118cdea02010f70': {
+                            'name': 'Living'}}}}))
 
         self.assertEqual(3, len(rfxtrx_core.RFX_DEVICES))
         device_num = 0
@@ -155,7 +194,7 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         entity = rfxtrx_core.RFX_DEVICES['0e611622']
         self.assertEqual(1, len(rfxtrx_core.RFX_DEVICES))
-        self.assertEqual('<Entity 0e611622 : 0b11009e00e6116202020070: on>',
+        self.assertEqual('<Entity 0b11009e00e6116202020070: on>',
                          entity.__str__())
 
         event = rfxtrx_core.get_rfx_object('0b11009e00e6116201010070')
@@ -171,7 +210,7 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         entity = rfxtrx_core.RFX_DEVICES['118cdea2']
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
-        self.assertEqual('<Entity 118cdea2 : 0b1100120118cdea02020070: on>',
+        self.assertEqual('<Entity 0b1100120118cdea02020070: on>',
                          entity.__str__())
 
         # trying to add a sensor
@@ -185,6 +224,13 @@ class TestLightRfxtrx(unittest.TestCase):
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])
 
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
+
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
@@ -226,6 +272,12 @@ class TestLightRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))

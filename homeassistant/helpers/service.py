@@ -2,9 +2,13 @@
 import functools
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.loader import get_component
+import homeassistant.helpers.config_validation as cv
 
 HASS = None
 
@@ -28,47 +32,40 @@ def service(domain, service_name):
     return register_service_decorator
 
 
-def call_from_config(hass, config, blocking=False):
+def call_from_config(hass, config, blocking=False, variables=None,
+                     validate_config=True):
     """Call a service based on a config hash."""
-    validation_error = validate_service_call(config)
-    if validation_error:
-        _LOGGER.error(validation_error)
-        return
+    if validate_config:
+        try:
+            config = cv.SERVICE_SCHEMA(config)
+        except vol.Invalid as ex:
+            _LOGGER.error("Invalid config for calling service: %s", ex)
+            return
 
-    domain_service = (
-        config[CONF_SERVICE]
-        if CONF_SERVICE in config
-        else template.render(hass, config[CONF_SERVICE_TEMPLATE]))
-
-    try:
-        domain, service_name = domain_service.split('.', 1)
-    except ValueError:
-        _LOGGER.error('Invalid service specified: %s', domain_service)
-        return
-
-    service_data = config.get(CONF_SERVICE_DATA)
-
-    if service_data is None:
-        service_data = {}
-    elif isinstance(service_data, dict):
-        service_data = dict(service_data)
+    if CONF_SERVICE in config:
+        domain_service = config[CONF_SERVICE]
     else:
-        _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
-        service_data = {}
+        try:
+            domain_service = template.render(
+                hass, config[CONF_SERVICE_TEMPLATE], variables)
+            domain_service = cv.service(domain_service)
+        except TemplateError as ex:
+            _LOGGER.error('Error rendering service name template: %s', ex)
+            return
+        except vol.Invalid as ex:
+            _LOGGER.error('Template rendered invalid service: %s',
+                          domain_service)
+            return
 
-    service_data_template = config.get(CONF_SERVICE_DATA_TEMPLATE)
-    if service_data_template and isinstance(service_data_template, dict):
-        for key, value in service_data_template.items():
-            service_data[key] = template.render(hass, value)
-    elif service_data_template:
-        _LOGGER.error("%s should be a dictionary", CONF_SERVICE_DATA)
+    domain, service_name = domain_service.split('.', 1)
+    service_data = dict(config.get(CONF_SERVICE_DATA, {}))
 
-    entity_id = config.get(CONF_SERVICE_ENTITY_ID)
-    if isinstance(entity_id, str):
-        service_data[ATTR_ENTITY_ID] = [ent.strip() for ent in
-                                        entity_id.split(",")]
-    elif entity_id is not None:
-        service_data[ATTR_ENTITY_ID] = entity_id
+    if CONF_SERVICE_DATA_TEMPLATE in config:
+        for key, value in config[CONF_SERVICE_DATA_TEMPLATE].items():
+            service_data[key] = template.render(hass, value, variables)
+
+    if CONF_SERVICE_ENTITY_ID in config:
+        service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
     hass.services.call(domain, service_name, service_data, blocking)
 
@@ -90,19 +87,3 @@ def extract_entity_ids(hass, service_call):
         return group.expand_entity_ids(hass, [service_ent_id])
 
     return [ent_id for ent_id in group.expand_entity_ids(hass, service_ent_id)]
-
-
-def validate_service_call(config):
-    """Validate service call configuration.
-
-    Helper method to validate that a configuration is a valid service call.
-    Returns None if validation succeeds, else an error description
-    """
-    if not isinstance(config, dict):
-        return 'Invalid configuration {}'.format(config)
-    if CONF_SERVICE not in config and CONF_SERVICE_TEMPLATE not in config:
-        return 'Missing key {} or {}: {}'.format(
-            CONF_SERVICE,
-            CONF_SERVICE_TEMPLATE,
-            config)
-    return None
