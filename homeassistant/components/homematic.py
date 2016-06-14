@@ -215,7 +215,7 @@ def get_devices(device_types, keys):
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
     """Helper to setup Homematic devices."""
-    if HOMEMATIC.Server is None:
+    if HOMEMATIC is None:
         _LOGGER.error('Error setting up hmevice: Server not configured.')
         return False
     address = config.get('address', None)
