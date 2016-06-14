@@ -91,7 +91,7 @@ class HMSensor(homematic.HMDevice, Entity):
             self.update_ha_state()
 
         super().connect_to_homematic()
-        # pylint: disable=protected-access
+        # pylint: disable=protected-access,bad-continuation
         if (not self._hmdevice._PARENT and self._hmdevice._TYPE
                 in ROTARYHANDLESENSOR) or \
            (self._hmdevice._PARENT and self._hmdevice._PARENT_TYPE
