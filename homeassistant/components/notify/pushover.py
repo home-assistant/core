@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.pushover/
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_TARGET, ATTR_DATA, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
@@ -51,7 +51,21 @@ class PushoverNotificationService(BaseNotificationService):
         """Send a message to a user."""
         from pushover import RequestError
 
+        data = kwargs.get(ATTR_DATA)
+
+        if not data:
+            data = {}
+
+        data['title'] = kwargs.get(ATTR_TITLE)
+
+        target = kwargs.get(ATTR_TARGET)
+
+        if target is not None:
+            data['device'] = target
+
         try:
-            self.pushover.send_message(message, title=kwargs.get(ATTR_TITLE))
+            self.pushover.send_message(message, **data)
+        except ValueError as val_err:
+            _LOGGER.error(str(val_err))
         except RequestError:
             _LOGGER.exception("Could not send pushover notification")
