@@ -176,7 +176,7 @@ def setup(hass, config):
         schema=SET_FAN_MODE_SCHEMA)
 
     def hvac_mode_set_service(service):
-        """Set fvac mode on target thermostats."""
+        """Set hvac mode on target thermostats."""
         target_thermostats = component.extract_from_service(service)
 
         hvac_mode = service.data[ATTR_HVAC_MODE]
