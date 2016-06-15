@@ -14,7 +14,7 @@ import shutil
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
@@ -97,6 +97,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         import pexpect
+        if self._player_state != STATE_OFF:
+            return
         self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info('Started pianobar subprocess')
         mode = self._pianobar.expect(['Receiving new playlist',
@@ -167,6 +169,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         return self._media_title
 
     @property
+    def media_content_type(self):
+        """Content type of current playing media."""
+        return MEDIA_TYPE_MUSIC
+
+    @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
         return self._media_artist
@@ -189,11 +196,22 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.warning('Station `%s` is not in list', source)
             return
         _LOGGER.info('Setting station %s, %d', source, station_index)
-        self._pianobar.send('s')
-        self._pianobar.expect('Select station')
+        self._send_station_list_command()
         self._pianobar.sendline('{}'.format(station_index))
         self._pianobar.expect('\r\n')
         self._player_state = STATE_PLAYING
+
+    def _send_station_list_command(self):
+        """Send a station list command."""
+        import pexpect
+        self._pianobar.send('s')
+        try:
+            self._pianobar.expect('Select station:', timeout=1)
+        except pexpect.exceptions.TIMEOUT:
+            # try again. Buffer was contaminated.
+            self._clear_buffer()
+            self._pianobar.send('s')
+            self._pianobar.expect('Select station:')
 
     def update_playing_status(self):
         """Query pianobar for info about current media_title, station."""
@@ -268,11 +286,10 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if time_remaining != self._time_remaining:
-            _LOGGER.debug('PLAYING')
+        if (time_remaining != self._time_remaining and
+                time_remaining != self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
-            _LOGGER.debug('PAUSED')
             self._player_state = STATE_PAUSED
         self._time_remaining = time_remaining
 
@@ -286,14 +303,16 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
+        _LOGGER.debug('Sending pinaobar command %s for %s',
+                      command, service_cmd)
         if command is None:
             _LOGGER.info('Command %s not supported yet', service_cmd)
+        self._clear_buffer()
         self._pianobar.sendline(command)
 
     def _update_stations(self):
         """List defined Pandora stations."""
-        self._pianobar.send('s')
-        self._pianobar.expect('Select station:')
+        self._send_station_list_command()
         station_lines = self._pianobar.before.decode('utf-8')
         _LOGGER.debug('Getting stations: %s', station_lines)
         self._stations = []
