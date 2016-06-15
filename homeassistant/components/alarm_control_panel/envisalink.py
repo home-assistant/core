@@ -56,8 +56,10 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
                            signal=SIGNAL_KEYPAD_UPDATE,
                            sender=dispatcher.Any)
 
-    def _update_callback(self):
-        self.update_ha_state()
+    def _update_callback(self, partition):
+        """Update HA state, if needed."""
+        if partition is None or int(partition) == self._partition_number:
+            self.update_ha_state()
 
     @property
     def code_format(self):

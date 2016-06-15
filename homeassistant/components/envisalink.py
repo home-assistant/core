@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 from homeassistant.util import convert
 
-REQUIREMENTS = ['pyenvisalink==0.5', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==0.9', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
@@ -121,17 +121,17 @@ def setup(hass, base_config):
     def zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
-        dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None)
+        dispatcher.send(signal=SIGNAL_ZONE_UPDATE, sender=None, zone=data)
 
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
-        dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE, sender=None)
+        dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE, sender=None, partition=data)
 
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
-        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None)
+        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE, sender=None, partition=data)
 
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""

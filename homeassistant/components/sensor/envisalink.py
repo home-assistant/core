@@ -23,6 +23,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         EnvisalinkSensor(convert(_configured_partitions[partNum]['name'],
                                  str,
                                  str.format("Partition #{0}", partNum)),
+                         partNum,
                          EVL_CONTROLLER.alarm_state['partition'][partNum],
                          EVL_CONTROLLER)
         for partNum in _configured_partitions)
@@ -31,10 +32,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class EnvisalinkSensor(EnvisalinkDevice):
     """Representation of an envisalink keypad."""
 
-    def __init__(self, partitionName, info, controller):
+    def __init__(self, partitionName, partitionNumber, info, controller):
         """Initialize the sensor."""
         from pydispatch import dispatcher
         self._icon = 'mdi:alarm'
+        self._partition_number = partitionNumber
         _LOGGER.info('Setting up sensor for partition: ' + partitionName)
         EnvisalinkDevice.__init__(self,
                                   partitionName + ' Keypad',
@@ -60,5 +62,7 @@ class EnvisalinkSensor(EnvisalinkDevice):
         """Return the state attributes."""
         return self._info['status']
 
-    def _update_callback(self):
-        self.update_ha_state()
+    def _update_callback(self, partition):
+        """Update the partition state in HA, if needed."""
+        if partition is None or int(partition) == self._partition_number: 
+            self.update_ha_state()

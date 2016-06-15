@@ -42,6 +42,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher
         self._zone_type = zoneType
+        self._zone_number = zoneNumber
 
         _LOGGER.info('Setting up zone: ' + zoneName)
         EnvisalinkDevice.__init__(self, zoneName, info, controller)
@@ -66,5 +67,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         """Return the class of this sensor, from SENSOR_CLASSES."""
         return self._zone_type
 
-    def _update_callback(self):
-        self.update_ha_state()
+    def _update_callback(self, zone):
+        """Update the zone's state, if needed."""
+        if zone is None or int(zone) == self._zone_number:
+            self.update_ha_state()
