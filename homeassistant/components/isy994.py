@@ -74,7 +74,7 @@ def setup(hass, config):
 
     # Load platforms for the devices in the ISY controller that we support.
     for component in ('sensor', 'light', 'switch'):
-        discovery.load_platform(hass, component, DOMAIN, None, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
     return True
