@@ -443,3 +443,7 @@ class HomeAssistantView(object):
 
         return self.Response(wrap_file(request.environ, fil),
                              mimetype=mimetype, direct_passthrough=True)
+
+    def options(self, request):
+        """Default handler for OPTIONS (necessary for CORS preflight)."""
+        return self.Response('', status=200)
