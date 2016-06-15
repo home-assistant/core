@@ -95,6 +95,7 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
+    homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/icloud.py
