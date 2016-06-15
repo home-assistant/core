@@ -36,7 +36,7 @@ def setup(hass, config):
         return False
 
     for component in ('sensor', 'switch', 'alarm_control_panel', 'lock'):
-        discovery.load_platform(hass, component, DOMAIN, None, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 

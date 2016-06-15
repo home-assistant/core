@@ -51,6 +51,6 @@ def setup(hass, config):
         return False
 
     for component in 'camera', 'sensor':
-        discovery.load_platform(hass, component, DOMAIN, None, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

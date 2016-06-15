@@ -71,7 +71,7 @@ def setup_ecobee(hass, network, config):
 
     discovery.load_platform(hass, 'thermostat', DOMAIN,
                             {'hold_temp': hold_temp}, config)
-    discovery.load_platform(hass, 'sensor', DOMAIN, None, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
 
 # pylint: disable=too-few-public-methods
