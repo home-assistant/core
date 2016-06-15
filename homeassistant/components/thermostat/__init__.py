@@ -97,6 +97,7 @@ def set_fan_mode(hass, fan_mode, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
 
+
 def set_hvac_mode(hass, hvac_mode, entity_id=None):
     """Set specified thermostat hvac mode."""
     data = {
