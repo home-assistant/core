@@ -2,7 +2,9 @@
 
 cd "$(dirname "$0")/.."
 
-cd homeassistant/components/frontend/www_static/home-assistant-polymer
+cd homeassistant/components/frontend/www_static/home-assistant-polymer/home-assistant-js/
+npm run prod
+cd ..
 npm run frontend_prod
 
 cp bower_components/webcomponentsjs/webcomponents-lite.min.js ..
