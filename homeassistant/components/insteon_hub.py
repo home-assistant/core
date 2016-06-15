@@ -40,6 +40,6 @@ def setup(hass, config):
         return
 
     for component in 'light':
-        discovery.load_platform(hass, component, DOMAIN, None, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

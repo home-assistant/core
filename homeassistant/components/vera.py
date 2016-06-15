@@ -92,7 +92,7 @@ def setup(hass, base_config):
         VERA_DEVICES[dev_type].append(device)
 
     for component in 'binary_sensor', 'sensor', 'light', 'switch':
-        discovery.load_platform(hass, component, DOMAIN, None, base_config)
+        discovery.load_platform(hass, component, DOMAIN, {}, base_config)
 
     return True
 
