@@ -109,7 +109,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals
             device, persistence_file, baud_rate, tcp_port)
 
     for component in 'sensor', 'switch', 'light', 'binary_sensor':
-        discovery.load_platform(hass, component, DOMAIN, None, config)
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
