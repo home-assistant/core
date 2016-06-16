@@ -25,8 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                  config.get(CONF_BASE, 'USD'),
                                  config.get(CONF_QUOTE), payload)
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME,
-                                         DEFAULT_NAME),
+    add_devices([OpenexchangeratesSensor(rest,
+                                         config.get(CONF_NAME, DEFAULT_NAME),
                                          config.get(CONF_QUOTE))])
 
 
