@@ -30,7 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OpenexchangeratesSensor(Entity):
-    
     """Implementing the Openexchangerates sensor."""
     def __init__(self, rest, name, quote):
         """Initialize the sensor."""
@@ -62,7 +61,6 @@ class OpenexchangeratesSensor(Entity):
 
 
 class OpenexchangeratesData(object):
-    
     """Get data from Openexchangerates.org."""
     def __init__(self, resource, api_key, base, quote, data):
         """Initialize the data object."""
