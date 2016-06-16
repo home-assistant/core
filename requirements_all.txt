@@ -235,9 +235,6 @@ pychromecast==0.7.2
 
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
-# homeassistant.components.alarm_control_panel.envisalink
-# homeassistant.components.binary_sensor.envisalink
-# homeassistant.components.sensor.envisalink
 pydispatcher==2.0.5
 
 # homeassistant.components.envisalink

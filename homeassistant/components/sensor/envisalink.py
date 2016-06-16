@@ -5,13 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.envisalink/
 """
 import logging
-
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
+                                                 PARTITION_SCHEMA,
+                                                 CONF_PARTITIONNAME,
                                                  EnvisalinkDevice,
                                                  SIGNAL_KEYPAD_UPDATE)
 from homeassistant.util import convert
 
-REQUIREMENTS = ['pydispatcher==2.0.5']
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,27 +21,31 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_partitions = discovery_info['partitions']
-    add_devices_callback(
-        EnvisalinkSensor(convert(_configured_partitions[partNum]['name'],
-                                 str,
-                                 str.format("Partition #{0}", partNum)),
-                         partNum,
-                         EVL_CONTROLLER.alarm_state['partition'][partNum],
-                         EVL_CONTROLLER)
-        for partNum in _configured_partitions)
+    for partNum in _configured_partitions:
+        try:
+            _LOGGER.info(str.format("Validating config for partition: {0}", partNum))
+            _device_config_data = PARTITION_SCHEMA(_configured_partitions[partNum])
+            _device = EnvisalinkSensor(
+                      _device_config_data[CONF_PARTITIONNAME],
+                      partNum,
+                      EVL_CONTROLLER.alarm_state['partition'][partNum],
+                      EVL_CONTROLLER)
+            add_devices_callback([_device])
+        except vol.MultipleInvalid:
+            _LOGGER.error('Failed to load partition. A partition name is required.')
 
 
 class EnvisalinkSensor(EnvisalinkDevice):
     """Representation of an envisalink keypad."""
 
-    def __init__(self, partitionName, partitionNumber, info, controller):
+    def __init__(self, partition_name, partition_number, info, controller):
         """Initialize the sensor."""
         from pydispatch import dispatcher
         self._icon = 'mdi:alarm'
-        self._partition_number = partitionNumber
-        _LOGGER.info('Setting up sensor for partition: ' + partitionName)
+        self._partition_number = partition_number
+        _LOGGER.info('Setting up sensor for partition: ' + partition_name)
         EnvisalinkDevice.__init__(self,
-                                  partitionName + ' Keypad',
+                                  partition_name + ' Keypad',
                                   info,
                                   controller)
 

@@ -5,10 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import logging
-
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  EnvisalinkDevice,
+                                                 PARTITION_SCHEMA,
+                                                 CONF_CODE,
+                                                 CONF_PARTITIONNAME,
                                                  SIGNAL_PARTITION_UPDATE,
                                                  SIGNAL_KEYPAD_UPDATE)
 from homeassistant.util import convert
@@ -16,7 +20,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
 
-REQUIREMENTS = ['pydispatcher==2.0.5']
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +28,21 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     _configured_partitions = discovery_info['partitions']
-    _code = discovery_info['code']
-    add_devices_callback(
-        EnvisalinkAlarm(partNum,
-                        convert(_configured_partitions[partNum]['name'],
-                                str,
-                                str.format("Partition #{0}", partNum)),
-                        _code,
-                        EVL_CONTROLLER.alarm_state['partition'][partNum],
-                        EVL_CONTROLLER)
-        for partNum in _configured_partitions)
+    _code = discovery_info[CONF_CODE]
+    for partNum in _configured_partitions:
+        try:
+            _LOGGER.info(str.format("Validating config for partition: {0}", partNum))
+            _device_config_data = PARTITION_SCHEMA(_configured_partitions[partNum])
+            _device = EnvisalinkAlarm(
+                      partNum,
+                      _device_config_data[CONF_PARTITIONNAME],
+                      _code,
+                      EVL_CONTROLLER.alarm_state['partition'][partNum],
+                      EVL_CONTROLLER)
+            add_devices_callback([_device])
+        except vol.MultipleInvalid:
+            _LOGGER.error('Failed to load partition. A partition name is required.')
+
     return True
 
 
@@ -42,13 +50,13 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
     """Represents the Envisalink-based alarm panel."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, partitionNumber, alarmName, code, info, controller):
+    def __init__(self, partition_number, alarm_name, code, info, controller):
         """Initialize the alarm panel."""
         from pydispatch import dispatcher
-        self._partition_number = partitionNumber
+        self._partition_number = partition_number
         self._code = code
-        _LOGGER.info('Setting up alarm: ' + alarmName)
-        EnvisalinkDevice.__init__(self, alarmName, info, controller)
+        _LOGGER.info('Setting up alarm: ' + alarm_name)
+        EnvisalinkDevice.__init__(self, alarm_name, info, controller)
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_PARTITION_UPDATE,
                            sender=dispatcher.Any)

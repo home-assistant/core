@@ -5,47 +5,50 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.envisalink/
 """
 import logging
-
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
+                                                 ZONE_SCHEMA,
+                                                 CONF_ZONENAME,
+                                                 CONF_ZONETYPE,
                                                  EnvisalinkDevice,
                                                  SIGNAL_ZONE_UPDATE)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 from homeassistant.util import convert
 
-REQUIREMENTS = ['pydispatcher==2.0.5']
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_zones = discovery_info['zones']
-    add_devices_callback(
-        EnvisalinkBinarySensor(zoneNum,
-                               convert(_configured_zones[zoneNum]['name'],
-                                       str,
-                                       str.format("Zone #{0}", zoneNum)),
-                               convert(_configured_zones[zoneNum]['type'],
-                                       str,
-                                       "opening"),
-                               EVL_CONTROLLER.alarm_state['zone'][zoneNum],
-                               EVL_CONTROLLER)
-        for zoneNum in _configured_zones)
-
+    for zoneNum in _configured_zones:
+        try:
+            _LOGGER.info(str.format("Validating config for zone: {0}", zoneNum))
+            _device_config_data = ZONE_SCHEMA(_configured_zones[zoneNum])
+            _device = EnvisalinkBinarySensor(
+                      zoneNum,
+                      _device_config_data[CONF_ZONENAME],
+                      _device_config_data[CONF_ZONETYPE],
+                      EVL_CONTROLLER.alarm_state['zone'][zoneNum],
+                      EVL_CONTROLLER) 
+            add_devices_callback([_device])
+        except vol.MultipleInvalid:
+            _LOGGER.error('Failed to load zone. A zone name is required.')
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an envisalink Binary Sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, zoneNumber, zoneName, zoneType, info, controller):
+    def __init__(self, zone_number, zone_name, zone_type, info, controller):
         """Initialize the binary_sensor."""
         from pydispatch import dispatcher
-        self._zone_type = zoneType
-        self._zone_number = zoneNumber
+        self._zone_type = zone_type
+        self._zone_number = zone_number
 
-        _LOGGER.info('Setting up zone: ' + zoneName)
-        EnvisalinkDevice.__init__(self, zoneName, info, controller)
+        _LOGGER.info('Setting up zone: ' + zone_name)
+        EnvisalinkDevice.__init__(self, zone_name, info, controller)
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_ZONE_UPDATE,
                            sender=dispatcher.Any)

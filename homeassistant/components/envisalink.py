@@ -6,10 +6,11 @@ https://home-assistant.io/components/envisalink/
 """
 import logging
 import time
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
-from homeassistant.util import convert
 
 REQUIREMENTS = ['pyenvisalink==0.9', 'pydispatcher==2.0.5']
 
@@ -30,18 +31,47 @@ CONF_ZONEDUMP_INTERVAL = 'zonedump_interval'
 CONF_ZONES = 'zones'
 CONF_PARTITIONS = 'partitions'
 
+CONF_ZONENAME = 'name'
+CONF_ZONETYPE = 'type'
+CONF_PARTITIONNAME = 'name'
+
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
+DEFAULT_ZONETYPE = 'opening'
 
 SIGNAL_ZONE_UPDATE = 'zones_updated'
 SIGNAL_PARTITION_UPDATE = 'partition_updated'
 SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
 
-REQ_VAR_ERR = "Missing required variable: {0}"
-INVALID_PANEL_ERR = REQ_VAR_ERR + " Valid values are HONEYWELL/DSC."
+ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ZONENAME): cv.string,
+    vol.Optional(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string})
 
+PARTITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_PARTITIONNAME): cv.string})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_EVL_HOST): cv.string,
+        vol.Required(CONF_PANEL_TYPE):
+            vol.All(cv.string, vol.In(['HONEYWELL','DSC'])),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASS): cv.string,
+        vol.Required(CONF_CODE): cv.string,
+        vol.Optional(CONF_ZONES): dict,
+        vol.Optional(CONF_PARTITIONS): dict,
+        vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
+            vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
+        vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
+            vol.All(vol.Coerce(int), vol.Range(min=15)),
+        vol.Optional(CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL):
+            vol.All(vol.Coerce(int), vol.Range(min=15)),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 # pylint: disable=unused-argument, too-many-function-args, too-many-locals
 # pylint: disable=too-many-return-statements
@@ -54,43 +84,15 @@ def setup(hass, base_config):
 
     config = base_config.get(DOMAIN)
 
-    if config.get(CONF_EVL_HOST) is None:
-        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_EVL_HOST))
-        return False
-
-    if config.get(CONF_PANEL_TYPE) is None:
-        _LOGGER.error(str.format(INVALID_PANEL_ERR, CONF_PANEL_TYPE))
-        return False
-
-    if config.get(CONF_USERNAME) is None:
-        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_USERNAME))
-        return False
-
-    if config.get(CONF_PASS) is None:
-        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_PASS))
-        return False
-
-    if config.get(CONF_ZONES) is None:
-        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_ZONES))
-        return False
-
-    if config.get(CONF_PARTITIONS) is None:
-        _LOGGER.error(str.format(REQ_VAR_ERR, CONF_PARTITIONS))
-        return False
-
     _host = config.get(CONF_EVL_HOST)
-    _port = convert(config.get(CONF_EVL_PORT), int, DEFAULT_PORT)
+    _port = config.get(CONF_EVL_PORT)
     _code = config.get(CONF_CODE)
     _panel_type = config.get(CONF_PANEL_TYPE)
-    _version = convert(config.get(CONF_EVL_VERSION), int, DEFAULT_EVL_VERSION)
+    _version = config.get(CONF_EVL_VERSION)
     _user = config.get(CONF_USERNAME)
     _pass = config.get(CONF_PASS)
-    _keep_alive = convert(config.get(CONF_EVL_KEEPALIVE),
-                          int,
-                          DEFAULT_KEEPALIVE)
-    _zone_dump = convert(config.get(CONF_ZONEDUMP_INTERVAL),
-                         int,
-                         DEFAULT_ZONEDUMP_INTERVAL)
+    _keep_alive = config.get(CONF_EVL_KEEPALIVE)
+    _zone_dump = config.get(CONF_ZONEDUMP_INTERVAL)
     _zones = config.get(CONF_ZONES)
     _partitions = config.get(CONF_PARTITIONS)
     _connect_status = {}
@@ -170,10 +172,16 @@ def setup(hass, base_config):
     _result = start_envisalink(None)
     if _result:
         # Load sub-components for envisalink
-        for comp_name in (['binary_sensor', 'alarm_control_panel', 'sensor']):
-            load_platform(hass, comp_name, 'envisalink',
-                          {'zones': _zones, 'partitions': _partitions,
+        if _partitions:
+            load_platform(hass, 'alarm_control_panel', 'envisalink',
+                          {'partitions': _partitions,
                            'code': _code}, config)
+            load_platform(hass, 'sensor', 'envisalink',
+                          {'partitions': _partitions,
+                           'code': _code}, config)
+        if _zones:
+            load_platform(hass, 'binary_sensor', 'envisalink',
+                          {'zones': _zones}, config)
 
     return _result
 
