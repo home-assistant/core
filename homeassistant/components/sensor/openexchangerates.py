@@ -38,7 +38,6 @@ class openexchangeratesSensor(Entity):
         self._name = name
         self._quote = quote
         self.update()
-
     @property
     def name(self):
         """Return the name of the sensor."""
