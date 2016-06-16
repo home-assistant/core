@@ -1,7 +1,4 @@
-"""
-Support for openexchangerates.org exchange rates service.
-For more details about this platform, please refer to the documentation at (working on it).
-"""
+"""Support for openexchangerates.org exchange rates service."""
 import requests
 import logging
 
