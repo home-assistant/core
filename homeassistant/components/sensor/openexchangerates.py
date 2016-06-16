@@ -20,10 +20,10 @@ DEFAULT_NAME = 'Exchange Rate Sensor'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     payload = config.get('payload', None)
     rest = openexchangeratesData(_RESOURCE, config.get(CONF_API_KEY), 
-    config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
+            config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
     rest.update()
     add_devices([openexchangeratesSensor(rest, config.get(CONF_NAME, DEFAULT_NAME), 
-    config.get(CONF_QUOTE))])
+            config.get(CONF_QUOTE))])
 
 class openexchangeratesSensor(Entity):
     """Implementing the Openexchangerates sensor."""
@@ -65,8 +65,8 @@ class openexchangeratesData(object):
     def update(self):
         """Get the latest data from openexchangerates."""
         try:
-            result = requests.get(self._resource + '?base=' + 
-            self._base + '&app_id=' + self._api_key)
+            result = requests.get(self._resource + '?base=' + self._base +
+                        '&app_id=' + self._api_key)
             self.data = result.json()['rates']
             _LOGGER.debug(result.json()['timestamp'])
         except requests.exceptions.ConnectionError:
