@@ -1,7 +1,6 @@
 """
 Support for openexchangerates.org exchange rates service.
-For more details about this platform, please refer to the documentation at
-
+For more details about this platform, please refer to the documentation at (working on it).
 """
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,6 +20,7 @@ CONF_NAME = 'name'
 DEFAULT_NAME = 'Exchange Rate Sensor'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Openexchangerates sensor."""
     payload = config.get('payload', None)
     rest = openexchangeratesData(_RESOURCE, config.get(CONF_API_KEY), 
            config.get(CONF_BASE,'USD'), config.get(CONF_QUOTE), payload)
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 config.get(CONF_QUOTE))])
 
 class openexchangeratesSensor(Entity):
-
+    """Implementing the Openexchangerates sensor."""
     def __init__(self, rest, name, quote):
         self.rest = rest
         self._name = name
@@ -47,12 +47,13 @@ class openexchangeratesSensor(Entity):
         return self.rest.data
 
     def update(self):
-        """Update current conditions"""
+        """Update current conditions."""
         self.rest.update()
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
 
 class openexchangeratesData(object):
+    """Get data from Openexchangerates.org."""
     def __init__(self, resource, api_key, base, quote, data):
         self._resource = resource
         self._api_key = api_key
@@ -62,7 +63,7 @@ class openexchangeratesData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from openexchangerates"""
+        """Get the latest data from openexchangerates."""
         try:
             result = requests.get(self._resource + '?base=' + 
                      self._base + '&app_id=' + self._api_key)
