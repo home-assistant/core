@@ -66,7 +66,7 @@ class openexchangeratesData(object):
         """Get the latest data from openexchangerates"""
         try:
             result = requests.get(self._resource + '?base=' + self._base + '&app_id=' + self._api_key)
-            self.data =  result.json()['rates']
+            self.data = result.json()['rates']
             _LOGGER.debug(result.json()['timestamp'])
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to host/endpoint: %s", self._resource)
