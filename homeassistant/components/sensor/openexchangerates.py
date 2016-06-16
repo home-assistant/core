@@ -46,20 +46,17 @@ class openexchangeratesSensor(Entity):
 
     def update(self):
         """Update current conditions"""
-
         self.rest.update()
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
 
 class openexchangeratesData(object):
-
     def __init__(self, resource, api_key, base, quote, data):
         self._resource = resource
         self._api_key = api_key
         self._base = base
         self._quote = quote
         self.data=None
-
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
