@@ -1,19 +1,20 @@
 """
 Support for openexchangerates.org exchange rates service.
 For more details about this platform, please refer to the documentation at (working on it).
+
 """
+import requests
+import logging
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
-import requests
-import logging
 from datetime import timedelta
 
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=100)
-
 CONF_BASE = 'base'
 CONF_QUOTE = 'quote'
 CONF_NAME = 'name'
