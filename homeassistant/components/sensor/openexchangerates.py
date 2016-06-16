@@ -21,10 +21,13 @@ DEFAULT_NAME = 'Exchange Rate Sensor'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     payload = config.get('payload', None)
     rest = OpenexchangeratesData(_RESOURCE, config.get(CONF_API_KEY),
-                                 config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
+                                 config.get(CONF_BASE, 'USD'),
+                                 config.get(CONF_QUOTE), payload)
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME, DEFAULT_NAME),
+    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME,
+                                         DEFAULT_NAME),
                                          config.get(CONF_QUOTE))])
+
 
 class OpenexchangeratesSensor(Entity):
     """Implementing the Openexchangerates sensor."""
@@ -34,23 +37,28 @@ class OpenexchangeratesSensor(Entity):
         self._name = name
         self._quote = quote
         self.update()
+
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
     @property
     def device_state_attributes(self):
         """Return other attributes of the sensor."""
         return self.rest.data
+
     def update(self):
         """Update current conditions."""
         self.rest.update()
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
+
 
 class OpenexchangeratesData(object):
     """Get data from Openexchangerates.org."""
