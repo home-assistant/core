@@ -11,6 +11,7 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
 from datetime import timedelta
 
+"""Initialize variables or setup default values."""
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago.
