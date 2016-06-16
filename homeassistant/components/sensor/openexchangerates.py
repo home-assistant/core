@@ -1,7 +1,7 @@
 """Support for openexchangerates.org exchange rates service."""
+from datetime import timedelta
 import logging
 import requests
-from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
@@ -16,13 +16,14 @@ CONF_QUOTE = 'quote'
 CONF_NAME = 'name'
 DEFAULT_NAME = 'Exchange Rate Sensor'
 
+
 """Setup the Openexchangerates sensor."""
 def setup_platform(hass, config, add_devices, discovery_info=None):
     payload = config.get('payload', None)
-    rest = OpenexchangeratesData(_RESOURCE, config.get(CONF_API_KEY), 
+    rest = OpenexchangeratesData(_RESOURCE, config.get(CONF_API_KEY),
                                  config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME, DEFAULT_NAME), 
+    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME, DEFAULT_NAME),
                                          config.get(CONF_QUOTE))])
 
 class OpenexchangeratesSensor(Entity):
