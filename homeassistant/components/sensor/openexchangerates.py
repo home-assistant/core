@@ -1,10 +1,10 @@
 """Support for openexchangerates.org exchange rates service."""
 import logging
 import requests
+from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
-from datetime import timedelta
 
 """Initialize variables or setup default values."""
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
@@ -20,10 +20,10 @@ DEFAULT_NAME = 'Exchange Rate Sensor'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     payload = config.get('payload', None)
     rest = OpenexchangeratesData(_RESOURCE, config.get(CONF_API_KEY), 
-            config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
+                                 config.get(CONF_BASE, 'USD'), config.get(CONF_QUOTE), payload)
     rest.update()
     add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME, DEFAULT_NAME), 
-            config.get(CONF_QUOTE))])
+                                         config.get(CONF_QUOTE))])
 
 class OpenexchangeratesSensor(Entity):
     """Implementing the Openexchangerates sensor."""
@@ -66,7 +66,7 @@ class OpenexchangeratesData(object):
         """Get the latest data from openexchangerates."""
         try:
             result = requests.get(self._resource + '?base=' + self._base +
-                        '&app_id=' + self._api_key)
+                                  '&app_id=' + self._api_key)
             self.data = result.json()['rates']
             _LOGGER.debug(result.json()['timestamp'])
         except requests.exceptions.ConnectionError:
