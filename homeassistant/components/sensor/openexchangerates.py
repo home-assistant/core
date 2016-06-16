@@ -1,3 +1,8 @@
+"""
+Support for openexchangerates.org exchange rates service.
+For more details about this platform, please refer to the documentation at
+
+"""
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
