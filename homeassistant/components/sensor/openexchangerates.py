@@ -16,7 +16,7 @@ CONF_NAME = 'name'
 DEFAULT_NAME = 'Exchange Rate Sensor'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    payload=config.get('payload', None)
+    payload = config.get('payload', None)
     rest = openexchangeratesData(_RESOURCE, config.get(CONF_API_KEY),config.get(CONF_BASE,'USD'),config.get(CONF_QUOTE),payload)
     rest.update()
     add_devices([openexchangeratesSensor(rest,config.get(CONF_NAME,DEFAULT_NAME),config.get(CONF_QUOTE))])
