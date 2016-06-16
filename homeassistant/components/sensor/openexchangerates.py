@@ -36,14 +36,14 @@ class openexchangeratesSensor(Entity):
 
     @property
     def name(self):
-        return self._name    
+        return self._name
     @property
     def state(self):
         return self._state
     @property
     def device_state_attributes(self):
         return self.rest.data
-		
+
     def update(self):
         """Update current conditions"""
 
