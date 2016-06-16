@@ -38,14 +38,16 @@ class openexchangeratesSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return self._name
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._state
     @property
     def device_state_attributes(self):
+        """Return other attributes of the sensor."""
         return self.rest.data
-
     def update(self):
         """Update current conditions."""
         self.rest.update()
@@ -55,6 +57,7 @@ class openexchangeratesSensor(Entity):
 class openexchangeratesData(object):
     """Get data from Openexchangerates.org."""
     def __init__(self, resource, api_key, base, quote, data):
+        """Initialize the data object."""
         self._resource = resource
         self._api_key = api_key
         self._base = base
