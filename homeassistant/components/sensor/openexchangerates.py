@@ -56,7 +56,7 @@ class openexchangeratesData(object):
         self._api_key = api_key
         self._base = base
         self._quote = quote
-        self.data=None
+        self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
