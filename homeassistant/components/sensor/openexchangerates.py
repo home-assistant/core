@@ -1,7 +1,6 @@
 """Support for openexchangerates.org exchange rates service."""
-import requests
 import logging
-
+import requests
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.const import CONF_API_KEY
