@@ -63,6 +63,7 @@ class OpenexchangeratesSensor(Entity):
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
 
+
 # pylint: disable=too-few-public-methods
 class OpenexchangeratesData(object):
     """Get data from Openexchangerates.org."""
