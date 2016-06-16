@@ -63,10 +63,11 @@ class OpenexchangeratesSensor(Entity):
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
 
-
+# pylint: disable=too-few-public-methods
 class OpenexchangeratesData(object):
     """Get data from Openexchangerates.org."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, resource, api_key, base, quote, data):
         """Initialize the data object."""
         self._resource = resource
