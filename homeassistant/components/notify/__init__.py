@@ -35,7 +35,7 @@ ATTR_DATA = 'data'
 SERVICE_NOTIFY = "notify"
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_MESSAGE): cv.template,
+    vol.Optional(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_DATA): dict,      # nobody seems to be using this (yet)
@@ -80,7 +80,7 @@ def setup(hass, config):
 
         def notify_message(notify_service, call):
             """Handle sending notification message service calls."""
-            message = call.data[ATTR_MESSAGE]
+            message = call.data.get(ATTR_MESSAGE, "")
 
             title = template.render(
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
