@@ -57,6 +57,7 @@ class RestBinarySensor(BinarySensorDevice):
         self._name = name
         self._sensor_class = sensor_class
         self._state = False
+        self._previous_data = None
         self._value_template = value_template
         self.update()
 
@@ -77,17 +78,14 @@ class RestBinarySensor(BinarySensorDevice):
             return False
 
         if self._value_template is not None:
-            self._state = template.render_with_possible_json_value(
+            response = template.render_with_possible_json_value(
                 self._hass, self._value_template, self.rest.data, False)
-        else:
-            self._state = self.rest.data
 
         try:
-            return bool(int(self._state))
+            return bool(int(response))
         except ValueError:
-            return {"True": True, "true": True, "TRUE": True, "On": True,
-                    "on": True, "ON": True, "Open": True, "open": True,
-                    "OPEN": True}.get(self._state, False)
+            return {"true": True, "on": True, "open": True,
+                    "yes": True}.get(response.lower(), False)
 
     def update(self):
         """Get the latest data from REST API and updates the state."""
