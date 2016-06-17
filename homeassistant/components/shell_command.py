@@ -32,7 +32,10 @@ def setup(hass, config):
 
     def service_handler(call):
         """Execute a shell command service."""
-        cmd, shell = _parse_command(conf[call.service], hass)
+        cmd = conf[call.service]
+        cmd, shell = _parse_command(hass, cmd, call.data)
+        if cmd is None:
+            return
         try:
             subprocess.call(cmd, shell=shell,
                             stdout=subprocess.DEVNULL,
@@ -46,15 +49,16 @@ def setup(hass, config):
     return True
 
 
-def _parse_command(cmd, hass):
+def _parse_command(hass, cmd, variables):
     """Parse command and fill in any template arguments if necessary."""
     cmds = cmd.split()
     prog = cmds[0]
     args = ' '.join(cmds[1:])
     try:
-        rendered_args = template.render(hass, args)
+        rendered_args = template.render(hass, args, variables=variables)
     except TemplateError as ex:
-        _LOGGER.error('Error rendering command template: %s', ex)
+        _LOGGER.exception('Error rendering command template: %s', ex)
+        return None, None
     if rendered_args == args:
         # no template used. default behavior
         shell = True
