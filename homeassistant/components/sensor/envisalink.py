@@ -6,13 +6,11 @@ https://home-assistant.io/components/sensor.envisalink/
 """
 import logging
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  PARTITION_SCHEMA,
                                                  CONF_PARTITIONNAME,
                                                  EnvisalinkDevice,
                                                  SIGNAL_KEYPAD_UPDATE)
-from homeassistant.util import convert
 
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
@@ -21,18 +19,20 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_partitions = discovery_info['partitions']
-    for partNum in _configured_partitions:
+    for part_num in _configured_partitions:
         try:
-            _LOGGER.info(str.format("Validating config for partition: {0}", partNum))
-            _device_config_data = PARTITION_SCHEMA(_configured_partitions[partNum])
+            _LOGGER.info(str.format("Validating config for partition: {0}",
+                                    part_num))
+            _device_config_data = PARTITION_SCHEMA(
+                _configured_partitions[part_num])
             _device = EnvisalinkSensor(
-                      _device_config_data[CONF_PARTITIONNAME],
-                      partNum,
-                      EVL_CONTROLLER.alarm_state['partition'][partNum],
-                      EVL_CONTROLLER)
+                _device_config_data[CONF_PARTITIONNAME],
+                part_num,
+                EVL_CONTROLLER.alarm_state['partition'][part_num],
+                EVL_CONTROLLER)
             add_devices_callback([_device])
         except vol.MultipleInvalid:
-            _LOGGER.error('Failed to load partition. A partition name is required.')
+            _LOGGER.error('A partition name is required.')
 
 
 class EnvisalinkSensor(EnvisalinkDevice):

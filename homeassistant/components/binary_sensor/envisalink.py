@@ -6,7 +6,6 @@ https://home-assistant.io/components/binary_sensor.envisalink/
 """
 import logging
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  ZONE_SCHEMA,
@@ -15,27 +14,29 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  EnvisalinkDevice,
                                                  SIGNAL_ZONE_UPDATE)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
-from homeassistant.util import convert
 
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_zones = discovery_info['zones']
-    for zoneNum in _configured_zones:
+    for zone_num in _configured_zones:
         try:
-            _LOGGER.info(str.format("Validating config for zone: {0}", zoneNum))
-            _device_config_data = ZONE_SCHEMA(_configured_zones[zoneNum])
+            _LOGGER.info(str.format("Validating config for zone: {0}",
+                                    zone_num))
+            _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
             _device = EnvisalinkBinarySensor(
-                      zoneNum,
-                      _device_config_data[CONF_ZONENAME],
-                      _device_config_data[CONF_ZONETYPE],
-                      EVL_CONTROLLER.alarm_state['zone'][zoneNum],
-                      EVL_CONTROLLER) 
+                zone_num,
+                _device_config_data[CONF_ZONENAME],
+                _device_config_data[CONF_ZONETYPE],
+                EVL_CONTROLLER.alarm_state['zone'][zone_num],
+                EVL_CONTROLLER)
             add_devices_callback([_device])
         except vol.MultipleInvalid:
-            _LOGGER.error('Failed to load zone. A zone name is required.')
+            _LOGGER.error('A zone name is required.')
+
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     """Representation of an envisalink Binary Sensor."""

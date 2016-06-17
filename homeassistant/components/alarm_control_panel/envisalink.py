@@ -6,7 +6,6 @@ https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import logging
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  EnvisalinkDevice,
@@ -15,7 +14,6 @@ from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  CONF_PARTITIONNAME,
                                                  SIGNAL_PARTITION_UPDATE,
                                                  SIGNAL_KEYPAD_UPDATE)
-from homeassistant.util import convert
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
@@ -29,19 +27,21 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     _configured_partitions = discovery_info['partitions']
     _code = discovery_info[CONF_CODE]
-    for partNum in _configured_partitions:
+    for part_num in _configured_partitions:
         try:
-            _LOGGER.info(str.format("Validating config for partition: {0}", partNum))
-            _device_config_data = PARTITION_SCHEMA(_configured_partitions[partNum])
+            _LOGGER.info(str.format("Validating config for partition: {0}",
+                                    part_num))
+            _device_config_data = PARTITION_SCHEMA(
+                _configured_partitions[part_num])
             _device = EnvisalinkAlarm(
-                      partNum,
-                      _device_config_data[CONF_PARTITIONNAME],
-                      _code,
-                      EVL_CONTROLLER.alarm_state['partition'][partNum],
-                      EVL_CONTROLLER)
+                part_num,
+                _device_config_data[CONF_PARTITIONNAME],
+                _code,
+                EVL_CONTROLLER.alarm_state['partition'][part_num],
+                EVL_CONTROLLER)
             add_devices_callback([_device])
         except vol.MultipleInvalid:
-            _LOGGER.error('Failed to load partition. A partition name is required.')
+            _LOGGER.error('A partition name is required.')
 
     return True
 

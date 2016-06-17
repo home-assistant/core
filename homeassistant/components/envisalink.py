@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_EVL_HOST): cv.string,
         vol.Required(CONF_PANEL_TYPE):
-            vol.All(cv.string, vol.In(['HONEYWELL','DSC'])),
+            vol.All(cv.string, vol.In(['HONEYWELL', 'DSC'])),
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASS): cv.string,
         vol.Required(CONF_CODE): cv.string,
@@ -68,10 +68,12 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
         vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(CONF_ZONEDUMP_INTERVAL, default=DEFAULT_ZONEDUMP_INTERVAL):
+        vol.Optional(CONF_ZONEDUMP_INTERVAL,
+                     default=DEFAULT_ZONEDUMP_INTERVAL):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
     }),
 }, extra=vol.ALLOW_EXTRA)
+
 
 # pylint: disable=unused-argument, too-many-function-args, too-many-locals
 # pylint: disable=too-many-return-statements
