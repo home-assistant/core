@@ -169,6 +169,7 @@ def request_configuration(config, hass, add_devices_callback):
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
     )
 
+
 # pylint: disable=abstract-method, too-many-public-methods,
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class BraviaTVDevice(MediaPlayerDevice):
@@ -215,6 +216,11 @@ class BraviaTVDevice(MediaPlayerDevice):
 
         # Retrieve the latest data.
         try:
+            if self._state == self._STATE_ON:
+                # refresh volume info:
+                self._refresh_volume()
+                self._refresh_channels()
+
             playing_info = self._braviarc.get_playing_info()
             if playing_info is None or len(playing_info) == 0:
                 self._state = STATE_OFF
@@ -230,16 +236,6 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._duration = playing_info.get('durationSec')
                 self._start_date_time = playing_info.get('startDateTime')
 
-                # refresh volume info:
-                self._refresh_volume()
-
-                if len(self._source_list) == 0:
-                    self._content_mapping = self._braviarc.\
-                        load_source_list()
-                    self._source_list = []
-                    for key in self._content_mapping:
-                        self._source_list.append(key)
-
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
@@ -252,6 +248,14 @@ class BraviaTVDevice(MediaPlayerDevice):
             self._min_volume = volume_info.get('minVolume')
             self._max_volume = volume_info.get('maxVolume')
             self._muted = volume_info.get('mute')
+
+    def _refresh_channels(self):
+        if len(self._source_list) == 0:
+            self._content_mapping = self._braviarc. \
+                load_source_list()
+            self._source_list = []
+            for key in self._content_mapping:
+                self._source_list.append(key)
 
     @property
     def name(self):
@@ -318,12 +322,10 @@ class BraviaTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self._braviarc.turn_on()
-        self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
         self._braviarc.turn_off()
-        self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
