@@ -13,7 +13,7 @@ from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
