@@ -18,7 +18,7 @@ except ImportError:
 # - Used to check missing & unused secrets
 # - Can be used to edit secrets through the frontend after HA started
 HISTORY = {}
-SECRET_DICT = None
+__SECRET_DICT = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,17 +37,16 @@ def get_secret(secret_name, log_warning=True):
     """Retrieve a secret from the secrets.yaml or keyring."""
     HISTORY[secret_name] = SSource.notfound
 
-    if SECRET_DICT and secret_name in SECRET_DICT:
+    if __SECRET_DICT and secret_name in __SECRET_DICT:
         HISTORY[secret_name] = SSource.yaml
-        _LOGGER.debug('from secrets.yaml: %s = "%s"', secret_name,
-                      SECRET_DICT[secret_name])
-        return SECRET_DICT[secret_name]
+        _LOGGER.debug('Retrieved from secrets.yaml: %s', secret_name)
+        return __SECRET_DICT[secret_name]
 
     if keyring:
         pwd = keyring.get_password(_SECRET_NAMESPACE, secret_name)
         if pwd:
             HISTORY[secret_name] = SSource.keyring
-            _LOGGER.debug('from keyring: %s = "%s"', secret_name, pwd)
+            _LOGGER.debug('Retrieved from keyring: %s', secret_name)
             return pwd
 
     if log_warning:
@@ -59,18 +58,21 @@ def load_secrets_yaml(config_path, filename='secrets.yaml'):
     """Try to load secrets.yaml."""
     from homeassistant.config import load_yaml_config_file
     from homeassistant.exceptions import HomeAssistantError
-    global SECRET_DICT
+    global __SECRET_DICT
     try:
-        SECRET_DICT = load_yaml_config_file(
+        __SECRET_DICT = load_yaml_config_file(
             os.path.join(os.path.dirname(config_path), filename))
         _LOGGER.info(filename + ' loaded')
-        if 'debug' in SECRET_DICT and SECRET_DICT['debug']:
-            _LOGGER.setLevel(logging.DEBUG)
+        if 'logger' in __SECRET_DICT:
+            logger = str(__SECRET_DICT['logger']).lower()
+            if logger == 'debug':
+                _LOGGER.setLevel(logging.DEBUG)
+            del __SECRET_DICT['logger']
     except FileNotFoundError:
-        SECRET_DICT = None
+        __SECRET_DICT = None
     except HomeAssistantError:
         _LOGGER.error('Could not load %s', filename)
-        SECRET_DICT = None
+        __SECRET_DICT = None
 
 
 def check_secrets_on_start(hass):
@@ -87,9 +89,9 @@ def check_secrets(log_warning=False):
     missing = [sname for sname, ssrc in HISTORY.items()
                if ssrc == SSource.notfound]
     unused = []
-    if SECRET_DICT:
-        unused = [sname for sname in SECRET_DICT.keys()
-                  if sname not in HISTORY and sname != 'debug']
+    if __SECRET_DICT:
+        unused = [sname for sname in __SECRET_DICT
+                  if sname not in HISTORY]
     if log_warning:
         if len(unused) > 0:
             _LOGGER.warning('Unused secrets [secrets.yaml]: ' +
@@ -97,36 +99,3 @@ def check_secrets(log_warning=False):
         if len(missing) > 0:
             _LOGGER.warning('Missing secrets: ' + ', '.join(missing))
     return {'missing': missing, 'unused': unused}
-
-
-def _cmd_line():
-    """Set / Get secrets through cmdline."""
-    if not keyring:
-        _LOGGER.error("keyring needs to be installed (pip install keyring)")
-        return
-    import argparse
-    parser = argparse.ArgumentParser(
-        description="Manage secrets in the keyring.",
-        epilog="Alternative use: keyring [set|get|del] homeassistant name")
-    parser.add_argument('action', help="The action [get|set|del]")
-    parser.add_argument('name', help="The name of the secret")
-    arguments = parser.parse_args()
-    if arguments.action == 'set':
-        from getpass import getpass
-        secret = getpass("Secret for '{}': ".format(arguments.name))
-        if isinstance(secret, str) and len(secret) > 0:
-            keyring.set_password(_SECRET_NAMESPACE, arguments.name, secret)
-        else:
-            print("Not set")
-    elif arguments.action == 'del':
-        try:
-            keyring.delete_password(_SECRET_NAMESPACE, arguments.name)
-        except keyring.errors.PasswordDeleteError:
-            print("Secret not found.")
-    elif arguments.action == 'get':
-        print(keyring.get_password(_SECRET_NAMESPACE, arguments.name))
-    else:
-        print('Invalid action: {}'.format(arguments.action))
-
-if __name__ == "__main__":
-    _cmd_line()

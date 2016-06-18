@@ -9,7 +9,6 @@ import homeassistant.util.secrets as secrets
 from tests.common import get_test_config_dir
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
-# YAML_PATH = "/home/pi/test_conf.yaml"
 
 
 def load_yaml(string):
@@ -35,8 +34,6 @@ class TestSecrets(unittest.TestCase):
                                '  username: !secret comp1_un\n'
                                '  password: !secret comp1_pw\n'
                                '')
-        # To enable logging for secrets module, uncomment the next line:
-        # secrets.logging.disable(logging.NOTSET)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up."""
@@ -44,17 +41,11 @@ class TestSecrets(unittest.TestCase):
             if os.path.isfile(path):
                 os.remove(path)
 
-    def test_secrets_prepared_ok(self):
+    def test_secrets_parsed_correctly(self):
         """Did secrets load ok."""
-        self.assertEqual(len(secrets.SECRET_DICT), 4)
-
-    def test_secret_1(self):
-        """Don't overwrite existing password."""
         expected = {'api_password': 'pwhttp'}
         self.assertEqual(expected, self._yaml['http'])
 
-    def test_secret_2(self):
-        """Dont overwrite existing password."""
         expected = {
             'username': 'un1',
             'password': 'pw1'}
