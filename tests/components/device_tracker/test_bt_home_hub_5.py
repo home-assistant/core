@@ -9,6 +9,7 @@ patch_file = 'homeassistant.components.device_tracker.bt_home_hub_5'
 
 
 def _get_homehub_data(url):
+    """Return mock homehub data."""
     return '''
     [
         {
@@ -42,7 +43,6 @@ class TestBTHomeHub5DeviceTracker(unittest.TestCase):
     @patch('{}._get_homehub_data'.format(patch_file), new=_get_homehub_data)
     def test_config_minimal(self):
         """Test the setup with minimal configuration."""
-
         config = {
             'device_tracker': {
                 CONF_HOST: 'foo'
