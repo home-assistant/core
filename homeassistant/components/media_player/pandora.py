@@ -102,11 +102,22 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._pianobar = pexpect.spawn('pianobar')
         _LOGGER.info('Started pianobar subprocess')
         mode = self._pianobar.expect(['Receiving new playlist',
-                                      'Select station:'])
+                                      'Select station:',
+                                      'Email:'])
         if mode == 1:
             # station list was presented. dismiss it.
             self._pianobar.sendcontrol('m')
-
+        elif mode == 2:
+            _LOGGER.warning('The pianobar client is not configured to log in. '
+                            'Please create a config file for it as described '
+                            'at https://home-assistant.io'
+                            '/components/media_player.pandora/')
+            # pass through the email/password prompts to quit cleanly
+            self._pianobar.sendcontrol('m')
+            self._pianobar.sendcontrol('m')
+            self._pianobar.terminate()
+            self._pianobar = None
+            return
         self._update_stations()
         self.update_playing_status()
 
@@ -122,6 +133,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self._pianobar.send('q')
         try:
             _LOGGER.info('Stopped Pianobar subprocess')
+            self._pianobar.terminate()
         except pexpect.exceptions.TIMEOUT:
             # kill the process group
             os.killpg(os.getpgid(self._pianobar.pid), signal.SIGTERM)
