@@ -46,10 +46,9 @@ class MjpegCamera(Camera):
             return requests.get(self._mjpeg_url,
                                 auth=HTTPBasicAuth(self._username,
                                                    self._password),
-                                stream=True)
+                                stream=True, timeout=10)
         else:
-            return requests.get(self._mjpeg_url,
-                                stream=True)
+            return requests.get(self._mjpeg_url, stream=True, timeout=10)
 
     def camera_image(self):
         """Return a still image response from the camera."""
