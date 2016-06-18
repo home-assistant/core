@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error('Unable to fetch Rest data')
+        _LOGGER.error('Unable to fetch REST data')
         return False
 
     add_devices([RestBinarySensor(
@@ -57,6 +57,7 @@ class RestBinarySensor(BinarySensorDevice):
         self._name = name
         self._sensor_class = sensor_class
         self._state = False
+        self._previous_data = None
         self._value_template = value_template
         self.update()
 
@@ -77,9 +78,14 @@ class RestBinarySensor(BinarySensorDevice):
             return False
 
         if self._value_template is not None:
-            self.rest.data = template.render_with_possible_json_value(
+            response = template.render_with_possible_json_value(
                 self._hass, self._value_template, self.rest.data, False)
-        return bool(int(self.rest.data))
+
+        try:
+            return bool(int(response))
+        except ValueError:
+            return {"true": True, "on": True, "open": True,
+                    "yes": True}.get(response.lower(), False)
 
     def update(self):
         """Get the latest data from REST API and updates the state."""
