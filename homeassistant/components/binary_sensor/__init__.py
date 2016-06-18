@@ -9,8 +9,6 @@ import logging
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
-from homeassistant.components import (
-    bloomsky, mysensors, zwave, vera, wemo, wink)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 DOMAIN = 'binary_sensor'
@@ -35,22 +33,11 @@ SENSOR_CLASSES = [
     'vibration',     # On means vibration detected, Off means no vibration
 ]
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    bloomsky.DISCOVER_BINARY_SENSORS: 'bloomsky',
-    mysensors.DISCOVER_BINARY_SENSORS: 'mysensors',
-    zwave.DISCOVER_BINARY_SENSORS: 'zwave',
-    vera.DISCOVER_BINARY_SENSORS: 'vera',
-    wemo.DISCOVER_BINARY_SENSORS: 'wemo',
-    wink.DISCOVER_BINARY_SENSORS: 'wink'
-}
-
 
 def setup(hass, config):
     """Track states and offer events for binary sensors."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     component.setup(config)
 

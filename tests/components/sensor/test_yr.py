@@ -25,7 +25,7 @@ class TestSensorYr:
 
     def test_default_setup(self, betamax_session):
         """Test the default setup."""
-        now = datetime(2016, 1, 5, 1, tzinfo=dt_util.UTC)
+        now = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
         with patch('homeassistant.components.sensor.yr.requests.Session',
                    return_value=betamax_session):
@@ -37,13 +37,13 @@ class TestSensorYr:
 
         state = self.hass.states.get('sensor.yr_symbol')
 
-        assert '46' == state.state
+        assert '3' == state.state
         assert state.state.isnumeric()
         assert state.attributes.get('unit_of_measurement') is None
 
     def test_custom_setup(self, betamax_session):
         """Test a custom setup."""
-        now = datetime(2016, 1, 5, 1, tzinfo=dt_util.UTC)
+        now = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
         with patch('homeassistant.components.sensor.yr.requests.Session',
                    return_value=betamax_session):
@@ -61,15 +61,15 @@ class TestSensorYr:
 
         state = self.hass.states.get('sensor.yr_pressure')
         assert 'hPa' == state.attributes.get('unit_of_measurement')
-        assert '1025.1' == state.state
+        assert '1009.3' == state.state
 
         state = self.hass.states.get('sensor.yr_wind_direction')
         assert '°' == state.attributes.get('unit_of_measurement')
-        assert '81.8' == state.state
+        assert '103.6' == state.state
 
         state = self.hass.states.get('sensor.yr_humidity')
         assert '%' == state.attributes.get('unit_of_measurement')
-        assert '79.6' == state.state
+        assert '55.5' == state.state
 
         state = self.hass.states.get('sensor.yr_fog')
         assert '%' == state.attributes.get('unit_of_measurement')
@@ -77,4 +77,4 @@ class TestSensorYr:
 
         state = self.hass.states.get('sensor.yr_wind_speed')
         assert 'm/s', state.attributes.get('unit_of_measurement')
-        assert '4.3' == state.state
+        assert '3.5' == state.state

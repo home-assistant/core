@@ -51,6 +51,30 @@ class TestShellCommand(unittest.TestCase):
             }
         })
 
+    def test_template_render_no_template(self):
+        """Ensure shell_commands without templates get rendered properly."""
+        cmd, shell = shell_command._parse_command(self.hass, 'ls /bin', {})
+        self.assertTrue(shell)
+        self.assertEqual(cmd, 'ls /bin')
+
+    def test_template_render(self):
+        """Ensure shell_commands with templates get rendered properly."""
+        self.hass.states.set('sensor.test_state', 'Works')
+        cmd, shell = shell_command._parse_command(
+            self.hass,
+            'ls /bin {{ states.sensor.test_state.state }}', {}
+        )
+        self.assertFalse(shell, False)
+        self.assertEqual(cmd[-1], 'Works')
+
+    def test_invalid_template_fails(self):
+        """Test that shell_commands with invalid templates fail."""
+        cmd, _shell = shell_command._parse_command(
+            self.hass,
+            'ls /bin {{ states. .test_state.state }}', {}
+        )
+        self.assertEqual(cmd, None)
+
     @patch('homeassistant.components.shell_command.subprocess.call',
            side_effect=SubprocessError)
     @patch('homeassistant.components.shell_command._LOGGER.error')

@@ -17,8 +17,8 @@ def track_state_change(hass, entity_ids, action, from_state=None,
     Returns the listener that listens on the bus for EVENT_STATE_CHANGED.
     Pass the return value into hass.bus.remove_listener to remove it.
     """
-    from_state = _process_match_param(from_state)
-    to_state = _process_match_param(to_state)
+    from_state = _process_state_match(from_state)
+    to_state = _process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
@@ -155,7 +155,7 @@ def track_utc_time_change(hass, action, year=None, month=None, day=None,
         hass.bus.listen(EVENT_TIME_CHANGED, time_change_listener)
         return time_change_listener
 
-    pmp = _process_match_param
+    pmp = _process_time_match
     year, month, day = pmp(year), pmp(month), pmp(day)
     hour, minute, second = pmp(hour), pmp(minute), pmp(second)
 
@@ -190,7 +190,17 @@ def track_time_change(hass, action, year=None, month=None, day=None,
                                  second, local=True)
 
 
-def _process_match_param(parameter):
+def _process_state_match(parameter):
+    """Wrap parameter in a tuple if it is not one and returns it."""
+    if parameter is None or parameter == MATCH_ALL:
+        return MATCH_ALL
+    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+        return (parameter,)
+    else:
+        return tuple(parameter)
+
+
+def _process_time_match(parameter):
     """Wrap parameter in a tuple if it is not one and returns it."""
     if parameter is None or parameter == MATCH_ALL:
         return MATCH_ALL

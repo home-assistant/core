@@ -78,6 +78,9 @@ omit =
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
+    homeassistant/components/netatmo.py
+    homeassistant/components/*/netatmo.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/binary_sensor/arest.py
@@ -92,6 +95,7 @@ omit =
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/bluetooth_tracker.py
+    homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/ddwrt.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/icloud.py
@@ -126,6 +130,7 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/panasonic_viera.py
+    homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
@@ -171,16 +176,18 @@ omit =
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
-    homeassistant/components/sensor/netatmo.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
+    homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
+    homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
@@ -196,6 +203,7 @@ omit =
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/mystrom.py
+    homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py

@@ -9,6 +9,8 @@ import subprocess
 
 import voluptuous as vol
 
+from homeassistant.helpers import template
+from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'shell_command'
@@ -30,14 +32,38 @@ def setup(hass, config):
 
     def service_handler(call):
         """Execute a shell command service."""
+        cmd = conf[call.service]
+        cmd, shell = _parse_command(hass, cmd, call.data)
+        if cmd is None:
+            return
         try:
-            subprocess.call(conf[call.service], shell=True,
+            subprocess.call(cmd, shell=shell,
                             stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL)
         except subprocess.SubprocessError:
-            _LOGGER.exception('Error running command')
+            _LOGGER.exception('Error running command: %s', cmd)
 
     for name in conf.keys():
         hass.services.register(DOMAIN, name, service_handler,
                                schema=SHELL_COMMAND_SCHEMA)
     return True
+
+
+def _parse_command(hass, cmd, variables):
+    """Parse command and fill in any template arguments if necessary."""
+    cmds = cmd.split()
+    prog = cmds[0]
+    args = ' '.join(cmds[1:])
+    try:
+        rendered_args = template.render(hass, args, variables=variables)
+    except TemplateError as ex:
+        _LOGGER.exception('Error rendering command template: %s', ex)
+        return None, None
+    if rendered_args == args:
+        # no template used. default behavior
+        shell = True
+    else:
+        # template used. Must break into list and use shell=False for security
+        cmd = [prog] + rendered_args.split()
+        shell = False
+    return cmd, shell

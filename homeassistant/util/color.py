@@ -1,10 +1,35 @@
 """Color util methods."""
+import logging
 import math
 # pylint: disable=unused-import
-from webcolors import html5_parse_legacy_color as color_name_to_rgb  # noqa
+
+_LOGGER = logging.getLogger(__name__)
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154
+COLORS = {
+    'white': (255, 255, 255), 'beige': (245, 245, 220),
+    'tan': (210, 180, 140), 'gray': (128, 128, 128),
+    'navy blue': (0, 0, 128), 'royal blue': (8, 76, 158),
+    'blue': (0, 0, 255), 'azure': (0, 127, 255), 'aqua': (127, 255, 212),
+    'teal': (0, 128, 128), 'green': (0, 255, 0),
+    'forest green': (34, 139, 34), 'olive': (128, 128, 0),
+    'chartreuse': (127, 255, 0), 'lime': (191, 255, 0),
+    'golden': (255, 215, 0), 'red': (255, 0, 0), 'coral': (0, 63, 72),
+    'hot pink': (252, 15, 192), 'fuchsia': (255, 119, 255),
+    'lavender': (181, 126, 220), 'indigo': (75, 0, 130),
+    'maroon': (128, 0, 0), 'crimson': (220, 20, 60)}
+
+
+def color_name_to_rgb(color_name):
+    """Convert color name to RGB hex value."""
+    hex_value = COLORS.get(color_name.lower())
+
+    if not hex_value:
+        _LOGGER.error('unknown color supplied %s default to white', color_name)
+        hex_value = COLORS['white']
+
+    return hex_value
 
 
 # Taken from:
