@@ -9,6 +9,7 @@ dedicated to Isabel
 import logging
 import os
 import json
+import re
 from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
@@ -18,8 +19,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.zip'
-    '#braviarc==0.3']
+    'https://github.com/aparraga/braviarc/archive/0.3.2.zip'
+    '#braviarc==0.3.2']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
@@ -34,6 +35,16 @@ SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                  SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                  SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
                  SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+
+
+def _get_mac_address(ip_address):
+    from subprocess import Popen, PIPE
+
+    pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
+    pid_component = pid.communicate()[0]
+    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
+                    pid_component).groups()[0]
+    return mac
 
 
 def _config_from_file(filename, config=None):
@@ -83,8 +94,9 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config['pin']
+            mac = host_config['mac']
             name = config.get(CONF_NAME)
-            add_devices_callback([BraviaTVDevice(host, name, pin)])
+            add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
             return
 
     setup_bravia(config, pin, hass, add_devices_callback)
@@ -102,6 +114,9 @@ def setup_bravia(config, pin, hass, add_devices_callback):
         request_configuration(config, hass, add_devices_callback)
         return
     else:
+        mac = _get_mac_address(host)
+        if mac is not None:
+            mac = mac.decode('utf8')
         # If we came here and configuring this host, mark as done
         if host in _CONFIGURING:
             request_id = _CONFIGURING.pop(host)
@@ -112,10 +127,10 @@ def setup_bravia(config, pin, hass, add_devices_callback):
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'host': host}}):
+                {host: {'pin': pin, 'host': host, 'mac': mac}}):
             _LOGGER.error('failed to save config file')
 
-        add_devices_callback([BraviaTVDevice(host, name, pin)])
+        add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
 
 
 def request_configuration(config, hass, add_devices_callback):
@@ -159,12 +174,12 @@ def request_configuration(config, hass, add_devices_callback):
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
-    def __init__(self, host, name, pin):
+    def __init__(self, host, mac, name, pin):
         """Initialize the sony bravia device."""
         from braviarc import braviarc
 
         self._pin = pin
-        self._braviarc = braviarc.BraviaRC(host)
+        self._braviarc = braviarc.BraviaRC(host, mac)
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -201,7 +216,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         # Retrieve the latest data.
         try:
             playing_info = self._braviarc.get_playing_info()
-            if len(playing_info) == 0:
+            if playing_info is None or len(playing_info) == 0:
                 self._state = STATE_OFF
             else:
                 self._state = STATE_ON
