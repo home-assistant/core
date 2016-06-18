@@ -9,7 +9,6 @@ dedicated to Isabel
 import logging
 import os
 import json
-import re
 from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
@@ -35,20 +34,6 @@ SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                  SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                  SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
                  SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-
-
-def _jdata_build(method, params):
-    if params:
-        ret = json.dumps({"method": method,
-                          "params": [params],
-                          "id": 1,
-                          "version": "1.0"})
-    else:
-        ret = json.dumps({"method": method,
-                          "params": [],
-                          "id": 1,
-                          "version": "1.0"})
-    return ret
 
 
 def _config_from_file(filename, config=None):
@@ -98,9 +83,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config['pin']
-            mac = host_config['mac']
             name = config.get(CONF_NAME)
-            add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
+            add_devices_callback([BraviaTVDevice(host, name, pin)])
             return
 
     setup_bravia(config, pin, hass, add_devices_callback)
@@ -118,9 +102,6 @@ def setup_bravia(config, pin, hass, add_devices_callback):
         request_configuration(config, hass, add_devices_callback)
         return
     else:
-        mac = _get_mac_address(host)
-        if mac is not None:
-            mac = mac.decode('utf8')
         # If we came here and configuring this host, mark as done
         if host in _CONFIGURING:
             request_id = _CONFIGURING.pop(host)
@@ -131,10 +112,10 @@ def setup_bravia(config, pin, hass, add_devices_callback):
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
-                {host: {'pin': pin, 'mac': mac}}):
+                {host: {'pin': pin, 'host': host}}):
             _LOGGER.error('failed to save config file')
 
-        add_devices_callback([BraviaTVDevice(host, mac, name, pin)])
+        add_devices_callback([BraviaTVDevice(host, name, pin)])
 
 
 def request_configuration(config, hass, add_devices_callback):
@@ -158,7 +139,7 @@ def request_configuration(config, hass, add_devices_callback):
 
         pin = data.get('pin')
         braviarc = braviarc.BraviaRC(host)
-        braviarc.bravia_auth(pin, CLIENTID_PREFIX, NICKNAME)
+        braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if braviarc.is_connected():
             setup_bravia(config, pin, hass, add_devices_callback)
         else:
@@ -173,28 +154,17 @@ def request_configuration(config, hass, add_devices_callback):
         fields=[{'id': 'pin', 'name': 'Enter the pin', 'type': ''}]
     )
 
-
-def _get_mac_address(ip_address):
-    from subprocess import Popen, PIPE
-
-    pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
-    pid_component = pid.communicate()[0]
-    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
-                    pid_component).groups()[0]
-    return mac
-
-
 # pylint: disable=abstract-method, too-many-public-methods,
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
-    def __init__(self, host, mac, name, pin):
+    def __init__(self, host, name, pin):
         """Initialize the sony bravia device."""
         from braviarc import braviarc
 
         self._pin = pin
-        self._braviarc = braviarc.BraviaRC(host, mac)
+        self._braviarc = braviarc.BraviaRC(host)
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -215,7 +185,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._max_volume = None
         self._volume = None
 
-        self._braviarc.bravia_auth(pin, CLIENTID_PREFIX, NICKNAME)
+        self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if self._braviarc.is_connected():
             self.update()
         else:
@@ -224,7 +194,7 @@ class BraviaTVDevice(MediaPlayerDevice):
     def update(self):
         """Update TV info."""
         if not self._braviarc.is_connected():
-            self._braviarc.bravia_auth(self._pin, CLIENTID_PREFIX, NICKNAME)
+            self._braviarc.connect(self._pin, CLIENTID_PREFIX, NICKNAME)
             if not self._braviarc.is_connected():
                 return
 
@@ -260,24 +230,13 @@ class BraviaTVDevice(MediaPlayerDevice):
             self._state = STATE_OFF
 
     def _refresh_volume(self):
-        resp = self. \
-            _braviarc.bravia_req_json(self._host,
-                                      self._cookies,
-                                      "sony/audio",
-                                      _jdata_build(
-                                          "getVolumeInformation",
-                                          None))
-        if not resp.get('error'):
-            results = resp.get('result')[0]
-            for result in results:
-                if result.get('target') == 'speaker':
-                    self._volume = result.get('volume')
-                    self._min_volume = result.get('minVolume')
-                    self._max_volume = result.get('maxVolume')
-                    self._muted = result.get('mute')
-        else:
-            _LOGGER.error("JSON request error:" +
-                          json.dumps(resp, indent=4))
+        """Refresh volume information."""
+        volume_info = self._braviarc.get_volume_info()
+        if volume_info is not None:
+            self._volume = volume_info.get('volume')
+            self._min_volume = volume_info.get('minVolume')
+            self._max_volume = volume_info.get('maxVolume')
+            self._muted = volume_info.get('mute')
 
     @property
     def name(self):
