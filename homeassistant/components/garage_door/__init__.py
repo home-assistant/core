@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, SERVICE_CLOSE, SERVICE_OPEN,
     ATTR_ENTITY_ID)
-from homeassistant.components import (group, wink)
+from homeassistant.components import group
 
 DOMAIN = 'garage_door'
 SCAN_INTERVAL = 30
@@ -26,11 +26,6 @@ GROUP_NAME_ALL_GARAGE_DOORS = 'all garage doors'
 ENTITY_ID_ALL_GARAGE_DOORS = group.ENTITY_ID_FORMAT.format('all_garage_doors')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wink.DISCOVER_GARAGE_DOORS: 'wink'
-}
 
 GARAGE_DOOR_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -60,8 +55,7 @@ def open_door(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for garage door."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_GARAGE_DOORS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_GARAGE_DOORS)
     component.setup(config)
 
     def handle_garage_door_service(service):
