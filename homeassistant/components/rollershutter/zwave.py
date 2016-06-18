@@ -59,10 +59,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         return self._value.node.name or "{} {}".format(
             self._value.node.manufacturer_name, self._value.node.product_name)
 
-    @property
-    def should_poll(self):
-        """No polling available in Zwave roller shutter."""
-        return False
 
     @property
     def current_position(self):
@@ -78,6 +74,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == 38 and value.index == 0:
                 value.data = 255
+                break
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
@@ -85,6 +82,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == 38 and value.index == 0:
                 value.data = 0
+                break
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
