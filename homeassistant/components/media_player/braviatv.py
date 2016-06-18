@@ -10,7 +10,6 @@ import logging
 import os
 import json
 import re
-from io import StringIO
 from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
