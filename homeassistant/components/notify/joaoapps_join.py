@@ -13,14 +13,14 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-join-api/archive/'
-    'b12729fff7bf77c93afd328a3104c60c48aa9832.zip#python-join-api==0.0.1']
+    'ceb384eb21e2b103fc0c355447252fedd7f7a185.zip#python-join-api==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE_ID = 'device_id'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'join',
+    vol.Required(CONF_PLATFORM): 'joaoapps_join',
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_API_KEY): cv.string
@@ -32,6 +32,11 @@ def get_service(hass, config):
     """Get the Join notification service."""
     device_id = config.get(CONF_DEVICE_ID)
     api_key = config.get(CONF_API_KEY)
+    if api_key:
+        from pyjoin import get_devices
+        if not get_devices(api_key):
+            _LOGGER.error("Error connecting to Join, check API key")
+            return False
     return JoinNotificationService(device_id, api_key)
 
 

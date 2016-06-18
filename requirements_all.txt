@@ -132,8 +132,8 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
 
-# homeassistant.components.notify.join
-https://github.com/nkgilley/python-join-api/archive/b12729fff7bf77c93afd328a3104c60c48aa9832.zip#python-join-api==0.0.1
+# homeassistant.components.notify.joaoapps_join
+https://github.com/nkgilley/python-join-api/archive/ceb384eb21e2b103fc0c355447252fedd7f7a185.zip#python-join-api==0.0.1
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
