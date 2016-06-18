@@ -5,7 +5,6 @@ pytz>=2016.4
 pip>=7.0.0
 jinja2>=2.8
 voluptuous==0.8.9
-webcolors==1.5
 eventlet==0.19.0
 
 # homeassistant.components.isy994
@@ -30,7 +29,10 @@ Werkzeug==0.11.5
 apcaccess==0.0.4
 
 # homeassistant.components.sun
-astral==1.1
+astral==1.2
+
+# homeassistant.components.sensor.swiss_hydrological_data
+beautifulsoup4==4.4.1
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
@@ -95,9 +97,6 @@ hikvision==0.4
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
-# homeassistant.components.sensor.netatmo
-https://github.com/HydrelioxGitHub/netatmo-api-python/archive/43ff238a0122b0939a0dc4e8836b6782913fb6e2.zip#lnetatmo==0.4.0
-
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
@@ -124,6 +123,9 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # homeassistant.components.device_tracker.fritz
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
+# homeassistant.components.netatmo
+https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
+
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
@@ -131,7 +133,7 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/4a884bc146a93991b4210f868f3d6aecf0a181e6.zip#python-ecobee==0.0.5
+https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
@@ -172,6 +174,9 @@ lightify==1.0.3
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
+# homeassistant.components.sensor.swiss_hydrological_data
+lxml==3.6.0
+
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
@@ -196,12 +201,14 @@ panasonic_viera==0.2
 
 # homeassistant.components.device_tracker.aruba
 # homeassistant.components.device_tracker.asuswrt
+# homeassistant.components.media_player.pandora
 pexpect==4.0.1
 
 # homeassistant.components.light.hue
 phue==0.8
 
 # homeassistant.components.media_player.plex
+# homeassistant.components.sensor.plex
 plexapi==1.1.0
 
 # homeassistant.components.thermostat.proliphix
@@ -252,6 +259,9 @@ pyloopenergy==0.0.13
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
+# homeassistant.components.switch.netio
+pynetio==0.1.6
+
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.2
@@ -263,6 +273,7 @@ pyowm==2.3.1
 pyserial<=3.0
 
 # homeassistant.components.device_tracker.snmp
+# homeassistant.components.sensor.snmp
 pysnmp==4.3.2
 
 # homeassistant.components.sensor.forecast
@@ -287,7 +298,7 @@ python-pushover==0.2
 python-statsd==1.7.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==4.2.0
+python-telegram-bot==4.2.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
@@ -297,9 +308,10 @@ python-twitch==1.2.0
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
+# homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.6
+python-wink==0.7.7
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9

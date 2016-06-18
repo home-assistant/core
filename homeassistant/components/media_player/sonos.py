@@ -34,6 +34,8 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_SEEK
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
+SERVICE_SNAPSHOT = 'sonos_snapshot'
+SERVICE_RESTORE = 'sonos_restore'
 
 
 # pylint: disable=unused-argument
@@ -84,12 +86,48 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device.group_players()
             device.update_ha_state(True)
 
+    def snapshot(service):
+        """Take a snapshot."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.snapshot(service)
+            device.update_ha_state(True)
+
+    def restore(service):
+        """Restore a snapshot."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.restore(service)
+            device.update_ha_state(True)
+
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
                            group_players_service,
                            descriptions.get(SERVICE_GROUP_PLAYERS))
+
+    hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
+                           snapshot,
+                           descriptions.get(SERVICE_SNAPSHOT))
+
+    hass.services.register(DOMAIN, SERVICE_RESTORE,
+                           restore,
+                           descriptions.get(SERVICE_RESTORE))
 
     return True
 
@@ -136,6 +174,8 @@ class SonosDevice(MediaPlayerDevice):
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
+        from soco.snapshot import Snapshot
+        self.soco_snapshot = Snapshot(self._player)
 
     @property
     def should_poll(self):
@@ -314,6 +354,16 @@ class SonosDevice(MediaPlayerDevice):
     def group_players(self):
         """Group all players under this coordinator."""
         self._player.partymode()
+
+    @only_if_coordinator
+    def snapshot(self, service):
+        """Snapshot the player."""
+        self.soco_snapshot.snapshot()
+
+    @only_if_coordinator
+    def restore(self, service):
+        """Restore snapshot for the player."""
+        self.soco_snapshot.restore(True)
 
     @property
     def available(self):

@@ -11,7 +11,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
                                  ATTR_BATTERY_LEVEL)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 

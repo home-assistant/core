@@ -7,14 +7,11 @@ https://home-assistant.io/components/sensor.mysensors/
 import logging
 import socket
 
-import homeassistant.bootstrap as bootstrap
-from homeassistant.const import (ATTR_BATTERY_LEVEL, ATTR_DISCOVERED,
-                                 ATTR_SERVICE, CONF_OPTIMISTIC,
+from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 EVENT_PLATFORM_DISCOVERED, STATE_OFF,
-                                 STATE_ON, TEMP_CELSIUS)
-from homeassistant.helpers import validate_config
+                                 STATE_OFF, STATE_ON, TEMP_CELSIUS)
+from homeassistant.helpers import validate_config, discovery
 
 CONF_GATEWAYS = 'gateways'
 CONF_DEVICE = 'device'
@@ -39,19 +36,6 @@ ATTR_CHILD_ID = 'child_id'
 ATTR_DEVICE = 'device'
 
 GATEWAYS = None
-
-DISCOVER_SENSORS = 'mysensors.sensors'
-DISCOVER_SWITCHES = 'mysensors.switches'
-DISCOVER_LIGHTS = 'mysensors.lights'
-DISCOVER_BINARY_SENSORS = 'mysensors.binary_sensor'
-
-# Maps discovered services to their platforms
-DISCOVERY_COMPONENTS = [
-    ('sensor', DISCOVER_SENSORS),
-    ('switch', DISCOVER_SWITCHES),
-    ('light', DISCOVER_LIGHTS),
-    ('binary_sensor', DISCOVER_BINARY_SENSORS),
-]
 
 
 def setup(hass, config):  # pylint: disable=too-many-locals
@@ -124,14 +108,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals
         GATEWAYS[device] = setup_gateway(
             device, persistence_file, baud_rate, tcp_port)
 
-    for (component, discovery_service) in DISCOVERY_COMPONENTS:
-        # Ensure component is loaded
-        if not bootstrap.setup_component(hass, component, config):
-            return False
-        # Fire discovery event
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-            ATTR_SERVICE: discovery_service,
-            ATTR_DISCOVERED: {}})
+    for component in 'sensor', 'switch', 'light', 'binary_sensor':
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
