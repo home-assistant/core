@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
