@@ -17,7 +17,6 @@ REQUIRES = [
     'pip>=7.0.0',
     'jinja2>=2.8',
     'voluptuous==0.8.9',
-    'webcolors==1.5',
     'eventlet==0.19.0',
 ]
 

@@ -10,8 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                                 CONF_PLATFORM, CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_MONITORED_CONDITIONS)
+                                 CONF_PLATFORM, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -34,8 +33,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_API_KEY): vol.Coerce(str),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude
+    vol.Optional('forecast', default=False): cv.boolean
 })
 
 # Return cached results if last scan was less then this time ago.
@@ -52,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
     unit = hass.config.temperature_unit
-    forecast = config.get('forecast', 0)
+    forecast = config.get('forecast')
     owm = OWM(config.get(CONF_API_KEY, None))
 
     if not owm:
@@ -73,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    if forecast == 1:
+    if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
         dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
 

@@ -67,7 +67,9 @@ def setup(hass, config):
         lights[1], switches[0], 'input_select.living_room_preset',
         'rollershutter.living_room_window', media_players[1],
         'scene.romantic_lights'])
-    group.Group(hass, 'bedroom', [lights[0], switches[1], media_players[0]])
+    group.Group(hass, 'bedroom', [
+        lights[0], switches[1], media_players[0],
+        'input_slider.noise_allowance'])
     group.Group(hass, 'kitchen', [
         lights[2], 'rollershutter.kitchen_window', 'lock.kitchen_door'])
     group.Group(hass, 'doors', [
@@ -145,6 +147,17 @@ def setup(hass, config):
         {'input_boolean': {'notify': {'icon': 'mdi:car',
                                       'initial': False,
                                       'name': 'Notify Anne Therese is home'}}})
+
+    # Set up input boolean
+    bootstrap.setup_component(
+        hass, 'input_slider',
+        {'input_slider': {
+            'noise_allowance': {'icon': 'mdi:bell-ring',
+                                'min': 0,
+                                'max': 10,
+                                'name': 'Allowed Noise',
+                                'unit_of_measurement': 'dB'}}})
+
     # Set up weblink
     bootstrap.setup_component(
         hass, 'weblink',

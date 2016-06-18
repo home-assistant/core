@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {

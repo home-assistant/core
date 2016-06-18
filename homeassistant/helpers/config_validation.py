@@ -73,12 +73,13 @@ def entity_id(value):
     value = string(value).lower()
     if valid_entity_id(value):
         return value
-    raise vol.Invalid('Entity ID {} does not match format <domain>.<object_id>'
-                      .format(value))
+    raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
 def entity_ids(value):
     """Validate Entity IDs."""
+    if value is None:
+        raise vol.Invalid('Entity IDs can not be None')
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(',')]
 

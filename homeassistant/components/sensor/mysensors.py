@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_POWER: [set_req.V_WATT, set_req.V_KWH],
             pres.S_DISTANCE: [set_req.V_DISTANCE],
             pres.S_LIGHT_LEVEL: [set_req.V_LIGHT_LEVEL],
-            pres.S_IR: [set_req.V_IR_SEND, set_req.V_IR_RECEIVE],
+            pres.S_IR: [set_req.V_IR_RECEIVE],
             pres.S_WATER: [set_req.V_FLOW, set_req.V_VOLUME],
             pres.S_CUSTOM: [set_req.V_VAR1,
                             set_req.V_VAR2,

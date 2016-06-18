@@ -7,11 +7,7 @@ https://home-assistant.io/components/tellduslive/
 import logging
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
-from homeassistant.loader import get_component
+from homeassistant.helpers import validate_config, discovery
 from homeassistant.util import Throttle
 
 DOMAIN = "tellduslive"
@@ -19,12 +15,6 @@ DOMAIN = "tellduslive"
 REQUIREMENTS = ['tellive-py==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVER_SENSORS = "tellduslive.sensors"
-DISCOVER_SWITCHES = "tellduslive.switches"
-DISCOVERY_TYPES = {"sensor": DISCOVER_SENSORS,
-                   "switch": DISCOVER_SWITCHES}
-
 
 CONF_PUBLIC_KEY = "public_key"
 CONF_PRIVATE_KEY = "private_key"
@@ -101,16 +91,8 @@ class TelldusLiveData(object):
         _LOGGER.info("discovered %d new %s devices",
                      len(found_devices), component_name)
 
-        component = get_component(component_name)
-        bootstrap.setup_component(self._hass,
-                                  component.DOMAIN,
-                                  self._config)
-
-        discovery_type = DISCOVERY_TYPES[component_name]
-
-        self._hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                            {ATTR_SERVICE: discovery_type,
-                             ATTR_DISCOVERED: found_devices})
+        discovery.load_platform(self._hass, component_name, DOMAIN,
+                                found_devices, self._config)
 
     def request(self, what, **params):
         """Send a request to the Tellstick Live API."""
