@@ -335,7 +335,7 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._braviarc.mute_volume()
+        self._braviarc.mute_volume(mute)
 
     def select_source(self, source):
         """Set the input source."""
