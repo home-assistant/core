@@ -11,7 +11,7 @@ from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import ToggleEntity
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.6']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup(hass, config):
@@ -32,6 +32,7 @@ def setup(hass, config):
             ('binary_sensor', pywink.get_sensors),
             ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays),
             ('lock', pywink.get_locks),
+            ('rollershutter', pywink.get_shades),
             ('garage_door', pywink.get_garage_doors)):
 
         if func_exists():
