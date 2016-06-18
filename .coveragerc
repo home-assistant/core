@@ -187,6 +187,7 @@ omit =
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
+    homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/temper.py
