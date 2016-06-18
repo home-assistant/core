@@ -49,7 +49,7 @@ class FoscamCamera(Camera):
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url)
+        response = requests.get(self._snap_picture_url, timeout=10)
 
         return response.content
 
