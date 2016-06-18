@@ -59,7 +59,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         return self._value.node.name or "{} {}".format(
             self._value.node.manufacturer_name, self._value.node.product_name)
 
-
     @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
