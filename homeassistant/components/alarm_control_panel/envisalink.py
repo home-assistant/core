@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import logging
-import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  EnvisalinkDevice,
@@ -28,20 +27,15 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     _configured_partitions = discovery_info['partitions']
     _code = discovery_info[CONF_CODE]
     for part_num in _configured_partitions:
-        try:
-            _LOGGER.info(str.format("Validating config for partition: {0}",
-                                    part_num))
-            _device_config_data = PARTITION_SCHEMA(
-                _configured_partitions[part_num])
-            _device = EnvisalinkAlarm(
-                part_num,
-                _device_config_data[CONF_PARTITIONNAME],
-                _code,
-                EVL_CONTROLLER.alarm_state['partition'][part_num],
-                EVL_CONTROLLER)
-            add_devices_callback([_device])
-        except vol.MultipleInvalid:
-            _LOGGER.error('A partition name is required.')
+        _device_config_data = PARTITION_SCHEMA(
+            _configured_partitions[part_num])
+        _device = EnvisalinkAlarm(
+            part_num,
+            _device_config_data[CONF_PARTITIONNAME],
+            _code,
+            EVL_CONTROLLER.alarm_state['partition'][part_num],
+            EVL_CONTROLLER)
+        add_devices_callback([_device])
 
     return True
 
@@ -55,7 +49,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         from pydispatch import dispatcher
         self._partition_number = partition_number
         self._code = code
-        _LOGGER.info('Setting up alarm: ' + alarm_name)
+        _LOGGER.debug('Setting up alarm: ' + alarm_name)
         EnvisalinkDevice.__init__(self, alarm_name, info, controller)
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_PARTITION_UPDATE,

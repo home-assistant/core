@@ -60,8 +60,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASS): cv.string,
         vol.Required(CONF_CODE): cv.string,
-        vol.Optional(CONF_ZONES): dict,
-        vol.Optional(CONF_PARTITIONS): dict,
+        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
+        vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
         vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
         vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
@@ -172,20 +172,22 @@ def setup(hass, base_config):
     EVL_CONTROLLER.callback_login_success = connection_success_callback
 
     _result = start_envisalink(None)
-    if _result:
-        # Load sub-components for envisalink
-        if _partitions:
-            load_platform(hass, 'alarm_control_panel', 'envisalink',
-                          {'partitions': _partitions,
-                           'code': _code}, config)
-            load_platform(hass, 'sensor', 'envisalink',
-                          {'partitions': _partitions,
-                           'code': _code}, config)
-        if _zones:
-            load_platform(hass, 'binary_sensor', 'envisalink',
-                          {'zones': _zones}, config)
+    if not _result:
+        return False
 
-    return _result
+    # Load sub-components for envisalink
+    if _partitions:
+        load_platform(hass, 'alarm_control_panel', 'envisalink',
+                      {'partitions': _partitions,
+                       'code': _code}, config)
+        load_platform(hass, 'sensor', 'envisalink',
+                      {'partitions': _partitions,
+                       'code': _code}, config)
+    if _zones:
+        load_platform(hass, 'binary_sensor', 'envisalink',
+                      {'zones': _zones}, config)
+
+    return True
 
 
 class EnvisalinkDevice(Entity):

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.envisalink/
 """
 import logging
-import voluptuous as vol
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  PARTITION_SCHEMA,
                                                  CONF_PARTITIONNAME,
@@ -20,19 +19,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_partitions = discovery_info['partitions']
     for part_num in _configured_partitions:
-        try:
-            _LOGGER.info(str.format("Validating config for partition: {0}",
-                                    part_num))
-            _device_config_data = PARTITION_SCHEMA(
-                _configured_partitions[part_num])
-            _device = EnvisalinkSensor(
-                _device_config_data[CONF_PARTITIONNAME],
-                part_num,
-                EVL_CONTROLLER.alarm_state['partition'][part_num],
-                EVL_CONTROLLER)
-            add_devices_callback([_device])
-        except vol.MultipleInvalid:
-            _LOGGER.error('A partition name is required.')
+        _device_config_data = PARTITION_SCHEMA(
+            _configured_partitions[part_num])
+        _device = EnvisalinkSensor(
+            _device_config_data[CONF_PARTITIONNAME],
+            part_num,
+            EVL_CONTROLLER.alarm_state['partition'][part_num],
+            EVL_CONTROLLER)
+        add_devices_callback([_device])
 
 
 class EnvisalinkSensor(EnvisalinkDevice):
@@ -43,7 +37,7 @@ class EnvisalinkSensor(EnvisalinkDevice):
         from pydispatch import dispatcher
         self._icon = 'mdi:alarm'
         self._partition_number = partition_number
-        _LOGGER.info('Setting up sensor for partition: ' + partition_name)
+        _LOGGER.debug('Setting up sensor for partition: ' + partition_name)
         EnvisalinkDevice.__init__(self,
                                   partition_name + ' Keypad',
                                   info,

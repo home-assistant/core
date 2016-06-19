@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.envisalink/
 """
 import logging
-import voluptuous as vol
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.envisalink import (EVL_CONTROLLER,
                                                  ZONE_SCHEMA,
@@ -23,19 +22,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     _configured_zones = discovery_info['zones']
     for zone_num in _configured_zones:
-        try:
-            _LOGGER.info(str.format("Validating config for zone: {0}",
-                                    zone_num))
-            _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
-            _device = EnvisalinkBinarySensor(
-                zone_num,
-                _device_config_data[CONF_ZONENAME],
-                _device_config_data[CONF_ZONETYPE],
-                EVL_CONTROLLER.alarm_state['zone'][zone_num],
-                EVL_CONTROLLER)
-            add_devices_callback([_device])
-        except vol.MultipleInvalid:
-            _LOGGER.error('A zone name is required.')
+        _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
+        _device = EnvisalinkBinarySensor(
+            zone_num,
+            _device_config_data[CONF_ZONENAME],
+            _device_config_data[CONF_ZONETYPE],
+            EVL_CONTROLLER.alarm_state['zone'][zone_num],
+            EVL_CONTROLLER)
+        add_devices_callback([_device])
 
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
@@ -48,7 +42,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         self._zone_type = zone_type
         self._zone_number = zone_number
 
-        _LOGGER.info('Setting up zone: ' + zone_name)
+        _LOGGER.debug('Setting up zone: ' + zone_name)
         EnvisalinkDevice.__init__(self, zone_name, info, controller)
         dispatcher.connect(self._update_callback,
                            signal=SIGNAL_ZONE_UPDATE,
