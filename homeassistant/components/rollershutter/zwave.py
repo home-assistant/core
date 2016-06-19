@@ -54,12 +54,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._value.node.name or "{} {}".format(
-            self._value.node.manufacturer_name, self._value.node.product_name)
-
-    @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
         for value in self._node.get_values(
