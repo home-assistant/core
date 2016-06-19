@@ -216,7 +216,7 @@ class BraviaTVDevice(MediaPlayerDevice):
 
         # Retrieve the latest data.
         try:
-            if self._state == self._STATE_ON:
+            if self._state == STATE_ON:
                 # refresh volume info:
                 self._refresh_volume()
                 self._refresh_channels()
