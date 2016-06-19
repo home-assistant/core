@@ -20,6 +20,9 @@ omit =
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
+    homeassistant/components/envisalink.py
+    homeassistant/components/*/envisalink.py
+
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
