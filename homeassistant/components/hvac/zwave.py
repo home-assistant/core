@@ -211,6 +211,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 value.data = int(round(temperature, 0))
             else:
                 value.data = int(temperature)
+            break
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -218,6 +219,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
             if value.command_class == 68 and value.index == 0:
                 value.data = bytes(fan, 'utf-8')
+                break
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -225,6 +227,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
             if value.command_class == 64 and value.index == 0:
                 value.data = bytes(operation_mode, 'utf-8')
+                break
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
@@ -233,3 +236,4 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     value.data = int(swing_mode)
+                    break

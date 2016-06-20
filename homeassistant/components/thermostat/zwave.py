@@ -156,3 +156,4 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
                 COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0 and value.index == self._index:
                 value.data = temperature
+                break
