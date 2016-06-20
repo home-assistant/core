@@ -218,7 +218,7 @@ plexapi==1.1.0
 proliphix==0.1.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==4.2.0
+psutil==4.3.0
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
