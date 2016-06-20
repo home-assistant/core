@@ -94,6 +94,7 @@ omit =
     homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/cec.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
