@@ -19,7 +19,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP,\
                                 EVENT_PLATFORM_DISCOVERED,\
                                 ATTR_SERVICE,\
                                 ATTR_DISCOVERED,\
-                                ATTR_BATTERY_LEVEL
+                                STATE_UNKNOWN
 from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
@@ -354,7 +354,10 @@ class HMDevice(Entity):
                                             channel=channel)
 
     def _check_hm_to_ha_object(self):
-        """ Check if possible to use the HM Object as this HA type """
+        """
+        Check if possible to use the HM Object as this HA type
+        NEED overwrite by inheret!
+        """
         if not self._connected or self._hmdevice is None:
             _LOGGER.error("HA object is not linked to homematic.")
             return False
@@ -365,3 +368,12 @@ class HMDevice(Entity):
             return False
 
         return True
+
+    def _init_data(self):
+        """
+        Generate a data struct (self._data) from hm metadata
+        NEED overwrite by inheret!
+        """
+        # add all attribute to data struct
+        for data_note in self._hmdevice.ATTRIBUTENODE:
+            self._data[data_note] = STATE_UNKNOWN
