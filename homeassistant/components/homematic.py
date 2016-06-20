@@ -18,7 +18,8 @@ from collections import OrderedDict
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP,\
                                 EVENT_PLATFORM_DISCOVERED,\
                                 ATTR_SERVICE,\
-                                ATTR_DISCOVERED
+                                ATTR_DISCOVERED,\
+                                ATTR_BATTERY_LEVEL
 from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
@@ -54,7 +55,9 @@ HM_DEVICE_TYPES = {
 HM_ATTRIBUTE_SUPPORT = {
     "LOWBAT": "Battery",
     "ERROR": "Sabotage",
-    "RSSI_DEVICE": "RSSI"
+    "RSSI_DEVICE": "RSSI",
+    "VALVE_STATE": "Valve",
+    "BATTERY_STATE": "Battery"
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -274,6 +277,19 @@ class HMDevice(Entity):
     def hidden(self):
         """Return True if the entity should be hidden from UIs."""
         return self._hidden
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {}
+
+        # generate a attributes list
+        for data_node, text in HM_ATTRIBUTE_SUPPORT.items():
+            # is a attributes and exists for this object
+            if data_node in self._data:
+                attr[name] = self._data[data_node]
+
+        return attr
 
     def link_homematic(self):
         """Connect to homematic."""
