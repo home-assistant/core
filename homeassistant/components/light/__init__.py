@@ -42,6 +42,9 @@ ATTR_COLOR_NAME = "color_name"
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
 
+# bool to determine if we should just change the light state.
+ATTR_POWER_UNCHANGED = 'power_unchanged'
+
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
 
@@ -73,6 +76,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: cv.byte,
+    ATTR_POWER_UNCHANGED: cv.boolean,
     ATTR_COLOR_NAME: str,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
@@ -107,7 +111,7 @@ def is_on(hass, entity_id=None):
 
 
 # pylint: disable=too-many-arguments
-def turn_on(hass, entity_id=None, transition=None, brightness=None,
+def turn_on(hass, entity_id=None, transition=None, brightness=None, power_unchanged=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
             flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
@@ -123,6 +127,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_POWER_UNCHANGED, power_unchanged),
         ] if value is not None
     }
 

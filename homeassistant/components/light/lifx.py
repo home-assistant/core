@@ -10,7 +10,8 @@ import colorsys
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_POWER_UNCHANGED, ATTR_COLOR_TEMP, 
+    ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,6 +209,11 @@ class LIFXLight(Light):
         else:
             brightness = self._bri
 
+        if ATTR_POWER_UNCHANGED in kwargs:
+            power_unchanged = kwargs[ATTR_POWER_UNCHANGED]
+        else:
+            power_unchanged = 0
+
         if ATTR_COLOR_TEMP in kwargs:
             # pylint: disable=fixme
             # TODO: Use color_temperature_mired_to_kelvin from util.color
@@ -217,11 +223,13 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
+
+
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self._ip, self._power,
                       hue, saturation, brightness, kelvin, fade)
 
-        if self._power == 0:
+        if self._power == 0 and power_unchanged == 0:
             self._liffylights.set_power(self._ip, 65535, fade)
 
         self._liffylights.set_color(self._ip, hue, saturation,
