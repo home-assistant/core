@@ -7,6 +7,7 @@ import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_SET_BRIGHTNESS,
+    SERVICE_TOGGLE)
     method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)SERVICE_TOGGLE)
