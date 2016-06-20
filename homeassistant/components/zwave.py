@@ -50,6 +50,14 @@ COMMAND_CLASS_ALARM = 113  # 0x71
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
 COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68  # 0x44
 
+SPECIFIC_DEVICE_CLASS_WHATEVER = None
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 1
+SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 3
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 4
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 6
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 7
+
 GENRE_WHATEVER = None
 GENRE_USER = "User"
 
@@ -60,38 +68,54 @@ TYPE_DECIMAL = "Decimal"
 
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
-# value type).
+# value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
       COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('light',
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
-     GENRE_USER),
+     GENRE_USER,
+     [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
+      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE]),
     ('switch',
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('binary_sensor',
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('thermostat',
      [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_WHATEVER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('hvac',
      [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_WHATEVER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('lock',
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
+    ('rollershutter',
+     [COMMAND_CLASS_SWITCH_MULTILEVEL],
+     TYPE_WHATEVER,
+     GENRE_USER,
+     [SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C,
+      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR]),
 ]
 
 
@@ -222,7 +246,8 @@ def setup(hass, config):
         for (component,
              command_ids,
              value_type,
-             value_genre) in DISCOVERY_COMPONENTS:
+             value_genre,
+             specific_device_class) in DISCOVERY_COMPONENTS:
 
             if value.command_class not in command_ids:
                 continue
@@ -230,8 +255,14 @@ def setup(hass, config):
                 continue
             if value_genre is not None and value_genre != value.genre:
                 continue
+            if specific_device_class is not None and \
+               specific_device_class != node.specific:
+                continue
 
             # Configure node
+            _LOGGER.debug("Node_id=%s Value type=%s Genre=%s \
+                          Specific Device_class=%s", node.node_id,
+                          value.type, value.genre, specific_device_class)
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
