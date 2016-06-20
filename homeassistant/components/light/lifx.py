@@ -227,6 +227,25 @@ class LIFXLight(Light):
         self._liffylights.set_color(self._ip, hue, saturation,
                                     brightness, kelvin, fade)
 
+    def set_brightness(self, **kwargs):
+        """Turn the device on."""
+        if ATTR_TRANSITION in kwargs:
+            fade = kwargs[ATTR_TRANSITION] * 1000
+        else:
+            fade = 0
+        
+        hue = self._hue
+        saturation = self._sat
+        kelvin = self._kel
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
+        else:
+            brightness = self._bri
+
+        self._liffylights.set_color(self._ip, hue, saturation,
+                                    brightness, kelvin, fade)
+
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if ATTR_TRANSITION in kwargs:

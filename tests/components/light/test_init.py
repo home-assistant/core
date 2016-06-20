@@ -89,6 +89,29 @@ class TestLight(unittest.TestCase):
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
         self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
 
+        # Test set_brightness
+        set_brightness_calls = mock_service(
+            self.hass, light.DOMAIN, SERVICE_SET_BRIGHTNESS)
+
+        light.set_brightness(
+            self.hass,
+            entity_id='entity_id_val',
+            transition='transition_val',
+            brightness='brightness_val',)
+
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(set_brightness_calls))
+        call = set_brightness_calls[-1]
+
+        self.assertEqual(light.DOMAIN, call.domain)
+        self.assertEqual(SERVICE_SET_BRIGHTNESS, call.service)
+        self.assertEqual('entity_id_val', call.data.get(ATTR_ENTITY_ID))
+        self.assertEqual(
+            'transition_val', call.data.get(light.ATTR_TRANSITION))
+        self.assertEqual(
+            'brightness_val', call.data.get(light.ATTR_BRIGHTNESS))
+
         # Test toggle
         toggle_calls = mock_service(
             self.hass, light.DOMAIN, SERVICE_TOGGLE)
@@ -187,6 +210,17 @@ class TestLight(unittest.TestCase):
         method, data = dev3.last_call('turn_on')
         self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
 
+        light.set_brightness(self.hass. dev1.entity_id,
+                              transition=15, brightness=30)
+
+        self.hass.pool.block_till_done()
+
+        method, data = dev1.last_call('set_brightness')
+        self.assertEqual(
+            {light.ATTR_TRANSITION: 15,
+             light.ATTR_BRIGHTNESS: 30},
+            data)
+
         # One of the light profiles
         prof_name, prof_x, prof_y, prof_bri = 'relax', 0.5119, 0.4147, 144
 
@@ -216,6 +250,7 @@ class TestLight(unittest.TestCase):
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
         light.turn_on(self.hass, dev3.entity_id, rgb_color=[255, None, 2])
+        light.set_brightness(self.hass, dev1.entity_id, brightness=None)
 
         self.hass.pool.block_till_done()
 
@@ -228,15 +263,28 @@ class TestLight(unittest.TestCase):
         method, data = dev3.last_call('turn_on')
         self.assertEqual({}, data)
 
+        method, data = dev1.last_call('set_brightness')
+        self.assertEqual({}, data)
+
+
+
         # faulty attributes will not trigger a service call
         light.turn_on(
             self.hass, dev1.entity_id,
             profile=prof_name, brightness='bright', rgb_color='yellowish')
 
+        light.set_brightness(
+            self.hass, dev1.entity_id, transition='slowly', 
+            brightness='bright')
+
         self.hass.pool.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
+        
+        method, data = dev1.last_call('turn_on')
+        self.assertEqual({}, data)
+
 
     def test_broken_light_profiles(self):
         """Test light profiles."""

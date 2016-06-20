@@ -14,7 +14,7 @@ from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    ATTR_ENTITY_ID)
+    SERVICE_SET_BRIGHTNESS, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -83,6 +83,12 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
 })
 
+LIGHT_SET_BRIGHTNESS_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_BRIGHTNESS: cv.byte,
+})
+
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TRANSITION: VALID_TRANSITION,
@@ -127,6 +133,22 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+# pylint: disable=too-many-arguments
+def set_brightness(hass, entity_id=None, transition=None, brightness=None,
+            rgb_color=None, xy_color=None, color_temp=None, profile=None,
+            flash=None, effect=None, color_name=None):
+    """Turn all or specified light on."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+            (ATTR_BRIGHTNESS, brightness),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
 
 
 def turn_off(hass, entity_id=None, transition=None):
@@ -198,6 +220,8 @@ def setup(hass, config):
             service_fun = 'turn_off'
         elif service.service == SERVICE_TOGGLE:
             service_fun = 'toggle'
+        elif service.service == SERVICE_SET_BRIGHTNESS:
+            service_fun = 'set_brightness'
 
         if service_fun:
             for light in target_lights:
@@ -233,6 +257,10 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
                            descriptions.get(SERVICE_TURN_ON),
                            schema=LIGHT_TURN_ON_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS, handle_light_service,
+                           descriptions.get(SERVICE_SET_BRIGHTNESS),
+                           schema=LIGHT_SET_BRIGHTNESS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
                            descriptions.get(SERVICE_TURN_OFF),
