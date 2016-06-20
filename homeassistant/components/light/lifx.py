@@ -10,8 +10,7 @@ import colorsys
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_POWER_UNCHANGED, ATTR_COLOR_TEMP, 
-    ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_POWER_UNCHANGED, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -273,3 +272,4 @@ class LIFXLight(Light):
                       hue, sat, bri, kel, red, green, blue)
 
         self._rgb = [red, green, blue]
+

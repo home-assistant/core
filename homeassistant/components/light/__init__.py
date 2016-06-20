@@ -42,7 +42,7 @@ ATTR_COLOR_NAME = "color_name"
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
 
-# bool to determine if we should just change the light state.
+# bool to determine if we should just change the state and leave the lights power unchanged
 ATTR_POWER_UNCHANGED = 'power_unchanged'
 
 # String representing a profile (built-in ones or external defined).
@@ -111,7 +111,7 @@ def is_on(hass, entity_id=None):
 
 
 # pylint: disable=too-many-arguments
-def turn_on(hass, entity_id=None, transition=None, brightness=None, power_unchanged=None,
+def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
             flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
@@ -292,3 +292,4 @@ class Light(ToggleEntity):
                     data[ATTR_BRIGHTNESS])
 
         return data
+
