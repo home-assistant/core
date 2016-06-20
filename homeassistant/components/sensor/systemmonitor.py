@@ -1,5 +1,5 @@
 """
-Support for monitoring the local system..
+Support for monitoring the local system.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.systemmonitor/
