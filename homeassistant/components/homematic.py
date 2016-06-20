@@ -27,10 +27,8 @@ import homeassistant.bootstrap
 DOMAIN = 'homematic'
 REQUIREMENTS = ['pyhomematic==0.1.4']
 
-
-HOMEMATIC_DEVICES = {}
-
 HOMEMATIC = None
+HOMEMATIC_DEVICES = {}
 HOMEMATIC_AUTODETECT = False
 
 DISCOVER_SWITCHES = "homematic.switch"
@@ -127,14 +125,14 @@ def system_callback_handler(src, *args):
             # all devices not configured are added.
             if HOMEMATIC_AUTODETECT and devices_not_created:
                 for component_name, func_get_devices, discovery_type in (
-                        ('switch', get_switches, DISCOVER_SWITCHES),
-                        ('light', get_lights, DISCOVER_LIGHTS),
-                        ('rollershutter', get_rollershutters,
+                        ('switch', _get_switches, DISCOVER_SWITCHES),
+                        ('light', _get_lights, DISCOVER_LIGHTS),
+                        ('rollershutter', _get_rollershutters,
                          DISCOVER_ROLLERSHUTTER),
-                        ('binary_sensor', get_binary_sensors,
+                        ('binary_sensor', _get_binary_sensors,
                          DISCOVER_BINARY_SENSORS),
-                        ('sensor', get_sensors, DISCOVER_SENSORS),
-                        ('thermostat', get_thermostats, DISCOVER_THERMOSTATS)):
+                        ('sensor', _get_sensors, DISCOVER_SENSORS),
+                        ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
                     # Get all devices of a specific type
                     found_devices = func_get_devices(devices_not_created)
 
@@ -167,49 +165,84 @@ def system_callback_handler(src, *args):
                             hm_element.link_homematic()
 
 
-def get_switches(keys=None):
+def _get_switches(keys=None):
     """Get switches."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_SWITCHES], keys)
+    return _get_devices(DISCOVER_SWITCHES, keys)
 
 
-def get_lights(keys=None):
+def _get_lights(keys=None):
     """Get lights."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_LIGHTS], keys)
+    return _get_devices(DISCOVER_LIGHTS, keys)
 
 
-def get_rollershutters(keys=None):
+def _get_rollershutters(keys=None):
     """Get rollershutters."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_ROLLERSHUTTER], keys)
+    return _get_devices(DISCOVER_ROLLERSHUTTER, keys)
 
 
-def get_binary_sensors(keys=None):
+def _get_binary_sensors(keys=None):
     """Get binary sensors."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_BINARY_SENSORS], keys)
+    return _get_devices(DISCOVER_BINARY_SENSORS, keys)
 
 
-def get_sensors(keys=None):
+def _get_sensors(keys=None):
     """Get sensors."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_SENSORS], keys)
+    return _get_devices(DISCOVER_SENSORS, keys)
 
 
-def get_thermostats(keys=None):
+def _get_thermostats(keys=None):
     """Get thermostats."""
-    return get_devices(HM_DEVICE_TYPES[DISCOVER_THERMOSTATS], keys)
+    return _get_devices(DISCOVER_THERMOSTATS, keys)
 
 
-def get_devices(device_types, keys):
+def _get_devices(device_type, keys, metadata):
     """Get devices."""
     device_arr = []
     if not keys:
         keys = HOMEMATIC.devices
     for key in keys:
-        if HOMEMATIC.devices[key].__class__.__name__ in device_types:
-            ordered_device_dict = OrderedDict()
-            ordered_device_dict['platform'] = 'homematic'
-            ordered_device_dict['key'] = key
-            ordered_device_dict['name'] = HOMEMATIC.devices[key].NAME
-            device_arr.append(ordered_device_dict)
+        device = HOMEMATIC.devices[key]
+        if device.__class__.__name__ in HM_DEVICE_TYPES[device_types]:
+            elements = self._hmdevice.ELEMENT + 1
+            metadata = {}
+
+            # load metadata if needed an generate a param list
+            if device_type is DISCOVER_SENSORS:
+                metadata.update(device.SENSORNODE)
+            elif device_type is DISCOVER_BINARY_SENSORS:
+                metadata.update(device.BINARYNODE)
+            params = _create_params_list(HOMEMATIC.devices[key], metadata)
+
+            # generate options for 1..n elements with 1..n params
+            for channel in xrange(1, elements):
+                for param in params:
+                    ordered_device_dict = OrderedDict()
+                    ordered_device_dict["platform"] = "homematic"
+                    ordered_device_dict["key"] = key
+                    ordered_device_dict["name"] = HOMEMATIC.devices[key].NAME
+                    ordered_device_dict["button"] = channel
+                    if param is not None:
+                        ordered_device_dict["param"] = param
+
+                    # add new device
+                    device_arr.append(ordered_device_dict)
     return device_arr
+
+
+def _create_params_list(hmdevice, metadata):
+    """ Create a list from HMDevice witch all posible param in config """
+    params = []
+
+    # search in Sensor and Binary metadata
+    for node, channel in metadata.items():
+        if channel == 'c' or channel is None:
+            params.append(node)
+
+    # if no possible params have found make a None
+    if len(params) == 0:
+        params.append(None)
+
+    return params
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
@@ -250,8 +283,13 @@ class HMDevice(Entity):
         self._connected = False
         self._available = False
 
+        # generate name
         if not self._name:
-            self._name = self._address
+            if self._state is not None:
+                self._name = self._address + "_" + self._state\
+                            + "_" + self._channel
+            else:
+                self._name = self._address + "_" + self._channel
 
     @property
     def should_poll(self):
