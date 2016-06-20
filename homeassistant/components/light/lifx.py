@@ -233,7 +233,7 @@ class LIFXLight(Light):
             fade = kwargs[ATTR_TRANSITION] * 1000
         else:
             fade = 0
-        
+
         hue = self._hue
         saturation = self._sat
         kelvin = self._kel

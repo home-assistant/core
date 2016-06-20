@@ -258,7 +258,7 @@ def setup(hass, config):
                            descriptions.get(SERVICE_TURN_ON),
                            schema=LIGHT_TURN_ON_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS, 
+    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS,
                            handle_light_service,
                            descriptions.get(SERVICE_SET_BRIGHTNESS),
                            schema=LIGHT_SET_BRIGHTNESS_SCHEMA)
