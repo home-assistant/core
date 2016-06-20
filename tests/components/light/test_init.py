@@ -6,7 +6,10 @@ import os
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_SET_BRIGHTNESS,
+    method, data = dev1.last_call('turn_on')
+        self.assertEqual({}, data)method, data = dev1.last_call('turn_on')
+        self.assertEqual({}, data)SERVICE_TOGGLE)
 import homeassistant.components.light as light
 
 from tests.common import mock_service, get_test_home_assistant
@@ -210,8 +213,8 @@ class TestLight(unittest.TestCase):
         method, data = dev3.last_call('turn_on')
         self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
 
-        light.set_brightness(self.hass. dev1.entity_id,
-                              transition=15, brightness=30)
+        light.set_brightness(self.hass, dev1.entity_id,
+            transition=15, brightness=30)
 
         self.hass.pool.block_till_done()
 
@@ -274,17 +277,16 @@ class TestLight(unittest.TestCase):
             profile=prof_name, brightness='bright', rgb_color='yellowish')
 
         light.set_brightness(
-            self.hass, dev1.entity_id, transition='slowly', 
+            self.hass, dev1.entity_id, transition='slowly',
             brightness='bright')
 
         self.hass.pool.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
-        
+
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)
-
 
     def test_broken_light_profiles(self):
         """Test light profiles."""

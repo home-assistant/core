@@ -134,10 +134,11 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
+
 # pylint: disable=too-many-arguments
 def set_brightness(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None, color_name=None):
+                   rgb_color=None, xy_color=None, color_temp=None, profile=None,
+                   flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -148,7 +149,6 @@ def set_brightness(hass, entity_id=None, transition=None, brightness=None,
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
 
 
 def turn_off(hass, entity_id=None, transition=None):
@@ -258,7 +258,8 @@ def setup(hass, config):
                            descriptions.get(SERVICE_TURN_ON),
                            schema=LIGHT_TURN_ON_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS, handle_light_service,
+    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS, 
+                           handle_light_service,
                            descriptions.get(SERVICE_SET_BRIGHTNESS),
                            schema=LIGHT_SET_BRIGHTNESS_SCHEMA)
 

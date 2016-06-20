@@ -5,8 +5,7 @@ from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, 
-    SERVICE_SET_BRIGHTNESS, SERVICE_TOGGLE)
+    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
 
 from tests.common import get_test_home_assistant
@@ -40,18 +39,6 @@ class TestComponentsCore(unittest.TestCase):
             'light', SERVICE_TURN_ON, lambda x: runs.append(1))
 
         comps.turn_on(self.hass, 'light.Ceiling')
-
-        self.hass.pool.block_till_done()
-
-        self.assertEqual(1, len(runs))
-
-    def test_set_brightness(self):
-        """Test set_brightness method."""
-        runs = []
-        self.hass.services.register(
-            'light', SERVICE_SET_BRIGHTNESS, lambda x: runs.append(1))
-
-        comps.set_brightness(self.hass, 'light.Bedroom')
 
         self.hass.pool.block_till_done()
 
