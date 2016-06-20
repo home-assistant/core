@@ -10,7 +10,7 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['slacker==0.9.16']
+REQUIREMENTS = ['slacker==0.9.17']
 _LOGGER = logging.getLogger(__name__)
 
 
