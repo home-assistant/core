@@ -476,7 +476,7 @@ class HMDevice(Entity):
             return False
 
         # check if button option is correct set for this object
-        if self._channel <= self._hmdevice.ELEMENT:
+        if self._channel > self._hmdevice.ELEMENT:
             _LOGGER.critical("Button option is not correct for this object!")
             return False
 
