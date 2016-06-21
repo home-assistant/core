@@ -89,6 +89,8 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         from pyhomematic.devicetypes.actors import Dimmer,\
             Switch, SwitchPowermeter
 
+        super()._init_data_struct()
+
         # use STATE
         if isinstance(self._hmdevice, Switch):
             self._state = "STATE"

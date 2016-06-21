@@ -119,6 +119,8 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
         """
+        super()._init_data_struct()
+
         # add state to data struct
         self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
                            "SET_TEMPERATURE": STATE_UNKNOWN,

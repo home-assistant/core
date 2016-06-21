@@ -99,6 +99,8 @@ class HMLight(homematic.HMDevice, Light):
         """
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
+        super()._init_data_struct()
+
         # use STATE
         if isinstance(self._hmdevice, Switch):
             self._state = "STATE"
