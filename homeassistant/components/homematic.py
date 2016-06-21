@@ -212,8 +212,8 @@ def _get_devices(device_type, keys, metadata):
         keys = HOMEMATIC.devices
     for key in keys:
         device = HOMEMATIC.devices[key]
-        if device.__class__.__name__ in HM_DEVICE_TYPES[device_types]:
-            elements = self._hmdevice.ELEMENT + 1
+        if device.__class__.__name__ in HM_DEVICE_TYPES[device_type]:
+            elements = device.ELEMENT + 1
             metadata = {}
 
             # load metadata if needed for generate a param list
@@ -460,7 +460,7 @@ class HMDevice(Entity):
             (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)
                 ):
             if node in self._data:
-                self._data[node] = funct(name=name, channel=self._channel)
+                self._data[node] = funct(name=node, channel=self._channel)
 
         return True
 
