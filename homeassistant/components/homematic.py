@@ -390,6 +390,7 @@ class HMDevice(Entity):
                 # init datapoints of this object
                 self._init_data_struct()
                 self._load_init_data_from_hm()
+                _LOGGER.debug("%s generate: %s", self._name, str(self._data))
 
                 # link events from pyhomatic
                 self._subscribe_homematic_events()
@@ -440,7 +441,7 @@ class HMDevice(Entity):
 
         # set callbacks
         for channel in channels_to_sub:
-            _LOGGER.info("Subscribe %s from %i", self._address, channel)
+            _LOGGER.debug("Subscribe %s from %i", self._address, channel)
             self._hmdevice.setEventCallback(callback=self._hm_event_callback,
                                             bequeath=False,
                                             channel=channel)
@@ -451,14 +452,15 @@ class HMDevice(Entity):
             return False
 
         # Read data from pyhomematic direct
-        for node, funct in (
+        for metadata, funct in (
                 (self._hmdevice.ATTRIBUTENODE,
                  self._hmdevice.getAttributeData),
                 (self._hmdevice.WRITENODE, self._hmdevice.getWriteData),
                 (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
                 (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)):
-            if node in self._data:
-                self._data[node] = funct(name=node, channel=self._channel)
+            for node in metadata:
+                if node in self._data:
+                    self._data[node] = funct(name=node, channel=self._channel)
 
         return True
 
