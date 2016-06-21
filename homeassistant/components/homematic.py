@@ -132,7 +132,8 @@ def system_callback_handler(src, *args):
                         ('binary_sensor', _get_binary_sensors,
                          DISCOVER_BINARY_SENSORS),
                         ('sensor', _get_sensors, DISCOVER_SENSORS),
-                        ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
+                        ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)
+                        ):
                     # Get all devices of a specific type
                     found_devices = func_get_devices(devices_not_created)
 
@@ -206,7 +207,7 @@ def _get_devices(device_type, keys, metadata):
             elements = self._hmdevice.ELEMENT + 1
             metadata = {}
 
-            # load metadata if needed an generate a param list
+            # load metadata if needed for generate a param list
             if device_type is DISCOVER_SENSORS:
                 metadata.update(device.SENSORNODE)
             elif device_type is DISCOVER_BINARY_SENSORS:
@@ -215,11 +216,14 @@ def _get_devices(device_type, keys, metadata):
 
             # generate options for 1..n elements with 1..n params
             for channel in xrange(1, elements):
-                for param in params:
+                for param in params[channel]:
+                    name = _create_ha_name(name=HOMEMATIC.devices[key].NAME,
+                                           channel=channel,
+                                           param=param)
                     ordered_device_dict = OrderedDict()
                     ordered_device_dict["platform"] = "homematic"
                     ordered_device_dict["key"] = key
-                    ordered_device_dict["name"] = HOMEMATIC.devices[key].NAME
+                    ordered_device_dict["name"] = name
                     ordered_device_dict["button"] = channel
                     if param is not None:
                         ordered_device_dict["param"] = param
@@ -231,18 +235,46 @@ def _get_devices(device_type, keys, metadata):
 
 def _create_params_list(hmdevice, metadata):
     """ Create a list from HMDevice witch all posible param in config """
-    params = []
+    params = {}
+    elements = hmdevice.ELEMENT + 1
 
-    # search in Sensor and Binary metadata
-    for node, channel in metadata.items():
-        if channel == 'c' or channel is None:
-            params.append(node)
+    # search in Sensor and Binary metadata per elements
+    for channel in xrange(1, elements):
+        param_chan = []
+        for node, channel in metadata.items():
+            if channel == 'c' or channel is None:
+                # only channel linked data
+                param_chan.append(node)
+            elif channel == 1:
+                # first channel can have other data channel
+                param_chan.append(node)
 
-    # if no possible params have found make a None
-    if len(params) == 0:
-        params.append(None)
+        # default parameter
+        if len(param_chan) == 0:
+            param_chan.append(None)
+        # add to channel
+        params.update({channel: param_chan})
 
     return params
+
+
+def _create_ha_name(name, channel, param):
+    """ Generate a union object name  """
+    # hm device is a simple device
+    if channel == 1 and param is None:
+        return name
+
+    # have multible elements/channels
+    if channel > 1 and param is None:
+        return name + "_" + channel
+
+    # with multible param first elements
+    if channel == 1 and param is not None:
+        return name + "_" + param
+
+    # multible param on object with multible elements
+    if channel > 1 and param is not None:
+        return name + "_" + channel + "_" + param
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
@@ -285,11 +317,9 @@ class HMDevice(Entity):
 
         # generate name
         if not self._name:
-            if self._state is not None:
-                self._name = self._address + "_" + self._state\
-                            + "_" + self._channel
-            else:
-                self._name = self._address + "_" + self._channel
+            self._name = _create_ha_name(name=self._address,
+                                         channel=self._channel,
+                                         param=self._state)
 
     @property
     def should_poll(self):
