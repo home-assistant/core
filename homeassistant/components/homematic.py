@@ -59,7 +59,10 @@ HM_ATTRIBUTE_SUPPORT = {
     "RSSI_DEVICE": "RSSI",
     "VALVE_STATE": "Valve",
     "BATTERY_STATE": "Battery",
-    "CONTROL_MODE": "Mode"
+    "CONTROL_MODE": "Mode",
+    "POWER": "Power",
+    "CURRENT": "Current",
+    "VOLTAGE": "Voltage"
 }
 
 _LOGGER = logging.getLogger(__name__)
