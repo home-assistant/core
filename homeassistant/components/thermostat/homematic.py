@@ -110,14 +110,15 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         Check if possible to use the HM Object as this HA type
         NEED overwrite by inheret!
         """
-        import pyhomematic.devicetypes.thermostats
+        from pyhomematic.devicetypes.thermostats import HMThermostat\
+            as pyHMThermostat
 
         # Check compatibility from HMDevice
         if not super()._check_hm_to_ha_object():
             return False
 
         # check if the homematic device correct for this HA device
-        if isinstance(self._hmdevice, devicetypes.thermostats.HMThermostat):
+        if isinstance(self._hmdevice, pyHMThermostat):
             return True
 
         _LOGGER.critical("This %s can't be use as thermostat", self._name)
