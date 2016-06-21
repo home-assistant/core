@@ -18,6 +18,7 @@ light:
 
 import logging
 from homeassistant.components.light import (ATTR_BRIGHTNESS, Light)
+from homeassistant.const import STATE_UNKNOWN
 import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
