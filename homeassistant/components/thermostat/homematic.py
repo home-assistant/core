@@ -59,9 +59,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         """Set new target temperature."""
         if not self.available:
             return None
-
         self._hmdevice.set_temperature(temperature)
-        self._data["SET_TEMPERATURE"] = temperature
 
     @property
     def is_away_mode_on(self):
@@ -76,14 +74,12 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if not self.available:
             return None
         self._hmdevice.PARTYMODE = True
-        self._data["CONTROL_MODE"] = self._hmdevice.PARTY_MODE
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         if not self.available:
             return None
         self._hmdevice.AUTOMODE = False
-        self._data["CONTROL_MODE"] = self._hmdevice.AUTO_MODE
 
     @property
     def min_temp(self):

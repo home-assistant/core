@@ -53,13 +53,11 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         """Turn the switch on."""
         if self.available:
             self._hmdevice.on(self._channel)
-            self._set_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self.available:
             self._hmdevice.off(self._channel)
-            self._set_state(False)
 
     def _check_hm_to_ha_object(self):
         """
