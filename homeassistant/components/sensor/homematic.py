@@ -64,19 +64,19 @@ class HMSensor(homematic.HMDevice):
 
         # check if the homematic device correct for this HA device
         if not isinstance(self._hmdevice, HMSensor):
-            _LOGGER.critical("This %s can't be use as sensor!" % self._name)
+            _LOGGER.critical("This %s can't be use as sensor!", self._name)
             return False
 
         # if exists user value?
         if self._state and not (self._state in self._hmdevice.SENSORNODE):
-            _LOGGER.critical("This %s have no sensor with %s!" %
-                             (self._name, self._state))
+            _LOGGER.critical("This %s have no sensor with %s!", self._name,
+                             self._state)
             return False
 
         # no param is set and more than 1 sensor node are present
         if self._state is None and len(self._hmdevice.SENSORNODE) > 1:
             _LOGGER.critical("This %s have more sensore node. " +
-                             "Please us param." % self._name)
+                             "Please us param.", self._name)
             return False
 
         return True
@@ -94,4 +94,4 @@ class HMSensor(homematic.HMDevice):
         if self._state:
             self._set_state(STATE_UNKNOWN)
         else:
-            _LOGGER.critical("Can't correct init sensor %s." % self._name)
+            _LOGGER.critical("Can't correct init sensor %s.", self._name)

@@ -100,7 +100,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         if isinstance(self._hmdevice, Blind):
             return True
 
-        _LOGGER.critical("This %s can't be use as rollershutter!" % self._name)
+        _LOGGER.critical("This %s can't be use as rollershutter!", self._name)
         return False
 
     def _init_data_struct(self):

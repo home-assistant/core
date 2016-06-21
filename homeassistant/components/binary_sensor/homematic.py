@@ -92,18 +92,18 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         # check if the homematic device correct for this HA device
         if not isinstance(self._hmdevice, HMBinarySensor):
-            _LOGGER.critical("This %s can't be use as binary!" % self._name)
+            _LOGGER.critical("This %s can't be use as binary!", self._name)
             return False
 
         # if exists user value?
         if self._state and not (self._state in self._hmdevice.BINARYNODE):
-            _LOGGER.critical("This %s have no binary with %s!" %
-                             (self._name, self._state))
+            _LOGGER.critical("This %s have no binary with %s!", self._name,
+                             self._state)
             return False
 
         # only check and give a warining to User
         if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
-            _LOGGER.warning("This %s have more than one binary." % self._name)
+            _LOGGER.warning("This %s have more than one binary.", self._name)
 
         return True
 

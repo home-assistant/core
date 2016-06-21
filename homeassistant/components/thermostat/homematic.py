@@ -120,7 +120,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if isinstance(self._hmdevice, HMThermostat):
             return True
 
-        _LOGGER.critical("This %s can't be use as thermostat" % self._name)
+        _LOGGER.critical("This %s can't be use as thermostat", self._name)
         return False
 
     def _init_data_struct(self):
