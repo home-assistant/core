@@ -434,7 +434,7 @@ class HMDevice(Entity):
                 # data are needed for this instance
                 if node in self._data:
                     # chan is current channel
-                    if channel == 'n' or channel is None:
+                    if channel == 'c' or channel is None:
                         channel = self._channel
                     # prepare for subscription
                     channels_to_sub.update({channel: True})
