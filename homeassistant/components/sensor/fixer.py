@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 # Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
+MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -73,6 +73,11 @@ class ExchangeRateSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._target
 
     @property
     def state(self):
