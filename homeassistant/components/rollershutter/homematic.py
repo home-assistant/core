@@ -56,7 +56,6 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
                 position = min(100, max(0, position))
                 level = (100 - position) / 100.0
                 self._hmdevice.set_level(level, self._channel)
-                self._set_state(level)
 
     @property
     def state(self):
