@@ -64,7 +64,13 @@ class HMSensor(homematic.HMDevice):
 
         # check if the homematic device correct for this HA device
         if not isinstance(self._hmdevice, HMSensor):
-            _LOGGER.critical("This %s can't be use as Sensor!" % self._name)
+            _LOGGER.critical("This %s can't be use as sensor!" % self._name)
+            return False
+
+        # if exists user value?
+        if self._state and not (self._state in self._hmdevice.SENSORNODE):
+            _LOGGER.critical("This %s have no sensor with %s!" %
+                             (self._name, self._state))
             return False
 
         # no param is set and more than 1 sensor node are present
@@ -80,7 +86,6 @@ class HMSensor(homematic.HMDevice):
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
         """
-
         if self._state is None and len(self._hmdevice.SENSORNODE) == 1:
             for value in self._hmdevice.SENSORNODE:
                 self._state = value
