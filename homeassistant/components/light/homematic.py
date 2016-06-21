@@ -13,7 +13,7 @@ light:
   - platform: homematic
     addresss: <Homematic addresss for device> # e.g. "JEQ0XXXXXXX"
     name: <User defined name> (optional)
-    button: <Channel for toggle> (optional)
+    button: n (integer of channel to map, device-dependent)
 """
 
 import logging

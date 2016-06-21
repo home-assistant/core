@@ -13,7 +13,7 @@ switch:
   - platform: homematic
     address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
     name: <User defined name> (optional)
-    button: <Channel for toggle> (optional)
+    button: n (integer of channel to map, device-dependent)
 """
 
 import logging
@@ -78,7 +78,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         if isinstance(self._hmdevice, Dimmer):
             return True
 
-        _LOGGER.critical("This %s can't be use as Switch!" % self._name)
+        _LOGGER.critical("This %s can't be use as switch!" % self._name)
         return False
 
     def _init_data_struct(self):
@@ -100,7 +100,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         # need sensor value for SwitchPowermeter
         if isinstance(self._hmdevice, SwitchPowermeter):
             for node in self._hmdevice.SENSORNODE:
-                self._data[node] = STATE_UNKNOWN
+                self._data.update({node: STATE_UNKNOWN})
 
         # add state to data struct
         if self._state:
