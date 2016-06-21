@@ -106,6 +106,7 @@ def setup(hass, config):
     return True
 
 
+# pylint: disable=too-many-branches
 def system_callback_handler(src, *args):
     """Callback handler."""
     if src == 'newDevices':
@@ -127,9 +128,8 @@ def system_callback_handler(src, *args):
                     devices_not_created.append(dev)
             # pylint: disable=broad-except
             except Exception as err:
-                # pylint: disable=logging-not-lazy
-                _LOGGER.error("Failed to setup device %s: %s" % (
-                    (str(dev), str(err))))
+                _LOGGER.error("Failed to setup device %s: %s", str(dev),
+                              str(err))
         # If configuration allows auto detection of devices,
         # all devices not configured are added.
         if HOMEMATIC_AUTODETECT and devices_not_created:
@@ -141,8 +141,7 @@ def system_callback_handler(src, *args):
                     ('binary_sensor', _get_binary_sensors,
                      DISCOVER_BINARY_SENSORS),
                     ('sensor', _get_sensors, DISCOVER_SENSORS),
-                    ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)
-                    ):
+                    ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
                 found_devices = func_get_devices(devices_not_created)
 
@@ -205,7 +204,7 @@ def _get_thermostats(keys=None):
     return _get_devices(DISCOVER_THERMOSTATS, keys)
 
 
-def _get_devices(device_type, keys, metadata):
+def _get_devices(device_type, keys):
     """Get devices."""
     device_arr = []
     if not keys:
@@ -397,7 +396,7 @@ class HMDevice(Entity):
                 # link events from pyhomatic
                 self._subscribe_homematic_events()
             else:
-                _LOGGER.critical("Delink %s object from HM!" % self._name)
+                _LOGGER.critical("Delink %s object from HM!", self._name)
                 self._connected = False
                 self._available = False
 
@@ -454,11 +453,11 @@ class HMDevice(Entity):
 
         # Read data from pyhomematic direct
         for node, funct in (
-            (self._hmdevice.ATTRIBUTENODE, self._hmdevice.getAttributeData),
-            (self._hmdevice.WRITENODE, self._hmdevice.getWriteData),
-            (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
-            (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)
-                ):
+                (self._hmdevice.ATTRIBUTENODE,
+                 self._hmdevice.getAttributeData),
+                (self._hmdevice.WRITENODE, self._hmdevice.getWriteData),
+                (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
+                (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)):
             if node in self._data:
                 self._data[node] = funct(name=node, channel=self._channel)
 
