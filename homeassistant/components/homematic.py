@@ -385,7 +385,8 @@ class HMDevice(Entity):
             self._available = not self._hmdevice.UNREACH
 
             # check is HM class okay for HA class
-            _LOGGER.info("Link %s to %s", self._address, self._name)
+            _LOGGER.info("Link %s to %s - %s", self._address,
+                         self._name, self._available)
             if self._check_hm_to_ha_object():
                 # init datapoints of this object
                 self._init_data_struct()
@@ -436,8 +437,10 @@ class HMDevice(Entity):
                     # chan is current channel
                     if channel == 'c' or channel is None:
                         channel = self._channel
+
                     # prepare for subscription
-                    channels_to_sub.update({channel: True})
+                    if channel > 0:
+                        channels_to_sub.update({channel: True})
 
         # set callbacks
         for channel in channels_to_sub:
