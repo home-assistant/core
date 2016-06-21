@@ -385,6 +385,7 @@ class HMDevice(Entity):
             self._available = not self._hmdevice.UNREACH
 
             # check is HM class okay for HA class
+            _LOGGER.info("Link %s to %s", self._address, self._name)
             if self._check_hm_to_ha_object():
                 # init datapoints of this object
                 self._init_data_struct()
@@ -439,6 +440,7 @@ class HMDevice(Entity):
 
         # set callbacks
         for channel in channels_to_sub:
+            _LOGGER.info("Subscribe %s from %i", self._address, channel)
             self._hmdevice.setEventCallback(callback=self._hm_event_callback,
                                             bequeath=False,
                                             channel=channel)
@@ -489,4 +491,4 @@ class HMDevice(Entity):
         """
         # add all attribute to data struct
         for data_note in self._hmdevice.ATTRIBUTENODE:
-            self._data[data_note] = STATE_UNKNOWN
+            self._data.update({data_note: STATE_UNKNOWN})
