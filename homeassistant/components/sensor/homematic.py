@@ -68,7 +68,7 @@ class HMSensor(homematic.HMDevice):
             return False
 
         # if exists user value?
-        if self._state and not (self._state in self._hmdevice.SENSORNODE):
+        if self._state not in self._hmdevice.SENSORNODE:
             _LOGGER.critical("This %s have no sensor with %s!", self._name,
                              self._state)
             return False
