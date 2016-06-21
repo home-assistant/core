@@ -29,6 +29,10 @@ def setup(hass, config):
         "/robots.txt",
         os.path.join(www_static_path, "robots.txt")
     )
+    hass.wsgi.register_static_path(
+        "/.well-known",
+        os.path.join(www_static_path, ".well-known")
+    )
     hass.wsgi.register_static_path("/static", www_static_path)
     hass.wsgi.register_static_path("/local", hass.config.path('www'))
 
