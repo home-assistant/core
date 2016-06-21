@@ -197,7 +197,7 @@ neurio==0.2.10
 orvibo==1.1.1
 
 # homeassistant.components.mqtt
-paho-mqtt==1.1
+paho-mqtt==1.2
 
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
