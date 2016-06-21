@@ -444,7 +444,7 @@ class HMDevice(Entity):
 
         # set callbacks
         for channel in channels_to_sub:
-            _LOGGER.debug("Subscribe %s from %i", self._address, channel)
+            _LOGGER.debug("Subscribe %s from %s", self._address, str(channel))
             self._hmdevice.setEventCallback(callback=self._hm_event_callback,
                                             bequeath=False,
                                             channel=channel)
