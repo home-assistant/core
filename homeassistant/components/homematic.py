@@ -45,10 +45,10 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: ["Switch", "SwitchPowermeter"],
     DISCOVER_LIGHTS: ["Dimmer"],
     DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
-                       "RemoteMotion", "ThermostatWall", "AreaThermostat"],
+                       "RemoteMotion", "ThermostatWall", "AreaThermostat",
+                       "RotaryHandleSensor"],
     DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
-    DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact",
-                              "RotaryHandleSensor", "Smoke", "SmokeV2",
+    DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact", "Smoke", "SmokeV2",
                               "Motion", "MotionV2"],
     DISCOVER_ROLLERSHUTTER: ["Blind"]
 }
@@ -355,6 +355,13 @@ class HMDevice(Entity):
     def hidden(self):
         """Return True if the entity should be hidden from UIs."""
         return self._hidden
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if not self.available:
+            return STATE_UNKNOWN
+        return self._get_state()
 
     @property
     def device_state_attributes(self):
