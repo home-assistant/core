@@ -3,8 +3,9 @@ import io
 import unittest
 import os
 import tempfile
-
 from homeassistant.util import yaml
+import homeassistant.config as config_util
+from tests.common import get_test_config_dir
 
 
 class TestYaml(unittest.TestCase):
@@ -135,3 +136,50 @@ class TestYaml(unittest.TestCase):
                     "key2": "two",
                     "key3": "three"
                 }
+
+
+def load_yaml(fname, string):
+    """Write a string to file and return the parsed yaml."""
+    with open(fname, 'w') as file:
+        file.write(string)
+    return config_util.load_yaml_config_file(fname)
+
+
+class TestSecrets(unittest.TestCase):
+    """Test the secrets parameter in the yaml utility."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Create & load secrets file."""
+        config_dir = get_test_config_dir()
+        self._yaml_path = os.path.join(config_dir,
+                                       config_util.YAML_CONFIG_FILE)
+        self._secret_path = os.path.join(config_dir, 'secrets.yaml')
+
+        load_yaml(self._secret_path,
+                  'http_pw: pwhttp\n'
+                  'comp1_un: un1\n'
+                  'comp1_pw: pw1\n'
+                  'stale_pw: not_used')
+        self._yaml = load_yaml(self._yaml_path,
+                               'http:\n'
+                               '  api_password: !secret http_pw\n'
+                               'component:\n'
+                               '  username: !secret comp1_un\n'
+                               '  password: !secret comp1_pw\n'
+                               '')
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Clean up secrets."""
+        for path in [self._yaml_path, self._secret_path]:
+            if os.path.isfile(path):
+                os.remove(path)
+
+    def test_secrets_parsed_correctly(self):
+        """Did secrets load ok."""
+        expected = {'api_password': 'pwhttp'}
+        self.assertEqual(expected, self._yaml['http'])
+
+        expected = {
+            'username': 'un1',
+            'password': 'pw1'}
+        self.assertEqual(expected, self._yaml['component'])

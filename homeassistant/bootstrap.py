@@ -19,7 +19,6 @@ import homeassistant.loader as loader
 import homeassistant.util.dt as date_util
 import homeassistant.util.location as loc_util
 import homeassistant.util.package as pkg_util
-import homeassistant.util.secrets as secrets
 from homeassistant.const import (
     CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
     CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
@@ -297,8 +296,6 @@ def from_config_file(config_path, hass=None, verbose=False, skip_pip=True,
     enable_logging(hass, verbose, log_rotate_days)
 
     try:
-        secrets.load_secrets_yaml(config_path)
-        secrets.check_secrets_on_start(hass)
         config_dict = config_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
