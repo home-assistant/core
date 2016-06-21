@@ -108,6 +108,8 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
         """
+        super()._init_data_struct()
+
         # add state to data struct
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})

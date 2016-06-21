@@ -86,6 +86,8 @@ class HMSensor(homematic.HMDevice):
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
         """
+        super()._init_data_struct()
+
         if self._state is None and len(self._hmdevice.SENSORNODE) == 1:
             for value in self._hmdevice.SENSORNODE:
                 self._state = value
