@@ -311,6 +311,7 @@ def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
 class HMDevice(Entity):
     """Homematic device base object."""
 
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize generic HM device."""
         Entity.__init__()
@@ -373,7 +374,7 @@ class HMDevice(Entity):
         for data_node, text in HM_ATTRIBUTE_SUPPORT.items():
             # is a attributes and exists for this object
             if data_node in self._data:
-                attr[HM_ATTRIBUTE_SUPPORT[data_node]] = self._data[data_node]
+                attr[text] = self._data[data_node]
 
         return attr
 
@@ -387,8 +388,7 @@ class HMDevice(Entity):
             self._available = not self._hmdevice.UNREACH
 
             # check is HM class okay for HA class
-            if self._check_hm_to_ha_object() and \
-               self._element <= self._hmdevice.ELEMENT:
+            if self._check_hm_to_ha_object():
                 # init datapoints of this object
                 self._init_data_struct()
                 self._load_init_data_from_hm()
