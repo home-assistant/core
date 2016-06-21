@@ -97,7 +97,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return False
 
         # if exists user value?
-        if self._state not in self._hmdevice.BINARYNODE:
+        if self._state and self._state not in self._hmdevice.BINARYNODE:
             _LOGGER.critical("This %s have no binary with %s!", self._name,
                              self._state)
             return False
