@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.4']
+REQUIREMENTS = ['pyhomematic==0.1.5']
 
 HOMEMATIC = None
 HOMEMATIC_DEVICES = {}
@@ -314,9 +314,6 @@ class HMDevice(Entity):
     # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize generic HM device."""
-        Entity.__init__()
-
-        # member data
         self._name = config.get("name", None)
         self._address = config.get("address", None)
         self._channel = config.get("button", 1)
