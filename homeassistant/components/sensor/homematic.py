@@ -27,6 +27,7 @@ HM_STATE_HA_CAST = {
     "RotaryHandleSensor", {0: "closed", 1: "tilted", 2: "open"}
 }
 
+
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
     return homematic.setup_hmdevice_entity_helper(HMSensor,
@@ -62,6 +63,7 @@ class HMSensor(homematic.HMDevice):
 
         # check if the homematic device correct for this HA device
         if not isinstance(self._hmdevice, HMSensor):
+            _LOGGER.critical("This %s can't be use as Sensor!" % self._name)
             return False
 
         # no param is set and more than 1 sensor node are present
@@ -70,7 +72,7 @@ class HMSensor(homematic.HMDevice):
                              "Please us param." % self._name)
             return False
 
-        return False
+        return True
 
     def _init_data_struct(self):
         """
