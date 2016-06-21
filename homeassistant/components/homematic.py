@@ -89,7 +89,7 @@ def setup(hass, config):
                              remote=remote_ip,
                              remoteport=remote_port,
                              systemcallback=system_callback_handler,
-                             interface_id='homeassistant')
+                             interface_id="homeassistant")
 
     # Start server thread, connect to homegear, initialize to receive events
     HOMEMATIC.start()
@@ -309,6 +309,9 @@ class HMDevice(Entity):
 
     def __init__(self, config):
         """Initialize generic HM device."""
+        Entity.__init__()
+
+        # member data
         self._name = config.get("name", None)
         self._address = config.get("address", None)
         self._channel = config.get("button", 1)
@@ -381,9 +384,14 @@ class HMDevice(Entity):
 
                 # link events from pyhomatic
                 self._subscribe_homematic_events()
+            else:
+                _LOGGER.critical("Delink %s object from HM!" % self._name)
+                self._connected = False
+                return False
 
             # update HA
             self.update_ha_state()
+            return True
 
     def _hm_event_callback(self, device, caller, attribute, value):
         """ Handle all pyhomematic device events """
@@ -444,6 +452,12 @@ class HMDevice(Entity):
                 self._data[node] = funct(name=attr, channel=self._channel)
 
         return True
+
+    def _set_state(self, value):
+        self._data[self._state] = value
+
+    def _set_state(self):
+        return self._data[self._state]
 
     def _check_hm_to_ha_object(self):
         """
