@@ -28,7 +28,7 @@ binary_sensor:
 """
 
 import logging
-from homeassistant.const import (STATE_UNKNOWN)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.components.homematic as homematic
 
@@ -69,7 +69,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                     return True
             return False
 
-        # single binary 
+        # single binary
         return bool(self._get_state())
 
     @property
