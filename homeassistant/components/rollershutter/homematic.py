@@ -110,4 +110,4 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         """
         # add state to data struct
         self._state = "LEVEL"
-        self._set_state(STATE_UNKNOWN)
+        self._data.update({self._state: STATE_UNKNOWN})

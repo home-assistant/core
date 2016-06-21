@@ -125,4 +125,4 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         # add state to data struct
         if self._state:
-            self._set_state(STATE_UNKNOWN)
+            self._data.update({self._state: STATE_UNKNOWN})
