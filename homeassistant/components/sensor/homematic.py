@@ -48,8 +48,8 @@ class HMSensor(homematic.HMDevice):
         # if exists a cast for that class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
-            return HM_STATE_HA_CAST[name].get(self._get_state(), None)
-        return self._get_state()
+            return HM_STATE_HA_CAST[name].get(self._hm_get_state(), None)
+        return self._hm_get_state()
 
     def _check_hm_to_ha_object(self):
         """

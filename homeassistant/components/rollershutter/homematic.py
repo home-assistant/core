@@ -45,7 +45,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         None is unknown, 0 is closed, 100 is fully open.
         """
         if self.available:
-            return int((1 - self._get_state()) * 100)
+            return int((1 - self._hm_get_state()) * 100)
         return None
 
     def position(self, **kwargs):
