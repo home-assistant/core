@@ -397,11 +397,10 @@ class HMDevice(Entity):
             else:
                 _LOGGER.critical("Delink %s object from HM!" % self._name)
                 self._connected = False
-                return False
+                self._available = False
 
             # update HA
             self.update_ha_state()
-            return True
 
     def _hm_event_callback(self, device, caller, attribute, value):
         """ Handle all pyhomematic device events """
