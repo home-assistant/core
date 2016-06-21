@@ -36,16 +36,6 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 class HMThermostat(homematic.HMDevice, ThermostatDevice):
     """Represents an Homematic Thermostat in Home Assistant."""
 
-    def __init__(self, config):
-        """Initialize generic HM device."""
-        super().__init__(config)
-
-        self.__current_temperature = None
-        self.__set_temperature = None
-        self.__mode = None
-        self.__away_mode = None
-        self.__auto_mode = None
-
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that is used."""
@@ -56,14 +46,14 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         """Return the current temperature."""
         if not self.available:
             return None
-        return self._data[self.__current_temperature]
+        return self._data["ACTUAL_TEMPERATURE"]
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if not self.available:
             return None
-        return self._data[self.__set_temperature]
+        return self._data["SET_TEMPERATURE"]
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
@@ -71,7 +61,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
             return None
 
         self._hmdevice.set_temperature(temperature)
-        self._data[self.__set_temperature] = temperature
+        self._data["SET_TEMPERATURE"] = temperature
 
     @property
     def is_away_mode_on(self):
@@ -79,21 +69,21 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if not self.available:
             return None
 
-        return self._data[self.__mode] == self.__away_mode
+        return self._data["CONTROL_MODE"] == self._hmdevice.PARTY_MODE
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
         if not self.available:
             return None
         self._hmdevice.PARTYMODE = True
-        self._data[self.__mode] = self.__away_mode
+        self._data["CONTROL_MODE"] = self._hmdevice.PARTY_MODE
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         if not self.available:
             return None
         self._hmdevice.AUTOMODE = False
-        self._data[self.__mode] = self.__auto_mode
+        self._data["CONTROL_MODE"] = self._hmdevice.AUTO_MODE
 
     @property
     def min_temp(self):
@@ -129,13 +119,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
         """
-        self.__current_temperature = "ACTUAL_TEMPERATURE"
-        self.__set_temperature = "SET_TEMPERATURE"
-        self.__mode = "CONTROL_MODE"
-        self.__auto_mode = self._hmdevice.AUTO_MODE
-        self.__away_mode = self._hmdevice.PARTY_MODE
-
         # add state to data struct
-        self._data.update({self.__mode: STATE_UNKNOWN,
-                           self.__set_temperature: STATE_UNKNOWN,
-                           self.__current_temperature: STATE_UNKNOWN})
+        self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
+                           "SET_TEMPERATURE": STATE_UNKNOWN,
+                           "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
