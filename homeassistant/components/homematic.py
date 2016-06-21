@@ -42,12 +42,15 @@ ATTR_DISCOVER_DEVICES = "devices"
 ATTR_DISCOVER_CONFIG = "config"
 
 HM_DEVICE_TYPES = {
-    DISCOVER_SWITCHES: ['HMSwitch'],
-    DISCOVER_LIGHTS: ['HMDimmer'],
-    DISCOVER_SENSORS: ['HMCcu'],
-    DISCOVER_THERMOSTATS: ['HMThermostat'],
-    DISCOVER_BINARY_SENSORS: ['HMRemote', 'HMDoorContact'],
-    DISCOVER_ROLLERSHUTTER: ['HMRollerShutter']
+    DISCOVER_SWITCHES: ["Switch", "SwitchPowermeter"],
+    DISCOVER_LIGHTS: ["Dimmer"],
+    DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
+                       "RemoteMotion", "ThermostatWall", "AreaThermostat"],
+    DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
+    DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact",
+                              "RotaryHandleSensor", "Smoke", "SmokeV2",
+                              "Motion", "MotionV2"],
+    DISCOVER_ROLLERSHUTTER: ["Blind"]
 }
 
 HM_ATTRIBUTE_SUPPORT = {
