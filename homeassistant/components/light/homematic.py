@@ -59,17 +59,17 @@ class HMLight(homematic.HMDevice, Light):
         if self.available:
             if ATTR_BRIGHTNESS in kwargs and self._state is "LEVEL":
                 percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
-                self._hmdevice.set_level(percent_bright)
+                self._hmdevice.set_level(percent_bright, self._channel)
                 self._set_state(percent_bright)
             else:
                 self._set_state(True)
-                self._hmdevice.on()
+                self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         if self.available:
             self._set_state(0)
-            self._hmdevice.off()
+            self._hmdevice.off(self._channel)
 
     def _check_hm_to_ha_object(self):
         """
