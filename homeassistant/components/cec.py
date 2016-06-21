@@ -46,7 +46,7 @@ def parse_mapping(mapping, parents=None):
 
 
 def pad_physical_address(addr):
-    """Right-pad a physical address"""
+    """Right-pad a physical address."""
     return addr + ['0'] * (MAX_DEPTH - len(addr))
 
 
