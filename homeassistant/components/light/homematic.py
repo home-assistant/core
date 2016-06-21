@@ -89,7 +89,7 @@ class HMLight(homematic.HMDevice, Light):
         if isinstance(self._hmdevice, Dimmer):
             return True
 
-        _LOGGER.critical("This %s can't be use as light!" % self._name)
+        _LOGGER.critical("This %s can't be use as light!", self._name)
         return False
 
     def _init_data_struct(self):
@@ -111,4 +111,4 @@ class HMLight(homematic.HMDevice, Light):
         if self._state:
             self._set_state(STATE_UNKNOWN)
         else:
-            _LOGGER.critical("Can't correct init sensor %s." % self._name)
+            _LOGGER.critical("Can't correct init sensor %s.", self._name)
