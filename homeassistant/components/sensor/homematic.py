@@ -56,14 +56,14 @@ class HMSensor(homematic.HMDevice):
         Check if possible to use the HM Object as this HA type
         NEED overwrite by inheret!
         """
-        from pyhomematic.devicetypes.sensors import HMSensor
+        from pyhomematic.devicetypes.sensors import HMSensor as pyHMSensor
 
         # Check compatibility from HMDevice
         if not super()._check_hm_to_ha_object():
             return False
 
         # check if the homematic device correct for this HA device
-        if not isinstance(self._hmdevice, HMSensor):
+        if not isinstance(self._hmdevice, pyHMSensor):
             _LOGGER.critical("This %s can't be use as sensor!", self._name)
             return False
 

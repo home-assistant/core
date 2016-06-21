@@ -84,19 +84,20 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         Check if possible to use the HM Object as this HA type
         NEED overwrite by inheret!
         """
-        from pyhomematic.devicetypes.sensors import HMBinarySensor
+        from pyhomematic.devicetypes.sensors import HMBinarySensor\
+            as pyHMBinarySensor
 
         # Check compatibility from HMDevice
         if not super()._check_hm_to_ha_object():
             return False
 
         # check if the homematic device correct for this HA device
-        if not isinstance(self._hmdevice, HMBinarySensor):
+        if not isinstance(self._hmdevice, pyHMBinarySensor):
             _LOGGER.critical("This %s can't be use as binary!", self._name)
             return False
 
         # if exists user value?
-        if self._state and not (self._state in self._hmdevice.BINARYNODE):
+        if self._state not in self._hmdevice.BINARYNODE:
             _LOGGER.critical("This %s have no binary with %s!", self._name,
                              self._state)
             return False
