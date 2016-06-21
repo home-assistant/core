@@ -65,13 +65,14 @@ HM_ATTRIBUTE_SUPPORT = {
     "VOLTAGE": "Voltage"
 }
 
+_HM_DISCOVER_HASS = None
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Homematic component."""
-    global HOMEMATIC, HOMEMATIC_AUTODETECT
+    global HOMEMATIC, HOMEMATIC_AUTODETECT, _HM_DISCOVER_HASS
 
     from pyhomematic import HMConnection
 
@@ -87,6 +88,7 @@ def setup(hass, config):
 
     # Create server thread
     HOMEMATIC_AUTODETECT = autodetect
+    _HM_DISCOVER_HASS = hass
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
@@ -105,72 +107,72 @@ def setup(hass, config):
 
 
 def system_callback_handler(src, *args):
-        """Callback handler."""
-        if src == 'newDevices':
-            # pylint: disable=unused-variable
-            (interface_id, dev_descriptions) = args
-            key_dict = {}
-            # Get list of all keys of the devices (ignoring channels)
-            for dev in dev_descriptions:
-                key_dict[dev['ADDRESS'].split(':')[0]] = True
-            # Connect devices already created in HA to pyhomematic and
-            # add remaining devices to list
-            devices_not_created = []
-            for dev in key_dict:
-                try:
-                    if dev in HOMEMATIC_DEVICES:
-                        for hm_element in HOMEMATIC_DEVICES[dev]:
-                            hm_element.link_homematic()
-                    else:
-                        devices_not_created.append(dev)
-                # pylint: disable=broad-except
-                except Exception as err:
-                    # pylint: disable=logging-not-lazy
-                    _LOGGER.error("Failed to setup device %s: %s" % (
-                        (str(dev), str(err))))
-            # If configuration allows auto detection of devices,
-            # all devices not configured are added.
-            if HOMEMATIC_AUTODETECT and devices_not_created:
-                for component_name, func_get_devices, discovery_type in (
-                        ('switch', _get_switches, DISCOVER_SWITCHES),
-                        ('light', _get_lights, DISCOVER_LIGHTS),
-                        ('rollershutter', _get_rollershutters,
-                         DISCOVER_ROLLERSHUTTER),
-                        ('binary_sensor', _get_binary_sensors,
-                         DISCOVER_BINARY_SENSORS),
-                        ('sensor', _get_sensors, DISCOVER_SENSORS),
-                        ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)
-                        ):
-                    # Get all devices of a specific type
-                    found_devices = func_get_devices(devices_not_created)
+    """Callback handler."""
+    if src == 'newDevices':
+        # pylint: disable=unused-variable
+        (interface_id, dev_descriptions) = args
+        key_dict = {}
+        # Get list of all keys of the devices (ignoring channels)
+        for dev in dev_descriptions:
+            key_dict[dev['ADDRESS'].split(':')[0]] = True
+        # Connect devices already created in HA to pyhomematic and
+        # add remaining devices to list
+        devices_not_created = []
+        for dev in key_dict:
+            try:
+                if dev in HOMEMATIC_DEVICES:
+                    for hm_element in HOMEMATIC_DEVICES[dev]:
+                        hm_element.link_homematic()
+                else:
+                    devices_not_created.append(dev)
+            # pylint: disable=broad-except
+            except Exception as err:
+                # pylint: disable=logging-not-lazy
+                _LOGGER.error("Failed to setup device %s: %s" % (
+                    (str(dev), str(err))))
+        # If configuration allows auto detection of devices,
+        # all devices not configured are added.
+        if HOMEMATIC_AUTODETECT and devices_not_created:
+            for component_name, func_get_devices, discovery_type in (
+                    ('switch', _get_switches, DISCOVER_SWITCHES),
+                    ('light', _get_lights, DISCOVER_LIGHTS),
+                    ('rollershutter', _get_rollershutters,
+                     DISCOVER_ROLLERSHUTTER),
+                    ('binary_sensor', _get_binary_sensors,
+                     DISCOVER_BINARY_SENSORS),
+                    ('sensor', _get_sensors, DISCOVER_SENSORS),
+                    ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)
+                    ):
+                # Get all devices of a specific type
+                found_devices = func_get_devices(devices_not_created)
 
-                    # When devices of this type are found
-                    # they are setup in HA and a event is fired
-                    if found_devices:
-                        component = get_component(component_name)
-                        config = {component.DOMAIN: found_devices}
+                # When devices of this type are found
+                # they are setup in HA and a event is fired
+                if found_devices:
+                    component = get_component(component_name)
+                    config = {component.DOMAIN: found_devices}
 
-                        # Ensure component is loaded
-                        homeassistant.bootstrap.setup_component(
-                            hass,
-                            component.DOMAIN,
-                            config)
+                    # Ensure component is loaded
+                    homeassistant.bootstrap.setup_component(
+                        _HM_DISCOVER_HASS,
+                        component.DOMAIN,
+                        config)
 
-                        # Fire discovery event
-                        hass.bus.fire(
-                            EVENT_PLATFORM_DISCOVERED, {
-                                ATTR_SERVICE: discovery_type,
-                                ATTR_DISCOVERED: {
-                                    ATTR_DISCOVER_DEVICES:
-                                    found_devices,
-                                    ATTR_DISCOVER_CONFIG: ''
-                                    }
+                    # Fire discovery event
+                    _HM_DISCOVER_HASS.bus.fire(
+                        EVENT_PLATFORM_DISCOVERED, {
+                            ATTR_SERVICE: discovery_type,
+                            ATTR_DISCOVERED: {
+                                ATTR_DISCOVER_DEVICES:
+                                found_devices,
+                                ATTR_DISCOVER_CONFIG: ''
                                 }
-                            )
-                for dev in devices_not_created:
-                    if dev in HOMEMATIC_DEVICES:
-                        for hm_element in HOMEMATIC_DEVICES[dev]:
-                            hm_element.link_homematic()
+                            }
+                        )
+            for dev in devices_not_created:
+                if dev in HOMEMATIC_DEVICES:
+                    for hm_element in HOMEMATIC_DEVICES[dev]:
+                        hm_element.link_homematic()
 
 
 def _get_switches(keys=None):
