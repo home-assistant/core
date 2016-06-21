@@ -224,7 +224,7 @@ def _get_devices(device_type, keys, metadata):
             params = _create_params_list(HOMEMATIC.devices[key], metadata)
 
             # generate options for 1..n elements with 1..n params
-            for channel in xrange(1, elements):
+            for channel in range(1, elements):
                 for param in params[channel]:
                     name = _create_ha_name(name=HOMEMATIC.devices[key].NAME,
                                            channel=channel,
@@ -248,7 +248,7 @@ def _create_params_list(hmdevice, metadata):
     elements = hmdevice.ELEMENT + 1
 
     # search in Sensor and Binary metadata per elements
-    for channel in xrange(1, elements):
+    for channel in range(1, elements):
         param_chan = []
         for node, channel in metadata.items():
             if channel == 'c' or channel is None:
@@ -374,7 +374,7 @@ class HMDevice(Entity):
         for data_node, text in HM_ATTRIBUTE_SUPPORT.items():
             # is a attributes and exists for this object
             if data_node in self._data:
-                attr[name] = self._data[data_node]
+                attr[HM_ATTRIBUTE_SUPPORT[data_node]] = self._data[data_node]
 
         return attr
 
@@ -444,7 +444,7 @@ class HMDevice(Entity):
         # set callbacks
         for channel in channels_to_sub:
             self._hmdevice.setEventCallback(callback=self._hm_event_callback,
-                                            bequeath=false,
+                                            bequeath=False,
                                             channel=channel)
 
     def _load_init_data_from_hm(self):
@@ -460,14 +460,14 @@ class HMDevice(Entity):
             (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)
                 ):
             if node in self._data:
-                self._data[node] = funct(name=attr, channel=self._channel)
+                self._data[node] = funct(name=name, channel=self._channel)
 
         return True
 
     def _set_state(self, value):
         self._data[self._state] = value
 
-    def _set_state(self):
+    def _get_state(self):
         return self._data[self._state]
 
     def _check_hm_to_ha_object(self):
