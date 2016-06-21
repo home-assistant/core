@@ -11,8 +11,9 @@ Configuration:
 
 sensor:
   - platform: homematic
-    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>" (optional)
+    address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
+    name: <User defined name> (optional)
+    param: <Name of datapoint to us as sensor> (optional)
 """
 
 import logging
