@@ -58,7 +58,8 @@ HM_ATTRIBUTE_SUPPORT = {
     "ERROR": "Sabotage",
     "RSSI_DEVICE": "RSSI",
     "VALVE_STATE": "Valve",
-    "BATTERY_STATE": "Battery"
+    "BATTERY_STATE": "Battery",
+    "CONTROL_MODE": "Mode"
 }
 
 _LOGGER = logging.getLogger(__name__)
