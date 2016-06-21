@@ -379,11 +379,9 @@ class HMDevice(Entity):
             # init
             self._hmdevice = HOMEMATIC.devices[self._address]
             self._connected = True
-            self._available = not self._hmdevice.UNREACH
 
             # check is HM class okay for HA class
-            _LOGGER.info("Link %s to %s - %s", self._address,
-                         self._name, self._available)
+            _LOGGER.info("Link %s to %s", self._address, self._name)
             if self._check_hm_to_ha_object():
                 # init datapoints of this object
                 self._init_data_struct()
@@ -392,12 +390,14 @@ class HMDevice(Entity):
 
                 # link events from pyhomatic
                 self._subscribe_homematic_events()
+                self._available = not self._hmdevice.UNREACH
             else:
                 _LOGGER.critical("Delink %s object from HM!", self._name)
                 self._connected = False
                 self._available = False
 
             # update HA
+            _LOGGER.debug("Linking down, send update_ha_state")
             self.update_ha_state()
 
     def _hm_event_callback(self, device, caller, attribute, value):
@@ -464,11 +464,14 @@ class HMDevice(Entity):
 
         return True
 
-    def _set_state(self, value):
-        self._data[self._state] = value
+    def _hm_set_state(self, value):
+        if self._state in self._data:
+            self._data[self._state] = value
 
-    def _get_state(self):
-        return self._data[self._state]
+    def _hm_get_state(self):
+        if self._state in self._data:
+            return self._data[self._state]
+        return None
 
     def _check_hm_to_ha_object(self):
         """

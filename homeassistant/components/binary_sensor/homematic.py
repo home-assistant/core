@@ -70,7 +70,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return False
 
         # single binary
-        return bool(self._get_state())
+        return bool(self._hm_get_state())
 
     @property
     def sensor_class(self):

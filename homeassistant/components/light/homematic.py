@@ -44,25 +44,27 @@ class HMLight(homematic.HMDevice, Light):
             return None
         # is dimmer?
         if self._state is "LEVEL":
-            return int(self._get_state() * 255)
+            return int(self._hm_get_state() * 255)
         else:
             return None
 
     @property
     def is_on(self):
         """Return True if light is on."""
-        if self.available:
-            return self._get_state() > 0
-        return False
+        if not self.available:
+            return False
+        return self._hm_get_state() > 0
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if self.available:
-            if ATTR_BRIGHTNESS in kwargs and self._state is "LEVEL":
-                percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
-                self._hmdevice.set_level(percent_bright, self._channel)
-            else:
-                self._hmdevice.on(self._channel)
+        if not self.available:
+            return
+
+        if ATTR_BRIGHTNESS in kwargs and self._state is "LEVEL":
+            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
+            self._hmdevice.set_level(percent_bright, self._channel)
+        else:
+            self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
