@@ -330,6 +330,10 @@ class HMDevice(Entity):
                                          channel=self._channel,
                                          param=self._state)
 
+        # fix possible error
+        if not self._channel:
+            self._channel = 1
+
     @property
     def should_poll(self):
         """Return False. Homematic states are pushed by the XML RPC Server."""
@@ -354,13 +358,6 @@ class HMDevice(Entity):
     def hidden(self):
         """Return True if the entity should be hidden from UIs."""
         return self._hidden
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        if not self.available:
-            return STATE_UNKNOWN
-        return self._get_state()
 
     @property
     def device_state_attributes(self):
