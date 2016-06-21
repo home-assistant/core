@@ -78,6 +78,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         if isinstance(self._hmdevice, Dimmer):
             return True
 
+        _LOGGER.critical("This %s can't be use as Switch!" % self._name)
         return False
 
     def _init_data_struct(self):
