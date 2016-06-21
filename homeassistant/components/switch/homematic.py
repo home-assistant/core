@@ -104,6 +104,6 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
 
         # add state to data struct
         if self._state:
-            self._set_state(STATE_UNKNOWN)
+            self._data.update({self._state: STATE_UNKNOWN})
         else:
             _LOGGER.critical("Can't correct init sensor %s.", self._name)
