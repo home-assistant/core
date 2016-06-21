@@ -62,6 +62,14 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         """Return True if switch is on."""
         if not self.available:
             return False
+        # no binary is defined, check all!
+        if self._state is None:
+            for binary in self._hmdevice.BINARYNODE:
+                if self._data[binary] == 1:
+                    return True
+            return False
+
+        # single binary 
         return bool(self._get_state())
 
     @property
