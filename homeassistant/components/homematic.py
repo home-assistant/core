@@ -376,7 +376,10 @@ class HMDevice(Entity):
             if self._check_hm_to_ha_object() and \
                self._element <= self._hmdevice.ELEMENT:
                 # init datapoints of this object
-                self._init_data()
+                self._init_data_struct()
+                self._load_init_data_from_hm()
+
+                # link events from pyhomatic
                 self._subscribe_homematic_events()
 
             # update HA
@@ -425,6 +428,23 @@ class HMDevice(Entity):
                                             bequeath=false,
                                             channel=channel)
 
+    def _load_init_data_from_hm(self):
+        """ Load first value from pyhomematic """
+        if not self._connected:
+            return False
+
+        # Read data from pyhomematic direct
+        for node, funct in (
+            (self._hmdevice.ATTRIBUTENODE, self._hmdevice.getAttributeData),
+            (self._hmdevice.WRITENODE, self._hmdevice.getWriteData),
+            (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
+            (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)
+                ):
+            if node in self._data:
+                self._data[node] = funct(name=attr, channel=self._channel)
+
+        return True
+
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
@@ -441,7 +461,7 @@ class HMDevice(Entity):
 
         return True
 
-    def _init_data(self):
+    def _init_data_struct(self):
         """
         Generate a data struct (self._data) from hm metadata
         NEED overwrite by inheret!
