@@ -11,6 +11,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 
+# Fix for pylint too many statements error
+# pylint: disable=too-many-statements
+
 DEPENDENCIES = ["netatmo"]
 
 _LOGGER = logging.getLogger(__name__)
