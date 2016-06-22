@@ -1,5 +1,5 @@
 """
-CEC platform.
+CEC component.
 
 Requires libcec + Python bindings.
 """
@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _CEC = None
-DOMAIN = 'cec'
+DOMAIN = 'hdmi_cec'
 SERVICE_SELECT_DEVICE = 'select_device'
 SERVICE_POWER_ON = 'power_on'
 SERVICE_STANDBY = 'standby'
@@ -28,8 +28,10 @@ DEVICE_SCHEMA = vol.Schema({
 })
 
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICES): DEVICE_SCHEMA
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DEVICES): DEVICE_SCHEMA
+    })
 })
 
 
