@@ -11,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 
-# Fix for pylint too many statements error
-# pylint: disable=too-many-statements
 
 DEPENDENCIES = ["netatmo"]
 
@@ -109,6 +107,8 @@ class NetAtmoSensor(Entity):
         return self._unit_of_measurement
 
     # pylint: disable=too-many-branches
+    # Fix for pylint too many statements error
+    # pylint: disable=too-many-statements
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
