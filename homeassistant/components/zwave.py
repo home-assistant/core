@@ -284,7 +284,7 @@ def setup(hass, config):
              value_genre,
              specific_device_class) in DISCOVERY_COMPONENTS:
 
-            _LOGGER.debug("Node_id=%s query start",node.node_id)
+            _LOGGER.debug("Node_id=%s query start", node.node_id)
             _LOGGER.debug("Generic class query=%s, From node=%s",
                           generic_command_class, node.generic)
             if generic_command_class is not None and \
@@ -308,7 +308,7 @@ def setup(hass, config):
                           generic_command_class, node.generic)
             if value_genre is not None and value_genre != value.genre:
                 continue
- 
+
             # Configure node
             _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, \
                           Specific_command_class=%s, \
