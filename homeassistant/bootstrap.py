@@ -25,8 +25,8 @@ from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    event_decorators, service, config_per_platform, extract_domain_configs)
-from homeassistant.helpers.entity import Entity
+    event_decorators, service, config_per_platform, extract_domain_configs,
+    entity)
 
 _LOGGER = logging.getLogger(__name__)
 _SETUP_LOCK = RLock()
@@ -412,8 +412,7 @@ def process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    for entity_id, attrs in config.get(CONF_CUSTOMIZE).items():
-        Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
+    entity.set_customize(config.get(CONF_CUSTOMIZE))
 
     if CONF_TEMPERATURE_UNIT in config:
         hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
