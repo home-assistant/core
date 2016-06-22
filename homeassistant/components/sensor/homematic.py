@@ -69,6 +69,7 @@ class HMSensor(homematic.HMDevice):
 
         # if exists user value?
         if self._state and self._state not in self._hmdevice.SENSORNODE:
+            # pylint: disable=logging-too-many-args
             _LOGGER.critical("This %s have no sensor with %s! Values are",
                              self._name, self._state,
                              str(self._hmdevice.SENSORNODE.keys()))
