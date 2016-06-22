@@ -60,10 +60,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
     @property
     def state(self):
         """Return the state of the roller shutter."""
-        if not self.available:
-            return STATE_UNKNOWN
-
-        current = self._hm_get_state()
+        current = self.current_position
         if current is None:
             return STATE_UNKNOWN
 
