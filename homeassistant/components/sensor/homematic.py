@@ -28,6 +28,16 @@ HM_STATE_HA_CAST = {
     "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"}
 }
 
+HM_UNIT_HA_CAST = {
+    "HUMIDITY": "%",
+    "TEMPERATURE": "°C",
+    "BRIGHTNESS": "#",
+    "POWER": "W",
+    "CURRENT": "mA",
+    "VOLTAGE": "V",
+    "ENERGY_COUNTER": "Wh"
+}
+
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
@@ -49,7 +59,17 @@ class HMSensor(homematic.HMDevice):
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
             return HM_STATE_HA_CAST[name].get(self._hm_get_state(), None)
+
+        # no cast, return original value
         return self._hm_get_state()
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        if not self.available:
+            return None
+
+        return HM_UNIT_HA_CAST.get(self._state, None)
 
     def _check_hm_to_ha_object(self):
         """

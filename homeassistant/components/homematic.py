@@ -324,6 +324,10 @@ class HMDevice(Entity):
         self._connected = False
         self._available = False
 
+        # set param to uppercase
+        if self._state:
+            self._state = self._state.upper()
+
         # generate name
         if not self._name:
             self._name = _create_ha_name(name=self._address,
