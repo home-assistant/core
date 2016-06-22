@@ -54,15 +54,15 @@ HM_DEVICE_TYPES = {
 }
 
 HM_ATTRIBUTE_SUPPORT = {
-    "LOWBAT": "Battery",
-    "ERROR": "Sabotage",
-    "RSSI_DEVICE": "RSSI",
-    "VALVE_STATE": "Valve",
-    "BATTERY_STATE": "Battery",
-    "CONTROL_MODE": "Mode",
-    "POWER": "Power",
-    "CURRENT": "Current",
-    "VOLTAGE": "Voltage"
+    "LOWBAT": ["Battery", {0: "High", 1: "Low"}],
+    "ERROR": ["Sabotage", {0: "No", 1: "Yes"}],
+    "RSSI_DEVICE": ["RSSI", {}],
+    "VALVE_STATE": ["Valve", {}],
+    "BATTERY_STATE": ["Battery", {}],
+    "CONTROL_MODE": ["Mode", {0: "Auto", 1: "Manual", 2: "Away", 3: "Boost"}],
+    "POWER": ["Power", {}],
+    "CURRENT": ["Current", {}],
+    "VOLTAGE": ["Voltage", {}]
 }
 
 _HM_DISCOVER_HASS = None
@@ -365,10 +365,11 @@ class HMDevice(Entity):
         attr = {}
 
         # generate a attributes list
-        for data_node, text in HM_ATTRIBUTE_SUPPORT.items():
+        for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # is a attributes and exists for this object
-            if data_node in self._data:
-                attr[text] = self._data[data_node]
+            if node in self._data:
+                value = data[1].get(self._data[node], self._data[node])
+                attr[data[0]] = value
 
         return attr
 
