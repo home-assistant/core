@@ -117,14 +117,19 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         # object have 1 binary
         if self._state is None and len(self._hmdevice.BINARYNODE) == 1:
-            for value in self._hmdevice.SENSORNODE:
+            for value in self._hmdevice.BINARYNODE:
                 self._state = value
 
         # no binary is definit, use all binary for state
         if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
+            _LOGGER.warning("%s have multible binary params. It use all " +
+                            "binary nodes as one. Possible param values: %s",
+                            str(keys(self._hmdevice.BINARYNODE)))
             for node in self._hmdevice.BINARYNODE:
                 self._data.update({node: STATE_UNKNOWN})
 
         # add state to data struct
         if self._state:
+            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})
