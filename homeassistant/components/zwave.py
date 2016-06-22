@@ -87,69 +87,69 @@ TYPE_DECIMAL = "Decimal"
 # value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
-     [COMMAND_CLASS_SENSOR_MULTILEVEL,
-      COMMAND_CLASS_METER,
-      COMMAND_CLASS_ALARM],
      [GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR,
       GENERIC_COMMAND_CLASS_METER,
       GENERIC_COMMAND_CLASS_ALARM_SENSOR],
+     SPECIFIC_DEVICE_CLASS_WHATEVER,
+     [COMMAND_CLASS_SENSOR_MULTILEVEL,
+      COMMAND_CLASS_METER,
+      COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
-     GENRE_USER,
-     [SPECIFIC_DEVICE_CLASS_WHATEVER]),
+     GENRE_USER),
     ('light',
-     [COMMAND_CLASS_SWITCH_MULTILEVEL],
-     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
-     TYPE_BYTE,
-     GENRE_USER,
+     GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
      [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
-      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE]),
+      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE],
+     COMMAND_CLASS_SWITCH_MULTILEVEL,
+     TYPE_BYTE,
+     GENRE_USER),
     ('switch',
-     [COMMAND_CLASS_SWITCH_BINARY],
-     [GENERIC_COMMAND_CLASS_BINARY_SWITCH],
+     GENERIC_COMMAND_CLASS_BINARY_SWITCH,
+     SPECIFIC_DEVICE_CLASS_WHATEVER,
+     COMMAND_CLASS_SWITCH_BINARY,
      TYPE_BOOL,
-     GENRE_USER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_USER),
     ('binary_sensor',
-     [COMMAND_CLASS_SENSOR_BINARY],
-     [GENERIC_COMMAND_CLASS_BINARY_SENSOR],
+     GENERIC_COMMAND_CLASS_BINARY_SENSOR,
+     SPECIFIC_DEVICE_CLASS_WHATEVER,
+     COMMAND_CLASS_SENSOR_BINARY,
      TYPE_BOOL,
-     GENRE_USER,
-     [SPECIFIC_DEVICE_CLASS_WHATEVER]),
+     GENRE_USER),
     ('thermostat',
-     [COMMAND_CLASS_THERMOSTAT_SETPOINT],
-     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     GENERIC_COMMAND_CLASS_THERMOSTAT,
+     SPECIFIC_DEVICE_CLASS_WHATEVER,
+     COMMAND_CLASS_THERMOSTAT_SETPOINT,
      TYPE_WHATEVER,
-     GENRE_WHATEVER,
-     [SPECIFIC_DEVICE_CLASS_WHATEVER]),
+     GENRE_WHATEVER),
     ('hvac',
-     [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
-     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     GENERIC_COMMAND_CLASS_THERMOSTAT,
+     SPECIFIC_DEVICE_CLASS_WHATEVER,
+     COMMAND_CLASS_THERMOSTAT_FAN_MODE,
      TYPE_WHATEVER,
-     GENRE_WHATEVER,
-     [SPECIFIC_DEVICE_CLASS_WHATEVER]),
+     GENRE_WHATEVER),
     ('lock',
-     [COMMAND_CLASS_DOOR_LOCK],
-     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
-     TYPE_BOOL,
-     GENRE_USER,
+     GENERIC_COMMAND_CLASS_ENTRY_CONTROL,
      [SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK,
-      SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK]),
+      SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK],
+     COMMAND_CLASS_DOOR_LOCK,
+     TYPE_BOOL,
+     GENRE_USER),
     ('rollershutter',
-     [COMMAND_CLASS_WHATEVER],
-     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
-     TYPE_WHATEVER,
-     GENRE_USER,
+     GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
      [SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A,
       SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B,
       SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C,
-      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR]),
+      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR],
+     COMMAND_CLASS_WHATEVER,
+     TYPE_WHATEVER,
+     GENRE_USER),
     ('garagedoor',
-     [COMMAND_CLASS_SWITCH_BINARY],
-     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
-     TYPE_BOOL,
-     GENRE_USER,
+     GENERIC_COMMAND_CLASS_ENTRY_CONTROL,
      [SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON,
-      SPECIFIC_DEVICE_CLASS_SECURE_DOOR])
+      SPECIFIC_DEVICE_CLASS_SECURE_DOOR],
+     COMMAND_CLASS_SWITCH_BINARY,
+     TYPE_BOOL,
+     GENRE_USER)
 ]
 
 
@@ -278,35 +278,40 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
+             generic_device_class,
+             specific_device_class,
              command_class,
-             generic_command_class,
              value_type,
-             value_genre,
-             specific_device_class) in DISCOVERY_COMPONENTS:
+             value_genre) in DISCOVERY_COMPONENTS:
 
-            _LOGGER.debug("Node_id=%s query start", node.node_id)
+            _LOGGER.debug("Component=%s Node_id=%s query start", component,
+                          node.node_id)
             _LOGGER.debug("Generic class query=%s, From node=%s",
-                          generic_command_class, node.generic)
-            if generic_command_class is not None and \
-               node.generic not in generic_command_class:
+                          generic_device_class, node.generic)
+            if node.generic != int(generic_device_class):
+                _LOGGER.debug("node.generic %s not in generic_device_class %s", node.generic, int(generic_device_class))
                 continue
             _LOGGER.debug("Specific class query=%s, From node=%s",
                           specific_device_class, node.specific)
-            if specific_device_class is not None and \
-               node.specific not in specific_device_class:
+            if node.specific != int(specific_device_class) and \
+               specific_device_class is not None:
+                _LOGGER.debug("node.specific %s is not None and specific_device_class %s", node.specific, int(specific_device_class))
                 continue
             _LOGGER.debug("Command_class query=%s, From node=%s",
                           command_class, value.command_class)
-            if command_class is not None and  \
-               value.command_class not in command_class:
+            if value.command_class != int(command_class) and \
+               command_class is not None:
+                _LOGGER.debug("value.command_class %s != command_class %s", value.command_class, int(command_class))
                 continue
             _LOGGER.debug("Value type query=%s, From node=%s",
                           value_type, value.type)
-            if value_type is not None and value_type != value.type:
+            if value_type != value.type and value_type is not None:
+                _LOGGER.debug("value.type %s != value_type %s", value.type, value_type)
                 continue
             _LOGGER.debug("Value genre query=%s, From node=%s",
                           generic_command_class, node.generic)
-            if value_genre is not None and value_genre != value.genre:
+            if value_genre != value.genre and value_genre != None:
+                _LOGGER.debug("value.genre %s != value_genre %s", value.genre, value_genre)
                 continue
 
             # Configure node
