@@ -330,10 +330,6 @@ class HMDevice(Entity):
                                          channel=self._channel,
                                          param=self._state)
 
-        # fix possible error
-        if not self._channel:
-            self._channel = 1
-
     @property
     def should_poll(self):
         """Return False. Homematic states are pushed by the XML RPC Server."""
@@ -381,12 +377,12 @@ class HMDevice(Entity):
             self._connected = True
 
             # check is HM class okay for HA class
-            _LOGGER.info("Link %s to %s", self._address, self._name)
+            _LOGGER.info("Start linking %s to %s", self._address, self._name)
             if self._check_hm_to_ha_object():
                 # init datapoints of this object
                 self._init_data_struct()
                 self._load_init_data_from_hm()
-                _LOGGER.debug("%s generate: %s", self._name, str(self._data))
+                _LOGGER.debug("%s datastruct: %s", self._name, str(self._data))
 
                 # link events from pyhomatic
                 self._subscribe_homematic_events()
@@ -397,11 +393,13 @@ class HMDevice(Entity):
                 self._available = False
 
             # update HA
-            _LOGGER.debug("Linking down, send update_ha_state")
+            _LOGGER.debug("%s linking down, send update_ha_state", self._name)
             self.update_ha_state()
 
     def _hm_event_callback(self, device, caller, attribute, value):
         """ Handle all pyhomematic device events """
+        _LOGGER.debug("%s receive event '%s' value: %s", self._name,
+                      attribute, value)
         have_change = False
 
         # is data needed for this instance?
@@ -418,6 +416,8 @@ class HMDevice(Entity):
 
         # if it change data, update HA
         if have_change:
+            _LOGGER.debug("%s update_ha_state after '%s'", self._name,
+                          attribute)
             self.update_ha_state()
 
     def _subscribe_homematic_events(self):
@@ -434,10 +434,13 @@ class HMDevice(Entity):
                     # chan is current channel
                     if channel == 'c' or channel is None:
                         channel = self._channel
-
                     # prepare for subscription
-                    if channel > 0:
-                        channels_to_sub.update({channel: True})
+                    try:
+                        if int(channel) > 0:
+                            channels_to_sub.update({int(channel): True})
+                    except (ValueError, TypeError):
+                        _LOGGER("Invalid channel in metadata from %s",
+                                self._name)
 
         # set callbacks
         for channel in channels_to_sub:
