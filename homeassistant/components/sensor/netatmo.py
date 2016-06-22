@@ -24,7 +24,7 @@ SENSOR_TYPES = {
     'rain':         ['Rain', 'mm', 'mdi:weather-rainy'],
     'sum_rain_1':   ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
     'sum_rain_24':  ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
-    'battery_vp':   ['Battery', '','mdi:battery'],
+    'battery_vp':   ['Battery', '', 'mdi:battery'],
     'min_temp':     ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
     'max_temp':     ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
     'WindAngle':    ['Angle', '', 'mdi:compass'],
@@ -32,7 +32,7 @@ SENSOR_TYPES = {
     'GustAngle':    ['Gust Angle', '', 'mdi:compass'],
     'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
     'rf_status':    ['Radio', '', 'mdi:signal'],
-    'wifi_status':  ['Wifi', '','mdi:wifi']
+    'wifi_status':  ['Wifi', '', 'mdi:wifi']
 }
 
 CONF_STATION = 'station'
@@ -200,6 +200,7 @@ class NetAtmoSensor(Entity):
                 self._state = "Middle"
             elif data['wifi_status'] <= 70:
                 self._state = "Good"
+
 
 class NetAtmoData(object):
     """Get the latest data from NetAtmo."""
