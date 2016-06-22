@@ -16,23 +16,23 @@ DEPENDENCIES = ["netatmo"]
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'co2':         ['CO2', 'ppm', 'mdi:cloud'],
-    'pressure':    ['Pressure', 'mbar', 'mdi:gauge'],
-    'noise':       ['Noise', 'dB', 'mdi:volume-high'],
-    'humidity':    ['Humidity', '%', 'mdi:water-percent'],
-    'rain':        ['Rain', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_1':  ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
-    'battery_vp':  ['Battery','','mdi:battery'],
-    'min_temp':    ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'max_temp':    ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'WindAngle':   ['Angle','', 'mdi:compass'],
-    'WindStrength':['Strength','km/h', 'mdi:weather-windy'],
-    'GustAngle':   ['Gust Angle','', 'mdi:compass'],
-    'GustStrength':['Gust Strength','km/h', 'mdi:weather-windy'],
-    'rf_status':   ['Radio','', 'mdi:signal'],
-    'wifi_status': ['Wifi','','mdi:wifi']
+    'temperature':  ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'co2':          ['CO2', 'ppm', 'mdi:cloud'],
+    'pressure':     ['Pressure', 'mbar', 'mdi:gauge'],
+    'noise':        ['Noise', 'dB', 'mdi:volume-high'],
+    'humidity':     ['Humidity', '%', 'mdi:water-percent'],
+    'rain':         ['Rain', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_1':   ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
+    'sum_rain_24':  ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
+    'battery_vp':   ['Battery', '','mdi:battery'],
+    'min_temp':     ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'max_temp':     ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'WindAngle':    ['Angle', '', 'mdi:compass'],
+    'WindStrength': ['Strength', 'km/h', 'mdi:weather-windy'],
+    'GustAngle':    ['Gust Angle', '', 'mdi:compass'],
+    'GustStrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
+    'rf_status':    ['Radio', '', 'mdi:signal'],
+    'wifi_status':  ['Wifi', '','mdi:wifi']
 }
 
 CONF_STATION = 'station'
@@ -128,17 +128,17 @@ class NetAtmoSensor(Entity):
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
         elif self.type == 'battery_vp':
-                if data['battery_vp'] >= 5500:
-                    self._state = "Full"
-                elif data['battery_vp'] >= 5100:
-                    self._state = "High"
-                elif data['battery_vp'] >= 4600:
-                    self._state = "Medium"
-                elif data['battery_vp'] >= 4100:
-                    self._state = "Low"
-                elif data['battery_vp'] < 4100:
-                    self._state = "Very Low"
-       elif self.type == 'min_temp':
+            if data['battery_vp'] >= 5500:
+                self._state = "Full"
+            elif data['battery_vp'] >= 5100:
+                self._state = "High"
+            elif data['battery_vp'] >= 4600:
+                self._state = "Medium"
+            elif data['battery_vp'] >= 4100:
+                self._state = "Low"
+            elif data['battery_vp'] < 4100:
+                self._state = "Very Low"
+        elif self.type == 'min_temp':
             self._state = data['min_temp']
         elif self.type == 'max_temp':
             self._state = data['max_temp']
