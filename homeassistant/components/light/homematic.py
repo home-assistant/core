@@ -51,9 +51,10 @@ class HMLight(homematic.HMDevice, Light):
     @property
     def is_on(self):
         """Return True if light is on."""
-        if not self.available:
+        try:
+            return self._hm_get_state() > 0
+        except TypeError:
             return False
-        return self._hm_get_state() > 0
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
