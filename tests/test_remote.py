@@ -8,7 +8,7 @@ import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -154,6 +154,21 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual('set_test', state.state)
 
         self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
+
+    def test_set_state_with_push(self):
+        """TestPython API set_state with push option."""
+        events = []
+        hass.bus.listen(EVENT_STATE_CHANGED, events.append)
+
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        hass.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
+        remote.set_state(
+            master_api, 'test.test', 'set_test_2', push_state=True)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(2, len(events))
 
     def test_is_state(self):
         """Test Python API is_state."""
