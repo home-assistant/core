@@ -47,7 +47,7 @@ HydroData = collections.namedtuple(
      'temperature_max'])
 
 # Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
