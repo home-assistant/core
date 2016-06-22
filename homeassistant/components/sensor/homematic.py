@@ -71,14 +71,14 @@ class HMSensor(homematic.HMDevice):
         if self._state and self._state not in self._hmdevice.SENSORNODE:
             _LOGGER.critical("This %s have no sensor with %s! Values are",
                              self._name, self._state,
-                             str(keys(self._hmdevice.SENSORNODE)))
+                             str(self._hmdevice.SENSORNODE.keys()))
             return False
 
         # no param is set and more than 1 sensor node are present
         if self._state is None and len(self._hmdevice.SENSORNODE) > 1:
             _LOGGER.critical("This %s have more sensore node. " +
                              "Please us param. Values are: %s", self._name,
-                             str(keys(self._hmdevice.SENSORNODE)))
+                             str(self._hmdevice.SENSORNODE.keys()))
             return False
 
         _LOGGER.debug("%s is okay for linking", self._name)
