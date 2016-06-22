@@ -24,6 +24,15 @@ SENSOR_TYPES = {
     'rain':        ['Rain', 'mm', 'mdi:weather-rainy'],
     'sum_rain_1':  ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
     'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
+    'battery_vp':  ['Battery','','mdi:battery'],
+    'min_temp':    ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'max_temp':    ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
+    'WindAngle':   ['Angle','', 'mdi:compass'],
+    'WindStrength':['Strength','km/h', 'mdi:weather-windy'],
+    'GustAngle':   ['Gust Angle','', 'mdi:compass'],
+    'GustStrength':['Gust Strength','km/h', 'mdi:weather-windy'],
+    'rf_status':   ['Radio','', 'mdi:signal'],
+    'wifi_status': ['Wifi','','mdi:wifi']
 }
 
 CONF_STATION = 'station'
@@ -118,7 +127,79 @@ class NetAtmoSensor(Entity):
             self._state = data['CO2']
         elif self.type == 'pressure':
             self._state = round(data['Pressure'], 1)
-
+        elif self.type == 'battery_vp':
+                if data['battery_vp'] >= 5500:
+                    self._state = "Full"
+                elif data['battery_vp'] >= 5100:
+                    self._state = "High"
+                elif data['battery_vp'] >= 4600:
+                    self._state = "Medium"
+                elif data['battery_vp'] >= 4100:
+                    self._state = "Low"
+                elif data['battery_vp'] < 4100:
+                    self._state = "Very Low"
+       elif self.type == 'min_temp':
+            self._state = data['min_temp']
+        elif self.type == 'max_temp':
+            self._state = data['max_temp']
+        elif self.type == 'WindAngle':
+            if data['WindAngle'] >= 330:
+                self._state = "North (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 300:
+                self._state = "North-West (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 240:
+                self._state = "West (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 210:
+                self._state = "South-West (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 150:
+                self._state = "South (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 120:
+                self._state = "South-East (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 60:
+                self._state = "East (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 30:
+                self._state = "North-East (%d\xb0)" % data['WindAngle']
+            elif data['WindAngle'] >= 0:
+                self._state = "North (%d\xb0)" % data['WindAngle']
+        elif self.type == 'WindStrength':
+            self._state = data['WindStrength']
+        elif self.type == 'GustAngle':
+            if data['GustAngle'] >= 330:
+                self._state = "North (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 300:
+                self._state = "North-West (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 240:
+                self._state = "West (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 210:
+                self._state = "South-West (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 150:
+                self._state = "South (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 120:
+                self._state = "South-East (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 60:
+                self._state = "East (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 30:
+                self._state = "North-East (%d\xb0)" % data['GustAngle']
+            elif data['GustAngle'] >= 0:
+                self._state = "North (%d\xb0)" % data['GustAngle']
+        elif self.type == 'GustStrength':
+            self._state = data['GustStrength']
+        elif self.type == 'rf_status':
+            if data['rf_status'] >= 90:
+                self._state = "Low"
+            elif data['rf_status'] >= 76:
+                self._state = "Medium"
+            elif data['rf_status'] >= 60:
+                self._state = "High"
+            elif data['rf_status'] <= 59:
+                self._state = "Full"
+        elif self.type == 'wifi_status':
+            if data['wifi_status'] >= 86:
+                self._state = "Bad"
+            elif data['wifi_status'] >= 71:
+                self._state = "Middle"
+            elif data['wifi_status'] <= 70:
+                self._state = "Good"
 
 class NetAtmoData(object):
     """Get the latest data from NetAtmo."""
