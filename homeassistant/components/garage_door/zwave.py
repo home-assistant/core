@@ -25,11 +25,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY:
-        return
-    if value.index != 0:
-        return
-
     value.set_change_verified(False)
     add_devices([ZwaveGarageDoor(value)])
 
