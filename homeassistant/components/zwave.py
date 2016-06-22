@@ -52,27 +52,27 @@ COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
 COMMAND_CLASS_BATTERY = 128
 
 GENERIC_COMMAND_CLASS_WHATEVER = None
-GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 0x11
-GENERIC_COMMAND_CLASS_BINARY_SWITCH = 0x10
-GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 0x40
-GENERIC_COMMAND_CLASS_BINARY_SENSOR = 0x20
-GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR = 0x21
-GENERIC_COMMAND_CLASS_METER = 0x31
-GENERIC_COMMAND_CLASS_ALARM_SENSOR = 0xA1
-GENERIC_COMMAND_CLASS_THERMOSTAT = 0x08
+GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
+GENERIC_COMMAND_CLASS_BINARY_SWITCH = 16
+GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 64
+GENERIC_COMMAND_CLASS_BINARY_SENSOR = 32
+GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR = 33
+GENERIC_COMMAND_CLASS_METER = 49
+GENERIC_COMMAND_CLASS_ALARM_SENSOR = 161
+GENERIC_COMMAND_CLASS_THERMOSTAT = 8
 
 SPECIFIC_DEVICE_CLASS_WHATEVER = None
-SPECIFIC_DEVICE_CLASS_NOT_USED = 0x00
-SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 0x01
-SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK = 0x02
-SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 0x03
-SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK = 0x03
-SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 0x04
-SPECIFIC_DEVICE_CLASS_SECURE_DOOR = 0x05
-SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 0x05
-SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 0x06
-SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON = 0x07
-SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 0x07
+SPECIFIC_DEVICE_CLASS_NOT_USED = 0
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 1
+SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK = 2
+SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 3
+SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK = 3
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 4
+SPECIFIC_DEVICE_CLASS_SECURE_DOOR = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 6
+SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON = 7
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 7
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -278,32 +278,45 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
-             basic_command_class,
+             command_class,
              generic_command_class,
              value_type,
              value_genre,
              specific_device_class) in DISCOVERY_COMPONENTS:
 
-            if basic_command_class is not None and  \
-               basic_command_class not in value.command_class:
-                continue
+            _LOGGER.debug("Node_id=%s query start",node.node_id)
+            _LOGGER.debug("Generic class query=%s, From node=%s",
+                          generic_command_class, node.generic)
             if generic_command_class is not None and \
                node.generic not in generic_command_class:
                 continue
-            if value_type is not None and value_type != value.type:
-                continue
-            if value_genre is not None and value_genre != value.genre:
-                continue
+            _LOGGER.debug("Specific class query=%s, From node=%s",
+                          specific_device_class, node.specific)
             if specific_device_class is not None and \
                node.specific not in specific_device_class:
                 continue
-
+            _LOGGER.debug("Command_class query=%s, From node=%s",
+                          command_class, value.command_class)
+            if command_class is not None and  \
+               value.command_class not in command_class:
+                continue
+            _LOGGER.debug("Value type query=%s, From node=%s",
+                          value_type, value.type)
+            if value_type is not None and value_type != value.type:
+                continue
+            _LOGGER.debug("Value genre query=%s, From node=%s",
+                          generic_command_class, node.generic)
+            if value_genre is not None and value_genre != value.genre:
+                continue
+ 
             # Configure node
-            _LOGGER.debug("Node_id=%s Value type=%s Genre=%s \
-                          Generic command_class=%s \
-                          Specific Device_class=%s", node.node_id,
-                          value.type, value.genre, generic_command_class,
-                          specific_device_class)
+            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, \
+                          Specific_command_class=%s, \
+                          Command_class=%s, Value type=%s, \
+                          Genre=%s", node.node_id,
+                          node.generic, node.specific,
+                          value.command_class, value.type,
+                          value.genre)
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
