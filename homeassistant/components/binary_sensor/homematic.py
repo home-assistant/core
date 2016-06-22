@@ -124,7 +124,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
             _LOGGER.warning("%s have multible binary params. It use all " +
                             "binary nodes as one. Possible param values: %s",
-                            str(keys(self._hmdevice.BINARYNODE)))
+                            str(self._hmdevice.BINARYNODE.keys()))
             for node in self._hmdevice.BINARYNODE:
                 self._data.update({node: STATE_UNKNOWN})
 
