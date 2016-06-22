@@ -51,10 +51,11 @@ class PushoverNotificationService(BaseNotificationService):
         """Send a message to a user."""
         from pushover import RequestError
 
-        # Make a copy and use empty dict as default value (thanks @balloob)
-        data = dict(kwargs.get(ATTR_DATA, {}))
+        # Make a copy and use empty dict if necessary
+        data = dict(kwargs.get(ATTR_DATA) or {})
 
         data['title'] = kwargs.get(ATTR_TITLE)
+
         target = kwargs.get(ATTR_TARGET)
         if target is not None:
             data['device'] = target
