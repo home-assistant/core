@@ -359,9 +359,6 @@ def setup(hass, config):
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
-                           descriptions.get(SERVICE_VOLUME_SET),
-                           schema=MEDIA_PLAYER_SET_VOLUME_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
                            descriptions.get(SERVICE_VOLUME_MUTE),
                            schema=MEDIA_PLAYER_MUTE_VOLUME_SCHEMA)

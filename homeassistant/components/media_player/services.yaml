@@ -7,6 +7,10 @@ turn_on:
     entity_id:
       description: Name(s) of entities to turn on
       example: 'media_player.living_room_chromecast'
+    source:
+      description: Name of the source to switch to. Platform dependent.
+      example: 'video1'
+
 
 turn_off:
   description: Turn a media player power off
