@@ -284,18 +284,18 @@ def setup(hass, config):
              value_genre,
              specific_device_class) in DISCOVERY_COMPONENTS:
 
-            if basic_command_class is not None and basic_command_class \
-               != value.command_class:
+            if basic_command_class is not None and  \
+               basic_command_class not in value.command_class:
                 continue
             if generic_command_class is not None and \
-               generic_command_class != node.generic:
+               node.generic not in generic_command_class:
                 continue
             if value_type is not None and value_type != value.type:
                 continue
             if value_genre is not None and value_genre != value.genre:
                 continue
             if specific_device_class is not None and \
-               specific_device_class != node.specific:
+               node.specific not in specific_device_class:
                 continue
 
             # Configure node
