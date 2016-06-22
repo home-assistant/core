@@ -110,6 +110,8 @@ class HMLight(homematic.HMDevice, Light):
 
         # add state to data struct
         if self._state:
+            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
             _LOGGER.critical("Can't correct init sensor %s.", self._name)

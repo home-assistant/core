@@ -63,7 +63,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         if not self.available:
             return STATE_UNKNOWN
 
-        current = self.current_position
+        current = self._hm_get_state()
         if current is None:
             return STATE_UNKNOWN
 

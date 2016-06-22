@@ -69,16 +69,19 @@ class HMSensor(homematic.HMDevice):
 
         # if exists user value?
         if self._state and self._state not in self._hmdevice.SENSORNODE:
-            _LOGGER.critical("This %s have no sensor with %s!", self._name,
-                             self._state)
+            _LOGGER.critical("This %s have no sensor with %s! Values are",
+                             self._name, self._state,
+                             str(keys(self._hmdevice.SENSORNODE)))
             return False
 
         # no param is set and more than 1 sensor node are present
         if self._state is None and len(self._hmdevice.SENSORNODE) > 1:
             _LOGGER.critical("This %s have more sensore node. " +
-                             "Please us param.", self._name)
+                             "Please us param. Values are: %s", self._name,
+                             str(keys(self._hmdevice.SENSORNODE)))
             return False
 
+        _LOGGER.debug("%s is okay for linking", self._name)
         return True
 
     def _init_data_struct(self):
@@ -94,6 +97,8 @@ class HMSensor(homematic.HMDevice):
 
         # add state to data struct
         if self._state:
+            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
             _LOGGER.critical("Can't correct init sensor %s.", self._name)
