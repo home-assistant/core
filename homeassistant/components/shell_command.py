@@ -6,6 +6,7 @@ https://home-assistant.io/components/shell_command/
 """
 import logging
 import subprocess
+import shlex
 
 import voluptuous as vol
 
@@ -61,6 +62,6 @@ def _parse_command(hass, cmd, variables):
         shell = True
     else:
         # template used. Must break into list and use shell=False for security
-        cmd = [prog] + rendered_args.split()
+        cmd = [prog] + shlex.split(rendered_args)
         shell = False
     return cmd, shell
