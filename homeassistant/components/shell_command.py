@@ -23,8 +23,6 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-SHELL_COMMAND_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-
 
 def setup(hass, config):
     """Setup the shell_command component."""
@@ -44,8 +42,7 @@ def setup(hass, config):
             _LOGGER.exception('Error running command: %s', cmd)
 
     for name in conf.keys():
-        hass.services.register(DOMAIN, name, service_handler,
-                               schema=SHELL_COMMAND_SCHEMA)
+        hass.services.register(DOMAIN, name, service_handler)
     return True
 
 
