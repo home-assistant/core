@@ -225,7 +225,7 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""
-        test_content = 'Test String'
+        test_content = 'Test String°'
         with tempfile.NamedTemporaryFile() as log:
             log.write(test_content.encode('utf-8'))
             log.flush()
