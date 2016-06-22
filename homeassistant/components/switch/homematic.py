@@ -39,13 +39,16 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return True if switch is on."""
-        return bool(self._hm_get_state())
+        return self._hm_get_state() > 0
 
     @property
     def current_power_mwh(self):
         """Return the current power usage in mWh."""
         if "ENERGY_COUNTER" in self._data:
-            return self._data["ENERGY_COUNTER"] * 1000
+            try:
+                return self._data["ENERGY_COUNTER"] / 1000
+            except ZeroDivisionError:
+                return 0
 
         return None
 
