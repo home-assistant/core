@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICES): DEVICE_SCHEMA
     })
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def parse_mapping(mapping, parents=None):
@@ -68,7 +68,7 @@ def setup(hass, config):
     # to physical address represented as a list of
     # four elements.
     flat = {}
-    for pair in parse_mapping(config[DOMAIN][0].get(CONF_DEVICES, {})):
+    for pair in parse_mapping(config[DOMAIN].get(CONF_DEVICES, {})):
         flat[pair[0]] = pad_physical_address(pair[1])
 
     # Configure libcec.
