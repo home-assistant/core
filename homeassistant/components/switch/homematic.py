@@ -39,7 +39,10 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return True if switch is on."""
-        return self._hm_get_state() > 0
+        try:
+            return self._hm_get_state() > 0
+        except TypeError:
+            return False
 
     @property
     def current_power_mwh(self):
