@@ -418,7 +418,7 @@ class HMDevice(Entity):
         if have_change:
             _LOGGER.debug("%s update_ha_state after '%s'", self._name,
                           attribute)
-            self.update_ha_state(True)
+            self.update_ha_state()
 
     def _subscribe_homematic_events(self):
         """ Subscribe all requered events to handle his job """
