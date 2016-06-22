@@ -11,12 +11,14 @@ Configuration:
 
 switch:
   - platform: homematic
-    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>" (optional)
+    address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
+    name: <User defined name> (optional)
+    button: n (integer of channel to map, device-dependent)
 """
 
 import logging
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import STATE_UNKNOWN
 import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,54 +39,79 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
     @property
     def is_on(self):
         """Return True if switch is on."""
-        return self._state
+        try:
+            return self._hm_get_state() > 0
+        except TypeError:
+            return False
 
     @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return not self.available
+    def current_power_mwh(self):
+        """Return the current power usage in mWh."""
+        if "ENERGY_COUNTER" in self._data:
+            try:
+                return self._data["ENERGY_COUNTER"] / 1000
+            except ZeroDivisionError:
+                return 0
+
+        return None
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self._is_connected:
-            self._hmdevice.on()
-            self._state = True
+        if self.available:
+            self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self._is_connected:
-            self._hmdevice.off()
-            self._state = False
+        if self.available:
+            self._hmdevice.off(self._channel)
 
-    def connect_to_homematic(self):
-        """Configuration for device after connection with pyhomematic."""
-        def event_received(device, caller, attribute, value):
-            """Handler for received events."""
-            attribute = str(attribute).upper()
-            if attribute == 'LEVEL':
-                # pylint: disable=attribute-defined-outside-init
-                self._level = float(value)
-            elif attribute == 'STATE':
-                self._state = bool(value)
-            elif attribute == 'UNREACH':
-                self._is_available = not bool(value)
-            else:
-                return
-            self.update_ha_state()
+    def _check_hm_to_ha_object(self):
+        """
+        Check if possible to use the HM Object as this HA type
+        NEED overwrite by inheret!
+        """
+        from pyhomematic.devicetypes.actors import Dimmer, Switch
 
-        super().connect_to_homematic()
+        # Check compatibility from HMDevice
+        if not super()._check_hm_to_ha_object():
+            return False
 
-        # pylint: disable=attribute-defined-outside-init
-        self._dimmer = bool(hasattr(self._hmdevice, 'level'))
+        # check if the homematic device correct for this HA device
+        if isinstance(self._hmdevice, Switch):
+            return True
+        if isinstance(self._hmdevice, Dimmer):
+            return True
 
-        if self._is_available:
-            _LOGGER.debug("Setting up switch-device %s",
-                          # pylint: disable=protected-access
-                          self._hmdevice._ADDRESS)
-            self._hmdevice.setEventCallback(event_received)
-            if self._dimmer:
-                # pylint: disable=attribute-defined-outside-init
-                self._level = self._hmdevice.level
-            else:
-                self._state = self._hmdevice.is_on
-            self.update_ha_state()
+        _LOGGER.critical("This %s can't be use as switch!", self._name)
+        return False
+
+    def _init_data_struct(self):
+        """
+        Generate a data struct (self._data) from hm metadata
+        NEED overwrite by inheret!
+        """
+        from pyhomematic.devicetypes.actors import Dimmer,\
+            Switch, SwitchPowermeter
+
+        super()._init_data_struct()
+
+        # use STATE
+        if isinstance(self._hmdevice, Switch):
+            self._state = "STATE"
+
+        # use LEVEL
+        if isinstance(self._hmdevice, Dimmer):
+            self._state = "LEVEL"
+
+        # need sensor value for SwitchPowermeter
+        if isinstance(self._hmdevice, SwitchPowermeter):
+            for node in self._hmdevice.SENSORNODE:
+                self._data.update({node: STATE_UNKNOWN})
+
+        # add state to data struct
+        if self._state:
+            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+                          self._state)
+            self._data.update({self._state: STATE_UNKNOWN})
+        else:
+            _LOGGER.critical("Can't correct init sensor %s.", self._name)

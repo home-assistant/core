@@ -44,24 +44,23 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self._is_connected:
-            return int((1 - self._level) * 100)
-        else:
-            return None
+        if self.available:
+            return int((1 - self._hm_get_state()) * 100)
+        return None
 
     def position(self, **kwargs):
         """Move to a defined position: 0 (closed) and 100 (open)."""
-        if self._is_connected:
+        if self.available:
             if ATTR_CURRENT_POSITION in kwargs:
                 position = float(kwargs[ATTR_CURRENT_POSITION])
                 position = min(100, max(0, position))
-                self._hmdevice.level = (100 - position) / 100.0
+                level = (100 - position) / 100.0
+                self._hmdevice.set_level(level, self._channel)
 
     @property
     def state(self):
         """Return the state of the roller shutter."""
         current = self.current_position
-
         if current is None:
             return STATE_UNKNOWN
 
@@ -69,39 +68,44 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
-        if self._is_connected:
-            self._hmdevice.move_up()
+        if self.available:
+            self._hmdevice.move_up(self._channel)
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
-        if self._is_connected:
-            self._hmdevice.move_down()
+        if self.available:
+            self._hmdevice.move_down(self._channel)
 
     def stop(self, **kwargs):
         """Stop the device."""
-        if self._is_connected:
-            self._hmdevice.stop()
+        if self.available:
+            self._hmdevice.stop(self._channel)
 
-    def connect_to_homematic(self):
-        """Configuration for device after connection with pyhomematic."""
-        def event_received(device, caller, attribute, value):
-            """Handler for received events."""
-            attribute = str(attribute).upper()
-            if attribute == 'LEVEL':
-                # pylint: disable=attribute-defined-outside-init
-                self._level = float(value)
-            elif attribute == 'UNREACH':
-                self._is_available = not bool(value)
-            else:
-                return
-            self.update_ha_state()
+    def _check_hm_to_ha_object(self):
+        """
+        Check if possible to use the HM Object as this HA type
+        NEED overwrite by inheret!
+        """
+        from pyhomematic.devicetypes.actors import Blind
 
-        super().connect_to_homematic()
-        if self._is_available:
-            _LOGGER.debug("Setting up rollershutter %s",
-                          # pylint: disable=protected-access
-                          self._hmdevice._ADDRESS)
-            self._hmdevice.setEventCallback(event_received)
-            # pylint: disable=attribute-defined-outside-init
-            self._level = self._hmdevice.level
-            self.update_ha_state()
+        # Check compatibility from HMDevice
+        if not super()._check_hm_to_ha_object():
+            return False
+
+        # check if the homematic device correct for this HA device
+        if isinstance(self._hmdevice, Blind):
+            return True
+
+        _LOGGER.critical("This %s can't be use as rollershutter!", self._name)
+        return False
+
+    def _init_data_struct(self):
+        """
+        Generate a data struct (self._data) from hm metadata
+        NEED overwrite by inheret!
+        """
+        super()._init_data_struct()
+
+        # add state to data struct
+        self._state = "LEVEL"
+        self._data.update({self._state: STATE_UNKNOWN})

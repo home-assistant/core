@@ -23,20 +23,6 @@ from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 DEPENDENCIES = ['homematic']
 
-PROPERTY_VALVE_STATE = 'VALVE_STATE'
-PROPERTY_CONTROL_MODE = 'CONTROL_MODE'
-
-HMCOMP = 0
-MAXCOMP = 1
-VARIANTS = {
-    "HM-CC-RT-DN": HMCOMP,
-    "HM-CC-RT-DN-BoM": HMCOMP,
-    "BC-RT-TRX-CyG": MAXCOMP,
-    "BC-RT-TRX-CyG-2": MAXCOMP,
-    "BC-RT-TRX-CyG-3": MAXCOMP,
-    "BC-RT-TRX-CyG-4": MAXCOMP
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -50,12 +36,6 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 class HMThermostat(homematic.HMDevice, ThermostatDevice):
     """Represents an Homematic Thermostat in Home Assistant."""
 
-    def __init__(self, config):
-        """Re-Init the device."""
-        super().__init__(config)
-        self._battery = STATE_UNKNOWN
-        self._rssi = STATE_UNKNOWN
-
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that is used."""
@@ -64,51 +44,42 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if self._is_connected:
-            try:
-                return self._current_temperature
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.error("Exception getting current temp.: %s", str(err))
-        else:
+        if not self.available:
             return None
+        return self._data["ACTUAL_TEMPERATURE"]
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._is_connected:
-            try:
-                return self._set_temperature
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.error("Exception getting set temperature: %s",
-                              str(err))
-        else:
+        if not self.available:
             return None
+        return self._data["SET_TEMPERATURE"]
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        if self._is_connected:
-            try:
-                self._hmdevice.set_temperature = temperature
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.error("Exception setting temperature: %s", str(err))
+        if not self.available:
+            return None
+        self._hmdevice.set_temperature(temperature)
 
     @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        _LOGGER.info("device_state_attributes")
-        if self._is_connected:
-            return {"valve": self._valve,
-                    "battery": self._battery,
-                    "mode": self._mode,
-                    "rssi": self._rssi}
-        else:
-            return {"valve": STATE_UNKNOWN,
-                    "battery": STATE_UNKNOWN,
-                    "mode": STATE_UNKNOWN,
-                    "rssi": STATE_UNKNOWN}
+    def is_away_mode_on(self):
+        """Return true if away mode is on."""
+        if not self.available:
+            return None
+
+        return self._data["CONTROL_MODE"] == self._hmdevice.PARTY_MODE
+
+    def turn_away_mode_on(self):
+        """Turn away mode on."""
+        if not self.available:
+            return None
+        self._hmdevice.PARTYMODE = True
+
+    def turn_away_mode_off(self):
+        """Turn away mode off."""
+        if not self.available:
+            return None
+        self._hmdevice.AUTOMODE = False
 
     @property
     def min_temp(self):
@@ -120,66 +91,33 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         """Return the maximum temperature - 30.5 means on."""
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
-    def connect_to_homematic(self):
-        """Configuration for device after connection with pyhomematic."""
-        def event_received(device, caller, attribute, value):
-            """Handler for received events."""
-            attribute = str(attribute).upper()
-            if attribute == 'SET_TEMPERATURE':
-                # pylint: disable=attribute-defined-outside-init
-                self._set_temperature = value
-            elif attribute == 'ACTUAL_TEMPERATURE':
-                # pylint: disable=attribute-defined-outside-init
-                self._current_temperature = value
-            elif attribute == 'VALVE_STATE':
-                # pylint: disable=attribute-defined-outside-init
-                self._valve = float(value)
-            elif attribute == 'CONTROL_MODE':
-                # pylint: disable=attribute-defined-outside-init
-                self._mode = value
-            elif attribute == 'RSSI_DEVICE':
-                self._rssi = value
-            elif attribute == 'BATTERY_STATE':
-                if isinstance(value, float):
-                    self._battery = value
-            elif attribute == 'LOWBAT':
-                if value:
-                    self._battery = 1.5
-                else:
-                    self._battery = 4.6
-            elif attribute == 'UNREACH':
-                self._is_available = not bool(value)
-            else:
-                return
-            self.update_ha_state()
+    def _check_hm_to_ha_object(self):
+        """
+        Check if possible to use the HM Object as this HA type
+        NEED overwrite by inheret!
+        """
+        from pyhomematic.devicetypes.thermostats import HMThermostat\
+            as pyHMThermostat
 
-        super().connect_to_homematic()
-        if self._is_available:
-            # pylint: disable=protected-access
-            _LOGGER.debug("Setting up thermostat %s", self._hmdevice._ADDRESS)
-            try:
-                self._hmdevice.setEventCallback(event_received)
-                # pylint: disable=attribute-defined-outside-init
-                self._current_temperature = self._hmdevice.actual_temperature
-                # pylint: disable=attribute-defined-outside-init
-                self._set_temperature = self._hmdevice.set_temperature
-                self._battery = None
-                # pylint: disable=protected-access
-                if self._hmdevice._TYPE in VARIANTS:
-                    # pylint: disable=protected-access
-                    if VARIANTS[self._hmdevice._TYPE] == HMCOMP:
-                        self._battery = self._hmdevice.battery_state
-                    # pylint: disable=protected-access
-                    elif VARIANTS[self._hmdevice._TYPE] == MAXCOMP:
-                        if self._hmdevice.battery_state:
-                            self._battery = 1.5
-                        else:
-                            self._battery = 4.6
-                # pylint: disable=attribute-defined-outside-init
-                self._valve = None
-                # pylint: disable=attribute-defined-outside-init
-                self._mode = None
-                self.update_ha_state()
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.error("Exception while connecting: %s", str(err))
+        # Check compatibility from HMDevice
+        if not super()._check_hm_to_ha_object():
+            return False
+
+        # check if the homematic device correct for this HA device
+        if isinstance(self._hmdevice, pyHMThermostat):
+            return True
+
+        _LOGGER.critical("This %s can't be use as thermostat", self._name)
+        return False
+
+    def _init_data_struct(self):
+        """
+        Generate a data struct (self._data) from hm metadata
+        NEED overwrite by inheret!
+        """
+        super()._init_data_struct()
+
+        # add state to data struct
+        self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
+                           "SET_TEMPERATURE": STATE_UNKNOWN,
+                           "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
