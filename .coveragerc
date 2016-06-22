@@ -94,7 +94,6 @@ omit =
     homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
-    homeassistant/components/cec.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py
@@ -115,6 +114,7 @@ omit =
     homeassistant/components/downloader.py
     homeassistant/components/feedreader.py
     homeassistant/components/garage_door/wink.py
+    homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
