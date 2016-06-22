@@ -23,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-SHELL_COMMAND_SCHEMA = vol.Schema({})
+SHELL_COMMAND_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
