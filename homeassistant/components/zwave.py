@@ -286,7 +286,8 @@ def setup(hass, config):
                           node.node_id)
             _LOGGER.debug("Generic class query=%s, From node=%s",
                           generic_device_class, node.generic)
-            if node.generic not in generic_device_class:
+            if node.generic not in generic_device_class and \
+               None not in generic_device_class:
                 _LOGGER.debug("node.generic %s not in generic_device_class %s", node.generic, generic_device_class)
                 continue
             _LOGGER.debug("Specific class query=%s, From node=%s",
