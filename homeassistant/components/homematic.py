@@ -432,7 +432,8 @@ class HMDevice(Entity):
         # fill data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,
                          self._hmdevice.ATTRIBUTENODE,
-                         self._hmdevice.WRITENODE):
+                         self._hmdevice.WRITENODE, self._hmdevice.EVENTNODE,
+                         self._hmdevice.ACTIONNODE):
             for node, channel in metadata.items():
                 # data are needed for this instance
                 if node in self._data:

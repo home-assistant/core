@@ -162,7 +162,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         bin_data.update(self._hmdevice.BINARYNODE)
 
         # copy all hm event they are supportet by this object
-        for event, channel in self._hmdevice.EVENTNODE:
+        for event, channel in self._hmdevice.EVENTNODE.items():
             if event in SUPPORT_HM_EVENT_AS_BINMOD:
                 bin_data.update({event: channel})
 
