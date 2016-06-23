@@ -81,7 +81,7 @@ class OpenexchangeratesData(object):
     def update(self):
         """Get the latest data from openexchangerates."""
         try:
-            result = requests.get(self._resource,params={'base': self._base,
+            result = requests.get(self._resource, params={'base': self._base,
                                                          'app_id': self._api_key},
                                   timeout=10)
             if result.status_code == 200:
