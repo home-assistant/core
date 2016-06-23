@@ -41,10 +41,15 @@ SENSOR_TYPES_CLASS = {
     "ShutterContact": "opening",
     "Smoke": "smoke",
     "SmokeV2": "smoke",
-    "Motion": "moving",
-    "MotionV2": "moving",
+    "Motion": "motion",
+    "MotionV2": "motion",
     "RemoteMotion": None
 }
+
+SUPPORT_HM_EVENT_AS_BINMOD = [
+    "PRESS_LONG",
+    "PRESS_SHORT"
+]
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
@@ -64,9 +69,13 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return False
         # no binary is defined, check all!
         if self._state is None:
-            for binary in self._hmdevice.BINARYNODE:
-                if self._data[binary] == 1:
-                    return True
+            available_bin = self._create_binary_list_from_hm()
+            for binary in available_bin:
+                try:
+                    if binary in self._data and self._data[binary] == 1:
+                        return True
+                except (ValueError, TypeError):
+                    _LOGGER.warning("%s datatype error!", self._name)
             return False
 
         # single binary
@@ -77,6 +86,10 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         """Return the class of this sensor, from SENSOR_CLASSES."""
         if not self.available:
             return None
+
+        # If state is MOTION (RemoteMotion works only)
+        if self._state is "MOTION":
+            return "motion"
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _check_hm_to_ha_object(self):
@@ -96,15 +109,20 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             _LOGGER.critical("This %s can't be use as binary!", self._name)
             return False
 
+        # load possible binary sensor
+        available_bin = self._create_binary_list_from_hm()
+
         # if exists user value?
-        if self._state and self._state not in self._hmdevice.BINARYNODE:
+        if self._state and self._state not in available_bin:
             _LOGGER.critical("This %s have no binary with %s!", self._name,
                              self._state)
             return False
 
         # only check and give a warining to User
-        if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
-            _LOGGER.warning("This %s have more than one binary.", self._name)
+        if self._state is None and len(available_bin) > 1:
+            _LOGGER.warning("%s have multible binary params. It use all " +
+                            "binary nodes as one. Possible param values: %s",
+                            self._name, str(available_bin))
 
         return True
 
@@ -115,17 +133,17 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         """
         super()._init_data_struct()
 
+        # load possible binary sensor
+        available_bin = self._create_binary_list_from_hm()
+
         # object have 1 binary
-        if self._state is None and len(self._hmdevice.BINARYNODE) == 1:
-            for value in self._hmdevice.BINARYNODE:
+        if self._state is None and len(available_bin) == 1:
+            for value in available_bin:
                 self._state = value
 
         # no binary is definit, use all binary for state
-        if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
-            _LOGGER.warning("%s have multible binary params. It use all " +
-                            "binary nodes as one. Possible param values: %s",
-                            str(self._hmdevice.BINARYNODE.keys()))
-            for node in self._hmdevice.BINARYNODE:
+        if self._state is None and len(available_bin) > 1:
+            for node in available_bin:
                 self._data.update({node: STATE_UNKNOWN})
 
         # add state to data struct
@@ -133,3 +151,19 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
                           self._state)
             self._data.update({self._state: STATE_UNKNOWN})
+
+    def _create_binary_list_from_hm(self):
+        """ Generate a own metadata for binary_sensr """
+        bin_data = {}
+        if not self._hmdevice:
+            return bin_data
+
+        # copy all data from BINARYNODE
+        bin_data.update(self._hmdevice.BINARYNODE)
+
+        # copy all hm event they are supportet by this object
+        for event, channel in self._hmdevice.EVENTNODE.items():
+            if event in SUPPORT_HM_EVENT_AS_BINMOD:
+                bin_data.update({event: channel})
+
+        return bin_data

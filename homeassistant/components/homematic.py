@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.5']
+REQUIREMENTS = ['pyhomematic==0.1.6']
 
 HOMEMATIC = None
 HOMEMATIC_DEVICES = {}
@@ -46,7 +46,7 @@ HM_DEVICE_TYPES = {
     DISCOVER_LIGHTS: ["Dimmer"],
     DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
                        "RemoteMotion", "ThermostatWall", "AreaThermostat",
-                       "RotaryHandleSensor"],
+                       "RotaryHandleSensor", "GongSensor"],
     DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
     DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact", "Smoke", "SmokeV2",
                               "Motion", "MotionV2", "RemoteMotion"],
@@ -132,6 +132,8 @@ def system_callback_handler(src, *args):
                               str(err))
         # If configuration allows auto detection of devices,
         # all devices not configured are added.
+        _LOGGER.debug("Homematic autotetect is %s: %s", HOMEMATIC_AUTODETECT,
+                      str(devices_not_created))
         if HOMEMATIC_AUTODETECT and devices_not_created:
             for component_name, func_get_devices, discovery_type in (
                     ('switch', _get_switches, DISCOVER_SWITCHES),
@@ -143,31 +145,42 @@ def system_callback_handler(src, *args):
                     ('sensor', _get_sensors, DISCOVER_SENSORS),
                     ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
-                found_devices = func_get_devices(devices_not_created)
+                try:
+                    found_devices = func_get_devices(devices_not_created)
+                # pylint: disable=broad-except
+                except Exception as err:
+                    _LOGGER.error("Failed generate opt %s with error '%s'",
+                                  component_name, str(err))
 
                 # When devices of this type are found
                 # they are setup in HA and a event is fired
+                _LOGGER("Found for %s: %s", component_name, str(found_devices))
                 if found_devices:
-                    component = get_component(component_name)
-                    config = {component.DOMAIN: found_devices}
+                    try:
+                        component = get_component(component_name)
+                        config = {component.DOMAIN: found_devices}
 
-                    # Ensure component is loaded
-                    homeassistant.bootstrap.setup_component(
-                        _HM_DISCOVER_HASS,
-                        component.DOMAIN,
-                        config)
+                        # Ensure component is loaded
+                        homeassistant.bootstrap.setup_component(
+                            _HM_DISCOVER_HASS,
+                            component.DOMAIN,
+                            config)
 
-                    # Fire discovery event
-                    _HM_DISCOVER_HASS.bus.fire(
-                        EVENT_PLATFORM_DISCOVERED, {
-                            ATTR_SERVICE: discovery_type,
-                            ATTR_DISCOVERED: {
-                                ATTR_DISCOVER_DEVICES:
-                                found_devices,
-                                ATTR_DISCOVER_CONFIG: ''
+                        # Fire discovery event
+                        _HM_DISCOVER_HASS.bus.fire(
+                            EVENT_PLATFORM_DISCOVERED, {
+                                ATTR_SERVICE: discovery_type,
+                                ATTR_DISCOVERED: {
+                                    ATTR_DISCOVER_DEVICES:
+                                    found_devices,
+                                    ATTR_DISCOVER_CONFIG: ''
+                                    }
                                 }
-                            }
-                        )
+                            )
+                    # pylint: disable=broad-except
+                    except Exception as err:
+                        _LOGGER.error("Failed to autotetect %s with" +
+                                      "error '%s'", component_name, str(err))
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
                     for hm_element in HOMEMATIC_DEVICES[dev]:
@@ -220,24 +233,25 @@ def _get_devices(device_type, keys):
                 metadata.update(device.SENSORNODE)
             elif device_type is DISCOVER_BINARY_SENSORS:
                 metadata.update(device.BINARYNODE)
-            params = _create_params_list(HOMEMATIC.devices[key], metadata)
+            params = _create_params_list(device, metadata)
 
             # generate options for 1..n elements with 1..n params
             for channel in range(1, elements):
                 for param in params[channel]:
-                    name = _create_ha_name(name=HOMEMATIC.devices[key].NAME,
+                    name = _create_ha_name(name=device.NAME,
                                            channel=channel,
                                            param=param)
                     ordered_device_dict = OrderedDict()
                     ordered_device_dict["platform"] = "homematic"
                     ordered_device_dict["key"] = key
                     ordered_device_dict["name"] = name
-                    ordered_device_dict["button"] = channel
+                    ordered_device_dict["button"] = str(channel)
                     if param is not None:
                         ordered_device_dict["param"] = param
 
                     # add new device
                     device_arr.append(ordered_device_dict)
+    _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
     return device_arr
 
 
@@ -263,6 +277,8 @@ def _create_params_list(hmdevice, metadata):
         # add to channel
         params.update({channel: param_chan})
 
+    _LOGGER.debug("Create param list for %s with: %s", hmdevice.ADDRESS,
+                  str(params))
     return params
 
 
@@ -274,7 +290,7 @@ def _create_ha_name(name, channel, param):
 
     # have multible elements/channels
     if channel > 1 and param is None:
-        return name + "_" + channel
+        return name + "_" + str(channel)
 
     # with multible param first elements
     if channel == 1 and param is not None:
@@ -282,7 +298,7 @@ def _create_ha_name(name, channel, param):
 
     # multible param on object with multible elements
     if channel > 1 and param is not None:
-        return name + "_" + channel + "_" + param
+        return name + "_" + str(channel) + "_" + param
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
@@ -425,6 +441,12 @@ class HMDevice(Entity):
                           attribute)
             self.update_ha_state()
 
+            # reset events
+            if attribute in self._hmdevice.EVENTNODE:
+                _LOGGER.debug("%s reset event", self._name)
+                self._data[attribute] = False
+                self.update_ha_state()
+
     def _subscribe_homematic_events(self):
         """ Subscribe all requered events to handle his job """
         channels_to_sub = {}
@@ -432,7 +454,8 @@ class HMDevice(Entity):
         # fill data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,
                          self._hmdevice.ATTRIBUTENODE,
-                         self._hmdevice.WRITENODE):
+                         self._hmdevice.WRITENODE, self._hmdevice.EVENTNODE,
+                         self._hmdevice.ACTIONNODE):
             for node, channel in metadata.items():
                 # data are needed for this instance
                 if node in self._data:
@@ -470,6 +493,11 @@ class HMDevice(Entity):
             for node in metadata:
                 if node in self._data:
                     self._data[node] = funct(name=node, channel=self._channel)
+
+        # set events false
+        for node in self._hmdevice.EVENTNODE:
+            if node in self._data:
+                self._data[node] = False
 
         return True
 
