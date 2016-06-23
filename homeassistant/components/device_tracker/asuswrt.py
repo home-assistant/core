@@ -83,8 +83,8 @@ class AsusWrtDeviceScanner(object):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
-        self.password = str(config.get(CONF_PASSWORD))
-        self.pub_key = str(config.get('pub_key'))
+        self.password = str(config.get(CONF_PASSWORD, ""))
+        self.pub_key = str(config.get('pub_key', ""))
         self.protocol = config.get('protocol')
         self.mode = config.get('mode')
 
