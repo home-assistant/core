@@ -252,7 +252,7 @@ pychromecast==0.7.2
 pydispatcher==2.0.5
 
 # homeassistant.components.envisalink
-pyenvisalink==0.9
+pyenvisalink==1.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
