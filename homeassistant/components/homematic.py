@@ -12,7 +12,7 @@ homematic:
   remote_ip: "<IP of Homegear / CCU>"
   remote_port: <Port of Homegear / CCU XML-RPC Server>
 """
-
+import time
 import logging
 from collections import OrderedDict
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP,\
@@ -187,6 +187,9 @@ def system_callback_handler(src, *args):
                     try:
                         for hm_element in HOMEMATIC_DEVICES[dev]:
                             hm_element.link_homematic()
+                            # need wait, if you have a lot device that can
+                            # break the CCU/Homegear
+                            time.sleep(1)
                     # pylint: disable=broad-except
                     except Exception as err:
                         _LOGGER.error("Failed link %s with" +
