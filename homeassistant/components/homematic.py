@@ -272,7 +272,7 @@ def _create_params_list(hmdevice, metadata):
         # add to channel
         params.update({channel: param_chan})
 
-    _LOGGER("Create param list for %s with: %s", hmdevice.ADDRESS,
+    _LOGGER.debug("Create param list for %s with: %s", hmdevice.ADDRESS,
             str(params))
     return params
 
