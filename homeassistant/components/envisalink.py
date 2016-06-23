@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.discovery import load_platform
 
-REQUIREMENTS = ['pyenvisalink==0.9', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==1.0', 'pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
