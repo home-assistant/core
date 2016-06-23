@@ -233,14 +233,14 @@ def _get_devices(device_type, keys):
             # generate options for 1..n elements with 1..n params
             for channel in range(1, elements):
                 for param in params[channel]:
-                    name = _create_ha_name(name=HOMEMATIC.devices[key].NAME,
+                    name = _create_ha_name(name=device.NAME,
                                            channel=channel,
                                            param=param)
                     ordered_device_dict = OrderedDict()
                     ordered_device_dict["platform"] = "homematic"
                     ordered_device_dict["key"] = key
                     ordered_device_dict["name"] = name
-                    ordered_device_dict["button"] = channel
+                    ordered_device_dict["button"] = str(channel)
                     if param is not None:
                         ordered_device_dict["param"] = param
 
@@ -285,7 +285,7 @@ def _create_ha_name(name, channel, param):
 
     # have multible elements/channels
     if channel > 1 and param is None:
-        return name + "_" + channel
+        return name + "_" + str(channel)
 
     # with multible param first elements
     if channel == 1 and param is not None:
@@ -293,7 +293,7 @@ def _create_ha_name(name, channel, param):
 
     # multible param on object with multible elements
     if channel > 1 and param is not None:
-        return name + "_" + channel + "_" + param
+        return name + "_" + str(channel) + "_" + param
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
