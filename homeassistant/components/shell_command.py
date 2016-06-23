@@ -6,7 +6,6 @@ https://home-assistant.io/components/shell_command/
 """
 import logging
 import subprocess
-import shlex
 
 import voluptuous as vol
 
@@ -23,6 +22,8 @@ CONFIG_SCHEMA = vol.Schema({
         cv.slug: cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+SHELL_COMMAND_SCHEMA = vol.Schema({})
 
 
 def setup(hass, config):
@@ -43,7 +44,8 @@ def setup(hass, config):
             _LOGGER.exception('Error running command: %s', cmd)
 
     for name in conf.keys():
-        hass.services.register(DOMAIN, name, service_handler)
+        hass.services.register(DOMAIN, name, service_handler,
+                               schema=SHELL_COMMAND_SCHEMA)
     return True
 
 
@@ -62,6 +64,6 @@ def _parse_command(hass, cmd, variables):
         shell = True
     else:
         # template used. Must break into list and use shell=False for security
-        cmd = [prog] + shlex.split(rendered_args)
+        cmd = [prog] + rendered_args.split()
         shell = False
     return cmd, shell
