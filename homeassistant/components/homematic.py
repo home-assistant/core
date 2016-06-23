@@ -132,6 +132,7 @@ def system_callback_handler(src, *args):
                               str(err))
         # If configuration allows auto detection of devices,
         # all devices not configured are added.
+        _LOGGER.debug("Homematic autotetect is %s", HOMEMATIC_AUTODETECT)
         if HOMEMATIC_AUTODETECT and devices_not_created:
             for component_name, func_get_devices, discovery_type in (
                     ('switch', _get_switches, DISCOVER_SWITCHES),
@@ -238,6 +239,7 @@ def _get_devices(device_type, keys):
 
                     # add new device
                     device_arr.append(ordered_device_dict)
+    _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
     return device_arr
 
 
