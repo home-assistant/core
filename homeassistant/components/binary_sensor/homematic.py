@@ -78,9 +78,6 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                     _LOGGER.warning("%s datatype error!", self._name)
             return False
 
-        # state unnown
-        if self._data.get(self._state, STATE_UNKNOWN) == STATE_UNKNOWN:
-            return False
         # single binary
         return bool(self._hm_get_state())
 
