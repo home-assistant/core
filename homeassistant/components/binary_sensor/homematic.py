@@ -74,7 +74,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
                 try:
                     if binary in self._data and self._data[binary] == 1:
                         return True
-                except ValueError, TypeError:
+                except (ValueError, TypeError):
                     _LOGGER.warn("%s datatype error!", self._name)
             return False
 
