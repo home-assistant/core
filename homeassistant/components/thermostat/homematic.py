@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMThermostat(homematic.HMDevice, ThermostatDevice):
-    """Represents an Homematic Thermostat in Home Assistant."""
+    """Represents a Homematic Thermostat in Home Assistant."""
 
     @property
     def unit_of_measurement(self):
@@ -50,7 +50,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
 
     @property
     def target_temperature(self):
-        """Return the temperature we try to reach."""
+        """Return the target temperature."""
         if not self.available:
             return None
         return self._data["SET_TEMPERATURE"]
@@ -74,7 +74,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.thermostats import HMThermostat\
             as pyHMThermostat
@@ -83,7 +83,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # Check if the homematic device correct for this HA device
         if isinstance(self._hmdevice, pyHMThermostat):
             return True
 
@@ -92,12 +92,12 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
 
     def _init_data_struct(self):
         """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
+        Generate a data dict (self._data) from hm metadata
+        NEEDS overwrite by inherit!
         """
         super()._init_data_struct()
 
-        # add state to data struct
+        # Add state to data dict
         self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
                            "SET_TEMPERATURE": STATE_UNKNOWN,
                            "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
