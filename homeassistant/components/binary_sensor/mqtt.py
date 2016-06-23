@@ -23,10 +23,14 @@ DEPENDENCIES = ['mqtt']
 CONF_SENSOR_CLASS = 'sensor_class'
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
+CONF_STATUS_ON = 'status_on'
+CONF_STATUS_OFF = 'status_off'
 
 DEFAULT_NAME = 'MQTT Binary sensor'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
+DEFAULT_STATUS_ON = "ON"
+DEFAULT_STATUS_OFF = "OFF"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -34,6 +38,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
         vol.Any(vol.In(SENSOR_CLASSES), vol.SetTo(None)),
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_STATUS_ON, default=DEFAULT_STATUS_ON): cv.string,
+    vol.Optional(CONF_STATUS_OFF, default=DEFAULT_STATUS_OFF): cv.string,
 })
 
 
@@ -48,6 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config[CONF_QOS],
         config[CONF_PAYLOAD_ON],
         config[CONF_PAYLOAD_OFF],
+        config[CONF_STATUS_ON],
+        config[CONF_STATUS_OFF],
         config.get(CONF_VALUE_TEMPLATE)
     )])
 
@@ -66,6 +74,8 @@ class MqttBinarySensor(BinarySensorDevice):
         self._sensor_class = sensor_class
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._status_on = status_on
+        self._status_off = status_off
         self._qos = qos
 
         def message_received(topic, payload, qos):
@@ -73,10 +83,10 @@ class MqttBinarySensor(BinarySensorDevice):
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
-            if payload == self._payload_on:
+            if payload == self._status_on:
                 self._state = True
                 self.update_ha_state()
-            elif payload == self._payload_off:
+            elif payload == self._status_off:
                 self._state = False
                 self.update_ha_state()
 

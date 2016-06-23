@@ -19,6 +19,8 @@ DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_SENSOR_CLASS = None
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
+DEFAULT_STATUS_ON = "ON"
+DEFAULT_STATUS_OFF = "OFF"
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -45,6 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensor_class,
         config.get('payload_on', DEFAULT_PAYLOAD_ON),
         config.get('payload_off', DEFAULT_PAYLOAD_OFF),
+        config.get('status_on', DEFAULT_STATUS_ON),
+        config.get('status_off', DEFAULT_STATUS_OFF),
         config.get(CONF_VALUE_TEMPLATE)
     )])
 
@@ -63,6 +67,8 @@ class CommandBinarySensor(BinarySensorDevice):
         self._state = False
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._status_on = status_on
+        self._status_off = status_off
         self._value_template = value_template
         self.update()
 

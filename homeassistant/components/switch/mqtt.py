@@ -22,16 +22,22 @@ DEPENDENCIES = ['mqtt']
 
 CONF_PAYLOAD_ON = 'payload_on'
 CONF_PAYLOAD_OFF = 'payload_off'
+CONF_STATUS_ON = 'status_on'
+CONF_STATUS_OFF = 'status_off'
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
+DEFAULT_STATUS_ON = "ON"
+DEFAULT_STATUS_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_STATUS_ON, default=DEFAULT_STATUS_ON): cv.string,
+    vol.Optional(CONF_STATUS_OFF, default=DEFAULT_STATUS_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
 
@@ -48,6 +54,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         config[CONF_RETAIN],
         config[CONF_PAYLOAD_ON],
         config[CONF_PAYLOAD_OFF],
+        config[CONF_STATUS_ON],
+        config[CONF_STATUS_OFF],
         config[CONF_OPTIMISTIC],
         config.get(CONF_VALUE_TEMPLATE))])
 
@@ -57,7 +65,7 @@ class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
     def __init__(self, hass, name, state_topic, command_topic, qos, retain,
-                 payload_on, payload_off, optimistic, value_template):
+                 payload_on, payload_off, status_on, status_off, optimistic, value_template):
         """Initialize the MQTT switch."""
         self._state = False
         self._hass = hass
@@ -68,6 +76,8 @@ class MqttSwitch(SwitchDevice):
         self._retain = retain
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._status_on = status_on
+        self._status_off = status_off
         self._optimistic = optimistic
 
         def message_received(topic, payload, qos):
@@ -75,10 +85,10 @@ class MqttSwitch(SwitchDevice):
             if value_template is not None:
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
-            if payload == self._payload_on:
+            if payload == self._status_on:
                 self._state = True
                 self.update_ha_state()
-            elif payload == self._payload_off:
+            elif payload == self._status_off:
                 self._state = False
                 self.update_ha_state()
 
