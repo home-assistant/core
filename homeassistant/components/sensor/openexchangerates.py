@@ -91,4 +91,3 @@ class OpenexchangeratesData(object):
             _LOGGER.error("Check OpenExchangeRates API")
             self.data = None
             return False
-
