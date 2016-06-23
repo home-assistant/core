@@ -282,12 +282,12 @@ def setup(hass, config):
              value_type,
              value_genre) in DISCOVERY_COMPONENTS:
 
-            _LOGGER.debug("Component=%s Node_id=%s query start", 
+            _LOGGER.debug("Component=%s Node_id=%s query start",
                           component, node.node_id)
             if node.generic not in generic_device_class and \
                None not in generic_device_class:
                 _LOGGER.debug("node.generic %s not None and in \
-                              generic_device_class %s", 
+                              generic_device_class %s",
                               node.generic, generic_device_class)
                 continue
             if node.specific not in specific_device_class and \
