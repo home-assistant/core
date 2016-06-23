@@ -149,33 +149,37 @@ def system_callback_handler(src, *args):
                     found_devices = func_get_devices(devices_not_created)
                 # pylint: disable=broad-except
                 except Exception as err:
-                    _LOGGER.error("Failed to autotetect %s with error '%s'",
+                    _LOGGER.error("Failed generate opt %s with error '%s'",
                                   component_name, str(err))
 
                 # When devices of this type are found
                 # they are setup in HA and a event is fired
                 _LOGGER("Found for %s: %s", component_name, str(found_devices))
                 if found_devices:
-                    component = get_component(component_name)
-                    config = {component.DOMAIN: found_devices}
+                    try:
+                        component = get_component(component_name)
+                        config = {component.DOMAIN: found_devices}
 
-                    # Ensure component is loaded
-                    homeassistant.bootstrap.setup_component(
-                        _HM_DISCOVER_HASS,
-                        component.DOMAIN,
-                        config)
+                        # Ensure component is loaded
+                        homeassistant.bootstrap.setup_component(
+                            _HM_DISCOVER_HASS,
+                            component.DOMAIN,
+                            config)
 
-                    # Fire discovery event
-                    _HM_DISCOVER_HASS.bus.fire(
-                        EVENT_PLATFORM_DISCOVERED, {
-                            ATTR_SERVICE: discovery_type,
-                            ATTR_DISCOVERED: {
-                                ATTR_DISCOVER_DEVICES:
-                                found_devices,
-                                ATTR_DISCOVER_CONFIG: ''
+                        # Fire discovery event
+                        _HM_DISCOVER_HASS.bus.fire(
+                            EVENT_PLATFORM_DISCOVERED, {
+                                ATTR_SERVICE: discovery_type,
+                                ATTR_DISCOVERED: {
+                                    ATTR_DISCOVER_DEVICES:
+                                    found_devices,
+                                    ATTR_DISCOVER_CONFIG: ''
+                                    }
                                 }
-                            }
-                        )
+                            )
+                    except Exception as err:
+                        _LOGGER.error("Failed to autotetect %s with" +
+                                      "error '%s'", component_name, str(err))
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
                     for hm_element in HOMEMATIC_DEVICES[dev]:
