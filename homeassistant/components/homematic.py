@@ -177,6 +177,7 @@ def system_callback_handler(src, *args):
                                     }
                                 }
                             )
+                    # pylint: disable=broad-except
                     except Exception as err:
                         _LOGGER.error("Failed to autotetect %s with" +
                                       "error '%s'", component_name, str(err))
@@ -277,7 +278,7 @@ def _create_params_list(hmdevice, metadata):
         params.update({channel: param_chan})
 
     _LOGGER.debug("Create param list for %s with: %s", hmdevice.ADDRESS,
-            str(params))
+                  str(params))
     return params
 
 
