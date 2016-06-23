@@ -335,6 +335,7 @@ class TestStateMachine(unittest.TestCase):
                          self.states.get('light.Bowl').last_changed)
 
     def test_push_state(self):
+        """Test push state option"""
         self.pool.add_worker()
         events = []
         self.bus.listen(EVENT_STATE_CHANGED, events.append)

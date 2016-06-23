@@ -472,8 +472,8 @@ class StateMachine(object):
             old_state = self._states.get(entity_id)
 
             is_existing = old_state is not None
-            same_state = (is_existing and old_state.state == new_state
-                          and not push_state)
+            same_state = (is_existing and old_state.state == new_state and
+                          not push_state)
             same_attr = is_existing and old_state.attributes == attributes
 
             if same_state and same_attr:
