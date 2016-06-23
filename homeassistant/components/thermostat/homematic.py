@@ -62,26 +62,6 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         self._hmdevice.set_temperature(temperature)
 
     @property
-    def is_away_mode_on(self):
-        """Return true if away mode is on."""
-        if not self.available:
-            return None
-
-        return self._data["CONTROL_MODE"] == self._hmdevice.PARTY_MODE
-
-    def turn_away_mode_on(self):
-        """Turn away mode on."""
-        if not self.available:
-            return None
-        self._hmdevice.PARTYMODE = True
-
-    def turn_away_mode_off(self):
-        """Turn away mode off."""
-        if not self.available:
-            return None
-        self._hmdevice.AUTOMODE = False
-
-    @property
     def min_temp(self):
         """Return the minimum temperature - 4.5 means off."""
         return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)

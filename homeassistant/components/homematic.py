@@ -25,7 +25,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.5']
+REQUIREMENTS = ['pyhomematic==0.1.6']
 
 HOMEMATIC = None
 HOMEMATIC_DEVICES = {}
