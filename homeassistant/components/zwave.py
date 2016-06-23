@@ -282,35 +282,33 @@ def setup(hass, config):
              value_type,
              value_genre) in DISCOVERY_COMPONENTS:
 
-            _LOGGER.debug("Component=%s Node_id=%s query start", component,
-                          node.node_id)
-            _LOGGER.debug("Generic class query=%s, From node=%s",
-                          generic_device_class, node.generic)
+            _LOGGER.debug("Component=%s Node_id=%s query start", 
+                          component, node.node_id)
             if node.generic not in generic_device_class and \
                None not in generic_device_class:
-                _LOGGER.debug("node.generic %s not in generic_device_class %s", node.generic, generic_device_class)
+                _LOGGER.debug("node.generic %s not None and in \
+                              generic_device_class %s", 
+                              node.generic, generic_device_class)
                 continue
-            _LOGGER.debug("Specific class query=%s, From node=%s",
-                          specific_device_class, node.specific)
             if node.specific not in specific_device_class and \
                None not in specific_device_class:
-                _LOGGER.debug("node.specific %s is not None and specific_device_class %s", node.specific, specific_device_class)
+                _LOGGER.debug("node.specific %s is not None and in \
+                              specific_device_class %s", node.specific,
+                              specific_device_class)
                 continue
-            _LOGGER.debug("Command_class query=%s, From node=%s",
-                          command_class, value.command_class)
             if value.command_class not in command_class and \
                None not in command_class:
-                _LOGGER.debug("value.command_class %s != command_class %s", value.command_class, command_class)
+                _LOGGER.debug("value.command_class %s is not None \
+                              and in command_class %s",
+                              value.command_class, command_class)
                 continue
-            _LOGGER.debug("Value type query=%s, From node=%s",
-                          value_type, value.type)
             if value_type != value.type and value_type is not None:
-                _LOGGER.debug("value.type %s != value_type %s", value.type, value_type)
+                _LOGGER.debug("value.type %s != value_type %s",
+                              value.type, value_type)
                 continue
-            _LOGGER.debug("Value genre query=%s, From node=%s",
-                          value_genre, value.genre)
             if value_genre != value.genre and value_genre is not None:
-                _LOGGER.debug("value.genre %s != value_genre %s", value.genre, value_genre)
+                _LOGGER.debug("value.genre %s != value_genre %s",
+                              value.genre, value_genre)
                 continue
 
             # Configure node
