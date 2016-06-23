@@ -64,7 +64,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
-        self._node.set_dimmer(self._value.value_id, 0)
+        self._node.set_dimmer(self._value.value_id, 100)
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
