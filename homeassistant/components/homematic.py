@@ -425,6 +425,12 @@ class HMDevice(Entity):
                           attribute)
             self.update_ha_state()
 
+            # reset events
+            if attribute in self._hmdevice.EVENTNODE:
+                _LOGGER.debug("%s reset event", self._name)
+                self._data[attribute] = False
+                self.update_ha_state()
+
     def _subscribe_homematic_events(self):
         """ Subscribe all requered events to handle his job """
         channels_to_sub = {}
