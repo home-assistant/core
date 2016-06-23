@@ -53,6 +53,10 @@ HM_DEVICE_TYPES = {
     DISCOVER_ROLLERSHUTTER: ["Blind"]
 }
 
+HM_IGNORE_DISCOVERY_NODE = [
+    "ACTUAL_TEMPERATUR"
+]
+
 HM_ATTRIBUTE_SUPPORT = {
     "LOWBAT": ["Battery", {0: "High", 1: "Low"}],
     "ERROR": ["Sabotage", {0: "No", 1: "Yes"}],
@@ -132,8 +136,6 @@ def system_callback_handler(src, *args):
                               str(err))
         # If configuration allows auto detection of devices,
         # all devices not configured are added.
-        _LOGGER.debug("Homematic autotetect is %s: %s", HOMEMATIC_AUTODETECT,
-                      str(devices_not_created))
         if HOMEMATIC_AUTODETECT and devices_not_created:
             for component_name, func_get_devices, discovery_type in (
                     ('switch', _get_switches, DISCOVER_SWITCHES),
@@ -183,8 +185,13 @@ def system_callback_handler(src, *args):
                                       "error '%s'", component_name, str(err))
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
-                    for hm_element in HOMEMATIC_DEVICES[dev]:
-                        hm_element.link_homematic()
+                    try:
+                        for hm_element in HOMEMATIC_DEVICES[dev]:
+                            hm_element.link_homematic()
+                    # pylint: disable=broad-except
+                    except Exception as err:
+                        _LOGGER.error("Failed to autotetect %s with" +
+                                      "error '%s'", dev, str(err))
 
 
 def _get_switches(keys=None):
@@ -219,6 +226,10 @@ def _get_thermostats(keys=None):
 
 def _get_devices(device_type, keys):
     """Get devices."""
+    from homeassistant.components.binary_sensor.homematic import \
+        SUPPORT_HM_EVENT_AS_BINMOD
+
+    # run
     device_arr = []
     if not keys:
         keys = HOMEMATIC.devices
@@ -233,6 +244,12 @@ def _get_devices(device_type, keys):
                 metadata.update(device.SENSORNODE)
             elif device_type is DISCOVER_BINARY_SENSORS:
                 metadata.update(device.BINARYNODE)
+
+                # add also supportet events als Binary Type
+                for event, channel in device.EVENTNODE.items():
+                    if event in SUPPORT_HM_EVENT_AS_BINMOD:
+                        metadata.update({event: channel})
+
             params = _create_params_list(device, metadata)
 
             # generate options for 1..n elements with 1..n params
@@ -243,7 +260,7 @@ def _get_devices(device_type, keys):
                                            param=param)
                     ordered_device_dict = OrderedDict()
                     ordered_device_dict["platform"] = "homematic"
-                    ordered_device_dict["key"] = key
+                    ordered_device_dict["address"] = key
                     ordered_device_dict["name"] = name
                     ordered_device_dict["button"] = str(channel)
                     if param is not None:
@@ -264,6 +281,9 @@ def _create_params_list(hmdevice, metadata):
     for channel in range(1, elements):
         param_chan = []
         for node, channel in metadata.items():
+            # is thi attribute ignore?
+            if node in HM_IGNORE_DISCOVERY_NODE:
+                continue
             if channel == 'c' or channel is None:
                 # only channel linked data
                 param_chan.append(node)
