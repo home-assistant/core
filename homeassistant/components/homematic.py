@@ -132,7 +132,8 @@ def system_callback_handler(src, *args):
                               str(err))
         # If configuration allows auto detection of devices,
         # all devices not configured are added.
-        _LOGGER.debug("Homematic autotetect is %s", HOMEMATIC_AUTODETECT)
+        _LOGGER.debug("Homematic autotetect is %s: %s", HOMEMATIC_AUTODETECT,
+                      str(devices_not_created))
         if HOMEMATIC_AUTODETECT and devices_not_created:
             for component_name, func_get_devices, discovery_type in (
                     ('switch', _get_switches, DISCOVER_SWITCHES),
@@ -144,7 +145,12 @@ def system_callback_handler(src, *args):
                     ('sensor', _get_sensors, DISCOVER_SENSORS),
                     ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
-                found_devices = func_get_devices(devices_not_created)
+                try:
+                    found_devices = func_get_devices(devices_not_created)
+                # pylint: disable=broad-except
+                except Exception as err:
+                    _LOGGER.error("Failed to autotetect device %s",
+                                  component_name, str(err))
 
                 # When devices of this type are found
                 # they are setup in HA and a event is fired
