@@ -27,6 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
+# pylint: disable=abstract-method
 class ProliphixThermostat(ThermostatDevice):
     """Representation a Proliphix thermostat."""
 

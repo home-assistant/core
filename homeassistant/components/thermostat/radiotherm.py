@@ -45,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(tstats)
 
 
+# pylint: disable=abstract-method
 class RadioThermostat(ThermostatDevice):
     """Representation of a Radio Thermostat."""
 
