@@ -472,6 +472,11 @@ class HMDevice(Entity):
                 if node in self._data:
                     self._data[node] = funct(name=node, channel=self._channel)
 
+        # set events false
+        for node in self._hmdevice.EVENTNODE:
+            if node in self._data:
+                self._data[node] = False
+
         return True
 
     def _hm_set_state(self, value):
