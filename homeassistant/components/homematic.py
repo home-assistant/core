@@ -149,7 +149,7 @@ def system_callback_handler(src, *args):
                     found_devices = func_get_devices(devices_not_created)
                 # pylint: disable=broad-except
                 except Exception as err:
-                    _LOGGER.error("Failed to autotetect device %s",
+                    _LOGGER.error("Failed to autotetect %s with error '%s'",
                                   component_name, str(err))
 
                 # When devices of this type are found
@@ -228,7 +228,7 @@ def _get_devices(device_type, keys):
                 metadata.update(device.SENSORNODE)
             elif device_type is DISCOVER_BINARY_SENSORS:
                 metadata.update(device.BINARYNODE)
-            params = _create_params_list(HOMEMATIC.devices[key], metadata)
+            params = _create_params_list(device, metadata)
 
             # generate options for 1..n elements with 1..n params
             for channel in range(1, elements):
@@ -272,6 +272,8 @@ def _create_params_list(hmdevice, metadata):
         # add to channel
         params.update({channel: param_chan})
 
+    _LOGGER("Create param list for %s with: %s", hmdevice._address,
+            str(params))
     return params
 
 
