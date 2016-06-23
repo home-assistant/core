@@ -73,3 +73,4 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
             # Rollershutter will toggle between UP (True), DOWN (False).
             # It also stops the shutter if the same value is sent while moving.
             value.data = value.data
+            break
