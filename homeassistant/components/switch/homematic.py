@@ -13,7 +13,7 @@ switch:
   - platform: homematic
     address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
     name: <User defined name> (optional)
-    button: n (integer of channel to map, device-dependent)
+    button: n (integer of channel to map, device-dependent) (optional)
 """
 
 import logging
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
-    """Represents an Homematic Switch in Home Assistant."""
+    """Represents a Homematic Switch in Home Assistant."""
 
     @property
     def is_on(self):
@@ -68,7 +68,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
@@ -76,7 +76,7 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # Check if the homematic device is correct for this HA device
         if isinstance(self._hmdevice, Switch):
             return True
         if isinstance(self._hmdevice, Dimmer):
@@ -87,31 +87,31 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
 
     def _init_data_struct(self):
         """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
+        Generate a data dict (self._data) from hm metadata
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.actors import Dimmer,\
             Switch, SwitchPowermeter
 
         super()._init_data_struct()
 
-        # use STATE
+        # Use STATE
         if isinstance(self._hmdevice, Switch):
             self._state = "STATE"
 
-        # use LEVEL
+        # Use LEVEL
         if isinstance(self._hmdevice, Dimmer):
             self._state = "LEVEL"
 
-        # need sensor value for SwitchPowermeter
+        # Need sensor values for SwitchPowermeter
         if isinstance(self._hmdevice, SwitchPowermeter):
             for node in self._hmdevice.SENSORNODE:
                 self._data.update({node: STATE_UNKNOWN})
 
-        # add state to data struct
+        # Add state to data dict
         if self._state:
-            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+            _LOGGER.debug("%s init data dict with main node '%s'", self._name,
                           self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correct init sensor %s.", self._name)
+            _LOGGER.critical("Can't correctly init light %s.", self._name)

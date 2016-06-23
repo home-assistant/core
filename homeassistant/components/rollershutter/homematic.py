@@ -35,12 +35,12 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMRollershutter(homematic.HMDevice, RollershutterDevice):
-    """Represents an Homematic Rollershutter in Home Assistant."""
+    """Represents a Homematic Rollershutter in Home Assistant."""
 
     @property
     def current_position(self):
         """
-        Return current position of roller shutter.
+        Return current position of rollershutter.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
@@ -59,7 +59,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
     @property
     def state(self):
-        """Return the state of the roller shutter."""
+        """Return the state of the rollershutter."""
         current = self.current_position
         if current is None:
             return STATE_UNKNOWN
@@ -67,24 +67,24 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         return STATE_CLOSED if current == 100 else STATE_OPEN
 
     def move_up(self, **kwargs):
-        """Move the roller shutter up."""
+        """Move the rollershutter up."""
         if self.available:
             self._hmdevice.move_up(self._channel)
 
     def move_down(self, **kwargs):
-        """Move the roller shutter down."""
+        """Move the rollershutter down."""
         if self.available:
             self._hmdevice.move_down(self._channel)
 
     def stop(self, **kwargs):
-        """Stop the device."""
+        """Stop the device if in motion."""
         if self.available:
             self._hmdevice.stop(self._channel)
 
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.actors import Blind
 
@@ -92,7 +92,7 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # Check if the homematic device is correct for this HA device
         if isinstance(self._hmdevice, Blind):
             return True
 
@@ -101,11 +101,11 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
 
     def _init_data_struct(self):
         """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
+        Generate a data dict (self._data) from hm metadata
+        NEEDS overwrite by inherit!
         """
         super()._init_data_struct()
 
-        # add state to data struct
+        # Add state to data dict
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
