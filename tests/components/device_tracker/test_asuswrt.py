@@ -67,3 +67,68 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertIsNotNone(device_tracker.asuswrt.get_scanner(
             self.hass, conf_dict))
         asuswrt_mock.assert_called_once_with(conf_dict[device_tracker.DOMAIN])
+
+    def test_ssh_login_with_pub_key(self):
+        """Test that login is done with pub_key when configured to."""
+        ssh = mock.MagicMock()
+        ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
+        ssh_mock.start()
+        self.addCleanup(ssh_mock.stop)
+        conf_dict = {
+                CONF_PLATFORM: 'asuswrt',
+                CONF_HOST: 'fake_host',
+                CONF_USERNAME: 'fake_user',
+                'pub_key': '/fake_path'
+        }
+        update_mock = mock.patch(
+            'homeassistant.components.device_tracker.asuswrt.'
+            'AsusWrtDeviceScanner.get_asuswrt_data')
+        update_mock.start()
+        self.addCleanup(update_mock.stop)
+        asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
+        asuswrt.ssh_connection()
+        ssh.login.assert_called_once_with('fake_host', 'fake_user',
+                                          ssh_key='/fake_path')
+
+    def test_ssh_login_with_password(self):
+        """Test that login is done with password when configured to."""
+        ssh = mock.MagicMock()
+        ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
+        ssh_mock.start()
+        self.addCleanup(ssh_mock.stop)
+        conf_dict = {
+                CONF_PLATFORM: 'asuswrt',
+                CONF_HOST: 'fake_host',
+                CONF_USERNAME: 'fake_user',
+                CONF_PASSWORD: 'fake_pass'
+        }
+        update_mock = mock.patch(
+            'homeassistant.components.device_tracker.asuswrt.'
+            'AsusWrtDeviceScanner.get_asuswrt_data')
+        update_mock.start()
+        self.addCleanup(update_mock.stop)
+        asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
+        asuswrt.ssh_connection()
+        ssh.login.assert_called_once_with('fake_host', 'fake_user',
+                                          'fake_pass')
+
+    def test_ssh_login_without_password_or_pubkey(self):
+        """Test that login is not called without password or pub_key."""
+        ssh = mock.MagicMock()
+        ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
+        ssh_mock.start()
+        self.addCleanup(ssh_mock.stop)
+        conf_dict = {
+                CONF_PLATFORM: 'asuswrt',
+                CONF_HOST: 'fake_host',
+                CONF_USERNAME: 'fake_user',
+        }
+        update_mock = mock.patch(
+            'homeassistant.components.device_tracker.asuswrt.'
+            'AsusWrtDeviceScanner.get_asuswrt_data')
+        update_mock.start()
+        self.addCleanup(update_mock.stop)
+        asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
+        result = asuswrt.ssh_connection()
+        ssh.login.assert_not_called()
+        self.assertIsNone(result)
