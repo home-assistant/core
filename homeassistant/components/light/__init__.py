@@ -14,7 +14,7 @@ from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    SERVICE_SET_BRIGHTNESS, ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -64,6 +64,8 @@ PROP_TO_ATTR = {
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
 }
+
+SERVICE_SET_BRIGHTNESS = 'set_brightness'
 
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
@@ -135,10 +137,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
-# pylint: disable=too-many-arguments
-def set_brightness(hass, entity_id=None, transition=None, brightness=None,
-                   rgb_color=None, xy_color=None, color_temp=None, profile=None,
-                   flash=None, effect=None, color_name=None):
+def set_brightness(hass, entity_id=None, transition=None, brightness=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -148,7 +147,7 @@ def set_brightness(hass, entity_id=None, transition=None, brightness=None,
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    hass.services.call(DOMAIN, SERVICE_SET_BRIGHTNESS, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):

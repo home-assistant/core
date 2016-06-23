@@ -163,7 +163,6 @@ SERVICE_HOMEASSISTANT_RESTART = "restart"
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
-SERVICE_SET_BRIGHTNESS = 'set_brightness'
 
 SERVICE_VOLUME_UP = "volume_up"
 SERVICE_VOLUME_DOWN = "volume_down"

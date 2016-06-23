@@ -6,8 +6,7 @@ import os
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_SET_BRIGHTNESS,
-    SERVICE_TOGGLE)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components.light as light
 
 from tests.common import mock_service, get_test_home_assistant
@@ -92,7 +91,7 @@ class TestLight(unittest.TestCase):
 
         # Test set_brightness
         set_brightness_calls = mock_service(
-            self.hass, light.DOMAIN, SERVICE_SET_BRIGHTNESS)
+            self.hass, light.DOMAIN, light.SERVICE_SET_BRIGHTNESS)
 
         light.set_brightness(
             self.hass,
@@ -106,7 +105,7 @@ class TestLight(unittest.TestCase):
         call = set_brightness_calls[-1]
 
         self.assertEqual(light.DOMAIN, call.domain)
-        self.assertEqual(SERVICE_SET_BRIGHTNESS, call.service)
+        self.assertEqual(light.SERVICE_SET_BRIGHTNESS, call.service)
         self.assertEqual('entity_id_val', call.data.get(ATTR_ENTITY_ID))
         self.assertEqual(
             'transition_val', call.data.get(light.ATTR_TRANSITION))
@@ -211,17 +210,6 @@ class TestLight(unittest.TestCase):
         method, data = dev3.last_call('turn_on')
         self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
 
-        light.set_brightness(self.hass, dev1.entity_id,
-            transition=15, brightness=30)
-
-        self.hass.pool.block_till_done()
-
-        method, data = dev1.last_call('set_brightness')
-        self.assertEqual(
-            {light.ATTR_TRANSITION: 15,
-             light.ATTR_BRIGHTNESS: 30},
-            data)
-
         # One of the light profiles
         prof_name, prof_x, prof_y, prof_bri = 'relax', 0.5119, 0.4147, 144
 
@@ -251,7 +239,6 @@ class TestLight(unittest.TestCase):
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
         light.turn_on(self.hass, dev3.entity_id, rgb_color=[255, None, 2])
-        light.set_brightness(self.hass, dev1.entity_id, brightness=None)
 
         self.hass.pool.block_till_done()
 
@@ -263,11 +250,6 @@ class TestLight(unittest.TestCase):
 
         method, data = dev3.last_call('turn_on')
         self.assertEqual({}, data)
-
-        method, data = dev1.last_call('set_brightness')
-        self.assertEqual({}, data)
-
-
 
         # faulty attributes will not trigger a service call
         light.turn_on(
