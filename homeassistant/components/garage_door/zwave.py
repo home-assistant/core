@@ -57,10 +57,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_BINARY).values():
-            if value.command_class == 37 and value.index == 0:
-                return value.data
+        return self._value.data
 
     def close_door(self):
         """Close the garage door."""
