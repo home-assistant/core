@@ -45,19 +45,21 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._node = value.node
+        self._state = value.data
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
         if self._value.node == value.node:
+            self._state = value.data
             self.update_ha_state(True)
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return self._value.data
+        return self._state
 
     def close_door(self):
         """Close the garage door."""
