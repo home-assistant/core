@@ -148,6 +148,7 @@ def system_callback_handler(src, *args):
 
                 # When devices of this type are found
                 # they are setup in HA and a event is fired
+                _LOGGER("Found for %s: %s", component_name, str(found_devices))
                 if found_devices:
                     component = get_component(component_name)
                     config = {component.DOMAIN: found_devices}
