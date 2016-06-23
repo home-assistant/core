@@ -41,8 +41,8 @@ SENSOR_TYPES_CLASS = {
     "ShutterContact": "opening",
     "Smoke": "smoke",
     "SmokeV2": "smoke",
-    "Motion": "moving",
-    "MotionV2": "moving",
+    "Motion": "motion",
+    "MotionV2": "motion",
     "RemoteMotion": None
 }
 
@@ -89,7 +89,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
 
         # If state is MOTION (RemoteMotion works only)
         if self._state is "MOTION":
-            return "moving"
+            return "motion"
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _check_hm_to_ha_object(self):
