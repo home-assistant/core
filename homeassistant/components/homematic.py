@@ -54,7 +54,7 @@ HM_DEVICE_TYPES = {
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
-    "ACTUAL_TEMPERATUR"
+    "ACTUAL_TEMPERATURE"
 ]
 
 HM_ATTRIBUTE_SUPPORT = {
@@ -156,7 +156,6 @@ def system_callback_handler(src, *args):
 
                 # When devices of this type are found
                 # they are setup in HA and a event is fired
-                _LOGGER("Found for %s: %s", component_name, str(found_devices))
                 if found_devices:
                     try:
                         component = get_component(component_name)
@@ -190,7 +189,7 @@ def system_callback_handler(src, *args):
                             hm_element.link_homematic()
                     # pylint: disable=broad-except
                     except Exception as err:
-                        _LOGGER.error("Failed to autotetect %s with" +
+                        _LOGGER.error("Failed link %s with" +
                                       "error '%s'", dev, str(err))
 
 
@@ -262,7 +261,7 @@ def _get_devices(device_type, keys):
                     ordered_device_dict["platform"] = "homematic"
                     ordered_device_dict["address"] = key
                     ordered_device_dict["name"] = name
-                    ordered_device_dict["button"] = str(channel)
+                    ordered_device_dict["button"] = channel
                     if param is not None:
                         ordered_device_dict["param"] = param
 
@@ -280,11 +279,11 @@ def _create_params_list(hmdevice, metadata):
     # search in Sensor and Binary metadata per elements
     for channel in range(1, elements):
         param_chan = []
-        for node, channel in metadata.items():
+        for node, meta_chan in metadata.items():
             # is thi attribute ignore?
             if node in HM_IGNORE_DISCOVERY_NODE:
                 continue
-            if channel == 'c' or channel is None:
+            if meta_chan == 'c' or meta_chan is None:
                 # only channel linked data
                 param_chan.append(node)
             elif channel == 1:
@@ -310,15 +309,15 @@ def _create_ha_name(name, channel, param):
 
     # have multible elements/channels
     if channel > 1 and param is None:
-        return name + "_" + str(channel)
+        return name + " " + str(channel)
 
     # with multible param first elements
     if channel == 1 and param is not None:
-        return name + "_" + param
+        return name + " " + param
 
     # multible param on object with multible elements
     if channel > 1 and param is not None:
-        return name + "_" + str(channel) + "_" + param
+        return name + " " + str(channel) + " " + param
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
