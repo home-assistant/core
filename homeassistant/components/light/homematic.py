@@ -73,10 +73,7 @@ class HMLight(homematic.HMDevice, Light):
             self._hmdevice.off(self._channel)
 
     def _check_hm_to_ha_object(self):
-        """
-        Check if possible to use the HM Object as this HA type
-        NEEDS overwrite by inherit!
-        """
+        """Check if possible to use the HM Object as this HA type."""
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
         # Check compatibility from HMDevice
@@ -93,10 +90,7 @@ class HMLight(homematic.HMDevice, Light):
         return False
 
     def _init_data_struct(self):
-        """
-        Generate a data dict (self._data) from hm metadata
-        NEEDS overwrite by inherit!
-        """
+        """Generate a data dict (self._data) from hm metadata."""
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
         super()._init_data_struct()

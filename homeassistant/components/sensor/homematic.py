@@ -72,10 +72,7 @@ class HMSensor(homematic.HMDevice):
         return HM_UNIT_HA_CAST.get(self._state, None)
 
     def _check_hm_to_ha_object(self):
-        """
-        Check if possible to use the HM Object as this HA type
-        NEEDS overwrite by inherit!
-        """
+        """Check if possible to use the HM Object as this HA type."""
         from pyhomematic.devicetypes.sensors import HMSensor as pyHMSensor
 
         # Check compatibility from HMDevice
@@ -106,10 +103,7 @@ class HMSensor(homematic.HMDevice):
         return True
 
     def _init_data_struct(self):
-        """
-        Generate a data dict (self._data) from hm metadata
-        NEEDS overwrite by inherit!
-        """
+        """Generate a data dict (self._data) from hm metadata."""
         super()._init_data_struct()
 
         if self._state is None and len(self._hmdevice.SENSORNODE) == 1:

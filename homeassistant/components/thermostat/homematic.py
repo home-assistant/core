@@ -72,10 +72,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _check_hm_to_ha_object(self):
-        """
-        Check if possible to use the HM Object as this HA type
-        NEEDS overwrite by inherit!
-        """
+        """Check if possible to use the HM Object as this HA type."""
         from pyhomematic.devicetypes.thermostats import HMThermostat\
             as pyHMThermostat
 
@@ -91,10 +88,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return False
 
     def _init_data_struct(self):
-        """
-        Generate a data dict (self._data) from hm metadata
-        NEEDS overwrite by inherit!
-        """
+        """Generate a data dict (self._data) from hm metadata."""
         super()._init_data_struct()
 
         # Add state to data dict

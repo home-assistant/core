@@ -94,10 +94,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _check_hm_to_ha_object(self):
-        """
-        Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
-        """
+        """Check if possible to use the HM Object as this HA type."""
         from pyhomematic.devicetypes.sensors import HMBinarySensor\
             as pyHMBinarySensor
 
@@ -128,10 +125,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         return True
 
     def _init_data_struct(self):
-        """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
-        """
+        """Generate a data struct (self._data) from hm metadata."""
         super()._init_data_struct()
 
         # load possible binary sensor
@@ -154,7 +148,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             self._data.update({self._state: STATE_UNKNOWN})
 
     def _create_binary_list_from_hm(self):
-        """ Generate a own metadata for binary_sensr """
+        """Generate a own metadata for binary_sensors."""
         bin_data = {}
         if not self._hmdevice:
             return bin_data
