@@ -138,15 +138,13 @@ def system_callback_handler(src, *args):
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
         if HOMEMATIC_AUTODETECT and devices_not_created:
-            for component_name, func_get_devices, discovery_type in (
-                    ('switch', _get_switches, DISCOVER_SWITCHES),
-                    ('light', _get_lights, DISCOVER_LIGHTS),
-                    ('rollershutter', _get_rollershutters,
-                     DISCOVER_ROLLERSHUTTER),
-                    ('binary_sensor', _get_binary_sensors,
-                     DISCOVER_BINARY_SENSORS),
-                    ('sensor', _get_sensors, DISCOVER_SENSORS),
-                    ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
+            for component_name, discovery_type in (
+                    ('switch', DISCOVER_SWITCHES),
+                    ('light', DISCOVER_LIGHTS),
+                    ('rollershutter', DISCOVER_ROLLERSHUTTER),
+                    ('binary_sensor', DISCOVER_BINARY_SENSORS),
+                    ('sensor', DISCOVER_SENSORS),
+                    ('thermostat', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
                 try:
                     found_devices = _get_devices(discovery_type,
