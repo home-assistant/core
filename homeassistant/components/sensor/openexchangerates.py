@@ -26,9 +26,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_QUOTE),
         payload
     )
+    response = requests.get(_RESOURCE, params={'base': config.get(CONF_BASE,
+                                                                  'USD'),
+                                               'app_id':
+                                               config.get(CONF_API_KEY)},
+                            timeout=10)
+    if response.status_code != 200:
+        _LOGGER.error("Check your OpenExchangeRates API")
+        return False
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest,
-                                         config.get(CONF_NAME, DEFAULT_NAME),
+    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME,
+                                                          DEFAULT_NAME),
                                          config.get(CONF_QUOTE))])
 
 
@@ -63,7 +71,6 @@ class OpenexchangeratesSensor(Entity):
         value = self.rest.data
         self._state = round(value[str(self._quote)], 4)
 
-
 # pylint: disable=too-few-public-methods
 class OpenexchangeratesData(object):
     """Get data from Openexchangerates.org."""
@@ -85,11 +92,8 @@ class OpenexchangeratesData(object):
                                                           'app_id':
                                                           self._api_key},
                                   timeout=10)
-            if result.status_code == 200:
-                self.data = result.json()['rates']
-            else:
-                result.raise_for_status()
+            self.data = result.json()['rates']
         except requests.exceptions.HTTPError:
-            _LOGGER.error("Check OpenExchangeRates API")
+            _LOGGER.error("Check Openexchangerates API Key")
             self.data = None
             return False
