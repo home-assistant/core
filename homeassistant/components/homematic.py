@@ -138,18 +138,17 @@ def system_callback_handler(src, *args):
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
         if HOMEMATIC_AUTODETECT and devices_not_created:
-            for component_name, func_get_devices, discovery_type in (
-                    ('switch', _get_switches, DISCOVER_SWITCHES),
-                    ('light', _get_lights, DISCOVER_LIGHTS),
-                    ('rollershutter', _get_rollershutters,
-                     DISCOVER_ROLLERSHUTTER),
-                    ('binary_sensor', _get_binary_sensors,
-                     DISCOVER_BINARY_SENSORS),
-                    ('sensor', _get_sensors, DISCOVER_SENSORS),
-                    ('thermostat', _get_thermostats, DISCOVER_THERMOSTATS)):
+            for component_name, discovery_type in (
+                    ('switch', DISCOVER_SWITCHES),
+                    ('light', DISCOVER_LIGHTS),
+                    ('rollershutter', DISCOVER_ROLLERSHUTTER),
+                    ('binary_sensor', DISCOVER_BINARY_SENSORS),
+                    ('sensor', DISCOVER_SENSORS),
+                    ('thermostat', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
                 try:
-                    found_devices = func_get_devices(devices_not_created)
+                    found_devices = _get_devices(discovery_type,
+                                                 devices_not_created)
                 # pylint: disable=broad-except
                 except Exception as err:
                     _LOGGER.error("Failed generate opt %s with error '%s'",
@@ -195,36 +194,6 @@ def system_callback_handler(src, *args):
                     except Exception as err:
                         _LOGGER.error("Failed link %s with" +
                                       "error '%s'", dev, str(err))
-
-
-def _get_switches(keys=None):
-    """Get switches."""
-    return _get_devices(DISCOVER_SWITCHES, keys)
-
-
-def _get_lights(keys=None):
-    """Get lights."""
-    return _get_devices(DISCOVER_LIGHTS, keys)
-
-
-def _get_rollershutters(keys=None):
-    """Get rollershutters."""
-    return _get_devices(DISCOVER_ROLLERSHUTTER, keys)
-
-
-def _get_binary_sensors(keys=None):
-    """Get binary sensors."""
-    return _get_devices(DISCOVER_BINARY_SENSORS, keys)
-
-
-def _get_sensors(keys=None):
-    """Get sensors."""
-    return _get_devices(DISCOVER_SENSORS, keys)
-
-
-def _get_thermostats(keys=None):
-    """Get thermostats."""
-    return _get_devices(DISCOVER_THERMOSTATS, keys)
 
 
 def _get_devices(device_type, keys):
@@ -276,7 +245,7 @@ def _get_devices(device_type, keys):
 
 
 def _create_params_list(hmdevice, metadata):
-    """ Create a list from HMDevice with all possible parameters in config """
+    """Create a list from HMDevice with all possible parameters in config."""
     params = {}
     elements = hmdevice.ELEMENT + 1
 
@@ -306,7 +275,7 @@ def _create_params_list(hmdevice, metadata):
 
 
 def _create_ha_name(name, channel, param):
-    """ Generate a unique object name """
+    """Generate a unique object name."""
     # HMDevice is a simple device
     if channel == 1 and param is None:
         return name
@@ -441,7 +410,7 @@ class HMDevice(Entity):
             self.update_ha_state()
 
     def _hm_event_callback(self, device, caller, attribute, value):
-        """ Handle all pyhomematic device events """
+        """Handle all pyhomematic device events."""
         _LOGGER.debug("%s receive event '%s' value: %s", self._name,
                       attribute, value)
         have_change = False
@@ -471,7 +440,7 @@ class HMDevice(Entity):
                 self.update_ha_state()
 
     def _subscribe_homematic_events(self):
-        """ Subscribe all required events to handle job """
+        """Subscribe all required events to handle job."""
         channels_to_sub = {}
 
         # Push data to channels_to_sub from hmdevice metadata
@@ -502,7 +471,7 @@ class HMDevice(Entity):
                                             channel=channel)
 
     def _load_init_data_from_hm(self):
-        """ Load first value from pyhomematic """
+        """Load first value from pyhomematic."""
         if not self._connected:
             return False
 
@@ -534,8 +503,8 @@ class HMDevice(Entity):
         return None
 
     def _check_hm_to_ha_object(self):
-        """
-        Check if it is possible to use the HM Object as this HA type
+        """Check if it is possible to use the HM Object as this HA type.
+
         NEEDS overwrite by inherit!
         """
         if not self._connected or self._hmdevice is None:
@@ -550,8 +519,8 @@ class HMDevice(Entity):
         return True
 
     def _init_data_struct(self):
-        """
-        Generate a data dict (self._data) from hm metadata.
+        """Generate a data dict (self._data) from hm metadata.
+
         NEEDS overwrite by inherit!
         """
         # Add all attributes to data dict
