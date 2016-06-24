@@ -9,11 +9,11 @@ import os.path
 import time
 from pprint import pprint
 
-from homeassistant import bootstrap
+from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_DISCOVERED, ATTR_ENTITY_ID, ATTR_LOCATION,
-    ATTR_SERVICE, CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_LOCATION,
+    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
@@ -37,14 +37,6 @@ SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
 
-DISCOVER_SENSORS = "zwave.sensors"
-DISCOVER_SWITCHES = "zwave.switch"
-DISCOVER_LIGHTS = "zwave.light"
-DISCOVER_BINARY_SENSORS = 'zwave.binary_sensor'
-DISCOVER_THERMOSTATS = 'zwave.thermostat'
-DISCOVER_HVAC = 'zwave.hvac'
-DISCOVER_LOCKS = 'zwave.lock'
-
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
 COMMAND_CLASS_SWITCH_MULTILEVEL = 38
@@ -58,6 +50,14 @@ COMMAND_CLASS_ALARM = 113  # 0x71
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
 COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68  # 0x44
 
+SPECIFIC_DEVICE_CLASS_WHATEVER = None
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 1
+SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 3
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 4
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 6
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 7
+
 GENRE_WHATEVER = None
 GENRE_USER = "User"
 
@@ -68,45 +68,54 @@ TYPE_DECIMAL = "Decimal"
 
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
-# value type).
+# value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
-     DISCOVER_SENSORS,
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
       COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('light',
-     DISCOVER_LIGHTS,
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
-     GENRE_USER),
+     GENRE_USER,
+     [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
+      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE]),
     ('switch',
-     DISCOVER_SWITCHES,
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('binary_sensor',
-     DISCOVER_BINARY_SENSORS,
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('thermostat',
-     DISCOVER_THERMOSTATS,
      [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_WHATEVER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('hvac',
-     DISCOVER_HVAC,
      [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
      TYPE_WHATEVER,
-     GENRE_WHATEVER),
+     GENRE_WHATEVER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
     ('lock',
-     DISCOVER_LOCKS,
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
-     GENRE_USER),
+     GENRE_USER,
+     SPECIFIC_DEVICE_CLASS_WHATEVER),
+    ('rollershutter',
+     [COMMAND_CLASS_SWITCH_MULTILEVEL],
+     TYPE_WHATEVER,
+     GENRE_USER,
+     [SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C,
+      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR]),
 ]
 
 
@@ -235,10 +244,10 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
-             discovery_service,
              command_ids,
              value_type,
-             value_genre) in DISCOVERY_COMPONENTS:
+             value_genre,
+             specific_device_class) in DISCOVERY_COMPONENTS:
 
             if value.command_class not in command_ids:
                 continue
@@ -246,11 +255,14 @@ def setup(hass, config):
                 continue
             if value_genre is not None and value_genre != value.genre:
                 continue
-
-            # Ensure component is loaded
-            bootstrap.setup_component(hass, component, config)
+            if specific_device_class is not None and \
+               specific_device_class != node.specific:
+                continue
 
             # Configure node
+            _LOGGER.debug("Node_id=%s Value type=%s Genre=%s \
+                          Specific Device_class=%s", node.node_id,
+                          value.type, value.genre, specific_device_class)
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
@@ -261,14 +273,10 @@ def setup(hass, config):
             else:
                 value.disable_poll()
 
-            # Fire discovery event
-            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: discovery_service,
-                ATTR_DISCOVERED: {
-                    ATTR_NODE_ID: node.node_id,
-                    ATTR_VALUE_ID: value.value_id,
-                }
-            })
+            discovery.load_platform(hass, component, DOMAIN, {
+                ATTR_NODE_ID: node.node_id,
+                ATTR_VALUE_ID: value.value_id,
+            }, config)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""

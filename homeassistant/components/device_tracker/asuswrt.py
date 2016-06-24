@@ -6,8 +6,10 @@ https://home-assistant.io/components/device_tracker.asuswrt/
 """
 import logging
 import re
+import socket
 import telnetlib
 import threading
+from collections import namedtuple
 from datetime import timedelta
 
 from homeassistant.components.device_tracker import DOMAIN
@@ -56,13 +58,19 @@ _IP_NEIGH_REGEX = re.compile(
 def get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
     if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_USERNAME, CONF_PASSWORD]},
+                           {DOMAIN: [CONF_HOST, CONF_USERNAME]},
                            _LOGGER):
+        return None
+    elif CONF_PASSWORD not in config[DOMAIN] and \
+            'pub_key' not in config[DOMAIN]:
+        _LOGGER.error("Either a public key or password must be provided")
         return None
 
     scanner = AsusWrtDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
+AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp')
 
 
 class AsusWrtDeviceScanner(object):
@@ -75,7 +83,8 @@ class AsusWrtDeviceScanner(object):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
-        self.password = str(config[CONF_PASSWORD])
+        self.password = str(config.get(CONF_PASSWORD, ""))
+        self.pub_key = str(config.get('pub_key', ""))
         self.protocol = config.get('protocol')
         self.mode = config.get('mode')
 
@@ -125,10 +134,17 @@ class AsusWrtDeviceScanner(object):
 
     def ssh_connection(self):
         """Retrieve data from ASUSWRT via the ssh protocol."""
-        from pexpect import pxssh
+        from pexpect import pxssh, exceptions
+
         try:
             ssh = pxssh.pxssh()
-            ssh.login(self.host, self.username, self.password)
+            if self.pub_key:
+                ssh.login(self.host, self.username, ssh_key=self.pub_key)
+            elif self.password:
+                ssh.login(self.host, self.username, self.password)
+            else:
+                _LOGGER.error('No password or public key specified')
+                return None
             ssh.sendline(_IP_NEIGH_CMD)
             ssh.prompt()
             neighbors = ssh.before.split(b'\n')[1:-1]
@@ -145,10 +161,13 @@ class AsusWrtDeviceScanner(object):
                 ssh.prompt()
                 leases_result = ssh.before.split(b'\n')[1:-1]
             ssh.logout()
-            return (neighbors, leases_result, arp_result)
+            return AsusWrtResult(neighbors, leases_result, arp_result)
         except pxssh.ExceptionPxssh as exc:
-            _LOGGER.exception('Unexpected response from router: %s', exc)
-            return ('', '', '')
+            _LOGGER.error('Unexpected response from router: %s', exc)
+            return None
+        except exceptions.EOF:
+            _LOGGER.error('Connection refused or no route to host')
+            return None
 
     def telnet_connection(self):
         """Retrieve data from ASUSWRT via the telnet protocol."""
@@ -174,25 +193,42 @@ class AsusWrtDeviceScanner(object):
                 leases_result = (telnet.read_until(prompt_string).
                                  split(b'\n')[1:-1])
             telnet.write('exit\n'.encode('ascii'))
-            return (neighbors, leases_result, arp_result)
+            return AsusWrtResult(neighbors, leases_result, arp_result)
         except EOFError:
-            _LOGGER.exception("Unexpected response from router")
-            return ('', '', '')
+            _LOGGER.error("Unexpected response from router")
+            return None
         except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router,"
-                              " is telnet enabled?")
-            return ('', '', '')
+            _LOGGER.error("Connection refused by router, is telnet enabled?")
+            return None
+        except socket.gaierror as exc:
+            _LOGGER.error("Socket exception: %s", exc)
+            return None
+        except OSError as exc:
+            _LOGGER.error("OSError: %s", exc)
+            return None
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
-        if self.protocol == 'telnet':
-            neighbors, leases_result, arp_result = self.telnet_connection()
+        if self.protocol == 'ssh':
+            result = self.ssh_connection()
+        elif self.protocol == 'telnet':
+            result = self.telnet_connection()
         else:
-            neighbors, leases_result, arp_result = self.ssh_connection()
+            # autodetect protocol
+            result = self.ssh_connection()
+            if result:
+                self.protocol = 'ssh'
+            else:
+                result = self.telnet_connection()
+                if result:
+                    self.protocol = 'telnet'
+
+        if not result:
+            return {}
 
         devices = {}
         if self.mode == 'ap':
-            for lease in leases_result:
+            for lease in result.leases:
                 match = _WL_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
@@ -202,7 +238,7 @@ class AsusWrtDeviceScanner(object):
                 host = ''
 
                 # match mac addresses to IP addresses in ARP table
-                for arp in arp_result:
+                for arp in result.arp:
                     if match.group('mac').lower() in arp.decode('utf-8'):
                         arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
                         if not arp_match:
@@ -216,7 +252,7 @@ class AsusWrtDeviceScanner(object):
                             'mac': match.group('mac').upper(),
                             }
         else:
-            for lease in leases_result:
+            for lease in result.leases:
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
@@ -236,7 +272,7 @@ class AsusWrtDeviceScanner(object):
                     'mac': match.group('mac').upper(),
                     }
 
-        for neighbor in neighbors:
+        for neighbor in result.neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
             if not match:
                 _LOGGER.warning("Could not parse neighbor row: %s", neighbor)

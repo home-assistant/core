@@ -35,14 +35,14 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMLight(homematic.HMDevice, Light):
-    """Represents an Homematic Light in Home Assistant."""
+    """Represents a Homematic Light in Home Assistant."""
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if not self.available:
             return None
-        # is dimmer?
+        # Is dimmer?
         if self._state is "LEVEL":
             return int(self._hm_get_state() * 255)
         else:
@@ -75,7 +75,7 @@ class HMLight(homematic.HMDevice, Light):
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
@@ -83,7 +83,7 @@ class HMLight(homematic.HMDevice, Light):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # Check if the homematic device is correct for this HA device
         if isinstance(self._hmdevice, Switch):
             return True
         if isinstance(self._hmdevice, Dimmer):
@@ -94,25 +94,25 @@ class HMLight(homematic.HMDevice, Light):
 
     def _init_data_struct(self):
         """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
+        Generate a data dict (self._data) from hm metadata
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.actors import Dimmer, Switch
 
         super()._init_data_struct()
 
-        # use STATE
+        # Use STATE
         if isinstance(self._hmdevice, Switch):
             self._state = "STATE"
 
-        # use LEVEL
+        # Use LEVEL
         if isinstance(self._hmdevice, Dimmer):
             self._state = "LEVEL"
 
-        # add state to data struct
+        # Add state to data dict
         if self._state:
-            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+            _LOGGER.debug("%s init datadict with main node '%s'", self._name,
                           self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correct init sensor %s.", self._name)
+            _LOGGER.critical("Can't correctly init light %s.", self._name)

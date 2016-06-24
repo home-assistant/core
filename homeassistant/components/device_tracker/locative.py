@@ -26,7 +26,7 @@ class LocativeView(HomeAssistantView):
     """View to handle locative requests."""
 
     url = "/api/locative"
-    name = "api:bootstrap"
+    name = "api:locative"
 
     def __init__(self, hass, see):
         """Initialize Locative url endpoints."""

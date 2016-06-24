@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.homematic/
 Important: For this platform to work the homematic component has to be
 properly configured.
 
-Configuration (single channel):
+Configuration (single channel, simple device):
 
 binary_sensor:
   - platform: homematic
@@ -15,12 +15,13 @@ binary_sensor:
     name: "<User defined name>" (optional)
 
 
-Configuration (multiple channels):
+Configuration (multiple channels, like motion detector with buttons):
 
 binary_sensor:
   - platform: homematic
     address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    button: n (integer of channel to map, device-dependent)
+    param: <MOTION|PRESS_SHORT...> (device-dependent) (optional)
+    button: n (integer of channel to map, device-dependent) (optional)
     name: "<User defined name>" (optional)
 binary_sensor:
   - platform: homematic
@@ -88,7 +89,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return None
 
         # If state is MOTION (RemoteMotion works only)
-        if self._state is "MOTION":
+        if self._state in "MOTION":
             return "motion"
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 

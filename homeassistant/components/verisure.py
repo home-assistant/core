@@ -9,19 +9,11 @@ import threading
 import time
 from datetime import timedelta
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
-from homeassistant.loader import get_component
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import validate_config, discovery
 from homeassistant.util import Throttle
 
 DOMAIN = "verisure"
-DISCOVER_SENSORS = 'verisure.sensors'
-DISCOVER_SWITCHES = 'verisure.switches'
-DISCOVER_ALARMS = 'verisure.alarm_control_panel'
-DISCOVER_LOCKS = 'verisure.lock'
 
 REQUIREMENTS = ['vsure==0.8.1']
 
@@ -43,15 +35,8 @@ def setup(hass, config):
     if not HUB.login():
         return False
 
-    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('switch', DISCOVER_SWITCHES),
-                                  ('alarm_control_panel', DISCOVER_ALARMS),
-                                  ('lock', DISCOVER_LOCKS))):
-        component = get_component(comp_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: discovery,
-                       ATTR_DISCOVERED: {}})
+    for component in ('sensor', 'switch', 'alarm_control_panel', 'lock'):
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
@@ -142,7 +127,7 @@ class VerisureHub(object):
                 except AttributeError:
                     status[overview.deviceLabel] = overview
         except self._verisure.Error as ex:
-            _LOGGER.error('Caught connection error %s, tries to reconnect', ex)
+            _LOGGER.info('Caught connection error %s, tries to reconnect', ex)
             self.reconnect()
 
     def reconnect(self):

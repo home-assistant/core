@@ -6,10 +6,9 @@ https://home-assistant.io/components/netatmo/
 """
 import logging
 from urllib.error import HTTPError
-from homeassistant.components import discovery
 from homeassistant.const import (
     CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, discovery
 
 REQUIREMENTS = [
     'https://github.com/jabesq/netatmo-api-python/archive/'
@@ -23,9 +22,6 @@ DOMAIN = "netatmo"
 NETATMO_AUTH = None
 
 _LOGGER = logging.getLogger(__name__)
-
-DISCOVER_SENSORS = 'netatmo.sensors'
-DISCOVER_CAMERAS = 'netatmo.cameras'
 
 
 def setup(hass, config):
@@ -54,9 +50,7 @@ def setup(hass, config):
             "Please check your settings for NatAtmo API.")
         return False
 
-    for component, discovery_service in (
-            ('camera', DISCOVER_CAMERAS), ('sensor', DISCOVER_SENSORS)):
-        discovery.discover(hass, discovery_service, component=component,
-                           hass_config=config)
+    for component in 'camera', 'sensor':
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

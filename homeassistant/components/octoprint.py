@@ -9,9 +9,8 @@ import logging
 import time
 import requests
 
-from homeassistant.components import discovery
 from homeassistant.const import CONF_API_KEY, CONF_HOST
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import validate_config, discovery
 
 DOMAIN = "octoprint"
 OCTOPRINT = None

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
     STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
-from homeassistant.components import (group, verisure, wink, zwave)
+from homeassistant.components import group
 
 DOMAIN = 'lock'
 SCAN_INTERVAL = 30
@@ -29,13 +29,6 @@ ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wink.DISCOVER_LOCKS: 'wink',
-    verisure.DISCOVER_LOCKS: 'verisure',
-    zwave.DISCOVER_LOCKS: 'zwave',
-}
 
 LOCK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -76,8 +69,7 @@ def unlock(hass, entity_id=None, code=None):
 def setup(hass, config):
     """Track states and offer events for locks."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_LOCKS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS)
     component.setup(config)
 
     def handle_lock_service(service):

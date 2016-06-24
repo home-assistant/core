@@ -47,20 +47,20 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMSensor(homematic.HMDevice):
-    """Represents diverse Homematic sensors in Home Assistant."""
+    """Represents various Homematic sensors in Home Assistant."""
 
     @property
     def state(self):
-        """Return the state of the sensor (0=closed, 1=tilted, 2=open)."""
+        """Return the state of the sensor."""
         if not self.available:
             return STATE_UNKNOWN
 
-        # if exists a cast for that class?
+        # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
             return HM_STATE_HA_CAST[name].get(self._hm_get_state(), None)
 
-        # no cast, return original value
+        # No cast, return original value
         return self._hm_get_state()
 
     @property
@@ -74,7 +74,7 @@ class HMSensor(homematic.HMDevice):
     def _check_hm_to_ha_object(self):
         """
         Check if possible to use the HM Object as this HA type
-        NEED overwrite by inheret!
+        NEEDS overwrite by inherit!
         """
         from pyhomematic.devicetypes.sensors import HMSensor as pyHMSensor
 
@@ -82,12 +82,12 @@ class HMSensor(homematic.HMDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # Check if the homematic device is correct for this HA device
         if not isinstance(self._hmdevice, pyHMSensor):
             _LOGGER.critical("This %s can't be use as sensor!", self._name)
             return False
 
-        # if exists user value?
+        # Does user defined value exist?
         if self._state and self._state not in self._hmdevice.SENSORNODE:
             # pylint: disable=logging-too-many-args
             _LOGGER.critical("This %s have no sensor with %s! Values are",
@@ -95,9 +95,9 @@ class HMSensor(homematic.HMDevice):
                              str(self._hmdevice.SENSORNODE.keys()))
             return False
 
-        # no param is set and more than 1 sensor node are present
+        # No param is set and more than 1 sensor nodes are present
         if self._state is None and len(self._hmdevice.SENSORNODE) > 1:
-            _LOGGER.critical("This %s have more sensore node. " +
+            _LOGGER.critical("This %s has multiple sensor nodes. " +
                              "Please us param. Values are: %s", self._name,
                              str(self._hmdevice.SENSORNODE.keys()))
             return False
@@ -107,8 +107,8 @@ class HMSensor(homematic.HMDevice):
 
     def _init_data_struct(self):
         """
-        Generate a data struct (self._data) from hm metadata
-        NEED overwrite by inheret!
+        Generate a data dict (self._data) from hm metadata
+        NEEDS overwrite by inherit!
         """
         super()._init_data_struct()
 
@@ -116,10 +116,10 @@ class HMSensor(homematic.HMDevice):
             for value in self._hmdevice.SENSORNODE:
                 self._state = value
 
-        # add state to data struct
+        # Add state to data dict
         if self._state:
-            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
+            _LOGGER.debug("%s init datadict with main node '%s'", self._name,
                           self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correct init sensor %s.", self._name)
+            _LOGGER.critical("Can't correctly init sensor %s.", self._name)

@@ -1,4 +1,9 @@
-"""This module provides WSGI application to serve the Home Assistant API."""
+"""
+This module provides WSGI application to serve the Home Assistant API.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/http/
+"""
 import hmac
 import json
 import logging
@@ -19,7 +24,7 @@ import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
-REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5",)
+REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.5")
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -395,7 +400,12 @@ class HomeAssistantView(object):
                                  self.hass.wsgi.api_password):
             authenticated = True
 
-        if self.requires_auth and not authenticated:
+        if authenticated:
+            _LOGGER.info('Successful login/request from %s',
+                         request.remote_addr)
+        elif self.requires_auth and not authenticated:
+            _LOGGER.warning('Login attempt or request with an invalid'
+                            'password from %s', request.remote_addr)
             raise Unauthorized()
 
         request.authenticated = authenticated
@@ -437,9 +447,13 @@ class HomeAssistantView(object):
                 mimetype = mimetypes.guess_type(fil)[0]
 
             try:
-                fil = open(fil)
+                fil = open(fil, mode='br')
             except IOError:
                 raise NotFound()
 
         return self.Response(wrap_file(request.environ, fil),
                              mimetype=mimetype, direct_passthrough=True)
+
+    def options(self, request):
+        """Default handler for OPTIONS (necessary for CORS preflight)."""
+        return self.Response('', status=200)
