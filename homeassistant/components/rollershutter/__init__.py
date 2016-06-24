@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
+import homeassistant.util as util
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
     STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
@@ -29,12 +30,18 @@ ENTITY_ID_ALL_ROLLERSHUTTERS = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+# Maps discovered services to their platforms
+DISCOVERY_PLATFORMS = {}
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
+ATTR_POSITION = 'position'
+SERVICE_POSITION = 'position'
 
 ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    ATTR_POSITION: cv.byte,
 })
 
 
@@ -65,12 +72,15 @@ def stop(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for roller shutters."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_ROLLERSHUTTERS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
+        GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
     def handle_rollershutter_service(service):
         """Handle calls to the roller shutter services."""
         target_rollershutters = component.extract_from_service(service)
+        dat = service.data
+        params = {}
 
         for rollershutter in target_rollershutters:
             if service.service == SERVICE_MOVE_UP:
@@ -79,6 +89,13 @@ def setup(hass, config):
                 rollershutter.move_down()
             elif service.service == SERVICE_STOP:
                 rollershutter.stop()
+            elif service.service == SERVICE_POSITION:
+                if ATTR_POSITION in dat:
+                    params[ATTR_POSITION] = util.convert(
+                        dat.get(ATTR_POSITION),
+                        int,
+                        params.get(ATTR_POSITION))
+                    rollershutter.position(**params)
 
             if rollershutter.should_poll:
                 rollershutter.update_ha_state(True)
@@ -97,6 +114,10 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_rollershutter_service,
                            descriptions.get(SERVICE_STOP),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_POSITION,
+                           handle_rollershutter_service,
+                           descriptions.get(SERVICE_POSITION),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     return True
 
@@ -145,4 +166,8 @@ class RollershutterDevice(Entity):
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
+        raise NotImplementedError()
+
+    def position(self, **kwargs):
+        """Set position."""
         raise NotImplementedError()
