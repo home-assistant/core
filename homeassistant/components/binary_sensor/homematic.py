@@ -89,7 +89,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
             return None
 
         # If state is MOTION (RemoteMotion works only)
-        if self._state in "MOTION":
+        if self._state == "MOTION":
             return "motion"
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
