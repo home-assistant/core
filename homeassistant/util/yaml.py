@@ -140,6 +140,9 @@ def _secret_yaml(loader, node):
                 logger = str(secrets['logger']).lower()
                 if logger == 'debug':
                     _LOGGER.setLevel(logging.DEBUG)
+                else:
+                    _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
+                                  " but 'logger: %s' found", logger)
                 del secrets['logger']
         else:
             loader._SECRET_CACHE[secret_path] = None

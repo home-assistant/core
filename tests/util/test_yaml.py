@@ -145,6 +145,20 @@ def load_yaml(fname, string):
     return config_util.load_yaml_config_file(fname)
 
 
+class FakeKeyring():
+    """Fake a keyring class."""
+
+    def __init__(self, secrets_dict):
+        """Store keyring dictionary."""
+        self._secrets = secrets_dict
+
+    # pylint: disable=protected-access
+    def get_password(self, domain, name):
+        """Retrieve password."""
+        assert domain == yaml._SECRET_NAMESPACE
+        return self._secrets.get(name)
+
+
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
 
@@ -159,7 +173,8 @@ class TestSecrets(unittest.TestCase):
                   'http_pw: pwhttp\n'
                   'comp1_un: un1\n'
                   'comp1_pw: pw1\n'
-                  'stale_pw: not_used')
+                  'stale_pw: not_used\n'
+                  'logger: debug\n')
         self._yaml = load_yaml(self._yaml_path,
                                'http:\n'
                                '  api_password: !secret http_pw\n'
@@ -174,7 +189,7 @@ class TestSecrets(unittest.TestCase):
             if os.path.isfile(path):
                 os.remove(path)
 
-    def test_secrets_parsed_correctly(self):
+    def test_secrets_from_yaml(self):
         """Did secrets load ok."""
         expected = {'api_password': 'pwhttp'}
         self.assertEqual(expected, self._yaml['http'])
@@ -183,3 +198,19 @@ class TestSecrets(unittest.TestCase):
             'username': 'un1',
             'password': 'pw1'}
         self.assertEqual(expected, self._yaml['component'])
+
+    def test_secrets_keyring(self):
+        """Test keyring fallback & get_password."""
+        yaml.keyring = None  # Ensure its not there
+        yaml_str = 'http:\n  api_password: !secret http_pw_keyring'
+        with self.assertRaises(yaml.HomeAssistantError):
+            load_yaml(self._yaml_path, yaml_str)
+
+        yaml.keyring = FakeKeyring({'http_pw_keyring': 'yeah'})
+        _yaml = load_yaml(self._yaml_path, yaml_str)
+        self.assertEqual({'http': {'api_password': 'yeah'}}, _yaml)
+
+    def test_secrets_logger_removed(self):
+        """Ensure logger: debug was removed."""
+        with self.assertRaises(yaml.HomeAssistantError):
+            load_yaml(self._yaml_path, 'api_password: !secret logger')
