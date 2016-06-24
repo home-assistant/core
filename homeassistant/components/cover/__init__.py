@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_CLOSE, SERVICE_MOVE_DOWN, SERVICE_MOVE_UP,
     SERVICE_OPEN, SERVICE_STOP, STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN)
-from homeassistant.components import (group, wink)
+from homeassistant.components import group
 
 DOMAIN = 'cover'
 SCAN_INTERVAL = 30
@@ -26,11 +26,6 @@ GROUP_NAME_ALL_COVERS = 'all covers'
 ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wink.DISCOVER_COVERS: 'wink'
-}
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -73,8 +68,7 @@ def stop(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for cover."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_COVERS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
     component.setup(config)
 
     def handle_cover_service(service):
