@@ -1,121 +1,40 @@
 """
-Support for Homematic (HM-TC-IT-WM-W-EU, HM-CC-RT-DN) thermostats.
+The Homematic thermostat platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.homematic/
+
+Important: For this platform to work the homematic component has to be
+properly configured.
+
+Configuration:
+
+thermostat:
+  - platform: homematic
+    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
+    name: "<User defined name>" (optional)
 """
+
 import logging
-import socket
-from xmlrpc.client import ServerProxy
-from xmlrpc.client import Error
-from collections import namedtuple
-
+import homeassistant.components.homematic as homematic
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.temperature import convert
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = []
+DEPENDENCIES = ['homematic']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDRESS = 'address'
-CONF_DEVICES = 'devices'
-CONF_ID = 'id'
-PROPERTY_SET_TEMPERATURE = 'SET_TEMPERATURE'
-PROPERTY_VALVE_STATE = 'VALVE_STATE'
-PROPERTY_ACTUAL_TEMPERATURE = 'ACTUAL_TEMPERATURE'
-PROPERTY_BATTERY_STATE = 'BATTERY_STATE'
-PROPERTY_LOWBAT = 'LOWBAT'
-PROPERTY_CONTROL_MODE = 'CONTROL_MODE'
-PROPERTY_BURST_MODE = 'BURST_RX'
-TYPE_HM_THERMOSTAT = 'HOMEMATIC_THERMOSTAT'
-TYPE_HM_WALLTHERMOSTAT = 'HOMEMATIC_WALLTHERMOSTAT'
-TYPE_MAX_THERMOSTAT = 'MAX_THERMOSTAT'
 
-HomematicConfig = namedtuple('HomematicConfig',
-                             ['device_type',
-                              'platform_type',
-                              'channel',
-                              'maint_channel'])
-
-HM_TYPE_MAPPING = {
-    'HM-CC-RT-DN': HomematicConfig('HM-CC-RT-DN',
-                                   TYPE_HM_THERMOSTAT,
-                                   4, 4),
-    'HM-CC-RT-DN-BoM': HomematicConfig('HM-CC-RT-DN-BoM',
-                                       TYPE_HM_THERMOSTAT,
-                                       4, 4),
-    'HM-TC-IT-WM-W-EU': HomematicConfig('HM-TC-IT-WM-W-EU',
-                                        TYPE_HM_WALLTHERMOSTAT,
-                                        2, 2),
-    'BC-RT-TRX-CyG': HomematicConfig('BC-RT-TRX-CyG',
-                                     TYPE_MAX_THERMOSTAT,
-                                     1, 0),
-    'BC-RT-TRX-CyG-2': HomematicConfig('BC-RT-TRX-CyG-2',
-                                       TYPE_MAX_THERMOSTAT,
-                                       1, 0),
-    'BC-RT-TRX-CyG-3': HomematicConfig('BC-RT-TRX-CyG-3',
-                                       TYPE_MAX_THERMOSTAT,
-                                       1, 0)
-}
+def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+    """Setup the platform."""
+    return homematic.setup_hmdevice_entity_helper(HMThermostat,
+                                                  config,
+                                                  add_callback_devices)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic thermostat."""
-    devices = []
-    try:
-        address = config[CONF_ADDRESS]
-        homegear = ServerProxy(address)
-
-        for name, device_cfg in config[CONF_DEVICES].items():
-            # get device description to detect the type
-            device_type = homegear.getDeviceDescription(
-                device_cfg[CONF_ID] + ':-1')['TYPE']
-
-            if device_type in HM_TYPE_MAPPING.keys():
-                devices.append(HomematicThermostat(
-                    HM_TYPE_MAPPING[device_type],
-                    address,
-                    device_cfg[CONF_ID],
-                    name))
-            else:
-                raise ValueError(
-                    "Device Type '{}' currently not supported".format(
-                        device_type))
-    except socket.error:
-        _LOGGER.exception("Connection error to homematic web service")
-        return False
-
-    add_devices(devices)
-
-    return True
-
-
-# pylint: disable=too-many-instance-attributes
-class HomematicThermostat(ThermostatDevice):
-    """Representation of a Homematic thermostat."""
-
-    def __init__(self, hm_config, address, _id, name):
-        """Initialize the thermostat."""
-        self._hm_config = hm_config
-        self.address = address
-        self._id = _id
-        self._name = name
-        self._full_device_name = '{}:{}'.format(self._id,
-                                                self._hm_config.channel)
-        self._maint_device_name = '{}:{}'.format(self._id,
-                                                 self._hm_config.maint_channel)
-        self._current_temperature = None
-        self._target_temperature = None
-        self._valve = None
-        self._battery = None
-        self._mode = None
-        self.update()
-
-    @property
-    def name(self):
-        """Return the name of the Homematic device."""
-        return self._name
+class HMThermostat(homematic.HMDevice, ThermostatDevice):
+    """Represents a Homematic Thermostat in Home Assistant."""
 
     @property
     def unit_of_measurement(self):
@@ -125,26 +44,22 @@ class HomematicThermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._current_temperature
+        if not self.available:
+            return None
+        return self._data["ACTUAL_TEMPERATURE"]
 
     @property
     def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._target_temperature
+        """Return the target temperature."""
+        if not self.available:
+            return None
+        return self._data["SET_TEMPERATURE"]
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        device = ServerProxy(self.address)
-        device.setValue(self._full_device_name,
-                        PROPERTY_SET_TEMPERATURE,
-                        temperature)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {"valve": self._valve,
-                "battery": self._battery,
-                "mode": self._mode}
+        if not self.available:
+            return None
+        self._hmdevice.set_temperature(temperature)
 
     @property
     def min_temp(self):
@@ -156,39 +71,27 @@ class HomematicThermostat(ThermostatDevice):
         """Return the maximum temperature - 30.5 means on."""
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
-    def update(self):
-        """Update the data from the thermostat."""
-        try:
-            device = ServerProxy(self.address)
-            self._current_temperature = device.getValue(
-                self._full_device_name,
-                PROPERTY_ACTUAL_TEMPERATURE)
-            self._target_temperature = device.getValue(
-                self._full_device_name,
-                PROPERTY_SET_TEMPERATURE)
-            self._valve = device.getValue(
-                self._full_device_name,
-                PROPERTY_VALVE_STATE)
-            self._mode = device.getValue(
-                self._full_device_name,
-                PROPERTY_CONTROL_MODE)
+    def _check_hm_to_ha_object(self):
+        """Check if possible to use the HM Object as this HA type."""
+        from pyhomematic.devicetypes.thermostats import HMThermostat\
+            as pyHMThermostat
 
-            if self._hm_config.platform_type in [TYPE_HM_THERMOSTAT,
-                                                 TYPE_HM_WALLTHERMOSTAT]:
-                self._battery = device.getValue(self._maint_device_name,
-                                                PROPERTY_BATTERY_STATE)
-            elif self._hm_config.platform_type == TYPE_MAX_THERMOSTAT:
-                # emulate homematic battery voltage,
-                # max reports lowbat if voltage < 2.2V
-                # while homematic battery_state should
-                # be between 1.5V and 4.6V
-                lowbat = device.getValue(self._maint_device_name,
-                                         PROPERTY_LOWBAT)
-                if lowbat:
-                    self._battery = 1.5
-                else:
-                    self._battery = 4.6
+        # Check compatibility from HMDevice
+        if not super()._check_hm_to_ha_object():
+            return False
 
-        except Error:
-            _LOGGER.exception("Did not receive any temperature data from the "
-                              "homematic API.")
+        # Check if the homematic device correct for this HA device
+        if isinstance(self._hmdevice, pyHMThermostat):
+            return True
+
+        _LOGGER.critical("This %s can't be use as thermostat", self._name)
+        return False
+
+    def _init_data_struct(self):
+        """Generate a data dict (self._data) from hm metadata."""
+        super()._init_data_struct()
+
+        # Add state to data dict
+        self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
+                           "SET_TEMPERATURE": STATE_UNKNOWN,
+                           "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
