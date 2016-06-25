@@ -55,6 +55,11 @@ SUPPORT_HM_EVENT_AS_BINMOD = [
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
+    if discovery_info:
+        return homematic.setup_hmdevice_discovery_helper(HMBinarySensor,
+                                                         discovery_info,
+                                                         add_callback_devices)
+    # Manual
     return homematic.setup_hmdevice_entity_helper(HMBinarySensor,
                                                   config,
                                                   add_callback_devices)
