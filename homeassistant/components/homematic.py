@@ -15,7 +15,6 @@ homematic:
 """
 import time
 import logging
-from collections import OrderedDict
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP,\
                                 EVENT_PLATFORM_DISCOVERED,\
                                 ATTR_SERVICE,\
@@ -157,31 +156,27 @@ def system_callback_handler(src, *args):
                 # When devices of this type are found
                 # they are setup in HA and an event is fired
                 if found_devices:
-                    try:
-                        component = get_component(component_name)
-                        config = {component.DOMAIN: found_devices}
+                    component = get_component(component_name)
+                    config = {component.DOMAIN: found_devices}
 
-                        # Ensure component is loaded
-                        homeassistant.bootstrap.setup_component(
-                            _HM_DISCOVER_HASS,
-                            component.DOMAIN,
-                            config)
+                    # Ensure component is loaded
+                    homeassistant.bootstrap.setup_component(
+                        _HM_DISCOVER_HASS,
+                        component.DOMAIN,
+                        config)
 
-                        # Fire discovery event
-                        _HM_DISCOVER_HASS.bus.fire(
-                            EVENT_PLATFORM_DISCOVERED, {
-                                ATTR_SERVICE: discovery_type,
-                                ATTR_DISCOVERED: {
-                                    ATTR_DISCOVER_DEVICES:
-                                    found_devices,
-                                    ATTR_DISCOVER_CONFIG: ''
-                                    }
+                    # Fire discovery event
+                    _HM_DISCOVER_HASS.bus.fire(
+                        EVENT_PLATFORM_DISCOVERED, {
+                            ATTR_SERVICE: discovery_type,
+                            ATTR_DISCOVERED: {
+                                ATTR_DISCOVER_DEVICES:
+                                found_devices,
+                                ATTR_DISCOVER_CONFIG: ''
                                 }
-                            )
-                    # pylint: disable=broad-except
-                    except Exception as err:
-                        _LOGGER.error("Failed to autotetect %s with" +
-                                      "error '%s'", component_name, str(err))
+                            }
+                        )
+
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
                     try:
@@ -207,39 +202,37 @@ def _get_devices(device_type, keys):
         keys = HOMEMATIC.devices
     for key in keys:
         device = HOMEMATIC.devices[key]
-        if device.__class__.__name__ in HM_DEVICE_TYPES[device_type]:
-            elements = device.ELEMENT + 1
-            metadata = {}
+        if device.__class__.__name__ not in HM_DEVICE_TYPES[device_type]:
+            continue
+        elements = device.ELEMENT + 1
+        metadata = {}
 
-            # Load metadata if needed to generate a param list
-            if device_type is DISCOVER_SENSORS:
-                metadata.update(device.SENSORNODE)
-            elif device_type is DISCOVER_BINARY_SENSORS:
-                metadata.update(device.BINARYNODE)
+        # Load metadata if needed to generate a param list
+        if device_type is DISCOVER_SENSORS:
+            metadata.update(device.SENSORNODE)
+        elif device_type is DISCOVER_BINARY_SENSORS:
+            metadata.update(device.BINARYNODE)
 
-                # Also add supported events as binary type
-                for event, channel in device.EVENTNODE.items():
-                    if event in SUPPORT_HM_EVENT_AS_BINMOD:
-                        metadata.update({event: channel})
+            # Also add supported events as binary type
+            for event, channel in device.EVENTNODE.items():
+                if event in SUPPORT_HM_EVENT_AS_BINMOD:
+                    metadata.update({event: channel})
 
-            params = _create_params_list(device, metadata)
+        params = _create_params_list(device, metadata)
 
-            # Generate options for 1...n elements with 1...n params
-            for channel in range(1, elements):
-                for param in params[channel]:
-                    name = _create_ha_name(name=device.NAME,
-                                           channel=channel,
-                                           param=param)
-                    ordered_device_dict = OrderedDict()
-                    ordered_device_dict["platform"] = "homematic"
-                    ordered_device_dict["address"] = key
-                    ordered_device_dict["name"] = name
-                    ordered_device_dict["button"] = channel
-                    if param is not None:
-                        ordered_device_dict["param"] = param
+        # Generate options for 1...n elements with 1...n params
+        for channel in range(1, elements):
+            for param in params[channel]:
+                name = _create_ha_name(name=device.NAME,
+                                       channel=channel,
+                                       param=param)
+                device_dict = dict(platform="homematic", address=key,
+                                   name=name, button=channel)
+                if param is not None:
+                    device_dict["param"] = param
 
-                    # Add new device
-                    device_arr.append(ordered_device_dict)
+                # Add new device
+                device_arr.append(device_dict)
     _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
     return device_arr
 
@@ -282,15 +275,15 @@ def _create_ha_name(name, channel, param):
 
     # Has multiple elements/channels
     if channel > 1 and param is None:
-        return name + " " + str(channel)
+        return "{} {}".format(name, channel)
 
     # With multiple param first elements
     if channel == 1 and param is not None:
-        return name + " " + param
+        return "{} {}".format(name, param)
 
     # Multiple param on object with multiple elements
     if channel > 1 and param is not None:
-        return name + " " + str(channel) + " " + param
+        return "{} {} {}".format(name, channel, param)
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
