@@ -51,7 +51,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id:
             self._state = value.data
             self.update_ha_state(True)
             _LOGGER.debug("Value changed on network %s", value)
@@ -59,7 +59,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return self._state
+        return not self._state
 
     def close_door(self):
         """Close the garage door."""
