@@ -4,6 +4,7 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
+# pylint: disable=abstract-method
 import logging
 
 from homeassistant.components.light import (
