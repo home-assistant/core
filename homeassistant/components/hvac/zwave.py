@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, abstract-method
 class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     """Represents a HeatControl hvac."""
 
@@ -98,7 +98,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id:
             self.update_properties()
             self.update_ha_state(True)
             _LOGGER.debug("Value changed on network %s", value)
