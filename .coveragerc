@@ -115,6 +115,7 @@ omit =
     homeassistant/components/feedreader.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
+    homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
