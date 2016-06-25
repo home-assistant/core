@@ -389,8 +389,8 @@ class HMDevice(Entity):
                 except Exception as err:
                     self._connected = False
                     self._available = False
-                    _LOGGER.error("Exception while linking %s: %s" %
-                                  (self._address, str(err)))
+                    _LOGGER.error("Exception while linking %s: %s",
+                                  self._address, str(err))
             else:
                 _LOGGER.critical("Delink %s object from HM!", self._name)
                 self._connected = False
