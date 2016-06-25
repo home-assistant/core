@@ -58,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=abstract-method
 class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 

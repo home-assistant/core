@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, abstract-method
 class HomematicThermostat(ThermostatDevice):
     """Representation of a Homematic thermostat."""
 
