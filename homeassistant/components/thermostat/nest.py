@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for structure, device in nest.devices()])
 
 
+# pylint: disable=abstract-method
 class NestThermostat(ThermostatDevice):
     """Representation of a Nest thermostat."""
 
