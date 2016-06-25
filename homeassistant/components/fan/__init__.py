@@ -36,7 +36,7 @@ ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format('all_fans')
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # String representing the speed setting for the fan
-ATTR_SPEED = "level"
+ATTR_SPEED = "value"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -49,7 +49,7 @@ DISCOVERY_PLATFORMS = {
 }
 
 PROP_TO_ATTR = {
-    'level': ATTR_SPEED,
+    'value': ATTR_SPEED,
 }
 
 
