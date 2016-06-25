@@ -16,9 +16,7 @@ homematic:
 import time
 import logging
 from functools import partial
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
-    ATTR_DISCOVER_DEVICES, \
-    STATE_UNKNOWN
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
