@@ -15,11 +15,11 @@ homematic:
 """
 import time
 import logging
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP,\
-                                EVENT_PLATFORM_DISCOVERED,\
-                                ATTR_SERVICE,\
-                                ATTR_DISCOVERED,\
-                                STATE_UNKNOWN
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
+    EVENT_PLATFORM_DISCOVERED, \
+    ATTR_SERVICE, \
+    ATTR_DISCOVERED, \
+    STATE_UNKNOWN
 from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
@@ -141,13 +141,8 @@ def system_callback_handler(src, *args):
                     ('sensor', DISCOVER_SENSORS),
                     ('thermostat', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
-                try:
-                    found_devices = _get_devices(discovery_type,
-                                                 devices_not_created)
-                # pylint: disable=broad-except
-                except Exception as err:
-                    _LOGGER.error("Failed generate opt %s with error '%s'",
-                                  component_name, str(err))
+                found_devices = _get_devices(discovery_type,
+                                             devices_not_created)
 
                 # When devices of this type are found
                 # they are setup in HA and an event is fired
@@ -157,21 +152,21 @@ def system_callback_handler(src, *args):
 
                     # Ensure component is loaded
                     homeassistant.bootstrap.setup_component(
-                        _HM_DISCOVER_HASS,
-                        component.DOMAIN,
-                        config)
+                            _HM_DISCOVER_HASS,
+                            component.DOMAIN,
+                            config)
 
                     # Fire discovery event
                     _HM_DISCOVER_HASS.bus.fire(
-                        EVENT_PLATFORM_DISCOVERED, {
-                            ATTR_SERVICE: discovery_type,
-                            ATTR_DISCOVERED: {
-                                ATTR_DISCOVER_DEVICES:
-                                found_devices,
-                                ATTR_DISCOVER_CONFIG: ''
+                            EVENT_PLATFORM_DISCOVERED, {
+                                ATTR_SERVICE: discovery_type,
+                                ATTR_DISCOVERED: {
+                                    ATTR_DISCOVER_DEVICES:
+                                        found_devices,
+                                    ATTR_DISCOVER_CONFIG: ''
                                 }
                             }
-                        )
+                    )
 
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
@@ -192,13 +187,12 @@ def _get_devices(device_type, keys):
         device = HOMEMATIC.devices[key]
         if device.__class__.__name__ not in HM_DEVICE_TYPES[device_type]:
             continue
-        elements = device.ELEMENT + 1
         metadata = {}
 
         # Load metadata if needed to generate a param list
-        if device_type is DISCOVER_SENSORS:
+        if device_type == DISCOVER_SENSORS:
             metadata.update(device.SENSORNODE)
-        elif device_type is DISCOVER_BINARY_SENSORS:
+        elif device_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
 
             # Also add supported events as binary type
@@ -207,45 +201,57 @@ def _get_devices(device_type, keys):
                     metadata.update({event: channel})
 
         params = _create_params_list(device, metadata)
+        if params:
+            # Generate options for 1...n elements with 1...n params
+            for channel in range(1, device.ELEMENT + 1):
+                _LOGGER.debug("Handling %s:%i", key, channel)
+                if channel in params:
+                    for param in params[channel]:
+                        name = _create_ha_name(name=device.NAME,
+                                               channel=channel,
+                                               param=param)
+                        device_dict = dict(platform="homematic",
+                                           address=key,
+                                           name=name,
+                                           button=channel)
+                        if param is not None:
+                            device_dict["param"] = param
 
-        # Generate options for 1...n elements with 1...n params
-        for channel in range(1, elements):
-            for param in params[channel]:
-                name = _create_ha_name(name=device.NAME,
-                                       channel=channel,
-                                       param=param)
-                device_dict = dict(platform="homematic", address=key,
-                                   name=name, button=channel)
-                if param is not None:
-                    device_dict["param"] = param
-
-                # Add new device
-                device_arr.append(device_dict)
-    _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
+                        # Add new device
+                        device_arr.append(device_dict)
+                else:
+                    _LOGGER.debug("Channel %i not in params", channel)
+        else:
+            _LOGGER.debug("Got no params for %s", key)
+    _LOGGER.debug("%s autodiscovery: %s",
+                  device_type, str(device_arr))
     return device_arr
 
 
 def _create_params_list(hmdevice, metadata):
     """Create a list from HMDevice with all possible parameters in config."""
     params = {}
-    elements = hmdevice.ELEMENT + 1
 
     # Search in sensor and binary metadata per elements
-    for channel in range(1, elements):
+    for channel in range(1, hmdevice.ELEMENT + 1):
         param_chan = []
-        for node, meta_chan in metadata.items():
-            # Is this attribute ignored?
-            if node in HM_IGNORE_DISCOVERY_NODE:
-                continue
-            if meta_chan == 'c' or meta_chan is None:
-                # Only channel linked data
-                param_chan.append(node)
-            elif channel == 1:
-                # First channel can have other data channel
-                param_chan.append(node)
-
+        try:
+            for node, meta_chan in metadata.items():
+                # Is this attribute ignored?
+                if node in HM_IGNORE_DISCOVERY_NODE:
+                    continue
+                if meta_chan == 'c' or meta_chan is None:
+                    # Only channel linked data
+                    param_chan.append(node)
+                elif channel == 1:
+                    # First channel can have other data channel
+                    param_chan.append(node)
+        # pylint: disable=broad-except
+        except Exception as err:
+            _LOGGER.error("Exception generating %s (%s): %s",
+                          hmdevice.ADDRESS, str(metadata), str(err))
         # Default parameter
-        if len(param_chan) == 0:
+        if not param_chan:
             param_chan.append(None)
         # Add to channel
         params.update({channel: param_chan})
