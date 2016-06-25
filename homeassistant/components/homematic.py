@@ -21,6 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     ATTR_SERVICE, \
     ATTR_DISCOVERED, \
     STATE_UNKNOWN
+from homeassistant.loader import get_component
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
@@ -149,8 +150,10 @@ def system_callback_handler(hass, config, src, *args):
                 # When devices of this type are found
                 # they are setup in HA and an event is fired
                 if found_devices:
+                    component = get_component(component_name)
+
                     # HA discovery event
-                    discovery.load_platform(hass, component_name, DOMAIN, {
+                    discovery.load_platform(hass, component, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
 
