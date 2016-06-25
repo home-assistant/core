@@ -4,6 +4,7 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
+# pylint: disable=abstract-method
 import logging
 
 from homeassistant.components import mysensors

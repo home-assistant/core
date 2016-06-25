@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the heat control thermostat."""
     name = config.get(CONF_NAME)
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                              min_temp, max_temp, target_temp)])
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, abstract-method
 class HeatControl(ThermostatDevice):
     """Representation of a HeatControl device."""
 
