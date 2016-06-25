@@ -124,16 +124,12 @@ def system_callback_handler(src, *args):
         # add remaining devices to list
         devices_not_created = []
         for dev in key_dict:
-            try:
-                if dev in HOMEMATIC_DEVICES:
-                    for hm_element in HOMEMATIC_DEVICES[dev]:
-                        hm_element.link_homematic()
-                else:
-                    devices_not_created.append(dev)
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.error("Failed to setup device %s: %s", str(dev),
-                              str(err))
+            if dev in HOMEMATIC_DEVICES:
+                for hm_element in HOMEMATIC_DEVICES[dev]:
+                    hm_element.link_homematic()
+            else:
+                devices_not_created.append(dev)
+
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
         if HOMEMATIC_AUTODETECT and devices_not_created:
@@ -179,16 +175,8 @@ def system_callback_handler(src, *args):
 
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
-                    try:
-                        for hm_element in HOMEMATIC_DEVICES[dev]:
-                            hm_element.link_homematic()
-                            # Need to wait, if you have a lot devices we don't
-                            # to overload CCU/Homegear
-                            time.sleep(1)
-                    # pylint: disable=broad-except
-                    except Exception as err:
-                        _LOGGER.error("Failed link %s with" +
-                                      "error '%s'", dev, str(err))
+                    for hm_element in HOMEMATIC_DEVICES[dev]:
+                        hm_element.link_homematic(delay=1)
 
 
 def _get_devices(device_type, keys):
@@ -374,7 +362,7 @@ class HMDevice(Entity):
 
         return attr
 
-    def link_homematic(self):
+    def link_homematic(self, delay=0):
         """Connect to homematic."""
         # Does a HMDevice from pyhomematic exist?
         if self._address in HOMEMATIC.devices:
@@ -385,14 +373,26 @@ class HMDevice(Entity):
             # Check if HM class is okay for HA class
             _LOGGER.info("Start linking %s to %s", self._address, self._name)
             if self._check_hm_to_ha_object():
-                # Init datapoints of this object
-                self._init_data_struct()
-                self._load_init_data_from_hm()
-                _LOGGER.debug("%s datastruct: %s", self._name, str(self._data))
+                try:
+                    # Init datapoints of this object
+                    self._init_data_struct()
+                    if delay:
+                        # We delay / pause loading of data to avoid overloading
+                        # of CCU / Homegear when doing auto detection
+                        time.sleep(delay)
+                    self._load_init_data_from_hm()
+                    _LOGGER.debug("%s datastruct: %s",
+                                  self._name, str(self._data))
 
-                # Link events from pyhomatic
-                self._subscribe_homematic_events()
-                self._available = not self._hmdevice.UNREACH
+                    # Link events from pyhomatic
+                    self._subscribe_homematic_events()
+                    self._available = not self._hmdevice.UNREACH
+                # pylint: disable=broad-except
+                except Exception as err:
+                    self._connected = False
+                    self._available = False
+                    _LOGGER.error("Exception while linking %s: %s" %
+                                  (self._address, str(err)))
             else:
                 _LOGGER.critical("Delink %s object from HM!", self._name)
                 self._connected = False
@@ -401,6 +401,8 @@ class HMDevice(Entity):
             # Update HA
             _LOGGER.debug("%s linking down, send update_ha_state", self._name)
             self.update_ha_state()
+        else:
+            _LOGGER.debug("%s not found in HOMEMATIC.devices", self._address)
 
     def _hm_event_callback(self, device, caller, attribute, value):
         """Handle all pyhomematic device events."""
