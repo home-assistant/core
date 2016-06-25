@@ -29,8 +29,6 @@ DEPENDENCIES = ['homematic']
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    if discovery_info:
-        config = discovery_info
     return homematic.setup_hmdevice_entity_helper(HMLight,
                                                   config,
                                                   add_callback_devices)
