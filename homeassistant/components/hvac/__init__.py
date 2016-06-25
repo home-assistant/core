@@ -425,39 +425,39 @@ class HvacDevice(Entity):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        pass
+        raise NotImplementedError()
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
-        pass
+        raise NotImplementedError()
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
-        pass
+        raise NotImplementedError()
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        pass
+        raise NotImplementedError()
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
-        pass
+        raise NotImplementedError()
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
-        pass
+        raise NotImplementedError()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
-        pass
+        raise NotImplementedError()
 
     def turn_aux_heat_on(self):
         """Turn auxillary heater on."""
-        pass
+        raise NotImplementedError()
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
-        pass
+        raise NotImplementedError()
 
     @property
     def min_temp(self):
