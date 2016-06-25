@@ -152,7 +152,7 @@ class TestAPI(unittest.TestCase):
 
         requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
                       data=json.dumps({"state": "not_to_be_set",
-                                       "push_state": True}),
+                                       "force_update": True}),
                       headers=HA_HEADERS)
         hass.bus._pool.block_till_done()
         self.assertEqual(1, len(events))

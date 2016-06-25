@@ -259,9 +259,9 @@ class StateMachine(ha.StateMachine):
         """
         return remove_state(self._api, entity_id)
 
-    def set(self, entity_id, new_state, attributes=None, push_state=False):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Call set_state on remote API."""
-        set_state(self._api, entity_id, new_state, attributes, push_state)
+        set_state(self._api, entity_id, new_state, attributes, force_update)
 
     def mirror(self):
         """Discard current data and mirrors the remote state machine."""
@@ -450,7 +450,7 @@ def remove_state(api, entity_id):
         return False
 
 
-def set_state(api, entity_id, new_state, attributes=None, push_state=False):
+def set_state(api, entity_id, new_state, attributes=None, force_update=False):
     """Tell API to update state for entity_id.
 
     Return True if success.
@@ -459,7 +459,7 @@ def set_state(api, entity_id, new_state, attributes=None, push_state=False):
 
     data = {'state': new_state,
             'attributes': attributes,
-            'push_state': push_state}
+            'force_update': force_update}
 
     try:
         req = api(METHOD_POST,

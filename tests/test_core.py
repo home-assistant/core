@@ -334,8 +334,8 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(state.last_changed,
                          self.states.get('light.Bowl').last_changed)
 
-    def test_push_state(self):
-        """Test push state option"""
+    def test_force_update(self):
+        """Test force update option."""
         self.pool.add_worker()
         events = []
         self.bus.listen(EVENT_STATE_CHANGED, events.append)

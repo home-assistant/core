@@ -166,7 +166,7 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(1, len(events))
 
         remote.set_state(
-            master_api, 'test.test', 'set_test_2', push_state=True)
+            master_api, 'test.test', 'set_test_2', force_update=True)
         hass.bus._pool.block_till_done()
         self.assertEqual(2, len(events))
 

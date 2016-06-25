@@ -456,7 +456,7 @@ class StateMachine(object):
 
             return True
 
-    def set(self, entity_id, new_state, attributes=None, push_state=False):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -473,7 +473,7 @@ class StateMachine(object):
 
             is_existing = old_state is not None
             same_state = (is_existing and old_state.state == new_state and
-                          not push_state)
+                          not force_update)
             same_attr = is_existing and old_state.attributes == attributes
 
             if same_state and same_attr:

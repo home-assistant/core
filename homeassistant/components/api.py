@@ -204,12 +204,12 @@ class APIEntityStateView(HomeAssistantView):
             return self.json_message('No state specified', HTTP_BAD_REQUEST)
 
         attributes = request.json.get('attributes')
-        push_state = request.json.get('push_state', False)
+        force_update = request.json.get('force_update', False)
 
         is_new_state = self.hass.states.get(entity_id) is None
 
         # Write state
-        self.hass.states.set(entity_id, new_state, attributes, push_state)
+        self.hass.states.set(entity_id, new_state, attributes, force_update)
 
         # Read the state back for our response
         resp = self.json(self.hass.states.get(entity_id))

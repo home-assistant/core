@@ -126,8 +126,8 @@ class Entity(object):
         return False
 
     @property
-    def push_state(self):
-        """Return True if state changes should be pushed.
+    def force_update(self):
+        """Return True if state updates should be forced.
 
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
@@ -200,7 +200,7 @@ class Entity(object):
             state = str(state)
 
         return self.hass.states.set(
-            self.entity_id, state, attr, self.push_state)
+            self.entity_id, state, attr, self.force_update)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
