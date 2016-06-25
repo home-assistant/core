@@ -247,6 +247,9 @@ pyasn1==0.1.9
 # homeassistant.components.media_player.cast
 pychromecast==0.7.2
 
+# homeassistant.components.media_player.cmus
+pycmus>=0.1.0
+
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
 pydispatcher==2.0.5

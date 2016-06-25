@@ -229,17 +229,15 @@ class ToggleEntity(Entity):
     @property
     def is_on(self):
         """Return True if entity is on."""
-        return False
+        raise NotImplementedError()
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        _LOGGER.warning('Method turn_on not implemented for %s',
-                        self.entity_id)
+        raise NotImplementedError()
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
-        _LOGGER.warning('Method turn_off not implemented for %s',
-                        self.entity_id)
+        raise NotImplementedError()
 
     def toggle(self, **kwargs):
         """Toggle the entity off."""

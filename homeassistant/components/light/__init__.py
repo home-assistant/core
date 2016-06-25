@@ -248,7 +248,8 @@ def setup(hass, config):
 class Light(ToggleEntity):
     """Representation of a light."""
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use, abstract-method
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
