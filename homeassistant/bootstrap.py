@@ -11,7 +11,7 @@ from threading import RLock
 import voluptuous as vol
 
 import homeassistant.components as core_components
-import homeassistant.components.group as group
+from homeassistant.components import group, persistent_notification
 import homeassistant.config as config_util
 import homeassistant.core as core
 import homeassistant.helpers.config_validation as cv
@@ -262,8 +262,9 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
                       'Further initialization aborted.')
-
         return hass
+
+    persistent_notification.setup(hass, config)
 
     _LOGGER.info('Home Assistant core initialized')
 

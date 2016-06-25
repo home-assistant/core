@@ -37,6 +37,7 @@ def setup(hass, config):
     """Setup a demo environment."""
     group = loader.get_component('group')
     configurator = loader.get_component('configurator')
+    persistent_notification = loader.get_component('persistent_notification')
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -58,6 +59,11 @@ def setup(hass, config):
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
         demo_config[component] = {CONF_PLATFORM: 'demo'}
         bootstrap.setup_component(hass, component, demo_config)
+
+    # Setup example persistent notification
+    persistent_notification.create(
+        hass, 'This is an example of a persistent notification.',
+        title='Example Notification')
 
     # Setup room groups
     lights = sorted(hass.states.entity_ids('light'))
