@@ -150,9 +150,9 @@ def system_callback_handler(hass, config, src, *args):
                 # they are setup in HA and an event is fired
                 if found_devices:
                     # HA discovery event
-                    discovery.load_platform(hass, discovery_type, {
+                    discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
-                    }, component_name, config)
+                    }, config)
 
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
