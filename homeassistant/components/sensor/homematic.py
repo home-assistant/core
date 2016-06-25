@@ -41,6 +41,8 @@ HM_UNIT_HA_CAST = {
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
+    if discovery_info:
+        config = discovery_info
     return homematic.setup_hmdevice_entity_helper(HMSensor,
                                                   config,
                                                   add_callback_devices)
