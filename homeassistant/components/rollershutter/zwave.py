@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if value.command_class != zwave.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
-    if value.index != 1:
+    if value.index != 0:
         return
 
     value.set_change_verified(False)
@@ -49,33 +49,22 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id:
             self.update_ha_state(True)
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == 38 and value.index == 0:
-                return value.data
+        return self._value.data
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == 38 and value.index == 0:
-                value.data = 255
-                break
+        self._node.set_dimmer(self._value.value_id, 100)
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
-        for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == 38 and value.index == 0:
-                value.data = 0
-                break
+        self._node.set_dimmer(self._value.value_id, 0)
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
@@ -84,3 +73,4 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
             # Rollershutter will toggle between UP (True), DOWN (False).
             # It also stops the shutter if the same value is sent while moving.
             value.data = value.data
+            break

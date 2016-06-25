@@ -49,7 +49,6 @@ def _setup_round(username, password, config, add_devices):
 
 
 # config will be used later
-# pylint: disable=unused-argument
 def _setup_us(username, password, config, add_devices):
     """Setup user."""
     import somecomfort
@@ -74,7 +73,6 @@ def _setup_us(username, password, config, add_devices):
     return True
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the honeywel thermostat."""
     username = config.get(CONF_USERNAME)
@@ -98,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RoundThermostat(ThermostatDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, device, zone_id, master, away_temp):
         """Initialize the thermostat."""
         self.device = device
@@ -182,6 +180,7 @@ class RoundThermostat(ThermostatDevice):
             self._is_dhw = False
 
 
+# pylint: disable=abstract-method
 class HoneywellUSThermostat(ThermostatDevice):
     """Representation of a Honeywell US Thermostat."""
 
