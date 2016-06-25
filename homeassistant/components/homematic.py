@@ -17,11 +17,9 @@ import time
 import logging
 from functools import partial
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
-    EVENT_PLATFORM_DISCOVERED, \
-    ATTR_SERVICE, \
     ATTR_DISCOVERED, \
     STATE_UNKNOWN
-from homeassistant.loader import get_component
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.bootstrap
 
@@ -149,26 +147,10 @@ def system_callback_handler(hass, config, src, *args):
                 # When devices of this type are found
                 # they are setup in HA and an event is fired
                 if found_devices:
-                    component = get_component(component_name)
-                    config = {component.DOMAIN: found_devices}
-
-                    # Ensure component is loaded
-                    homeassistant.bootstrap.setup_component(
-                            hass,
-                            component.DOMAIN,
-                            config)
-
                     # Fire discovery event
-                    hass.bus.fire(
-                            EVENT_PLATFORM_DISCOVERED, {
-                                ATTR_SERVICE: discovery_type,
-                                ATTR_DISCOVERED: {
-                                    ATTR_DISCOVER_DEVICES:
-                                        found_devices,
-                                    ATTR_DISCOVER_CONFIG: ''
-                                }
-                            }
-                    )
+                    discovery.load_platform(hass, component_name, DOMAIN, {
+                        ATTR_DISCOVER_DEVICES: found_devices
+                    }, config)
 
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
@@ -280,6 +262,17 @@ def _create_ha_name(name, channel, param):
     # Multiple param on object with multiple elements
     if channel > 1 and param is not None:
         return "{} {} {}".format(name, channel, param)
+
+
+def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
+                                    add_callback_devices):
+    """Helper to setup Homematic devices with discovery info."""
+    for config in discovery_info["devices"]:
+        ret = setup_hmdevice_entity_helper(hmdevicetype, config,
+                                           add_callback_devices)
+        if not ret:
+            _LOGGER.error("Setup discovery error with config %s", str(config))
+    return True
 
 
 def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
