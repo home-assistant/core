@@ -15,6 +15,7 @@ homematic:
 """
 import time
 import logging
+from functools import partial
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
     EVENT_PLATFORM_DISCOVERED, \
     ATTR_SERVICE, \
@@ -29,7 +30,6 @@ REQUIREMENTS = ['pyhomematic==0.1.6']
 
 HOMEMATIC = None
 HOMEMATIC_DEVICES = {}
-HOMEMATIC_AUTODETECT = False
 
 DISCOVER_SWITCHES = "homematic.switch"
 DISCOVER_LIGHTS = "homematic.light"
@@ -69,14 +69,13 @@ HM_ATTRIBUTE_SUPPORT = {
     "VOLTAGE": ["Voltage", {}]
 }
 
-_HM_DISCOVER_HASS = None
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Homematic component."""
-    global HOMEMATIC, HOMEMATIC_AUTODETECT, _HM_DISCOVER_HASS
+    global HOMEMATIC
 
     from pyhomematic import HMConnection
 
@@ -84,20 +83,18 @@ def setup(hass, config):
     local_port = config[DOMAIN].get("local_port", 8943)
     remote_ip = config[DOMAIN].get("remote_ip", None)
     remote_port = config[DOMAIN].get("remote_port", 2001)
-    autodetect = config[DOMAIN].get("autodetect", False)
 
     if remote_ip is None or local_ip is None:
         _LOGGER.error("Missing remote CCU/Homegear or local address")
         return False
 
     # Create server thread
-    HOMEMATIC_AUTODETECT = autodetect
-    _HM_DISCOVER_HASS = hass
+    bound_system_callback = partial(system_callback_handler, hass, config)
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
                              remoteport=remote_port,
-                             systemcallback=system_callback_handler,
+                             systemcallback=bound_system_callback,
                              interface_id="homeassistant")
 
     # Start server thread, connect to peer, initialize to receive events
@@ -111,8 +108,9 @@ def setup(hass, config):
 
 
 # pylint: disable=too-many-branches
-def system_callback_handler(src, *args):
+def system_callback_handler(hass, config, src, *args):
     """Callback handler."""
+    delay = config[DOMAIN].get("delay", 0.5)
     if src == 'newDevices':
         # pylint: disable=unused-variable
         (interface_id, dev_descriptions) = args
@@ -126,13 +124,14 @@ def system_callback_handler(src, *args):
         for dev in key_dict:
             if dev in HOMEMATIC_DEVICES:
                 for hm_element in HOMEMATIC_DEVICES[dev]:
-                    hm_element.link_homematic()
+                    hm_element.link_homematic(delay=delay)
             else:
                 devices_not_created.append(dev)
 
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
-        if HOMEMATIC_AUTODETECT and devices_not_created:
+        autodetect = config[DOMAIN].get("autodetect", False)
+        if autodetect and devices_not_created:
             for component_name, discovery_type in (
                     ('switch', DISCOVER_SWITCHES),
                     ('light', DISCOVER_LIGHTS),
@@ -152,12 +151,12 @@ def system_callback_handler(src, *args):
 
                     # Ensure component is loaded
                     homeassistant.bootstrap.setup_component(
-                            _HM_DISCOVER_HASS,
+                            hass,
                             component.DOMAIN,
                             config)
 
                     # Fire discovery event
-                    _HM_DISCOVER_HASS.bus.fire(
+                    hass.bus.fire(
                             EVENT_PLATFORM_DISCOVERED, {
                                 ATTR_SERVICE: discovery_type,
                                 ATTR_DISCOVERED: {
@@ -171,7 +170,7 @@ def system_callback_handler(src, *args):
             for dev in devices_not_created:
                 if dev in HOMEMATIC_DEVICES:
                     for hm_element in HOMEMATIC_DEVICES[dev]:
-                        hm_element.link_homematic(delay=1)
+                        hm_element.link_homematic(delay=delay)
 
 
 def _get_devices(device_type, keys):
@@ -368,7 +367,7 @@ class HMDevice(Entity):
 
         return attr
 
-    def link_homematic(self, delay=0):
+    def link_homematic(self, delay=0.5):
         """Connect to homematic."""
         # Does a HMDevice from pyhomematic exist?
         if self._address in HOMEMATIC.devices:
