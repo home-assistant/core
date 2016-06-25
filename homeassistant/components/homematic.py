@@ -46,10 +46,11 @@ HM_DEVICE_TYPES = {
     DISCOVER_LIGHTS: ["Dimmer"],
     DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
                        "RemoteMotion", "ThermostatWall", "AreaThermostat",
-                       "RotaryHandleSensor", "GongSensor"],
+                       "RotaryHandleSensor"],
     DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
     DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact", "Smoke", "SmokeV2",
-                              "Motion", "MotionV2", "RemoteMotion"],
+                              "Motion", "MotionV2", "RemoteMotion",
+                              "GongSensor"],
     DISCOVER_ROLLERSHUTTER: ["Blind"]
 }
 
