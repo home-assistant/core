@@ -84,6 +84,7 @@ def setup(hass, config):
     local_port = config[DOMAIN].get("local_port", 8943)
     remote_ip = config[DOMAIN].get("remote_ip", None)
     remote_port = config[DOMAIN].get("remote_port", 2001)
+    resolvenames = config[DOMAIN].get("resolvenames", False)
 
     if remote_ip is None or local_ip is None:
         _LOGGER.error("Missing remote CCU/Homegear or local address")
@@ -96,6 +97,7 @@ def setup(hass, config):
                              remote=remote_ip,
                              remoteport=remote_port,
                              systemcallback=bound_system_callback,
+                             resolvenames=resolvenames,
                              interface_id="homeassistant")
 
     # Start server thread, connect to peer, initialize to receive events
