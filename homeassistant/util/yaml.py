@@ -5,10 +5,15 @@ from collections import OrderedDict
 
 import glob
 import yaml
+try:
+    import keyring
+except ImportError:
+    keyring = None
 
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
+_SECRET_NAMESPACE = 'homeassistant'
 
 
 # pylint: disable=too-many-ancestors
@@ -119,10 +124,49 @@ def _env_var_yaml(loader, node):
         raise HomeAssistantError(node.value)
 
 
+# pylint: disable=protected-access
+def _secret_yaml(loader, node):
+    """Load secrets and embed it into the configuration YAML."""
+    # Create secret cache on loader and load secret.yaml
+    if not hasattr(loader, '_SECRET_CACHE'):
+        loader._SECRET_CACHE = {}
+
+    secret_path = os.path.join(os.path.dirname(loader.name), 'secrets.yaml')
+    if secret_path not in loader._SECRET_CACHE:
+        if os.path.isfile(secret_path):
+            loader._SECRET_CACHE[secret_path] = load_yaml(secret_path)
+            secrets = loader._SECRET_CACHE[secret_path]
+            if 'logger' in secrets:
+                logger = str(secrets['logger']).lower()
+                if logger == 'debug':
+                    _LOGGER.setLevel(logging.DEBUG)
+                else:
+                    _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
+                                  " but 'logger: %s' found", logger)
+                del secrets['logger']
+        else:
+            loader._SECRET_CACHE[secret_path] = None
+    secrets = loader._SECRET_CACHE[secret_path]
+
+    # Retrieve secret, first from secrets.yaml, then from keyring
+    if secrets is not None and node.value in secrets:
+        _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
+        return secrets[node.value]
+    elif keyring:
+        # do ome keyring stuff
+        pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
+        if pwd:
+            _LOGGER.debug('Secret %s retrieved from keyring.', node.value)
+            return pwd
+
+    _LOGGER.error('Secret %s not defined.', node.value)
+    raise HomeAssistantError(node.value)
+
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
 yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                                 _ordered_dict)
 yaml.SafeLoader.add_constructor('!env_var', _env_var_yaml)
+yaml.SafeLoader.add_constructor('!secret', _secret_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_list', _include_dir_list_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_list',
                                 _include_dir_merge_list_yaml)

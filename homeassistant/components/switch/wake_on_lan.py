@@ -65,6 +65,10 @@ class WOLSwitch(SwitchDevice):
         self._wol.send_magic_packet(self._mac_address)
         self.update_ha_state()
 
+    def turn_off(self):
+        """Do nothing."""
+        pass
+
     def update(self):
         """Check if device is on and update the state."""
         if platform.system().lower() == "windows":

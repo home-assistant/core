@@ -39,23 +39,39 @@ SERVICE_TEST_NETWORK = "test_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 
-COMMAND_CLASS_SWITCH_MULTILEVEL = 38
-COMMAND_CLASS_DOOR_LOCK = 98
-COMMAND_CLASS_SWITCH_BINARY = 37
-COMMAND_CLASS_SENSOR_BINARY = 48
+COMMAND_CLASS_WHATEVER = None
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
 COMMAND_CLASS_METER = 50
+COMMAND_CLASS_ALARM = 113
+COMMAND_CLASS_SWITCH_BINARY = 37
+COMMAND_CLASS_SENSOR_BINARY = 48
+COMMAND_CLASS_SWITCH_MULTILEVEL = 38
+COMMAND_CLASS_DOOR_LOCK = 98
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 67
+COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
 COMMAND_CLASS_BATTERY = 128
-COMMAND_CLASS_ALARM = 113  # 0x71
-COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
-COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68  # 0x44
+
+GENERIC_COMMAND_CLASS_WHATEVER = None
+GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
+GENERIC_COMMAND_CLASS_BINARY_SWITCH = 16
+GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 64
+GENERIC_COMMAND_CLASS_BINARY_SENSOR = 32
+GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR = 33
+GENERIC_COMMAND_CLASS_METER = 49
+GENERIC_COMMAND_CLASS_ALARM_SENSOR = 161
+GENERIC_COMMAND_CLASS_THERMOSTAT = 8
 
 SPECIFIC_DEVICE_CLASS_WHATEVER = None
+SPECIFIC_DEVICE_CLASS_NOT_USED = 0
 SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 1
+SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK = 2
 SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 3
+SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK = 3
 SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 4
+SPECIFIC_DEVICE_CLASS_SECURE_DOOR = 5
 SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 5
 SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 6
+SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON = 7
 SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 7
 
 GENRE_WHATEVER = None
@@ -71,51 +87,68 @@ TYPE_DECIMAL = "Decimal"
 # value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
+     [GENERIC_COMMAND_CLASS_WHATEVER],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
       COMMAND_CLASS_ALARM],
      TYPE_WHATEVER,
-     GENRE_USER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_USER),
     ('light',
+     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
+     [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
+      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE],
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
-     GENRE_USER,
-     [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
-      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE]),
+     GENRE_USER),
     ('switch',
+     [GENERIC_COMMAND_CLASS_BINARY_SWITCH],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
-     GENRE_USER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_USER),
     ('binary_sensor',
+     [GENERIC_COMMAND_CLASS_BINARY_SENSOR,
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
-     GENRE_USER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_USER),
     ('thermostat',
+     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
-     GENRE_WHATEVER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_WHATEVER),
     ('hvac',
+     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
      TYPE_WHATEVER,
-     GENRE_WHATEVER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_WHATEVER),
     ('lock',
+     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
+     [SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK,
+      SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK],
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
-     GENRE_USER,
-     SPECIFIC_DEVICE_CLASS_WHATEVER),
+     GENRE_USER),
     ('rollershutter',
-     [COMMAND_CLASS_SWITCH_MULTILEVEL],
-     TYPE_WHATEVER,
-     GENRE_USER,
+     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
      [SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A,
       SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B,
       SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C,
-      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR]),
+      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR],
+     [COMMAND_CLASS_WHATEVER],
+     TYPE_WHATEVER,
+     GENRE_USER),
+    ('garage_door',
+     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
+     [SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON,
+      SPECIFIC_DEVICE_CLASS_SECURE_DOOR],
+     [COMMAND_CLASS_SWITCH_BINARY],
+     TYPE_BOOL,
+     GENRE_USER)
 ]
 
 
@@ -244,25 +277,49 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
-             command_ids,
+             generic_device_class,
+             specific_device_class,
+             command_class,
              value_type,
-             value_genre,
-             specific_device_class) in DISCOVERY_COMPONENTS:
+             value_genre) in DISCOVERY_COMPONENTS:
 
-            if value.command_class not in command_ids:
+            _LOGGER.debug("Component=%s Node_id=%s query start",
+                          component, node.node_id)
+            if node.generic not in generic_device_class and \
+               None not in generic_device_class:
+                _LOGGER.debug("node.generic %s not None and in \
+                              generic_device_class %s",
+                              node.generic, generic_device_class)
                 continue
-            if value_type is not None and value_type != value.type:
+            if node.specific not in specific_device_class and \
+               None not in specific_device_class:
+                _LOGGER.debug("node.specific %s is not None and in \
+                              specific_device_class %s", node.specific,
+                              specific_device_class)
                 continue
-            if value_genre is not None and value_genre != value.genre:
+            if value.command_class not in command_class and \
+               None not in command_class:
+                _LOGGER.debug("value.command_class %s is not None \
+                              and in command_class %s",
+                              value.command_class, command_class)
                 continue
-            if specific_device_class is not None and \
-               specific_device_class != node.specific:
+            if value_type != value.type and value_type is not None:
+                _LOGGER.debug("value.type %s != value_type %s",
+                              value.type, value_type)
+                continue
+            if value_genre != value.genre and value_genre is not None:
+                _LOGGER.debug("value.genre %s != value_genre %s",
+                              value.genre, value_genre)
                 continue
 
             # Configure node
-            _LOGGER.debug("Node_id=%s Value type=%s Genre=%s \
-                          Specific Device_class=%s", node.node_id,
-                          value.type, value.genre, specific_device_class)
+            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, \
+                          Specific_command_class=%s, \
+                          Command_class=%s, Value type=%s, \
+                          Genre=%s", node.node_id,
+                          node.generic, node.specific,
+                          value.command_class, value.type,
+                          value.genre)
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
