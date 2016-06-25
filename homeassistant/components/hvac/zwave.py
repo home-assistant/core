@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, abstract-method
 class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     """Represents a HeatControl hvac."""
 
