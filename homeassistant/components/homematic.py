@@ -17,11 +17,10 @@ import time
 import logging
 from functools import partial
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
-    ATTR_DISCOVERED, \
+    ATTR_DISCOVER_DEVICES, \
     STATE_UNKNOWN
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-import homeassistant.bootstrap
 
 DOMAIN = 'homematic'
 REQUIREMENTS = ['pyhomematic==0.1.6']
