@@ -180,9 +180,6 @@ lightify==1.0.3
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.0
 
-# homeassistant.components.sensor.swiss_hydrological_data
-lxml==3.6.0
-
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
