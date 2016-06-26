@@ -10,6 +10,7 @@ import logging
 import mimetypes
 import threading
 import re
+import ssl
 import voluptuous as vol
 
 import homeassistant.core as ha
@@ -35,6 +36,22 @@ CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
+
+# https://mozilla.github.io/server-side-tls/ssl-config-generator/
+SSL_VERSION = ssl.PROTOCOL_TLSv1
+CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
+          "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
+          "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
+          "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:" \
+          "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:" \
+          "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:" \
+          "ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:" \
+          "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:" \
+          "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:" \
+          "DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:" \
+          "ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:" \
+          "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
+          "AES256-SHA:DES-CBC3-SHA:!DSS"
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
@@ -294,7 +311,8 @@ class HomeAssistantWSGI(object):
         sock = eventlet.listen((self.server_host, self.server_port))
         if self.ssl_certificate:
             sock = eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
-                                     keyfile=self.ssl_key, server_side=True)
+                                     keyfile=self.ssl_key, server_side=True,
+                                     ssl_version=SSL_VERSION, ciphers=CIPHERS)
         wsgi.server(sock, self, log=_LOGGER)
 
     def dispatch_request(self, request):
