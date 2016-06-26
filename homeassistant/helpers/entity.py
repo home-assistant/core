@@ -125,6 +125,15 @@ class Entity(object):
         """Return True if unable to access real state of the entity."""
         return False
 
+    @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return False
+
     def update(self):
         """Retrieve latest state."""
         pass
@@ -190,7 +199,8 @@ class Entity(object):
                     state, attr[ATTR_UNIT_OF_MEASUREMENT])
             state = str(state)
 
-        return self.hass.states.set(self.entity_id, state, attr)
+        return self.hass.states.set(
+            self.entity_id, state, attr, self.force_update)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
