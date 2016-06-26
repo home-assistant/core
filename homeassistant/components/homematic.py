@@ -24,6 +24,7 @@ DOMAIN = 'homematic'
 REQUIREMENTS = ['pyhomematic==0.1.6']
 
 HOMEMATIC = None
+HOMEMATIC_LINK_DELAY = 0.5
 HOMEMATIC_DEVICES = {}
 
 DISCOVER_SWITCHES = "homematic.switch"
@@ -71,7 +72,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup(hass, config):
     """Setup the Homematic component."""
-    global HOMEMATIC
+    global HOMEMATIC, HOMEMATIC_LINK_DELAY
 
     from pyhomematic import HMConnection
 
@@ -80,6 +81,7 @@ def setup(hass, config):
     remote_ip = config[DOMAIN].get("remote_ip", None)
     remote_port = config[DOMAIN].get("remote_port", 2001)
     resolvenames = config[DOMAIN].get("resolvenames", False)
+    HOMEMATIC_LINK_DELAY = config[DOMAIN].get("delay", 0.5)
 
     if remote_ip is None or local_ip is None:
         _LOGGER.error("Missing remote CCU/Homegear or local address")
@@ -108,27 +110,30 @@ def setup(hass, config):
 # pylint: disable=too-many-branches
 def system_callback_handler(hass, config, src, *args):
     """Callback handler."""
-    delay = config[DOMAIN].get("delay", 0.5)
     if src == 'newDevices':
+        _LOGGER.debug("newDevices with: %s", str(args))
         # pylint: disable=unused-variable
         (interface_id, dev_descriptions) = args
         key_dict = {}
         # Get list of all keys of the devices (ignoring channels)
         for dev in dev_descriptions:
             key_dict[dev['ADDRESS'].split(':')[0]] = True
+
         # Connect devices already created in HA to pyhomematic and
         # add remaining devices to list
         devices_not_created = []
         for dev in key_dict:
             if dev in HOMEMATIC_DEVICES:
                 for hm_element in HOMEMATIC_DEVICES[dev]:
-                    hm_element.link_homematic(delay=delay)
+                    hm_element.link_homematic()
             else:
                 devices_not_created.append(dev)
 
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
         autodetect = config[DOMAIN].get("autodetect", False)
+        _LOGGER.debug("Autodetect is %s / unknown device: %s", str(autodetect),
+                      str(devices_not_created))
         if autodetect and devices_not_created:
             for component_name, discovery_type in (
                     ('switch', DISCOVER_SWITCHES),
@@ -148,11 +153,6 @@ def system_callback_handler(hass, config, src, *args):
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
-
-            for dev in devices_not_created:
-                if dev in HOMEMATIC_DEVICES:
-                    for hm_element in HOMEMATIC_DEVICES[dev]:
-                        hm_element.link_homematic(delay=delay)
 
 
 def _get_devices(device_type, keys):
@@ -269,6 +269,7 @@ def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
                                            add_callback_devices)
         if not ret:
             _LOGGER.error("Setup discovery error with config %s", str(config))
+
     return True
 
 
@@ -284,6 +285,8 @@ def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
                       "'address' missing in configuration.", address)
         return False
 
+    _LOGGER.debug("Add device %s from config: %s",
+                  str(hmdevicetype), str(config))
     # Create a new HA homematic object
     new_device = hmdevicetype(config)
     if address not in HOMEMATIC_DEVICES:
@@ -292,6 +295,10 @@ def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
 
     # Add to HA
     add_callback_devices([new_device])
+
+    # HM is connected
+    if address in HOMEMATIC.devices:
+        return new_device.link_homematic()
     return True
 
 
@@ -360,8 +367,12 @@ class HMDevice(Entity):
 
         return attr
 
-    def link_homematic(self, delay=0.5):
+    def link_homematic(self):
         """Connect to homematic."""
+        # device is already linked
+        if self._connected:
+            return True
+
         # Does a HMDevice from pyhomematic exist?
         if self._address in HOMEMATIC.devices:
             # Init
@@ -374,10 +385,10 @@ class HMDevice(Entity):
                 try:
                     # Init datapoints of this object
                     self._init_data_struct()
-                    if delay:
+                    if HOMEMATIC_LINK_DELAY:
                         # We delay / pause loading of data to avoid overloading
                         # of CCU / Homegear when doing auto detection
-                        time.sleep(delay)
+                        time.sleep(HOMEMATIC_LINK_DELAY)
                     self._load_init_data_from_hm()
                     _LOGGER.debug("%s datastruct: %s",
                                   self._name, str(self._data))
@@ -388,23 +399,21 @@ class HMDevice(Entity):
                 # pylint: disable=broad-except
                 except Exception as err:
                     self._connected = False
-                    self._available = False
                     _LOGGER.error("Exception while linking %s: %s",
                                   self._address, str(err))
             else:
                 _LOGGER.critical("Delink %s object from HM!", self._name)
                 self._connected = False
-                self._available = False
 
             # Update HA
-            _LOGGER.debug("%s linking down, send update_ha_state", self._name)
+            _LOGGER.debug("%s linking done, send update_ha_state", self._name)
             self.update_ha_state()
         else:
             _LOGGER.debug("%s not found in HOMEMATIC.devices", self._address)
 
     def _hm_event_callback(self, device, caller, attribute, value):
         """Handle all pyhomematic device events."""
-        _LOGGER.debug("%s receive event '%s' value: %s", self._name,
+        _LOGGER.debug("%s received event '%s' value: %s", self._name,
                       attribute, value)
         have_change = False
 
