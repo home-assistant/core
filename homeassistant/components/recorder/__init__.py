@@ -161,7 +161,8 @@ def get_model(model_name):
     return getattr(models, model_name)
 
 
-def log_error(e, retry_wait=0, rollback=True, message="Error during query: %s"):
+def log_error(e, retry_wait=0, rollback=True,
+              message="Error during query: %s"):
     """Log about SQLAlchemy errors in a sane manner."""
     import sqlalchemy.exc
     if not isinstance(e, sqlalchemy.exc.OperationalError):
@@ -244,7 +245,8 @@ class Recorder(threading.Thread):
                     if event.event_type == EVENT_STATE_CHANGED:
                         States.record_state(
                             Session,
-                            event.data['entity_id'], event.data.get('new_state'),
+                            event.data['entity_id'],
+                            event.data.get('new_state'),
                             event_id)
                         break
                 except sqlalchemy.exc.OperationalError as e:
