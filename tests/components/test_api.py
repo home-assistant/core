@@ -137,6 +137,27 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(400, req.status_code)
 
     # pylint: disable=invalid-name
+    def test_api_state_change_push(self):
+        """Test if we can push a change the state of an entity."""
+        hass.states.set("test.test", "not_to_be_set")
+
+        events = []
+        hass.bus.listen(const.EVENT_STATE_CHANGED, events.append)
+
+        requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
+                      data=json.dumps({"state": "not_to_be_set"}),
+                      headers=HA_HEADERS)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(0, len(events))
+
+        requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
+                      data=json.dumps({"state": "not_to_be_set",
+                                       "force_update": True}),
+                      headers=HA_HEADERS)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
+    # pylint: disable=invalid-name
     def test_api_fire_event_with_no_data(self):
         """Test if the API allows us to fire an event."""
         test_value = []
