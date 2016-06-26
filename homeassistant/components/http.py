@@ -39,6 +39,7 @@ DATA_API_PASSWORD = 'api_password'
 
 # TLS configuation follows the best-practice guidelines
 # specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
+# Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_TLSv1
 CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
