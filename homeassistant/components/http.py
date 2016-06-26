@@ -37,7 +37,8 @@ CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/
+# TLS configuation follows the best-practice guidelines
+# specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
 SSL_VERSION = ssl.PROTOCOL_TLSv1
 CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
