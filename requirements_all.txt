@@ -23,7 +23,7 @@ SoCo==0.11.1
 TwitterAPI==2.4.1
 
 # homeassistant.components.http
-Werkzeug==0.11.5
+Werkzeug==0.11.10
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.4
