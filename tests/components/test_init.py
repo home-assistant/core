@@ -131,7 +131,7 @@ class TestComponentsCore(unittest.TestCase):
         assert state.attributes.get('hello') == 'world'
 
     @patch('homeassistant.components._LOGGER.error')
-    @patch('homeassistant.bootstrap.process_ha_core_config')
+    @patch('homeassistant.config.process_ha_core_config')
     def test_reload_core_with_wrong_conf(self, mock_process, mock_error):
         """Test reload core conf service."""
         with TemporaryDirectory() as conf_dir:

@@ -49,7 +49,7 @@ class TestPackageUtil(unittest.TestCase):
         self.assertTrue(package.check_package_exists(
             TEST_NEW_REQ, self.lib_dir))
 
-        bootstrap.mount_local_lib_path(self.tmp_dir.name)
+        bootstrap._mount_local_lib_path(self.tmp_dir.name)
 
         try:
             import pyhelloworld3
