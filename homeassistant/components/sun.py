@@ -12,7 +12,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     track_point_in_utc_time, track_utc_time_change)
 from homeassistant.util import dt as dt_util
-from homeassistant.util import location as location_util
 from homeassistant.const import CONF_ELEVATION
 
 REQUIREMENTS = ['astral==1.2']
@@ -108,7 +107,7 @@ def setup(hass, config):
 
     elevation = platform_config.get(CONF_ELEVATION)
     if elevation is None:
-        elevation = location_util.elevation(latitude, longitude)
+        elevation = hass.config.elevation or 0
 
     from astral import Location
 
