@@ -681,6 +681,7 @@ class Config(object):
         """Initialize a new config object."""
         self.latitude = None
         self.longitude = None
+        self.elevation = None
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None

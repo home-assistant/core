@@ -10,7 +10,7 @@ from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.temperature import convert
 
-REQUIREMENTS = ['bluepy_devices>=0.2.0']
+REQUIREMENTS = ['bluepy_devices==0.2.0']
 
 CONF_MAC = 'mac'
 CONF_DEVICES = 'devices'

@@ -1,16 +1,16 @@
 """The tests for the forecast.io platform."""
-import json
 import re
-import os
 import unittest
 from unittest.mock import MagicMock, patch
 
 import forecastio
-import httpretty
 from requests.exceptions import HTTPError
+import requests_mock
 
 from homeassistant.components.sensor import forecast
 from homeassistant import core as ha
+
+from tests.common import load_fixture
 
 
 class TestForecastSetup(unittest.TestCase):
@@ -48,29 +48,14 @@ class TestForecastSetup(unittest.TestCase):
         response = forecast.setup_platform(self.hass, self.config, MagicMock())
         self.assertFalse(response)
 
-    @httpretty.activate
+    @requests_mock.Mocker()
     @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
-    def test_setup(self, mock_get_forecast):
+    def test_setup(self, m, mock_get_forecast):
         """Test for successfully setting up the forecast.io platform."""
-        def load_fixture_from_json():
-            cwd = os.path.dirname(__file__)
-            fixture_path = os.path.join(cwd, '..', 'fixtures', 'forecast.json')
-            with open(fixture_path) as file:
-                content = json.load(file)
-            return json.dumps(content)
-
-        # Mock out any calls to the actual API and
-        # return the fixture json instead
-        uri = 'api.forecast.io\/forecast\/(\w+)\/(-?\d+\.?\d*),(-?\d+\.?\d*)'
-        httpretty.register_uri(
-            httpretty.GET,
-            re.compile(uri),
-            body=load_fixture_from_json(),
-        )
-        # The following will raise an error if the regex for the mock was
-        # incorrect and we actually try to go out to the internet.
-        httpretty.HTTPretty.allow_net_connect = False
-
+        uri = ('https://api.forecast.io\/forecast\/(\w+)\/'
+               '(-?\d+\.?\d*),(-?\d+\.?\d*)')
+        m.get(re.compile(uri),
+              text=load_fixture('forecast.json'))
         forecast.setup_platform(self.hass, self.config, MagicMock())
         self.assertTrue(mock_get_forecast.called)
         self.assertEqual(mock_get_forecast.call_count, 1)
