@@ -6,3 +6,4 @@ pytest-cov>=2.2.1
 pytest-timeout>=1.0.0
 pytest-capturelog>=0.7
 pydocstyle>=1.0.0
+requests_mock>=1.0
