@@ -1,6 +1,5 @@
 """Test the bootstrapping."""
 # pylint: disable=too-many-public-methods,protected-access
-import os
 import tempfile
 from unittest import mock
 import threading
@@ -8,10 +7,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant import bootstrap, loader
-from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
-                                 CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 
 from tests.common import get_test_home_assistant, MockModule, MockPlatform
@@ -24,19 +20,16 @@ class TestBootstrap:
 
     def setup_method(self, method):
         """Setup the test."""
+        self.backup_cache = loader._COMPONENT_CACHE
+
         if method == self.test_from_config_file:
             return
 
         self.hass = get_test_home_assistant()
-        self.backup_cache = loader._COMPONENT_CACHE
 
     def teardown_method(self, method):
         """Clean up."""
         dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
-
-        if method == self.test_from_config_file:
-            return
-
         self.hass.stop()
         loader._COMPONENT_CACHE = self.backup_cache
 
@@ -50,70 +43,10 @@ class TestBootstrap:
                 fp.write('{}:\n'.format(comp).encode('utf-8'))
             fp.flush()
 
-            hass = bootstrap.from_config_file(fp.name)
+            self.hass = bootstrap.from_config_file(fp.name)
 
         components.append('group')
-        assert sorted(components) == sorted(hass.config.components)
-
-    def test_remove_lib_on_upgrade(self):
-        """Test removal of library on upgrade."""
-        with tempfile.TemporaryDirectory() as config_dir:
-            version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'deps')
-            check_file = os.path.join(lib_dir, 'check')
-
-            with open(version_path, 'wt') as outp:
-                outp.write('0.7.0')
-
-            os.mkdir(lib_dir)
-
-            with open(check_file, 'w'):
-                pass
-
-            self.hass.config.config_dir = config_dir
-
-            assert os.path.isfile(check_file)
-            bootstrap.process_ha_config_upgrade(self.hass)
-            assert not os.path.isfile(check_file)
-
-    def test_not_remove_lib_if_not_upgrade(self):
-        """Test removal of library with no upgrade."""
-        with tempfile.TemporaryDirectory() as config_dir:
-            version_path = os.path.join(config_dir, '.HA_VERSION')
-            lib_dir = os.path.join(config_dir, 'deps')
-            check_file = os.path.join(lib_dir, 'check')
-
-            with open(version_path, 'wt') as outp:
-                outp.write(__version__)
-
-            os.mkdir(lib_dir)
-
-            with open(check_file, 'w'):
-                pass
-
-            self.hass.config.config_dir = config_dir
-
-            bootstrap.process_ha_config_upgrade(self.hass)
-
-            assert os.path.isfile(check_file)
-
-    def test_entity_customization(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
-
-        bootstrap.process_ha_core_config(self.hass, config)
-
-        entity = Entity()
-        entity.entity_id = 'test.test'
-        entity.hass = self.hass
-        entity.update_ha_state()
-
-        state = self.hass.states.get('test.test')
-
-        assert state.attributes['hidden']
+        assert sorted(components) == sorted(self.hass.config.components)
 
     def test_handle_setup_circular_dependency(self):
         """Test the setup of circular dependencies."""
@@ -303,8 +236,7 @@ class TestBootstrap:
         assert not bootstrap._setup_component(self.hass, 'comp', None)
         assert 'comp' not in self.hass.config.components
 
-    @mock.patch('homeassistant.bootstrap.process_ha_core_config')
-    def test_home_assistant_core_config_validation(self, mock_process):
+    def test_home_assistant_core_config_validation(self):
         """Test if we pass in wrong information for HA conf."""
         # Extensive HA conf validation testing is done in test_config.py
         assert None is bootstrap.from_config_dict({
@@ -312,7 +244,6 @@ class TestBootstrap:
                 'latitude': 'some string'
             }
         })
-        assert not mock_process.called
 
     def test_component_setup_with_validation_and_dependency(self):
         """Test all config is passed to dependencies."""

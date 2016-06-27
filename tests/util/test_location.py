@@ -61,8 +61,7 @@ class TestLocationUtil(TestCase):
         assert round(miles, 2) == DISTANCE_MILES
 
     @requests_mock.Mocker()
-    @patch('homeassistant.util.location.elevation', return_value=101)
-    def test_detect_location_info_freegeoip(self, m, mock_elevation):
+    def test_detect_location_info_freegeoip(self, m):
         """Test detect location info using freegeoip."""
         m.get(location_util.FREEGEO_API,
               text=load_fixture('freegeoip.io.json'))
@@ -81,13 +80,10 @@ class TestLocationUtil(TestCase):
         assert info.latitude == 32.8594
         assert info.longitude == -117.2073
         assert info.use_fahrenheit
-        assert info.elevation == 101
 
     @requests_mock.Mocker()
-    @patch('homeassistant.util.location.elevation', return_value=101)
     @patch('homeassistant.util.location._get_freegeoip', return_value=None)
-    def test_detect_location_info_ipapi(self, mock_req, mock_freegeoip,
-                                        mock_elevation):
+    def test_detect_location_info_ipapi(self, mock_req, mock_freegeoip):
         """Test detect location info using freegeoip."""
         mock_req.get(location_util.IP_API,
                      text=load_fixture('ip-api.com.json'))
@@ -106,7 +102,6 @@ class TestLocationUtil(TestCase):
         assert info.latitude == 32.8594
         assert info.longitude == -117.2073
         assert info.use_fahrenheit
-        assert info.elevation == 101
 
     @patch('homeassistant.util.location.elevation', return_value=0)
     @patch('homeassistant.util.location._get_freegeoip', return_value=None)

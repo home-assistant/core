@@ -27,7 +27,7 @@ CONVERGENCE_THRESHOLD = 1e-12
 LocationInfo = collections.namedtuple(
     "LocationInfo",
     ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
-     'city', 'zip_code', 'time_zone', 'latitude', 'longitude', 'elevation',
+     'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
      'use_fahrenheit'])
 
 
@@ -46,8 +46,6 @@ def detect_location_info():
     # territories of American Samoa and the U.S. Virgin Islands
     data['use_fahrenheit'] = data['country_code'] in (
         'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
-
-    data['elevation'] = elevation(data['latitude'], data['longitude'])
 
     return LocationInfo(**data)
 
