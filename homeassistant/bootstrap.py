@@ -220,7 +220,7 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
 
     try:
         conf_util.process_ha_core_config(hass, core_config)
-    except vol.MultipleInvalid as ex:
+    except vol.Invalid as ex:
         cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
         return None
 

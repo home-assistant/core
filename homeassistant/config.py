@@ -140,10 +140,10 @@ def create_default_config(config_dir, detect_location=True):
                 config_file.write("# {}\n".format(description))
                 config_file.write("{}\n\n".format(component))
 
-        return config_path
-
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
+
+        return config_path
 
     except IOError:
         print('Unable to create default configuration file', config_path)
