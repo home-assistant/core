@@ -35,6 +35,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
+    hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.temperature_unit = TEMP_CELSIUS
 
@@ -103,6 +104,13 @@ def ensure_sun_set(hass):
     if not sun.is_on(hass):
         return
     fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
+
+
+def load_fixture(filename):
+    """Helper to load a fixture."""
+    path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
+    with open(path) as fp:
+        return fp.read()
 
 
 def mock_state_change_event(hass, new_state, old_state=None):

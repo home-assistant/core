@@ -40,7 +40,9 @@ class TestBootstrap:
         self.hass.stop()
         loader._COMPONENT_CACHE = self.backup_cache
 
-    def test_from_config_file(self):
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=None)
+    def test_from_config_file(self, mock_detect):
         """Test with configuration file."""
         components = ['browser', 'conversation', 'script']
         with tempfile.NamedTemporaryFile() as fp:
@@ -50,9 +52,8 @@ class TestBootstrap:
 
             hass = bootstrap.from_config_file(fp.name)
 
-            components.append('group')
-
-            assert sorted(components) == sorted(hass.config.components)
+        components.append('group')
+        assert sorted(components) == sorted(hass.config.components)
 
     def test_remove_lib_on_upgrade(self):
         """Test removal of library on upgrade."""

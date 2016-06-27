@@ -11,9 +11,10 @@ from homeassistant.core import DOMAIN, HomeAssistantError
 import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
-    CONF_TIME_ZONE)
+    CONF_TIME_ZONE, CONF_ELEVATION)
+from homeassistant.util import location as location_util
 
-from tests.common import get_test_config_dir
+from tests.common import get_test_config_dir, load_fixture
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -108,9 +109,17 @@ class TestConfig(unittest.TestCase):
             [('hello', 0), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=location_util.LocationInfo(
+                    '0.0.0.0', 'US', 'United States', 'CA', 'California',
+                    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+                    -117.2073, 101, True))
     @mock.patch('builtins.print')
-    def test_create_default_config_detect_location(self, mock_print):
+    def test_create_default_config_detect_location(self, m, mock_print):
         """Test that detect location sets the correct config keys."""
+        m.get(location_util.FREEGEO_API,
+              text=load_fixture('freegeoip.io.json'))
+
         config_util.ensure_config_exists(CONFIG_DIR)
 
         config = config_util.load_yaml_config_file(YAML_PATH)
@@ -120,15 +129,16 @@ class TestConfig(unittest.TestCase):
         ha_conf = config[DOMAIN]
 
         expected_values = {
-            CONF_LATITUDE: 2.0,
-            CONF_LONGITUDE: 1.0,
+            CONF_LATITUDE: 32.8594,
+            CONF_LONGITUDE: -117.2073,
+            CONF_ELEVATION: 101,
             CONF_TEMPERATURE_UNIT: 'F',
             CONF_NAME: 'Home',
             CONF_TIME_ZONE: 'America/Los_Angeles'
         }
 
-        self.assertEqual(expected_values, ha_conf)
-        self.assertTrue(mock_print.called)
+        assert expected_values == ha_conf
+        assert mock_print.called
 
     @mock.patch('builtins.print')
     def test_create_default_config_returns_none_if_write_error(self,

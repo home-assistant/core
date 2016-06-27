@@ -8,7 +8,7 @@ import voluptuous as vol
 import homeassistant.util.location as loc_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
-    CONF_TIME_ZONE, CONF_CUSTOMIZE)
+    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +26,7 @@ DEFAULT_CONFIG = (
     (CONF_LATITUDE, None, 'latitude', 'Location required to calculate the time'
      ' the sun rises and sets'),
     (CONF_LONGITUDE, None, 'longitude', None),
+    (CONF_ELEVATION, 0, 'elevation', 'Impacts weather/sunrise data'),
     (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
@@ -61,6 +62,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_NAME: vol.Coerce(str),
     CONF_LATITUDE: cv.latitude,
     CONF_LONGITUDE: cv.longitude,
+    CONF_ELEVATION: vol.Coerce(float),
     CONF_TEMPERATURE_UNIT: cv.temperature_unit,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
