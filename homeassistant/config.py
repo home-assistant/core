@@ -19,15 +19,16 @@ from homeassistant.util import dt as date_util, location as loc_util
 _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = 'configuration.yaml'
+VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 
 DEFAULT_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
      'running'),
-    (CONF_LATITUDE, None, 'latitude', 'Location required to calculate the time'
+    (CONF_LATITUDE, 0, 'latitude', 'Location required to calculate the time'
      ' the sun rises and sets'),
-    (CONF_LONGITUDE, None, 'longitude', None),
+    (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
     (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
@@ -42,7 +43,7 @@ DEFAULT_COMPONENTS = {
     'history:': 'Enables support for tracking state changes over time.',
     'logbook:': 'View all events in a logbook',
     'sun:': 'Track the sun',
-    'sensor:\n   platform: yr': 'Prediction of weather',
+    'sensor:\n   platform: yr': 'Weather Prediction',
 }
 
 
@@ -101,6 +102,7 @@ def create_default_config(config_dir, detect_location=True):
     Return path to new config file if success, None if failed.
     """
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
+    version_path = os.path.join(config_dir, VERSION_FILE)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CONFIG}
 
@@ -140,6 +142,9 @@ def create_default_config(config_dir, detect_location=True):
 
         return config_path
 
+        with open(version_path, 'wt') as version_file:
+            version_file.write(__version__)
+
     except IOError:
         print('Unable to create default configuration file', config_path)
         return None
@@ -167,7 +172,7 @@ def load_yaml_config_file(config_path):
 
 def process_ha_config_upgrade(hass):
     """Upgrade config if necessary."""
-    version_path = hass.config.path('.HA_VERSION')
+    version_path = hass.config.path(VERSION_FILE)
 
     try:
         with open(version_path, 'rt') as inp:
@@ -192,6 +197,7 @@ def process_ha_config_upgrade(hass):
 
 def process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the config."""
+    # pylint: disable=too-many-branches
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 
@@ -218,10 +224,15 @@ def process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    set_customize(config.get(CONF_CUSTOMIZE))
+    set_customize(config.get(CONF_CUSTOMIZE) or {})
 
     if CONF_TEMPERATURE_UNIT in config:
         hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
+
+    # Shortcut if no auto-detection necessary
+    if None not in (hac.latitude, hac.longitude, hac.temperature_unit,
+                    hac.time_zone, hac.elevation):
+        return
 
     discovered = []
 
@@ -243,10 +254,10 @@ def process_ha_core_config(hass, config):
         if hac.temperature_unit is None:
             if info.use_fahrenheit:
                 hac.temperature_unit = TEMP_FAHRENHEIT
+                discovered.append(('temperature_unit', 'F'))
             else:
                 hac.temperature_unit = TEMP_CELSIUS
-            discovered.append(('temperature_unit',
-                               'F' if info.use_fahrenheit else 'C'))
+                discovered.append(('temperature_unit', 'C'))
 
         if hac.location_name is None:
             hac.location_name = info.city
@@ -256,11 +267,13 @@ def process_ha_core_config(hass, config):
             set_time_zone(info.time_zone)
             discovered.append(('time_zone', info.time_zone))
 
-    if hac.elevation is None:
+    if hac.elevation is None and hac.latitude is not None and \
+       hac.longitude is not None:
         elevation = loc_util.elevation(hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 
-    _LOGGER.warning(
-        'Incomplete core config. Auto detected %s',
-        ', '.join('{}: {}'.format(key, val) for key, val in discovered))
+    if discovered:
+        _LOGGER.warning(
+            'Incomplete core config. Auto detected %s',
+            ', '.join('{}: {}'.format(key, val) for key, val in discovered))
