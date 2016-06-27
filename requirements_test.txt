@@ -7,4 +7,3 @@ pytest-timeout>=1.0.0
 pytest-capturelog>=0.7
 betamax==0.7.0
 pydocstyle>=1.0.0
-httpretty==0.8.14
