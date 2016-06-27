@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.4.1', 'lxml==3.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.hydrodaten.admin.ch/en/'
@@ -148,7 +148,7 @@ class HydrologicalData(object):
 
         try:
             tables = BeautifulSoup(response.content,
-                                   'lxml').findChildren('table')
+                                   'html.parser').findChildren('table')
             rows = tables[0].findChildren(['th', 'tr'])
 
             details = []
