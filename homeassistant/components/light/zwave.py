@@ -184,16 +184,6 @@ class ZwaveColorLight(ZwaveDimmer):
 
         super().__init__(value)
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        # In the case of a color changing light, use only the node name to
-        # generate the friendly device name. Currently color changing bulbs
-        # have a one node to one entity relationship, and the entity will
-        # include both the dimmer and the color zwave value. This allows a
-        # friendlier name assignment in this case.
-        return zwave.node_name(self._value.node)
-
     def update_properties(self):
         """Update internal properties based on zwave values."""
         super().update_properties()

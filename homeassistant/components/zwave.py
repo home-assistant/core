@@ -170,7 +170,7 @@ def _obj_to_dict(obj):
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
-def node_name(node):
+def _node_name(node):
     """Return the name of the node."""
     return node.name or "{} {}".format(
         node.manufacturer_name, node.product_name)
@@ -178,7 +178,7 @@ def node_name(node):
 
 def _value_name(value):
     """Return the name of the value."""
-    return "{} {}".format(node_name(value.node), value.label)
+    return "{} {}".format(_node_name(value.node), value.label)
 
 
 def _object_id(value):
@@ -338,7 +338,7 @@ def setup(hass, config):
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
-        name = node_name(node)
+        name = _node_name(node)
         object_id = "{}_{}".format(slugify(name), node.node_id)
 
         hass.bus.fire(EVENT_SCENE_ACTIVATED, {
