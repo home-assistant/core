@@ -41,7 +41,7 @@ blinkstick==1.1.7
 blockchain==1.3.3
 
 # homeassistant.components.thermostat.eq3btsmart
-# bluepy_devices>=0.2.0
+# bluepy_devices==0.2.0
 
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
@@ -245,7 +245,7 @@ pyasn1==0.1.9
 pychromecast==0.7.2
 
 # homeassistant.components.media_player.cmus
-pycmus>=0.1.0
+pycmus==0.1.0
 
 # homeassistant.components.envisalink
 # homeassistant.components.zwave
