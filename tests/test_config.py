@@ -270,3 +270,42 @@ class TestConfig(unittest.TestCase):
         assert config.location_name == 'Huis'
         assert config.temperature_unit == TEMP_FAHRENHEIT
         assert config.time_zone.zone == 'America/New_York'
+
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=location_util.LocationInfo(
+                    '0.0.0.0', 'US', 'United States', 'CA', 'California',
+                    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+                    -117.2073, True))
+    @mock.patch('homeassistant.util.location.elevation', return_value=101)
+    def test_discovering_configuration(self, mock_detect, mock_elevation):
+        """Test auto discovery for missing core configs."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {})
+
+        assert config.latitude == 32.8594
+        assert config.longitude == -117.2073
+        assert config.elevation == 101
+        assert config.location_name == 'San Diego'
+        assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.time_zone.zone == 'America/Los_Angeles'
+
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=None)
+    @mock.patch('homeassistant.util.location.elevation', return_value=0)
+    def test_discovering_configuration_auto_detect_fails(self, mock_detect,
+                                                         mock_elevation):
+        """Test config remains unchanged if discovery fails."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {})
+
+        blankConfig = Config()
+        assert config.latitude == blankConfig.latitude
+        assert config.longitude == blankConfig.longitude
+        assert config.elevation == blankConfig.elevation
+        assert config.location_name == blankConfig.location_name
+        assert config.temperature_unit == blankConfig.temperature_unit
+        assert config.time_zone == blankConfig.time_zone
