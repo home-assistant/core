@@ -230,6 +230,8 @@ omit =
     homeassistant/components/upnp.py
     homeassistant/components/zeroconf.py
 
+    homeassistant/scripts/*.py
+
 
 [report]
 # Regexes for lines to exclude from consideration
