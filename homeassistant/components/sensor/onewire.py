@@ -109,7 +109,8 @@ class OneWire(Entity):
                 try:
                     temp = round(float(temp_read[0]), 1)
                 except ValueError:
-                    _LOGGER.warning('Invalid temperature value read from ' + self._device_file)
+                    _LOGGER.warning('Invalid temperature value read from ' +
+                                    self._device_file)
 
         if temp < -55 or temp > 125:
             return
