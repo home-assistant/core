@@ -40,7 +40,8 @@ DATA_API_PASSWORD = 'api_password'
 # TLS configuation follows the best-practice guidelines
 # specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
-SSL_VERSION = ssl.PROTOCOL_TLSv1
+SSL_VERSION = ssl.PROTOCOL_SSLv23
+SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_COMPRESSION
 CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
           "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
@@ -312,9 +313,11 @@ class HomeAssistantWSGI(object):
 
         sock = eventlet.listen((self.server_host, self.server_port))
         if self.ssl_certificate:
-            sock = eventlet.wrap_ssl(sock, certfile=self.ssl_certificate,
-                                     keyfile=self.ssl_key, server_side=True,
-                                     ssl_version=SSL_VERSION, ciphers=CIPHERS)
+            context = ssl.SSLContext(SSL_VERSION)
+            context.options |= SSL_OPTS
+            context.set_ciphers(CIPHERS)
+            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            sock = context.wrap_socket(sock, server_side=True)
         wsgi.server(sock, self, log=_LOGGER)
 
     def dispatch_request(self, request):
