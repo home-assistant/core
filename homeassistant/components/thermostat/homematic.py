@@ -6,13 +6,6 @@ https://home-assistant.io/components/thermostat.homematic/
 
 Important: For this platform to work the homematic component has to be
 properly configured.
-
-Configuration:
-
-thermostat:
-  - platform: homematic
-    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>" (optional)
 """
 
 import logging
@@ -28,14 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    if discovery_info:
-        return homematic.setup_hmdevice_discovery_helper(HMThermostat,
-                                                         discovery_info,
-                                                         add_callback_devices)
-    # Manual
-    return homematic.setup_hmdevice_entity_helper(HMThermostat,
-                                                  config,
-                                                  add_callback_devices)
+    if discovery_info is None:
+        return
+
+    return homematic.setup_hmdevice_discovery_helper(HMThermostat,
+                                                     discovery_info,
+                                                     add_callback_devices)
 
 
 # pylint: disable=abstract-method
