@@ -6,7 +6,8 @@ https://home-assistant.io/components/switch.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import convert
+from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
@@ -49,7 +50,7 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
-                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
+                utc_time = utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None
@@ -71,6 +72,13 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         self.vera_device.switch_off()
         self._state = STATE_OFF
         self.update_ha_state()
+
+    @property
+    def current_power_mwh(self):
+        """Current power usage in mWh."""
+        power = self.vera_device.power
+        if power:
+            return convert(power, float, 0.0) * 1000
 
     @property
     def is_on(self):
