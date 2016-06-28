@@ -163,7 +163,7 @@ https://github.com/w1ll1am23/pygooglevoice-sms/archive/7c5ee9969b97a7992fc86a753
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.influxdb
-influxdb==2.12.0
+influxdb==3.0.0
 
 # homeassistant.components.insteon_hub
 insteon_hub==0.4.5
