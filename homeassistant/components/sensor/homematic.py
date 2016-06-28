@@ -6,14 +6,6 @@ https://home-assistant.io/components/sensor.homematic/
 
 Important: For this platform to work the homematic component has to be
 properly configured.
-
-Configuration:
-
-sensor:
-  - platform: homematic
-    address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
-    name: <User defined name> (optional)
-    param: <Name of datapoint to us as sensor> (optional)
 """
 
 import logging
@@ -41,14 +33,12 @@ HM_UNIT_HA_CAST = {
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    if discovery_info:
-        return homematic.setup_hmdevice_discovery_helper(HMSensor,
-                                                         discovery_info,
-                                                         add_callback_devices)
-    # Manual
-    return homematic.setup_hmdevice_entity_helper(HMSensor,
-                                                  config,
-                                                  add_callback_devices)
+    if discovery_info is None:
+        return
+
+    return homematic.setup_hmdevice_discovery_helper(HMSensor,
+                                                     discovery_info,
+                                                     add_callback_devices)
 
 
 class HMSensor(homematic.HMDevice):
