@@ -3,6 +3,7 @@ source = homeassistant
 
 omit =
     homeassistant/__main__.py
+    homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
@@ -229,8 +230,6 @@ omit =
     homeassistant/components/thermostat/radiotherm.py
     homeassistant/components/upnp.py
     homeassistant/components/zeroconf.py
-
-    homeassistant/scripts/*.py
 
 
 [report]
