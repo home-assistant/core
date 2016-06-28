@@ -15,7 +15,7 @@ from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['websocket-client==0.35.0']
+REQUIREMENTS = ['websocket-client==0.37.0']
 SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
