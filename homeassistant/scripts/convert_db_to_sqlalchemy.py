@@ -90,8 +90,8 @@ def main():
     if not args.uri and (os.path.exists(dst_db) and not args.append):
         print("Fatal Error: New format database '{}' exists already - "
               "Remove it or use --append".format(dst_db))
-        print("Note: --append must maintain an ID mapping and is much slower and")
-        print("requires sufficient memory to track all event IDs")
+        print("Note: --append must maintain an ID mapping and is much slower")
+        print("and requires sufficient memory to track all event IDs")
         sys.exit(1)
 
     conn = sqlite3.connect(src_db)

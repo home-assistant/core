@@ -207,7 +207,8 @@ class Recorder(threading.Thread):
                             event_id)
                         break
                     except sqlalchemy.exc.OperationalError as e:
-                        log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+                        log_error(e, retry_wait=QUERY_RETRY_WAIT,
+                                  rollback=True)
 
             self.queue.task_done()
 
