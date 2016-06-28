@@ -28,7 +28,7 @@ def last_5_states(entity_id):
     entity_id = entity_id.lower()
 
     states = recorder.get_model('States')
-    return recorder.query_to_states(
+    return recorder.execute(
         recorder.query('States').filter(
             (states.entity_id == entity_id) &
             (states.last_changed == states.last_updated)
@@ -57,7 +57,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None):
         query = query.filter_by(entity_id=entity_id.lower())
 
     states = (
-        state for state in recorder.query_to_states(
+        state for state in recorder.execute(
             query.order_by(states.entity_id, states.last_updated))
         if _is_significant(state))
 
@@ -77,7 +77,7 @@ def state_changes_during_period(start_time, end_time=None, entity_id=None):
     if entity_id is not None:
         query = query.filter_by(entity_id=entity_id.lower())
 
-    states = recorder.query_to_states(
+    states = recorder.execute(
         query.order_by(states.entity_id, states.last_updated))
 
     return states_to_json(states, start_time, entity_id)
@@ -112,7 +112,7 @@ def get_states(utc_point_in_time, entity_ids=None, run=None):
     query = recorder.query('States').join(most_recent_state_ids, and_(
         states.state_id == most_recent_state_ids.c.max_state_id))
 
-    return recorder.query_to_states(query)
+    return recorder.execute(query)
 
 
 def states_to_json(states, start_time, entity_id):

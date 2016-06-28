@@ -97,7 +97,7 @@ class TestRecorder(unittest.TestCase):
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        states = recorder.query_to_states(
+        states = recorder.execute(
             recorder.query('States'))
 
         self.assertEqual(1, len(states))
@@ -122,7 +122,7 @@ class TestRecorder(unittest.TestCase):
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        db_events = recorder.query_to_events(
+        db_events = recorder.execute(
             recorder.query('Events').filter_by(
                 event_type=event_type))
 

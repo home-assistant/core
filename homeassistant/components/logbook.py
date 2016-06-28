@@ -100,7 +100,7 @@ class LogbookView(HomeAssistantView):
         query = recorder.query('Events').filter(
             (events.time_fired > start_day) &
             (events.time_fired < end_day))
-        events = recorder.query_to_events(query)
+        events = recorder.execute(query)
 
         return self.json(humanify(events))
 

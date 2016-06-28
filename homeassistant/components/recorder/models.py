@@ -2,16 +2,20 @@
 
 import json
 from datetime import datetime
+import logging
 
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
                         String, Text, distinct)
 from sqlalchemy.ext.declarative import declarative_base
 import homeassistant.util.dt as dt_util
+from homeassistant.core import Event, EventOrigin, State
 from homeassistant.remote import JSONEncoder
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Events(Base):
@@ -38,6 +42,20 @@ class Events(Base):
         session.commit()
 
         return dbevent.event_id
+
+    def to_native(self):
+        """Convert to a natve HA Event."""
+        try:
+            return Event(
+                self.event_type,
+                json.loads(self.event_data),
+                EventOrigin(self.origin),
+                dt_util.UTC.localize(self.time_fired)
+            )
+        except ValueError:
+            # When json.loads fails
+            _LOGGER.exception("Error converting to event: %s", self)
+            return None
 
 
 class States(Base):
@@ -85,6 +103,20 @@ class States(Base):
         session().add(dbstate)
         session().commit()
 
+    def to_native(self):
+        """Convert to an HA state object."""
+        try:
+            return State(
+                self.entity_id, self.state,
+                json.loads(self.attributes),
+                dt_util.UTC.localize(self.last_changed),
+                dt_util.UTC.localize(self.last_updated)
+            )
+        except ValueError:
+            # When json.loads fails
+            _LOGGER.exception("Error converting row to state: %s", self)
+            return None
+
 
 class RecorderRuns(Base):
     # pylint: disable=too-few-public-methods
@@ -113,3 +145,7 @@ class RecorderRuns(Base):
             query = query.filter(States.created < point_in_time)
 
         return [row.entity_id for row in query]
+
+    def to_native(self):
+        """Return self, native format is this model."""
+        return self

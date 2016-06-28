@@ -10,7 +10,6 @@ https://home-assistant.io/components/recorder/
 import logging
 import queue
 import threading
-import json
 import time
 from datetime import timedelta
 
@@ -20,7 +19,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
-from homeassistant.core import Event, EventOrigin, State
 from homeassistant.helpers.event import track_point_in_utc_time
 
 DOMAIN = "recorder"
@@ -35,7 +33,7 @@ CONF_PURGE_DAYS = "purge_days"
 
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
-QUERY_RETRY_WAIT = 1
+QUERY_RETRY_WAIT = 0.1
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -53,62 +51,21 @@ _LOGGER = logging.getLogger(__name__)
 Session = None
 
 
-def query_to_states(q):
-    """Given a query object, convert all results to an array of States."""
+def execute(q):
+    """Query the database and convert the objects to HA native form.
+
+    This method also retries a few times in the case of stale connections.
+    """
     import sqlalchemy.exc
     for _ in range(0, RETRIES):
         try:
             return [
                 row for row in
-                (row_to_state(row) for row in q)
+                (row.to_native() for row in q)
                 if row is not None]
         except sqlalchemy.exc.SQLAlchemyError as e:
             log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
     return []
-
-
-def query_to_events(q):
-    """Query the database and return a list of states."""
-    import sqlalchemy.exc
-    for _ in range(0, RETRIES):
-        try:
-            return [
-                row for row in
-                (row_to_event(row) for row in q)
-                if row is not None]
-        except sqlalchemy.exc.SQLAlchemyError as e:
-            log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
-    return []
-
-
-def row_to_state(row):
-    """Convert a database row to a state."""
-    try:
-        return State(
-            row.entity_id, row.state,
-            json.loads(row.attributes),
-            dt_util.UTC.localize(row.last_changed),
-            dt_util.UTC.localize(row.last_updated)
-        )
-    except ValueError:
-        # When json.loads fails
-        _LOGGER.exception("Error converting row to state: %s", row)
-        return None
-
-
-def row_to_event(row):
-    """Convert a databse row to an event."""
-    try:
-        return Event(
-            row.event_type,
-            json.loads(row.event_data),
-            EventOrigin(row.origin),
-            dt_util.UTC.localize(row.time_fired)
-        )
-    except ValueError:
-        # When json.loads fails
-        _LOGGER.exception("Error converting row to event: %s", row)
-        return None
 
 
 def run_information(point_in_time=None):
@@ -240,17 +197,17 @@ class Recorder(threading.Thread):
                 except sqlalchemy.exc.OperationalError as e:
                     log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
 
-            for _ in range(0, RETRIES):
-                try:
-                    if event.event_type == EVENT_STATE_CHANGED:
+            if event.event_type == EVENT_STATE_CHANGED:
+                for _ in range(0, RETRIES):
+                    try:
                         States.record_state(
                             Session,
                             event.data['entity_id'],
                             event.data.get('new_state'),
                             event_id)
                         break
-                except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+                    except sqlalchemy.exc.OperationalError as e:
+                        log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
 
             self.queue.task_done()
 
@@ -281,7 +238,6 @@ class Recorder(threading.Thread):
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
 
-        _LOGGER.info("Recorder database URI %s", self.db_url)
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
             self.engine = create_engine(
