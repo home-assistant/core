@@ -15,8 +15,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_CLOSE, SERVICE_MOVE_DOWN, SERVICE_MOVE_UP,
-    SERVICE_OPEN, SERVICE_STOP, STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, SERVICE_CLOSE, SERVICE_OPEN, SERVICE_STOP, STATE_CLOSED,
+    STATE_OPEN, STATE_UNKNOWN)
 from homeassistant.components import group
 
 DOMAIN = 'cover'
@@ -47,19 +47,19 @@ def is_closed(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
-def close_cover(hass, entity_id=None):
-    """Close all or a specified cover."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_CLOSE, data)
-
-
 def open_cover(hass, entity_id=None):
     """Open all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_OPEN, data)
 
 
-def stop(hass, entity_id=None):
+def close_cover(hass, entity_id=None):
+    """Close all or specified cover."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_CLOSE, data)
+
+
+def stop_cover(hass, entity_id=None):
     """Stop all or specified cover."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_STOP, data)
@@ -95,14 +95,6 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_cover_service,
                            descriptions.get(SERVICE_STOP),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_MOVE_UP,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_MOVE_UP),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_MOVE_DOWN,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_MOVE_DOWN),
                            schema=COVER_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_cover_service,
@@ -153,14 +145,6 @@ class CoverDevice(Entity):
         """Fully close the cover."""
         raise NotImplementedError()
 
-    def move_up(self, **kwargs):
-        """Move the cover up."""
-        raise NotImplementedError()
-
-    def move_down(self, **kwargs):
-        """Move the cover down."""
-        raise NotImplementedError()
-
-    def stop(self, **kwargs):
+    def stop_cover(self, **kwargs):
         """Stop the cover."""
         raise NotImplementedError()

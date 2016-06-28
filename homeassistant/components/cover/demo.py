@@ -24,6 +24,7 @@ class DemoCover(CoverDevice):
         """Initialize the cover."""
         self._name = name
         self._state = state
+        self._position = position
 
     @property
     def should_poll(self):
@@ -41,16 +42,26 @@ class DemoCover(CoverDevice):
         return self._position
 
     @property
+    def is_open(self):
+        """Return true if cover is closed."""
+        return self._state == STATE_OPEN
+
+    @property
     def is_closed(self):
         """Return true if cover is closed."""
         return self._state == STATE_CLOSED
 
-    def close_door(self, **kwargs):
+    def open_cover(self, **kwargs):
+        """Open the cover."""
+        self._state = STATE_OPEN
+        self.update_ha_state()
+
+    def close_cover(self, **kwargs):
         """Close the cover."""
         self._state = STATE_CLOSED
         self.update_ha_state()
 
-    def open_door(self, **kwargs):
-        """Open the cover."""
-        self._state = STATE_OPEN
+    def stop_cover(self, **kwargs):
+        """Stop the cover."""
+        self._state = STATE_CLOSED
         self.update_ha_state()

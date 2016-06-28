@@ -70,21 +70,21 @@ class SCSGateCover(CoverDevice):
         """
         return None
 
-    def move_up(self, **kwargs):
-        """Move the cover up."""
+    def open_cover(self, **kwargs):
+        """Open the cover."""
         from scsgate.tasks import RaiseRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             RaiseRollerShutterTask(target=self._scs_id))
 
-    def move_down(self, **kwargs):
-        """Move the cover down."""
+    def close_cover(self, **kwargs):
+        """Close the cover."""
         from scsgate.tasks import LowerRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             LowerRollerShutterTask(target=self._scs_id))
 
-    def stop(self, **kwargs):
+    def stop_cover(self, **kwargs):
         """Stop the cover."""
         from scsgate.tasks import HaltRollerShutterTask
 

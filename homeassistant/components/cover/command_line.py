@@ -35,20 +35,20 @@ class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, hass, name, command_up, command_down, command_stop,
+    def __init__(self, hass, name, command_open, command_close, command_stop,
                  command_state, value_template):
         """Initialize the cover."""
         self._hass = hass
         self._name = name
         self._state = None
-        self._command_up = command_up
-        self._command_down = command_down
+        self._command_open = command_open
+        self._command_close = command_close
         self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
 
     @staticmethod
-    def _move_cover(command):
+    def _send_cover_cmd(command):
         """Execute the actual commands."""
         _LOGGER.info('Running command: %s', command)
 
@@ -104,14 +104,14 @@ class CommandCover(CoverDevice):
                     self._hass, self._value_template, payload)
             self._state = int(payload)
 
-    def move_up(self, **kwargs):
-        """Move the cover up."""
-        self._move_cover(self._command_up)
+    def open_cover(self, **kwargs):
+        """Open the cover."""
+        self._send_cover_cmd(self._command_open)
 
-    def move_down(self, **kwargs):
-        """Move the cover down."""
-        self._move_cover(self._command_down)
+    def close_cover(self, **kwargs):
+        """Close the cover."""
+        self._send_cover_cmd(self._command_close)
 
-    def stop(self, **kwargs):
+    def stop_cover(self, **kwargs):
         """Stop the device."""
-        self._move_cover(self._command_stop)
+        self._send_cover_cmd(self._command_stop)
