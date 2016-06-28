@@ -62,10 +62,10 @@ class WinkGarageDoorDevice(GarageDoorDevice):
         """True if connection == True."""
         return self.wink.available
 
-    def close_door(self):
-        """Close the door."""
-        self.wink.set_state(0)
-
-    def open_door(self):
+    def open_cover(self):
         """Open the door."""
         self.wink.set_state(1)
+
+    def close_cover(self):
+        """Close the door."""
+        self.wink.set_state(0)

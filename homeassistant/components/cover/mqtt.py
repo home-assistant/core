@@ -120,7 +120,7 @@ class MqttCover(CoverDevice):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
-    def close_door(self):
+    def close_cover(self):
         """Close the cover."""
         mqtt.publish(self.hass, self._command_topic, self._service_close,
                      self._qos, self._retain)
@@ -129,8 +129,8 @@ class MqttCover(CoverDevice):
             self._state = False
             self.update_ha_state()
 
-    def open_door(self):
-        """Open the door."""
+    def open_cover(self):
+        """Open the cover."""
         mqtt.publish(self.hass, self._command_topic, self._service_open,
                      self._qos, self._retain)
         if self._optimistic:
