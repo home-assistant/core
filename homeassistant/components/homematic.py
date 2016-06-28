@@ -11,7 +11,6 @@ homematic:
   local_port: <Port for connection with Home Assistant>
   remote_ip: "<IP of Homegear / CCU>"
   remote_port: <Port of Homegear / CCU XML-RPC Server>
-  autodetect: "<True/False>" (optional, experimental, detect all devices)
 """
 import time
 import logging
@@ -119,22 +118,9 @@ def system_callback_handler(hass, config, src, *args):
         for dev in dev_descriptions:
             key_dict[dev['ADDRESS'].split(':')[0]] = True
 
-        # Connect devices already created in HA to pyhomematic and
-        # add remaining devices to list
-        devices_not_created = []
-        for dev in key_dict:
-            if dev in HOMEMATIC_DEVICES:
-                for hm_element in HOMEMATIC_DEVICES[dev]:
-                    hm_element.link_homematic()
-            else:
-                devices_not_created.append(dev)
-
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
-        autodetect = config[DOMAIN].get("autodetect", False)
-        _LOGGER.debug("Autodetect is %s / unknown device: %s", str(autodetect),
-                      str(devices_not_created))
-        if autodetect and devices_not_created:
+        if key_dict:
             for component_name, discovery_type in (
                     ('switch', DISCOVER_SWITCHES),
                     ('light', DISCOVER_LIGHTS),
@@ -143,8 +129,7 @@ def system_callback_handler(hass, config, src, *args):
                     ('sensor', DISCOVER_SENSORS),
                     ('thermostat', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
-                found_devices = _get_devices(discovery_type,
-                                             devices_not_created)
+                found_devices = _get_devices(discovery_type, key_dict)
 
                 # When devices of this type are found
                 # they are setup in HA and an event is fired
@@ -162,8 +147,6 @@ def _get_devices(device_type, keys):
 
     # run
     device_arr = []
-    if not keys:
-        keys = HOMEMATIC.devices
     for key in keys:
         device = HOMEMATIC.devices[key]
         if device.__class__.__name__ not in HM_DEVICE_TYPES[device_type]:
@@ -265,40 +248,16 @@ def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
                                     add_callback_devices):
     """Helper to setup Homematic devices with discovery info."""
     for config in discovery_info["devices"]:
-        ret = setup_hmdevice_entity_helper(hmdevicetype, config,
-                                           add_callback_devices)
-        if not ret:
-            _LOGGER.error("Setup discovery error with config %s", str(config))
+        _LOGGER.debug("Add device %s from config: %s",
+                      str(hmdevicetype), str(config))
 
-    return True
+        # create object and add to HA
+        new_device = hmdevicetype(config)
+        add_callback_devices([new_device])
 
+        # link to HM
+        new_device.link_homematic()
 
-def setup_hmdevice_entity_helper(hmdevicetype, config, add_callback_devices):
-    """Helper to setup Homematic devices."""
-    if HOMEMATIC is None:
-        _LOGGER.error('Error setting up HMDevice: Server not configured.')
-        return False
-
-    address = config.get('address', None)
-    if address is None:
-        _LOGGER.error("Error setting up device '%s': " +
-                      "'address' missing in configuration.", address)
-        return False
-
-    _LOGGER.debug("Add device %s from config: %s",
-                  str(hmdevicetype), str(config))
-    # Create a new HA homematic object
-    new_device = hmdevicetype(config)
-    if address not in HOMEMATIC_DEVICES:
-        HOMEMATIC_DEVICES[address] = []
-    HOMEMATIC_DEVICES[address].append(new_device)
-
-    # Add to HA
-    add_callback_devices([new_device])
-
-    # HM is connected
-    if address in HOMEMATIC.devices:
-        return new_device.link_homematic()
     return True
 
 
@@ -312,7 +271,6 @@ class HMDevice(Entity):
         self._address = config.get("address", None)
         self._channel = config.get("button", 1)
         self._state = config.get("param", None)
-        self._hidden = config.get("hidden", False)
         self._data = {}
         self._hmdevice = None
         self._connected = False
@@ -347,11 +305,6 @@ class HMDevice(Entity):
     def available(self):
         """Return True if device is available."""
         return self._available
-
-    @property
-    def hidden(self):
-        """Return True if the entity should be hidden from UIs."""
-        return self._hidden
 
     @property
     def device_state_attributes(self):

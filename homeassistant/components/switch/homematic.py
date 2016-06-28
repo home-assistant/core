@@ -6,14 +6,6 @@ https://home-assistant.io/components/switch.homematic/
 
 Important: For this platform to work the homematic component has to be
 properly configured.
-
-Configuration:
-
-switch:
-  - platform: homematic
-    address: <Homematic address for device> # e.g. "JEQ0XXXXXXX"
-    name: <User defined name> (optional)
-    button: n (integer of channel to map, device-dependent) (optional)
 """
 
 import logging
@@ -28,14 +20,12 @@ DEPENDENCIES = ['homematic']
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    if discovery_info:
-        return homematic.setup_hmdevice_discovery_helper(HMSwitch,
-                                                         discovery_info,
-                                                         add_callback_devices)
-    # Manual
-    return homematic.setup_hmdevice_entity_helper(HMSwitch,
-                                                  config,
-                                                  add_callback_devices)
+    if discovery_info is None:
+        return
+
+    return homematic.setup_hmdevice_discovery_helper(HMSwitch,
+                                                     discovery_info,
+                                                     add_callback_devices)
 
 
 class HMSwitch(homematic.HMDevice, SwitchDevice):
