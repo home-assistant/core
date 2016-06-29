@@ -61,4 +61,5 @@ class VeraLock(VeraDevice, LockDevice):
 
     def update(self):
         """Called by the vera device callback to update state."""
-        self._state = STATE_LOCKED if self.vera_device.is_locked(True) else STATE_UNLOCKED
+        self._state = (STATE_LOCKED if self.vera_device.is_locked(True)
+                       else STATE_UNLOCKED)
