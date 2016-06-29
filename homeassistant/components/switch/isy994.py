@@ -31,6 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not node.dimmable and (SWITCH_STRING in node.name or SWITCH_STRING in path):
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
+            logger.critical(node.name + '|' + path)
             devs.append(ISYSwitchDevice(node))
 
     # Import ISY doors programs

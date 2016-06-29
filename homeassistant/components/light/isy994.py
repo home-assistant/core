@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if node.dimmable and (LIGHT_STRING in node.name or LIGHT_STRING in path):
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
+            logger.critical(node.name + '|' + path)
             devs.append(ISYLightDevice(node))
 
     add_devices(devs)
