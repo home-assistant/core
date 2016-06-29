@@ -23,6 +23,8 @@ DISCOVER_SENSORS = "isy994.sensors"
 ISY = None
 SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
+LIGHT_STRING = 'Light'
+SWITCH_STRING = 'Switch'
 CONF_TLS_VER = 'tls'
 
 _LOGGER = logging.getLogger(__name__)
