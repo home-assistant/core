@@ -12,6 +12,7 @@ from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup cover controlled by shell commands."""
     covers = config.get('covers', {})
