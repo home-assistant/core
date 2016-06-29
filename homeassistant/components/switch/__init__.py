@@ -42,20 +42,6 @@ ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wemo.DISCOVER_SWITCHES: 'wemo',
-    wink.DISCOVER_SWITCHES: 'wink',
-    isy994.DISCOVER_SWITCHES: 'isy994',
-    insteon_hub.DISCOVERY[DOMAIN]: 'insteon_hub',
-    verisure.DISCOVER_SWITCHES: 'verisure',
-    zwave.DISCOVER_SWITCHES: 'zwave',
-    tellduslive.DISCOVER_SWITCHES: 'tellduslive',
-    mysensors.DISCOVER_SWITCHES: 'mysensors',
-    tellstick.DISCOVER_SWITCHES: 'tellstick',
-    vera.DISCOVER_SWITCHES: 'vera',
-}
-
 PROP_TO_ATTR = {
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
     'today_power_mw': ATTR_TODAY_MWH,
@@ -91,8 +77,7 @@ def toggle(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for switches."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_SWITCHES)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     component.setup(config)
 
     def handle_switch_service(service):
