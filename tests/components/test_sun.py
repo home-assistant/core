@@ -1,9 +1,8 @@
 """The tests for the Sun component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-from datetime import timedelta
-
-from astral import Astral
+from unittest.mock import patch
+from datetime import timedelta, datetime
 
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
@@ -32,16 +31,15 @@ class TestSun(unittest.TestCase):
 
     def test_setting_rising(self):
         """Test retrieving sun setting and rising."""
-        latitude = 32.87336
-        longitude = 117.22743
-
-        # Compare it with the real data
-        self.hass.config.latitude = latitude
-        self.hass.config.longitude = longitude
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        from astral import Astral
 
         astral = Astral()
         utc_now = dt_util.utcnow()
+
+        latitude = self.hass.config.latitude
+        longitude = self.hass.config.longitude
 
         mod = -1
         while True:
@@ -73,8 +71,6 @@ class TestSun(unittest.TestCase):
 
     def test_state_change(self):
         """Test if the state changes at next setting/rising."""
-        self.hass.config.latitude = '32.87336'
-        self.hass.config.longitude = '117.22743'
         sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         if sun.is_on(self.hass):
@@ -92,3 +88,22 @@ class TestSun(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
+
+    def test_norway_in_june(self):
+        """Test location in Norway where the sun doesn't set in summer."""
+        self.hass.config.latitude = 69.6
+        self.hass.config.longitude = 18.8
+
+        june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.helpers.condition.dt_util.now',
+                   return_value=june):
+            assert sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        state = self.hass.states.get(sun.ENTITY_ID)
+
+        assert state is not None
+        assert sun.next_rising_utc(self.hass) == \
+            datetime(2016, 7, 25, 23, 38, 21, tzinfo=dt_util.UTC)
+        assert sun.next_setting_utc(self.hass) == \
+            datetime(2016, 7, 26, 22, 4, 18, tzinfo=dt_util.UTC)

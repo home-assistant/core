@@ -27,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELCIUS,
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
@@ -79,6 +79,7 @@ class HomeAssistant(object):
 
         def restart_homeassistant(*args):
             """Reset Home Assistant."""
+            _LOGGER.warning('Home Assistant requested a restart.')
             request_restart.set()
             request_shutdown.set()
 
@@ -92,14 +93,21 @@ class HomeAssistant(object):
         except ValueError:
             _LOGGER.warning(
                 'Could not bind to SIGTERM. Are you running in a thread?')
-
-        while not request_shutdown.isSet():
-            try:
+        try:
+            signal.signal(signal.SIGHUP, restart_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGHUP. Are you running in a thread?')
+        except AttributeError:
+            pass
+        try:
+            while not request_shutdown.isSet():
                 time.sleep(1)
-            except KeyboardInterrupt:
-                break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.stop()
 
-        self.stop()
         return RESTART_EXIT_CODE if request_restart.isSet() else 0
 
     def stop(self):
@@ -156,8 +164,7 @@ class Event(object):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
-        self.time_fired = dt_util.strip_microseconds(
-            time_fired or dt_util.utcnow())
+        self.time_fired = time_fired or dt_util.utcnow()
 
     def as_dict(self):
         """Create a dict representation of this Event."""
@@ -165,7 +172,7 @@ class Event(object):
             'event_type': self.event_type,
             'data': dict(self.data),
             'origin': str(self.origin),
-            'time_fired': dt_util.datetime_to_str(self.time_fired),
+            'time_fired': self.time_fired,
         }
 
     def __repr__(self):
@@ -310,15 +317,9 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = str(state)
         self.attributes = MappingProxyType(attributes or {})
-        self.last_updated = dt_util.strip_microseconds(
-            last_updated or dt_util.utcnow())
+        self.last_updated = last_updated or dt_util.utcnow()
 
-        # Strip microsecond from last_changed else we cannot guarantee
-        # state == State.from_dict(state.as_dict())
-        # This behavior occurs because to_dict uses datetime_to_str
-        # which does not preserve microseconds
-        self.last_changed = dt_util.strip_microseconds(
-            last_changed or self.last_updated)
+        self.last_changed = last_changed or self.last_updated
 
     @property
     def domain(self):
@@ -346,8 +347,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': dict(self.attributes),
-                'last_changed': dt_util.datetime_to_str(self.last_changed),
-                'last_updated': dt_util.datetime_to_str(self.last_updated)}
+                'last_changed': self.last_changed,
+                'last_updated': self.last_updated}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -361,13 +362,13 @@ class State(object):
 
         last_changed = json_dict.get('last_changed')
 
-        if last_changed:
-            last_changed = dt_util.str_to_datetime(last_changed)
+        if isinstance(last_changed, str):
+            last_changed = dt_util.parse_datetime(last_changed)
 
         last_updated = json_dict.get('last_updated')
 
-        if last_updated:
-            last_updated = dt_util.str_to_datetime(last_updated)
+        if isinstance(last_updated, str):
+            last_updated = dt_util.parse_datetime(last_updated)
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
@@ -386,7 +387,7 @@ class State(object):
 
         return "<state {}={}{} @ {}>".format(
             self.entity_id, self.state, attr,
-            dt_util.datetime_to_local_str(self.last_changed))
+            dt_util.as_local(self.last_changed).isoformat())
 
 
 class StateMachine(object):
@@ -455,7 +456,7 @@ class StateMachine(object):
 
             return True
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -471,7 +472,8 @@ class StateMachine(object):
             old_state = self._states.get(entity_id)
 
             is_existing = old_state is not None
-            same_state = is_existing and old_state.state == new_state
+            same_state = (is_existing and old_state.state == new_state and
+                          not force_update)
             same_attr = is_existing and old_state.attributes == attributes
 
             if same_state and same_attr:
@@ -679,6 +681,7 @@ class Config(object):
         """Initialize a new config object."""
         self.latitude = None
         self.longitude = None
+        self.elevation = None
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
@@ -705,7 +708,7 @@ class Config(object):
 
     def temperature(self, value, unit):
         """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELCIUS, TEMP_FAHRENHEIT) and
+        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                 self.temperature_unit and unit != self.temperature_unit):
             return value, unit
 
@@ -819,6 +822,6 @@ def create_worker_pool(worker_count=None):
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                            dt_util.datetime_to_local_str(start), job)
+                            dt_util.as_local(start).isoformat(), job)
 
     return util.ThreadPool(job_handler, worker_count, busy_callback)

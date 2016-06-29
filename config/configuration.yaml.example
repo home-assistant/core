@@ -7,7 +7,7 @@ homeassistant:
   latitude: 32.87336
   longitude: 117.22743
 
-  # C for Celcius, F for Fahrenheit
+  # C for Celsius, F for Fahrenheit
   temperature_unit: C
 
   # Pick yours from here:
@@ -21,6 +21,9 @@ http:
   api_password: mypass
   # Set to 1 to enable development mode
   # development: 1
+
+frontend:
+# enable the frontend
 
 light:
 #  platform: hue

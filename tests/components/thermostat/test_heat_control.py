@@ -1,17 +1,16 @@
 """The tests for the heat control thermostat."""
 import unittest
-from unittest import mock
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_OFF,
-    TEMP_CELCIUS,
+    TEMP_CELSIUS,
 )
 from homeassistant.components import thermostat
-import homeassistant.components.thermostat.heat_control as heat_control
 
 from tests.common import get_test_home_assistant
 
@@ -41,14 +40,22 @@ class TestSetupThermostatHeatControl(unittest.TestCase):
             'name': 'test',
             'target_sensor': ENT_SENSOR
         }
-        add_devices = mock.MagicMock()
-        result = heat_control.setup_platform(self.hass, config, add_devices)
-        self.assertEqual(False, result)
+        self.assertFalse(_setup_component(self.hass, 'thermostat', {
+            'thermostat': config}))
+
+    def test_valid_conf(self):
+        """Test set up heat_control with valid config values."""
+        self.assertTrue(_setup_component(self.hass, 'thermostat',
+                        {'thermostat': {
+                            'platform': 'heat_control',
+                            'name': 'test',
+                            'heater': ENT_SWITCH,
+                            'target_sensor': ENT_SENSOR}}))
 
     def test_setup_with_sensor(self):
         """Test set up heat_control with sensor to trigger update at init."""
         self.hass.states.set(ENT_SENSOR, 22.0, {
-            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELCIUS
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS
         })
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
@@ -58,7 +65,7 @@ class TestSetupThermostatHeatControl(unittest.TestCase):
         }})
         state = self.hass.states.get(ENTITY)
         self.assertEqual(
-            TEMP_CELCIUS, state.attributes.get('unit_of_measurement'))
+            TEMP_CELSIUS, state.attributes.get('unit_of_measurement'))
         self.assertEqual(22.0, state.attributes.get('current_temperature'))
 
 
@@ -68,7 +75,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.temperature_unit = TEMP_CELCIUS
+        self.hass.config.temperature_unit = TEMP_CELSIUS
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
             'name': 'test',
@@ -182,7 +189,7 @@ class TestThermostatHeatControl(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def _setup_sensor(self, temp, unit=TEMP_CELCIUS):
+    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
         self.hass.states.set(ENT_SENSOR, temp, {
             ATTR_UNIT_OF_MEASUREMENT: unit

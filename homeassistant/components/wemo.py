@@ -6,29 +6,22 @@ https://home-assistant.io/components/wemo/
 """
 import logging
 
-from homeassistant.components import discovery
+from homeassistant.components.discovery import SERVICE_WEMO
+from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.1']
+REQUIREMENTS = ['pywemo==0.4.3']
 
 DOMAIN = 'wemo'
-DISCOVER_LIGHTS = 'wemo.light'
-DISCOVER_BINARY_SENSORS = 'wemo.binary_sensor'
-DISCOVER_SWITCHES = 'wemo.switch'
 
-# Mapping from Wemo model_name to service.
+# Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
-    'Bridge':  DISCOVER_LIGHTS,
-    'Insight': DISCOVER_SWITCHES,
-    'Maker':   DISCOVER_SWITCHES,
-    'Sensor':  DISCOVER_BINARY_SENSORS,
-    'Socket':  DISCOVER_SWITCHES,
-    'LightSwitch': DISCOVER_SWITCHES
-}
-WEMO_SERVICE_DISPATCH = {
-    DISCOVER_LIGHTS: 'light',
-    DISCOVER_BINARY_SENSORS: 'binary_sensor',
-    DISCOVER_SWITCHES: 'switch',
+    'Bridge':  'light',
+    'Insight': 'switch',
+    'Maker':   'switch',
+    'Sensor':  'binary_sensor',
+    'Socket':  'switch',
+    'LightSwitch': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
@@ -64,13 +57,12 @@ def setup(hass, config):
         _LOGGER.debug('Discovered unique device %s', serial)
         KNOWN_DEVICES.append(serial)
 
-        service = WEMO_MODEL_DISPATCH.get(model_name) or DISCOVER_SWITCHES
-        component = WEMO_SERVICE_DISPATCH.get(service)
+        component = WEMO_MODEL_DISPATCH.get(model_name, 'switch')
 
-        discovery.discover(hass, service, discovery_info,
-                           component, config)
+        discovery.load_platform(hass, component, DOMAIN, discovery_info,
+                                config)
 
-    discovery.listen(hass, discovery.SERVICE_WEMO, discovery_dispatch)
+    discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     _LOGGER.info("Scanning for WeMo devices.")
     devices = [(device.host, device) for device in pywemo.discover_devices()]
@@ -92,5 +84,5 @@ def setup(hass, config):
 
         discovery_info = (device.name, device.model_name, url, device.mac,
                           device.serialnumber)
-        discovery.discover(hass, discovery.SERVICE_WEMO, discovery_info)
+        discovery.discover(hass, SERVICE_WEMO, discovery_info)
     return True

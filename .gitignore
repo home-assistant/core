@@ -1,6 +1,5 @@
 config/*
 !config/home-assistant.conf.default
-homeassistant/components/frontend/www_static/polymer/bower_components/*
 
 # There is not a better solution afaik..
 !config/custom_components
@@ -9,6 +8,7 @@ config/custom_components/*
 !config/custom_components/hello_world.py
 !config/custom_components/mqtt_example.py
 
+tests/config/deps
 tests/config/home-assistant.log
 
 # Hide sublime text stuff
@@ -78,7 +78,15 @@ nosetests.xml
 pyvenv.cfg
 pip-selfcheck.json
 venv
+.venv
 
 # vimmy stuff
 *.swp
 *.swo
+
+ctags.tmp
+
+# vagrant stuff
+virtualization/vagrant/setup_done
+virtualization/vagrant/.vagrant
+virtualization/vagrant/config

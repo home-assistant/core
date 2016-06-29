@@ -6,10 +6,11 @@ from unittest import mock
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
+import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, TEMP_CELSIUS)
 from homeassistant.components import sun, mqtt
 
 _TEST_INSTANCE_PORT = SERVER_PORT
@@ -34,6 +35,9 @@ def get_test_home_assistant(num_threads=None):
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
+    hass.config.elevation = 0
+    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+    hass.config.temperature_unit = TEMP_CELSIUS
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
@@ -102,6 +106,13 @@ def ensure_sun_set(hass):
     fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
+def load_fixture(filename):
+    """Helper to load a fixture."""
+    path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
+    with open(path) as fp:
+        return fp.read()
+
+
 def mock_state_change_event(hass, new_state, old_state=None):
     """Mock state change envent."""
     event_data = {
@@ -117,7 +128,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.http = MockHTTP()
+    hass.wsgi = mock.MagicMock()
     hass.config.components.append('http')
 
 
@@ -130,14 +141,6 @@ def mock_mqtt_component(hass, mock_mqtt):
         }
     })
     return mock_mqtt
-
-
-class MockHTTP(object):
-    """Mock the HTTP module."""
-
-    def register_path(self, method, url, callback, require_auth=True):
-        """Register a path."""
-        pass
 
 
 class MockModule(object):

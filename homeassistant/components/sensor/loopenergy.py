@@ -8,12 +8,13 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "loopenergy"
 
-REQUIREMENTS = ['pyloopenergy==0.0.7']
+REQUIREMENTS = ['pyloopenergy==0.0.13']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -24,6 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elec_secret = config.get('electricity_secret')
     gas_serial = config.get('gas_serial')
     gas_secret = config.get('gas_secret')
+    gas_type = config.get('gas_type', 'metric')
+    gas_calorific = convert(config.get('gas_calorific'), float, 39.11)
 
     if not (elec_serial and elec_secret):
         _LOGGER.error(
@@ -39,11 +42,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "serial and secret tokens")
         return None
 
+    if gas_type not in ['imperial', 'metric']:
+        _LOGGER.error(
+            "Configuration Error, 'gas_type' "
+            "can only be 'imperial' or 'metric' ")
+        return None
+
+    # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
         elec_serial,
         elec_secret,
         gas_serial,
-        gas_secret
+        gas_secret,
+        gas_type,
+        gas_calorific
         )
 
     def stop_loopenergy(event):

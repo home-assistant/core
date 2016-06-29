@@ -4,33 +4,29 @@ Support for Nest thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.nest/
 """
-import logging
-import socket
+import voluptuous as vol
 
 import homeassistant.components.nest as nest
 from homeassistant.components.thermostat import (
     STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS, CONF_PLATFORM, CONF_SCAN_INTERVAL
 
 DEPENDENCIES = ['nest']
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): nest.DOMAIN,
+    vol.Optional(CONF_SCAN_INTERVAL):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Nest thermostat."""
-    logger = logging.getLogger(__name__)
-
-    try:
-        add_devices([
-            NestThermostat(structure, device)
-            for structure in nest.NEST.structures
-            for device in structure.devices
-        ])
-    except socket.error:
-        logger.error(
-            "Connection error logging into the nest web service."
-        )
+    add_devices([NestThermostat(structure, device)
+                 for structure, device in nest.devices()])
 
 
+# pylint: disable=abstract-method
 class NestThermostat(ThermostatDevice):
     """Representation of a Nest thermostat."""
 
@@ -55,7 +51,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def device_state_attributes(self):
@@ -70,7 +66,7 @@ class NestThermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return round(self.device.temperature, 1)
+        return self.device.temperature
 
     @property
     def operation(self):
@@ -85,38 +81,51 @@ class NestThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        target = self.device.target
-
         if self.device.mode == 'range':
-            low, high = target
+            low, high = self.target_temperature_low, \
+                        self.target_temperature_high
             if self.operation == STATE_COOL:
                 temp = high
             elif self.operation == STATE_HEAT:
                 temp = low
             else:
-                range_average = (low + high)/2
-                if self.current_temperature < range_average:
+                # If the outside temp is lower than the current temp, consider
+                # the 'low' temp to the target, otherwise use the high temp
+                if (self.device.structure.weather.current.temperature <
+                        self.current_temperature):
                     temp = low
-                elif self.current_temperature >= range_average:
+                else:
                     temp = high
         else:
-            temp = target
+            if self.is_away_mode_on:
+                # away_temperature is a low, high tuple. Only one should be set
+                # if not in range mode, the other will be None
+                temp = self.device.away_temperature[0] or \
+                        self.device.away_temperature[1]
+            else:
+                temp = self.device.target
 
-        return round(temp, 1)
+        return temp
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
+        if self.is_away_mode_on and self.device.away_temperature[0]:
+            # away_temperature is always a low, high tuple
+            return self.device.away_temperature[0]
         if self.device.mode == 'range':
-            return round(self.device.target[0], 1)
-        return round(self.target_temperature, 1)
+            return self.device.target[0]
+        return self.target_temperature
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
+        if self.is_away_mode_on and self.device.away_temperature[1]:
+            # away_temperature is always a low, high tuple
+            return self.device.away_temperature[1]
         if self.device.mode == 'range':
-            return round(self.device.target[1], 1)
-        return round(self.target_temperature, 1)
+            return self.device.target[1]
+        return self.target_temperature
 
     @property
     def is_away_mode_on(self):

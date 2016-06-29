@@ -10,7 +10,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['schiene==0.14']
+REQUIREMENTS = ['schiene==0.17']
 ICON = 'mdi:train'
 
 # Return cached results if last scan was less then this time ago.
@@ -69,11 +69,10 @@ class DeutscheBahnSensor(Entity):
         """Get the latest delay from bahn.de and updates the state."""
         self.data.update()
         self._state = self.data.connections[0].get('departure', 'Unknown')
-        delay = self.data.connections[0].get('delay',
-                                             {'delay_departure': 0,
-                                              'delay_arrival': 0})
-        if delay['delay_departure'] != 0:
-            self._state += " + {}".format(delay['delay_departure'])
+        if self.data.connections[0]['delay'] != 0:
+            self._state += " + {}".format(
+                self.data.connections[0]['delay']
+            )
 
 
 # pylint: disable=too-few-public-methods
@@ -95,6 +94,14 @@ class SchieneData(object):
                                                     self.goal,
                                                     datetime.now())
         for con in self.connections:
-            # Details info are not useful.
+            # Details info is not useful.
+            # Having a more consistent interface simplifies
+            # usage of Template sensors later on
             if 'details' in con:
                 con.pop('details')
+                delay = con.get('delay',
+                                {'delay_departure': 0,
+                                 'delay_arrival': 0})
+                # IMHO only delay_departure is usefull
+                con['delay'] = delay['delay_departure']
+                con['ontime'] = con.get('ontime', False)

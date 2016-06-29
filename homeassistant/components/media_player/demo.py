@@ -20,11 +20,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             'Living Room', 'eyU3bRy2x44',
             '♥♥ The Best Fireplace Video (3 hours)'),
         DemoYoutubePlayer('Bedroom', 'kxopViU98Xo', 'Epic sax guy 10 hours'),
-        DemoMusicPlayer(), DemoTVShowPlayer(), DemoReceiver(),
+        DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 
 
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
+YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -35,9 +35,7 @@ MUSIC_PLAYER_SUPPORT = \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-
-RECEIVER_SUPPORT = SUPPORT_SELECT_SOURCE
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -154,7 +152,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         """Flag of media commands that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         self.youtube_id = media_id
         self.update_ha_state()
@@ -210,7 +208,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/107771475912710/picture'
+        return 'https://graph.facebook.com/v2.5/107771475912710/' \
+            'picture?type=large'
 
     @property
     def media_title(self):
@@ -269,6 +268,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         super().__init__('Lounge room')
         self._cur_episode = 1
         self._episode_count = 13
+        self._source = 'dvd'
 
     @property
     def media_content_id(self):
@@ -288,7 +288,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/HouseofCards/picture'
+        return 'https://graph.facebook.com/v2.5/HouseofCards/picture?width=400'
 
     @property
     def media_title(self):
@@ -316,6 +316,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return "Netflix"
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._source
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
@@ -340,28 +345,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
             self._cur_episode += 1
             self.update_ha_state()
 
-
-class DemoReceiver(AbstractDemoPlayer):
-    """A Demo receiver that only supports changing source input."""
-
-    # We only implement the methods that we support
-    # pylint: disable=abstract-method
-    def __init__(self):
-        """Initialize the demo device."""
-        super().__init__('receiver')
-        self._source = 'dvd'
-
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self._source
-
     def select_source(self, source):
         """Set the input source."""
         self._source = source
         self.update_ha_state()
-
-    @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
-        return RECEIVER_SUPPORT

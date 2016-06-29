@@ -47,7 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
            (product_id not in wanted_product_ids):
             continue
         dev.append(UberSensor('time', timeandpriceest, product_id, product))
-        if 'price_details' in product:
+        is_metered = (product['price_details']['estimate'] == "Metered")
+        if 'price_details' in product and is_metered is False:
             dev.append(UberSensor('price', timeandpriceest,
                                   product_id, product))
     add_devices(dev)

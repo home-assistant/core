@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 from homeassistant.loader import get_component
+from homeassistant.helpers.event import (track_utc_time_change)
 
 REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -115,6 +116,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
     plex_clients = {}
     plex_sessions = {}
+    track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():

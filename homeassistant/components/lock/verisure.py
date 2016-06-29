@@ -47,6 +47,11 @@ class VerisureDoorlock(LockDevice):
         return self._state
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
+
+    @property
     def code_format(self):
         """Return the required six digit code."""
         return '^\\d{%s}$' % self._digits

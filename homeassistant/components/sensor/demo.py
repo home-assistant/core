@@ -4,7 +4,7 @@ Demo platform that has a couple of fake sensors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELCIUS
+from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo sensors."""
     add_devices([
-        DemoSensor('Outside Temperature', 15.6, TEMP_CELCIUS, 12),
+        DemoSensor('Outside Temperature', 15.6, TEMP_CELSIUS, 12),
         DemoSensor('Outside Humidity', 54, '%', None),
     ])
 

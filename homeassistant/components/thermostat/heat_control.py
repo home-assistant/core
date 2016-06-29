@@ -5,13 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.heat_control/
 """
 import logging
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 from homeassistant.components import switch
 from homeassistant.components.thermostat import (
     STATE_HEAT, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.event import track_state_change
 
 DEPENDENCIES = ['switch', 'sensor']
@@ -28,27 +30,31 @@ CONF_TARGET_TEMP = 'target_temp'
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required("platform"): "heat_control",
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HEATER): cv.entity_id,
+    vol.Required(CONF_SENSOR): cv.entity_id,
+    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+})
 
-# pylint: disable=unused-argument
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the heat control thermostat."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
+    name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
-    min_temp = util.convert(config.get(CONF_MIN_TEMP), float, None)
-    max_temp = util.convert(config.get(CONF_MAX_TEMP), float, None)
-    target_temp = util.convert(config.get(CONF_TARGET_TEMP), float, None)
-
-    if None in (heater_entity_id, sensor_entity_id):
-        _LOGGER.error('Missing required key %s or %s', CONF_HEATER,
-                      CONF_SENSOR)
-        return False
+    min_temp = config.get(CONF_MIN_TEMP)
+    max_temp = config.get(CONF_MAX_TEMP)
+    target_temp = config.get(CONF_TARGET_TEMP)
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
                              min_temp, max_temp, target_temp)])
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes, abstract-method
 class HeatControl(ThermostatDevice):
     """Representation of a HeatControl device."""
 
@@ -142,11 +148,11 @@ class HeatControl(ThermostatDevice):
         """Update thermostat with latest state from sensor."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if unit not in (TEMP_CELCIUS, TEMP_FAHRENHEIT):
+        if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             self._cur_temp = None
             self._unit = None
             _LOGGER.error('Sensor has unsupported unit: %s (allowed: %s, %s)',
-                          unit, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+                          unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
             return
 
         temp = util.convert(state.state, float)

@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup a Hyperion server remote."""
     host = config.get(CONF_HOST, None)
     port = config.get("port", 19444)
-    device = Hyperion(host, port)
+    device = Hyperion(config.get('name', host), host, port)
     if device.setup():
         add_devices_callback([device])
         return True
@@ -30,11 +30,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, host, port):
+    def __init__(self, name, host, port):
         """Initialize the light."""
         self._host = host
         self._port = port
-        self._name = host
+        self._name = name
         self._is_available = True
         self._rgb_color = [255, 255, 255]
 
@@ -75,7 +75,8 @@ class Hyperion(Light):
         """Get the hostname of the remote."""
         response = self.json_request({"command": "serverinfo"})
         if response:
-            self._name = response["info"]["hostname"]
+            if self._name == self._host:
+                self._name = response["info"]["hostname"]
             return True
 
         return False

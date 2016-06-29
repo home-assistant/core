@@ -6,12 +6,17 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELCIUS, TEMP_FAHRENHEIT)
+    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    SUN_EVENT_SUNRISE)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
 
 # pylint: disable=invalid-name
+
+TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -21,6 +26,24 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
+
+
+# Adapted from:
+# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
+def has_at_least_one_key(*keys):
+    """Validator that at least one key exists."""
+    def validate(obj):
+        """Test keys exist in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for k in obj.keys():
+            if k in keys:
+                return obj
+        raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
 
 
 def boolean(value):
@@ -47,21 +70,20 @@ def ensure_list(value):
 
 def entity_id(value):
     """Validate Entity ID."""
+    value = string(value).lower()
     if valid_entity_id(value):
         return value
-    raise vol.Invalid('Entity ID {} does not match format <domain>.<object_id>'
-                      .format(value))
+    raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
 def entity_ids(value):
     """Validate Entity IDs."""
+    if value is None:
+        raise vol.Invalid('Entity IDs can not be None')
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(',')]
 
-    for ent_id in value:
-        entity_id(ent_id)
-
-    return value
+    return [entity_id(ent_id) for ent_id in value]
 
 
 def icon(value):
@@ -74,10 +96,25 @@ def icon(value):
     raise vol.Invalid('Icons should start with prefix "mdi:"')
 
 
-def time_offset(value):
+time_period_dict = vol.All(
+    dict, vol.Schema({
+        'days': vol.Coerce(int),
+        'hours': vol.Coerce(int),
+        'minutes': vol.Coerce(int),
+        'seconds': vol.Coerce(int),
+        'milliseconds': vol.Coerce(int),
+    }),
+    has_at_least_one_key('days', 'hours', 'minutes',
+                         'seconds', 'milliseconds'),
+    lambda value: timedelta(**value))
+
+
+def time_period_str(value):
     """Validate and transform time offset."""
-    if not isinstance(value, str):
-        raise vol.Invalid('offset should be a string')
+    if isinstance(value, int):
+        raise vol.Invalid('Make sure you wrap time values in quotes')
+    elif not isinstance(value, str):
+        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     negative_offset = False
     if value.startswith('-'):
@@ -89,8 +126,7 @@ def time_offset(value):
     try:
         parsed = [int(x) for x in value.split(':')]
     except ValueError:
-        raise vol.Invalid(
-            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
+        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     if len(parsed) == 2:
         hour, minute = parsed
@@ -98,8 +134,7 @@ def time_offset(value):
     elif len(parsed) == 3:
         hour, minute, second = parsed
     else:
-        raise vol.Invalid(
-            'offset {} should be format HH:MM or HH:MM:SS'.format(value))
+        raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
     offset = timedelta(hours=hour, minutes=minute, seconds=second)
 
@@ -107,6 +142,26 @@ def time_offset(value):
         offset *= -1
 
     return offset
+
+
+time_period = vol.Any(time_period_str, timedelta, time_period_dict)
+
+
+def log_exception(logger, ex, domain, config):
+    """Generate log exception for config validation."""
+    message = 'Invalid config for [{}]: '.format(domain)
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join('%s' % m for m in ex.path))
+    else:
+        message += str(ex)
+
+    if hasattr(config, '__line__'):
+        message += " (See {}:{})".format(config.__config_file__,
+                                         config.__line__ or '?')
+
+    logger.error(message)
 
 
 def match_all(value):
@@ -125,6 +180,13 @@ def platform_validator(domain):
         raise vol.Invalid(
             'platform {} does not exist for {}'.format(value, domain))
     return validator
+
+
+def positive_timedelta(value):
+    """Validate timedelta is positive."""
+    if value < timedelta(0):
+        raise vol.Invalid('Time period should be positive')
+    return value
 
 
 def service(value):
@@ -158,7 +220,7 @@ def temperature_unit(value):
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == 'C':
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
     elif value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
@@ -177,6 +239,16 @@ def template(value):
         raise vol.Invalid('invalid template ({})'.format(ex))
 
 
+def time(value):
+    """Validate time."""
+    time_val = dt_util.parse_time(value)
+
+    if time_val is None:
+        raise vol.Invalid('Invalid time specified: {}'.format(value))
+
+    return time_val
+
+
 def time_zone(value):
     """Validate timezone."""
     if dt_util.get_time_zone(value) is not None:
@@ -184,6 +256,8 @@ def time_zone(value):
     raise vol.Invalid(
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
+
+weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
 # Validator helpers
@@ -194,30 +268,12 @@ def key_dependency(key, dependency):
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid('key dependencies require a dict')
-        print(key, value)
         if key in value and dependency not in value:
             raise vol.Invalid('dependency violation - key "{}" requires '
                               'key "{}" to exist'.format(key, dependency))
 
         return value
     return validator
-
-
-# Adapted from:
-# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys):
-    """Validator that at least one key exists."""
-    def validate(obj):
-        """Test keys exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        for k in obj.keys():
-            if k in keys:
-                return obj
-        raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
-
-    return validate
 
 
 # Schemas
@@ -228,14 +284,103 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
-    'event_data': dict
+    vol.Optional('event_data'): dict,
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
     vol.Exclusive('service', 'service name'): service,
-    vol.Exclusive('service_template', 'service name'): string,
-    vol.Exclusive('data', 'service data'): dict,
-    vol.Exclusive('data_template', 'service data'): {match_all: template},
-    'entity_id': entity_ids,
+    vol.Exclusive('service_template', 'service name'): template,
+    vol.Optional('data'): dict,
+    vol.Optional('data_template'): {match_all: template},
+    vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
+
+NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_CONDITION): 'numeric_state',
+    vol.Required(CONF_ENTITY_ID): entity_id,
+    CONF_BELOW: vol.Coerce(float),
+    CONF_ABOVE: vol.Coerce(float),
+    vol.Optional(CONF_VALUE_TEMPLATE): template,
+}), has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
+
+STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_CONDITION): 'state',
+    vol.Required(CONF_ENTITY_ID): entity_id,
+    vol.Required('state'): str,
+    vol.Optional('for'): vol.All(time_period, positive_timedelta),
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional('from'): str,
+}), key_dependency('for', 'state'))
+
+SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_CONDITION): 'sun',
+    vol.Optional('before'): sun_event,
+    vol.Optional('before_offset'): time_period,
+    vol.Optional('after'): vol.All(vol.Lower, vol.Any('sunset', 'sunrise')),
+    vol.Optional('after_offset'): time_period,
+}), has_at_least_one_key('before', 'after'))
+
+TEMPLATE_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'template',
+    vol.Required(CONF_VALUE_TEMPLATE): template,
+})
+
+TIME_CONDITION_SCHEMA = vol.All(vol.Schema({
+    vol.Required(CONF_CONDITION): 'time',
+    'before': time,
+    'after': time,
+    'weekday': weekdays,
+}), has_at_least_one_key('before', 'after', 'weekday'))
+
+ZONE_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'zone',
+    vol.Required(CONF_ENTITY_ID): entity_id,
+    'zone': entity_id,
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional('event'): vol.Any('enter', 'leave'),
+})
+
+AND_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'and',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+OR_CONDITION_SCHEMA = vol.Schema({
+    vol.Required(CONF_CONDITION): 'or',
+    vol.Required('conditions'): vol.All(
+        ensure_list,
+        # pylint: disable=unnecessary-lambda
+        [lambda value: CONDITION_SCHEMA(value)],
+    )
+})
+
+CONDITION_SCHEMA = vol.Any(
+    NUMERIC_STATE_CONDITION_SCHEMA,
+    STATE_CONDITION_SCHEMA,
+    SUN_CONDITION_SCHEMA,
+    TEMPLATE_CONDITION_SCHEMA,
+    TIME_CONDITION_SCHEMA,
+    ZONE_CONDITION_SCHEMA,
+    AND_CONDITION_SCHEMA,
+    OR_CONDITION_SCHEMA,
+)
+
+_SCRIPT_DELAY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("delay"): vol.All(time_period, positive_timedelta)
+})
+
+SCRIPT_SCHEMA = vol.All(
+    ensure_list,
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
+             CONDITION_SCHEMA)],
+)

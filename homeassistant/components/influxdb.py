@@ -7,7 +7,8 @@ https://home-assistant.io/components/influxdb/
 import logging
 
 import homeassistant.util as util
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN
+from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNAVAILABLE,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers import validate_config
 
@@ -22,7 +23,7 @@ DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['influxdb==2.12.0']
+REQUIREMENTS = ['influxdb==3.0.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
@@ -70,8 +71,9 @@ def setup(hass, config):
     def influx_event_listener(event):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
-        if state is None or state.state in (STATE_UNKNOWN, '') \
-           or state.entity_id in blacklist:
+        if state is None or state.state in (
+                STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
+                state.entity_id in blacklist:
             return
 
         try:

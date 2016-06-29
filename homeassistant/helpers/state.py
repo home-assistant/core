@@ -12,9 +12,17 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE, SERVICE_NOTIFY)
 from homeassistant.components.sun import (
     STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
+from homeassistant.components.switch.mysensors import (
+    ATTR_IR_CODE, SERVICE_SEND_IR_CODE)
 from homeassistant.components.thermostat import (
     ATTR_AWAY_MODE, ATTR_FAN, SERVICE_SET_AWAY_MODE, SERVICE_SET_FAN_MODE,
     SERVICE_SET_TEMPERATURE)
+from homeassistant.components.thermostat.ecobee import (
+    ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME)
+from homeassistant.components.hvac import (
+    ATTR_HUMIDITY, ATTR_SWING_MODE, ATTR_OPERATION_MODE, ATTR_AUX_HEAT,
+    SERVICE_SET_HUMIDITY, SERVICE_SET_SWING_MODE,
+    SERVICE_SET_OPERATION_MODE, SERVICE_SET_AUX_HEAT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
@@ -42,8 +50,14 @@ SERVICE_ATTRIBUTES = {
     SERVICE_NOTIFY: [ATTR_MESSAGE],
     SERVICE_SET_AWAY_MODE: [ATTR_AWAY_MODE],
     SERVICE_SET_FAN_MODE: [ATTR_FAN],
+    SERVICE_SET_FAN_MIN_ON_TIME: [ATTR_FAN_MIN_ON_TIME],
     SERVICE_SET_TEMPERATURE: [ATTR_TEMPERATURE],
+    SERVICE_SET_HUMIDITY: [ATTR_HUMIDITY],
+    SERVICE_SET_SWING_MODE: [ATTR_SWING_MODE],
+    SERVICE_SET_OPERATION_MODE: [ATTR_OPERATION_MODE],
+    SERVICE_SET_AUX_HEAT: [ATTR_AUX_HEAT],
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
+    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE]
 }
 
 # Update this dict when new services are added to HA.
@@ -92,9 +106,8 @@ class TrackStates(object):
 
 def get_changed_since(states, utc_point_in_time):
     """Return list of states that have been changed since utc_point_in_time."""
-    point_in_time = dt_util.strip_microseconds(utc_point_in_time)
-
-    return [state for state in states if state.last_updated >= point_in_time]
+    return [state for state in states
+            if state.last_updated >= utc_point_in_time]
 
 
 def reproduce_state(hass, states, blocking=False):

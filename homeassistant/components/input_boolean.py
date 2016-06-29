@@ -6,8 +6,11 @@ at https://home-assistant.io/components/input_boolean/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -21,6 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_NAME = "name"
 CONF_INITIAL = "initial"
 CONF_ICON = "icon"
+
+TOGGLE_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 
 def is_on(hass, entity_id):
@@ -75,8 +82,10 @@ def setup(hass, config):
             else:
                 input_b.turn_off()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service)
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_OFF, toggle_service,
+                           schema=TOGGLE_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, toggle_service,
+                           schema=TOGGLE_SERVICE_SCHEMA)
 
     component.add_entities(entities)
 

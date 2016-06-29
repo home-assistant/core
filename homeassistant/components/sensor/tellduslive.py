@@ -10,7 +10,7 @@ from datetime import datetime
 
 from homeassistant.components import tellduslive
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, TEMP_CELCIUS)
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 
 ATTR_LAST_UPDATED = "time_last_updated"
@@ -27,7 +27,7 @@ SENSOR_TYPE_WINDGUST = "wgust"
 SENSOR_TYPE_WATT = "watt"
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELCIUS, "mdi:thermometer"],
+    SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELSIUS, "mdi:thermometer"],
     SENSOR_TYPE_HUMIDITY: ['Humidity', '%', "mdi:water"],
     SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm', "mdi:water"],
     SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', "mdi:water"],

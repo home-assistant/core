@@ -6,14 +6,16 @@ https://home-assistant.io/components/media_player.sonos/
 """
 import datetime
 import logging
+import socket
+from os import path
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
+from homeassistant.config import load_yaml_config_file
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -31,16 +33,22 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA |\
     SUPPORT_SEEK
 
+SERVICE_GROUP_PLAYERS = 'sonos_group_players'
+SERVICE_SNAPSHOT = 'sonos_snapshot'
+SERVICE_RESTORE = 'sonos_restore'
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
-    import socket
 
     if discovery_info:
-        add_devices([SonosDevice(hass, soco.SoCo(discovery_info))])
-        return True
+        player = soco.SoCo(discovery_info)
+        if player.is_visible:
+            add_devices([SonosDevice(hass, player)])
+            return True
+        return False
 
     players = None
     hosts = config.get('hosts', None)
@@ -60,8 +68,66 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning('No Sonos speakers found.')
         return False
 
-    add_devices(SonosDevice(hass, p) for p in players)
+    devices = [SonosDevice(hass, p) for p in players]
+    add_devices(devices)
     _LOGGER.info('Added %s Sonos speakers', len(players))
+
+    def group_players_service(service):
+        """Group media players, use player as coordinator."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.group_players()
+            device.update_ha_state(True)
+
+    def snapshot(service):
+        """Take a snapshot."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.snapshot(service)
+            device.update_ha_state(True)
+
+    def restore(service):
+        """Restore a snapshot."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            device.restore(service)
+            device.update_ha_state(True)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
+                           group_players_service,
+                           descriptions.get(SERVICE_GROUP_PLAYERS))
+
+    hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
+                           snapshot,
+                           descriptions.get(SERVICE_SNAPSHOT))
+
+    hass.services.register(DOMAIN, SERVICE_RESTORE,
+                           restore,
+                           descriptions.get(SERVICE_RESTORE))
 
     return True
 
@@ -71,16 +137,26 @@ def only_if_coordinator(func):
 
     If used as decorator, avoid calling the decorated method if player is not
     a coordinator. If not, a grouped speaker (not in coordinator role) will
-    throw soco.exceptions.SoCoSlaveException
+    throw soco.exceptions.SoCoSlaveException.
+
+    Also, partially catch exceptions like:
+
+    soco.exceptions.SoCoUPnPException: UPnP Error 701 received:
+    Transition not available from <player ip address>
     """
     def wrapper(*args, **kwargs):
         """Decorator wrapper."""
         if args[0].is_coordinator:
-            return func(*args, **kwargs)
+            from soco.exceptions import SoCoUPnPException
+            try:
+                func(*args, **kwargs)
+            except SoCoUPnPException:
+                _LOGGER.error('command "%s" for Sonos device "%s" '
+                              'not available in this mode',
+                              func.__name__, args[0].name)
         else:
-            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" '
-                          '(not coordinator)',
-                          func.__name__, args[0].name)
+            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" (%s)',
+                          func.__name__, args[0].name, 'not coordinator')
 
     return wrapper
 
@@ -98,10 +174,12 @@ class SonosDevice(MediaPlayerDevice):
         super(SonosDevice, self).__init__()
         self._player = player
         self.update()
+        from soco.snapshot import Snapshot
+        self.soco_snapshot = Snapshot(self._player)
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Polling needed."""
         return True
 
     def update_sonos(self, now):
@@ -138,9 +216,14 @@ class SonosDevice(MediaPlayerDevice):
         """Retrieve latest state."""
         self._name = self._player.get_speaker_info()['zone_name'].replace(
             ' (R)', '').replace(' (L)', '')
-        self._status = self._player.get_current_transport_info().get(
-            'current_transport_state')
-        self._trackinfo = self._player.get_current_track_info()
+
+        if self.available:
+            self._status = self._player.get_current_transport_info().get(
+                'current_transport_state')
+            self._trackinfo = self._player.get_current_track_info()
+        else:
+            self._status = STATE_OFF
+            self._trackinfo = {}
 
     @property
     def volume_level(self):
@@ -250,6 +333,46 @@ class SonosDevice(MediaPlayerDevice):
         self._player.play()
 
     @only_if_coordinator
-    def play_media(self, media_type, media_id):
-        """Send the play_media command to the media player."""
-        self._player.play_uri(media_id)
+    def play_media(self, media_type, media_id, **kwargs):
+        """
+        Send the play_media command to the media player.
+
+        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
+        """
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            from soco.exceptions import SoCoUPnPException
+            try:
+                self._player.add_uri_to_queue(media_id)
+            except SoCoUPnPException:
+                _LOGGER.error('Error parsing media uri "%s", '
+                              "please check it's a valid media resource "
+                              'supported by Sonos', media_id)
+        else:
+            self._player.play_uri(media_id)
+
+    @only_if_coordinator
+    def group_players(self):
+        """Group all players under this coordinator."""
+        self._player.partymode()
+
+    @only_if_coordinator
+    def snapshot(self, service):
+        """Snapshot the player."""
+        self.soco_snapshot.snapshot()
+
+    @only_if_coordinator
+    def restore(self, service):
+        """Restore snapshot for the player."""
+        self.soco_snapshot.restore(True)
+
+    @property
+    def available(self):
+        """Return True if player is reachable, False otherwise."""
+        try:
+            sock = socket.create_connection(
+                address=(self._player.ip_address, 1443),
+                timeout=3)
+            sock.close()
+            return True
+        except socket.error:
+            return False

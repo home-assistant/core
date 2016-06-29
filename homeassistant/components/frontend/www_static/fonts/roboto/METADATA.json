@@ -1,0 +1,129 @@
+{
+  "name": "Roboto",
+  "designer": "Christian Robertson",
+  "license": "Apache2",
+  "visibility": "External",
+  "category": "Sans Serif",
+  "size": 86523,
+  "fonts": [
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 100,
+      "filename": "Roboto-Thin.ttf",
+      "postScriptName": "Roboto-Thin",
+      "fullName": "Roboto Thin",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 100,
+      "filename": "Roboto-ThinItalic.ttf",
+      "postScriptName": "Roboto-ThinItalic",
+      "fullName": "Roboto Thin Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 300,
+      "filename": "Roboto-Light.ttf",
+      "postScriptName": "Roboto-Light",
+      "fullName": "Roboto Light",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 300,
+      "filename": "Roboto-LightItalic.ttf",
+      "postScriptName": "Roboto-LightItalic",
+      "fullName": "Roboto Light Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 400,
+      "filename": "Roboto-Regular.ttf",
+      "postScriptName": "Roboto-Regular",
+      "fullName": "Roboto",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 400,
+      "filename": "Roboto-Italic.ttf",
+      "postScriptName": "Roboto-Italic",
+      "fullName": "Roboto Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 500,
+      "filename": "Roboto-Medium.ttf",
+      "postScriptName": "Roboto-Medium",
+      "fullName": "Roboto Medium",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 500,
+      "filename": "Roboto-MediumItalic.ttf",
+      "postScriptName": "Roboto-MediumItalic",
+      "fullName": "Roboto Medium Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 700,
+      "filename": "Roboto-Bold.ttf",
+      "postScriptName": "Roboto-Bold",
+      "fullName": "Roboto Bold",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 700,
+      "filename": "Roboto-BoldItalic.ttf",
+      "postScriptName": "Roboto-BoldItalic",
+      "fullName": "Roboto Bold Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "normal",
+      "weight": 900,
+      "filename": "Roboto-Black.ttf",
+      "postScriptName": "Roboto-Black",
+      "fullName": "Roboto Black",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    },
+    {
+      "name": "Roboto",
+      "style": "italic",
+      "weight": 900,
+      "filename": "Roboto-BlackItalic.ttf",
+      "postScriptName": "Roboto-BlackItalic",
+      "fullName": "Roboto Black Italic",
+      "copyright": "Copyright 2011 Google Inc. All Rights Reserved."
+    }
+  ],
+  "subsets": [
+    "cyrillic",
+    "cyrillic-ext",
+    "greek",
+    "greek-ext",
+    "latin",
+    "latin-ext",
+    "menu",
+    "vietnamese"
+  ],
+  "dateAdded": "2013-01-09"
+}

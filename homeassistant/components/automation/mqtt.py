@@ -30,7 +30,14 @@ def trigger(hass, config, action):
     def mqtt_automation_listener(msg_topic, msg_payload, qos):
         """Listen for MQTT messages."""
         if payload is None or payload == msg_payload:
-            action()
+            action({
+                'trigger': {
+                    'platform': 'mqtt',
+                    'topic': msg_topic,
+                    'payload': msg_payload,
+                    'qos': qos,
+                }
+            })
 
     mqtt.subscribe(hass, topic, mqtt_automation_listener)
 

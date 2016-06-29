@@ -6,10 +6,14 @@ https://home-assistant.io/components/light.wink/
 """
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
+    Light, ATTR_RGB_COLOR
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.util import color as color_util
+from homeassistant.util.color import \
+    color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['python-wink==0.6.4']
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -35,7 +39,11 @@ class WinkLight(Light):
     """Representation of a Wink light."""
 
     def __init__(self, wink):
-        """Initialize the light."""
+        """
+        Initialize the light.
+
+        :type wink: pywink.devices.standard.bulb.WinkBulb
+        """
         self.wink = wink
 
     @property
@@ -63,15 +71,43 @@ class WinkLight(Light):
         """True if connection == True."""
         return self.wink.available
 
+    @property
+    def xy_color(self):
+        """Current bulb color in CIE 1931 (XY) color space."""
+        if not self.wink.supports_xy_color():
+            return None
+        return self.wink.color_xy()
+
+    @property
+    def color_temp(self):
+        """Current bulb color in degrees Kelvin."""
+        if not self.wink.supports_temperature():
+            return None
+        return color_util.color_temperature_kelvin_to_mired(
+            self.wink.color_temperature_kelvin())
+
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+        color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
 
-        if brightness is not None:
-            self.wink.set_state(True, brightness=brightness / 255)
-        else:
-            self.wink.set_state(True)
+        state_kwargs = {
+        }
+
+        if rgb_color:
+            xyb = color_util.color_RGB_to_xy(*rgb_color)
+            state_kwargs['color_xy'] = xyb[0], xyb[1]
+            state_kwargs['brightness'] = xyb[2]
+
+        if color_temp_mired:
+            state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)
+
+        if brightness:
+            state_kwargs['brightness'] = brightness / 255.0
+
+        self.wink.set_state(True, **state_kwargs)
 
     def turn_off(self):
         """Turn the switch off."""
@@ -79,4 +115,4 @@ class WinkLight(Light):
 
     def update(self):
         """Update state of the light."""
-        self.wink.update_state()
+        self.wink.update_state(require_desired_state_fulfilled=True)

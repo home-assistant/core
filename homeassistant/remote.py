@@ -7,6 +7,7 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
+from datetime import datetime
 import enum
 import json
 import logging
@@ -20,7 +21,8 @@ import homeassistant.core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
-    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY)
+    URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
+    HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
 METHOD_GET = "get"
@@ -58,7 +60,9 @@ class API(object):
         else:
             self.base_url = "http://{}:{}".format(host, self.port)
         self.status = None
-        self._headers = {}
+        self._headers = {
+            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
+        }
 
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
@@ -125,7 +129,7 @@ class HomeAssistant(ha.HomeAssistant):
     def start(self):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
-        if self.config.api is None:
+        if 'api' not in self.config.components:
             if not bootstrap.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
@@ -134,6 +138,10 @@ class HomeAssistant(ha.HomeAssistant):
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
+
+        # Give eventlet time to startup
+        import eventlet
+        eventlet.sleep(0.1)
 
         # Setup that events from remote_api get forwarded to local_api
         # Do this after we fire START, otherwise HTTP is not started
@@ -251,9 +259,9 @@ class StateMachine(ha.StateMachine):
         """
         return remove_state(self._api, entity_id)
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Call set_state on remote API."""
-        set_state(self._api, entity_id, new_state, attributes)
+        set_state(self._api, entity_id, new_state, attributes, force_update)
 
     def mirror(self):
         """Discard current data and mirrors the remote state machine."""
@@ -277,7 +285,9 @@ class JSONEncoder(json.JSONEncoder):
 
         Hand other objects to the original method.
         """
-        if hasattr(obj, 'as_dict'):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif hasattr(obj, 'as_dict'):
             return obj.as_dict()
 
         try:
@@ -380,7 +390,7 @@ def fire_event(api, event_type, data=None):
         req = api(METHOD_POST, URL_API_EVENTS_EVENT.format(event_type), data)
 
         if req.status_code != 200:
-            _LOGGER.error("Error firing event: %d - %d",
+            _LOGGER.error("Error firing event: %d - %s",
                           req.status_code, req.text)
 
     except HomeAssistantError:
@@ -440,7 +450,7 @@ def remove_state(api, entity_id):
         return False
 
 
-def set_state(api, entity_id, new_state, attributes=None):
+def set_state(api, entity_id, new_state, attributes=None, force_update=False):
     """Tell API to update state for entity_id.
 
     Return True if success.
@@ -448,7 +458,8 @@ def set_state(api, entity_id, new_state, attributes=None):
     attributes = attributes or {}
 
     data = {'state': new_state,
-            'attributes': attributes}
+            'attributes': attributes,
+            'force_update': force_update}
 
     try:
         req = api(METHOD_POST,

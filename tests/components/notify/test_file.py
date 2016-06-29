@@ -2,6 +2,7 @@
 import os
 import unittest
 import tempfile
+from unittest.mock import patch
 
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import (
@@ -31,8 +32,11 @@ class TestNotifyFile(unittest.TestCase):
             }
         }))
 
-    def test_notify_file(self):
+    @patch('homeassistant.util.dt.utcnow')
+    def test_notify_file(self, mock_utcnow):
         """Test the notify file output."""
+        mock_utcnow.return_value = dt_util.as_utc(dt_util.now())
+
         with tempfile.TemporaryDirectory() as tempdirname:
             filename = os.path.join(tempdirname, 'notify.txt')
             message = 'one, two, testing, testing'
@@ -46,7 +50,7 @@ class TestNotifyFile(unittest.TestCase):
             }))
             title = '{} notifications (Log started: {})\n{}\n'.format(
                 ATTR_TITLE_DEFAULT,
-                dt_util.strip_microseconds(dt_util.utcnow()),
+                dt_util.utcnow().isoformat(),
                 '-' * 80)
 
             self.hass.services.call('notify', 'test', {'message': message},

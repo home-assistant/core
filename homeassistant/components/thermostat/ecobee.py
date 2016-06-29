@@ -5,16 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.ecobee/
 """
 import logging
+from os import path
+import voluptuous as vol
 
 from homeassistant.components import ecobee
 from homeassistant.components.thermostat import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import STATE_OFF, STATE_ON, TEMP_FAHRENHEIT
+    DOMAIN, STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, TEMP_FAHRENHEIT)
+from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ecobee']
 _LOGGER = logging.getLogger(__name__)
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 _CONFIGURING = {}
+
+ATTR_FAN_MIN_ON_TIME = "fan_min_on_time"
+SERVICE_SET_FAN_MIN_ON_TIME = "ecobee_set_fan_min_on_time"
+SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_FAN_MIN_ON_TIME): vol.Coerce(int),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,10 +38,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info(
         "Loading ecobee thermostat component with hold_temp set to %s",
         hold_temp)
-    add_devices(Thermostat(data, index, hold_temp)
-                for index in range(len(data.ecobee.thermostats)))
+    devices = [Thermostat(data, index, hold_temp)
+               for index in range(len(data.ecobee.thermostats))]
+    add_devices(devices)
+
+    def fan_min_on_time_set_service(service):
+        """Set the minimum fan on time on the target thermostats."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            target_thermostats = [device for device in devices
+                                  if device.entity_id == entity_id]
+        else:
+            target_thermostats = devices
+
+        fan_min_on_time = service.data[ATTR_FAN_MIN_ON_TIME]
+
+        for thermostat in target_thermostats:
+            thermostat.set_fan_min_on_time(str(fan_min_on_time))
+
+            thermostat.update_ha_state(True)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
+        descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
+        schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
 
+# pylint: disable=too-many-public-methods, abstract-method
 class Thermostat(ThermostatDevice):
     """A thermostat class for Ecobee."""
 
@@ -40,7 +79,6 @@ class Thermostat(ThermostatDevice):
         self.thermostat = self.data.ecobee.get_thermostat(
             self.thermostat_index)
         self._name = self.thermostat['name']
-        self._away = 'away' in self.thermostat['program']['currentClimateRef']
         self.hold_temp = hold_temp
 
     def update(self):
@@ -121,14 +159,17 @@ class Thermostat(ThermostatDevice):
     @property
     def mode(self):
         """Return current mode ie. home, away, sleep."""
-        mode = self.thermostat['program']['currentClimateRef']
-        self._away = 'away' in mode
-        return mode
+        return self.thermostat['program']['currentClimateRef']
 
     @property
     def hvac_mode(self):
         """Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off."""
         return self.thermostat['settings']['hvacMode']
+
+    @property
+    def fan_min_on_time(self):
+        """Return current fan minimum on time."""
+        return self.thermostat['settings']['fanMinOnTime']
 
     @property
     def device_state_attributes(self):
@@ -138,17 +179,23 @@ class Thermostat(ThermostatDevice):
             "humidity": self.humidity,
             "fan": self.fan,
             "mode": self.mode,
-            "hvac_mode": self.hvac_mode
+            "hvac_mode": self.hvac_mode,
+            "fan_min_on_time": self.fan_min_on_time
         }
 
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        return self._away
+        mode = self.mode
+        events = self.thermostat['events']
+        for event in events:
+            if event['running']:
+                mode = event['holdClimateRef']
+                break
+        return 'away' in mode
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self._away = True
         if self.hold_temp:
             self.data.ecobee.set_climate_hold(self.thermostat_index,
                                               "away", "indefinite")
@@ -157,7 +204,6 @@ class Thermostat(ThermostatDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self._away = False
         self.data.ecobee.resume_program(self.thermostat_index)
 
     def set_temperature(self, temperature):
@@ -176,24 +222,25 @@ class Thermostat(ThermostatDevice):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         self.data.ecobee.set_hvac_mode(self.thermostat_index, mode)
 
+    def set_fan_min_on_time(self, fan_min_on_time):
+        """Set the minimum fan on time."""
+        self.data.ecobee.set_fan_min_on_time(self.thermostat_index,
+                                             fan_min_on_time)
+
     # Home and Sleep mode aren't used in UI yet:
 
     # def turn_home_mode_on(self):
     #     """ Turns home mode on. """
-    #     self._away = False
     #     self.data.ecobee.set_climate_hold(self.thermostat_index, "home")
 
     # def turn_home_mode_off(self):
     #     """ Turns home mode off. """
-    #     self._away = False
     #     self.data.ecobee.resume_program(self.thermostat_index)
 
     # def turn_sleep_mode_on(self):
     #     """ Turns sleep mode on. """
-    #     self._away = False
     #     self.data.ecobee.set_climate_hold(self.thermostat_index, "sleep")
 
     # def turn_sleep_mode_off(self):
     #     """ Turns sleep mode off. """
-    #     self._away = False
     #     self.data.ecobee.resume_program(self.thermostat_index)

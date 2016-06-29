@@ -1,27 +1,19 @@
 """An abstract class for entities."""
+import logging
 import re
-from collections import defaultdict
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_HIDDEN,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_DEFAULT_NAME,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
-    STATE_OFF,
-    STATE_ON,
-    TEMP_CELCIUS,
-    TEMP_FAHRENHEIT,
-)
+    ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
+    STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    ATTR_ENTITY_PICTURE)
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 
-# Dict mapping entity_id to a boolean that overwrites the hidden property
-_OVERWRITE = defaultdict(dict)
+# Entity attributes that we will overwrite
+_OVERWRITE = {}
+
+_LOGGER = logging.getLogger(__name__)
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
@@ -32,12 +24,19 @@ def generate_entity_id(entity_id_format, name, current_ids=None, hass=None):
     name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
         if hass is None:
-            raise RuntimeError("Missing required parameter currentids or hass")
+            raise ValueError("Missing required parameter currentids or hass")
 
         current_ids = hass.states.entity_ids()
 
     return ensure_unique_string(
-        entity_id_format.format(slugify(name.lower())), current_ids)
+        entity_id_format.format(slugify(name)), current_ids)
+
+
+def set_customize(customize):
+    """Overwrite all current customize settings."""
+    global _OVERWRITE
+
+    _OVERWRITE = {key.lower(): val for key, val in customize.items()}
 
 
 def split_entity_id(entity_id):
@@ -126,6 +125,15 @@ class Entity(object):
         """Return True if unable to access real state of the entity."""
         return False
 
+    @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return False
+
     def update(self):
         """Retrieve latest state."""
         pass
@@ -183,7 +191,7 @@ class Entity(object):
             attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
-        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELCIUS,
+        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_CELSIUS,
                                                   TEMP_FAHRENHEIT):
 
             state, attr[ATTR_UNIT_OF_MEASUREMENT] = \
@@ -191,7 +199,8 @@ class Entity(object):
                     state, attr[ATTR_UNIT_OF_MEASUREMENT])
             state = str(state)
 
-        return self.hass.states.set(self.entity_id, state, attr)
+        return self.hass.states.set(
+            self.entity_id, state, attr, self.force_update)
 
     def _attr_setter(self, name, typ, attr, attrs):
         """Helper method to populate attributes based on properties."""
@@ -217,20 +226,6 @@ class Entity(object):
         """Return the representation."""
         return "<Entity {}: {}>".format(self.name, self.state)
 
-    @staticmethod
-    def overwrite_attribute(entity_id, attrs, vals):
-        """Overwrite any attribute of an entity.
-
-        This function should receive a list of attributes and a
-        list of values. Set attribute to None to remove any overwritten
-        value in place.
-        """
-        for attr, val in zip(attrs, vals):
-            if val is None:
-                _OVERWRITE[entity_id.lower()].pop(attr, None)
-            else:
-                _OVERWRITE[entity_id.lower()][attr] = val
-
 
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
@@ -244,15 +239,15 @@ class ToggleEntity(Entity):
     @property
     def is_on(self):
         """Return True if entity is on."""
-        return False
+        raise NotImplementedError()
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        pass
+        raise NotImplementedError()
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
-        pass
+        raise NotImplementedError()
 
     def toggle(self, **kwargs):
         """Toggle the entity off."""
@@ -260,12 +255,3 @@ class ToggleEntity(Entity):
             self.turn_off(**kwargs)
         else:
             self.turn_on(**kwargs)
-
-
-class EnumEntity(Entity):
-    """An abstract class for enumerated state entities."""
-
-    # pylint: disable=no-self-use
-    def set_value(self, value, **kwargs):
-        """Set the level of the entity."""
-        pass

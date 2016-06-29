@@ -6,23 +6,12 @@ https://home-assistant.io/components/wink/
 """
 import logging
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_ACCESS_TOKEN,
-    EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
+from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
+from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.loader import get_component
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.6.4']
-
-DISCOVER_LIGHTS = "wink.lights"
-DISCOVER_SWITCHES = "wink.switches"
-DISCOVER_SENSORS = "wink.sensors"
-DISCOVER_BINARY_SENSORS = "wink.binary_sensors"
-DISCOVER_LOCKS = "wink.locks"
-DISCOVER_GARAGE_DOORS = "wink.garage_doors"
+REQUIREMENTS = ['python-wink==0.7.7']
 
 
 def setup(hass, config):
@@ -36,28 +25,18 @@ def setup(hass, config):
     pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
 
     # Load components for the devices in the Wink that we support
-    for component_name, func_exists, discovery_type in (
-            ('light', pywink.get_bulbs, DISCOVER_LIGHTS),
-            ('switch', lambda: pywink.get_switches or
-             pywink.get_sirens or
-             pywink.get_powerstrip_outlets, DISCOVER_SWITCHES),
-            ('binary_sensor', pywink.get_sensors, DISCOVER_BINARY_SENSORS),
-            ('sensor', lambda: pywink.get_sensors or
-             pywink.get_eggtrays, DISCOVER_SENSORS),
-            ('lock', pywink.get_locks, DISCOVER_LOCKS),
-            ('garage_door', pywink.get_garage_doors, DISCOVER_GARAGE_DOORS)):
+    for component_name, func_exists in (
+            ('light', pywink.get_bulbs),
+            ('switch', lambda: pywink.get_switches or pywink.get_sirens or
+             pywink.get_powerstrip_outlets),
+            ('binary_sensor', pywink.get_sensors),
+            ('sensor', lambda: pywink.get_sensors or pywink.get_eggtrays),
+            ('lock', pywink.get_locks),
+            ('rollershutter', pywink.get_shades),
+            ('garage_door', pywink.get_garage_doors)):
 
         if func_exists():
-            component = get_component(component_name)
-
-            # Ensure component is loaded
-            bootstrap.setup_component(hass, component.DOMAIN, config)
-
-            # Fire discovery event
-            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: discovery_type,
-                ATTR_DISCOVERED: {}
-            })
+            discovery.load_platform(hass, component_name, DOMAIN, {}, config)
 
     return True
 
@@ -68,6 +47,7 @@ class WinkToggleDevice(ToggleEntity):
     def __init__(self, wink):
         """Initialize the Wink device."""
         self.wink = wink
+        self._battery = self.wink.battery_level
 
     @property
     def unique_id(self):
@@ -100,3 +80,16 @@ class WinkToggleDevice(ToggleEntity):
     def update(self):
         """Update state of the device."""
         self.wink.update_state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._battery:
+            return {
+                ATTR_BATTERY_LEVEL: self._battery_level,
+            }
+
+    @property
+    def _battery_level(self):
+        """Return the battery level."""
+        return self.wink.battery_level * 100

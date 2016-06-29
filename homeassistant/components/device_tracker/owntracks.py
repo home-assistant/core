@@ -11,7 +11,7 @@ from collections import defaultdict
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
-from homeassistant.util import convert
+from homeassistant.util import convert, slugify
 
 DEPENDENCIES = ['mqtt']
 
@@ -34,21 +34,39 @@ def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
 
-    def owntracks_location_update(topic, payload, qos):
-        """MQTT message received."""
-        # Docs on available data:
-        # http://owntracks.org/booklet/tech/json/#_typelocation
+    def validate_payload(payload, data_type):
+        """Validate OwnTracks payload."""
         try:
             data = json.loads(payload)
         except ValueError:
             # If invalid JSON
-            _LOGGER.error(
-                'Unable to parse payload as JSON: %s', payload)
-            return
+            _LOGGER.error('Unable to parse payload as JSON: %s', payload)
+            return None
+        if not isinstance(data, dict) or data.get('_type') != data_type:
+            _LOGGER.debug('Skipping %s update for following data '
+                          'because of missing or malformatted data: %s',
+                          data_type, data)
+            return None
+        if max_gps_accuracy is not None and \
+                convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
+            _LOGGER.debug('Skipping %s update because expected GPS '
+                          'accuracy %s is not met: %s',
+                          data_type, max_gps_accuracy, data)
+            return None
+        if convert(data.get('acc'), float, 1.0) == 0.0:
+            _LOGGER.debug('Skipping %s update because GPS accuracy'
+                          'is zero',
+                          data_type)
+            return None
 
-        if (not isinstance(data, dict) or data.get('_type') != 'location') or (
-                max_gps_accuracy is not None and
-                convert(data.get('acc'), float, 0.0) > max_gps_accuracy):
+        return data
+
+    def owntracks_location_update(topic, payload, qos):
+        """MQTT message received."""
+        # Docs on available data:
+        # http://owntracks.org/booklet/tech/json/#_typelocation
+        data = validate_payload(payload, 'location')
+        if not data:
             return
 
         dev_id, kwargs = _parse_see_args(topic, data)
@@ -65,44 +83,36 @@ def setup_scanner(hass, config, see):
             see_beacons(dev_id, kwargs)
 
     def owntracks_event_update(topic, payload, qos):
-        # pylint: disable=too-many-branches, too-many-statements
         """MQTT event (geofences) received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
-        try:
-            data = json.loads(payload)
-        except ValueError:
-            # If invalid JSON
-            _LOGGER.error(
-                'Unable to parse payload as JSON: %s', payload)
-            return
-
-        if not isinstance(data, dict) or data.get('_type') != 'transition':
+        data = validate_payload(payload, 'transition')
+        if not data:
             return
 
         if data.get('desc') is None:
             _LOGGER.error(
-                "Location missing from `enter/exit` message - "
+                "Location missing from `Entering/Leaving` message - "
                 "please turn `Share` on in OwnTracks app")
             return
         # OwnTracks uses - at the start of a beacon zone
         # to switch on 'hold mode' - ignore this
-        location = data['desc'].lstrip("-")
+        location = slugify(data['desc'].lstrip("-"))
         if location.lower() == 'home':
             location = STATE_HOME
 
         dev_id, kwargs = _parse_see_args(topic, data)
 
-        if data['event'] == 'enter':
+        def enter_event():
+            """Execute enter event."""
             zone = hass.states.get("zone.{}".format(location))
             with LOCK:
-                if zone is None:
-                    if data['t'] == 'b':
-                        # Not a HA zone, and a beacon so assume mobile
-                        beacons = MOBILE_BEACONS_ACTIVE[dev_id]
-                        if location not in beacons:
-                            beacons.append(location)
-                        _LOGGER.info("Added beacon %s", location)
+                if zone is None and data.get('t') == 'b':
+                    # Not a HA zone, and a beacon so assume mobile
+                    beacons = MOBILE_BEACONS_ACTIVE[dev_id]
+                    if location not in beacons:
+                        beacons.append(location)
+                    _LOGGER.info("Added beacon %s", location)
                 else:
                     # Normal region
                     regions = REGIONS_ENTERED[dev_id]
@@ -114,7 +124,8 @@ def setup_scanner(hass, config, see):
                 see(**kwargs)
                 see_beacons(dev_id, kwargs)
 
-        elif data['event'] == 'leave':
+        def leave_event():
+            """Execute leave event."""
             with LOCK:
                 regions = REGIONS_ENTERED[dev_id]
                 if location in regions:
@@ -146,6 +157,10 @@ def setup_scanner(hass, config, see):
                     beacons.remove(location)
                     _LOGGER.info("Remove beacon %s", location)
 
+        if data['event'] == 'enter':
+            enter_event()
+        elif data['event'] == 'leave':
+            leave_event()
         else:
             _LOGGER.error(
                 'Misformatted mqtt msgs, _type=transition, event=%s',
@@ -171,7 +186,7 @@ def setup_scanner(hass, config, see):
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects."""
     parts = topic.split('/')
-    dev_id = '{}_{}'.format(parts[1], parts[2])
+    dev_id = slugify('{}_{}'.format(parts[1], parts[2]))
     host_name = parts[1]
     kwargs = {
         'dev_id': dev_id,

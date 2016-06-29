@@ -176,7 +176,11 @@ class TestAutomationTime(unittest.TestCase):
                     'after': '5:00:00',
                 },
                 'action': {
-                    'service': 'test.automation'
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.platform }} - '
+                                '{{ trigger.now.hour }}'
+                    },
                 }
             }
         })
@@ -186,10 +190,11 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual('time - 5', self.calls[0].data['some'])
 
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -206,13 +211,12 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    @patch('homeassistant.components.automation.time._LOGGER.error')
-    def test_if_not_fires_using_wrong_after(self, mock_error):
+    def test_if_not_fires_using_wrong_after(self):
         """YAML translates time values to total seconds.
 
         This should break the before rule.
         """
-        assert _setup_component(self.hass, automation.DOMAIN, {
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -230,7 +234,6 @@ class TestAutomationTime(unittest.TestCase):
 
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
-        self.assertEqual(2, mock_error.call_count)
 
     def test_if_action_before(self):
         """Test for if action before."""
@@ -253,14 +256,14 @@ class TestAutomationTime(unittest.TestCase):
         before_10 = dt_util.now().replace(hour=8)
         after_10 = dt_util.now().replace(hour=14)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -288,14 +291,14 @@ class TestAutomationTime(unittest.TestCase):
         before_10 = dt_util.now().replace(hour=8)
         after_10 = dt_util.now().replace(hour=14)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -324,14 +327,14 @@ class TestAutomationTime(unittest.TestCase):
         monday = dt_util.now() - timedelta(days=days_past_monday)
         tuesday = monday + timedelta(days=1)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -361,21 +364,21 @@ class TestAutomationTime(unittest.TestCase):
         tuesday = monday + timedelta(days=1)
         wednesday = tuesday + timedelta(days=1)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(2, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=wednesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()

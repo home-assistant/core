@@ -2,11 +2,14 @@
 # pylint: disable=protected-access,too-many-public-methods
 import unittest
 
+import eventlet
+
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
+import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -45,6 +48,10 @@ def setUpModule():   # pylint: disable=invalid-name
 
     hass.start()
 
+    # Give eventlet time to start
+    # TODO fix this
+    eventlet.sleep(0.05)
+
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
     # Start slave
@@ -55,6 +62,10 @@ def setUpModule():   # pylint: disable=invalid-name
          http.CONF_SERVER_PORT: SLAVE_PORT}})
 
     slave.start()
+
+    # Give eventlet time to start
+    # TODO fix this
+    eventlet.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -144,6 +155,21 @@ class TestRemoteMethods(unittest.TestCase):
 
         self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
 
+    def test_set_state_with_push(self):
+        """TestPython API set_state with push option."""
+        events = []
+        hass.bus.listen(EVENT_STATE_CHANGED, events.append)
+
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        hass.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
+        remote.set_state(
+            master_api, 'test.test', 'set_test_2', force_update=True)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(2, len(events))
+
     def test_is_state(self):
         """Test Python API is_state."""
         self.assertTrue(
@@ -194,6 +220,9 @@ class TestRemoteMethods(unittest.TestCase):
         # Default method raises TypeError if non HA object
         self.assertRaises(TypeError, ha_json_enc.default, 1)
 
+        now = dt_util.utcnow()
+        self.assertEqual(now.isoformat(), ha_json_enc.default(now))
+
 
 class TestRemoteClasses(unittest.TestCase):
     """Test the homeassistant.remote module."""
@@ -228,6 +257,7 @@ class TestRemoteClasses(unittest.TestCase):
         slave.pool.block_till_done()
         # Wait till master gives updated state
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
@@ -236,11 +266,13 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertIn('remote.master_remove', slave.states.entity_ids())
 
         hass.states.remove("remote.master_remove")
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertNotIn('remote.master_remove', slave.states.entity_ids())
 
@@ -248,12 +280,14 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from slave."""
         hass.states.set("remote.slave_remove", "remove me!")
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertIn('remote.slave_remove', slave.states.entity_ids())
 
         self.assertTrue(slave.states.remove("remote.slave_remove"))
         slave.pool.block_till_done()
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
@@ -272,5 +306,6 @@ class TestRemoteClasses(unittest.TestCase):
         slave.pool.block_till_done()
         # Wait till master gives updated event
         hass.pool.block_till_done()
+        eventlet.sleep(0.01)
 
         self.assertEqual(1, len(test_value))

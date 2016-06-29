@@ -197,3 +197,26 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         mock_see.assert_called_once_with(
             mac=mac, dev_id=dev_id, host_name=host_name,
             location_name=location_name, gps=gps)
+
+    def test_not_write_duplicate_yaml_keys(self):
+        """Test that the device tracker will not generate invalid YAML."""
+        self.assertTrue(device_tracker.setup(self.hass, {}))
+
+        device_tracker.see(self.hass, 'mac_1', host_name='hello')
+        device_tracker.see(self.hass, 'mac_2', host_name='hello')
+
+        self.hass.pool.block_till_done()
+
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0), 0)
+        assert len(config) == 2
+
+    def test_not_allow_invalid_dev_id(self):
+        """Test that the device tracker will not allow invalid dev ids."""
+        self.assertTrue(device_tracker.setup(self.hass, {}))
+
+        device_tracker.see(self.hass, dev_id='hello-world')
+
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0), 0)
+        assert len(config) == 0

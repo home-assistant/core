@@ -9,15 +9,19 @@ import re
 from datetime import timedelta
 from itertools import groupby
 
+import voluptuous as vol
+
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    HTTP_BAD_REQUEST, STATE_NOT_HOME, STATE_OFF, STATE_ON)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.core import State
 from homeassistant.helpers.entity import split_entity_id
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'http']
@@ -39,6 +43,13 @@ ATTR_MESSAGE = 'message'
 ATTR_DOMAIN = 'domain'
 ATTR_ENTITY_ID = 'entity_id'
 
+LOG_MESSAGE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_MESSAGE): cv.string,
+    vol.Optional(ATTR_DOMAIN): cv.slug,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
@@ -58,44 +69,42 @@ def setup(hass, config):
     """Listen for download events to download files."""
     def log_message(service):
         """Handle sending notification message service calls."""
-        message = service.data.get(ATTR_MESSAGE)
-        name = service.data.get(ATTR_NAME)
-        domain = service.data.get(ATTR_DOMAIN, None)
-        entity_id = service.data.get(ATTR_ENTITY_ID, None)
-
-        if not message or not name:
-            return
+        message = service.data[ATTR_MESSAGE]
+        name = service.data[ATTR_NAME]
+        domain = service.data.get(ATTR_DOMAIN)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
         message = template.render(hass, message)
         log_entry(hass, name, message, domain, entity_id)
 
-    hass.http.register_path('GET', URL_LOGBOOK, _handle_get_logbook)
-    hass.services.register(DOMAIN, 'log', log_message)
+    hass.wsgi.register_view(LogbookView)
+
+    hass.services.register(DOMAIN, 'log', log_message,
+                           schema=LOG_MESSAGE_SCHEMA)
     return True
 
 
-def _handle_get_logbook(handler, path_match, data):
-    """Return logbook entries."""
-    date_str = path_match.group('date')
+class LogbookView(HomeAssistantView):
+    """Handle logbook view requests."""
 
-    if date_str:
-        start_date = dt_util.date_str_to_date(date_str)
+    url = '/api/logbook'
+    name = 'api:logbook'
+    extra_urls = ['/api/logbook/<date:date>']
 
-        if start_date is None:
-            handler.write_json_message("Error parsing JSON", HTTP_BAD_REQUEST)
-            return
+    def get(self, request, date=None):
+        """Retrieve logbook entries."""
+        if date:
+            start_day = dt_util.start_of_local_day(date)
+        else:
+            start_day = dt_util.start_of_local_day()
 
-        start_day = dt_util.start_of_local_day(start_date)
-    else:
-        start_day = dt_util.start_of_local_day()
+        end_day = start_day + timedelta(days=1)
 
-    end_day = start_day + timedelta(days=1)
+        events = recorder.query_events(
+            QUERY_EVENTS_BETWEEN,
+            (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
 
-    events = recorder.query_events(
-        QUERY_EVENTS_BETWEEN,
-        (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
-
-    handler.write_json(humanify(events))
+        return self.json(humanify(events))
 
 
 class Entry(object):
@@ -114,7 +123,7 @@ class Entry(object):
     def as_dict(self):
         """Convert entry to a dict to be used within JSON."""
         return {
-            'when': dt_util.datetime_to_str(self.when),
+            'when': self.when,
             'name': self.name,
             'message': self.message,
             'domain': self.domain,

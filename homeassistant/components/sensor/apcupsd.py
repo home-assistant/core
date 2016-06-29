@@ -7,13 +7,13 @@ https://home-assistant.io/components/sensor.apcupsd/
 import logging
 
 from homeassistant.components import apcupsd
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = [apcupsd.DOMAIN]
 DEFAULT_NAME = "UPS Status"
 SPECIFIC_UNITS = {
-    "ITEMP": TEMP_CELCIUS
+    "ITEMP": TEMP_CELSIUS
 }
 
 _LOGGER = logging.getLogger(__name__)

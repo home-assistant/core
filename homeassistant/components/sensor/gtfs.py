@@ -7,14 +7,15 @@ https://home-assistant.io/components/sensor.gtfs/
 import os
 import logging
 import datetime
+import threading
 
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
-                "6b40d5fb30fd410cfaf637c901b5ed5a08c33e4c.zip#"
-                "pygtfs==0.1.2"]
+                "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
+                "pygtfs==0.1.3"]
 
 ICON = "mdi:train"
 
@@ -67,6 +68,7 @@ def get_next_departure(sched, start_station_id, end_station_id):
                AND time(origin_stop_time.departure_time) > time(:now_str)
     AND start_station.stop_id = :origin_station_id
                AND end_station.stop_id = :end_station_id
+    AND origin_stop_time.stop_sequence < destination_stop_time.stop_sequence
     ORDER BY origin_stop_time.departure_time LIMIT 1;
     """.format(day_name=day_name))
     result = sched.engine.execute(sql_query, now_str=now_str,
@@ -152,9 +154,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("The given GTFS data file/folder was not found!")
         return False
 
+    import pygtfs
+
+    split_file_name = os.path.splitext(config["data"])
+
+    sqlite_file = "{}.sqlite".format(split_file_name[0])
+    joined_path = os.path.join(gtfs_dir, sqlite_file)
+    gtfs = pygtfs.Schedule(joined_path)
+
+    # pylint: disable=no-member
+    if len(gtfs.feeds) < 1:
+        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir,
+                                              config["data"]))
+
     dev = []
-    dev.append(GTFSDepartureSensor(config["data"], gtfs_dir,
-                                   config["origin"], config["destination"]))
+    dev.append(GTFSDepartureSensor(gtfs, config["origin"],
+                                   config["destination"]))
     add_devices(dev)
 
 # pylint: disable=too-many-instance-attributes,too-few-public-methods
@@ -163,16 +178,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GTFSDepartureSensor(Entity):
     """Implementation of an GTFS departures sensor."""
 
-    def __init__(self, data_source, gtfs_folder, origin, destination):
+    def __init__(self, pygtfs, origin, destination):
         """Initialize the sensor."""
-        self._data_source = data_source
-        self._gtfs_folder = gtfs_folder
+        self._pygtfs = pygtfs
         self.origin = origin
         self.destination = destination
         self._name = "GTFS Sensor"
         self._unit_of_measurement = "min"
         self._state = 0
         self._attributes = {}
+        self.lock = threading.Lock()
         self.update()
 
     @property
@@ -202,62 +217,52 @@ class GTFSDepartureSensor(Entity):
 
     def update(self):
         """Get the latest data from GTFS and update the states."""
-        import pygtfs
+        with self.lock:
+            self._departure = get_next_departure(self._pygtfs, self.origin,
+                                                 self.destination)
+            self._state = self._departure["minutes_until_departure"]
 
-        split_file_name = os.path.splitext(self._data_source)
+            origin_station = self._departure["origin_station"]
+            destination_station = self._departure["destination_station"]
+            origin_stop_time = self._departure["origin_stop_time"]
+            destination_stop_time = self._departure["destination_stop_time"]
+            agency = self._departure["agency"]
+            route = self._departure["route"]
+            trip = self._departure["trip"]
 
-        sqlite_file = "{}.sqlite".format(split_file_name[0])
-        gtfs = pygtfs.Schedule(os.path.join(self._gtfs_folder, sqlite_file))
+            name = "{} {} to {} next departure"
+            self._name = name.format(agency.agency_name,
+                                     origin_station.stop_id,
+                                     destination_station.stop_id)
 
-        # pylint: disable=no-member
-        if len(gtfs.feeds) < 1:
-            pygtfs.append_feed(gtfs, os.path.join(self._gtfs_folder,
-                                                  self._data_source))
+            # Build attributes
 
-        self._departure = get_next_departure(gtfs, self.origin,
-                                             self.destination)
-        self._state = self._departure["minutes_until_departure"]
+            self._attributes = {}
 
-        origin_station = self._departure["origin_station"]
-        destination_station = self._departure["destination_station"]
-        origin_stop_time = self._departure["origin_stop_time"]
-        destination_stop_time = self._departure["destination_stop_time"]
-        agency = self._departure["agency"]
-        route = self._departure["route"]
-        trip = self._departure["trip"]
+            def dict_for_table(resource):
+                """Return a dict for the SQLAlchemy resource given."""
+                return dict((col, getattr(resource, col))
+                            for col in resource.__table__.columns.keys())
 
-        name = "{} {} to {} next departure"
-        self._name = name.format(agency.agency_name,
-                                 origin_station.stop_id,
-                                 destination_station.stop_id)
+            def append_keys(resource, prefix=None):
+                """Properly format key val pairs to append to attributes."""
+                for key, val in resource.items():
+                    if val == "" or val is None or key == "feed_id":
+                        continue
+                    pretty_key = key.replace("_", " ")
+                    pretty_key = pretty_key.title()
+                    pretty_key = pretty_key.replace("Id", "ID")
+                    pretty_key = pretty_key.replace("Url", "URL")
+                    if prefix is not None and \
+                       pretty_key.startswith(prefix) is False:
+                        pretty_key = "{} {}".format(prefix, pretty_key)
+                    self._attributes[pretty_key] = val
 
-        # Build attributes
-
-        self._attributes = {}
-
-        def dict_for_table(resource):
-            """Return a dict for the SQLAlchemy resource given."""
-            return dict((col, getattr(resource, col))
-                        for col in resource.__table__.columns.keys())
-
-        def append_keys(resource, prefix=None):
-            """Properly format key val pairs to append to attributes."""
-            for key, val in resource.items():
-                if val == "" or val is None or key == "feed_id":
-                    continue
-                pretty_key = key.replace("_", " ")
-                pretty_key = pretty_key.title()
-                pretty_key = pretty_key.replace("Id", "ID")
-                pretty_key = pretty_key.replace("Url", "URL")
-                if prefix is not None and \
-                   pretty_key.startswith(prefix) is False:
-                    pretty_key = "{} {}".format(prefix, pretty_key)
-                self._attributes[pretty_key] = val
-
-        append_keys(dict_for_table(agency), "Agency")
-        append_keys(dict_for_table(route), "Route")
-        append_keys(dict_for_table(trip), "Trip")
-        append_keys(dict_for_table(origin_station), "Origin Station")
-        append_keys(dict_for_table(destination_station), "Destination Station")
-        append_keys(origin_stop_time, "Origin Stop")
-        append_keys(destination_stop_time, "Destination Stop")
+            append_keys(dict_for_table(agency), "Agency")
+            append_keys(dict_for_table(route), "Route")
+            append_keys(dict_for_table(trip), "Trip")
+            append_keys(dict_for_table(origin_station), "Origin Station")
+            append_keys(dict_for_table(destination_station),
+                        "Destination Station")
+            append_keys(origin_stop_time, "Origin Stop")
+            append_keys(destination_stop_time, "Destination Stop")

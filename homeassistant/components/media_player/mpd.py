@@ -10,14 +10,16 @@ import socket
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_PLAYLIST,
+    MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['python-mpd2==0.5.5']
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
-    SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PLAY_MEDIA
 
 
 # pylint: disable=unused-argument
@@ -64,7 +66,7 @@ class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
     # MPD confuses pylint
-    # pylint: disable=no-member, abstract-method
+    # pylint: disable=no-member, too-many-public-methods, abstract-method
     def __init__(self, server, port, location, password):
         """Initialize the MPD device."""
         import mpd
@@ -87,7 +89,13 @@ class MpdDevice(MediaPlayerDevice):
         try:
             self.status = self.client.status()
             self.currentsong = self.client.currentsong()
-        except mpd.ConnectionError:
+        except (mpd.ConnectionError, BrokenPipeError, ValueError):
+            # Cleanly disconnect in case connection is not in valid state
+            try:
+                self.client.disconnect()
+            except mpd.ConnectionError:
+                pass
+
             self.client.connect(self.server, self.port)
 
             if self.password is not None:
@@ -203,3 +211,14 @@ class MpdDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Service to send the MPD the command for previous track."""
         self.client.previous()
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Send the media player the command for playing a playlist."""
+        _LOGGER.info(str.format("Playing playlist: {0}", media_id))
+        if media_type == MEDIA_TYPE_PLAYLIST:
+            self.client.clear()
+            self.client.load(media_id)
+            self.client.play()
+        else:
+            _LOGGER.error(str.format("Invalid media type. Expected: {0}",
+                                     MEDIA_TYPE_PLAYLIST))
