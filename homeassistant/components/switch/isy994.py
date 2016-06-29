@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Import not dimmable nodes and groups
     for (path, node) in ISY.nodes:
-        logger.critical(node.name + '|' + (SWITCH_STRING in path))
+        logger.critical(node.name + '|' + str(SWITCH_STRING in path))
         if not node.dimmable and (SWITCH_STRING in node.name or SWITCH_STRING in path):
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
