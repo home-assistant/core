@@ -66,7 +66,7 @@ class RokuDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        import requests.exceptions
+        from requests.exceptions import (ConnectionError, ReadTimeout)
 
         try:
             self.roku_name = "roku_" + self.roku.device_info.sernum
@@ -77,7 +77,7 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = self.roku.current_app
             else:
                 self.current_app = None
-        except requests.exceptions.ConnectionError:
+        except (ConnectionError, ReadTimeout):
             self.current_app = None
 
     def get_source_list(self):
