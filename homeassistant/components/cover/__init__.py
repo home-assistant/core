@@ -96,10 +96,6 @@ def setup(hass, config):
                            handle_cover_service,
                            descriptions.get(SERVICE_STOP),
                            schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_STOP,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_STOP),
-                           schema=COVER_SERVICE_SCHEMA)
     return True
 
 
