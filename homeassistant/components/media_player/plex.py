@@ -111,7 +111,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
             {host: {'token': token}}):
         _LOGGER.error('failed to save config file')
 
-    _LOGGER.info('Connected to: http://%s', host)
+    _LOGGER.critical('Connected to: http://%s', host)
 
     plex_clients = {}
     plex_sessions = {}
