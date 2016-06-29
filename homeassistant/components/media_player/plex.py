@@ -77,6 +77,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
+    logger.critical('HOST: ' + host);
+    logger.critical('TOKEN: ' + token);
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
@@ -91,7 +93,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
     except (plexapi.exceptions.BadRequest,
             plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
-        _LOGGER.info(error)
+        _LOGGER.error(error)
         # No token or wrong token
         request_configuration(host, hass, add_devices_callback)
         return
