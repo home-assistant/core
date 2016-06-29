@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Import sensor nodes
     for (path, node) in ISY.nodes:
-        if SENSOR_STRING in node.name:
+        if SENSOR_STRING in node.name or SENSOR_STRING in path:
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
             devs.append(ISYSensorDevice(node, [STATE_ON, STATE_OFF]))
