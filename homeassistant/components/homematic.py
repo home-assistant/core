@@ -20,11 +20,10 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.6']
+REQUIREMENTS = ['pyhomematic==0.1.8']
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
-HOMEMATIC_DEVICES = {}
 
 DISCOVER_SWITCHES = "homematic.switch"
 DISCOVER_LIGHTS = "homematic.light"
@@ -34,18 +33,22 @@ DISCOVER_ROLLERSHUTTER = "homematic.rollershutter"
 DISCOVER_THERMOSTATS = "homematic.thermostat"
 
 ATTR_DISCOVER_DEVICES = "devices"
-ATTR_DISCOVER_CONFIG = "config"
+ATTR_PARAM = "param"
+ATTR_CHANNEL = "channel"
+ATTR_NAME = "name"
+ATTR_ADDRESS = "address"
+
+EVENT_KEYPRESS = "homematic.keypress"
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: ["Switch", "SwitchPowermeter"],
     DISCOVER_LIGHTS: ["Dimmer"],
     DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
                        "RemoteMotion", "ThermostatWall", "AreaThermostat",
-                       "RotaryHandleSensor"],
+                       "RotaryHandleSensor", "WaterSensor"],
     DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
-    DISCOVER_BINARY_SENSORS: ["Remote", "ShutterContact", "Smoke", "SmokeV2",
-                              "Motion", "MotionV2", "RemoteMotion",
-                              "GongSensor"],
+    DISCOVER_BINARY_SENSORS: ["ShutterContact", "Smoke", "SmokeV2",
+                              "Motion", "MotionV2", "RemoteMotion"],
     DISCOVER_ROLLERSHUTTER: ["Blind"]
 }
 
@@ -65,6 +68,13 @@ HM_ATTRIBUTE_SUPPORT = {
     "VOLTAGE": ["Voltage", {}]
 }
 
+HM_PRESS_EVENTS = [
+    "PRESS_SHORT",
+    "PRESS_LONG",
+    "PRESS_CONT",
+    "PRESS_LONG_RELEASE"
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -80,6 +90,8 @@ def setup(hass, config):
     remote_ip = config[DOMAIN].get("remote_ip", None)
     remote_port = config[DOMAIN].get("remote_port", 2001)
     resolvenames = config[DOMAIN].get("resolvenames", False)
+    username = config[DOMAIN].get("username", "Admin")
+    password = config[DOMAIN].get("password", "")
     HOMEMATIC_LINK_DELAY = config[DOMAIN].get("delay", 0.5)
 
     if remote_ip is None or local_ip is None:
@@ -88,12 +100,15 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(system_callback_handler, hass, config)
+    # pylint: disable=unexpected-keyword-arg
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
                              remoteport=remote_port,
                              systemcallback=bound_system_callback,
                              resolvenames=resolvenames,
+                             rpcusername=username,
+                             rpcpassword=password,
                              interface_id="homeassistant")
 
     # Start server thread, connect to peer, initialize to receive events
@@ -117,6 +132,20 @@ def system_callback_handler(hass, config, src, *args):
         # Get list of all keys of the devices (ignoring channels)
         for dev in dev_descriptions:
             key_dict[dev['ADDRESS'].split(':')[0]] = True
+
+        # Register EVENTS
+        # Search all device with a EVENTNODE that include data
+        bound_event_callback = partial(_hm_event_handler, hass)
+        for dev in key_dict:
+            if dev not in HOMEMATIC.devices:
+                continue
+
+            hmdevice = HOMEMATIC.devices.get(dev)
+            # have events?
+            if len(hmdevice.EVENTNODE) > 0:
+                _LOGGER.debug("Register Events from %s", dev)
+                hmdevice.setEventCallback(callback=bound_event_callback,
+                                          bequeath=True)
 
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
@@ -142,16 +171,16 @@ def system_callback_handler(hass, config, src, *args):
 
 def _get_devices(device_type, keys):
     """Get devices."""
-    from homeassistant.components.binary_sensor.homematic import \
-        SUPPORT_HM_EVENT_AS_BINMOD
-
     # run
     device_arr = []
     for key in keys:
         device = HOMEMATIC.devices[key]
-        if device.__class__.__name__ not in HM_DEVICE_TYPES[device_type]:
-            continue
+        class_name = device.__class__.__name__
         metadata = {}
+
+        # is class supported by discovery type
+        if class_name not in HM_DEVICE_TYPES[device_type]:
+            continue
 
         # Load metadata if needed to generate a param list
         if device_type == DISCOVER_SENSORS:
@@ -159,12 +188,7 @@ def _get_devices(device_type, keys):
         elif device_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
 
-            # Also add supported events as binary type
-            for event, channel in device.EVENTNODE.items():
-                if event in SUPPORT_HM_EVENT_AS_BINMOD:
-                    metadata.update({event: channel})
-
-        params = _create_params_list(device, metadata)
+        params = _create_params_list(device, metadata, device_type)
         if params:
             # Generate options for 1...n elements with 1...n params
             for channel in range(1, device.ELEMENT + 1):
@@ -177,9 +201,9 @@ def _get_devices(device_type, keys):
                         device_dict = dict(platform="homematic",
                                            address=key,
                                            name=name,
-                                           button=channel)
+                                           channel=channel)
                         if param is not None:
-                            device_dict["param"] = param
+                            device_dict[ATTR_PARAM] = param
 
                         # Add new device
                         device_arr.append(device_dict)
@@ -192,15 +216,22 @@ def _get_devices(device_type, keys):
     return device_arr
 
 
-def _create_params_list(hmdevice, metadata):
+def _create_params_list(hmdevice, metadata, device_type):
     """Create a list from HMDevice with all possible parameters in config."""
     params = {}
+    merge = False
+
+    # use merge?
+    if device_type == DISCOVER_SENSORS:
+        merge = True
+    elif device_type == DISCOVER_BINARY_SENSORS:
+        merge = True
 
     # Search in sensor and binary metadata per elements
     for channel in range(1, hmdevice.ELEMENT + 1):
         param_chan = []
-        try:
-            for node, meta_chan in metadata.items():
+        for node, meta_chan in metadata.items():
+            try:
                 # Is this attribute ignored?
                 if node in HM_IGNORE_DISCOVERY_NODE:
                     continue
@@ -210,15 +241,17 @@ def _create_params_list(hmdevice, metadata):
                 elif channel == 1:
                     # First channel can have other data channel
                     param_chan.append(node)
-        # pylint: disable=broad-except
-        except Exception as err:
-            _LOGGER.error("Exception generating %s (%s): %s",
-                          hmdevice.ADDRESS, str(metadata), str(err))
-        # Default parameter
-        if not param_chan:
+            except (TypeError, ValueError):
+                _LOGGER.error("Exception generating %s (%s)",
+                              hmdevice.ADDRESS, str(metadata))
+
+        # default parameter is merge is off
+        if len(param_chan) == 0 and not merge:
             param_chan.append(None)
+
         # Add to channel
-        params.update({channel: param_chan})
+        if len(param_chan) > 0:
+            params.update({channel: param_chan})
 
     _LOGGER.debug("Create param list for %s with: %s", hmdevice.ADDRESS,
                   str(params))
@@ -247,7 +280,7 @@ def _create_ha_name(name, channel, param):
 def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
                                     add_callback_devices):
     """Helper to setup Homematic devices with discovery info."""
-    for config in discovery_info["devices"]:
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
         _LOGGER.debug("Add device %s from config: %s",
                       str(hmdevicetype), str(config))
 
@@ -261,16 +294,41 @@ def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
     return True
 
 
+def _hm_event_handler(hass, device, caller, attribute, value):
+    """Handle all pyhomematic device events."""
+    channel = device.split(":")[1]
+    address = device.split(":")[0]
+    hmdevice = HOMEMATIC.devices.get(address)
+
+    # is not a event?
+    if attribute not in hmdevice.EVENTNODE:
+        return
+
+    _LOGGER.debug("Event %s for %s channel %s", attribute,
+                  hmdevice.NAME, channel)
+
+    # a keypress event
+    if attribute in HM_PRESS_EVENTS:
+        hass.bus.fire(EVENT_KEYPRESS, {
+            ATTR_NAME: hmdevice.NAME,
+            ATTR_PARAM: attribute,
+            ATTR_CHANNEL: channel
+        })
+        return
+
+    _LOGGER.warning("Event is unknown and not forwarded to HA")
+
+
 class HMDevice(Entity):
     """Homematic device base object."""
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize generic HM device."""
-        self._name = config.get("name", None)
-        self._address = config.get("address", None)
-        self._channel = config.get("button", 1)
-        self._state = config.get("param", None)
+        self._name = config.get(ATTR_NAME, None)
+        self._address = config.get(ATTR_ADDRESS, None)
+        self._channel = config.get(ATTR_CHANNEL, 1)
+        self._state = config.get(ATTR_PARAM, None)
         self._data = {}
         self._hmdevice = None
         self._connected = False
@@ -311,12 +369,19 @@ class HMDevice(Entity):
         """Return device specific state attributes."""
         attr = {}
 
+        # no data available to create
+        if not self.available:
+            return attr
+
         # Generate an attributes list
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
             # Is an attributes and exists for this object
             if node in self._data:
                 value = data[1].get(self._data[node], self._data[node])
                 attr[data[0]] = value
+
+        # static attributes
+        attr["ID"] = self._hmdevice.ADDRESS
 
         return attr
 
@@ -382,17 +447,11 @@ class HMDevice(Entity):
             self._available = bool(value)
             have_change = True
 
-        # If it has changed, update HA
+        # If it has changed data point, update HA
         if have_change:
             _LOGGER.debug("%s update_ha_state after '%s'", self._name,
                           attribute)
             self.update_ha_state()
-
-            # Reset events
-            if attribute in self._hmdevice.EVENTNODE:
-                _LOGGER.debug("%s reset event", self._name)
-                self._data[attribute] = False
-                self.update_ha_state()
 
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
@@ -441,18 +500,15 @@ class HMDevice(Entity):
                 if node in self._data:
                     self._data[node] = funct(name=node, channel=self._channel)
 
-        # Set events to False
-        for node in self._hmdevice.EVENTNODE:
-            if node in self._data:
-                self._data[node] = False
-
         return True
 
     def _hm_set_state(self, value):
+        """Set data to main datapoint."""
         if self._state in self._data:
             self._data[self._state] = value
 
     def _hm_get_state(self):
+        """Get data from main datapoint."""
         if self._state in self._data:
             return self._data[self._state]
         return None
