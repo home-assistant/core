@@ -77,8 +77,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    logger.critical('HOST: ' + host);
-    logger.critical('TOKEN: ' + token);
+    _LOGGER.critical('HOST: ' + host);
+    _LOGGER.critical('TOKEN: ' + token);
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
