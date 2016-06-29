@@ -62,8 +62,12 @@ def setup(hass, config):
     # Pull and parse optional configuration.
     global SENSOR_STRING
     global HIDDEN_STRING
+    global LIGHT_STRING
+    global SWITCH_STRING
     SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
     HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
+    LIGHT_STRING = str(config[DOMAIN].get('light_string', LIGHT_STRING))
+    SWITCH_STRING = str(config[DOMAIN].get('switch_string', SWITCH_STRING))
     tls_version = config[DOMAIN].get(CONF_TLS_VER, None)
 
     # Connect to ISY controller.

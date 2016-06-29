@@ -7,7 +7,7 @@ https://home-assistant.io/components/isy994/
 import logging
 
 from homeassistant.components.isy994 import (
-    HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
+    HIDDEN_STRING, ISY, SWITCH_STRING, ISYDeviceABC)
 from homeassistant.const import STATE_OFF, STATE_ON  # STATE_OPEN, STATE_CLOSED
 
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Import not dimmable nodes and groups
     for (path, node) in ISY.nodes:
-        if not node.dimmable and SENSOR_STRING not in node.name:
+        if not node.dimmable and SWITCH_STRING in node.name:
             if HIDDEN_STRING in path:
                 node.name += HIDDEN_STRING
             devs.append(ISYSwitchDevice(node))
