@@ -20,7 +20,7 @@ from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import (
     Entity,
     ToggleEntity,
-    EnumEntity,
+    # EnumEntity,
 )
 from homeassistant.loader import get_component
 
@@ -170,7 +170,7 @@ class InsteonToggleDevice(InsteonDevice, ToggleEntity):
         self._value = self.get_level(resp)
 
 
-class InsteonFanDevice(EnumEntity, InsteonDevice):
+class InsteonFanDevice(InsteonDevice): #EnumEntity
     """An abstract class for an Insteon node."""
 
     def __init__(self, node):
