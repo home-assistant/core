@@ -8,12 +8,13 @@ import logging
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     Light, ATTR_RGB_COLOR
+from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['python-wink==0.7.7']
+REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.8']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -35,26 +36,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         WinkLight(light) for light in pywink.get_bulbs())
 
 
-class WinkLight(Light):
+class WinkLight(WinkDevice, Light):
     """Representation of a Wink light."""
 
     def __init__(self, wink):
-        """
-        Initialize the light.
-
-        :type wink: pywink.devices.standard.bulb.WinkBulb
-        """
-        self.wink = wink
-
-    @property
-    def unique_id(self):
-        """Return the ID of this Wink light."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the light if any."""
-        return self.wink.name()
+        """Initialize the Wink device."""
+        WinkDevice.__init__(self, wink)
 
     @property
     def is_on(self):
@@ -65,11 +52,6 @@ class WinkLight(Light):
     def brightness(self):
         """Return the brightness of the light."""
         return int(self.wink.brightness() * 255)
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
 
     @property
     def xy_color(self):
@@ -112,7 +94,3 @@ class WinkLight(Light):
     def turn_off(self):
         """Turn the switch off."""
         self.wink.set_state(False)
-
-    def update(self):
-        """Update state of the light."""
-        self.wink.update_state(require_desired_state_fulfilled=True)

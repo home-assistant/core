@@ -220,6 +220,16 @@ proliphix==0.1.0
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.0
 
+# homeassistant.components.wink
+# homeassistant.components.binary_sensor.wink
+# homeassistant.components.garage_door.wink
+# homeassistant.components.light.wink
+# homeassistant.components.lock.wink
+# homeassistant.components.rollershutter.wink
+# homeassistant.components.sensor.wink
+# homeassistant.components.switch.wink
+pubnub==3.7.8
+
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
 
@@ -324,7 +334,7 @@ python-twitch==1.2.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.7
+python-wink==0.7.8
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
