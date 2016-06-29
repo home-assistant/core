@@ -22,10 +22,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             CommandCover(
                 hass,
                 properties.get('name', dev_name),
-                properties.get('upcmd', 'true'),
-                properties.get('downcmd', 'true'),
-                properties.get('stopcmd', 'true'),
-                properties.get('statecmd', False),
+                properties.get('open_cmd', 'true'),
+                properties.get('close_cmd', 'true'),
+                properties.get('stop_cmd', 'true'),
+                properties.get('state_cmd', False),
                 properties.get(CONF_VALUE_TEMPLATE, '{{ value }}')))
     add_devices_callback(devices)
 
