@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if ISY is None or not ISY.connected:
         logger.error('A connection has not been made to the ISY controller.')
-        #return False
+        return False
 
     # Import dimmable nodes
     for (path, node) in ISY.nodes:
