@@ -25,15 +25,15 @@ from homeassistant.helpers.entity import (
 from homeassistant.loader import get_component
 
 DOMAIN = "insteon_hub"
-DEVICE_CLASSES = ['light', 'fan', 'switch', 'sensor']
+DEVICE_CLASSES = ['light', 'fan', 'switch']
 REQUIREMENTS = ['insteon_hub==0.4.5']
 INSTEON = None
 _LOGGER = logging.getLogger(__name__)
 DISCOVERY = {
     'light': DOMAIN + '.light',
     'fan': DOMAIN + '.fan',
-    'switch': DOMAIN + '.switch',
-    'sensor': DOMAIN + '.sensor'}
+    'switch': DOMAIN + '.switch'
+}
 
 
 def filter_devices(devices, categories):
@@ -124,7 +124,7 @@ class InsteonSensorDevice(InsteonDevice, Entity):
 
     def update(self):
         """Update state of the sensor."""
-        resp = self.node.send_command('get_relay_status', wait=True)
+        resp = self.node.send_command('get_status', wait=True)
         try:
             self._state = resp
         except KeyError:
