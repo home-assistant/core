@@ -1,13 +1,9 @@
 """
-The homematic binary sensor platform.
+Support for Homematic binary sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
-
-Important: For this platform to work the homematic component has to be
-properly configured.
 """
-
 import logging
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -29,7 +25,7 @@ SENSOR_TYPES_CLASS = {
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the platform."""
+    """Setup the Homematic binary sensor platform."""
     if discovery_info is None:
         return
 
@@ -39,11 +35,11 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
-    """Represents diverse binary Homematic units in Home Assistant."""
+    """Representation of a binary Homematic device."""
 
     @property
     def is_on(self):
-        """Return True if switch is on."""
+        """Return true if switch is on."""
         if not self.available:
             return False
         return bool(self._hm_get_state())
@@ -68,20 +64,20 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # check if the homematic device correct for this HA device
+        # check if the Homematic device correct for this HA device
         if not isinstance(self._hmdevice, pyHMBinarySensor):
-            _LOGGER.critical("This %s can't be use as binary!", self._name)
+            _LOGGER.critical("This %s can't be use as binary", self._name)
             return False
 
         # if exists user value?
         if self._state and self._state not in self._hmdevice.BINARYNODE:
-            _LOGGER.critical("This %s have no binary with %s!", self._name,
+            _LOGGER.critical("This %s have no binary with %s", self._name,
                              self._state)
             return False
 
-        # only check and give a warining to User
+        # only check and give a warning to the user
         if self._state is None and len(self._hmdevice.BINARYNODE) > 1:
-            _LOGGER.critical("%s have multible binary params. It use all " +
+            _LOGGER.critical("%s have multiple binary params. It use all "
                              "binary nodes as one. Possible param values: %s",
                              self._name, str(self._hmdevice.BINARYNODE))
             return False
@@ -89,7 +85,7 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         return True
 
     def _init_data_struct(self):
-        """Generate a data struct (self._data) from hm metadata."""
+        """Generate a data struct (self._data) from the Homematic metadata."""
         super()._init_data_struct()
 
         # object have 1 binary

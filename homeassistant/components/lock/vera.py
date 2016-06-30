@@ -18,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return Vera switches."""
+    """Find and return Vera locks."""
     add_devices_callback(
         VeraLock(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['lock'])
 
 
 class VeraLock(VeraDevice, LockDevice):
-    """Representation of a Vera Lock."""
+    """Representation of a Vera lock."""
 
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
@@ -43,13 +43,13 @@ class VeraLock(VeraDevice, LockDevice):
         return attr
 
     def lock(self, **kwargs):
-        """Lock."""
+        """Lock the device."""
         self.vera_device.lock()
         self._state = STATE_LOCKED
         self.update_ha_state()
 
     def unlock(self, **kwargs):
-        """Unlock."""
+        """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
         self.update_ha_state()
@@ -60,6 +60,6 @@ class VeraLock(VeraDevice, LockDevice):
         return self._state == STATE_LOCKED
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Called by the Vera device callback to update state."""
         self._state = (STATE_LOCKED if self.vera_device.is_locked(True)
                        else STATE_UNLOCKED)
