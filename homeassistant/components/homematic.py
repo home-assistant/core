@@ -92,7 +92,6 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(system_callback_handler, hass, config)
-    # pylint: disable=unexpected-keyword-arg
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
