@@ -11,6 +11,7 @@ from datetime import datetime
 import enum
 import json
 import logging
+import time
 import threading
 import urllib.parse
 
@@ -123,6 +124,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.services = ha.ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus, self.remote_api)
         self.config = ha.Config()
+        self.state = ha.CoreState.not_running
 
         self.config.api = local_api
 
@@ -134,17 +136,20 @@ class HomeAssistant(ha.HomeAssistant):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
+        self.state = ha.CoreState.starting
         ha.create_timer(self)
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
                       origin=ha.EventOrigin.remote)
 
-        # Give eventlet time to startup
-        import eventlet
-        eventlet.sleep(0.1)
+        # Ensure local HTTP is started
+        self.pool.block_till_done()
+        self.state = ha.CoreState.running
+        time.sleep(0.05)
 
         # Setup that events from remote_api get forwarded to local_api
-        # Do this after we fire START, otherwise HTTP is not started
+        # Do this after we are running, otherwise HTTP is not started
+        # or requests are blocked
         if not connect_remote_events(self.remote_api, self.config.api):
             raise HomeAssistantError((
                 'Could not setup event forwarding from api {} to '
@@ -153,6 +158,7 @@ class HomeAssistant(ha.HomeAssistant):
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
+        self.state = ha.CoreState.stopping
 
         self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
                       origin=ha.EventOrigin.remote)
@@ -161,6 +167,7 @@ class HomeAssistant(ha.HomeAssistant):
 
         # Disconnect master event forwarding
         disconnect_remote_events(self.remote_api, self.config.api)
+        self.state = ha.CoreState.not_running
 
 
 class EventBus(ha.EventBus):
