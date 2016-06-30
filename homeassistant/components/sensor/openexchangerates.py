@@ -1,4 +1,9 @@
-"""Support for openexchangerates.org exchange rates service."""
+"""
+Support for openexchangerates.org exchange rates service.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.openexchangerates/
+"""
 from datetime import timedelta
 import logging
 import requests
@@ -41,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OpenexchangeratesSensor(Entity):
-    """Implementing the Openexchangerates sensor."""
+    """Representation of an Openexchangerates sensor."""
 
     def __init__(self, rest, name, quote):
         """Initialize the sensor."""
@@ -87,7 +92,7 @@ class OpenexchangeratesData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from openexchangerates."""
+        """Get the latest data from openexchangerates.org."""
         try:
             result = requests.get(self._resource, params={'base': self._base,
                                                           'app_id':

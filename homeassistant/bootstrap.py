@@ -3,7 +3,6 @@
 import logging
 import logging.handlers
 import os
-import shutil
 import sys
 from collections import defaultdict
 from threading import RLock
@@ -12,21 +11,15 @@ import voluptuous as vol
 
 import homeassistant.components as core_components
 from homeassistant.components import group, persistent_notification
-import homeassistant.config as config_util
+import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
-import homeassistant.util.dt as date_util
-import homeassistant.util.location as loc_util
 import homeassistant.util.package as pkg_util
-from homeassistant.const import (
-    CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
-    CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, PLATFORM_FORMAT, __version__)
+from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
-    event_decorators, service, config_per_platform, extract_domain_configs,
-    entity)
+    event_decorators, service, config_per_platform, extract_domain_configs)
 
 _LOGGER = logging.getLogger(__name__)
 _SETUP_LOCK = RLock()
@@ -208,11 +201,6 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     return platform
 
 
-def mount_local_lib_path(config_dir):
-    """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'deps'))
-
-
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
                      verbose=False, skip_pip=False,
@@ -226,18 +214,17 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            mount_local_lib_path(config_dir)
+            _mount_local_lib_path(config_dir)
 
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        process_ha_core_config(hass, config_util.CORE_CONFIG_SCHEMA(
-            core_config))
-    except vol.MultipleInvalid as ex:
+        conf_util.process_ha_core_config(hass, core_config)
+    except vol.Invalid as ex:
         cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
         return None
 
-    process_ha_config_upgrade(hass)
+    conf_util.process_ha_config_upgrade(hass)
 
     if enable_log:
         enable_logging(hass, verbose, log_rotate_days)
@@ -292,12 +279,12 @@ def from_config_file(config_path, hass=None, verbose=False, skip_pip=True,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    mount_local_lib_path(config_dir)
+    _mount_local_lib_path(config_dir)
 
     enable_logging(hass, verbose, log_rotate_days)
 
     try:
-        config_dict = config_util.load_yaml_config_file(config_path)
+        config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
 
@@ -356,100 +343,12 @@ def enable_logging(hass, verbose=False, log_rotate_days=None):
             'Unable to setup error log %s (access denied)', err_log_path)
 
 
-def process_ha_config_upgrade(hass):
-    """Upgrade config if necessary."""
-    version_path = hass.config.path('.HA_VERSION')
-
-    try:
-        with open(version_path, 'rt') as inp:
-            conf_version = inp.readline().strip()
-    except FileNotFoundError:
-        # Last version to not have this file
-        conf_version = '0.7.7'
-
-    if conf_version == __version__:
-        return
-
-    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
-                 __version__)
-
-    # This was where dependencies were installed before v0.18
-    # Probably should keep this around until ~v0.20.
-    lib_path = hass.config.path('lib')
-    if os.path.isdir(lib_path):
-        shutil.rmtree(lib_path)
-
-    lib_path = hass.config.path('deps')
-    if os.path.isdir(lib_path):
-        shutil.rmtree(lib_path)
-
-    with open(version_path, 'wt') as outp:
-        outp.write(__version__)
-
-
-def process_ha_core_config(hass, config):
-    """Process the [homeassistant] section from the config."""
-    hac = hass.config
-
-    def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
-        if time_zone_str is None:
-            return
-
-        time_zone = date_util.get_time_zone(time_zone_str)
-
-        if time_zone:
-            hac.time_zone = time_zone
-            date_util.set_default_time_zone(time_zone)
-        else:
-            _LOGGER.error('Received invalid time zone %s', time_zone_str)
-
-    for key, attr in ((CONF_LATITUDE, 'latitude'),
-                      (CONF_LONGITUDE, 'longitude'),
-                      (CONF_NAME, 'location_name')):
-        if key in config:
-            setattr(hac, attr, config[key])
-
-    if CONF_TIME_ZONE in config:
-        set_time_zone(config.get(CONF_TIME_ZONE))
-
-    entity.set_customize(config.get(CONF_CUSTOMIZE))
-
-    if CONF_TEMPERATURE_UNIT in config:
-        hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
-
-    # If we miss some of the needed values, auto detect them
-    if None not in (
-            hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
-        return
-
-    _LOGGER.warning('Incomplete core config. Auto detecting location and '
-                    'temperature unit')
-
-    info = loc_util.detect_location_info()
-
-    if info is None:
-        _LOGGER.error('Could not detect location information')
-        return
-
-    if hac.latitude is None and hac.longitude is None:
-        hac.latitude = info.latitude
-        hac.longitude = info.longitude
-
-    if hac.temperature_unit is None:
-        if info.use_fahrenheit:
-            hac.temperature_unit = TEMP_FAHRENHEIT
-        else:
-            hac.temperature_unit = TEMP_CELSIUS
-
-    if hac.location_name is None:
-        hac.location_name = info.city
-
-    if hac.time_zone is None:
-        set_time_zone(info.time_zone)
-
-
 def _ensure_loader_prepared(hass):
     """Ensure Home Assistant loader is prepared."""
     if not loader.PREPARED:
         loader.prepare(hass)
+
+
+def _mount_local_lib_path(config_dir):
+    """Add local library to Python Path."""
+    sys.path.insert(0, os.path.join(config_dir, 'deps'))
