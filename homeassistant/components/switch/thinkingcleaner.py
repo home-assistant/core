@@ -1,4 +1,9 @@
-"""Support for ThinkingCleaner."""
+"""
+Support for ThinkingCleaner.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.thinkingcleaner/
+"""
 import time
 import logging
 from datetime import timedelta
