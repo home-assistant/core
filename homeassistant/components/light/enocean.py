@@ -4,7 +4,6 @@ Support for EnOcean light sources.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.enocean/
 """
-
 import logging
 import math
 
@@ -86,7 +85,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self._on_state = False
 
     def value_changed(self, val):
-        """Update the internal state of this device in HA."""
+        """Update the internal state of this device."""
         self._brightness = math.floor(val / 100.0 * 256.0)
         self._on_state = bool(val != 0)
         self.update_ha_state()
