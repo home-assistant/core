@@ -1,9 +1,9 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
 import json
+import time
+import unittest
 
-import eventlet
 import requests
 
 from homeassistant import bootstrap, const
@@ -86,8 +86,7 @@ def setUpModule():   # pylint: disable=invalid-name
     })
 
     hass.start()
-
-    eventlet.sleep(0.1)
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
