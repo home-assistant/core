@@ -34,11 +34,12 @@ SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_SEEK
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
+SERVICE_UNJOIN = 'sonos_unjoin'
 SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
 
 
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
@@ -72,47 +73,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
     _LOGGER.info('Added %s Sonos speakers', len(players))
 
+    def _apply_service(service, service_func, *service_func_args):
+        """Internal func for applying a service."""
+        entity_id = service.data.get('entity_id')
+
+        if entity_id:
+            _devices = [device for device in devices
+                        if device.entity_id == entity_id]
+        else:
+            _devices = devices
+
+        for device in _devices:
+            service_func(device, *service_func_args)
+            device.update_ha_state(True)
+
     def group_players_service(service):
         """Group media players, use player as coordinator."""
-        entity_id = service.data.get('entity_id')
+        _apply_service(service, SonosDevice.group_players)
 
-        if entity_id:
-            _devices = [device for device in devices
-                        if device.entity_id == entity_id]
-        else:
-            _devices = devices
+    def unjoin_service(service):
+        """Unjoin the player from a group."""
+        _apply_service(service, SonosDevice.unjoin)
 
-        for device in _devices:
-            device.group_players()
-            device.update_ha_state(True)
-
-    def snapshot(service):
+    def snapshot_service(service):
         """Take a snapshot."""
-        entity_id = service.data.get('entity_id')
+        _apply_service(service, SonosDevice.snapshot)
 
-        if entity_id:
-            _devices = [device for device in devices
-                        if device.entity_id == entity_id]
-        else:
-            _devices = devices
-
-        for device in _devices:
-            device.snapshot(service)
-            device.update_ha_state(True)
-
-    def restore(service):
+    def restore_service(service):
         """Restore a snapshot."""
-        entity_id = service.data.get('entity_id')
-
-        if entity_id:
-            _devices = [device for device in devices
-                        if device.entity_id == entity_id]
-        else:
-            _devices = devices
-
-        for device in _devices:
-            device.restore(service)
-            device.update_ha_state(True)
+        _apply_service(service, SonosDevice.restore)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -121,12 +110,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            group_players_service,
                            descriptions.get(SERVICE_GROUP_PLAYERS))
 
+    hass.services.register(DOMAIN, SERVICE_UNJOIN,
+                           unjoin_service,
+                           descriptions.get(SERVICE_UNJOIN))
+
     hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
-                           snapshot,
+                           snapshot_service,
                            descriptions.get(SERVICE_SNAPSHOT))
 
     hass.services.register(DOMAIN, SERVICE_RESTORE,
-                           restore,
+                           restore_service,
                            descriptions.get(SERVICE_RESTORE))
 
     return True
@@ -356,12 +349,17 @@ class SonosDevice(MediaPlayerDevice):
         self._player.partymode()
 
     @only_if_coordinator
-    def snapshot(self, service):
+    def unjoin(self):
+        """Unjoin the player from a group."""
+        self._player.unjoin()
+
+    @only_if_coordinator
+    def snapshot(self):
         """Snapshot the player."""
         self.soco_snapshot.snapshot()
 
     @only_if_coordinator
-    def restore(self, service):
+    def restore(self):
         """Restore snapshot for the player."""
         self.soco_snapshot.restore(True)
 
