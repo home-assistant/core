@@ -1,20 +1,9 @@
 """
-The Homematic thermostat platform.
+Support for Homematic thermostats.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/thermostat.homematic/
-
-Important: For this platform to work the homematic component has to be
-properly configured.
-
-Configuration:
-
-thermostat:
-  - platform: homematic
-    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>" (optional)
 """
-
 import logging
 import homeassistant.components.homematic as homematic
 from homeassistant.components.thermostat import ThermostatDevice
@@ -27,20 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the platform."""
-    if discovery_info:
-        return homematic.setup_hmdevice_discovery_helper(HMThermostat,
-                                                         discovery_info,
-                                                         add_callback_devices)
-    # Manual
-    return homematic.setup_hmdevice_entity_helper(HMThermostat,
-                                                  config,
-                                                  add_callback_devices)
+    """Setup the Homematic thermostat platform."""
+    if discovery_info is None:
+        return
+
+    return homematic.setup_hmdevice_discovery_helper(HMThermostat,
+                                                     discovery_info,
+                                                     add_callback_devices)
 
 
 # pylint: disable=abstract-method
 class HMThermostat(homematic.HMDevice, ThermostatDevice):
-    """Represents a Homematic Thermostat in Home Assistant."""
+    """Representation of a Homematic thermostat."""
 
     @property
     def unit_of_measurement(self):
@@ -78,7 +65,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _check_hm_to_ha_object(self):
-        """Check if possible to use the HM Object as this HA type."""
+        """Check if possible to use the Homematic object as this HA type."""
         from pyhomematic.devicetypes.thermostats import HMThermostat\
             as pyHMThermostat
 
@@ -86,7 +73,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         if not super()._check_hm_to_ha_object():
             return False
 
-        # Check if the homematic device correct for this HA device
+        # Check if the Homematic device correct for this HA device
         if isinstance(self._hmdevice, pyHMThermostat):
             return True
 
@@ -94,7 +81,7 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
         return False
 
     def _init_data_struct(self):
-        """Generate a data dict (self._data) from hm metadata."""
+        """Generate a data dict (self._data) from the Homematic metadata."""
         super()._init_data_struct()
 
         # Add state to data dict

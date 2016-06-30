@@ -4,7 +4,6 @@ Support for the roku media player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
-
 import logging
 
 from homeassistant.components.media_player import (
@@ -77,7 +76,8 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = self.roku.current_app
             else:
                 self.current_app = None
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout):
             self.current_app = None
 
     def get_source_list(self):
