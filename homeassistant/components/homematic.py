@@ -92,7 +92,6 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(system_callback_handler, hass, config)
-    # pylint: disable=unexpected-keyword-arg
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
@@ -288,15 +287,19 @@ def setup_hmdevice_discovery_helper(hmdevicetype, discovery_info,
 
 def _hm_event_handler(hass, device, caller, attribute, value):
     """Handle all pyhomematic device events."""
-    channel = device.split(":")[1]
-    address = device.split(":")[0]
-    hmdevice = HOMEMATIC.devices.get(address)
+    try:
+        channel = int(device.split(":")[1])
+        address = device.split(":")[0]
+        hmdevice = HOMEMATIC.devices.get(address)
+    except (TypeError, ValueError):
+        _LOGGER.error("Event handling channel convert error!")
+        return
 
     # is not a event?
     if attribute not in hmdevice.EVENTNODE:
         return
 
-    _LOGGER.debug("Event %s for %s channel %s", attribute,
+    _LOGGER.debug("Event %s for %s channel %i", attribute,
                   hmdevice.NAME, channel)
 
     # a keypress event
