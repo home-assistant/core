@@ -1,19 +1,9 @@
 """
 Support for Osram Lightify.
 
-Uses: https://github.com/aneumeier/python-lightify for the Osram light
-interface.
-
-In order to use the platform just add the following to the configuration.yaml:
-
-light:
-  platform: osramlightify
-  host: <hostname_or_ip>
-
-Todo:
-Add support for Non RGBW lights.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.osramlightify/
 """
-
 import logging
 import socket
 from datetime import timedelta
@@ -40,7 +30,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return lights."""
+    """Setup Osram Lightify lights."""
     import lightify
     host = config.get(CONF_HOST)
     if host:
@@ -85,7 +75,7 @@ def setup_bridge(bridge, add_devices_callback):
 
 
 class OsramLightifyLight(Light):
-    """Defines an Osram Lightify Light."""
+    """Representation of an Osram Lightify Light."""
 
     def __init__(self, light_id, light, update_lights):
         """Initialize the light."""

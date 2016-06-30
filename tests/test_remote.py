@@ -1,8 +1,7 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
+import time
 import unittest
-
-import eventlet
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
@@ -47,10 +46,7 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-
-    # Give eventlet time to start
-    # TODO fix this
-    eventlet.sleep(0.05)
+    time.sleep(0.05)
 
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
@@ -62,10 +58,6 @@ def setUpModule():   # pylint: disable=invalid-name
          http.CONF_SERVER_PORT: SLAVE_PORT}})
 
     slave.start()
-
-    # Give eventlet time to start
-    # TODO fix this
-    eventlet.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -257,7 +249,6 @@ class TestRemoteClasses(unittest.TestCase):
         slave.pool.block_till_done()
         # Wait till master gives updated state
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
@@ -266,13 +257,11 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertIn('remote.master_remove', slave.states.entity_ids())
 
         hass.states.remove("remote.master_remove")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertNotIn('remote.master_remove', slave.states.entity_ids())
 
@@ -280,14 +269,12 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from slave."""
         hass.states.set("remote.slave_remove", "remove me!")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertIn('remote.slave_remove', slave.states.entity_ids())
 
         self.assertTrue(slave.states.remove("remote.slave_remove"))
         slave.pool.block_till_done()
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
@@ -306,6 +293,5 @@ class TestRemoteClasses(unittest.TestCase):
         slave.pool.block_till_done()
         # Wait till master gives updated event
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertEqual(1, len(test_value))

@@ -6,13 +6,6 @@ https://home-assistant.io/components/rollershutter.homematic/
 
 Important: For this platform to work the homematic component has to be
 properly configured.
-
-Configuration:
-
-rollershutter:
-  - platform: homematic
-    address: "<Homematic address for device>" # e.g. "JEQ0XXXXXXX"
-    name: "<User defined name>" (optional)
 """
 
 import logging
@@ -29,14 +22,12 @@ DEPENDENCIES = ['homematic']
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     """Setup the platform."""
-    if discovery_info:
-        return homematic.setup_hmdevice_discovery_helper(HMRollershutter,
-                                                         discovery_info,
-                                                         add_callback_devices)
-    # Manual
-    return homematic.setup_hmdevice_entity_helper(HMRollershutter,
-                                                  config,
-                                                  add_callback_devices)
+    if discovery_info is None:
+        return
+
+    return homematic.setup_hmdevice_discovery_helper(HMRollershutter,
+                                                     discovery_info,
+                                                     add_callback_devices)
 
 
 class HMRollershutter(homematic.HMDevice, RollershutterDevice):
