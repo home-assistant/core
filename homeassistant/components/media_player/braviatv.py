@@ -1,10 +1,8 @@
 """
 Support for interface with a Sony Bravia TV.
 
-By Antonio Parraga Navarro
-
-dedicated to Isabel
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.braviatv/
 """
 import logging
 import os
@@ -38,6 +36,7 @@ SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 
 def _get_mac_address(ip_address):
+    """Get the MAC address of the device."""
     from subprocess import Popen, PIPE
 
     pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
@@ -48,7 +47,7 @@ def _get_mac_address(ip_address):
 
 
 def _config_from_file(filename, config=None):
-    """Small configuration file management function."""
+    """Create the configuration from a file."""
     if config:
         # We're writing configuration
         bravia_config = _config_from_file(filename)
@@ -104,7 +103,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-branches
 def setup_bravia(config, pin, hass, add_devices_callback):
-    """Setup a sony bravia based on host parameter."""
+    """Setup a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     if name is None:
@@ -176,7 +175,7 @@ class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
     def __init__(self, host, mac, name, pin):
-        """Initialize the sony bravia device."""
+        """Initialize the Sony Bravia device."""
         from braviarc import braviarc
 
         self._pin = pin

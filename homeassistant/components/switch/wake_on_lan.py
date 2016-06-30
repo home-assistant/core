@@ -52,7 +52,7 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """True if switch is on."""
+        """Return true if switch is on."""
         return self._state
 
     @property

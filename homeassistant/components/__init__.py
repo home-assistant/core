@@ -121,16 +121,16 @@ def setup(hass, config):
     def handle_reload_config(call):
         """Service handler for reloading core config."""
         from homeassistant.exceptions import HomeAssistantError
-        from homeassistant import config, bootstrap
+        from homeassistant import config as conf_util
 
         try:
-            path = config.find_config_file(hass.config.config_dir)
-            conf = config.load_yaml_config_file(path)
+            path = conf_util.find_config_file(hass.config.config_dir)
+            conf = conf_util.load_yaml_config_file(path)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
-        bootstrap.process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
+        conf_util.process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.register(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG,
                            handle_reload_config)

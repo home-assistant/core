@@ -2,9 +2,8 @@
 Support for interacting with and controlling the cmus music player.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mpd/
+https://home-assistant.io/components/media_player.cmus/
 """
-
 import logging
 
 from homeassistant.components.media_player import (
@@ -17,7 +16,7 @@ from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  CONF_PORT)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pycmus>=0.1.0']
+REQUIREMENTS = ['pycmus==0.1.0']
 
 SUPPORT_CMUS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF |  \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
@@ -25,7 +24,7 @@ SUPPORT_CMUS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF |  \
 
 
 def setup_platform(hass, config, add_devices, discover_info=None):
-    """Setup the Cmus platform."""
+    """Setup the CMUS platform."""
     from pycmus import exceptions
 
     host = config.get(CONF_HOST, None)
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
 
 
 class CmusDevice(MediaPlayerDevice):
-    """Representation of a running cmus."""
+    """Representation of a running CMUS."""
 
     # pylint: disable=no-member, too-many-public-methods, abstract-method
     def __init__(self, server, password, port, name):
