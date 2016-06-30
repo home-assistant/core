@@ -4,7 +4,6 @@ Support for the roku media player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
-
 import logging
 
 from homeassistant.components.media_player import (
