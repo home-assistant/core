@@ -1,16 +1,8 @@
 """
-Support for Homematic Devices.
+Support for Homematic devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
-
-Configuration:
-
-homematic:
-  local_ip: "<IP of device running Home Assistant>"
-  local_port: <Port for connection with Home Assistant>
-  remote_ip: "<IP of Homegear / CCU>"
-  remote_port: <Port of Homegear / CCU XML-RPC Server>
 """
 import time
 import logging
@@ -170,7 +162,7 @@ def system_callback_handler(hass, config, src, *args):
 
 
 def _get_devices(device_type, keys):
-    """Get devices."""
+    """Get the Homematic devices."""
     # run
     device_arr = []
     for key in keys:
@@ -320,11 +312,11 @@ def _hm_event_handler(hass, device, caller, attribute, value):
 
 
 class HMDevice(Entity):
-    """Homematic device base object."""
+    """The Homematic device base object."""
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
-        """Initialize generic HM device."""
+        """Initialize a generic Homematic device."""
         self._name = config.get(ATTR_NAME, None)
         self._address = config.get(ATTR_ADDRESS, None)
         self._channel = config.get(ATTR_CHANNEL, 1)
@@ -346,7 +338,7 @@ class HMDevice(Entity):
 
     @property
     def should_poll(self):
-        """Return False. Homematic states are pushed by the XML RPC Server."""
+        """Return false. Homematic states are pushed by the XML RPC Server."""
         return False
 
     @property
@@ -356,12 +348,12 @@ class HMDevice(Entity):
 
     @property
     def assumed_state(self):
-        """Return True if unable to access real state of the device."""
+        """Return true if unable to access real state of the device."""
         return not self._available
 
     @property
     def available(self):
-        """Return True if device is available."""
+        """Return true if device is available."""
         return self._available
 
     @property
@@ -386,7 +378,7 @@ class HMDevice(Entity):
         return attr
 
     def link_homematic(self):
-        """Connect to homematic."""
+        """Connect to Homematic."""
         # device is already linked
         if self._connected:
             return True
@@ -397,7 +389,7 @@ class HMDevice(Entity):
             self._hmdevice = HOMEMATIC.devices[self._address]
             self._connected = True
 
-            # Check if HM class is okay for HA class
+            # Check if Homematic class is okay for HA class
             _LOGGER.info("Start linking %s to %s", self._address, self._name)
             if self._check_hm_to_ha_object():
                 try:
@@ -420,7 +412,7 @@ class HMDevice(Entity):
                     _LOGGER.error("Exception while linking %s: %s",
                                   self._address, str(err))
             else:
-                _LOGGER.critical("Delink %s object from HM!", self._name)
+                _LOGGER.critical("Delink %s object from HM", self._name)
                 self._connected = False
 
             # Update HA
@@ -514,7 +506,7 @@ class HMDevice(Entity):
         return None
 
     def _check_hm_to_ha_object(self):
-        """Check if it is possible to use the HM Object as this HA type.
+        """Check if it is possible to use the Homematic object as this HA type.
 
         NEEDS overwrite by inherit!
         """
@@ -530,7 +522,7 @@ class HMDevice(Entity):
         return True
 
     def _init_data_struct(self):
-        """Generate a data dict (self._data) from hm metadata.
+        """Generate a data dict (self._data) from the Homematic metadata.
 
         NEEDS overwrite by inherit!
         """
