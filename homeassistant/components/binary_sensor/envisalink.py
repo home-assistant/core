@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
-    """Representation of an envisalink Binary Sensor."""
+    """Representation of an Envisalink binary sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, zone_number, zone_name, zone_type, info, controller):

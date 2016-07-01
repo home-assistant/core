@@ -51,7 +51,7 @@ def _include_yaml(loader, node):
 
 
 def _include_dir_named_yaml(loader, node):
-    """Load multiple files from dir as a dict."""
+    """Load multiple files from directory as a dictionary."""
     mapping = OrderedDict()
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
@@ -61,7 +61,7 @@ def _include_dir_named_yaml(loader, node):
 
 
 def _include_dir_merge_named_yaml(loader, node):
-    """Load multiple files from dir as a merged dict."""
+    """Load multiple files from directory as a merged dictionary."""
     mapping = OrderedDict()
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
@@ -72,13 +72,13 @@ def _include_dir_merge_named_yaml(loader, node):
 
 
 def _include_dir_list_yaml(loader, node):
-    """Load multiple files from dir as a list."""
+    """Load multiple files from directory as a list."""
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     return [load_yaml(f) for f in glob.glob(files)]
 
 
 def _include_dir_merge_list_yaml(loader, node):
-    """Load multiple files from dir as a merged list."""
+    """Load multiple files from directory as a merged list."""
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     merged_list = []
     for fname in glob.glob(files):
@@ -89,7 +89,7 @@ def _include_dir_merge_list_yaml(loader, node):
 
 
 def _ordered_dict(loader, node):
-    """Load YAML mappings into an ordered dict to preserve key order."""
+    """Load YAML mappings into an ordered dictionary to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
 
@@ -127,7 +127,7 @@ def _env_var_yaml(loader, node):
 # pylint: disable=protected-access
 def _secret_yaml(loader, node):
     """Load secrets and embed it into the configuration YAML."""
-    # Create secret cache on loader and load secret.yaml
+    # Create secret cache on loader and load secrets.yaml
     if not hasattr(loader, '_SECRET_CACHE'):
         loader._SECRET_CACHE = {}
 
