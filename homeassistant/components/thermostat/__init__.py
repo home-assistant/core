@@ -52,7 +52,7 @@ SET_AWAY_MODE_SCHEMA = vol.Schema({
 })
 SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TEMPERATURE): vol.Coerce(int),
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
