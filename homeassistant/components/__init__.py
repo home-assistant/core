@@ -19,6 +19,8 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_RELOAD_CORE_CONFIG = 'reload_core_config'
+
 
 def is_on(hass, entity_id=None):
     """Load up the module to call the is_on method.
@@ -73,6 +75,11 @@ def toggle(hass, entity_id=None, **service_data):
     hass.services.call(ha.DOMAIN, SERVICE_TOGGLE, service_data)
 
 
+def reload_core_config(hass):
+    """Reload the core config."""
+    hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+
+
 def setup(hass, config):
     """Setup general services related to Home Assistant."""
     def handle_turn_service(service):
@@ -110,5 +117,22 @@ def setup(hass, config):
     hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, handle_turn_service)
     hass.services.register(ha.DOMAIN, SERVICE_TOGGLE, handle_turn_service)
+
+    def handle_reload_config(call):
+        """Service handler for reloading core config."""
+        from homeassistant.exceptions import HomeAssistantError
+        from homeassistant import config as conf_util
+
+        try:
+            path = conf_util.find_config_file(hass.config.config_dir)
+            conf = conf_util.load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error(err)
+            return
+
+        conf_util.process_ha_core_config(hass, conf.get(ha.DOMAIN) or {})
+
+    hass.services.register(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG,
+                           handle_reload_config)
 
     return True

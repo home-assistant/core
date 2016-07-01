@@ -1,16 +1,16 @@
 """
 Support for eq3 Bluetooth Smart thermostats.
 
-Uses bluepy_devices library.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/thermostat.eq3btsmart/
 """
-
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELCIUS
 from homeassistant.helpers.temperature import convert
 
-REQUIREMENTS = ['bluepy_devices>=0.2.0']
+REQUIREMENTS = ['bluepy_devices==0.2.0']
 
 CONF_MAC = 'mac'
 CONF_DEVICES = 'devices'
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-# pylint: disable=too-many-instance-attributes, import-error
+# pylint: disable=too-many-instance-attributes, import-error, abstract-method
 class EQ3BTSmartThermostat(ThermostatDevice):
     """Representation of a EQ3 Bluetooth Smart thermostat."""
 
