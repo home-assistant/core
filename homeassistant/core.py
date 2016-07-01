@@ -49,6 +49,19 @@ MIN_WORKER_THREAD = 2
 _LOGGER = logging.getLogger(__name__)
 
 
+class CoreState(enum.Enum):
+    """Represent the current state of Home Assistant."""
+
+    not_running = "NOT_RUNNING"
+    starting = "STARTING"
+    running = "RUNNING"
+    stopping = "STOPPING"
+
+    def __str__(self):
+        """Return the event."""
+        return self.value
+
+
 class HomeAssistant(object):
     """Root object of the Home Assistant home automation."""
 
@@ -59,14 +72,23 @@ class HomeAssistant(object):
         self.services = ServiceRegistry(self.bus, pool)
         self.states = StateMachine(self.bus)
         self.config = Config()
+        self.state = CoreState.not_running
+
+    @property
+    def is_running(self):
+        """Return if Home Assistant is running."""
+        return self.state == CoreState.running
 
     def start(self):
         """Start home assistant."""
         _LOGGER.info(
             "Starting Home Assistant (%d threads)", self.pool.worker_count)
+        self.state = CoreState.starting
 
         create_timer(self)
         self.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.pool.block_till_done()
+        self.state = CoreState.running
 
     def block_till_stopped(self):
         """Register service homeassistant/stop and will block until called."""
@@ -113,8 +135,10 @@ class HomeAssistant(object):
     def stop(self):
         """Stop Home Assistant and shuts down all threads."""
         _LOGGER.info("Stopping")
+        self.state = CoreState.stopping
         self.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.pool.stop()
+        self.state = CoreState.not_running
 
 
 class JobPriority(util.OrderedEnum):
@@ -456,7 +480,7 @@ class StateMachine(object):
 
             return True
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -472,7 +496,8 @@ class StateMachine(object):
             old_state = self._states.get(entity_id)
 
             is_existing = old_state is not None
-            same_state = is_existing and old_state.state == new_state
+            same_state = (is_existing and old_state.state == new_state and
+                          not force_update)
             same_attr = is_existing and old_state.attributes == attributes
 
             if same_state and same_attr:
@@ -680,6 +705,7 @@ class Config(object):
         """Initialize a new config object."""
         self.latitude = None
         self.longitude = None
+        self.elevation = None
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None

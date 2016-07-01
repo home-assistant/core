@@ -273,29 +273,29 @@ class ThermostatDevice(Entity):
         """Return true if the fan is on."""
         return None
 
-    def set_temperate(self, temperature):
+    def set_temperature(self, temperature):
         """Set new target temperature."""
-        pass
+        raise NotImplementedError()
 
     def set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
-        pass
+        raise NotImplementedError()
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
-        pass
+        raise NotImplementedError()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
-        pass
+        raise NotImplementedError()
 
     def turn_fan_on(self):
         """Turn fan on."""
-        pass
+        raise NotImplementedError()
 
     def turn_fan_off(self):
         """Turn fan off."""
-        pass
+        raise NotImplementedError()
 
     @property
     def min_temp(self):

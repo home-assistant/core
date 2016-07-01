@@ -4,7 +4,6 @@ Combination of multiple media players into one for a universal controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
-
 import logging
 # pylint: disable=import-error
 from copy import copy
