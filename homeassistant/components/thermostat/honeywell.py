@@ -225,10 +225,8 @@ class HoneywellUSThermostat(ThermostatDevice):
         try:
             if self._device.system_mode == 'cool':
                 self._device.setpoint_cool = temperature
-                self.target_temperature_high = temperature
             else:
                 self._device.setpoint_heat = temperature
-                self.target_temperature_low = temperature
         except somecomfort.SomeComfortError:
             _LOGGER.error('Temperature %.1f out of range', temperature)
 
