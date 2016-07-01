@@ -149,7 +149,7 @@ def setup(hass, base_config):
         EVL_CONTROLLER.stop()
 
     def start_envisalink(event):
-        """Startup process for the envisalink."""
+        """Startup process for the Envisalink."""
         EVL_CONTROLLER.start()
         for _ in range(10):
             if 'success' in _connect_status:
@@ -175,7 +175,7 @@ def setup(hass, base_config):
     if not _result:
         return False
 
-    # Load sub-components for envisalink
+    # Load sub-components for Envisalink
     if _partitions:
         load_platform(hass, 'alarm_control_panel', 'envisalink',
                       {'partitions': _partitions,
@@ -191,7 +191,7 @@ def setup(hass, base_config):
 
 
 class EnvisalinkDevice(Entity):
-    """Representation of an envisalink devicetity."""
+    """Representation of an Envisalink device."""
 
     def __init__(self, name, info, controller):
         """Initialize the device."""
