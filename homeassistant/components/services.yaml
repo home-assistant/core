@@ -1,0 +1,15 @@
+persistent_notification:
+  description: Show a notification in the frontend
+
+  fields:
+    message:
+      description: Message body of the notification.
+      example: Please check your configuration.yaml.
+
+    title:
+      description: Optional title for your notification.
+      example: Test notification
+
+    notification_id:
+      description: Target ID of the notification, will override same ID. Optional.
+      example: 1234
