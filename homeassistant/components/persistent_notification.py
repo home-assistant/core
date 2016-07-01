@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def create(hass, message, title=None, notification_id=None):
-    """Turn all or specified light off."""
+    """Generate a notification."""
     data = {
         key: value for key, value in [
             (ATTR_TITLE, title),
