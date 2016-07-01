@@ -127,7 +127,7 @@ def _env_var_yaml(loader, node):
 # pylint: disable=protected-access
 def _secret_yaml(loader, node):
     """Load secrets and embed it into the configuration YAML."""
-    # Create secret cache on loader and load secret.yaml
+    # Create secret cache on loader and load secrets.yaml
     if not hasattr(loader, '_SECRET_CACHE'):
         loader._SECRET_CACHE = {}
 
