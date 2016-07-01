@@ -58,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=abstract-method
 class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 
@@ -80,7 +81,7 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id:
             self.update_properties()
             self.update_ha_state()
 
@@ -156,3 +157,4 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
                 COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0 and value.index == self._index:
                 value.data = temperature
+                break

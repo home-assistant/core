@@ -8,7 +8,8 @@ import math
 import requests
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-DATA_SOURCE = ['https://freegeoip.io/json/', 'http://ip-api.com/json']
+FREEGEO_API = 'https://freegeoip.io/json/'
+IP_API = 'http://ip-api.com/json'
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -32,30 +33,13 @@ LocationInfo = collections.namedtuple(
 
 def detect_location_info():
     """Detect location information."""
-    success = None
+    data = _get_freegeoip()
 
-    for source in DATA_SOURCE:
-        try:
-            raw_info = requests.get(source, timeout=5).json()
-            success = source
-            break
-        except (requests.RequestException, ValueError):
-            success = False
+    if data is None:
+        data = _get_ip_api()
 
-    if success is False:
+    if data is None:
         return None
-    else:
-        data = {key: raw_info.get(key) for key in LocationInfo._fields}
-        if success is DATA_SOURCE[1]:
-            data['ip'] = raw_info.get('query')
-            data['country_code'] = raw_info.get('countryCode')
-            data['country_name'] = raw_info.get('country')
-            data['region_code'] = raw_info.get('region')
-            data['region_name'] = raw_info.get('regionName')
-            data['zip_code'] = raw_info.get('zip')
-            data['time_zone'] = raw_info.get('timezone')
-            data['latitude'] = raw_info.get('lat')
-            data['longitude'] = raw_info.get('lon')
 
     # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
     # the Cayman Islands, Palau, and the United States and associated
@@ -73,11 +57,16 @@ def distance(lat1, lon1, lat2, lon2):
 
 def elevation(latitude, longitude):
     """Return elevation for given latitude and longitude."""
-    req = requests.get(ELEVATION_URL,
-                       params={'locations': '{},{}'.format(latitude,
-                                                           longitude),
-                               'sensor': 'false'},
-                       timeout=10)
+    try:
+        req = requests.get(
+            ELEVATION_URL,
+            params={
+                'locations': '{},{}'.format(latitude, longitude),
+                'sensor': 'false',
+            },
+            timeout=10)
+    except requests.RequestException:
+        return 0
 
     if req.status_code != 200:
         return 0
@@ -157,3 +146,45 @@ def vincenty(point1, point2, miles=False):
         s *= MILES_PER_KILOMETER  # kilometers to miles
 
     return round(s, 6)
+
+
+def _get_freegeoip():
+    """Query freegeoip.io for location data."""
+    try:
+        raw_info = requests.get(FREEGEO_API, timeout=5).json()
+    except (requests.RequestException, ValueError):
+        return None
+
+    return {
+        'ip': raw_info.get('ip'),
+        'country_code': raw_info.get('country_code'),
+        'country_name': raw_info.get('country_name'),
+        'region_code': raw_info.get('region_code'),
+        'region_name': raw_info.get('region_name'),
+        'city': raw_info.get('city'),
+        'zip_code': raw_info.get('zip_code'),
+        'time_zone': raw_info.get('time_zone'),
+        'latitude': raw_info.get('latitude'),
+        'longitude': raw_info.get('longitude'),
+    }
+
+
+def _get_ip_api():
+    """Query ip-api.com for location data."""
+    try:
+        raw_info = requests.get(IP_API, timeout=5).json()
+    except (requests.RequestException, ValueError):
+        return None
+
+    return {
+        'ip': raw_info.get('query'),
+        'country_code': raw_info.get('countryCode'),
+        'country_name': raw_info.get('country'),
+        'region_code': raw_info.get('region'),
+        'region_name': raw_info.get('regionName'),
+        'city': raw_info.get('city'),
+        'zip_code': raw_info.get('zip'),
+        'time_zone': raw_info.get('timezone'),
+        'latitude': raw_info.get('lat'),
+        'longitude': raw_info.get('lon'),
+    }

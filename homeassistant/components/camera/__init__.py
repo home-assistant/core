@@ -6,6 +6,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
 import logging
+import time
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -81,8 +82,6 @@ class Camera(Entity):
 
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from camera images."""
-        import eventlet
-
         def stream():
             """Stream images as mjpeg stream."""
             try:
@@ -99,7 +98,7 @@ class Camera(Entity):
 
                         last_image = img_bytes
 
-                    eventlet.sleep(0.5)
+                    time.sleep(0.5)
             except GeneratorExit:
                 pass
 
