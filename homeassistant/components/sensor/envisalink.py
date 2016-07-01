@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class EnvisalinkSensor(EnvisalinkDevice):
-    """Representation of an envisalink keypad."""
+    """Representation of an Envisalink keypad."""
 
     def __init__(self, partition_name, partition_number, info, controller):
         """Initialize the sensor."""
