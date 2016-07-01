@@ -244,3 +244,6 @@ class HoneywellUSThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """Turn away off."""
         pass
+
+    def set_hvac_mode(self, hvac_mode):
+        self._device.system_mode(hvac_mode);
