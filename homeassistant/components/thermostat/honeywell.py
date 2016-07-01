@@ -223,8 +223,6 @@ class HoneywellUSThermostat(ThermostatDevice):
         """Set target temperature."""
         import somecomfort
         try:
-            _LOGGER.debug(str(temperature))
-            _LOGGER.debug(str(type(temperature)))
             if self._device.system_mode == 'cool':
                 self._device.setpoint_cool = temperature
             else:
