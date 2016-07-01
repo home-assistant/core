@@ -21,7 +21,6 @@ SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
 LIGHT_STRING = 'Light'
 SWITCH_STRING = 'Switch'
-LOCK_STRING = 'Lock'
 CONF_TLS_VER = 'tls'
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,12 +62,10 @@ def setup(hass, config):
     global HIDDEN_STRING
     global LIGHT_STRING
     global SWITCH_STRING
-    global LOCK_STRING
     SENSOR_STRING = str(config[DOMAIN].get('sensor_string', SENSOR_STRING))
     HIDDEN_STRING = str(config[DOMAIN].get('hidden_string', HIDDEN_STRING))
     LIGHT_STRING = str(config[DOMAIN].get('light_string', LIGHT_STRING))
     SWITCH_STRING = str(config[DOMAIN].get('switch_string', SWITCH_STRING))
-    LOCK_STRING = str(config[DOMAIN].get('lock_string', LOCK_STRING))
     tls_version = config[DOMAIN].get(CONF_TLS_VER, None)
 
     # Connect to ISY controller.
@@ -82,7 +79,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for component in ('sensor', 'light', 'switch', 'lock'):
+    for component in ('sensor', 'light', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
