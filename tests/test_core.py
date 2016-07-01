@@ -334,6 +334,20 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(state.last_changed,
                          self.states.get('light.Bowl').last_changed)
 
+    def test_force_update(self):
+        """Test force update option."""
+        self.pool.add_worker()
+        events = []
+        self.bus.listen(EVENT_STATE_CHANGED, events.append)
+
+        self.states.set('light.bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(0, len(events))
+
+        self.states.set('light.bowl', 'on', None, True)
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
 
 class TestServiceCall(unittest.TestCase):
     """Test ServiceCall class."""

@@ -6,7 +6,7 @@ https://home-assistant.io/developers/api/
 """
 import json
 import logging
-from time import time
+import queue
 
 import homeassistant.core as ha
 import homeassistant.remote as rem
@@ -72,19 +72,14 @@ class APIEventStream(HomeAssistantView):
 
     def get(self, request):
         """Provide a streaming interface for the event bus."""
-        from eventlet.queue import LightQueue, Empty
-        import eventlet
-
-        cur_hub = eventlet.hubs.get_hub()
-        request.environ['eventlet.minimum_write_chunk_size'] = 0
-        to_write = LightQueue()
         stop_obj = object()
+        to_write = queue.Queue()
 
         restrict = request.args.get('restrict')
         if restrict:
-            restrict = restrict.split(',')
+            restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
-        def thread_forward_events(event):
+        def forward_events(event):
             """Forward events to the open request."""
             if event.event_type == EVENT_TIME_CHANGED:
                 return
@@ -99,28 +94,20 @@ class APIEventStream(HomeAssistantView):
             else:
                 data = json.dumps(event, cls=rem.JSONEncoder)
 
-            cur_hub.schedule_call_global(0, lambda: to_write.put(data))
+            to_write.put(data)
 
         def stream():
             """Stream events to response."""
-            self.hass.bus.listen(MATCH_ALL, thread_forward_events)
+            self.hass.bus.listen(MATCH_ALL, forward_events)
 
             _LOGGER.debug('STREAM %s ATTACHED', id(stop_obj))
 
-            last_msg = time()
             # Fire off one message right away to have browsers fire open event
             to_write.put(STREAM_PING_PAYLOAD)
 
             while True:
                 try:
-                    # Somehow our queue.get sometimes takes too long to
-                    # be notified of arrival of data. Probably
-                    # because of our spawning on hub in other thread
-                    # hack. Because current goal is to get this out,
-                    # We just timeout every second because it will
-                    # return right away if qsize() > 0.
-                    # So yes, we're basically polling :(
-                    payload = to_write.get(timeout=1)
+                    payload = to_write.get(timeout=STREAM_PING_INTERVAL)
 
                     if payload is stop_obj:
                         break
@@ -129,15 +116,13 @@ class APIEventStream(HomeAssistantView):
                     _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
                                   msg.strip())
                     yield msg.encode("UTF-8")
-                    last_msg = time()
-                except Empty:
-                    if time() - last_msg > 50:
-                        to_write.put(STREAM_PING_PAYLOAD)
+                except queue.Empty:
+                    to_write.put(STREAM_PING_PAYLOAD)
                 except GeneratorExit:
-                    _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
                     break
 
-            self.hass.bus.remove_listener(MATCH_ALL, thread_forward_events)
+            _LOGGER.debug('STREAM %s RESPONSE CLOSED', id(stop_obj))
+            self.hass.bus.remove_listener(MATCH_ALL, forward_events)
 
         return self.Response(stream(), mimetype='text/event-stream')
 
@@ -204,11 +189,12 @@ class APIEntityStateView(HomeAssistantView):
             return self.json_message('No state specified', HTTP_BAD_REQUEST)
 
         attributes = request.json.get('attributes')
+        force_update = request.json.get('force_update', False)
 
         is_new_state = self.hass.states.get(entity_id) is None
 
         # Write state
-        self.hass.states.set(entity_id, new_state, attributes)
+        self.hass.states.set(entity_id, new_state, attributes, force_update)
 
         # Read the state back for our response
         resp = self.json(self.hass.states.get(entity_id))

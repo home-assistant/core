@@ -13,11 +13,12 @@ from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.10']
+REQUIREMENTS = ['pyvera==0.2.12']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vera'
+
 
 VERA_CONTROLLER = None
 
@@ -33,6 +34,7 @@ DEVICE_CATEGORIES = {
     'Switch': 'switch',
     'Armable Sensor': 'switch',
     'On/Off Switch': 'switch',
+    'Doorlock': 'lock',
     # 'Window Covering': NOT SUPPORTED YET
 }
 
@@ -91,7 +93,7 @@ def setup(hass, base_config):
             dev_type = 'light'
         VERA_DEVICES[dev_type].append(device)
 
-    for component in 'binary_sensor', 'sensor', 'light', 'switch':
+    for component in 'binary_sensor', 'sensor', 'light', 'switch', 'lock':
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
 
     return True
