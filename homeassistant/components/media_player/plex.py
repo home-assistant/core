@@ -126,11 +126,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         new_plex_clients = []
         for device in devices:
             # For now, let's allow all deviceClass types
-            _LOGGER.debug(str(device))
-            _LOGGER.debug(str(device.name))
-            _LOGGER.debug(str(device.title))
-            _LOGGER.debug(str(device.machineIdentifier))
-            _LOGGER.debug(str(device.product))
+
             if device.deviceClass in ['badClient']:
                 continue
 
@@ -210,7 +206,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.name or DEVICE_DEFAULT_NAME
+        return (self.device.name if self.device.name != 'My AFTS' else self.device.machineIdentifier) or DEVICE_DEFAULT_NAME
 
     @property
     def session(self):
