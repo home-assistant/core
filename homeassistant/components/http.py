@@ -41,7 +41,9 @@ DATA_API_PASSWORD = 'api_password'
 # specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
-SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_COMPRESSION
+SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
+if hasattr(ssl, 'OP_NO_COMPRESSION'):
+    SSL_OPTS |= ssl.OP_NO_COMPRESSION
 CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
           "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
