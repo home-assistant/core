@@ -366,7 +366,7 @@ scsgate==0.1.0
 sendgrid>=1.6.0,<1.7.0
 
 # homeassistant.components.notify.slack
-slacker==0.9.17
+slacker==0.9.18
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
