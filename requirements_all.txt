@@ -247,6 +247,9 @@ pyasn1-modules==0.0.8
 # homeassistant.components.notify.xmpp
 pyasn1==0.1.9
 
+# homeassistant.components.autohub
+pyautohub==0.1.0
+
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
 

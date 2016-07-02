@@ -4,13 +4,12 @@ Support for Autohub lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.autohub/
 """
-import time
 import logging
 
 from homeassistant.components.autohub import AUTOHUBWS
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,8 +22,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs.append(AutohubToggleDevice(device))
     add_devices(devs)
     return
-
-    
 
 class AutohubToggleDevice(Light):
     """An abstract Class for an Autohub node."""
@@ -99,10 +96,4 @@ class AutohubToggleDevice(Light):
 
     def update(self):
         """Update state of the sensor."""
-        #resp = self.node.send_command('status', wait=False)
-        #try:
-            #print(resp)
-        #self.node.reload_details()
         self._value = self.node._properties_.get("light_status", 0)
-        #except KeyError:
-            #pass

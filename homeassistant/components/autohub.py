@@ -5,16 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/autohub/
 """
 import logging
-import time
 
 from homeassistant.components.discovery import SERVICE_AUTOHUB
 
 
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, 
+EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import validate_config, discovery
-
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.loader import get_component
 
 DOMAIN = "autohub"
 REQUIREMENTS = ['pyautohub==0.1.0']
@@ -37,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Setup Autohub Hub component.
-
     This will automatically import associated lights.
     """
     if not validate_config(
@@ -51,7 +47,7 @@ def setup(hass, config):
     global AUTOHUBWS
     AUTOHUBWS = pyautohub.AutohubWS()
 
-    #callback handler
+    # callback handler
     def OnDeviceAdded(device):
         config_autohub = config.get("autohub")
         kDevices = config_autohub.get("devices", {})
@@ -60,7 +56,7 @@ def setup(hass, config):
         discovery_info = (device.device_address_, device.device_name_)
         discovery.discover(hass, SERVICE_AUTOHUB, discovery_info)
 
-    #register callback handler with pyautohub
+    # register callback handler with pyautohub
     AUTOHUBWS.on_device_added(OnDeviceAdded)
 	
     def autohub_stop(event):
@@ -83,7 +79,7 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_AUTOHUB, discovery_dispatch)
     AUTOHUBWS.start()
-    #AUTOHUBWS.getDeviceList()
+    # AUTOHUBWS.getDeviceList()
 
     return True
 
