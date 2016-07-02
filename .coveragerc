@@ -3,6 +3,7 @@ source = homeassistant
 
 omit =
     homeassistant/__main__.py
+    homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
