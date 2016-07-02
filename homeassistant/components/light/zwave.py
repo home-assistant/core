@@ -14,15 +14,26 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
 from homeassistant.components import zwave
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
-    color_temperature_mired_to_kelvin, color_temperature_to_rgb
+    color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
+    color_rgb_to_rgbw, color_rgbw_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
+
+AEOTEC = 0x86
+AEOTEC_ZW098_LED_BULB = 0x62
+AEOTEC_ZW098_LED_BULB_LIGHT = (AEOTEC, AEOTEC_ZW098_LED_BULB)
 
 COLOR_CHANNEL_WARM_WHITE = 0x01
 COLOR_CHANNEL_COLD_WHITE = 0x02
 COLOR_CHANNEL_RED = 0x04
 COLOR_CHANNEL_GREEN = 0x08
 COLOR_CHANNEL_BLUE = 0x10
+
+WORKAROUND_ZW098 = 'zw098'
+
+DEVICE_MAPPINGS = {
+    AEOTEC_ZW098_LED_BULB_LIGHT: WORKAROUND_ZW098
+}
 
 # Generate midpoint color temperatures for bulbs that have limited
 # support for white light colors
@@ -161,6 +172,7 @@ class ZwaveColorLight(ZwaveDimmer):
         self._color_channels = None
         self._rgb = None
         self._ct = None
+        self._zw098 = None
 
         # Here we attempt to find a zwave color value with the same instance
         # id as the dimmer value. Currently zwave nodes that change colors
@@ -181,6 +193,17 @@ class ZwaveColorLight(ZwaveDimmer):
 
         if self._value_color_channels is None:
             raise ValueError("Color Channels not found.")
+
+        # Make sure that we have values for the key before converting to int
+        if (value.node.manufacturer_id.strip() and
+                value.node.product_id.strip()):
+            specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                                   int(value.node.product_id, 16))
+
+            if specific_sensor_key in DEVICE_MAPPINGS:
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZW098:
+                    _LOGGER.debug("AEOTEC ZW098 workaround enabled")
+                    self._zw098 = 1
 
         super().__init__(value)
 
@@ -218,11 +241,10 @@ class ZwaveColorLight(ZwaveDimmer):
         else:
             cold_white = 0
 
-        # Color temperature. With two white channels, only two color
-        # temperatures are supported for the bulb. The channel values
+        # Color temperature. With the AEOTEC ZW098 bulb, only two color
+        # temperatures are supported. The warm and cold channel values
         # indicate brightness for warm/cold color temperature.
-        if (self._color_channels & COLOR_CHANNEL_WARM_WHITE and
-                self._color_channels & COLOR_CHANNEL_COLD_WHITE):
+        if self._zw098:
             if warm_white > 0:
                 self._ct = TEMP_WARM_HASS
                 self._rgb = ct_to_rgb(self._ct)
@@ -233,17 +255,11 @@ class ZwaveColorLight(ZwaveDimmer):
                 # RGB color is being used. Just report midpoint.
                 self._ct = TEMP_MID_HASS
 
-        # If only warm white is reported 0-255 is color temperature.
         elif self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            self._ct = HASS_COLOR_MIN + (HASS_COLOR_MAX - HASS_COLOR_MIN) * (
-                warm_white / 255)
-            self._rgb = ct_to_rgb(self._ct)
+            self._rgb = list(color_rgbw_to_rgb(*self._rgb, w=warm_white))
 
-        # If only cold white is reported 0-255 is negative color temperature.
         elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            self._ct = HASS_COLOR_MIN + (HASS_COLOR_MAX - HASS_COLOR_MIN) * (
-                (255 - cold_white) / 255)
-            self._rgb = ct_to_rgb(self._ct)
+            self._rgb = list(color_rgbw_to_rgb(*self._rgb, w=cold_white))
 
         # If no rgb channels supported, report None.
         if not (self._color_channels & COLOR_CHANNEL_RED or
@@ -266,10 +282,10 @@ class ZwaveColorLight(ZwaveDimmer):
         rgbw = None
 
         if ATTR_COLOR_TEMP in kwargs:
-            # With two white channels, only two color temperatures are
-            # supported for the bulb.
-            if (self._color_channels & COLOR_CHANNEL_WARM_WHITE and
-                    self._color_channels & COLOR_CHANNEL_COLD_WHITE):
+            # Color temperature. With the AEOTEC ZW098 bulb, only two color
+            # temperatures are supported. The warm and cold channel values
+            # indicate brightness for warm/cold color temperature.
+            if self._zw098:
                 if kwargs[ATTR_COLOR_TEMP] > TEMP_MID_HASS:
                     self._ct = TEMP_WARM_HASS
                     rgbw = b'#000000FF00'
@@ -277,29 +293,20 @@ class ZwaveColorLight(ZwaveDimmer):
                     self._ct = TEMP_COLD_HASS
                     rgbw = b'#00000000FF'
 
-            # If only warm white is reported 0-255 is color temperature
-            elif self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-                rgbw = b'#000000'
-                temp = (
-                    (kwargs[ATTR_COLOR_TEMP] - HASS_COLOR_MIN) /
-                    (HASS_COLOR_MAX - HASS_COLOR_MIN) * 255)
-                rgbw += format(int(temp)).encode('utf-8')
-
-            # If only cold white is reported 0-255 is negative color temp
-            elif self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-                rgbw = b'#000000'
-                temp = (
-                    255 - (kwargs[ATTR_COLOR_TEMP] - HASS_COLOR_MIN) /
-                    (HASS_COLOR_MAX - HASS_COLOR_MIN) * 255)
-                rgbw += format(int(temp)).encode('utf-8')
-
         elif ATTR_RGB_COLOR in kwargs:
             self._rgb = kwargs[ATTR_RGB_COLOR]
-
-            rgbw = b'#'
-            for colorval in self._rgb:
-                rgbw += format(colorval, '02x').encode('utf-8')
-            rgbw += b'0000'
+            if (not self._zw098 and (
+                    self._color_channels & COLOR_CHANNEL_WARM_WHITE or
+                    self._color_channels & COLOR_CHANNEL_COLD_WHITE)):
+                rgbw = b'#'
+                for colorval in color_rgb_to_rgbw(*self._rgb):
+                    rgbw += format(colorval, '02x').encode('utf-8')
+                rgbw += b'00'
+            else:
+                rgbw = b'#'
+                for colorval in self._rgb:
+                    rgbw += format(colorval, '02x').encode('utf-8')
+                rgbw += b'0000'
 
         if rgbw is None:
             _LOGGER.warning("rgbw string was not generated for turn_on")

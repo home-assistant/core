@@ -112,6 +112,39 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
     return (r, g, b)
 
 
+def _match_max_scale(input_colors, output_colors):
+    """Match the maximum value of the output to the input."""
+    max_in = max(input_colors)
+    max_out = max(output_colors)
+    if max_out == 0:
+        factor = 0
+    else:
+        factor = max_in / max_out
+    return tuple(int(round(i * factor)) for i in output_colors)
+
+
+def color_rgb_to_rgbw(r, g, b):
+    """Convert an rgb color to an rgbw representation."""
+    # Calculate the white channel as the minimum of input rgb channels.
+    # Subtract the white portion from the remaining rgb channels.
+    w = min(r, g, b)
+    rgbw = (r - w, g - w, b - w, w)
+
+    # Match the output maximum value to the input. This ensures the full
+    # channel range is used.
+    return _match_max_scale((r, g, b), rgbw)
+
+
+def color_rgbw_to_rgb(r, g, b, w):
+    """Convert an rgbw color to an rgb representation."""
+    # Add the white channel back into the rgb channels.
+    rgb = (r + w, g + w, b + w)
+
+    # Match the output maximum value to the input. This ensures the the
+    # output doesn't overflow.
+    return _match_max_scale((r, g, b, w), rgb)
+
+
 def rgb_hex_to_rgb_list(hex_string):
     """Return an RGB color value list from a hex color string."""
     return [int(hex_string[i:i + len(hex_string) // 3], 16)
