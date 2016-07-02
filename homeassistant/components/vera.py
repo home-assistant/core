@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.12']
+REQUIREMENTS = ['pyvera==0.2.13']
 
 _LOGGER = logging.getLogger(__name__)
 
