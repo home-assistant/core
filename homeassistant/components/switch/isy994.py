@@ -36,8 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Import ISY doors programs
     for folder_name, states in (('HA.doors', [STATE_ON, STATE_OFF]),
                                 ('HA.switches', [STATE_ON, STATE_OFF])):
-        logger.debug('PROGRAMS: ' + str(ISY.programs['My Programs']))
-        logger.debug('PROGRAMS: ' + dict(ISY.programs['My Programs']))
+        logger.debug('PROGRAMS: ' + repr(ISY.programs))
         try:
             logger.debug('CHECKING ' + folder_name);
             folder = ISY.programs['My Programs'][folder_name]
