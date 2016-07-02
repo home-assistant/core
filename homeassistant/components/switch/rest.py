@@ -69,8 +69,9 @@ class RestSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        headers = {'content-type': 'application/x-www-form-urlencoded'}
         request = requests.post(self._resource,
-                                data=self._body_on,
+                                data=self._body_on,headers=headers,
                                 timeout=10)
         if request.status_code == 200:
             self._state = True
@@ -80,8 +81,9 @@ class RestSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        headers = {'content-type': 'application/x-www-form-urlencoded'}
         request = requests.post(self._resource,
-                                data=self._body_off,
+                                data=self._body_off,headers=headers,
                                 timeout=10)
         if request.status_code == 200:
             self._state = False
