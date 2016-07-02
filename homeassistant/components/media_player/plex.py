@@ -78,8 +78,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    _LOGGER.critical('HOST: ' + host);
-    _LOGGER.critical('TOKEN: ' + token);
     setup_plexserver(host, token, hass, add_devices_callback)
 
 
@@ -112,8 +110,6 @@ def setup_plexserver(host, token, hass, add_devices_callback):
             {host: {'token': token}}):
         _LOGGER.error('failed to save config file')
 
-    _LOGGER.critical('Connected to: http://%s', host)
-
     plex_clients = {}
     plex_sessions = {}
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
@@ -130,6 +126,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         new_plex_clients = []
         for device in devices:
             # For now, let's allow all deviceClass types
+            _LOGGER.debug(str(device))
             if device.deviceClass in ['badClient']:
                 continue
 
