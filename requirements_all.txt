@@ -319,9 +319,6 @@ python-nmap==0.6.0
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
-# homeassistant.components.statsd
-python-statsd==1.7.2
-
 # homeassistant.components.notify.telegram
 python-telegram-bot==4.3.1
 
@@ -388,6 +385,9 @@ sqlalchemy==1.0.13
 
 # homeassistant.components.http
 static3==0.7.0
+
+# homeassistant.components.statsd
+statsd==3.2.1
 
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
