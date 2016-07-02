@@ -126,7 +126,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         new_plex_clients = []
         for device in devices:
             # For now, let's allow all deviceClass types
-            _LOGGER.debug(str(dict(device)))
+            _LOGGER.debug(str(device))
             if device.deviceClass in ['badClient']:
                 continue
 
