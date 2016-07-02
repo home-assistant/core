@@ -9,68 +9,28 @@ loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 import logging
 import threading
 
-from homeassistant import bootstrap
-from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_PLATFORM_DISCOVERED)
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.helpers.discovery import load_platform, discover
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.6.6']
+REQUIREMENTS = ['netdisco==0.6.7']
 
 SCAN_INTERVAL = 300  # seconds
 
 SERVICE_WEMO = 'belkin_wemo'
-SERVICE_HUE = 'philips_hue'
-SERVICE_CAST = 'google_cast'
 SERVICE_NETGEAR = 'netgear_router'
-SERVICE_SONOS = 'sonos'
-SERVICE_PLEX = 'plex_mediaserver'
-SERVICE_SQUEEZEBOX = 'logitech_mediaserver'
-SERVICE_PANASONIC_VIERA = 'panasonic_viera'
 
 SERVICE_HANDLERS = {
-    SERVICE_WEMO: "wemo",
-    SERVICE_CAST: "media_player",
-    SERVICE_HUE: "light",
-    SERVICE_NETGEAR: 'device_tracker',
-    SERVICE_SONOS: 'media_player',
-    SERVICE_PLEX: 'media_player',
-    SERVICE_SQUEEZEBOX: 'media_player',
-    SERVICE_PANASONIC_VIERA: 'media_player',
+    SERVICE_NETGEAR: ('device_tracker', None),
+    SERVICE_WEMO: ('wemo', None),
+    'philips_hue': ('light', 'hue'),
+    'google_cast': ('media_player', 'cast'),
+    'panasonic_viera': ('media_player', 'panasonic_viera'),
+    'plex_mediaserver': ('media_player', 'plex'),
+    'roku': ('media_player', 'roku'),
+    'sonos': ('media_player', 'sonos'),
+    'logitech_mediaserver': ('media_player', 'squeezebox'),
 }
-
-
-def listen(hass, service, callback):
-    """Setup listener for discovery of specific service.
-
-    Service can be a string or a list/tuple.
-    """
-    if isinstance(service, str):
-        service = (service,)
-    else:
-        service = tuple(service)
-
-    def discovery_event_listener(event):
-        """Listen for discovery events."""
-        if event.data[ATTR_SERVICE] in service:
-            callback(event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED))
-
-    hass.bus.listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
-
-
-def discover(hass, service, discovered=None, component=None, hass_config=None):
-    """Fire discovery event. Can ensure a component is loaded."""
-    if component is not None:
-        bootstrap.setup_component(hass, component, hass_config)
-
-    data = {
-        ATTR_SERVICE: service
-    }
-
-    if discovered is not None:
-        data[ATTR_DISCOVERED] = discovered
-
-    hass.bus.fire(EVENT_PLATFORM_DISCOVERED, data)
 
 
 def setup(hass, config):
@@ -89,20 +49,18 @@ def setup(hass, config):
         with lock:
             logger.info("Found new service: %s %s", service, info)
 
-            component = SERVICE_HANDLERS.get(service)
+            comp_plat = SERVICE_HANDLERS.get(service)
 
             # We do not know how to handle this service.
-            if not component:
+            if not comp_plat:
                 return
 
-            # This component cannot be setup.
-            if not bootstrap.setup_component(hass, component, config):
-                return
+            component, platform = comp_plat
 
-            hass.bus.fire(EVENT_PLATFORM_DISCOVERED, {
-                ATTR_SERVICE: service,
-                ATTR_DISCOVERED: info
-            })
+            if platform is None:
+                discover(hass, service, info, component, config)
+            else:
+                load_platform(hass, component, platform, info, config)
 
     # pylint: disable=unused-argument
     def start_discovery(event):

@@ -1,7 +1,8 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access,too-many-public-methods
-import unittest
 import json
+import time
+import unittest
 
 import requests
 
@@ -13,7 +14,10 @@ from tests.common import get_test_instance_port, get_test_home_assistant
 API_PASSWORD = "test1234"
 SERVER_PORT = get_test_instance_port()
 API_URL = "http://127.0.0.1:{}{}".format(SERVER_PORT, alexa.API_ENDPOINT)
-HA_HEADERS = {const.HTTP_HEADER_HA_AUTH: API_PASSWORD}
+HA_HEADERS = {
+    const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
+    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
+}
 
 SESSION_ID = 'amzn1.echo-api.session.0000000-0000-0000-0000-00000000000'
 APPLICATION_ID = 'amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe'
@@ -82,6 +86,7 @@ def setUpModule():   # pylint: disable=invalid-name
     })
 
     hass.start()
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name

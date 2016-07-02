@@ -18,9 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
-from homeassistant.components import (
-    group, wemo, wink, isy994, verisure,
-    zwave, tellduslive, tellstick, mysensors, vera)
+from homeassistant.components import group
 
 DOMAIN = 'switch'
 SCAN_INTERVAL = 30
@@ -34,19 +32,6 @@ ATTR_TODAY_MWH = "today_mwh"
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wemo.DISCOVER_SWITCHES: 'wemo',
-    wink.DISCOVER_SWITCHES: 'wink',
-    isy994.DISCOVER_SWITCHES: 'isy994',
-    verisure.DISCOVER_SWITCHES: 'verisure',
-    zwave.DISCOVER_SWITCHES: 'zwave',
-    tellduslive.DISCOVER_SWITCHES: 'tellduslive',
-    mysensors.DISCOVER_SWITCHES: 'mysensors',
-    tellstick.DISCOVER_SWITCHES: 'tellstick',
-    vera.DISCOVER_SWITCHES: 'vera',
-}
 
 PROP_TO_ATTR = {
     'current_power_mwh': ATTR_CURRENT_POWER_MWH,
@@ -87,8 +72,7 @@ def toggle(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for switches."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_SWITCHES)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     component.setup(config)
 
     def handle_switch_service(service):
@@ -124,7 +108,7 @@ def setup(hass, config):
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use, abstract-method
     @property
     def current_power_mwh(self):
         """Return the current power usage in mWh."""

@@ -107,6 +107,19 @@ class TestDateUtil(unittest.TestCase):
             datetime(1986, 7, 9, tzinfo=dt_util.UTC),
             dt_util.utc_from_timestamp(521251200))
 
+    def test_as_timestamp(self):
+        """Test as_timestamp method."""
+        ts = 1462401234
+        utc_dt = dt_util.utc_from_timestamp(ts)
+        self.assertEqual(ts, dt_util.as_timestamp(utc_dt))
+        utc_iso = utc_dt.isoformat()
+        self.assertEqual(ts, dt_util.as_timestamp(utc_iso))
+
+        # confirm the ability to handle a string passed in
+        delta = dt_util.as_timestamp("2016-01-01 12:12:12")
+        delta -= dt_util.as_timestamp("2016-01-01 12:12:11")
+        self.assertEquals(1, delta)
+
     def test_parse_datetime_converts_correctly(self):
         """Test parse_datetime converts strings."""
         assert \
@@ -120,3 +133,32 @@ class TestDateUtil(unittest.TestCase):
     def test_parse_datetime_returns_none_for_incorrect_format(self):
         """Test parse_datetime returns None if incorrect format."""
         self.assertIsNone(dt_util.parse_datetime("not a datetime string"))
+
+    def test_get_age(self):
+        """Test get_age."""
+        diff = dt_util.now() - timedelta(seconds=0)
+        self.assertEqual(dt_util.get_age(diff), "0 second")
+
+        diff = dt_util.now() - timedelta(seconds=30)
+        self.assertEqual(dt_util.get_age(diff), "30 seconds")
+
+        diff = dt_util.now() - timedelta(minutes=5)
+        self.assertEqual(dt_util.get_age(diff), "5 minutes")
+
+        diff = dt_util.now() - timedelta(minutes=1)
+        self.assertEqual(dt_util.get_age(diff), "1 minute")
+
+        diff = dt_util.now() - timedelta(minutes=300)
+        self.assertEqual(dt_util.get_age(diff), "5 hours")
+
+        diff = dt_util.now() - timedelta(minutes=320)
+        self.assertEqual(dt_util.get_age(diff), "5 hours")
+
+        diff = dt_util.now() - timedelta(minutes=2*60*24)
+        self.assertEqual(dt_util.get_age(diff), "2 days")
+
+        diff = dt_util.now() - timedelta(minutes=32*60*24)
+        self.assertEqual(dt_util.get_age(diff), "1 month")
+
+        diff = dt_util.now() - timedelta(minutes=365*60*24)
+        self.assertEqual(dt_util.get_age(diff), "1 year")

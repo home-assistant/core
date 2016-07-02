@@ -10,9 +10,7 @@ import csv
 
 import voluptuous as vol
 
-from homeassistant.components import (
-    group, discovery, wemo, wink, isy994,
-    zwave, insteon_hub, mysensors, tellstick, vera)
+from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -39,6 +37,7 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_COLOR_NAME = "color_name"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
@@ -59,19 +58,6 @@ EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
-# Maps discovered services to their platforms.
-DISCOVERY_PLATFORMS = {
-    wemo.DISCOVER_LIGHTS: 'wemo',
-    wink.DISCOVER_LIGHTS: 'wink',
-    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
-    isy994.DISCOVER_LIGHTS: 'isy994',
-    discovery.SERVICE_HUE: 'hue',
-    zwave.DISCOVER_LIGHTS: 'zwave',
-    mysensors.DISCOVER_LIGHTS: 'mysensors',
-    tellstick.DISCOVER_LIGHTS: 'tellstick',
-    vera.DISCOVER_LIGHTS: 'vera',
-}
-
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
@@ -87,6 +73,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: cv.byte,
+    ATTR_COLOR_NAME: str,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
@@ -122,7 +109,7 @@ def is_on(hass, entity_id=None):
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None):
+            flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -135,6 +122,7 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_COLOR_TEMP, color_temp),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
+            (ATTR_COLOR_NAME, color_name),
         ] if value is not None
     }
 
@@ -169,8 +157,7 @@ def toggle(hass, entity_id=None, transition=None):
 def setup(hass, config):
     """Expose light control via statemachine and services."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_LIGHTS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     component.setup(config)
 
     # Load built-in profiles and custom profiles
@@ -228,6 +215,11 @@ def setup(hass, config):
             params.setdefault(ATTR_XY_COLOR, profile[:2])
             params.setdefault(ATTR_BRIGHTNESS, profile[2])
 
+        color_name = params.pop(ATTR_COLOR_NAME, None)
+
+        if color_name is not None:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
         for light in target_lights:
             light.turn_on(**params)
 
@@ -256,7 +248,8 @@ def setup(hass, config):
 class Light(ToggleEntity):
     """Representation of a light."""
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use, abstract-method
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""

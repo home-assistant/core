@@ -8,7 +8,7 @@ the user has submitted configuration information.
 """
 import logging
 
-from homeassistant.const import EVENT_TIME_CHANGED
+from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
 from homeassistant.helpers.entity import generate_entity_id
 
 DOMAIN = "configurator"
@@ -19,6 +19,8 @@ SERVICE_CONFIGURE = "configure"
 STATE_CONFIGURE = "configure"
 STATE_CONFIGURED = "configured"
 
+ATTR_LINK_NAME = "link_name"
+ATTR_LINK_URL = "link_url"
 ATTR_CONFIGURE_ID = "configure_id"
 ATTR_DESCRIPTION = "description"
 ATTR_DESCRIPTION_IMAGE = "description_image"
@@ -34,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=too-many-arguments
 def request_config(
         hass, name, callback, description=None, description_image=None,
-        submit_caption=None, fields=None):
+        submit_caption=None, fields=None, link_name=None, link_url=None):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
@@ -43,7 +45,8 @@ def request_config(
 
     request_id = instance.request_config(
         name, callback,
-        description, description_image, submit_caption, fields)
+        description, description_image, submit_caption,
+        fields, link_name, link_url)
 
     _REQUESTS[request_id] = instance
 
@@ -100,7 +103,8 @@ class Configurator(object):
     # pylint: disable=too-many-arguments
     def request_config(
             self, name, callback,
-            description, description_image, submit_caption, fields):
+            description, description_image, submit_caption,
+            fields, link_name, link_url):
         """Setup a request for configuration."""
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
@@ -114,6 +118,7 @@ class Configurator(object):
         data = {
             ATTR_CONFIGURE_ID: request_id,
             ATTR_FIELDS: fields,
+            ATTR_FRIENDLY_NAME: name,
         }
 
         data.update({
@@ -121,6 +126,8 @@ class Configurator(object):
                 (ATTR_DESCRIPTION, description),
                 (ATTR_DESCRIPTION_IMAGE, description_image),
                 (ATTR_SUBMIT_CAPTION, submit_caption),
+                (ATTR_LINK_NAME, link_name),
+                (ATTR_LINK_URL, link_url),
             ] if value is not None
         })
 

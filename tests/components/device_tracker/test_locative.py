@@ -1,4 +1,5 @@
 """The tests the for Locative device tracker platform."""
+import time
 import unittest
 from unittest.mock import patch
 
@@ -31,11 +32,8 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
             http.CONF_SERVER_PORT: SERVER_PORT
-        }
+        },
     })
-
-    # Set up API
-    bootstrap.setup_component(hass, 'api')
 
     # Set up device tracker
     bootstrap.setup_component(hass, device_tracker.DOMAIN, {
@@ -45,6 +43,7 @@ def setUpModule():   # pylint: disable=invalid-name
     })
 
     hass.start()
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name

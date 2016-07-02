@@ -9,28 +9,18 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import (
+    CONF_EVENT, CONF_OFFSET, CONF_PLATFORM, SUN_EVENT_SUNRISE)
 from homeassistant.helpers.event import track_sunrise, track_sunset
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['sun']
 
-CONF_OFFSET = 'offset'
-CONF_EVENT = 'event'
-CONF_BEFORE = "before"
-CONF_BEFORE_OFFSET = "before_offset"
-CONF_AFTER = "after"
-CONF_AFTER_OFFSET = "after_offset"
-
-EVENT_SUNSET = 'sunset'
-EVENT_SUNRISE = 'sunrise'
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'sun',
-    vol.Required(CONF_EVENT):
-        vol.All(vol.Lower, vol.Any(EVENT_SUNRISE, EVENT_SUNSET)),
+    vol.Required(CONF_EVENT): cv.sun_event,
     vol.Required(CONF_OFFSET, default=timedelta(0)): cv.time_period,
 })
 
@@ -51,7 +41,7 @@ def trigger(hass, config, action):
         })
 
     # Do something to call action
-    if event == EVENT_SUNRISE:
+    if event == SUN_EVENT_SUNRISE:
         track_sunrise(hass, call_action, offset)
     else:
         track_sunset(hass, call_action, offset)

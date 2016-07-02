@@ -9,7 +9,7 @@ import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.components import discovery
+from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -228,22 +228,17 @@ class TestHelpersEntityComponent(unittest.TestCase):
            '._setup_platform')
     def test_setup_does_discovery(self, mock_setup):
         """Test setup for discovery."""
-        component = EntityComponent(
-            _LOGGER, DOMAIN, self.hass, discovery_platforms={
-                'discovery.test': 'platform_test',
-            })
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         component.setup({})
 
-        self.hass.bus.fire(discovery.EVENT_PLATFORM_DISCOVERED, {
-            discovery.ATTR_SERVICE: 'discovery.test',
-            discovery.ATTR_DISCOVERED: 'discovery_info',
-        })
+        discovery.load_platform(self.hass, DOMAIN, 'platform_test',
+                                {'msg': 'discovery_info'})
 
         self.hass.pool.block_till_done()
 
         assert mock_setup.called
-        assert ('platform_test', {}, 'discovery_info') == \
+        assert ('platform_test', {}, {'msg': 'discovery_info'}) == \
             mock_setup.call_args[0]
 
     @patch('homeassistant.helpers.entity_component.track_utc_time_change')

@@ -11,7 +11,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.const import HTTP_OK
 from homeassistant.helpers import validate_config
 
 CONTENT_TYPE_HEADER = 'Content-Type'
@@ -47,10 +46,9 @@ class MjpegCamera(Camera):
             return requests.get(self._mjpeg_url,
                                 auth=HTTPBasicAuth(self._username,
                                                    self._password),
-                                stream=True)
+                                stream=True, timeout=10)
         else:
-            return requests.get(self._mjpeg_url,
-                                stream=True)
+            return requests.get(self._mjpeg_url, stream=True, timeout=10)
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -68,19 +66,14 @@ class MjpegCamera(Camera):
         with closing(self.camera_stream()) as response:
             return process_response(response)
 
-    def mjpeg_stream(self, handler):
+    def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from the camera."""
-        response = self.camera_stream()
-        content_type = response.headers[CONTENT_TYPE_HEADER]
-
-        handler.send_response(HTTP_OK)
-        handler.send_header(CONTENT_TYPE_HEADER, content_type)
-        handler.end_headers()
-
-        for chunk in response.iter_content(chunk_size=1024):
-            if not chunk:
-                break
-            handler.wfile.write(chunk)
+        stream = self.camera_stream()
+        return response(
+            stream.iter_content(chunk_size=1024),
+            mimetype=stream.headers[CONTENT_TYPE_HEADER],
+            direct_passthrough=True
+        )
 
     @property
     def name(self):

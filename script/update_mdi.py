@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Download the latest Polymer v1 iconset for materialdesignicons.com."""
 import hashlib
+import gzip
 import os
 import re
 import requests
@@ -16,6 +17,7 @@ CUR_VERSION = re.compile(r'VERSION = "([A-Za-z0-9]{32})"')
 OUTPUT_BASE = os.path.join('homeassistant', 'components', 'frontend')
 VERSION_OUTPUT = os.path.join(OUTPUT_BASE, 'mdi_version.py')
 ICONSET_OUTPUT = os.path.join(OUTPUT_BASE, 'www_static', 'mdi.html')
+ICONSET_OUTPUT_GZ = os.path.join(OUTPUT_BASE, 'www_static', 'mdi.html.gz')
 
 
 def get_local_version():
@@ -57,6 +59,10 @@ def write_component(version, source):
     with open(ICONSET_OUTPUT, 'w') as outp:
         print('Writing icons to', ICONSET_OUTPUT)
         outp.write(source)
+
+    with gzip.open(ICONSET_OUTPUT_GZ, 'wb') as outp:
+        print('Writing icons gz to', ICONSET_OUTPUT_GZ)
+        outp.write(source.encode('utf-8'))
 
     with open(VERSION_OUTPUT, 'w') as outp:
         print('Generating version file', VERSION_OUTPUT)

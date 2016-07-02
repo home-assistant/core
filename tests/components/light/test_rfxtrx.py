@@ -227,6 +227,13 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
+
     def test_discover_light_noautoadd(self):
         """Test with discover of light when auto add is False."""
         self.assertTrue(_setup_component(self.hass, 'light', {
@@ -265,6 +272,12 @@ class TestLightRfxtrx(unittest.TestCase):
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])
+        rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
+        self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
+        # Trying to add a rollershutter
+        event = rfxtrx_core.get_rfx_object('0a1400adf394ab020e0060')
+        event.data = bytearray([0x0A, 0x14, 0x00, 0xAD, 0xF3, 0x94,
+                                0xAB, 0x02, 0x0E, 0x00, 0x60])
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))

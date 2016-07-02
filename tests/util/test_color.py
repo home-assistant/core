@@ -9,16 +9,17 @@ class TestColorUtil(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_color_RGB_to_xy(self):
         """Test color_RGB_to_xy."""
-        self.assertEqual((0, 0), color_util.color_RGB_to_xy(0, 0, 0))
-        self.assertEqual((0.3127159072215825, 0.3290014805066623),
+        self.assertEqual((0, 0, 0), color_util.color_RGB_to_xy(0, 0, 0))
+        self.assertEqual((0.32, 0.336, 255),
                          color_util.color_RGB_to_xy(255, 255, 255))
 
-        self.assertEqual((0.15001662234042554, 0.060006648936170214),
+        self.assertEqual((0.136, 0.04, 12),
                          color_util.color_RGB_to_xy(0, 0, 255))
 
-        self.assertEqual((0.3, 0.6), color_util.color_RGB_to_xy(0, 255, 0))
+        self.assertEqual((0.172, 0.747, 170),
+                         color_util.color_RGB_to_xy(0, 255, 0))
 
-        self.assertEqual((0.6400744994567747, 0.3299705106316933),
+        self.assertEqual((0.679, 0.321, 80),
                          color_util.color_RGB_to_xy(255, 0, 0))
 
     def test_color_xy_brightness_to_RGB(self):
@@ -57,6 +58,74 @@ class TestColorUtil(unittest.TestCase):
 
         self.assertEqual([51, 153, 255, 0],
                          color_util.rgb_hex_to_rgb_list('3399ff00'))
+
+    def test_color_name_to_rgb_valid_name(self):
+        """Test color_name_to_rgb."""
+        self.assertEqual((255, 0, 0),
+                         color_util.color_name_to_rgb('red'))
+
+        self.assertEqual((0, 0, 255),
+                         color_util.color_name_to_rgb('blue'))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_name_to_rgb('green'))
+
+    def test_color_name_to_rgb_unknown_name_default_white(self):
+        """Test color_name_to_rgb."""
+        self.assertEqual((255, 255, 255),
+                         color_util.color_name_to_rgb('not a color'))
+
+    def test_color_rgb_to_rgbw(self):
+        """Test color_rgb_to_rgbw."""
+        self.assertEqual((0, 0, 0, 0),
+                         color_util.color_rgb_to_rgbw(0, 0, 0))
+
+        self.assertEqual((0, 0, 0, 255),
+                         color_util.color_rgb_to_rgbw(255, 255, 255))
+
+        self.assertEqual((255, 0, 0, 0),
+                         color_util.color_rgb_to_rgbw(255, 0, 0))
+
+        self.assertEqual((0, 255, 0, 0),
+                         color_util.color_rgb_to_rgbw(0, 255, 0))
+
+        self.assertEqual((0, 0, 255, 0),
+                         color_util.color_rgb_to_rgbw(0, 0, 255))
+
+        self.assertEqual((255, 127, 0, 0),
+                         color_util.color_rgb_to_rgbw(255, 127, 0))
+
+        self.assertEqual((255, 0, 0, 253),
+                         color_util.color_rgb_to_rgbw(255, 127, 127))
+
+        self.assertEqual((0, 0, 0, 127),
+                         color_util.color_rgb_to_rgbw(127, 127, 127))
+
+    def test_color_rgbw_to_rgb(self):
+        """Test color_rgbw_to_rgb."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 0))
+
+        self.assertEqual((255, 255, 255),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 255))
+
+        self.assertEqual((255, 0, 0),
+                         color_util.color_rgbw_to_rgb(255, 0, 0, 0))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_rgbw_to_rgb(0, 255, 0, 0))
+
+        self.assertEqual((0, 0, 255),
+                         color_util.color_rgbw_to_rgb(0, 0, 255, 0))
+
+        self.assertEqual((255, 127, 0),
+                         color_util.color_rgbw_to_rgb(255, 127, 0, 0))
+
+        self.assertEqual((255, 127, 127),
+                         color_util.color_rgbw_to_rgb(255, 0, 0, 253))
+
+        self.assertEqual((127, 127, 127),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 127))
 
 
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):

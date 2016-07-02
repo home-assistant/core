@@ -1,48 +1,72 @@
 """Color util methods."""
+import logging
 import math
+# pylint: disable=unused-import
+
+_LOGGER = logging.getLogger(__name__)
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
 HASS_COLOR_MIN = 154
+COLORS = {
+    'white': (255, 255, 255), 'beige': (245, 245, 220),
+    'tan': (210, 180, 140), 'gray': (128, 128, 128),
+    'navy blue': (0, 0, 128), 'royal blue': (8, 76, 158),
+    'blue': (0, 0, 255), 'azure': (0, 127, 255), 'aqua': (127, 255, 212),
+    'teal': (0, 128, 128), 'green': (0, 255, 0),
+    'forest green': (34, 139, 34), 'olive': (128, 128, 0),
+    'chartreuse': (127, 255, 0), 'lime': (191, 255, 0),
+    'golden': (255, 215, 0), 'red': (255, 0, 0), 'coral': (0, 63, 72),
+    'hot pink': (252, 15, 192), 'fuchsia': (255, 119, 255),
+    'lavender': (181, 126, 220), 'indigo': (75, 0, 130),
+    'maroon': (128, 0, 0), 'crimson': (220, 20, 60)}
 
 
-# Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
+def color_name_to_rgb(color_name):
+    """Convert color name to RGB hex value."""
+    hex_value = COLORS.get(color_name.lower())
+
+    if not hex_value:
+        _LOGGER.error('unknown color supplied %s default to white', color_name)
+        hex_value = COLORS['white']
+
+    return hex_value
+
+
+# Taken from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
     """Convert from RGB color to XY color."""
     if R + G + B == 0:
-        return 0, 0
+        return 0, 0, 0
 
-    var_R = (R / 255.)
-    var_G = (G / 255.)
-    var_B = (B / 255.)
+    R = R / 255
+    B = B / 255
+    G = G / 255
 
-    if var_R > 0.04045:
-        var_R = ((var_R + 0.055) / 1.055) ** 2.4
-    else:
-        var_R /= 12.92
+    # Gamma correction
+    R = pow((R + 0.055) / (1.0 + 0.055),
+            2.4) if (R > 0.04045) else (R / 12.92)
+    G = pow((G + 0.055) / (1.0 + 0.055),
+            2.4) if (G > 0.04045) else (G / 12.92)
+    B = pow((B + 0.055) / (1.0 + 0.055),
+            2.4) if (B > 0.04045) else (B / 12.92)
 
-    if var_G > 0.04045:
-        var_G = ((var_G + 0.055) / 1.055) ** 2.4
-    else:
-        var_G /= 12.92
+    # Wide RGB D65 conversion formula
+    X = R * 0.664511 + G * 0.154324 + B * 0.162028
+    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
-    if var_B > 0.04045:
-        var_B = ((var_B + 0.055) / 1.055) ** 2.4
-    else:
-        var_B /= 12.92
+    # Convert XYZ to xy
+    x = X / (X + Y + Z)
+    y = Y / (X + Y + Z)
 
-    var_R *= 100
-    var_G *= 100
-    var_B *= 100
+    # Brightness
+    Y = 1 if Y > 1 else Y
+    brightness = round(Y * 255)
 
-    # Observer. = 2 deg, Illuminant = D65
-    X = var_R * 0.4124 + var_G * 0.3576 + var_B * 0.1805
-    Y = var_R * 0.2126 + var_G * 0.7152 + var_B * 0.0722
-    Z = var_R * 0.0193 + var_G * 0.1192 + var_B * 0.9505
-
-    # Convert XYZ to xy, see CIE 1931 color space on wikipedia
-    return X / (X + Y + Z), Y / (X + Y + Z)
+    return round(x, 3), round(y, 3), brightness
 
 
 # taken from
@@ -86,6 +110,39 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
     r, g, b = map(lambda x: int(x * 255), [r, g, b])
 
     return (r, g, b)
+
+
+def _match_max_scale(input_colors, output_colors):
+    """Match the maximum value of the output to the input."""
+    max_in = max(input_colors)
+    max_out = max(output_colors)
+    if max_out == 0:
+        factor = 0
+    else:
+        factor = max_in / max_out
+    return tuple(int(round(i * factor)) for i in output_colors)
+
+
+def color_rgb_to_rgbw(r, g, b):
+    """Convert an rgb color to an rgbw representation."""
+    # Calculate the white channel as the minimum of input rgb channels.
+    # Subtract the white portion from the remaining rgb channels.
+    w = min(r, g, b)
+    rgbw = (r - w, g - w, b - w, w)
+
+    # Match the output maximum value to the input. This ensures the full
+    # channel range is used.
+    return _match_max_scale((r, g, b), rgbw)
+
+
+def color_rgbw_to_rgb(r, g, b, w):
+    """Convert an rgbw color to an rgb representation."""
+    # Add the white channel back into the rgb channels.
+    rgb = (r + w, g + w, b + w)
+
+    # Match the output maximum value to the input. This ensures the the
+    # output doesn't overflow.
+    return _match_max_scale((r, g, b, w), rgb)
 
 
 def rgb_hex_to_rgb_list(hex_string):

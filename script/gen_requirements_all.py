@@ -6,13 +6,19 @@ import pkgutil
 import re
 import sys
 
-COMMENT_REQUIREMENTS = [
+COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
+    'rpi-rf',
     'Adafruit_Python_DHT',
     'fritzconnection',
     'pybluez',
     'bluepy',
-]
+    'python-lirc',
+)
+
+IGNORE_PACKAGES = (
+    'homeassistant.components.recorder.models',
+)
 
 
 def explore_module(package, explore_children):
@@ -57,7 +63,8 @@ def gather_modules():
         try:
             module = importlib.import_module(package)
         except ImportError:
-            errors.append(package)
+            if package not in IGNORE_PACKAGES:
+                errors.append(package)
             continue
 
         if not getattr(module, 'REQUIREMENTS', None):

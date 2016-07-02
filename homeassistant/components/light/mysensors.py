@@ -4,12 +4,13 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
+# pylint: disable=abstract-method
 import logging
 
+from homeassistant.components import mysensors
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
                                             Light)
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
-from homeassistant.loader import get_component
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +25,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Otherwise gateway is not setup.
     if discovery_info is None:
         return
-
-    mysensors = get_component('mysensors')
 
     for gateway in mysensors.GATEWAYS.values():
         # Define the S_TYPES and V_TYPES that the platform should handle as
@@ -52,35 +51,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             map_sv_types, devices, add_devices, device_class_map))
 
 
-class MySensorsLight(Light):
-    """Represent the value of a MySensors child node."""
+class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
+    """Represent the value of a MySensors Light child node."""
 
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
-    def __init__(
-            self, gateway, node_id, child_id, name, value_type, child_type):
+    def __init__(self, *args):
         """Setup instance attributes."""
-        self.gateway = gateway
-        self.node_id = node_id
-        self.child_id = child_id
-        self._name = name
-        self.value_type = value_type
-        self.battery_level = 0
-        self._values = {}
+        mysensors.MySensorsDeviceEntity.__init__(self, *args)
         self._state = None
         self._brightness = None
         self._rgb = None
         self._white = None
-        self.mysensors = get_component('mysensors')
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of this entity."""
-        return self._name
 
     @property
     def brightness(self):
@@ -96,29 +76,6 @@ class MySensorsLight(Light):
     def rgb_white(self):  # not implemented in the frontend yet
         """Return the white value in RGBW, value between 0..255."""
         return self._white
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        address = getattr(self.gateway, 'server_address', None)
-        if address:
-            device = '{}:{}'.format(address[0], address[1])
-        else:
-            device = self.gateway.port
-        attr = {
-            self.mysensors.ATTR_DEVICE: device,
-            self.mysensors.ATTR_NODE_ID: self.node_id,
-            self.mysensors.ATTR_CHILD_ID: self.child_id,
-            ATTR_BATTERY_LEVEL: self.battery_level,
-        }
-        for value_type, value in self._values.items():
-            attr[self.gateway.const.SetReq(value_type).name] = value
-        return attr
-
-    @property
-    def available(self):
-        """Return true if entity is available."""
-        return self.value_type in self._values
 
     @property
     def assumed_state(self):
@@ -319,28 +276,11 @@ class MySensorsLightRGB(MySensorsLight):
         self._update_rgb_or_w()
 
 
-class MySensorsLightRGBW(MySensorsLight):
-    """RGBW child class to MySensorsLight."""
+class MySensorsLightRGBW(MySensorsLightRGB):
+    """RGBW child class to MySensorsLightRGB."""
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
-
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        ret = self._turn_off_rgb_or_w()
-        ret = self._turn_off_dimmer(
-            value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        ret = self._turn_off_light(
-            value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-        self._turn_off_main(
-            value_type=ret[ATTR_VALUE_TYPE], value=ret[ATTR_VALUE])
-
-    def update(self):
-        """Update the controller with the latest value from a sensor."""
-        self._update_main()
-        self._update_light()
-        self._update_dimmer()
-        self._update_rgb_or_w()

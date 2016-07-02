@@ -10,7 +10,7 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['slacker==0.9.10']
+REQUIREMENTS = ['slacker==0.9.18']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,8 +30,7 @@ def get_service(hass, config):
             config[CONF_API_KEY])
 
     except slacker.Error:
-        _LOGGER.exception(
-            "Slack authentication failed")
+        _LOGGER.exception("Slack authentication failed")
         return None
 
 
@@ -51,7 +50,7 @@ class SlackNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import slacker
 
-        channel = kwargs.get('channel', self._default_channel)
+        channel = kwargs.get('target') or self._default_channel
         try:
             self.slack.chat.post_message(channel, message)
         except slacker.Error:

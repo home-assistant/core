@@ -9,8 +9,10 @@ import logging
 from homeassistant.const import (CONF_ACCESS_TOKEN, STATE_CLOSED,
                                  STATE_OPEN, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.wink import WinkDevice
+from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.5']
+REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.6']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 
@@ -37,12 +39,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(WinkEggMinder(eggtray) for eggtray in pywink.get_eggtrays())
 
 
-class WinkSensorDevice(Entity):
+class WinkSensorDevice(WinkDevice, Entity):
     """Representation of a Wink sensor."""
 
     def __init__(self, wink):
-        """Initialize the sensor."""
-        self.wink = wink
+        """Initialize the Wink device."""
+        super().__init__(wink)
+        wink = get_component('wink')
         self.capability = self.wink.capability()
         if self.wink.UNIT == "°":
             self._unit_of_measurement = TEMP_CELSIUS
@@ -53,9 +56,9 @@ class WinkSensorDevice(Entity):
     def state(self):
         """Return the state."""
         if self.capability == "humidity":
-            return self.wink.humidity_percentage()
+            return round(self.wink.humidity_percentage())
         elif self.capability == "temperature":
-            return self.wink.temperature_float()
+            return round(self.wink.temperature_float(), 1)
         else:
             return STATE_OPEN if self.is_open else STATE_CLOSED
 
@@ -65,52 +68,19 @@ class WinkSensorDevice(Entity):
         return self._unit_of_measurement
 
     @property
-    def unique_id(self):
-        """Return the ID of this wink sensor."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the sensor if any."""
-        return self.wink.name()
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
-
-    def update(self):
-        """Update state of the sensor."""
-        self.wink.update_state()
-
-    @property
     def is_open(self):
         """Return true if door is open."""
         return self.wink.state()
 
 
-class WinkEggMinder(Entity):
+class WinkEggMinder(WinkDevice, Entity):
     """Representation of a Wink Egg Minder."""
 
     def __init__(self, wink):
         """Initialize the sensor."""
-        self.wink = wink
+        WinkDevice.__init__(self, wink)
 
     @property
     def state(self):
         """Return the state."""
         return self.wink.state()
-
-    @property
-    def unique_id(self):
-        """Return the id of this wink Egg Minder."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the Egg Minder if any."""
-        return self.wink.name()
-
-    def update(self):
-        """Update state of the Egg Minder."""
-        self.wink.update_state()

@@ -21,7 +21,7 @@ CONF_FOR = "for"
 TRIGGER_SCHEMA = vol.All(
     vol.Schema({
         vol.Required(CONF_PLATFORM): 'state',
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
         # These are str on purpose. Want to catch YAML conversions
         CONF_FROM: str,
         CONF_TO: str,
@@ -77,7 +77,7 @@ def trigger(hass, config, action):
             hass, state_for_listener, dt_util.utcnow() + time_delta)
 
         attached_state_for_cancel = track_state_change(
-            hass, entity_id, state_for_cancel_listener)
+            hass, entity, state_for_cancel_listener)
 
     track_state_change(
         hass, entity_id, state_automation_listener, from_state, to_state)

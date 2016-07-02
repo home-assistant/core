@@ -16,7 +16,7 @@ from homeassistant.helpers import condition, config_validation as cv
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'numeric_state',
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     CONF_BELOW: vol.Coerce(float),
     CONF_ABOVE: vol.Coerce(float),
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -41,7 +41,7 @@ def trigger(hass, config, action):
         variables = {
             'trigger': {
                 'platform': 'numeric_state',
-                'entity_id': entity_id,
+                'entity_id': entity,
                 'below': below,
                 'above': above,
             }

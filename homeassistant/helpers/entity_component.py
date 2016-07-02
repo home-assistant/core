@@ -2,11 +2,11 @@
 from threading import Lock
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import discovery, group
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.service import extract_entity_ids
@@ -20,8 +20,7 @@ class EntityComponent(object):
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
     def __init__(self, logger, domain, hass,
-                 scan_interval=DEFAULT_SCAN_INTERVAL,
-                 discovery_platforms=None, group_name=None):
+                 scan_interval=DEFAULT_SCAN_INTERVAL, group_name=None):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -29,7 +28,6 @@ class EntityComponent(object):
         self.domain = domain
         self.entity_id_format = domain + '.{}'
         self.scan_interval = scan_interval
-        self.discovery_platforms = discovery_platforms
         self.group_name = group_name
 
         self.entities = {}
@@ -54,12 +52,14 @@ class EntityComponent(object):
         for p_type, p_config in config_per_platform(config, self.domain):
             self._setup_platform(p_type, p_config)
 
-        if self.discovery_platforms:
-            discovery.listen(
-                self.hass, self.discovery_platforms.keys(),
-                lambda service, info:
-                self._setup_platform(self.discovery_platforms[service], {},
-                                     info))
+        # Generic discovery listener for loading platform dynamically
+        # Refer to: homeassistant.components.discovery.load_platform()
+        def component_platform_discovered(platform, info):
+            """Callback to load a platform."""
+            self._setup_platform(platform, {}, info)
+
+        discovery.listen_platform(self.hass, self.domain,
+                                  component_platform_discovered)
 
     def extract_from_service(self, service):
         """Extract all known entities from a service call.
