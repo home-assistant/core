@@ -129,7 +129,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
             _LOGGER.debug(str(device))
             _LOGGER.debug(str(device.title))
             _LOGGER.debug(str(device.machineIdentifier))
-            _LOGGER.debug(str(device.device))
+            _LOGGER.debug(str(device.product))
             _LOGGER.debug(str(device.model))
             if device.deviceClass in ['badClient']:
                 continue
