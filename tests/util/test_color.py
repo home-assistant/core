@@ -75,6 +75,58 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((255, 255, 255),
                          color_util.color_name_to_rgb('not a color'))
 
+    def test_color_rgb_to_rgbw(self):
+        """Test color_rgb_to_rgbw."""
+        self.assertEqual((0, 0, 0, 0),
+                         color_util.color_rgb_to_rgbw(0, 0, 0))
+
+        self.assertEqual((0, 0, 0, 255),
+                         color_util.color_rgb_to_rgbw(255, 255, 255))
+
+        self.assertEqual((255, 0, 0, 0),
+                         color_util.color_rgb_to_rgbw(255, 0, 0))
+
+        self.assertEqual((0, 255, 0, 0),
+                         color_util.color_rgb_to_rgbw(0, 255, 0))
+
+        self.assertEqual((0, 0, 255, 0),
+                         color_util.color_rgb_to_rgbw(0, 0, 255))
+
+        self.assertEqual((255, 127, 0, 0),
+                         color_util.color_rgb_to_rgbw(255, 127, 0))
+
+        self.assertEqual((255, 0, 0, 253),
+                         color_util.color_rgb_to_rgbw(255, 127, 127))
+
+        self.assertEqual((0, 0, 0, 127),
+                         color_util.color_rgb_to_rgbw(127, 127, 127))
+
+    def test_color_rgbw_to_rgb(self):
+        """Test color_rgbw_to_rgb."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 0))
+
+        self.assertEqual((255, 255, 255),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 255))
+
+        self.assertEqual((255, 0, 0),
+                         color_util.color_rgbw_to_rgb(255, 0, 0, 0))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_rgbw_to_rgb(0, 255, 0, 0))
+
+        self.assertEqual((0, 0, 255),
+                         color_util.color_rgbw_to_rgb(0, 0, 255, 0))
+
+        self.assertEqual((255, 127, 0),
+                         color_util.color_rgbw_to_rgb(255, 127, 0, 0))
+
+        self.assertEqual((255, 127, 127),
+                         color_util.color_rgbw_to_rgb(255, 0, 0, 253))
+
+        self.assertEqual((127, 127, 127),
+                         color_util.color_rgbw_to_rgb(0, 0, 0, 127))
+
 
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):
     """Test color_temperature_mired_to_kelvin."""
