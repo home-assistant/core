@@ -40,7 +40,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             folder = ISY.programs['My Programs'][folder_name]
         except KeyError:
             # HA.doors folder does not exist
-            logger.debug('FOLDER DOESN\'T EXIST')
             pass
         else:
             for dtype, name, node_id in folder.children:
