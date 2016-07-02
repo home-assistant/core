@@ -1,8 +1,8 @@
 """The tests for the Recorder component."""
 # pylint: disable=too-many-public-methods,protected-access
 import unittest
-import time
 import json
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from homeassistant.const import MATCH_ALL
@@ -17,9 +17,14 @@ class TestRecorder(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        with patch('homeassistant.core.Config.path', return_value=':memory:'):
-            recorder.setup(self.hass, {})
+        db_uri = 'sqlite://'
+        with patch('homeassistant.core.Config.path', return_value=db_uri):
+            recorder.setup(self.hass, config={
+                "recorder": {
+                    "db_url": db_uri}})
         self.hass.start()
+        recorder._INSTANCE.block_till_db_ready()
+        self.session = recorder.Session()
         recorder._INSTANCE.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -29,12 +34,13 @@ class TestRecorder(unittest.TestCase):
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""
-        now = int(time.time())
-        five_days_ago = now - (60*60*24*5)
+        now = datetime.now()
+        five_days_ago = now - timedelta(days=5)
         attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
 
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
+
         for event_id in range(5):
             if event_id < 3:
                 timestamp = five_days_ago
@@ -42,19 +48,24 @@ class TestRecorder(unittest.TestCase):
             else:
                 timestamp = now
                 state = 'dontpurgeme'
-            recorder.query("INSERT INTO states ("
-                           "entity_id, domain, state, attributes,"
-                           "last_changed, last_updated, created,"
-                           "utc_offset, event_id)"
-                           "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                           ('test.recorder2', 'sensor', state,
-                            json.dumps(attributes), timestamp, timestamp,
-                            timestamp, -18000, event_id + 1000))
+
+            self.session.add(recorder.get_model('States')(
+                entity_id='test.recorder2',
+                domain='sensor',
+                state=state,
+                attributes=json.dumps(attributes),
+                last_changed=timestamp,
+                last_updated=timestamp,
+                created=timestamp,
+                event_id=event_id + 1000
+            ))
+
+        self.session.commit()
 
     def _add_test_events(self):
         """Add a few events for testing."""
-        now = int(time.time())
-        five_days_ago = now - (60*60*24*5)
+        now = datetime.now()
+        five_days_ago = now - timedelta(days=5)
         event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
 
         self.hass.pool.block_till_done()
@@ -66,12 +77,14 @@ class TestRecorder(unittest.TestCase):
             else:
                 timestamp = now
                 event_type = 'EVENT_TEST'
-            recorder.query("INSERT INTO events"
-                           "(event_type, event_data, origin, created,"
-                           "time_fired, utc_offset)"
-                           "VALUES (?, ?, ?, ?, ?, ?)",
-                           (event_type, json.dumps(event_data), 'LOCAL',
-                            timestamp, timestamp, -18000))
+
+            self.session.add(recorder.get_model('Events')(
+                event_type=event_type,
+                event_data=json.dumps(event_data),
+                origin='LOCAL',
+                created=timestamp,
+                time_fired=timestamp,
+            ))
 
     def test_saving_state(self):
         """Test saving and restoring a state."""
@@ -84,7 +97,8 @@ class TestRecorder(unittest.TestCase):
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        states = recorder.query_states('SELECT * FROM states')
+        states = recorder.execute(
+            recorder.query('States'))
 
         self.assertEqual(1, len(states))
         self.assertEqual(self.hass.states.get(entity_id), states[0])
@@ -108,8 +122,9 @@ class TestRecorder(unittest.TestCase):
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        db_events = recorder.query_events(
-            'SELECT * FROM events WHERE event_type = ?', (event_type, ))
+        db_events = recorder.execute(
+            recorder.query('Events').filter_by(
+                event_type=event_type))
 
         assert len(events) == 1
         assert len(db_events) == 1
@@ -129,51 +144,45 @@ class TestRecorder(unittest.TestCase):
         """Test deleting old states."""
         self._add_test_states()
         # make sure we start with 5 states
-        states = recorder.query_states('SELECT * FROM states')
-        self.assertEqual(len(states), 5)
+        states = recorder.query('States')
+        self.assertEqual(states.count(), 5)
 
         # run purge_old_data()
         recorder._INSTANCE.purge_days = 4
         recorder._INSTANCE._purge_old_data()
 
         # we should only have 2 states left after purging
-        states = recorder.query_states('SELECT * FROM states')
-        self.assertEqual(len(states), 2)
+        self.assertEqual(states.count(), 2)
 
     def test_purge_old_events(self):
         """Test deleting old events."""
         self._add_test_events()
-        events = recorder.query_events('SELECT * FROM events WHERE '
-                                       'event_type LIKE "EVENT_TEST%"')
-        self.assertEqual(len(events), 5)
+        events = recorder.query('Events').filter(
+            recorder.get_model('Events').event_type.like("EVENT_TEST%"))
+        self.assertEqual(events.count(), 5)
 
         # run purge_old_data()
         recorder._INSTANCE.purge_days = 4
         recorder._INSTANCE._purge_old_data()
 
         # now we should only have 3 events left
-        events = recorder.query_events('SELECT * FROM events WHERE '
-                                       'event_type LIKE "EVENT_TEST%"')
-        self.assertEqual(len(events), 3)
+        self.assertEqual(events.count(), 3)
 
     def test_purge_disabled(self):
         """Test leaving purge_days disabled."""
         self._add_test_states()
         self._add_test_events()
         # make sure we start with 5 states and events
-        states = recorder.query_states('SELECT * FROM states')
-        events = recorder.query_events('SELECT * FROM events WHERE '
-                                       'event_type LIKE "EVENT_TEST%"')
-        self.assertEqual(len(states), 5)
-        self.assertEqual(len(events), 5)
+        states = recorder.query('States')
+        events = recorder.query('Events').filter(
+            recorder.get_model('Events').event_type.like("EVENT_TEST%"))
+        self.assertEqual(states.count(), 5)
+        self.assertEqual(events.count(), 5)
 
         # run purge_old_data()
         recorder._INSTANCE.purge_days = None
         recorder._INSTANCE._purge_old_data()
 
         # we should have all of our states still
-        states = recorder.query_states('SELECT * FROM states')
-        events = recorder.query_events('SELECT * FROM events WHERE '
-                                       'event_type LIKE "EVENT_TEST%"')
-        self.assertEqual(len(states), 5)
-        self.assertEqual(len(events), 5)
+        self.assertEqual(states.count(), 5)
+        self.assertEqual(events.count(), 5)
