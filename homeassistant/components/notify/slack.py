@@ -10,7 +10,7 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['slacker==0.9.17']
+REQUIREMENTS = ['slacker==0.9.18']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,8 +30,7 @@ def get_service(hass, config):
             config[CONF_API_KEY])
 
     except slacker.Error:
-        _LOGGER.exception(
-            "Slack authentication failed")
+        _LOGGER.exception("Slack authentication failed")
         return None
 
 
