@@ -37,12 +37,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for folder_name, states in (('HA.doors', [STATE_ON, STATE_OFF]),
                                 ('HA.switches', [STATE_ON, STATE_OFF])):
         try:
+            logger.debug('CHECKING ' + folder_name);
             folder = ISY.programs['My Programs'][folder_name]
         except KeyError:
             # HA.doors folder does not exist
+            logger.debug('FOLDER DOESN\'T EXIST')
             pass
         else:
             for dtype, name, node_id in folder.children:
+                logger.debug('CHILD: ' + dtype + '|' + name)
                 if dtype is 'folder':
                     custom_switch = folder[node_id]
                     try:
@@ -50,8 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         assert actions.dtype == 'program', 'Not a program'
                         node = custom_switch['status'].leaf
                     except (KeyError, AssertionError):
+                        logger.debug('ERROR LOADING PROGRAM')
                         pass
                     else:
+                        logger.debug('ADDING DEVICE')
                         devs.append(ISYProgramDevice(name, node, actions,
                                                      states))
 
