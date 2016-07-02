@@ -10,7 +10,7 @@ from homeassistant.components.rollershutter import RollershutterDevice
 from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.8']
+REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.6']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
