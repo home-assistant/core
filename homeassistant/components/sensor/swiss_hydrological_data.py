@@ -19,12 +19,14 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['beautifulsoup4==4.4.1']
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'http://www.hydrodaten.admin.ch/en/'
+_RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
 
 DEFAULT_NAME = 'Water temperature'
 CONF_STATION = 'station'
 ICON = 'mdi:cup-water'
 
+ATTR_LOCATION = 'Location'
+ATTR_UPDATE = 'Update'
 ATTR_DISCHARGE = 'Discharge'
 ATTR_WATERLEVEL = 'Level'
 ATTR_DISCHARGE_MEAN = 'Discharge mean'
@@ -42,9 +44,9 @@ PLATFORM_SCHEMA = vol.Schema({
 
 HydroData = collections.namedtuple(
     "HydrologicalData",
-    ['discharge', 'waterlevel', 'temperature', 'discharge_mean',
-     'waterlevel_mean', 'temperature_mean', 'discharge_max', 'waterlevel_max',
-     'temperature_max'])
+    ['waterlevel', 'waterlevel_max', 'waterlevel_mean', 'temperature',
+     'temperature_max', 'temperature_mean', 'discharge', 'discharge_max',
+     'discharge_mean', 'location', 'update_time'])
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
@@ -52,13 +54,16 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Swiss hydrological sensor."""
+    from bs4 import BeautifulSoup
+
     station = config.get(CONF_STATION)
     name = config.get(CONF_NAME, DEFAULT_NAME)
 
     try:
-        response = requests.get('{}/{}.html'.format(_RESOURCE, station),
-                                timeout=5)
-        if not response.ok:
+        response = requests.get(_RESOURCE, timeout=5)
+        if BeautifulSoup(
+                response.content,
+                'html.parser').find(strnr='{}'.format(station)) is None:
             _LOGGER.error('The given station does not seem to exist: %s',
                           station)
             return False
@@ -94,13 +99,15 @@ class SwissHydrologicalDataSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return round(float(self._state), 1)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.data.measurings is not None:
             return {
+                ATTR_LOCATION: self.data.measurings.location,
+                ATTR_UPDATE: self.data.measurings.update_time,
                 ATTR_DISCHARGE: self.data.measurings.discharge,
                 ATTR_WATERLEVEL: self.data.measurings.waterlevel,
                 ATTR_DISCHARGE_MEAN: self.data.measurings.discharge_mean,
@@ -135,28 +142,28 @@ class HydrologicalData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from hydrodaten.admin.ch."""
+        """Get the latest data from hydrodata.ch."""
         from bs4 import BeautifulSoup
 
         try:
-            response = requests.get('{}/{}.html'.format(_RESOURCE,
-                                                        self.station),
-                                    timeout=5)
+            response = requests.get(_RESOURCE, timeout=5)
         except requests.exceptions.ConnectionError:
-            _LOGGER.error('Unable to retrieve data')
-            response = None
+            _LOGGER.error('Unable to retrieve data from %s', _RESOURCE)
 
         try:
-            tables = BeautifulSoup(response.content,
-                                   'html.parser').findChildren('table')
-            rows = tables[0].findChildren(['th', 'tr'])
+            soup = BeautifulSoup(response.content, 'html.parser')
+            # Water level: Typ="02", temperature: Typ="03", discharge: Typ="10"
+            type02, type03, type10 = [
+                soup.find(strnr='{}'.format(self.station), typ='{}'.format(i))
+                for i in ['02', '03', '10']]
 
             details = []
-
-            for row in rows:
-                cells = row.findChildren('td')
-                for cell in cells:
-                    details.append(cell.string)
+            for entry in [type02, type03, type10]:
+                details.append(entry.wert.string)
+                details.append(entry.find(typ="max24").string)
+                details.append(entry.find(typ="m24").string)
+            details.append(type03.find('name').string)
+            details.append(type03.find('zeit').string)
 
             self.measurings = HydroData._make(details)
         except AttributeError:
