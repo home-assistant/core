@@ -129,7 +129,7 @@ def setup_bridge(host, hass, add_devices_callback, filename,
         new_lights = []
 
         api_name = api.get('config').get('name')
-        if api_name == 'RaspBee-GW':
+        if api_name in ('RaspBee-GW', 'deCONZ-GW'):
             bridge_type = 'deconz'
         else:
             bridge_type = 'hue'
