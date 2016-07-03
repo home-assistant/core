@@ -20,7 +20,7 @@ DEFAULT_PORT = 8125
 DEFAULT_PREFIX = 'hass'
 DEFAULT_RATE = 1
 
-REQUIREMENTS = ['python-statsd==1.7.2']
+REQUIREMENTS = ['statsd==3.2.1']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
@@ -30,7 +30,6 @@ CONF_RATE = 'rate'
 
 def setup(hass, config):
     """Setup the StatsD component."""
-    from statsd.compat import NUM_TYPES
     import statsd
 
     conf = config[DOMAIN]
@@ -40,14 +39,11 @@ def setup(hass, config):
     sample_rate = util.convert(conf.get(CONF_RATE), int, DEFAULT_RATE)
     prefix = util.convert(conf.get(CONF_PREFIX), str, DEFAULT_PREFIX)
 
-    statsd_connection = statsd.Connection(
+    statsd_client = statsd.StatsClient(
         host=host,
         port=port,
-        sample_rate=sample_rate,
-        disabled=False
+        prefix=prefix
     )
-
-    meter = statsd.Gauge(prefix, statsd_connection)
 
     def statsd_event_listener(event):
         """Listen for new messages on the bus and sends them to StatsD."""
@@ -61,11 +57,11 @@ def setup(hass, config):
         except ValueError:
             return
 
-        if not isinstance(_state, NUM_TYPES):
-            return
-
         _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
-        meter.send(state.entity_id, _state)
+        statsd_client.gauge(state.entity_id, _state, sample_rate)
+
+        # Increment the count
+        statsd_client.incr(state.entity_id, rate=sample_rate)
 
     hass.bus.listen(EVENT_STATE_CHANGED, statsd_event_listener)
 
