@@ -16,6 +16,9 @@ REQUIREMENTS = ['radiotherm==1.2']
 HOLD_TEMP = 'hold_temp'
 _LOGGER = logging.getLogger(__name__)
 
+STATE_OFF = 'off'
+STATE_AUTO = 'auto'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Radio Thermostat."""
@@ -45,6 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(tstats)
 
 
+# pylint: disable=abstract-method
 class RadioThermostat(ThermostatDevice):
     """Representation of a Radio Thermostat."""
 
@@ -121,3 +125,14 @@ class RadioThermostat(ThermostatDevice):
         now = datetime.datetime.now()
         self.device.time = {'day': now.weekday(),
                             'hour': now.hour, 'minute': now.minute}
+
+    def set_hvac_mode(self, mode):
+        """Set HVAC mode (auto, cool, heat, off)."""
+        if mode == STATE_OFF:
+            self.device.tmode = 0
+        elif mode == STATE_AUTO:
+            self.device.tmode = 3
+        elif mode == STATE_COOL:
+            self.device.t_cool = self._target_temperature
+        elif mode == STATE_HEAT:
+            self.device.t_heat = self._target_temperature
