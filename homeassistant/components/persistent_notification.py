@@ -79,6 +79,7 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_CREATE, create_service,
-                           descriptions.get(DOMAIN), SCHEMA_SERVICE_CREATE)
+                           descriptions[DOMAIN][SERVICE_CREATE],
+                           SCHEMA_SERVICE_CREATE)
 
     return True
