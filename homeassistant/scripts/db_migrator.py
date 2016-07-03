@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Script to convert an old-format home-assistant.db to a new format one."""
 
 import argparse
@@ -46,11 +44,11 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=2,
         print("\n")
 
 
-def main():
+def run(args):
     """The actual script body."""
     # pylint: disable=too-many-locals,invalid-name,too-many-statements
     parser = argparse.ArgumentParser(
-        description="Home Assistant: Observe, Control, Automate.")
+        description="Migrate legacy DB to SQLAlchemy format.")
     parser.add_argument(
         '-c', '--config',
         metavar='path_to_config_dir',
@@ -66,6 +64,9 @@ def main():
         type=str,
         help="Connect to URI and import (implies --append)"
              "eg: mysql://localhost/homeassistant")
+    parser.add_argument(
+        '--script',
+        choices=['db_migrator'])
 
     args = parser.parse_args()
 
@@ -76,7 +77,7 @@ def main():
         if config_dir != config_util.get_default_config_dir():
             print(('Fatal Error: Specified configuration directory does '
                    'not exist {} ').format(config_dir))
-            sys.exit(1)
+            return 1
     else:
         config_dir = config_util.get_default_config_dir()
 
@@ -86,13 +87,13 @@ def main():
     if not os.path.exists(src_db):
         print("Fatal Error: Old format database '{}' does not exist".format(
             src_db))
-        sys.exit(1)
+        return 1
     if not args.uri and (os.path.exists(dst_db) and not args.append):
         print("Fatal Error: New format database '{}' exists already - "
               "Remove it or use --append".format(dst_db))
-        print("Note: --append must maintain an ID mapping and is much slower")
-        print("and requires sufficient memory to track all event IDs")
-        sys.exit(1)
+        print("Note: --append must maintain an ID mapping and is much slower"
+              "and requires sufficient memory to track all event IDs")
+        return 1
 
     conn = sqlite3.connect(src_db)
     uri = args.uri or "sqlite:///{}".format(dst_db)
@@ -182,6 +183,4 @@ def main():
     print_progress(n, num_rows)
     session.commit()
     c.close()
-
-if __name__ == "__main__":
-    main()
+    return 0
