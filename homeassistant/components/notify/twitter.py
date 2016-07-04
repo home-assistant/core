@@ -53,7 +53,7 @@ class TwitterNotificationService(BaseNotificationService):
 
     def send_message(self, message="", data=None, **kwargs):
         """Tweet some message."""
-        payload['status'] = message
+        payload = { 'status': message }
         if data:
           path = data.media
           if 'http' in kwargs['data']['media']:
