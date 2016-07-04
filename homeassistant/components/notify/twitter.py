@@ -46,10 +46,11 @@ class TwitterNotificationService(BaseNotificationService):
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message="", data=None **kwargs):
         """Tweet some message."""
         payload['status'] = message
-        if kwargs['data']['media']
+        if data
+          path = data.media
           if 'http' in kwargs['data']['media']
             file = cStringIO.StringIO(urllib.urlopen(kwargs['data']['media']).read())
             data = Image.open(file)
