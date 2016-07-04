@@ -12,7 +12,7 @@ from homeassistant.helpers import validate_config
 
 import requests
 from io import StringIO
-import Image
+from PIL import Image
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.4.1']
