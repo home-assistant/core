@@ -66,10 +66,16 @@ class TestStatsd(unittest.TestCase):
                  STATE_ON: 1,
                  STATE_OFF: 0}
         for in_, out in valid.items():
-            state = mock.MagicMock(state=in_)
+            state = mock.MagicMock(state=in_,
+                                   attributes={"attribute key": 3.2})
             handler_method(mock.MagicMock(data={'new_state': state}))
-            mock_client.return_value.gauge.assert_called_once_with(
-                state.entity_id, out, statsd.DEFAULT_RATE)
+            mock_client.return_value.gauge.assert_has_calls([
+                mock.call("%s.state" % state.entity_id,
+                          out, statsd.DEFAULT_RATE),
+                mock.call("%s.attribute_key" % state.entity_id,
+                          3.2, statsd.DEFAULT_RATE),
+            ])
+
             mock_client.return_value.gauge.reset_mock()
 
             mock_client.return_value.incr.assert_called_once_with(

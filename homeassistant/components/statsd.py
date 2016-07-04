@@ -57,8 +57,16 @@ def setup(hass, config):
         except ValueError:
             return
 
+        states = dict(state.attributes)
+
         _LOGGER.debug('Sending %s.%s', state.entity_id, _state)
-        statsd_client.gauge(state.entity_id, _state, sample_rate)
+        statsd_client.gauge("%s.state" % state.entity_id, _state, sample_rate)
+
+        # Send attribute values
+        for key, value in states.items():
+            if isinstance(value, (float, int)):
+                stat = "%s.%s" % (state.entity_id, key.replace(' ', '_'))
+                statsd_client.gauge(stat, value, sample_rate)
 
         # Increment the count
         statsd_client.incr(state.entity_id, rate=sample_rate)
