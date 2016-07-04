@@ -107,8 +107,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 sensor_type.title(), '', 'mdi:mdi:information-outline']
 
         if sensor_type.upper() not in apcupsd.DATA.status:
-            _LOGGER.warning('Sensor type: "%s" does not appear in the APCUPSd '
-                'status output.', sensor_type)
+            _LOGGER.warning(
+                'Sensor type: "%s" does not appear in the APCUPSd status '
+                    'output.', sensor_type)
 
         entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
 
