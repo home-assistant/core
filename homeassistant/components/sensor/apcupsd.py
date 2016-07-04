@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
 
     for resource in config['resources']:
-        sensor_type = resource[apcupsd.CONF_TYPE].lower()
+        sensor_type = resource.lower()
 
         if sensor_type not in SENSOR_TYPES:
             SENSOR_TYPES[sensor_type] = [
@@ -109,7 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if sensor_type.upper() not in apcupsd.DATA.status:
             _LOGGER.warning(
                 'Sensor type: "%s" does not appear in the APCUPSd status '
-                    'output.', sensor_type)
+                'output.', sensor_type)
 
         entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
 
