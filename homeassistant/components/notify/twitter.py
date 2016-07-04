@@ -10,7 +10,12 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
-import urllib, cStringIO
+import urllib
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.4.1']
@@ -52,7 +57,7 @@ class TwitterNotificationService(BaseNotificationService):
         if data:
           path = data.media
           if 'http' in kwargs['data']['media']:
-            file = cStringIO.StringIO(urllib.urlopen(kwargs['data']['media']).read())
+            file = StringIO.StringIO(urllib.urlopen(kwargs['data']['media']).read())
             data = Image.open(file)
           else:
             file = open(kwargs['data']['media'], 'rb')
