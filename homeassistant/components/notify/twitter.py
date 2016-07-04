@@ -54,8 +54,8 @@ class TwitterNotificationService(BaseNotificationService):
           path = data['media']
           _LOGGER.debug('PATH: ' + path);
           if 'http' in path:
-            file = StringIO(requests.get(path).content)
-            data = Image.open(file)
+            data = requests.get(path).content
+            # data = Image.open(file)
             _LOGGER.debug('IMAGE OPENED')
           else:
             file = open(path, 'rb')
