@@ -27,7 +27,8 @@ def get_service(hass, config):
                            _LOGGER):
         return None
 
-    return TwitterNotificationService(config[CONF_CONSUMER_KEY],
+    return TwitterNotificationService(hass,
+                                      config[CONF_CONSUMER_KEY],
                                       config[CONF_CONSUMER_SECRET],
                                       config[CONF_ACCESS_TOKEN],
                                       config[CONF_ACCESS_TOKEN_SECRET])
@@ -37,7 +38,7 @@ def get_service(hass, config):
 class TwitterNotificationService(BaseNotificationService):
     """Implement notification service for the Twitter service."""
 
-    def __init__(self, consumer_key, consumer_secret, access_token_key,
+    def __init__(self, hass, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):
         """Initialize the service."""
         from TwitterAPI import TwitterAPI
@@ -46,10 +47,8 @@ class TwitterNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Tweet some message."""
-        if kwargs['data']
-          file = open(kwargs['data']['media'], 'rb')
-          data = file.read()
-          r = api.request('media/upload', None, {'media': data})
+#        if kwargs['data']
+        _LOGGER.debug(str(hass))
 
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:
