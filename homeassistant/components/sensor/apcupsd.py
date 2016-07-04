@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if sensor_type not in SENSOR_TYPES:
             SENSOR_TYPES[sensor_type] = [
-                sensor_type.title(), '', 'mdi:mdi:information-outline']
+                sensor_type.title(), '', 'mdi:information-outline']
 
         if sensor_type.upper() not in apcupsd.DATA.status:
             _LOGGER.warning(
