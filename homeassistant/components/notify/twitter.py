@@ -51,7 +51,7 @@ class TwitterNotificationService(BaseNotificationService):
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
-    def send_message(self, message="", data=None **kwargs):
+    def send_message(self, message="", data=None, **kwargs):
         """Tweet some message."""
         payload['status'] = message
         if data:
