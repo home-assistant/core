@@ -10,6 +10,8 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
+import urllib, cStringIO
+
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.4.1']
 
@@ -27,8 +29,7 @@ def get_service(hass, config):
                            _LOGGER):
         return None
 
-    return TwitterNotificationService(hass,
-                                      config[CONF_CONSUMER_KEY],
+    return TwitterNotificationService(config[CONF_CONSUMER_KEY],
                                       config[CONF_CONSUMER_SECRET],
                                       config[CONF_ACCESS_TOKEN],
                                       config[CONF_ACCESS_TOKEN_SECRET])
@@ -38,19 +39,27 @@ def get_service(hass, config):
 class TwitterNotificationService(BaseNotificationService):
     """Implement notification service for the Twitter service."""
 
-    def __init__(self, hass, consumer_key, consumer_secret, access_token_key,
+    def __init__(self, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):
         """Initialize the service."""
-        _LOGGER.error(dict(hass))
         from TwitterAPI import TwitterAPI
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
     def send_message(self, message="", **kwargs):
         """Tweet some message."""
-#        if kwargs['data']
+        payload['status'] = message
+        if kwargs['data']['media']
+          if 'http' in kwargs['data']['media']
+            file = cStringIO.StringIO(urllib.urlopen(kwargs['data']['media']).read())
+            data = Image.open(file)
+          else
+            file = open(kwargs['data']['media'], 'rb')
+            data = file.read()
+          r = api.request('media/upload', None, {'media': data})
+          payload['media_ids'] = r.json()['media_id']
 
-        resp = self.api.request('statuses/update', {'status': message})
+        resp = self.api.request('statuses/update', payload)
         if resp.status_code != 200:
             import json
             obj = json.loads(resp.text)
