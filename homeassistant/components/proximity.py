@@ -33,47 +33,48 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     """Get the zones and offsets from configuration.yaml."""
-    ignored_zones = []
-    if 'ignored_zones' in config[DOMAIN]:
-        for variable in config[DOMAIN]['ignored_zones']:
-            ignored_zones.append(variable)
+    for prox in config[DOMAIN]:
+        ignored_zones = []
+        if 'ignored_zones' in prox:
+            for variable in prox['ignored_zones']:
+                ignored_zones.append(variable)
 
-    # Get the devices from configuration.yaml.
-    if 'devices' not in config[DOMAIN]:
-        _LOGGER.error('devices not found in config')
-        return False
+        # Get the devices from configuration.yaml.
+        if 'devices' not in prox:
+            _LOGGER.error('devices not found in config')
+            return False
 
-    proximity_devices = []
-    for variable in config[DOMAIN]['devices']:
-        proximity_devices.append(variable)
+        proximity_devices = []
+        for variable in prox['devices']:
+            proximity_devices.append(variable)
 
-    # Get the direction of travel tolerance from configuration.yaml.
-    tolerance = config[DOMAIN].get('tolerance', DEFAULT_TOLERANCE)
+        # Get the direction of travel tolerance from configuration.yaml.
+        tolerance = prox.get('tolerance', DEFAULT_TOLERANCE)
 
-    # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = config[DOMAIN].get('zone', DEFAULT_PROXIMITY_ZONE)
+        # Get the zone to monitor proximity to from configuration.yaml.
+        proximity_zone = prox.get('zone', DEFAULT_PROXIMITY_ZONE)
 
-    entity_id = DOMAIN + '.' + proximity_zone
-    proximity_zone = 'zone.' + proximity_zone
+        entity_id = DOMAIN + '.' + proximity_zone
+        proximity_zone = 'zone.' + proximity_zone
 
-    state = hass.states.get(proximity_zone)
-    zone_friendly_name = (state.name).lower()
+        state = hass.states.get(proximity_zone)
+        zone_friendly_name = (state.name).lower()
 
-    # Set the default values.
-    dist_to_zone = 'not set'
-    dir_of_travel = 'not set'
-    nearest = 'not set'
+        # Set the default values.
+        dist_to_zone = 'not set'
+        dir_of_travel = 'not set'
+        nearest = 'not set'
 
-    proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
-                          dir_of_travel, nearest, ignored_zones,
-                          proximity_devices, tolerance, proximity_zone)
-    proximity.entity_id = entity_id
+        proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
+                              dir_of_travel, nearest, ignored_zones,
+                              proximity_devices, tolerance, proximity_zone)
+        proximity.entity_id = entity_id
 
-    proximity.update_ha_state()
+        proximity.update_ha_state()
 
-    # Main command to monitor proximity of devices.
-    track_state_change(hass, proximity_devices,
-                       proximity.check_proximity_state_change)
+        # Main command to monitor proximity of devices.
+        track_state_change(hass, proximity_devices,
+                           proximity.check_proximity_state_change)
 
     return True
 
