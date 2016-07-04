@@ -41,7 +41,7 @@ class TwitterNotificationService(BaseNotificationService):
     def __init__(self, hass, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):
         """Initialize the service."""
-        _LOGGER.debug(str(hass))
+        _LOGGER.error(str(hass))
         from TwitterAPI import TwitterAPI
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
