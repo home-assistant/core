@@ -52,14 +52,17 @@ class TwitterNotificationService(BaseNotificationService):
         payload = { 'status': message }
         if data:
           path = data['media']
+          _LOGGER.debug('PATH: ' + path);
           if 'http' in path:
             file = StringIO(requests.get(path))
             data = Image.open(file)
+            _LOGGER.debug('IMAGE OPENED')
           else:
             file = open(path, 'rb')
             data = file.read()
           r = api.request('media/upload', None, {'media': data})
           payload['media_ids'] = r.json()['media_id']
+          _LOGGER.debug('PAYLOAD: ' + str(payload))
 
         resp = self.api.request('statuses/update', payload)
         if resp.status_code != 200:
