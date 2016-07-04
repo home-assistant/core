@@ -60,7 +60,7 @@ class TwitterNotificationService(BaseNotificationService):
           else:
             file = open(path, 'rb')
             data = file.read()
-          r = api.request('media/upload', None, {'media': data})
+          r = self.api.request('media/upload', None, {'media': data})
           payload['media_ids'] = r.json()['media_id']
           _LOGGER.debug('PAYLOAD: ' + str(payload))
 
