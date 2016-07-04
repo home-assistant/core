@@ -41,6 +41,7 @@ class TwitterNotificationService(BaseNotificationService):
     def __init__(self, hass, consumer_key, consumer_secret, access_token_key,
                  access_token_secret):
         """Initialize the service."""
+        _LOGGER.debug(str(hass))
         from TwitterAPI import TwitterAPI
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
@@ -48,7 +49,6 @@ class TwitterNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Tweet some message."""
 #        if kwargs['data']
-        _LOGGER.debug(str(hass))
 
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:
