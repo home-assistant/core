@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
 import requests
-from io import StringIO
+from StringIO import StringIO
 from PIL import Image
 
 _LOGGER = logging.getLogger(__name__)
