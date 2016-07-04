@@ -46,6 +46,7 @@ class TwitterNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Tweet some message."""
+        _LOGGER.debug(str(kwargs))
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:
             import json
