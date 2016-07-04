@@ -46,7 +46,11 @@ class TwitterNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Tweet some message."""
-        _LOGGER.debug(str(kwargs))
+        if kwargs['data']
+          file = open(kwargs['data']['media'], 'rb')
+          data = file.read()
+          r = api.request('media/upload', None, {'media': data})
+
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:
             import json
