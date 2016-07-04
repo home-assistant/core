@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
 import requests
-from io import BytesIO
+from StringIO import StringIO
 from PIL import Image
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class TwitterNotificationService(BaseNotificationService):
           _LOGGER.debug('PATH: ' + path);
           if 'http' in path:
             file = requests.get(path).content
-            data = Image.open(BytesIO(file))
+            data = Image.open(StringIO(file))
             _LOGGER.debug('IMAGE OPENED')
           else:
             file = open(path, 'rb')
