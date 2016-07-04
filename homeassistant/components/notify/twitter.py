@@ -55,12 +55,12 @@ class TwitterNotificationService(BaseNotificationService):
         """Tweet some message."""
         payload = { 'status': message }
         if data:
-          path = data.media
-          if 'http' in kwargs['data']['media']:
-            file = StringIO.StringIO(urllib.urlopen(kwargs['data']['media']).read())
+          path = data['media']
+          if 'http' in path:
+            file = StringIO.StringIO(urllib.urlopen(path).read())
             data = Image.open(file)
           else:
-            file = open(kwargs['data']['media'], 'rb')
+            file = open(path, 'rb')
             data = file.read()
           r = api.request('media/upload', None, {'media': data})
           payload['media_ids'] = r.json()['media_id']
