@@ -11,6 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
 from urllib import request
+from PIL import Image
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.4.1']
