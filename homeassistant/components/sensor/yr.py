@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     coordinates = dict(lat=latitude,
                        lon=longitude,
-                       msl=elevation)
+                       msl=int(elevation))
 
     weather = YrData(coordinates)
 
