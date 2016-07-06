@@ -320,7 +320,7 @@ python-nmap==0.6.0
 python-pushover==0.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==4.3.1
+python-telegram-bot==4.3.2
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
