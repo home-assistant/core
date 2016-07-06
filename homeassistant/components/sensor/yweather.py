@@ -60,19 +60,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # convert unit
     if unit == TEMP_CELSIUS:
-        unit = UNIT_C
+        yunit = UNIT_C
     elif unit == TEMP_FAHRENHEIT:
-        unit = UNIT_F
+        yunit = UNIT_F
     else:
         _LOGGER.error("Unit %s is not supported by yahoo!", unit)
         return False
+
+    # for print HA style temp
+    SENSOR_TYPES["temperature"][1] = unit
+    SENSOR_TYPES["temp_min"][1] = unit
+    SENSOR_TYPES["temp_max"][1] = unit
 
     # exists a yahoo api object for this woeid?
     yahoo_api = YAHOO_WEATHER.get(woeid, None)
 
     # api for woeid don't exist
     if yahoo_api is None:
-        yahoo_api = YahooWeatherData(woeid, unit)
+        yahoo_api = YahooWeatherData(woeid, yunit)
         if not yahoo_api.update():
             _LOGGER.critical("Can't retrieve data from yahoo!")
             return False
