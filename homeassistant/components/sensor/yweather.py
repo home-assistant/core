@@ -8,14 +8,13 @@ import logging
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
                                  CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ["yahooweather==0.3"]
 
-YAHOO_WEATHER = {}
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
     'weather': ['Condition', None],
@@ -31,7 +30,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "yweather",
     vol.Required("woeid"): vol.Coerce(str),
-    vol.Optional("forecast", default=0): vol.Coerce(int),
+    vol.Optional("forecast"): vol.Coerce(int),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
 })
@@ -47,59 +46,41 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from yahooweather import UNIT_C, UNIT_F
 
     unit = hass.config.temperature_unit
-    woeid = config.get("woeid", None)
+    woeid = config.get("woeid")
     forecast = config.get("forecast", 0)
 
-    if woeid is None:
-        _LOGGER.critical("You need woeid from yahoo!")
-        return False
-
-    if forecast > 4:
-        _LOGGER.error("Yahoo! don't support %d days forcast!", forecast)
-        return False
-
     # convert unit
-    if unit == TEMP_CELSIUS:
-        yunit = UNIT_C
-    elif unit == TEMP_FAHRENHEIT:
-        yunit = UNIT_F
-    else:
-        _LOGGER.error("Unit %s is not supported by yahoo!", unit)
-        return False
+    yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
 
     # for print HA style temp
     SENSOR_TYPES["temperature"][1] = unit
     SENSOR_TYPES["temp_min"][1] = unit
     SENSOR_TYPES["temp_max"][1] = unit
 
-    # exists a yahoo api object for this woeid?
-    yahoo_api = YAHOO_WEATHER.get(woeid, None)
+    # create api object
+    yahoo_api = YahooWeatherData(woeid, yunit)
 
-    # api for woeid don't exist
-    if yahoo_api is None:
-        yahoo_api = YahooWeatherData(woeid, yunit)
-        if not yahoo_api.update():
-            _LOGGER.critical("Can't retrieve data from yahoo!")
-            return False
-        # store object to ram. It save api request count
-        YAHOO_WEATHER[woeid] = yahoo_api
+    # if update is false, it will never work...
+    if not yahoo_api.update():
+        _LOGGER.critical("Can't retrieve data from yahoo!")
+        return False
+
+    # check if forecast support by API
+    if forecast >= len(yahoo_api.yahoo.Forecast):
+        _LOGGER.error("Yahoo! only support %d days forcast!",
+                      len(yahoo_api.yahoo.Forecast))
+        return False
 
     dev = []
-    try:
-        for variable in config[CONF_MONITORED_CONDITIONS]:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(YahooWeatherSensor(yahoo_api, forecast, variable))
-    except KeyError:
-        pass
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        dev.append(YahooWeatherSensor(yahoo_api, forecast, variable))
 
     add_devices(dev)
 
 
 # pylint: disable=too-many-instance-attributes
 class YahooWeatherSensor(Entity):
-    """Implementation of an OpenWeatherMap sensor."""
+    """Implementation of an Yahoo! weather sensor."""
 
     def __init__(self, weather_data, forecast, sensor_type):
         """Initialize the sensor."""
@@ -118,10 +99,7 @@ class YahooWeatherSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._forecast == 0:
-            return '{} {}'.format(self._client, self._name)
-
-        return '{} {} {}'.format(self._client, self._name, str(self._forecast))
+        return '{} {}'.format(self._client, self._name)
 
     @property
     def state(self):
@@ -142,7 +120,7 @@ class YahooWeatherSensor(Entity):
         return self._data.yahoo.getWeatherImage(self._code)
 
     def update(self):
-        """Get the latest data from OWM and updates the states."""
+        """Get the latest data from Yahoo! and updates the states."""
         self._data.update()
 
         # default code for weather image
@@ -191,6 +169,4 @@ class YahooWeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from yahoo. True is success."""
-        if self._yahoo.updateWeather():
-            return True
-        return False
+        return self._yahoo.updateWeather()
