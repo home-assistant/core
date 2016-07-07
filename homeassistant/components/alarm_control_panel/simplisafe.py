@@ -94,18 +94,31 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
+        if not self._validate_code(code, 'disarming'):
+            return
         self.simplisafe.set_state('off')
         _LOGGER.info('SimpliSafe alarm disarming')
         self.update()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
+        if not self._validate_code(code, 'arming home'):
+            return
         self.simplisafe.set_state('home')
         _LOGGER.info('SimpliSafe alarm arming home')
         self.update()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
+        if not self._validate_code(code, 'arming away'):
+            return
         self.simplisafe.set_state('away')
         _LOGGER.info('SimpliSafe alarm arming away')
         self.update()
+
+    def _validate_code(self, code, state):
+        """Validate given code."""
+        check = self._code is None or code == self._code
+        if not check:
+            _LOGGER.warning('Wrong code entered for %s', state)
+        return check
