@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
+_SECRET_YAML = 'secrets.yaml'
 
 
 # pylint: disable=too-many-ancestors
@@ -65,6 +66,8 @@ def _include_dir_merge_named_yaml(loader, node):
     mapping = OrderedDict()
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
+        if os.path.basename(fname) == _SECRET_YAML:
+            continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, dict):
             mapping.update(loaded_yaml)
@@ -74,7 +77,8 @@ def _include_dir_merge_named_yaml(loader, node):
 def _include_dir_list_yaml(loader, node):
     """Load multiple files from directory as a list."""
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    return [load_yaml(f) for f in glob.glob(files)]
+    return [load_yaml(f) for f in glob.glob(files)
+            if os.path.basename(f) != _SECRET_YAML]
 
 
 def _include_dir_merge_list_yaml(loader, node):
@@ -82,6 +86,8 @@ def _include_dir_merge_list_yaml(loader, node):
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     merged_list = []
     for fname in glob.glob(files):
+        if os.path.basename(fname) == _SECRET_YAML:
+            continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, list):
             merged_list.extend(loaded_yaml)
@@ -131,7 +137,7 @@ def _secret_yaml(loader, node):
     if not hasattr(loader, '_SECRET_CACHE'):
         loader._SECRET_CACHE = {}
 
-    secret_path = os.path.join(os.path.dirname(loader.name), 'secrets.yaml')
+    secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
     if secret_path not in loader._SECRET_CACHE:
         if os.path.isfile(secret_path):
             loader._SECRET_CACHE[secret_path] = load_yaml(secret_path)
@@ -152,7 +158,13 @@ def _secret_yaml(loader, node):
     if secrets is not None and node.value in secrets:
         _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
         return secrets[node.value]
-    elif keyring:
+    for sname, sdict in loader._SECRET_CACHE.items():
+        if node.value in sdict:
+            _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
+                          'folder %s', node.value, sname)
+            return sdict[node.value]
+
+    if keyring:
         # do ome keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
