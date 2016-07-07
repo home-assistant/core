@@ -9,15 +9,13 @@ import logging
 from urllib.error import URLError
 
 from homeassistant.components.thermostat import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
+    ThermostatDevice)
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
 
 REQUIREMENTS = ['radiotherm==1.2']
 HOLD_TEMP = 'hold_temp'
 _LOGGER = logging.getLogger(__name__)
-
-STATE_OFF = 'off'
-STATE_AUTO = 'auto'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -48,7 +46,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(tstats)
 
 
-# pylint: disable=abstract-method
 class RadioThermostat(ThermostatDevice):
     """Representation of a Radio Thermostat."""
 
