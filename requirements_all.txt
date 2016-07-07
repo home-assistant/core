@@ -114,7 +114,7 @@ https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcl
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.2.zip#braviarc==0.3.2
+https://github.com/aparraga/braviarc/archive/0.3.3.zip#braviarc==0.3.3
 
 # homeassistant.components.media_player.roku
 https://github.com/bah2830/python-roku/archive/3.1.2.zip#roku==3.1.2
