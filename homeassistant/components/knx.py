@@ -37,8 +37,8 @@ def setup(hass, config):
     host = config[DOMAIN].get(CONF_HOST, None)
 
     if host is None:
-        _LOGGER.exception("KNX IP interface hostname undefined")
-        return False
+        _LOGGER.debug("Will try to auto-detect KNX/IP gateway")
+        host = "0.0.0.0"
 
     try:
         port = int(config[DOMAIN].get(CONF_PORT, DEFAULT_PORT))
