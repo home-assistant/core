@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.3"]
+REQUIREMENTS = ["yahooweather==0.4"]
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
@@ -29,9 +29,9 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "yweather",
-    vol.Required("woeid"): vol.Coerce(str),
+    vol.Optional("woeid"): vol.Coerce(str),
     vol.Optional("forecast"): vol.Coerce(int),
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
 })
 
@@ -43,10 +43,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather sensor."""
-    from yahooweather import UNIT_C, UNIT_F
+    from yahooweather import get_woeid, UNIT_C, UNIT_F
 
     unit = hass.config.temperature_unit
-    woeid = config.get("woeid")
+    woeid = config.get("woeid", None)
     forecast = config.get("forecast", 0)
 
     # convert unit
@@ -57,12 +57,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     SENSOR_TYPES["temp_min"][1] = unit
     SENSOR_TYPES["temp_max"][1] = unit
 
+    # if not exists a customer woeid / calc from HA
+    if woeid is None:
+        woeid = get_woeid(hass.config.latitude, hass.config.longitude)
+        # receive a error?
+        if woeid is None:
+            _LOGGER.critical("Can't retrieve WOEID from yahoo!")
+            return False
+
     # create api object
     yahoo_api = YahooWeatherData(woeid, yunit)
 
     # if update is false, it will never work...
     if not yahoo_api.update():
-        _LOGGER.critical("Can't retrieve data from yahoo!")
+        _LOGGER.critical("Can't retrieve weather data from yahoo!")
         return False
 
     # check if forecast support by API
@@ -118,6 +126,15 @@ class YahooWeatherSensor(Entity):
             return None
 
         return self._data.yahoo.getWeatherImage(self._code)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'about': "Weather forecast delivered by Yahoo! Inc. are provided"
+                     " free of charge for use by individuals and non-profit"
+                     " organizations for personal, non-commercial uses."
+        }
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
