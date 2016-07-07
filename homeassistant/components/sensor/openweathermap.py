@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.3.1']
+REQUIREMENTS = ['pyowm==2.3.2']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'weather': ['Condition', None],
