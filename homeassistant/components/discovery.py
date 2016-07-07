@@ -17,10 +17,12 @@ REQUIREMENTS = ['netdisco==0.6.7']
 
 SCAN_INTERVAL = 300  # seconds
 
+SERVICE_AUTOHUB = 'autohub'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_NETGEAR = 'netgear_router'
 
 SERVICE_HANDLERS = {
+    SERVICE_AUTOHUB: ('autohub', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     'philips_hue': ('light', 'hue'),
