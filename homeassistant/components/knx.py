@@ -46,10 +46,6 @@ def setup(hass, config):
         _LOGGER.exception("Can't parse KNX IP interface port")
         return False
 
-    if KNXTUNNEL:
-        _LOGGER.warning("Tunnel already exists, not opening another tunnel")
-        return True
-
     HASS = hass
     KNXTUNNEL = KNXIPTunnel(host, port)
     try:
