@@ -5,8 +5,6 @@ It is able to monitor current switch status, as well as turn on and off the swit
 """
 
 import logging
-import socket
-import codecs
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
