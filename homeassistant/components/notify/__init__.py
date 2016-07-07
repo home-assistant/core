@@ -35,7 +35,7 @@ ATTR_DATA = 'data'
 SERVICE_NOTIFY = "notify"
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_MESSAGE, default=""): cv.template,
+    vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_DATA): dict,      # nobody seems to be using this (yet)

@@ -112,6 +112,7 @@ omit =
     homeassistant/components/feedreader.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/ifttt.py
+    homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/hue.py

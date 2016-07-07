@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-join-api/archive/'
-    'ceb384eb21e2b103fc0c355447252fedd7f7a185.zip#python-join-api==0.0.1']
+    '3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,26 +51,12 @@ class JoinNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        from pyjoin import (send_notification, ring_device, send_sms, send_url,
-                            set_wallpaper, send_file)
+        from pyjoin import send_notification
         title = kwargs.get(ATTR_TITLE)
-        data = kwargs.get(ATTR_DATA)
-        action = 'notify'
-        if data:
-            action = data.get('action')
-            url = data.get('url')
-            sms_number = data.get('sms_number')
-        if action == 'notify':
-            send_notification(self._device_id, text=message,
-                              title=title, api_key=self._api_key)
-        elif action == 'ring':
-            ring_device(self._device_id, api_key=self._api_key)
-        elif action == 'wallpaper':
-            set_wallpaper(self._device_id, url, api_key=self._api_key)
-        elif action == 'sms':
-            send_sms(self._device_id, sms_number, message,
-                     api_key=self._api_key)
-        elif action == 'file':
-            send_file(self._device_id, url=url, api_key=self._api_key)
-        elif action == 'url':
-            send_url(self._device_id, url=url, api_key=self._api_key)
+        data = kwargs.get(ATTR_DATA) or {}
+        send_notification(device_id=self._device_id,
+                          text=message,
+                          title=title,
+                          icon=data.get('icon'),
+                          smallicon=data.get('smallicon'),
+                          api_key=self._api_key)
