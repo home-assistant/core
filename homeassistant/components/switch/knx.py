@@ -30,7 +30,8 @@ class KNXSwitch(KNXGroupAddress, SwitchDevice):
         """
         self.group_write(1)
         self._state = [1]
-        self.update_ha_state()
+        if self.should_poll == False:
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off.
@@ -39,4 +40,5 @@ class KNXSwitch(KNXGroupAddress, SwitchDevice):
         """
         self.group_write(0)
         self._state = [0]
-        self.update_ha_state()
+        if self.should_poll == False:
+            self.update_ha_state()
