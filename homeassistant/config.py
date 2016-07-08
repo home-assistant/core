@@ -149,9 +149,9 @@ def load_yaml_config_file(config_path):
     conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
-        _LOGGER.error(
-            'The configuration file %s does not contain a dictionary',
+        msg = 'The configuration file {} does not contain a dictionary'.format(
             os.path.basename(config_path))
-        raise HomeAssistantError()
+        _LOGGER.error(msg)
+        raise HomeAssistantError(msg)
 
     return conf_dict

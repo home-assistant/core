@@ -437,7 +437,7 @@ class HomeAssistantView(object):
                 mimetype = mimetypes.guess_type(fil)[0]
 
             try:
-                fil = open(fil)
+                fil = open(fil, mode='br')
             except IOError:
                 raise NotFound()
 
