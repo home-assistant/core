@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Setup the connection to the KNX IP interface."""
-    global KNXTUNNEL, HASS
+    global KNXTUNNEL
 
     from knxip.ip import KNXIPTunnel
     from knxip.core import KNXException
@@ -45,7 +45,6 @@ def setup(hass, config):
         _LOGGER.exception("Can't parse KNX IP interface port")
         return False
 
-    HASS = hass
     KNXTUNNEL = KNXIPTunnel(host, port)
     try:
         KNXTUNNEL.connect()
