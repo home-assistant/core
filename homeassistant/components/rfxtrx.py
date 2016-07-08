@@ -41,6 +41,7 @@ DATA_TYPES = OrderedDict([
     ('Energy usage', 'W'),
     ('Total usage', 'W'),
     ('Sensor Status', ''),
+    ('Sound', ''),
     ('Unknown', '')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
