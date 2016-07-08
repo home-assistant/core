@@ -72,7 +72,6 @@ def color_RGB_to_xy(R, G, B):
 # taken from
 # https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
 # Copyright (c) 2014 Benjamin Knight / MIT License.
-# pylint: disable=bad-builtin
 def color_xy_brightness_to_RGB(vX, vY, brightness):
     """Convert from XYZ to RGB."""
     brightness /= 255.
