@@ -1,9 +1,9 @@
 """Handle the frontend for Home Assistant."""
 import os
 
-from . import version, mdi_version
 from homeassistant.components import api
 from homeassistant.components.http import HomeAssistantView
+from . import version, mdi_version
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
