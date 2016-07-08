@@ -40,6 +40,7 @@ DATA_TYPES = OrderedDict([
     ('Rain rate', ''),
     ('Energy usage', 'W'),
     ('Total usage', 'W'),
+    ('Sound', ''),
     ('Sensor Status', ''),
     ('Unknown', '')])
 
