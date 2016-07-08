@@ -211,6 +211,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
+    homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
