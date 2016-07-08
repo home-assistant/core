@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "knx"
-REQUIREMENTS = ['knxip==0.2.3']
+REQUIREMENTS = ['knxip==0.3.0']
 
 EVENT_KNX_FRAME_RECEIVED = "knx_frame_received"
 
@@ -22,7 +22,6 @@ CONF_PORT = "port"
 DEFAULT_PORT = "3671"
 
 KNXTUNNEL = None
-HASS = None
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,17 +54,10 @@ def setup(hass, config):
         KNXTUNNEL = None
         return False
 
-    KNXTUNNEL.notify = knx_message_received
     _LOGGER.info("KNX IP tunnel to %s:%i established", host, port)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_tunnel)
     return True
-
-
-def knx_message_received(address, data):
-    """Put a message received from the KNX bus to the HASS bus."""
-    HASS.bus.fire(EVENT_KNX_FRAME_RECEIVED,
-                  event_data=[address, list(data)])
 
 
 def close_tunnel(_data):
@@ -90,7 +82,7 @@ class KNXConfig(object):
             self._state_address = parse_group_address(
                 self.config.get("state_address"))
         else:
-            self.state_address = None
+            self._state_address = None
 
     @property
     def name(self):
@@ -129,19 +121,19 @@ class KNXGroupAddress(Entity):
         self._data = None
         _LOGGER.debug("Initalizing KNX group address %s", self.address)
 
-        def handle_frame(frame):
+        def handle_knx_message(addr, data):
             """Handle an incoming KNX frame.
 
             Handle an incoming frame and update our status if it contains
             information relating to this device.
             """
-            addr = frame.data[0]
-
             if (addr == self.state_address) or (addr == self.address):
-                self._state = frame.data[1]
+                self._state = data
                 self.update_ha_state()
 
-        hass.bus.listen(EVENT_KNX_FRAME_RECEIVED, handle_frame)
+        KNXTUNNEL.register_listener(self.address, handle_knx_message)
+        if self.state_address:
+            KNXTUNNEL.register_listener(self.state_address, handle_knx_message)
 
     @property
     def name(self):
@@ -235,7 +227,7 @@ class KNXMultiAddressDevice(KNXGroupAddress):
 
         # parse required addresses
         for name in required:
-            paramname = name+"_address"
+            paramname = name + "_address"
             addr = self._config.config.get(paramname)
             if addr is None:
                 _LOGGER.exception("Required KNX group address %s missing",
@@ -246,7 +238,7 @@ class KNXMultiAddressDevice(KNXGroupAddress):
 
         # parse optional addresses
         for name in optional:
-            paramname = name+"_address"
+            paramname = name + "_address"
             addr = self._config.config.get(paramname)
             if addr:
                 try:
