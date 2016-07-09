@@ -1,7 +1,7 @@
 """Support for TPLink HS100/HS110 smart switch.
 
-It is able to monitor current switch status, as well as turn on and off the switch. 
-
+It is able to monitor current switch status, as well as turn on and off
+the switch. Will work with both HS100 and HS110 switch models.
 """
 
 import logging
@@ -12,21 +12,21 @@ from homeassistant.const import (
 
 # constants
 DEVICE_DEFAULT_NAME = 'HS100'
-REQUIREMENTS = ['http://github.com/gadgetreactor/pyHS100/archive/'
-                '27dd078e57628e76a1de89cc9d81b703f8e846d1'
-                '#pyHS100==0.1.0']
+REQUIREMENTS = ['https://github.com/gadgetreactor/pyHS100/archive/'
+                'master.zip#pyHS100==0.1.2']
 
-# setup logger
-_LOGGER = logging.getLogger(__name__)
+# pylint: disable=unused-argument
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    import pyHS100
+    from pyHS100.pyHS100 import SmartPlug
     """Setup the TPLink platform in configuration.yaml."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
 
-    add_devices_callback([SmartPlugSwitch(pyHS100.SmartPlug(host),
+    add_devices_callback([SmartPlugSwitch(SmartPlug(host),
                                           name)])
+
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
