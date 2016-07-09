@@ -17,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['googlemaps==2.4.3']
+REQUIREMENTS = ['googlemaps==2.4.4']
 
 # Return cached results if last update was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
