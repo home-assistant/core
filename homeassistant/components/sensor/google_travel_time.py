@@ -123,13 +123,14 @@ class GoogleTravelTimeSensor(Entity):
         self._matrix = None
         self.valid_api_connection = True
 
-        # Check if location is a device_tracker entity
-        if "device_tracker." in origin:
+        # Check if location is a trackable entity
+        trackable_domains = ["device_tracker.", "sensor."]
+        if any(d in origin for d in trackable_domains):
             self._origin_entity_id = origin
         else:
             self._origin = origin
 
-        if "device_tracker." in destination:
+        if any(d in destination for d in trackable_domains):
             self._destination_entity_id = destination
         else:
             self._destination = destination
@@ -140,7 +141,7 @@ class GoogleTravelTimeSensor(Entity):
             self.update()
         except googlemaps.exceptions.ApiError as exp:
             _LOGGER .error(exp)
-            # self.valid_api_connection = False
+            self.valid_api_connection = False
             return
 
     @property
@@ -219,16 +220,25 @@ class GoogleTravelTimeSensor(Entity):
                                                         **options_copy)
 
     def _get_location_from_entity(self, entity_id):
+        """Get the location from the entity state or attributes."""
         entity = self._hass.states.get(entity_id)
 
-        if not hasattr(entity, 'attributes'):
+        if entity is None:
             _LOGGER.warning("Unable to find entity %s", entity_id)
             return None
 
-        attr = entity.attributes
-        if all(key in attr for key in ("longitude", "latitude")):
-            return "%s,%s" % (attr['latitude'], attr['longitude'])
-        else:
-            _LOGGER.warning(
-                "No longitude or latitude attribute found for %s", entity_id
-            )
+        if "sensor." in entity_id:
+            return entity.state
+        elif "device_tracker." in entity_id:
+            if not hasattr(entity, 'attributes'):
+                _LOGGER.warning("%s has no attributes", entity_id)
+                return None
+
+            attr = entity.attributes
+            if all(key in attr for key in ("longitude", "latitude")):
+                return "%s,%s" % (attr['latitude'], attr['longitude'])
+            else:
+                _LOGGER.warning(
+                    "No longitude or latitude attribute found for %s",
+                    entity_id
+                )
