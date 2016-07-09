@@ -114,7 +114,7 @@ https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcl
 https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.2.zip#braviarc==0.3.2
+https://github.com/aparraga/braviarc/archive/0.3.3.zip#braviarc==0.3.3
 
 # homeassistant.components.media_player.roku
 https://github.com/bah2830/python-roku/archive/3.1.2.zip#roku==3.1.2
@@ -292,7 +292,7 @@ pynetio==0.1.6
 pynx584==0.2
 
 # homeassistant.components.sensor.openweathermap
-pyowm==2.3.1
+pyowm==2.3.2
 
 # homeassistant.components.switch.acer_projector
 pyserial<=3.0
@@ -320,7 +320,7 @@ python-nmap==0.6.0
 python-pushover==0.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==4.3.1
+python-telegram-bot==4.3.2
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.2.0
@@ -366,7 +366,7 @@ scsgate==0.1.0
 sendgrid>=1.6.0,<1.7.0
 
 # homeassistant.components.notify.slack
-slacker==0.9.18
+slacker==0.9.21
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
@@ -433,5 +433,11 @@ xbee-helper==0.0.7
 # homeassistant.components.sensor.yr
 xmltodict
 
+# homeassistant.components.sensor.yweather
+yahooweather==0.4
+
 # homeassistant.components.zeroconf
 zeroconf==0.17.5
+
+# homeassistant.components.switch.tplink
+https://github.com/gadgetreactor/pyHS100/archive/master.zip#pyHS100==0.1.2
