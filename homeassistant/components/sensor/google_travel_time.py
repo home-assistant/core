@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
 
-    sensor = GoogleTravelTimeSensor(name, api_key, origin, destination,
+    sensor = GoogleTravelTimeSensor(hass, name, api_key, origin, destination,
                                     options)
 
     if sensor.valid_api_connection:
@@ -115,14 +115,24 @@ class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, api_key, origin, destination, options):
+    def __init__(self, hass, name, api_key, origin, destination, options):
         """Initialize the sensor."""
+        self._hass = hass
         self._name = name
         self._options = options
-        self._origin = origin
-        self._destination = destination
         self._matrix = None
         self.valid_api_connection = True
+
+        # Check if location is a device_tracker entity
+        if "device_tracker." in origin:
+            self._origin_entity_id = origin
+        else:
+            self._origin = origin
+
+        if "device_tracker." in destination:
+            self._destination_entity_id = destination
+        else:
+            self._destination = destination
 
         import googlemaps
         self._client = googlemaps.Client(api_key, timeout=10)
@@ -130,12 +140,15 @@ class GoogleTravelTimeSensor(Entity):
             self.update()
         except googlemaps.exceptions.ApiError as exp:
             _LOGGER .error(exp)
-            self.valid_api_connection = False
+            # self.valid_api_connection = False
             return
 
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._matrix is None:
+            return None
+
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
             return round(_data['duration_in_traffic']['value']/60)
@@ -151,6 +164,9 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        if self._matrix is None:
+            return None
+
         res = self._matrix.copy()
         res.update(self._options)
         del res['rows']
@@ -186,6 +202,33 @@ class GoogleTravelTimeSensor(Entity):
         elif atime is not None:
             options_copy['arrival_time'] = atime
 
-        self._matrix = self._client.distance_matrix(self._origin,
-                                                    self._destination,
-                                                    **options_copy)
+        # Convert device_trackers to google friendly location
+        if hasattr(self, '_origin_entity_id'):
+            self._origin = self._get_location_from_entity(
+                self._origin_entity_id
+            )
+
+        if hasattr(self, '_destination_entity_id'):
+            self._destination = self._get_location_from_entity(
+                self._destination_entity_id
+            )
+
+        if self._destination is not None and self._origin is not None:
+            self._matrix = self._client.distance_matrix(self._origin,
+                                                        self._destination,
+                                                        **options_copy)
+
+    def _get_location_from_entity(self, entity_id):
+        entity = self._hass.states.get(entity_id)
+
+        if not hasattr(entity, 'attributes'):
+            _LOGGER.warning("Unable to find entity %s", entity_id)
+            return None
+
+        attr = entity.attributes
+        if all(key in attr for key in ("longitude", "latitude")):
+            return "%s,%s" % (attr['latitude'], attr['longitude'])
+        else:
+            _LOGGER.warning(
+                "No longitude or latitude attribute found for %s", entity_id
+            )
