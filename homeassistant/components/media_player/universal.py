@@ -346,7 +346,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                 ATTR_MEDIA_VOLUME_MUTED in self._attrs:
             flags |= SUPPORT_VOLUME_MUTE
 
-        if SUPPORT_SELECT_SOURCE in self._cmds:
+        if SERVICE_SELECT_SOURCE in self._cmds:
             flags |= SUPPORT_SELECT_SOURCE
 
         return flags
