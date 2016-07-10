@@ -10,7 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START)
+
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -65,6 +68,8 @@ PLATFORM_SCHEMA = vol.Schema({
         }))
 })
 
+TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone"]
+
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
@@ -78,36 +83,44 @@ def convert_time_to_utc(timestr):
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the travel time platform."""
     # pylint: disable=too-many-locals
-    options = config.get(CONF_OPTIONS)
+    def run_setup(event):
+        """Delay the setup until home assistant is fully initialized.
 
-    if options.get('units') is None:
-        if hass.config.temperature_unit is TEMP_CELSIUS:
-            options['units'] = 'metric'
-        elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
-            options['units'] = 'imperial'
+        This allows any entities to be created already
+        """
+        options = config.get(CONF_OPTIONS)
 
-    travel_mode = config.get(CONF_TRAVEL_MODE)
-    mode = options.get(CONF_MODE)
+        if options.get('units') is None:
+            if hass.config.temperature_unit is TEMP_CELSIUS:
+                options['units'] = 'metric'
+            elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
+                options['units'] = 'imperial'
 
-    if travel_mode is not None:
-        wstr = ("Google Travel Time: travel_mode is deprecated, please add "
-                "mode to the options dictionary instead!")
-        _LOGGER.warning(wstr)
-        if mode is None:
-            options[CONF_MODE] = travel_mode
+        travel_mode = config.get(CONF_TRAVEL_MODE)
+        mode = options.get(CONF_MODE)
 
-    titled_mode = options.get(CONF_MODE).title()
-    formatted_name = "Google Travel Time - {}".format(titled_mode)
-    name = config.get(CONF_NAME, formatted_name)
-    api_key = config.get(CONF_API_KEY)
-    origin = config.get(CONF_ORIGIN)
-    destination = config.get(CONF_DESTINATION)
+        if travel_mode is not None:
+            wstr = ("Google Travel Time: travel_mode is deprecated, please "
+                    "add mode to the options dictionary instead!")
+            _LOGGER.warning(wstr)
+            if mode is None:
+                options[CONF_MODE] = travel_mode
 
-    sensor = GoogleTravelTimeSensor(hass, name, api_key, origin, destination,
-                                    options)
+        titled_mode = options.get(CONF_MODE).title()
+        formatted_name = "Google Travel Time - {}".format(titled_mode)
+        name = config.get(CONF_NAME, formatted_name)
+        api_key = config.get(CONF_API_KEY)
+        origin = config.get(CONF_ORIGIN)
+        destination = config.get(CONF_DESTINATION)
 
-    if sensor.valid_api_connection:
-        add_devices_callback([sensor])
+        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
+                                        destination, options)
+
+        if sensor.valid_api_connection:
+            add_devices_callback([sensor])
+
+    # Wait until start event is sent to load this component.
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -124,13 +137,12 @@ class GoogleTravelTimeSensor(Entity):
         self.valid_api_connection = True
 
         # Check if location is a trackable entity
-        trackable_domains = ["device_tracker.", "sensor."]
-        if any(d in origin for d in trackable_domains):
+        if any(origin.startswith(d) for d in TRACKABLE_DOMAINS):
             self._origin_entity_id = origin
         else:
             self._origin = origin
 
-        if any(d in destination for d in trackable_domains):
+        if any(destination.startswith(d) for d in TRACKABLE_DOMAINS):
             self._destination_entity_id = destination
         else:
             self._destination = destination
@@ -224,21 +236,44 @@ class GoogleTravelTimeSensor(Entity):
         entity = self._hass.states.get(entity_id)
 
         if entity is None:
-            _LOGGER.warning("Unable to find entity %s", entity_id)
+            _LOGGER.error("Unable to find entity %s", entity_id)
+            self.valid_api_connection = False
             return None
 
-        if "sensor." in entity_id:
-            return entity.state
-        elif "device_tracker." in entity_id:
-            if not hasattr(entity, 'attributes'):
-                _LOGGER.warning("%s has no attributes", entity_id)
-                return None
+        # Check if device is in a zone
+        zone_entity = self._hass.states.get("zone.%s" % entity.state)
+        if zone_entity is not None:
+            _LOGGER.debug(
+                "%s is in %s, getting zone location.",
+                entity_id, zone_entity.entity_id
+            )
+            return self._get_locatiom_from_attributes(zone_entity)
 
-            attr = entity.attributes
-            if all(key in attr for key in ("longitude", "latitude")):
-                return "%s,%s" % (attr['latitude'], attr['longitude'])
-            else:
-                _LOGGER.warning(
-                    "No longitude or latitude attribute found for %s",
-                    entity_id
-                )
+        # If zone was not found in state then use the state as the location
+        if entity_id.startswith("sensor"):
+            return entity.state
+
+        # For everything else look for location attributes
+        if hasattr(entity, 'attributes'):
+            return self._get_locatiom_from_attributes(entity)
+
+        # When everything fails just return nothing
+        return None
+
+    @staticmethod
+    def _get_locatiom_from_attributes(entity):
+        """Get the lat/long string from an entities attributes."""
+        if not hasattr(entity, 'attributes'):
+            _LOGGER.warning("%s has no attributes", entity.entity_id)
+            return None
+
+        attr = entity.attributes
+        if all(key in attr for key in ("longitude", "latitude")):
+            return "%s,%s" % (attr['latitude'], attr['longitude'])
+
+        _LOGGER.warning(
+            "No longitude or latitude attribute found for %s",
+            entity.entity_id
+        )
+
+        return None
