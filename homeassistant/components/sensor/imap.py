@@ -1,14 +1,11 @@
 """
-Support for Google travel time sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.google_travel_time/
+Imap sensor support
 """
-from datetime import timedelta
 import logging
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,16 +16,17 @@ CONF_PASSWORD = "password"
 CONF_SERVER = "server"
 CONF_PORT = "port"
 CONF_NAME = "name"
-CONF_PERIOD = "frequency"
+
+DEFAULT_PORT = 993
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required('platform'): 'imap',
-    vol.Optional(CONF_NAME): vol.Coerce(str),
-    vol.Required(CONF_USER): vol.Coerce(str),
-    vol.Required(CONF_PASSWORD): vol.Coerce(str),
-    vol.Required(CONF_SERVER): vol.Coerce(str),
-    vol.Optional(CONF_PORT): vol.Coerce(int),
-    vol.Optional(CONF_PERIOD): vol.Coerce(int),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_USER): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_SERVER): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
 })
 
 
@@ -39,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         config.get(CONF_USER),
                         config.get(CONF_PASSWORD),
                         config.get(CONF_SERVER),
-                        config.get(CONF_PORT, 993))
+                        config.get(CONF_PORT, DEFAULT_PORT))
 
     if sensor.connection:
         add_devices([sensor])
@@ -49,6 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ImapSensor(Entity):
     """IMAP sensor class."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, name, user, password, server, port):
         """Initialize the sensor."""
