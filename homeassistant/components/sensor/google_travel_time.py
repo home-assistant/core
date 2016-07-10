@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = vol.Schema({
         }))
 })
 
-TRACKABLE_DOMAINS = ["device_tracker.", "sensor.", "zone."]
+TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone"]
 
 
 def convert_time_to_utc(timestr):
@@ -138,12 +138,12 @@ class GoogleTravelTimeSensor(Entity):
         self.valid_api_connection = True
 
         # Check if location is a trackable entity
-        if any(origin.startswith(d) for d in TRACKABLE_DOMAINS):
+        if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
         else:
             self._origin = origin
 
-        if any(destination.startswith(d) for d in TRACKABLE_DOMAINS):
+        if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._destination_entity_id = destination
         else:
             self._destination = destination
