@@ -1,5 +1,7 @@
 """
-Imap sensor support
+Imap sensor support.
+
+Checks an email account for unread emails.
 """
 import logging
 import voluptuous as vol
@@ -32,7 +34,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the IMAP platform."""
-
     sensor = ImapSensor(config.get(CONF_NAME, None),
                         config.get(CONF_USER),
                         config.get(CONF_PASSWORD),
