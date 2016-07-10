@@ -12,9 +12,6 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last update was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-
 ICON = 'mdi:email-outline'
 
 CONF_USER = "user"
@@ -65,7 +62,7 @@ class ImapSensor(Entity):
         self.update()
 
     def _login(self):
-        """Login to gmail and return a imap connection."""
+        """Login and return a imap connection."""
         import imaplib
         try:
             connection = imaplib.IMAP4_SSL(self._server, self._port)
