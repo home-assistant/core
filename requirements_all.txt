@@ -176,6 +176,9 @@ insteon_hub==0.4.5
 # homeassistant.components.media_player.kodi
 jsonrpc-requests==0.3
 
+# homeassistant.components.knx
+knxip==0.3.0
+
 # homeassistant.components.light.lifx
 liffylights==0.9.4
 
