@@ -187,6 +187,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gtfs.py
+    homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/neurio_energy.py
