@@ -12,10 +12,11 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
 
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ PLATFORM_SCHEMA = vol.Schema({
         }))
 })
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone"]
+TRACKABLE_DOMAINS = ["device_tracker.", "sensor.", "zone."]
 
 
 def convert_time_to_utc(timestr):
@@ -242,7 +243,7 @@ class GoogleTravelTimeSensor(Entity):
 
         # Check if device is in a zone
         zone_entity = self._hass.states.get("zone.%s" % entity.state)
-        if zone_entity is not None:
+        if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location.",
                 entity_id, zone_entity.entity_id
@@ -250,11 +251,11 @@ class GoogleTravelTimeSensor(Entity):
             return self._get_locatiom_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor"):
+        if entity_id.startswith("sensor."):
             return entity.state
 
         # For everything else look for location attributes
-        if hasattr(entity, 'attributes'):
+        if location.has_location(entity):
             return self._get_locatiom_from_attributes(entity)
 
         # When everything fails just return nothing
@@ -263,13 +264,10 @@ class GoogleTravelTimeSensor(Entity):
     @staticmethod
     def _get_locatiom_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
-        if not hasattr(entity, 'attributes'):
-            _LOGGER.warning("%s has no attributes", entity.entity_id)
-            return None
-
-        attr = entity.attributes
-        if all(key in attr for key in ("longitude", "latitude")):
-            return "%s,%s" % (attr['latitude'], attr['longitude'])
+        if location.has_location(entity):
+            attr = entity.attributes
+            return "%s,%s" % (attr.get(ATTR_LATITUDE),
+                              attr.get(ATTR_LONGITUDE))
 
         _LOGGER.warning(
             "No longitude or latitude attribute found for %s",
