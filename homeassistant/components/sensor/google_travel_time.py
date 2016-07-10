@@ -248,7 +248,7 @@ class GoogleTravelTimeSensor(Entity):
                 "%s is in %s, getting zone location.",
                 entity_id, zone_entity.entity_id
             )
-            return self._get_locatiom_from_attributes(zone_entity)
+            return self._get_location_from_attributes(zone_entity)
 
         # If zone was not found in state then use the state as the location
         if entity_id.startswith("sensor."):
@@ -256,22 +256,13 @@ class GoogleTravelTimeSensor(Entity):
 
         # For everything else look for location attributes
         if location.has_location(entity):
-            return self._get_locatiom_from_attributes(entity)
+            return self._get_location_from_attributes(entity)
 
         # When everything fails just return nothing
         return None
 
     @staticmethod
-    def _get_locatiom_from_attributes(entity):
+    def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
-        if location.has_location(entity):
-            attr = entity.attributes
-            return "%s,%s" % (attr.get(ATTR_LATITUDE),
-                              attr.get(ATTR_LONGITUDE))
-
-        _LOGGER.warning(
-            "No longitude or latitude attribute found for %s",
-            entity.entity_id
-        )
-
-        return None
+        attr = entity.attributes
+        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
