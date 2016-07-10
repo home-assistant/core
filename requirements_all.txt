@@ -128,6 +128,9 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # homeassistant.components.device_tracker.fritz
 # https://github.com/deisi/fritzconnection/archive/b5c14515e1c8e2652b06b6316a7f3913df942841.zip#fritzconnection==0.4.6
 
+# homeassistant.components.switch.tplink
+https://github.com/gadgetreactor/pyHS100/archive/master.zip#pyHS100==0.1.2
+
 # homeassistant.components.netatmo
 https://github.com/jabesq/netatmo-api-python/archive/v0.5.0.zip#lnetatmo==0.5.0
 

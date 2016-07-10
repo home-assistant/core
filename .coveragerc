@@ -223,6 +223,7 @@ omit =
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
+    homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thermostat/eq3btsmart.py
