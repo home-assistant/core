@@ -88,6 +88,10 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/knx.py
+    homeassistant/components/switch/knx.py
+    homeassistant/components/binary_sensor/knx.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
