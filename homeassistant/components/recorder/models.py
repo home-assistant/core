@@ -34,7 +34,7 @@ class Events(Base):
 
     @staticmethod
     def from_event(event):
-        """Save an event to the database."""
+        """Create an event database object from a native event."""
         return Events(event_type=event.event_type,
                       event_data=json.dumps(event.data, cls=JSONEncoder),
                       origin=str(event.origin),
