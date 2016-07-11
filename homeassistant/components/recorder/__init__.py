@@ -23,7 +23,7 @@ from homeassistant.helpers.event import track_point_in_utc_time
 
 DOMAIN = "recorder"
 
-REQUIREMENTS = ['sqlalchemy==1.0.13']
+REQUIREMENTS = ['sqlalchemy==1.0.14']
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -164,6 +164,8 @@ class Recorder(threading.Thread):
         from homeassistant.components.recorder.models import Events, States
         import sqlalchemy.exc
 
+        global _INSTANCE
+
         while True:
             try:
                 self._setup_connection()
@@ -183,6 +185,8 @@ class Recorder(threading.Thread):
 
             if event == self.quit_object:
                 self._close_run()
+                self._close_connection()
+                _INSTANCE = None
                 self.queue.task_done()
                 return
 
@@ -190,25 +194,34 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
+            session = Session()
+            dbevent = Events.from_event(event)
+            session.add(dbevent)
+
             for _ in range(0, RETRIES):
                 try:
-                    event_id = Events.record_event(Session, event)
+                    session.commit()
                     break
                 except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
+                              rollback=True)
 
-            if event.event_type == EVENT_STATE_CHANGED:
-                for _ in range(0, RETRIES):
-                    try:
-                        States.record_state(
-                            Session,
-                            event.data['entity_id'],
-                            event.data.get('new_state'),
-                            event_id)
-                        break
-                    except sqlalchemy.exc.OperationalError as e:
-                        log_error(e, retry_wait=QUERY_RETRY_WAIT,
-                                  rollback=True)
+            if event.event_type != EVENT_STATE_CHANGED:
+                self.queue.task_done()
+                continue
+
+            session = Session()
+            dbstate = States.from_event(event)
+
+            for _ in range(0, RETRIES):
+                try:
+                    dbstate.event_id = dbevent.event_id
+                    session.add(dbstate)
+                    session.commit()
+                    break
+                except sqlalchemy.exc.OperationalError as e:
+                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
+                              rollback=True)
 
             self.queue.task_done()
 
@@ -219,7 +232,7 @@ class Recorder(threading.Thread):
     def shutdown(self, event):
         """Tell the recorder to shut down."""
         self.queue.put(self.quit_object)
-        self.block_till_done()
+        self.queue.join()
 
     def block_till_done(self):
         """Block till all events processed."""
@@ -253,6 +266,13 @@ class Recorder(threading.Thread):
         Session = scoped_session(session_factory)
         self.db_ready.set()
 
+    def _close_connection(self):
+        """Close the connection."""
+        global Session
+        self.engine.dispose()
+        self.engine = None
+        Session = None
+
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = get_model('RecorderRuns')
@@ -269,14 +289,16 @@ class Recorder(threading.Thread):
             start=self.recording_start,
             created=dt_util.utcnow()
         )
-        Session().add(self._run)
-        Session().commit()
+        session = Session()
+        session.add(self._run)
+        session.commit()
 
     def _close_run(self):
         """Save end time for current run."""
         self._run.end = dt_util.utcnow()
-        Session().add(self._run)
-        Session().commit()
+        session = Session()
+        session.add(self._run)
+        session.commit()
         self._run = None
 
     def _purge_old_data(self):
