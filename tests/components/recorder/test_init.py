@@ -30,7 +30,6 @@ class TestRecorder(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        recorder._INSTANCE.block_till_done()
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""
@@ -97,8 +96,10 @@ class TestRecorder(unittest.TestCase):
         self.hass.pool.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        states = recorder.execute(
-            recorder.query('States'))
+        db_states = recorder.query('States')
+        states = recorder.execute(db_states)
+
+        assert db_states[0].event_id is not None
 
         self.assertEqual(1, len(states))
         self.assertEqual(self.hass.states.get(entity_id), states[0])
