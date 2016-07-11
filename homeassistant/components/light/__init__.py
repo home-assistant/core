@@ -67,12 +67,13 @@ PROP_TO_ATTR = {
 
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: cv.byte,
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_COLOR_NAME: str,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
