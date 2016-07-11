@@ -42,6 +42,11 @@ ATTR_COLOR_NAME = "color_name"
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
 
+# String representing weather to turn the light on or off.
+ATTR_POWER = "power"
+POWER_ON = "on"
+POWER_OFF = "off"
+
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
 
@@ -65,22 +70,26 @@ PROP_TO_ATTR = {
     'xy_color': ATTR_XY_COLOR,
 }
 
+SERVICE_SET_STATE = "set_state"
+
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_PROFILE: str,
     ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: cv.byte,
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_COLOR_NAME: str,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
+    ATTR_COLOR_TEMP: vol.All(vol.int, vol.Range(min=154, max=500)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
+    ATTR_POWER: vol.In([POWER_OFF, POWER_ON]),
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -109,7 +118,7 @@ def is_on(hass, entity_id=None):
 # pylint: disable=too-many-arguments
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, profile=None,
-            flash=None, effect=None, color_name=None):
+            flash=None, effect=None, color_name=None, power=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -123,11 +132,11 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_POWER, power),
         ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
-
 
 def turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
@@ -241,15 +250,13 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_TOGGLE, handle_light_service,
                            descriptions.get(SERVICE_TOGGLE),
                            schema=LIGHT_TOGGLE_SCHEMA)
-
     return True
 
 
 class Light(ToggleEntity):
     """Representation of a light."""
 
-    # pylint: disable=no-self-use, abstract-method
-
+    # pylint: disable=no-self-use
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
