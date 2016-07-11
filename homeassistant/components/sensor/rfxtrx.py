@@ -41,6 +41,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         sub_sensors = {}
         data_types = entity_info[ATTR_DATA_TYPE]
         if len(data_types) == 0:
+            data_type = "Unknown"
             for data_type in DATA_TYPES:
                 if data_type in event.values:
                     data_types = [data_type]
