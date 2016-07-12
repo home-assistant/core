@@ -66,7 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
           value.type == zwave.TYPE_DECIMAL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif value.command_class == zwave.COMMAND_CLASS_ALARM:
+    elif (value.command_class == zwave.COMMAND_CLASS_ALARM or
+          value.command_class == zwave.COMMAND_CLASS_SENSOR_ALARM):
         add_devices([ZWaveAlarmSensor(value)])
 
 
