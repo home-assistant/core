@@ -80,10 +80,13 @@ class IndexView(HomeAssistantView):
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
             map_url = ('/static/home-assistant-polymer/src/layouts/'
                        'partial-map.html')
+            dev_url = ('/static/home-assistant-polymer/src/entry-points/'
+                       'dev-tools.html')
         else:
             core_url = '/static/core-{}.js'.format(version.CORE)
             ui_url = '/static/frontend-{}.html'.format(version.UI)
             map_url = '/static/partial-map-{}.html'.format(version.MAP)
+            dev_url = '/static/dev-tools-{}.html'.format(version.DEV)
 
         # auto login if no password was set
         if self.hass.config.api.api_password is None:
@@ -99,6 +102,6 @@ class IndexView(HomeAssistantView):
         # pylint: disable=no-member
         resp = template.render(
             core_url=core_url, ui_url=ui_url, map_url=map_url, auth=auth,
-            icons_url=icons_url, icons=mdi_version.VERSION)
+            dev_url=dev_url, icons_url=icons_url, icons=mdi_version.VERSION)
 
         return self.Response(resp, mimetype='text/html')
