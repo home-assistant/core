@@ -273,10 +273,7 @@ class GoogleTravelTimeSensor(Entity):
     def _resolve_zone(self, friendly_name):
         entities = self._hass.states.all()
         for entity in entities:
-            if not entity.entity_id.startswith('zone.'):
-                continue
-
-            if entity.attributes.get('friendly_name', '') is friendly_name:
+            if entity.domain == 'zone' and entity.name == friendly_name:
                 return self._get_location_from_attributes(entity)
 
         return friendly_name
