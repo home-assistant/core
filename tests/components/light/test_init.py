@@ -89,6 +89,29 @@ class TestLight(unittest.TestCase):
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
         self.assertEqual('transition_val', call.data[light.ATTR_TRANSITION])
 
+        # Test set_brightness
+        set_brightness_calls = mock_service(
+            self.hass, light.DOMAIN, light.SERVICE_SET_BRIGHTNESS)
+
+        light.set_brightness(
+            self.hass,
+            entity_id='entity_id_val',
+            transition='transition_val',
+            brightness='brightness_val',)
+
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(1, len(set_brightness_calls))
+        call = set_brightness_calls[-1]
+
+        self.assertEqual(light.DOMAIN, call.domain)
+        self.assertEqual(light.SERVICE_SET_BRIGHTNESS, call.service)
+        self.assertEqual('entity_id_val', call.data.get(ATTR_ENTITY_ID))
+        self.assertEqual(
+            'transition_val', call.data.get(light.ATTR_TRANSITION))
+        self.assertEqual(
+            'brightness_val', call.data.get(light.ATTR_BRIGHTNESS))
+
         # Test toggle
         toggle_calls = mock_service(
             self.hass, light.DOMAIN, SERVICE_TOGGLE)
@@ -233,7 +256,14 @@ class TestLight(unittest.TestCase):
             self.hass, dev1.entity_id,
             profile=prof_name, brightness='bright', rgb_color='yellowish')
 
+        light.set_brightness(
+            self.hass, dev1.entity_id, transition='slowly',
+            brightness='bright')
+
         self.hass.pool.block_till_done()
+
+        method, data = dev1.last_call('turn_on')
+        self.assertEqual({}, data)
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual({}, data)

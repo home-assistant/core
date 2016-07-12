@@ -65,6 +65,8 @@ PROP_TO_ATTR = {
     'xy_color': ATTR_XY_COLOR,
 }
 
+SERVICE_SET_BRIGHTNESS = 'set_brightness'
+
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
@@ -82,6 +84,12 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_COLOR_TEMP: vol.All(int, vol.Range(min=154, max=500)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: vol.In([EFFECT_COLORLOOP, EFFECT_RANDOM, EFFECT_WHITE]),
+})
+
+LIGHT_SET_BRIGHTNESS_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+    ATTR_TRANSITION: VALID_TRANSITION,
+    ATTR_BRIGHTNESS: cv.byte,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -128,6 +136,19 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
+def set_brightness(hass, entity_id=None, transition=None, brightness=None):
+    """Turn all or specified light on."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+            (ATTR_BRIGHTNESS, brightness),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_BRIGHTNESS, data)
 
 
 def turn_off(hass, entity_id=None, transition=None):
@@ -199,6 +220,8 @@ def setup(hass, config):
             service_fun = 'turn_off'
         elif service.service == SERVICE_TOGGLE:
             service_fun = 'toggle'
+        elif service.service == SERVICE_SET_BRIGHTNESS:
+            service_fun = 'set_brightness'
 
         if service_fun:
             for light in target_lights:
@@ -234,6 +257,11 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_light_service,
                            descriptions.get(SERVICE_TURN_ON),
                            schema=LIGHT_TURN_ON_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_SET_BRIGHTNESS,
+                           handle_light_service,
+                           descriptions.get(SERVICE_SET_BRIGHTNESS),
+                           schema=LIGHT_SET_BRIGHTNESS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_TURN_OFF, handle_light_service,
                            descriptions.get(SERVICE_TURN_OFF),
