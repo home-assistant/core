@@ -14,6 +14,7 @@ from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
     ATTR_AUTOMATIC_ADD, ATTR_NAME,
     CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES)
+from homeassistant.const import STATE_UNKNOWN
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -47,7 +48,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     data_types = [data_type]
                     break
         for _data_type in data_types:
-            new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
+            new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
                                       _data_type)
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
@@ -110,9 +111,9 @@ class RfxtrxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.data_type:
+        if self.event:
             return self.event.values[self.data_type]
-        return None
+        return STATE_UNKNOWN
 
     @property
     def name(self):
@@ -122,7 +123,8 @@ class RfxtrxSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return self.event.values
+        if self.event:
+            return self.event.values
 
     @property
     def unit_of_measurement(self):
