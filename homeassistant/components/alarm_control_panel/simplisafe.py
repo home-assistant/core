@@ -2,7 +2,7 @@
 Interfaces with SimpliSafe alarm control panel.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/simplisafe/
+https://home-assistant.io/components/alarm_control_panel.simplisafe/
 """
 import logging
 
@@ -36,10 +36,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=abstract-method
 class SimpliSafeAlarm(alarm.AlarmControlPanel):
-    """Represents a SimpliSafe alarm status."""
+    """Representation a SimpliSafe alarm."""
 
     def __init__(self, name, username, password, code):
-        """Initialize the SimpliSafe alaram."""
+        """Initialize the SimpliSafe alarm."""
         from simplisafe import SimpliSafe
         self.simplisafe = SimpliSafe(username, password)
         self._name = name
