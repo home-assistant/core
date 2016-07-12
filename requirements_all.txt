@@ -240,7 +240,7 @@ psutil==4.3.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-pubnub==3.7.6
+pubnub==3.8.2
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
@@ -343,7 +343,7 @@ python-twitch==1.2.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.8
+python-wink==0.7.10
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
