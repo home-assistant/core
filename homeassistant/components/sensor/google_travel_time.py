@@ -227,6 +227,9 @@ class GoogleTravelTimeSensor(Entity):
                 self._destination_entity_id
             )
 
+        self._destination = self._resolve_zone(self._destination)
+        self._origin = self._resolve_zone(self._origin)
+
         if self._destination is not None and self._origin is not None:
             self._matrix = self._client.distance_matrix(self._origin,
                                                         self._destination,
@@ -266,3 +269,14 @@ class GoogleTravelTimeSensor(Entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
         return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+
+    def _resolve_zone(self, friendly_name):
+        entities = self._hass.states.all()
+        for entity in entities:
+            if not entity.entity_id.startswith('zone.'):
+                continue
+
+            if entity.attributes.get('friendly_name', '') is friendly_name:
+                return self._get_location_from_attributes(entity)
+
+        return friendly_name
