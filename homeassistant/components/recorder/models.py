@@ -7,9 +7,11 @@ import logging
 from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
                         String, Text, distinct)
 from sqlalchemy.ext.declarative import declarative_base
+
 import homeassistant.util.dt as dt_util
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.entity import split_entity_id
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -31,17 +33,12 @@ class Events(Base):
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     @staticmethod
-    def record_event(session, event):
-        """Save an event to the database."""
-        dbevent = Events(event_type=event.event_type,
-                         event_data=json.dumps(event.data, cls=JSONEncoder),
-                         origin=str(event.origin),
-                         time_fired=event.time_fired)
-
-        session.add(dbevent)
-        session.commit()
-
-        return dbevent.event_id
+    def from_event(event):
+        """Create an event database object from a native event."""
+        return Events(event_type=event.event_type,
+                      event_data=json.dumps(event.data, cls=JSONEncoder),
+                      origin=str(event.origin),
+                      time_fired=event.time_fired)
 
     def to_native(self):
         """Convert to a natve HA Event."""
@@ -50,7 +47,7 @@ class Events(Base):
                 self.event_type,
                 json.loads(self.event_data),
                 EventOrigin(self.origin),
-                dt_util.UTC.localize(self.time_fired)
+                _process_timestamp(self.time_fired)
             )
         except ValueError:
             # When json.loads fails
@@ -68,7 +65,6 @@ class States(Base):
     entity_id = Column(String(64))
     state = Column(String(255))
     attributes = Column(Text)
-    origin = Column(String(32))
     event_id = Column(Integer, ForeignKey('events.event_id'))
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow)
@@ -80,19 +76,20 @@ class States(Base):
                             'domain', 'last_updated', 'entity_id'), )
 
     @staticmethod
-    def record_state(session, entity_id, state, event_id):
-        """Save a state to the database."""
-        now = dt_util.utcnow()
+    def from_event(event):
+        """Create object from a state_changed event."""
+        entity_id = event.data['entity_id']
+        state = event.data.get('new_state')
 
-        dbstate = States(event_id=event_id, entity_id=entity_id)
+        dbstate = States(entity_id=entity_id)
 
         # State got deleted
         if state is None:
             dbstate.state = ''
-            dbstate.domain = ''
+            dbstate.domain = split_entity_id(entity_id)[0]
             dbstate.attributes = '{}'
-            dbstate.last_changed = now
-            dbstate.last_updated = now
+            dbstate.last_changed = event.time_fired
+            dbstate.last_updated = event.time_fired
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
@@ -100,8 +97,7 @@ class States(Base):
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
-        session().add(dbstate)
-        session().commit()
+        return dbstate
 
     def to_native(self):
         """Convert to an HA state object."""
@@ -109,8 +105,8 @@ class States(Base):
             return State(
                 self.entity_id, self.state,
                 json.loads(self.attributes),
-                dt_util.UTC.localize(self.last_changed),
-                dt_util.UTC.localize(self.last_updated)
+                _process_timestamp(self.last_changed),
+                _process_timestamp(self.last_updated)
             )
         except ValueError:
             # When json.loads fails
@@ -135,17 +131,32 @@ class RecorderRuns(Base):
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
-        from homeassistant.components.recorder import Session, _verify_instance
-        _verify_instance()
+        from sqlalchemy.orm.session import Session
 
-        query = Session().query(distinct(States.entity_id)).filter(
-            States.created >= self.start)
+        session = Session.object_session(self)
 
-        if point_in_time is not None or self.end is not None:
-            query = query.filter(States.created < point_in_time)
+        assert session is not None, 'RecorderRuns need to be persisted'
 
-        return [row.entity_id for row in query]
+        query = session.query(distinct(States.entity_id)).filter(
+            States.last_updated >= self.start)
+
+        if point_in_time is not None:
+            query = query.filter(States.last_updated < point_in_time)
+        elif self.end is not None:
+            query = query.filter(States.last_updated < self.end)
+
+        return [row[0] for row in query]
 
     def to_native(self):
         """Return self, native format is this model."""
         return self
+
+
+def _process_timestamp(ts):
+    """Process a timestamp into datetime object."""
+    if ts is None:
+        return None
+    elif ts.tzinfo is None:
+        return dt_util.UTC.localize(ts)
+    else:
+        return dt_util.as_utc(ts)
