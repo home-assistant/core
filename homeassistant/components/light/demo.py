@@ -18,7 +18,7 @@ LIGHT_TEMPS = [240, 380]
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup demo light platform."""
+    """Setup the demo light platform."""
     add_devices_callback([
         DemoLight("Bed Light", False),
         DemoLight("Ceiling Lights", True, LIGHT_COLORS[0], LIGHT_TEMPS[1]),
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoLight(Light):
-    """Provide a demo light."""
+    """Represenation of a demo light."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, name, state, rgb=None, ct=None, brightness=180):

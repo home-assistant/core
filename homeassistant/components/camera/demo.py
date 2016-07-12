@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoCamera(Camera):
-    """A Demo camera."""
+    """The representation of a Demo camera."""
 
     def __init__(self, name):
         """Initialize demo camera component."""

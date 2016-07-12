@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class DemoSwitch(SwitchDevice):
-    """representation of a demo switch."""
+    """Representation of a demo switch."""
 
     def __init__(self, name, state, icon, assumed):
         """Initialize the Demo switch."""
