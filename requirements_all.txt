@@ -391,7 +391,7 @@ somecomfort==0.2.1
 speedtest-cli==0.3.4
 
 # homeassistant.components.recorder
-sqlalchemy==1.0.13
+sqlalchemy==1.0.14
 
 # homeassistant.components.http
 static3==0.7.0
