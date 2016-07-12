@@ -89,7 +89,7 @@ class TelegramNotificationService(BaseNotificationService):
                     # file is a url
                     if ATTR_URL in photo_data:
                         # use http authenticate
-                        if ATTR_USERNAME in photo_data or\
+                        if ATTR_USERNAME in photo_data and\
                            ATTR_PASSWORD in photo_data:
                             req = requests.get(
                                 photo_data[ATTR_URL],
