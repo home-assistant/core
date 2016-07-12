@@ -44,6 +44,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
+        self.assertEqual('unknown', entity.state)
 
     def test_one_sensor(self):
         """Test with 1 sensor."""
@@ -58,6 +59,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
+        self.assertEqual('unknown', entity.state)
 
     def test_one_sensor_no_datatype(self):
         """Test with 1 sensor."""
@@ -71,6 +73,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
+        self.assertEqual('unknown', entity.state)
 
     def test_several_sensors(self):
         """Test with 3 sensors."""
@@ -95,14 +98,14 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 self.assertEqual('%', _entity_hum.unit_of_measurement)
                 self.assertEqual('Bath', _entity_hum.__str__())
-
+                self.assertEqual('unknown', _entity_hum.state)
                 self.assertEqual(TEMP_CELSIUS,
                                  _entity_temp.unit_of_measurement)
                 self.assertEqual('Bath', _entity_temp.__str__())
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-
+                self.assertEqual('unknown', entity.state)
                 self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual('Test', entity.__str__())
 
@@ -216,14 +219,14 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 self.assertEqual('%', _entity_hum.unit_of_measurement)
                 self.assertEqual('Bath', _entity_hum.__str__())
-
+                self.assertEqual('unknown', _entity_temp.state)
                 self.assertEqual(TEMP_CELSIUS,
                                  _entity_temp.unit_of_measurement)
                 self.assertEqual('Bath', _entity_temp.__str__())
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-
+                self.assertEqual('unknown', entity.state)
                 self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
                 self.assertEqual('Test', entity.__str__())
 
