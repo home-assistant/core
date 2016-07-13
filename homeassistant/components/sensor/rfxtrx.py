@@ -14,7 +14,6 @@ from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
     ATTR_AUTOMATIC_ADD, ATTR_NAME,
     CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES)
-from homeassistant.const import STATE_UNKNOWN
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -113,7 +112,7 @@ class RfxtrxSensor(Entity):
         """Return the state of the sensor."""
         if self.event:
             return self.event.values[self.data_type]
-        return STATE_UNKNOWN
+        return None
 
     @property
     def name(self):
