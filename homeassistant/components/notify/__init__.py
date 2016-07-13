@@ -38,7 +38,7 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
-    vol.Optional(ATTR_DATA): dict,      # nobody seems to be using this (yet)
+    vol.Optional(ATTR_DATA): dict,
 })
 
 _LOGGER = logging.getLogger(__name__)
