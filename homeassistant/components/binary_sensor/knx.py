@@ -2,7 +2,7 @@
 Contains functionality to use a KNX group address as a binary.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.knx/
+https://home-assistant.io/components/binary_sensor.knx/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.knx import (
@@ -12,13 +12,13 @@ DEPENDENCIES = ["knx"]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create and add an entity based on the configuration."""
+    """Setup the KNX binary sensor platform."""
     add_entities([
         KNXSwitch(hass, KNXConfig(config))
     ])
 
 
 class KNXSwitch(KNXGroupAddress, BinarySensorDevice):
-    """Representation of a KNX sensor device."""
+    """Representation of a KNX binary sensor device."""
 
     pass

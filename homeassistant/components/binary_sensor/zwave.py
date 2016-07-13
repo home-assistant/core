@@ -31,7 +31,7 @@ DEVICE_MAPPINGS = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Z-Wave platform for sensors."""
+    """Setup the Z-Wave platform for binary sensors."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 

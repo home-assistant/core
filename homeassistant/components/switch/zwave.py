@@ -1,5 +1,5 @@
 """
-Zwave platform that handles simple binary switches.
+Z-Wave platform that handles simple binary switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zwave/
@@ -12,7 +12,7 @@ from homeassistant.components import zwave
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave switches."""
+    """Setup the Z-Wave platform."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 
