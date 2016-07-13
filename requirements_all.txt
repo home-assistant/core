@@ -447,4 +447,4 @@ xmltodict
 yahooweather==0.4
 
 # homeassistant.components.zeroconf
-zeroconf==0.17.5
+zeroconf==0.17.6
