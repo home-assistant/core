@@ -137,3 +137,7 @@ class MqttCover(CoverDevice):
             # Optimistically assume that door has changed state.
             self._state = True
             self.update_ha_state()
+
+    def stop_cover(self):
+        """Stop the cover."""
+        pass
