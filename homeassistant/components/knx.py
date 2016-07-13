@@ -3,8 +3,6 @@ Support for KNX components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/knx/
-
-(c) 2016 Daniel Matuschek <info@open-homeautomation.com>
 """
 import logging
 

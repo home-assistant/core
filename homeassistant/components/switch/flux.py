@@ -4,7 +4,7 @@ Flux for Home-Assistant.
 The idea was taken from https://github.com/KpaBap/hue-flux/
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch/flux/
+https://home-assistant.io/components/switch.flux/
 """
 from datetime import time
 import logging
@@ -62,7 +62,7 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the demo switches."""
+    """Setup the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class FluxSwitch(SwitchDevice):
-    """Flux switch."""
+    """Representation of a Flux switch."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, name, hass, state, lights, start_time, stop_time,
