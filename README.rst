@@ -75,7 +75,7 @@ Build home automation on top of your devices:
    (NMA) <http://www.notifymyandroid.com/>`__,
    `PushBullet <https://www.pushbullet.com/>`__,
    `PushOver <https://pushover.net/>`__, `Slack <https://slack.com/>`__,
-   `Telegram <https://telegram.org/>`__, `Join <https://joaoapps.com/join/>`__, and `Jabber
+   `Telegram <https://telegram.org/>`__, `Join <http://joaoapps.com/join/>`__, and `Jabber
    (XMPP) <http://xmpp.org>`__
 
 The system is built using a modular approach so support for other devices or actions can
