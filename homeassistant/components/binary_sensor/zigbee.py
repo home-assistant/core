@@ -19,6 +19,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ZigBeeBinarySensor(ZigBeeDigitalIn, BinarySensorDevice):
-    """Use ZigBeeDigitalIn as binary sensor."""
+    """Representation of a ZigBeeDigitalIn as binary sensor."""
 
     pass

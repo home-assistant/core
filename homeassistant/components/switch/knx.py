@@ -3,8 +3,6 @@ Support KNX switching actuators.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.knx/
-
-(c) 2016 Daniel Matuschek <info@open-homeautomation.com>
 """
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.knx import (
@@ -14,14 +12,14 @@ DEPENDENCIES = ["knx"]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create and add an entity based on the configuration."""
+    """Setup the KNX switch platform."""
     add_entities([
         KNXSwitch(hass, KNXConfig(config))
     ])
 
 
 class KNXSwitch(KNXGroupAddress, SwitchDevice):
-    """Representation of a KNX switch device."""
+    """Representation of a KNX switch."""
 
     def turn_on(self, **kwargs):
         """Turn the switch on.
