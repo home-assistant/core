@@ -66,6 +66,9 @@ def _valid_device(value, device_type):
             key = device.get('packetid')
             device.pop('packetid')
 
+        if not len(key) % 2 == 0:
+            key = '0' + key
+
         if get_rfx_object(key) is None:
             raise vol.Invalid('Rfxtrx device {} is invalid: '
                               'Invalid device id for {}'.format(key, value))
@@ -160,7 +163,11 @@ def get_rfx_object(packetid):
     """Return the RFXObject with the packetid."""
     import RFXtrx as rfxtrxmod
 
-    binarypacket = bytearray.fromhex(packetid)
+    try:
+        binarypacket = bytearray.fromhex(packetid)
+    except ValueError:
+        return None
+
     pkt = rfxtrxmod.lowlevel.parse(binarypacket)
     if pkt is None:
         return None

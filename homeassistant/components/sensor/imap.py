@@ -1,7 +1,8 @@
 """
-Imap sensor support.
+IMAP sensor support.
 
-Checks an email account for unread emails.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.imap/
 """
 import logging
 import voluptuous as vol
@@ -47,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ImapSensor(Entity):
-    """IMAP sensor class."""
+    """Representation of an IMAP sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, name, user, password, server, port):
@@ -62,7 +63,7 @@ class ImapSensor(Entity):
         self.update()
 
     def _login(self):
-        """Login and return a imap connection."""
+        """Login and return an IMAP connection."""
         import imaplib
         try:
             connection = imaplib.IMAP4_SSL(self._server, self._port)

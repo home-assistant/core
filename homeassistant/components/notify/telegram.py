@@ -4,17 +4,27 @@ Telegram platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.telegram/
 """
+import io
 import logging
 import urllib
+import requests
+from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_DATA, DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==4.3.2']
+REQUIREMENTS = ['python-telegram-bot==4.3.3']
+
+ATTR_PHOTO = "photo"
+ATTR_FILE = "file"
+ATTR_URL = "url"
+ATTR_CAPTION = "caption"
+ATTR_USERNAME = "username"
+ATTR_PASSWORD = "password"
 
 
 def get_service(hass, config):
@@ -54,9 +64,51 @@ class TelegramNotificationService(BaseNotificationService):
         import telegram
 
         title = kwargs.get(ATTR_TITLE)
+        data = kwargs.get(ATTR_DATA, {})
 
+        # send message
         try:
             self.bot.sendMessage(chat_id=self._chat_id,
                                  text=title + "  " + message)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message.")
+            return
+
+        # send photo
+        if ATTR_PHOTO in data:
+            # if not a list
+            if not isinstance(data[ATTR_PHOTO], list):
+                photos = [data[ATTR_PHOTO]]
+            else:
+                photos = data[ATTR_PHOTO]
+
+            try:
+                for photo_data in photos:
+                    caption = photo_data.get(ATTR_CAPTION, None)
+
+                    # file is a url
+                    if ATTR_URL in photo_data:
+                        # use http authenticate
+                        if ATTR_USERNAME in photo_data and\
+                           ATTR_PASSWORD in photo_data:
+                            req = requests.get(
+                                photo_data[ATTR_URL],
+                                auth=HTTPBasicAuth(photo_data[ATTR_USERNAME],
+                                                   photo_data[ATTR_PASSWORD])
+                            )
+                        else:
+                            req = requests.get(photo_data[ATTR_URL])
+                        file_id = io.BytesIO(req.content)
+                    elif ATTR_FILE in photo_data:
+                        file_id = open(photo_data[ATTR_FILE], "rb")
+                    else:
+                        _LOGGER.error("No url or path is set for photo!")
+                        continue
+
+                    self.bot.sendPhoto(chat_id=self._chat_id,
+                                       photo=file_id, caption=caption)
+
+            except (OSError, IOError, telegram.error.TelegramError,
+                    urllib.error.HTTPError):
+                _LOGGER.exception("Error sending photo.")
+                return
