@@ -168,15 +168,17 @@ class HydrologicalData(object):
             stations = xmltodict.parse(response.text)['AKT_Data']['MesPar']
             # Water level: Typ="02", temperature: Typ="03", discharge: Typ="10"
             for station in stations:
-                if str(self.station) == station.get('@StrNr'):
-                    for data in ['02', '03', '10']:
-                        if data == station.get('@Typ'):
-                            values = station.get('Wert')
-                            if values is not None:
-                                details[data] = {
-                                    'current': values[0],
-                                    'max': list(values[4].items())[1][1],
-                                    'mean': list(values[3].items())[1][1]}
+                if str(self.station) != station.get('@StrNr'):
+                    continue
+                for data in ['02', '03', '10']:
+                    if data != station.get('@Typ'):
+                        continue
+                    values = station.get('Wert')
+                    if values is not None:
+                        details[data] = {
+                            'current': values[0],
+                            'max': list(values[4].items())[1][1],
+                            'mean': list(values[3].items())[1][1]}
 
                     details['location'] = station.get('Name')
                     details['update_time'] = station.get('Zeit')
