@@ -32,16 +32,6 @@ class VeraLock(VeraDevice, LockDevice):
         self._state = None
         VeraDevice.__init__(self, vera_device, controller)
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = {}
-        if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
-
-        attr['Vera Device Id'] = self.vera_device.vera_device_id
-        return attr
-
     def lock(self, **kwargs):
         """Lock the device."""
         self.vera_device.lock()
