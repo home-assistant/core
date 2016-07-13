@@ -9,7 +9,7 @@ import logging
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.7.4']
+REQUIREMENTS = ['python-wink==0.7.8']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
