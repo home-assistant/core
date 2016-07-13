@@ -24,7 +24,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Setup the Wink binary sensor platform."""
     import pywink
 
     if discovery_info is None:
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
-    """Representation of a Wink sensor."""
+    """Representation of a Wink binary sensor."""
 
     def __init__(self, wink):
         """Initialize the Wink binary sensor."""
