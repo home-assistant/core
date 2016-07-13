@@ -19,7 +19,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup a Hyperion server remote."""
     host = config.get(CONF_HOST, None)
     port = config.get("port", 19444)
-    device = Hyperion(config.get('name', host), host, port)
+    color = config.get("color", [255, 255, 255])
+    device = Hyperion(config.get('name', host), host, port, color)
     if device.setup():
         add_devices_callback([device])
         return True
@@ -30,13 +31,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port):
+    def __init__(self, name, host, port, color):
         """Initialize the light."""
         self._host = host
         self._port = port
         self._name = name
         self._is_available = True
-        self._rgb_color = [255, 255, 255]
+        self._is_on = False
+        self._rgb_color = color
 
     @property
     def name(self):
@@ -51,7 +53,7 @@ class Hyperion(Light):
     @property
     def is_on(self):
         """Return true if the device is online."""
-        return self._is_available
+        return self._is_on
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
@@ -68,8 +70,14 @@ class Hyperion(Light):
 
     def update(self):
         """Ping the remote."""
-        # just see if the remote port is open
+        # Check if it's up, and showing color
         self._is_available = self.json_request()
+        response = self.json_request({"command": "serverinfo"})
+        if response:
+            if response["info"]["priorities"] == []:
+                self._is_on = False
+            else:
+                self._is_on = True
 
     def setup(self):
         """Get the hostname of the remote."""
@@ -77,6 +85,10 @@ class Hyperion(Light):
         if response:
             if self._name == self._host:
                 self._name = response["info"]["hostname"]
+            if response["info"]["priorities"] == []:
+                self._is_on = False
+            else:
+                self._is_on = True
             return True
 
         return False
