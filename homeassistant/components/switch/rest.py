@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "REST Switch"
 DEFAULT_BODY_ON = "ON"
 DEFAULT_BODY_OFF = "OFF"
+DEFAULT_HEADERS = {'Content-Type': 'application/x-www-form-urlencoded'}
 
 
 # pylint: disable=unused-argument,
@@ -36,19 +37,30 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
 
+    cfg_headers = config.get('headers')
+
+    if cfg_headers is None:
+        headers = DEFAULT_HEADERS
+    else:
+        headers = {}
+        for header in cfg_headers:
+            header = list(header.items())
+            headers[header[0][1]] = header[1][1]
+
     add_devices_callback([RestSwitch(
         hass,
         config.get('name', DEFAULT_NAME),
         config.get('resource'),
         config.get('body_on', DEFAULT_BODY_ON),
-        config.get('body_off', DEFAULT_BODY_OFF))])
+        config.get('body_off', DEFAULT_BODY_OFF), 
+        headers)])
 
 
 # pylint: disable=too-many-arguments
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, body_on, body_off):
+    def __init__(self, hass, name, resource, body_on, body_off, headers):
         """Initialize the REST switch."""
         self._state = None
         self._hass = hass
@@ -56,6 +68,7 @@ class RestSwitch(SwitchDevice):
         self._resource = resource
         self._body_on = body_on
         self._body_off = body_off
+        self._headers = headers
 
     @property
     def name(self):
@@ -70,7 +83,7 @@ class RestSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         request = requests.post(self._resource,
-                                data=self._body_on,
+                                data=self._body_on, headers=self._headers, 
                                 timeout=10)
         if request.status_code == 200:
             self._state = True
@@ -81,7 +94,7 @@ class RestSwitch(SwitchDevice):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         request = requests.post(self._resource,
-                                data=self._body_off,
+                                data=self._body_off, headers=self._headers, 
                                 timeout=10)
         if request.status_code == 200:
             self._state = False
