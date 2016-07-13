@@ -1,19 +1,19 @@
 """
-Support for Wink garage doors.
+Support for Wink covers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/garage_door.wink/
+https://home-assistant.io/components/cover.wink/
 """
 import logging
 
-from homeassistant.components.garage_door import GarageDoorDevice
+from homeassistant.components.cover import CoverDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 REQUIREMENTS = ['python-wink==0.7.4']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink garage door platform."""
+    """Setup the Wink cover platform."""
     import pywink
 
     if discovery_info is None:
@@ -27,34 +27,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         pywink.set_bearer_token(token)
 
-    add_devices(WinkGarageDoorDevice(door) for door in
-                pywink.get_garage_doors())
+    add_devices(WinkCoverDevice(cover) for cover in pywink.get_garage_doors())
 
 
-class WinkGarageDoorDevice(GarageDoorDevice):
-    """Representation of a Wink garage door."""
+class WinkCoverDevice(CoverDevice):
+    """Representation of a Wink cover."""
 
     def __init__(self, wink):
-        """Initialize the garage door."""
+        """Initialize the cover."""
         self.wink = wink
 
     @property
     def unique_id(self):
-        """Return the ID of this wink garage door."""
+        """Return the ID of this wink cover."""
         return "{}.{}".format(self.__class__, self.wink.device_id())
 
     @property
     def name(self):
-        """Return the name of the garage door if any."""
+        """Return the name of the cover if any."""
         return self.wink.name()
 
     def update(self):
-        """Update the state of the garage door."""
+        """Update the state of the cover."""
         self.wink.update_state()
 
     @property
     def is_closed(self):
-        """Return true if door is closed."""
+        """Return true if cover is closed."""
         return self.wink.state() == 0
 
     @property
@@ -63,9 +62,9 @@ class WinkGarageDoorDevice(GarageDoorDevice):
         return self.wink.available
 
     def open_cover(self):
-        """Open the door."""
+        """Open the cover."""
         self.wink.set_state(1)
 
     def close_cover(self):
-        """Close the door."""
+        """Close the cover."""
         self.wink.set_state(0)
