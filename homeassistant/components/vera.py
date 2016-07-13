@@ -17,30 +17,16 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.14']
+REQUIREMENTS = ['pyvera==0.2.15']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vera'
 
-
 VERA_CONTROLLER = None
 
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
-
-DEVICE_CATEGORIES = {
-    'Sensor': 'binary_sensor',
-    'Temperature Sensor': 'sensor',
-    'Light Sensor': 'sensor',
-    'Humidity Sensor': 'sensor',
-    'Dimmable Switch': 'light',
-    'Switch': 'switch',
-    'Armable Sensor': 'switch',
-    'On/Off Switch': 'switch',
-    'Doorlock': 'lock',
-    # 'Window Covering': NOT SUPPORTED YET
-}
 
 VERA_DEVICES = defaultdict(list)
 
@@ -70,8 +56,7 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
-        all_devices = VERA_CONTROLLER.get_devices(
-            list(DEVICE_CATEGORIES.keys()))
+        all_devices = VERA_CONTROLLER.get_devices()
     except RequestException:
         # There was a network related error connecting to the vera controller.
         _LOGGER.exception("Error communicating with Vera API")
@@ -90,17 +75,37 @@ def setup(hass, base_config):
     for device in all_devices:
         if device.device_id in exclude:
             continue
-        dev_type = DEVICE_CATEGORIES.get(device.category)
+        dev_type = map_vera_device(device, lights_ids)
         if dev_type is None:
             continue
-        if dev_type == 'switch' and device.device_id in lights_ids:
-            dev_type = 'light'
         VERA_DEVICES[dev_type].append(device)
 
     for component in 'binary_sensor', 'sensor', 'light', 'switch', 'lock':
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
 
     return True
+
+
+def map_vera_device(vera_device, remap):
+    """Map vera  classes to HA types."""
+    # pylint: disable=too-many-return-statements
+    import pyvera as veraApi
+    if isinstance(vera_device, veraApi.VeraSwitch):
+        if vera_device.device_id in remap:
+            return 'light'
+        else:
+            return 'switch'
+    if isinstance(vera_device, veraApi.VeraBinarySensor):
+        return 'binary_sensor'
+    if isinstance(vera_device, veraApi.VeraSensor):
+        return 'sensor'
+    if isinstance(vera_device, veraApi.VeraDimmer):
+        return 'light'
+    if isinstance(vera_device, veraApi.VeraArmableDevice):
+        return 'switch'
+    if isinstance(vera_device, veraApi.VeraLock):
+        return 'lock'
+    # VeraCurtain: NOT SUPPORTED YET
 
 
 class VeraDevice(Entity):
