@@ -78,9 +78,10 @@ def setup(hass, config):
         for cover in target_covers:
             if service.service == SERVICE_CLOSE:
                 cover.close_cover()
-            else:
+            elif service.service == SERVICE_OPEN:
                 cover.open_cover()
-
+            elif service.service == SERVICE_STOP:
+                cover.stop_cover()
             if cover.should_poll:
                 cover.update_ha_state(True)
 
