@@ -47,10 +47,6 @@ class WinkCoverDevice(CoverDevice):
         """Return the name of the cover if any."""
         return self.wink.name()
 
-    def update(self):
-        """Update the state of the cover."""
-        self.wink.update_state()
-
     @property
     def is_closed(self):
         """Return true if cover is closed."""
@@ -61,6 +57,10 @@ class WinkCoverDevice(CoverDevice):
         """True if connection == True."""
         return self.wink.available
 
+    def update(self):
+        """Update the state of the cover."""
+        self.wink.update_state()
+
     def open_cover(self):
         """Open the cover."""
         self.wink.set_state(1)
@@ -68,3 +68,7 @@ class WinkCoverDevice(CoverDevice):
     def close_cover(self):
         """Close the cover."""
         self.wink.set_state(0)
+
+    def stop_cover(self):
+        """Wink is not able to stop covers."""
+        pass
