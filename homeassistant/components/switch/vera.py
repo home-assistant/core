@@ -6,10 +6,9 @@ https://home-assistant.io/components/switch.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import convert
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)

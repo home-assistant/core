@@ -9,8 +9,12 @@ from collections import defaultdict
 
 from requests.exceptions import RequestException
 
+
+from homeassistant.util.dt import utc_from_timestamp
 from homeassistant.helpers import discovery
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyvera==0.2.13']
@@ -139,7 +143,7 @@ class VeraDevice(Entity):
         if self.vera_device.is_trippable:
             last_tripped = self.vera_device.last_trip
             if last_tripped is not None:
-                utc_time = dt_util.utc_from_timestamp(int(last_tripped))
+                utc_time = utc_from_timestamp(int(last_tripped))
                 attr[ATTR_LAST_TRIP_TIME] = utc_time.isoformat()
             else:
                 attr[ATTR_LAST_TRIP_TIME] = None

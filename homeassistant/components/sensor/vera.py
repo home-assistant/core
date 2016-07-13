@@ -6,9 +6,7 @@ https://home-assistant.io/components/sensor.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.vera import (

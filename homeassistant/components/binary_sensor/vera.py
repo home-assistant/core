@@ -6,9 +6,6 @@ https://home-assistant.io/components/binary_sensor.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.components.vera import (

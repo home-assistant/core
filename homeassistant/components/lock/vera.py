@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED)
+    STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
 

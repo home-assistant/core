@@ -6,10 +6,8 @@ https://home-assistant.io/components/light.vera/
 """
 import logging
 
-import homeassistant.util.dt as dt_util
 from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 from homeassistant.const import (
-    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
     STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
