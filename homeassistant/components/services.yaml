@@ -14,3 +14,20 @@ persistent_notification:
       notification_id:
         description: Target ID of the notification, will replace a notification with the same Id. [Optional]
         example: 1234
+
+homematic:
+  virtualkey:
+    description: Press a virtual key from CCU/Homegear or simulate keypress
+
+    fields:
+      address:
+        description: Address of homematic device or BidCoS-RF for virtual remote
+        example: BidCoS-RF
+
+      channel:
+        description: Channel for calling a keypress
+        example: 1
+
+      param:
+        description: Event to send i.e. PRESS_LONG, PRESS_SHORT
+        example: PRESS_LONG
