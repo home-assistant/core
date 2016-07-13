@@ -32,7 +32,6 @@ COVER_SERVICE_SCHEMA = vol.Schema({
 })
 
 _LOGGER = logging.getLogger(__name__)
-ATTR_CURRENT_POSITION = 'current_position'
 
 
 def is_open(hass, entity_id=None):
@@ -103,36 +102,20 @@ def setup(hass, config):
 class CoverDevice(Entity):
     """Representation of a cover."""
 
-    # pylint: disable=no-self-use
     @property
-    def current_position(self):
-        """Return current position of cover.
-
-        None is unknown, 0 is fully closed / down, 100 is fully open / up.
-        """
-        raise NotImplementedError()
+    def is_closed(self):
+        """Return true if cover is closed."""
+        return None
 
     @property
     def state(self):
         """Return the state of the cover."""
-        current = self.current_position
+        closed = self.is_closed
 
-        if current is None:
+        if closed is None:
             return STATE_UNKNOWN
 
-        return STATE_CLOSED if current == 0 else STATE_OPEN
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        current = self.current_position
-
-        if current is None:
-            return None
-
-        return {
-            ATTR_CURRENT_POSITION: current
-        }
+        return STATE_CLOSED if closed else STATE_OPEN
 
     def open_cover(self):
         """Fully open the cover."""
