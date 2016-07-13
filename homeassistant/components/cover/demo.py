@@ -24,7 +24,6 @@ class DemoCover(CoverDevice):
         """Initialize the cover."""
         self._name = name
         self._state = state
-        self._position = position
 
     @property
     def should_poll(self):
@@ -35,11 +34,6 @@ class DemoCover(CoverDevice):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def current_position(self):
-        """Return the current position of the cover."""
-        return self._position
 
     @property
     def is_open(self):
