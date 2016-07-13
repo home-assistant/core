@@ -357,11 +357,11 @@ def setup(hass, config):
 
     def add_node(service):
         """Switch into inclusion mode."""
-        NETWORK.controller.begin_command_add_device()
+        NETWORK.controller.add_node()
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        NETWORK.controller.begin_command_remove_device()
+        NETWORK.controller.remove_node()
 
     def heal_network(service):
         """Heal the network."""
