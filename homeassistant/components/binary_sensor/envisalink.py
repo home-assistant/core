@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Perform the setup for Envisalink sensor devices."""
+    """Setup Envisalink binary sensor devices."""
     _configured_zones = discovery_info['zones']
     for zone_num in _configured_zones:
         _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
