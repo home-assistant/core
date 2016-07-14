@@ -128,6 +128,7 @@ def validate_attributes(config):
         config[CONF_ATTRS][key] = attr
 
 
+# pylint: disable=abstract-method
 class UniversalMediaPlayer(MediaPlayerDevice):
     """Representation of an universal media player."""
 
