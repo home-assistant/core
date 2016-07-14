@@ -10,7 +10,7 @@ from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import ToggleEntity
 
-REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.6']
+REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
