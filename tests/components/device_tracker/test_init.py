@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
+import tempfile
 
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -44,6 +45,18 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_NOT_HOME)
 
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
+
+    def test_reading_broken_yaml_config(self):
+        """Test when known devices contains invalid data."""
+        with tempfile.NamedTemporaryFile() as fp:
+            # file is empty
+            assert device_tracker.load_config(fp.name, None, False, 0) == []
+
+            fp.write('100'.encode('utf-8'))
+            fp.flush()
+
+            # file contains a non-dict format
+            assert device_tracker.load_config(fp.name, None, False, 0) == []
 
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
