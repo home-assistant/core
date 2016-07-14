@@ -30,9 +30,6 @@ apcaccess==0.0.4
 # homeassistant.components.sun
 astral==1.2
 
-# homeassistant.components.sensor.swiss_hydrological_data
-beautifulsoup4==4.4.1
-
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
 
@@ -440,8 +437,9 @@ websocket-client==0.37.0
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
 
+# homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.yr
-xmltodict
+xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
 yahooweather==0.4
