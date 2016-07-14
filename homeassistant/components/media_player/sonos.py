@@ -321,7 +321,7 @@ class SonosDevice(MediaPlayerDevice):
             return SUPPORT_SOURCE_LINEIN
         if self._player.is_playing_tv:
             return SUPPORT_SOURCE_TV
-        if self.is_playing_radio:
+        if self._player.is_playing_radio:
             return SUPPORT_SOURCE_RADIO
         return None
 
