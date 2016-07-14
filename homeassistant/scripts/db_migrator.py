@@ -4,8 +4,13 @@ import argparse
 import os.path
 import sqlite3
 import sys
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+try:
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+except ImportError:
+    print('Fatal Error: SQLAlchemy is missing. Install it with '
+          '"pip3 install SQLAlchemy" before running this script')
+    sys.exit(1)
 from homeassistant.components.recorder import models
 import homeassistant.config as config_util
 import homeassistant.util.dt as dt_util
