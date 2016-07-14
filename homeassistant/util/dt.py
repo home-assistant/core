@@ -92,8 +92,7 @@ def start_of_local_day(dt_or_d=None):
     elif isinstance(dt_or_d, dt.datetime):
         dt_or_d = dt_or_d.date()
 
-    return dt.datetime.combine(dt_or_d, dt.time()).replace(
-        tzinfo=DEFAULT_TIME_ZONE)
+    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(dt_or_d, dt.time()))
 
 
 # Copyright (c) Django Software Foundation and individual contributors.

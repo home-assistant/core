@@ -94,6 +94,7 @@ class LogbookView(HomeAssistantView):
         else:
             start_day = dt_util.start_of_local_day()
 
+        start_day = dt_util.as_utc(start_day)
         end_day = start_day + timedelta(days=1)
 
         events = recorder.get_model('Events')
