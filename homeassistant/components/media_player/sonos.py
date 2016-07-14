@@ -41,6 +41,7 @@ SERVICE_RESTORE = 'sonos_restore'
 
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
+SUPPORT_SOURCE_RADIO = 'Radio'
 
 
 # pylint: disable=unused-argument, too-many-locals
@@ -309,6 +310,7 @@ class SonosDevice(MediaPlayerDevice):
         # generate list of supported device
         source.append(SUPPORT_SOURCE_LINEIN)
         source.append(SUPPORT_SOURCE_TV)
+        source.append(SUPPORT_SOURCE_RADIO)
 
         return source
 
@@ -319,6 +321,8 @@ class SonosDevice(MediaPlayerDevice):
             return SUPPORT_SOURCE_LINEIN
         if self._player.is_playing_tv:
             return SUPPORT_SOURCE_TV
+        if self.is_playing_radio:
+            return SUPPORT_SOURCE_RADIO
         return None
 
     @only_if_coordinator
