@@ -214,12 +214,12 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self.tracks[self._cur_track][1]
+        return self.tracks[self._cur_track][1] if len(self.tracks) > 0 else ""
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.tracks[self._cur_track][0]
+        return self.tracks[self._cur_track][0] if len(self.tracks) > 0 else ""
 
     @property
     def media_album_name(self):
@@ -260,6 +260,9 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     def clear_playlist(self):
         """Clear players playlist."""
         self.tracks = []
+        self._cur_track = 0
+        self._player_state = STATE_OFF
+        self.update_ha_state()
 
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
