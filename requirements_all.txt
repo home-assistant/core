@@ -317,6 +317,9 @@ python-forecastio==1.3.4
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
 
+# homeassistant.components.switch.mystrom
+python-mystrom==0.3.6
+
 # homeassistant.components.nest
 python-nest==2.9.2
 
