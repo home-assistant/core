@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT, ATTR_STATE,
+    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT,
     CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES, ATTR_ENTITY_ID)
 
 DEPENDENCIES = ['rfxtrx']
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     data_types = [data_type]
                     break
         for _data_type in data_types:
-            new_sensor = RfxtrxSensor(event, entity_info[ATTR_NAME],
+            new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
                                       _data_type, entity_info[ATTR_FIREEVENT])
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
@@ -73,7 +73,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                         "signal_received", {
                             ATTR_ENTITY_ID:
                                 sensors[key].entity_id,
-                            ATTR_STATE: event.values[sensor.data_type],
                         }
                     )
 

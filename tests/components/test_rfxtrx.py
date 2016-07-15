@@ -112,3 +112,37 @@ class TestRFXTRX(unittest.TestCase):
         self.assertEqual(1, len(calls))
         self.assertEqual(calls[0].data,
                          {'entity_id': 'switch.test', 'state': 'on'})
+
+    def test_fire_event_sensor(self):
+        """Test fire event."""
+        self.assertTrue(_setup_component(self.hass, 'rfxtrx', {
+            'rfxtrx': {
+                'device': '/dev/serial/by-id/usb' +
+                          '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
+                'dummy': True}
+        }))
+        self.assertTrue(_setup_component(self.hass, 'sensor', {
+            'sensor': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {'0a520802060100ff0e0269': {
+                               'name': 'Test',
+                               rfxtrx.ATTR_FIREEVENT: True}
+                            }}}))
+
+        calls = []
+
+        def record_event(event):
+            """Add recorded event to set."""
+            calls.append(event)
+
+        self.hass.bus.listen("signal_received", record_event)
+        event = rfxtrx.get_rfx_object('0a520802060101ff0f0269')
+        event.data = bytearray(b'\nR\x08\x01\x07\x01\x00\xb8\x1b\x02y')
+        rfxtrx.RECEIVED_EVT_SUBSCRIBERS[0](event)
+
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(rfxtrx.RFX_DEVICES))
+        self.assertEqual(1, len(calls))
+        self.assertEqual(calls[0].data,
+                         {'entity_id': 'sensor.test'})
