@@ -11,7 +11,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, DOMAIN, BaseNotificationService)
+    ATTR_TITLE, ATTR_DATA, ATTR_LONGITUDE, ATTR_LATITUDE, 
+    DOMAIN, BaseNotificationService)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 
@@ -26,6 +27,7 @@ ATTR_CAPTION = "caption"
 ATTR_USERNAME = "username"
 ATTR_PASSWORD = "password"
 
+ATTR_LOCATION = "location"
 
 def get_service(hass, config):
     """Get the Telegram notification service."""
@@ -111,4 +113,27 @@ class TelegramNotificationService(BaseNotificationService):
             except (OSError, IOError, telegram.error.TelegramError,
                     urllib.error.HTTPError):
                 _LOGGER.exception("Error sending photo.")
+                return
+
+         # send location 
+         if ATTR_LOCATION in data:
+         	location_entity = data[ATTR_LOCATION]
+
+            try:
+                for location_data in location:
+
+                	if ATTR_LONGITUDE in location_data and\
+                	   ATTR_LATITUDE in location_data:
+                	   latitude = location_data[ATTR_LATITUDE]
+                	   longitude = location_data[ATTR_LATITUDE]
+                	else:
+                		_LOGGER.error("Longitude and Latitude not set for location!")
+                        continue
+
+                    self.bot.sendPhoto(chat_id=self._chat_id,
+                                       latitude=latitude, longitude=longitude)
+
+            except (OSError, IOError, telegram.error.TelegramError,
+                    urllib.error.HTTPError):
+                _LOGGER.exception("Error sending location.")
                 return
