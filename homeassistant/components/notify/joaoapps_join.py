@@ -2,7 +2,7 @@
 Join platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.Join/
+https://home-assistant.io/components/notify.join/
 """
 import logging
 import voluptuous as vol

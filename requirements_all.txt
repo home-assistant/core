@@ -30,9 +30,6 @@ apcaccess==0.0.4
 # homeassistant.components.sun
 astral==1.2
 
-# homeassistant.components.sensor.swiss_hydrological_data
-beautifulsoup4==4.4.1
-
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.7
 
@@ -240,7 +237,7 @@ psutil==4.3.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-pubnub==3.7.6
+pubnub==3.8.2
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
@@ -280,7 +277,7 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.8
+pyhomematic==0.1.9
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.8.3
@@ -289,7 +286,7 @@ pyicloud==0.8.3
 pylast==1.6.0
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.13
+pyloopenergy==0.0.14
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
@@ -320,6 +317,9 @@ python-forecastio==1.3.4
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
 
+# homeassistant.components.switch.mystrom
+python-mystrom==0.3.6
+
 # homeassistant.components.nest
 python-nest==2.9.2
 
@@ -343,7 +343,7 @@ python-twitch==1.2.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.8
+python-wink==0.7.10
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
@@ -440,8 +440,9 @@ websocket-client==0.37.0
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
 
+# homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.yr
-xmltodict
+xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
 yahooweather==0.4
