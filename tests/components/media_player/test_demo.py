@@ -38,6 +38,17 @@ class TestDemoMediaPlayer(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         assert 'xbox' == state.attributes.get('source')
 
+    def test_clear_playlist(self):
+        """Test clear playlist."""
+        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        state = self.hass.states.get(entity_id)
+        assert 1 < len(state.attributes.get('tracks'))
+
+        mp.clear_playlist(self.hass, entity_id)
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get(entity_id)
+        assert 0 == len(state.attributes.get('tracks'))
+
     def test_volume_services(self):
         """Test the volume service."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
