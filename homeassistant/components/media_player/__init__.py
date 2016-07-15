@@ -31,6 +31,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
+SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -75,6 +76,7 @@ SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
+SUPPORT_CLEAR_PLAYLIST = 8192
 
 # simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
@@ -89,7 +91,8 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_SELECT_SOURCE: 'select_source'
+    SERVICE_SELECT_SOURCE: 'select_source',
+    SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
 }
 
 ATTR_TO_PROPERTY = [
@@ -270,6 +273,12 @@ def select_source(hass, source, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
+
+
+def clear_playlist(hass, entity_id=None):
+    """Send the media player the command for clear playlist."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
 
 def setup(hass, config):
@@ -542,6 +551,10 @@ class MediaPlayerDevice(Entity):
         """Select input source."""
         raise NotImplementedError()
 
+    def clear_playlist(self):
+        """Clear players playlist."""
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -587,6 +600,11 @@ class MediaPlayerDevice(Entity):
     def support_select_source(self):
         """Boolean if select source command supported."""
         return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
+
+    @property
+    def support_clear_playlist(self):
+        """Boolean if clear playlist command supported."""
+        return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
 
     def toggle(self):
         """Toggle the power on the media player."""

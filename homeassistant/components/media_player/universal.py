@@ -17,8 +17,9 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, ATTR_INPUT_SOURCE,
-    SERVICE_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
+    ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE, SERVICE_CLEAR_PLAYLIST,
+    MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
@@ -349,6 +350,9 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if SERVICE_SELECT_SOURCE in self._cmds:
             flags |= SUPPORT_SELECT_SOURCE
 
+        if SERVICE_CLEAR_PLAYLIST in self._cmds:
+            flags |= SUPPORT_CLEAR_PLAYLIST
+
         return flags
 
     @property
@@ -423,6 +427,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
         self._call_service(SERVICE_SELECT_SOURCE, data)
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self._call_service(SERVICE_CLEAR_PLAYLIST)
 
     def update(self):
         """Update state in HA."""
