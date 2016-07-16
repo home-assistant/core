@@ -1,8 +1,12 @@
 """Setup some common test helper things."""
 import functools
+import logging
 
 from homeassistant import util
 from homeassistant.util import location
+
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 def test_real(func):

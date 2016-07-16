@@ -3,6 +3,7 @@ source = homeassistant
 
 omit =
     homeassistant/__main__.py
+    homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
@@ -87,8 +88,13 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/knx.py
+    homeassistant/components/switch/knx.py
+    homeassistant/components/binary_sensor/knx.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
+    homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
@@ -120,6 +126,7 @@ omit =
     homeassistant/components/garage_door/rpi_gpio.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
+    homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/hue.py
@@ -156,6 +163,7 @@ omit =
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/googlevoice.py
     homeassistant/components/notify/instapush.py
+    homeassistant/components/notify/joaoapps_join.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
@@ -185,6 +193,7 @@ omit =
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gtfs.py
+    homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/neurio_energy.py
@@ -209,6 +218,7 @@ omit =
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/worldclock.py
+    homeassistant/components/sensor/yweather.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/arest.py
     homeassistant/components/switch/dlink.py
@@ -220,6 +230,7 @@ omit =
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
+    homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thermostat/eq3btsmart.py

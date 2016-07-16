@@ -4,70 +4,119 @@ Support for Homematic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
+import os
 import time
 import logging
 from functools import partial
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN
-from homeassistant.helpers import discovery
+import voluptuous as vol
+
+from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN,
+                                 CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import discovery
+from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ['pyhomematic==0.1.8']
+REQUIREMENTS = ["pyhomematic==0.1.9"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
 
-DISCOVER_SWITCHES = "homematic.switch"
-DISCOVER_LIGHTS = "homematic.light"
-DISCOVER_SENSORS = "homematic.sensor"
-DISCOVER_BINARY_SENSORS = "homematic.binary_sensor"
-DISCOVER_ROLLERSHUTTER = "homematic.rollershutter"
-DISCOVER_THERMOSTATS = "homematic.thermostat"
+DISCOVER_SWITCHES = 'homematic.switch'
+DISCOVER_LIGHTS = 'homematic.light'
+DISCOVER_SENSORS = 'homematic.sensor'
+DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
+DISCOVER_ROLLERSHUTTER = 'homematic.rollershutter'
+DISCOVER_THERMOSTATS = 'homematic.thermostat'
 
-ATTR_DISCOVER_DEVICES = "devices"
-ATTR_PARAM = "param"
-ATTR_CHANNEL = "channel"
-ATTR_NAME = "name"
-ATTR_ADDRESS = "address"
+ATTR_DISCOVER_DEVICES = 'devices'
+ATTR_PARAM = 'param'
+ATTR_CHANNEL = 'channel'
+ATTR_NAME = 'name'
+ATTR_ADDRESS = 'address'
 
-EVENT_KEYPRESS = "homematic.keypress"
+EVENT_KEYPRESS = 'homematic.keypress'
+EVENT_IMPULSE = 'homematic.impulse'
+
+SERVICE_VIRTUALKEY = 'virtualkey'
 
 HM_DEVICE_TYPES = {
-    DISCOVER_SWITCHES: ["Switch", "SwitchPowermeter"],
-    DISCOVER_LIGHTS: ["Dimmer"],
-    DISCOVER_SENSORS: ["SwitchPowermeter", "Motion", "MotionV2",
-                       "RemoteMotion", "ThermostatWall", "AreaThermostat",
-                       "RotaryHandleSensor", "WaterSensor"],
-    DISCOVER_THERMOSTATS: ["Thermostat", "ThermostatWall", "MAXThermostat"],
-    DISCOVER_BINARY_SENSORS: ["ShutterContact", "Smoke", "SmokeV2",
-                              "Motion", "MotionV2", "RemoteMotion"],
-    DISCOVER_ROLLERSHUTTER: ["Blind"]
+    DISCOVER_SWITCHES: ['Switch', 'SwitchPowermeter'],
+    DISCOVER_LIGHTS: ['Dimmer'],
+    DISCOVER_SENSORS: ['SwitchPowermeter', 'Motion', 'MotionV2',
+                       'RemoteMotion', 'ThermostatWall', 'AreaThermostat',
+                       'RotaryHandleSensor', 'WaterSensor', 'PowermeterGas',
+                       'LuxSensor'],
+    DISCOVER_THERMOSTATS: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
+    DISCOVER_BINARY_SENSORS: ['ShutterContact', 'Smoke', 'SmokeV2', 'Motion',
+                              'MotionV2', 'RemoteMotion'],
+    DISCOVER_ROLLERSHUTTER: ['Blind']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
-    "ACTUAL_TEMPERATURE"
+    'ACTUAL_TEMPERATURE'
 ]
 
 HM_ATTRIBUTE_SUPPORT = {
-    "LOWBAT": ["Battery", {0: "High", 1: "Low"}],
-    "ERROR": ["Sabotage", {0: "No", 1: "Yes"}],
-    "RSSI_DEVICE": ["RSSI", {}],
-    "VALVE_STATE": ["Valve", {}],
-    "BATTERY_STATE": ["Battery", {}],
-    "CONTROL_MODE": ["Mode", {0: "Auto", 1: "Manual", 2: "Away", 3: "Boost"}],
-    "POWER": ["Power", {}],
-    "CURRENT": ["Current", {}],
-    "VOLTAGE": ["Voltage", {}]
+    'LOWBAT': ['Battery', {0: 'High', 1: 'Low'}],
+    'ERROR': ['Sabotage', {0: 'No', 1: 'Yes'}],
+    'RSSI_DEVICE': ['RSSI', {}],
+    'VALVE_STATE': ['Valve', {}],
+    'BATTERY_STATE': ['Battery', {}],
+    'CONTROL_MODE': ['Mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
+    'POWER': ['Power', {}],
+    'CURRENT': ['Current', {}],
+    'VOLTAGE': ['Voltage', {}]
 }
 
 HM_PRESS_EVENTS = [
-    "PRESS_SHORT",
-    "PRESS_LONG",
-    "PRESS_CONT",
-    "PRESS_LONG_RELEASE"
+    'PRESS_SHORT',
+    'PRESS_LONG',
+    'PRESS_CONT',
+    'PRESS_LONG_RELEASE'
+]
+
+HM_IMPULSE_EVENTS = [
+    'SEQUENCE_OK'
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_RESOLVENAMES_OPTIONS = [
+    'metadata',
+    'json',
+    'xml',
+    False
+]
+
+CONF_LOCAL_IP = 'local_ip'
+CONF_LOCAL_PORT = 'local_port'
+CONF_REMOTE_IP = 'remote_ip'
+CONF_REMOTE_PORT = 'remote_port'
+CONF_RESOLVENAMES = 'resolvenames'
+CONF_DELAY = 'delay'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_LOCAL_IP): vol.Coerce(str),
+    vol.Optional(CONF_LOCAL_PORT, default=8943):
+        vol.All(vol.Coerce(int),
+                vol.Range(min=1, max=65535)),
+    vol.Required(CONF_REMOTE_IP): vol.Coerce(str),
+    vol.Optional(CONF_REMOTE_PORT, default=2001):
+        vol.All(vol.Coerce(int),
+                vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_RESOLVENAMES, default=False):
+        vol.In(CONF_RESOLVENAMES_OPTIONS),
+    vol.Optional(CONF_USERNAME, default="Admin"): vol.Coerce(str),
+    vol.Optional(CONF_PASSWORD, default=""): vol.Coerce(str),
+    vol.Optional(CONF_DELAY, default=0.5): vol.Coerce(float)
+})
+
+SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
+    vol.Required(ATTR_ADDRESS): vol.Coerce(str),
+    vol.Required(ATTR_CHANNEL): vol.Coerce(int),
+    vol.Required(ATTR_PARAM): vol.Coerce(str)
+})
 
 
 # pylint: disable=unused-argument
@@ -77,14 +126,14 @@ def setup(hass, config):
 
     from pyhomematic import HMConnection
 
-    local_ip = config[DOMAIN].get("local_ip", None)
-    local_port = config[DOMAIN].get("local_port", 8943)
-    remote_ip = config[DOMAIN].get("remote_ip", None)
-    remote_port = config[DOMAIN].get("remote_port", 2001)
-    resolvenames = config[DOMAIN].get("resolvenames", False)
-    username = config[DOMAIN].get("username", "Admin")
-    password = config[DOMAIN].get("password", "")
-    HOMEMATIC_LINK_DELAY = config[DOMAIN].get("delay", 0.5)
+    local_ip = config[DOMAIN][0].get(CONF_LOCAL_IP)
+    local_port = config[DOMAIN][0].get(CONF_LOCAL_PORT)
+    remote_ip = config[DOMAIN][0].get(CONF_REMOTE_IP)
+    remote_port = config[DOMAIN][0].get(CONF_REMOTE_PORT)
+    resolvenames = config[DOMAIN][0].get(CONF_RESOLVENAMES)
+    username = config[DOMAIN][0].get(CONF_USERNAME)
+    password = config[DOMAIN][0].get(CONF_PASSWORD)
+    HOMEMATIC_LINK_DELAY = config[DOMAIN][0].get(CONF_DELAY)
 
     if remote_ip is None or local_ip is None:
         _LOGGER.error("Missing remote CCU/Homegear or local address")
@@ -108,6 +157,15 @@ def setup(hass, config):
     # Stops server when Homeassistant is shutting down
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, HOMEMATIC.stop)
     hass.config.components.append(DOMAIN)
+
+    # regeister homematic services
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.register(DOMAIN, SERVICE_VIRTUALKEY,
+                           _hm_service_virtualkey,
+                           descriptions[DOMAIN][SERVICE_VIRTUALKEY],
+                           SCHEMA_SERVICE_VIRTUALKEY)
 
     return True
 
@@ -302,7 +360,7 @@ def _hm_event_handler(hass, device, caller, attribute, value):
     _LOGGER.debug("Event %s for %s channel %i", attribute,
                   hmdevice.NAME, channel)
 
-    # a keypress event
+    # keypress event
     if attribute in HM_PRESS_EVENTS:
         hass.bus.fire(EVENT_KEYPRESS, {
             ATTR_NAME: hmdevice.NAME,
@@ -311,7 +369,40 @@ def _hm_event_handler(hass, device, caller, attribute, value):
         })
         return
 
+    # impulse event
+    if attribute in HM_IMPULSE_EVENTS:
+        hass.bus.fire(EVENT_KEYPRESS, {
+            ATTR_NAME: hmdevice.NAME,
+            ATTR_CHANNEL: channel
+        })
+        return
+
     _LOGGER.warning("Event is unknown and not forwarded to HA")
+
+
+def _hm_service_virtualkey(call):
+    """Callback for handle virtualkey services."""
+    address = call.data.get(ATTR_ADDRESS)
+    channel = call.data.get(ATTR_CHANNEL)
+    param = call.data.get(ATTR_PARAM)
+
+    if address not in HOMEMATIC.devices:
+        _LOGGER.error("%s not found for service virtualkey!", address)
+        return
+    hmdevice = HOMEMATIC.devices.get(address)
+
+    # if param exists for this device
+    if param not in hmdevice.ACTIONNODE:
+        _LOGGER.error("%s not datapoint in hm device %s", param, address)
+        return
+
+    # channel exists?
+    if channel > hmdevice.ELEMENT:
+        _LOGGER.error("%i is not a channel in hm device %s", channel, address)
+        return
+
+    # call key
+    hmdevice.actionNodeData(param, 1, channel)
 
 
 class HMDevice(Entity):
@@ -465,7 +556,7 @@ class HMDevice(Entity):
                         channel = self._channel
                     # Prepare for subscription
                     try:
-                        if int(channel) > 0:
+                        if int(channel) >= 0:
                             channels_to_sub.update({int(channel): True})
                     except (ValueError, TypeError):
                         _LOGGER("Invalid channel in metadata from %s",
