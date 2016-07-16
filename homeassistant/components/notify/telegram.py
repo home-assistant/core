@@ -48,20 +48,6 @@ def get_service(hass, config):
 
     return TelegramNotificationService(config[CONF_API_KEY], config['chat_id'])
 
-
-# pylint: disable=too-few-public-methods
-class TelegramNotificationService(BaseNotificationService):
-    """Implement the notification service for Telegram."""
-
-    def __init__(self, api_key, chat_id):
-        """Initialize the service."""
-        import telegram
-
-        self._api_key = api_key
-        self._chat_id = chat_id
-        self.bot = telegram.Bot(token=self._api_key)
-
-
 # pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
