@@ -9,7 +9,8 @@ import logging
 from urllib.error import URLError
 
 from homeassistant.components.thermostat import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
+    ThermostatDevice)
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
 
 REQUIREMENTS = ['radiotherm==1.2']
@@ -122,3 +123,14 @@ class RadioThermostat(ThermostatDevice):
         now = datetime.datetime.now()
         self.device.time = {'day': now.weekday(),
                             'hour': now.hour, 'minute': now.minute}
+
+    def set_hvac_mode(self, mode):
+        """Set HVAC mode (auto, cool, heat, off)."""
+        if mode == STATE_OFF:
+            self.device.tmode = 0
+        elif mode == STATE_AUTO:
+            self.device.tmode = 3
+        elif mode == STATE_COOL:
+            self.device.t_cool = self._target_temperature
+        elif mode == STATE_HEAT:
+            self.device.t_heat = self._target_temperature

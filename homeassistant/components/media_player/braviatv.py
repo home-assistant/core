@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.2.zip'
-    '#braviarc==0.3.2']
+    'https://github.com/aparraga/braviarc/archive/0.3.3.zip'
+    '#braviarc==0.3.3']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
@@ -220,20 +220,24 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._refresh_volume()
                 self._refresh_channels()
 
-            playing_info = self._braviarc.get_playing_info()
-            if playing_info is None or len(playing_info) == 0:
-                self._state = STATE_OFF
-            else:
+            power_status = self._braviarc.get_power_status()
+            if power_status == 'active':
                 self._state = STATE_ON
-                self._program_name = playing_info.get('programTitle')
-                self._channel_name = playing_info.get('title')
-                self._program_media_type = playing_info.get(
-                    'programMediaType')
-                self._channel_number = playing_info.get('dispNum')
-                self._source = playing_info.get('source')
-                self._content_uri = playing_info.get('uri')
-                self._duration = playing_info.get('durationSec')
-                self._start_date_time = playing_info.get('startDateTime')
+                playing_info = self._braviarc.get_playing_info()
+                if playing_info is None or len(playing_info) == 0:
+                    self._channel_name = 'App'
+                else:
+                    self._program_name = playing_info.get('programTitle')
+                    self._channel_name = playing_info.get('title')
+                    self._program_media_type = playing_info.get(
+                        'programMediaType')
+                    self._channel_number = playing_info.get('dispNum')
+                    self._source = playing_info.get('source')
+                    self._content_uri = playing_info.get('uri')
+                    self._duration = playing_info.get('durationSec')
+                    self._start_date_time = playing_info.get('startDateTime')
+            else:
+                self._state = STATE_OFF
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)

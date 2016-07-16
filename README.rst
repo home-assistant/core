@@ -18,7 +18,7 @@ tutorials and documentation.
 
 |screenshot-states|
 
-Examples of devices it can interface it:
+Examples of devices Home Assistant can interface with:
 
 -  Monitoring connected devices to a wireless router:
    `OpenWrt <https://openwrt.org/>`__,
@@ -61,11 +61,11 @@ Examples of devices it can interface it:
 -  `See full list of supported
    devices <https://home-assistant.io/components/>`__
 
-Built home automation on top of your devices:
+Build home automation on top of your devices:
 
 -  Keep a precise history of every change to the state of your house
--  Turn on the lights when people get home after sun set
--  Turn on lights slowly during sun set to compensate for less light
+-  Turn on the lights when people get home after sunset
+-  Turn on lights slowly during sunset to compensate for less light
 -  Turn off all lights and devices when everybody leaves the house
 -  Offers a `REST API <https://home-assistant.io/developers/api/>`__
    and can interface with MQTT for easy integration with other projects
@@ -75,10 +75,10 @@ Built home automation on top of your devices:
    (NMA) <http://www.notifymyandroid.com/>`__,
    `PushBullet <https://www.pushbullet.com/>`__,
    `PushOver <https://pushover.net/>`__, `Slack <https://slack.com/>`__,
-   `Telegram <https://telegram.org/>`__, and `Jabber
+   `Telegram <https://telegram.org/>`__, `Join <http://joaoapps.com/join/>`__, and `Jabber
    (XMPP) <http://xmpp.org>`__
 
-The system is built modular so support for other devices or actions can
+The system is built using a modular approach so support for other devices or actions can
 be implemented easily. See also the `section on
 architecture <https://home-assistant.io/developers/architecture/>`__
 and the `section on creating your own

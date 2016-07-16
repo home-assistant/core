@@ -18,8 +18,7 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-
-REQUIREMENTS = ['xmltodict']
+REQUIREMENTS = ['xmltodict==0.10.2']
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {

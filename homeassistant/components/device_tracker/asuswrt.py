@@ -62,8 +62,9 @@ def get_scanner(hass, config):
                            _LOGGER):
         return None
     elif CONF_PASSWORD not in config[DOMAIN] and \
+            'ssh_key' not in config[DOMAIN] and \
             'pub_key' not in config[DOMAIN]:
-        _LOGGER.error("Either a public key or password must be provided")
+        _LOGGER.error('Either a private key or password must be provided')
         return None
 
     scanner = AsusWrtDeviceScanner(config[DOMAIN])
@@ -83,8 +84,8 @@ class AsusWrtDeviceScanner(object):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.username = str(config[CONF_USERNAME])
-        self.password = str(config.get(CONF_PASSWORD, ""))
-        self.pub_key = str(config.get('pub_key', ""))
+        self.password = str(config.get(CONF_PASSWORD, ''))
+        self.ssh_key = str(config.get('ssh_key', config.get('pub_key', '')))
         self.protocol = config.get('protocol')
         self.mode = config.get('mode')
 
@@ -120,7 +121,7 @@ class AsusWrtDeviceScanner(object):
             return False
 
         with self.lock:
-            _LOGGER.info("Checking ARP")
+            _LOGGER.info('Checking ARP')
             data = self.get_asuswrt_data()
             if not data:
                 return False
@@ -138,12 +139,12 @@ class AsusWrtDeviceScanner(object):
 
         try:
             ssh = pxssh.pxssh()
-            if self.pub_key:
-                ssh.login(self.host, self.username, ssh_key=self.pub_key)
+            if self.ssh_key:
+                ssh.login(self.host, self.username, ssh_key=self.ssh_key)
             elif self.password:
                 ssh.login(self.host, self.username, self.password)
             else:
-                _LOGGER.error('No password or public key specified')
+                _LOGGER.error('No password or private key specified')
                 return None
             ssh.sendline(_IP_NEIGH_CMD)
             ssh.prompt()
@@ -195,16 +196,16 @@ class AsusWrtDeviceScanner(object):
             telnet.write('exit\n'.encode('ascii'))
             return AsusWrtResult(neighbors, leases_result, arp_result)
         except EOFError:
-            _LOGGER.error("Unexpected response from router")
+            _LOGGER.error('Unexpected response from router')
             return None
         except ConnectionRefusedError:
-            _LOGGER.error("Connection refused by router, is telnet enabled?")
+            _LOGGER.error('Connection refused by router, is telnet enabled?')
             return None
         except socket.gaierror as exc:
-            _LOGGER.error("Socket exception: %s", exc)
+            _LOGGER.error('Socket exception: %s', exc)
             return None
         except OSError as exc:
-            _LOGGER.error("OSError: %s", exc)
+            _LOGGER.error('OSError: %s', exc)
             return None
 
     def get_asuswrt_data(self):
@@ -232,7 +233,7 @@ class AsusWrtDeviceScanner(object):
                 match = _WL_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
-                    _LOGGER.warning("Could not parse wl row: %s", lease)
+                    _LOGGER.warning('Could not parse wl row: %s', lease)
                     continue
 
                 host = ''
@@ -242,7 +243,7 @@ class AsusWrtDeviceScanner(object):
                     if match.group('mac').lower() in arp.decode('utf-8'):
                         arp_match = _ARP_REGEX.search(arp.decode('utf-8'))
                         if not arp_match:
-                            _LOGGER.warning("Could not parse arp row: %s", arp)
+                            _LOGGER.warning('Could not parse arp row: %s', arp)
                             continue
 
                         devices[arp_match.group('ip')] = {
@@ -256,7 +257,7 @@ class AsusWrtDeviceScanner(object):
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
-                    _LOGGER.warning("Could not parse lease row: %s", lease)
+                    _LOGGER.warning('Could not parse lease row: %s', lease)
                     continue
 
                 # For leases where the client doesn't set a hostname, ensure it
@@ -275,7 +276,7 @@ class AsusWrtDeviceScanner(object):
         for neighbor in result.neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
             if not match:
-                _LOGGER.warning("Could not parse neighbor row: %s", neighbor)
+                _LOGGER.warning('Could not parse neighbor row: %s', neighbor)
                 continue
             if match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')
