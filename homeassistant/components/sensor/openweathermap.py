@@ -127,9 +127,9 @@ class OpenWeatherMapSensor(Entity):
             else:
                 self._state = round(data.get_temperature()['temp'], 1)
         elif self.type == 'wind_speed':
-            self._state = data.get_wind()['speed']
+            self._state = round(data.get_wind()['speed'], 1)
         elif self.type == 'humidity':
-            self._state = data.get_humidity()
+            self._state = round(data.get_humidity(), 1)
         elif self.type == 'pressure':
             self._state = round(data.get_pressure()['press'], 0)
         elif self.type == 'clouds':
