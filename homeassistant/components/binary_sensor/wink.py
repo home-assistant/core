@@ -5,12 +5,15 @@ For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.wink/
 """
 import logging
+import json
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
+from homeassistant.components.sensor.wink import WinkDevice
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
+from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.7']
+REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
@@ -22,7 +25,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Setup the Wink binary sensor platform."""
     import pywink
 
     if discovery_info is None:
@@ -40,16 +43,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.capability() in SENSOR_TYPES:
             add_devices([WinkBinarySensorDevice(sensor)])
 
+    for key in pywink.get_keys():
+        add_devices([WinkBinarySensorDevice(key)])
 
-class WinkBinarySensorDevice(BinarySensorDevice, Entity):
-    """Representation of a Wink sensor."""
+
+class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
+    """Representation of a Wink binary sensor."""
 
     def __init__(self, wink):
         """Initialize the Wink binary sensor."""
-        self.wink = wink
+        super().__init__(wink)
+        wink = get_component('wink')
         self._unit_of_measurement = self.wink.UNIT
-        self._battery = self.wink.battery_level
         self.capability = self.wink.capability()
+
+    def _pubnub_update(self, message, channel):
+        if 'data' in message:
+            json_data = json.dumps(message.get('data'))
+        else:
+            json_data = message
+        self.wink.pubnub_update(json.loads(json_data))
+        self.update_ha_state()
 
     @property
     def is_on(self):
@@ -67,35 +81,3 @@ class WinkBinarySensorDevice(BinarySensorDevice, Entity):
     def sensor_class(self):
         """Return the class of this sensor, from SENSOR_CLASSES."""
         return SENSOR_TYPES.get(self.capability)
-
-    @property
-    def unique_id(self):
-        """Return the ID of this wink sensor."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the sensor if any."""
-        return self.wink.name()
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
-
-    def update(self):
-        """Update state of the sensor."""
-        self.wink.update_state()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self._battery:
-            return {
-                ATTR_BATTERY_LEVEL: self._battery_level,
-            }
-
-    @property
-    def _battery_level(self):
-        """Return the battery level."""
-        return self.wink.battery_level * 100

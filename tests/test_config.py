@@ -22,6 +22,7 @@ from tests.common import (
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
+VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -40,6 +41,9 @@ class TestConfig(unittest.TestCase):
 
         if os.path.isfile(YAML_PATH):
             os.remove(YAML_PATH)
+
+        if os.path.isfile(VERSION_PATH):
+            os.remove(VERSION_PATH)
 
         if hasattr(self, 'hass'):
             self.hass.stop()

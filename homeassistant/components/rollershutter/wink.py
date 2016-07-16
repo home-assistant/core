@@ -7,9 +7,10 @@ https://home-assistant.io/components/rollershutter.wink/
 import logging
 
 from homeassistant.components.rollershutter import RollershutterDevice
+from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['python-wink==0.7.7']
+REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -31,37 +32,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pywink.get_shades())
 
 
-class WinkRollershutterDevice(RollershutterDevice):
+class WinkRollershutterDevice(WinkDevice, RollershutterDevice):
     """Representation of a Wink rollershutter (shades)."""
 
     def __init__(self, wink):
         """Initialize the rollershutter."""
-        self.wink = wink
-        self._battery = None
+        WinkDevice.__init__(self, wink)
 
     @property
     def should_poll(self):
         """Wink Shades don't track their position."""
         return False
-
-    @property
-    def unique_id(self):
-        """Return the ID of this wink rollershutter."""
-        return "{}.{}".format(self.__class__, self.wink.device_id())
-
-    @property
-    def name(self):
-        """Return the name of the rollershutter if any."""
-        return self.wink.name()
-
-    def update(self):
-        """Update the state of the rollershutter."""
-        return self.wink.update_state()
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
 
     def move_down(self):
         """Close the shade."""

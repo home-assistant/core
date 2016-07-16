@@ -34,6 +34,17 @@ class TestSwitchRfxtrx(unittest.TestCase):
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))
 
+    def test_valid_config_int_device_id(self):
+        """Test configuration."""
+        self.assertTrue(_setup_component(self.hass, 'switch', {
+            'switch': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {'710000141010170': {
+                               'name': 'Test',
+                               rfxtrx_core.ATTR_FIREEVENT: True}
+                            }}}))
+
     def test_invalid_config1(self):
         self.assertFalse(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',

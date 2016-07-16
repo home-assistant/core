@@ -13,19 +13,19 @@ import re
 import ssl
 import voluptuous as vol
 
-import homeassistant.core as ha
 import homeassistant.remote as rem
 from homeassistant import util
 from homeassistant.const import (
     SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
-    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS)
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.entity import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
-REQUIREMENTS = ("eventlet==0.19.0", "static3==0.7.0", "Werkzeug==0.11.10")
+REQUIREMENTS = ("cherrypy==6.0.2", "static3==0.7.0", "Werkzeug==0.11.10")
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -41,7 +41,9 @@ DATA_API_PASSWORD = 'api_password'
 # specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
-SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_COMPRESSION
+SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
+if hasattr(ssl, 'OP_NO_COMPRESSION'):
+    SSL_OPTS |= ssl.OP_NO_COMPRESSION
 CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
           "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
@@ -118,11 +120,17 @@ def setup(hass, config):
         cors_origins=cors_origins
     )
 
-    hass.bus.listen_once(
-        ha.EVENT_HOMEASSISTANT_START,
-        lambda event:
-        threading.Thread(target=server.start, daemon=True,
-                         name='WSGI-server').start())
+    def start_wsgi_server(event):
+        """Start the WSGI server."""
+        server.start()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_wsgi_server)
+
+    def stop_wsgi_server(event):
+        """Stop the WSGI server."""
+        server.stop()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wsgi_server)
 
     hass.wsgi = server
     hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
@@ -241,6 +249,7 @@ class HomeAssistantWSGI(object):
         self.server_port = server_port
         self.cors_origins = cors_origins
         self.event_forwarder = None
+        self.server = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -308,17 +317,34 @@ class HomeAssistantWSGI(object):
 
     def start(self):
         """Start the wsgi server."""
-        from eventlet import wsgi
-        import eventlet
+        from cherrypy import wsgiserver
+        from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 
-        sock = eventlet.listen((self.server_host, self.server_port))
+        # pylint: disable=too-few-public-methods,super-init-not-called
+        class ContextSSLAdapter(BuiltinSSLAdapter):
+            """SSL Adapter that takes in an SSL context."""
+
+            def __init__(self, context):
+                self.context = context
+
+        # pylint: disable=no-member
+        self.server = wsgiserver.CherryPyWSGIServer(
+            (self.server_host, self.server_port), self,
+            server_name='Home Assistant')
+
         if self.ssl_certificate:
             context = ssl.SSLContext(SSL_VERSION)
             context.options |= SSL_OPTS
             context.set_ciphers(CIPHERS)
             context.load_cert_chain(self.ssl_certificate, self.ssl_key)
-            sock = context.wrap_socket(sock, server_side=True)
-        wsgi.server(sock, self, log=_LOGGER)
+            self.server.ssl_adapter = ContextSSLAdapter(context)
+
+        threading.Thread(target=self.server.start, daemon=True,
+                         name='WSGI-server').start()
+
+    def stop(self):
+        """Stop the wsgi server."""
+        self.server.stop()
 
     def dispatch_request(self, request):
         """Handle incoming request."""
@@ -364,6 +390,10 @@ class HomeAssistantWSGI(object):
     def __call__(self, environ, start_response):
         """Handle a request for base app + extra apps."""
         from werkzeug.wsgi import DispatcherMiddleware
+
+        if not self.hass.is_running:
+            from werkzeug.exceptions import BadRequest
+            return BadRequest()(environ, start_response)
 
         app = DispatcherMiddleware(self.base_app, self.extra_apps)
         # Strip out any cachebusting MD5 fingerprints
