@@ -266,6 +266,10 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
+        if self._player.is_playing_line_in:
+            return SUPPORT_SOURCE_LINEIN
+        if self._player.is_playing_tv:
+            return SUPPORT_SOURCE_TV
         if 'artist' in self._trackinfo and 'title' in self._trackinfo:
             return '{artist} - {title}'.format(
                 artist=self._trackinfo['artist'],
@@ -273,10 +277,6 @@ class SonosDevice(MediaPlayerDevice):
             )
         if 'title' in self._status:
             return self._trackinfo['title']
-        if self._player.is_playing_line_in:
-            return SUPPORT_SOURCE_LINEIN
-        if self._player.is_playing_tv:
-            return SUPPORT_SOURCE_TV
 
     @property
     def supported_media_commands(self):
