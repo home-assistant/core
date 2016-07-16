@@ -10,14 +10,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
+
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['googlemaps==2.4.3']
+REQUIREMENTS = ['googlemaps==2.4.4']
 
 # Return cached results if last update was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -65,6 +69,8 @@ PLATFORM_SCHEMA = vol.Schema({
         }))
 })
 
+TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone"]
+
 
 def convert_time_to_utc(timestr):
     """Take a string like 08:00:00 and convert it to a unix timestamp."""
@@ -78,36 +84,44 @@ def convert_time_to_utc(timestr):
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the travel time platform."""
     # pylint: disable=too-many-locals
-    options = config.get(CONF_OPTIONS)
+    def run_setup(event):
+        """Delay the setup until home assistant is fully initialized.
 
-    if options.get('units') is None:
-        if hass.config.temperature_unit is TEMP_CELSIUS:
-            options['units'] = 'metric'
-        elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
-            options['units'] = 'imperial'
+        This allows any entities to be created already
+        """
+        options = config.get(CONF_OPTIONS)
 
-    travel_mode = config.get(CONF_TRAVEL_MODE)
-    mode = options.get(CONF_MODE)
+        if options.get('units') is None:
+            if hass.config.temperature_unit is TEMP_CELSIUS:
+                options['units'] = 'metric'
+            elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
+                options['units'] = 'imperial'
 
-    if travel_mode is not None:
-        wstr = ("Google Travel Time: travel_mode is deprecated, please add "
-                "mode to the options dictionary instead!")
-        _LOGGER.warning(wstr)
-        if mode is None:
-            options[CONF_MODE] = travel_mode
+        travel_mode = config.get(CONF_TRAVEL_MODE)
+        mode = options.get(CONF_MODE)
 
-    titled_mode = options.get(CONF_MODE).title()
-    formatted_name = "Google Travel Time - {}".format(titled_mode)
-    name = config.get(CONF_NAME, formatted_name)
-    api_key = config.get(CONF_API_KEY)
-    origin = config.get(CONF_ORIGIN)
-    destination = config.get(CONF_DESTINATION)
+        if travel_mode is not None:
+            wstr = ("Google Travel Time: travel_mode is deprecated, please "
+                    "add mode to the options dictionary instead!")
+            _LOGGER.warning(wstr)
+            if mode is None:
+                options[CONF_MODE] = travel_mode
 
-    sensor = GoogleTravelTimeSensor(name, api_key, origin, destination,
-                                    options)
+        titled_mode = options.get(CONF_MODE).title()
+        formatted_name = "Google Travel Time - {}".format(titled_mode)
+        name = config.get(CONF_NAME, formatted_name)
+        api_key = config.get(CONF_API_KEY)
+        origin = config.get(CONF_ORIGIN)
+        destination = config.get(CONF_DESTINATION)
 
-    if sensor.valid_api_connection:
-        add_devices_callback([sensor])
+        sensor = GoogleTravelTimeSensor(hass, name, api_key, origin,
+                                        destination, options)
+
+        if sensor.valid_api_connection:
+            add_devices_callback([sensor])
+
+    # Wait until start event is sent to load this component.
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -115,14 +129,24 @@ class GoogleTravelTimeSensor(Entity):
     """Representation of a tavel time sensor."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, name, api_key, origin, destination, options):
+    def __init__(self, hass, name, api_key, origin, destination, options):
         """Initialize the sensor."""
+        self._hass = hass
         self._name = name
         self._options = options
-        self._origin = origin
-        self._destination = destination
         self._matrix = None
         self.valid_api_connection = True
+
+        # Check if location is a trackable entity
+        if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._origin_entity_id = origin
+        else:
+            self._origin = origin
+
+        if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._destination_entity_id = destination
+        else:
+            self._destination = destination
 
         import googlemaps
         self._client = googlemaps.Client(api_key, timeout=10)
@@ -136,6 +160,9 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._matrix is None:
+            return None
+
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
             return round(_data['duration_in_traffic']['value']/60)
@@ -151,6 +178,9 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        if self._matrix is None:
+            return None
+
         res = self._matrix.copy()
         res.update(self._options)
         del res['rows']
@@ -186,6 +216,64 @@ class GoogleTravelTimeSensor(Entity):
         elif atime is not None:
             options_copy['arrival_time'] = atime
 
-        self._matrix = self._client.distance_matrix(self._origin,
-                                                    self._destination,
-                                                    **options_copy)
+        # Convert device_trackers to google friendly location
+        if hasattr(self, '_origin_entity_id'):
+            self._origin = self._get_location_from_entity(
+                self._origin_entity_id
+            )
+
+        if hasattr(self, '_destination_entity_id'):
+            self._destination = self._get_location_from_entity(
+                self._destination_entity_id
+            )
+
+        self._destination = self._resolve_zone(self._destination)
+        self._origin = self._resolve_zone(self._origin)
+
+        if self._destination is not None and self._origin is not None:
+            self._matrix = self._client.distance_matrix(self._origin,
+                                                        self._destination,
+                                                        **options_copy)
+
+    def _get_location_from_entity(self, entity_id):
+        """Get the location from the entity state or attributes."""
+        entity = self._hass.states.get(entity_id)
+
+        if entity is None:
+            _LOGGER.error("Unable to find entity %s", entity_id)
+            self.valid_api_connection = False
+            return None
+
+        # Check if device is in a zone
+        zone_entity = self._hass.states.get("zone.%s" % entity.state)
+        if location.has_location(zone_entity):
+            _LOGGER.debug(
+                "%s is in %s, getting zone location.",
+                entity_id, zone_entity.entity_id
+            )
+            return self._get_location_from_attributes(zone_entity)
+
+        # If zone was not found in state then use the state as the location
+        if entity_id.startswith("sensor."):
+            return entity.state
+
+        # For everything else look for location attributes
+        if location.has_location(entity):
+            return self._get_location_from_attributes(entity)
+
+        # When everything fails just return nothing
+        return None
+
+    @staticmethod
+    def _get_location_from_attributes(entity):
+        """Get the lat/long string from an entities attributes."""
+        attr = entity.attributes
+        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+
+    def _resolve_zone(self, friendly_name):
+        entities = self._hass.states.all()
+        for entity in entities:
+            if entity.domain == 'zone' and entity.name == friendly_name:
+                return self._get_location_from_attributes(entity)
+
+        return friendly_name

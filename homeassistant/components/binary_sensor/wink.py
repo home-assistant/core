@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.wink/
 """
 import logging
+import json
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.wink import WinkDevice
@@ -12,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.6']
+REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
@@ -24,7 +25,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Setup the Wink binary sensor platform."""
     import pywink
 
     if discovery_info is None:
@@ -42,9 +43,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.capability() in SENSOR_TYPES:
             add_devices([WinkBinarySensorDevice(sensor)])
 
+    for key in pywink.get_keys():
+        add_devices([WinkBinarySensorDevice(key)])
+
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
-    """Representation of a Wink sensor."""
+    """Representation of a Wink binary sensor."""
 
     def __init__(self, wink):
         """Initialize the Wink binary sensor."""
@@ -52,6 +56,14 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
         wink = get_component('wink')
         self._unit_of_measurement = self.wink.UNIT
         self.capability = self.wink.capability()
+
+    def _pubnub_update(self, message, channel):
+        if 'data' in message:
+            json_data = json.dumps(message.get('data'))
+        else:
+            json_data = message
+        self.wink.pubnub_update(json.loads(json_data))
+        self.update_ha_state()
 
     @property
     def is_on(self):

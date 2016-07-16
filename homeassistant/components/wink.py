@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.8', 'pubnub==3.7.6']
+REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
 
 SUBSCRIPTION_HANDLER = None
 CHANNELS = []
@@ -29,7 +29,8 @@ def setup(hass, config):
     from pubnub import Pubnub
     pywink.set_bearer_token(config[DOMAIN][CONF_ACCESS_TOKEN])
     global SUBSCRIPTION_HANDLER
-    SUBSCRIPTION_HANDLER = Pubnub("N/A", pywink.get_subscription_key())
+    SUBSCRIPTION_HANDLER = Pubnub("N/A", pywink.get_subscription_key(),
+                                  ssl_on=True)
     SUBSCRIPTION_HANDLER.set_heartbeat(120)
 
     # Load components for the devices in the Wink that we support
@@ -58,7 +59,7 @@ class WinkDevice(Entity):
         self.wink = wink
         self._battery = self.wink.battery_level
         if self.wink.pubnub_channel in CHANNELS:
-            pubnub = Pubnub("N/A", self.wink.pubnub_key)
+            pubnub = Pubnub("N/A", self.wink.pubnub_key, ssl_on=True)
             pubnub.set_heartbeat(120)
             pubnub.subscribe(self.wink.pubnub_channel,
                              self._pubnub_update,

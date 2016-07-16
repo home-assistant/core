@@ -44,12 +44,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
-        self.assertEqual(14.9, entity.state)
-        self.assertEqual({'Humidity status': 'normal', 'Temperature': 14.9,
-                          'Rssi numeric': 6, 'Humidity': 34,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2},
-                         entity.device_state_attributes)
+        self.assertEqual(None, entity.state)
 
     def test_one_sensor(self):
         """Test with 1 sensor."""
@@ -64,12 +59,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
-        self.assertEqual(14.9, entity.state)
-        self.assertEqual({'Humidity status': 'normal', 'Temperature': 14.9,
-                          'Rssi numeric': 6, 'Humidity': 34,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2},
-                         entity.device_state_attributes)
+        self.assertEqual(None, entity.state)
 
     def test_one_sensor_no_datatype(self):
         """Test with 1 sensor."""
@@ -83,12 +73,7 @@ class TestSensorRfxtrx(unittest.TestCase):
         entity = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']
         self.assertEqual('Test', entity.name)
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
-        self.assertEqual(14.9, entity.state)
-        self.assertEqual({'Humidity status': 'normal', 'Temperature': 14.9,
-                          'Rssi numeric': 6, 'Humidity': 34,
-                          'Battery numeric': 9,
-                          'Humidity status numeric': 2},
-                         entity.device_state_attributes)
+        self.assertEqual(None, entity.state)
 
     def test_several_sensors(self):
         """Test with 3 sensors."""
@@ -112,35 +97,16 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]['Temperature']
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 self.assertEqual('%', _entity_hum.unit_of_measurement)
-                self.assertEqual(14, _entity_hum.state)
-                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
-                                  'Humidity': 14, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6},
-                                 _entity_hum.device_state_attributes)
                 self.assertEqual('Bath', _entity_hum.__str__())
-
+                self.assertEqual(None, _entity_hum.state)
                 self.assertEqual(TEMP_CELSIUS,
                                  _entity_temp.unit_of_measurement)
-                self.assertEqual(25.5, _entity_temp.state)
-                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
-                                  'Humidity': 14, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6},
-                                 _entity_temp.device_state_attributes)
                 self.assertEqual('Bath', _entity_temp.__str__())
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-
+                self.assertEqual(None, entity.state)
                 self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
-                self.assertEqual(14.9, entity.state)
-                self.assertEqual({'Humidity status': 'normal',
-                                  'Temperature': 14.9,
-                                  'Rssi numeric': 6, 'Humidity': 34,
-                                  'Battery numeric': 9,
-                                  'Humidity status numeric': 2},
-                                 entity.device_state_attributes)
                 self.assertEqual('Test', entity.__str__())
 
         self.assertEqual(2, device_num)
@@ -252,35 +218,16 @@ class TestSensorRfxtrx(unittest.TestCase):
                 _entity_temp = rfxtrx_core.RFX_DEVICES[id]['Temperature']
                 _entity_hum = rfxtrx_core.RFX_DEVICES[id]['Humidity']
                 self.assertEqual('%', _entity_hum.unit_of_measurement)
-                self.assertEqual(14, _entity_hum.state)
-                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
-                                  'Humidity': 14, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6},
-                                 _entity_hum.device_state_attributes)
                 self.assertEqual('Bath', _entity_hum.__str__())
-
+                self.assertEqual(None, _entity_temp.state)
                 self.assertEqual(TEMP_CELSIUS,
                                  _entity_temp.unit_of_measurement)
-                self.assertEqual(25.5, _entity_temp.state)
-                self.assertEqual({'Battery numeric': 9, 'Temperature': 25.5,
-                                  'Humidity': 14, 'Humidity status': 'normal',
-                                  'Humidity status numeric': 2,
-                                  'Rssi numeric': 6},
-                                 _entity_temp.device_state_attributes)
                 self.assertEqual('Bath', _entity_temp.__str__())
             elif id == 'sensor_0502':
                 device_num = device_num + 1
                 entity = rfxtrx_core.RFX_DEVICES[id]['Temperature']
-
+                self.assertEqual(None, entity.state)
                 self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
-                self.assertEqual(14.9, entity.state)
-                self.assertEqual({'Humidity status': 'normal',
-                                  'Temperature': 14.9,
-                                  'Rssi numeric': 6, 'Humidity': 34,
-                                  'Battery numeric': 9,
-                                  'Humidity status numeric': 2},
-                                 entity.device_state_attributes)
                 self.assertEqual('Test', entity.__str__())
 
         self.assertEqual(2, device_num)

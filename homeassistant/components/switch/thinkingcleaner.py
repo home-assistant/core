@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for device in devices:
-        for type_name in SWITCH_TYPES.keys():
+        for type_name in SWITCH_TYPES:
             dev.append(ThinkingCleanerSwitch(device, type_name,
                                              update_devices))
 

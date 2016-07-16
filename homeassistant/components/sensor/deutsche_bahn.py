@@ -13,6 +13,7 @@ from homeassistant.const import (CONF_PLATFORM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['schiene==0.17']
 
@@ -88,6 +89,7 @@ class SchieneData(object):
     def __init__(self, start, goal):
         """Initialize the sensor."""
         import schiene
+
         self.start = start
         self.goal = goal
         self.schiene = schiene.Schiene()
@@ -96,7 +98,8 @@ class SchieneData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the connection data."""
-        self.connections = self.schiene.connections(self.start, self.goal)
+        self.connections = self.schiene.connections(
+            self.start, self.goal, dt_util.as_local(dt_util.utcnow()))
 
         for con in self.connections:
             # Detail info is not useful. Having a more consistent interface

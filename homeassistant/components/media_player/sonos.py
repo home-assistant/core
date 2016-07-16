@@ -12,7 +12,8 @@ from os import path
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
 from homeassistant.config import load_yaml_config_file
@@ -31,12 +32,16 @@ _REQUESTS_LOGGER.setLevel(logging.ERROR)
 
 SUPPORT_SONOS = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA |\
-    SUPPORT_SEEK
+    SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST | SUPPORT_SELECT_SOURCE
 
 SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
 SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
+
+SUPPORT_SOURCE_LINEIN = 'Line-in'
+SUPPORT_SOURCE_TV = 'TV'
+SUPPORT_SOURCE_RADIO = 'Radio'
 
 
 # pylint: disable=unused-argument, too-many-locals
@@ -162,12 +167,12 @@ class SonosDevice(MediaPlayerDevice):
     # pylint: disable=too-many-arguments
     def __init__(self, hass, player):
         """Initialize the Sonos device."""
+        from soco.snapshot import Snapshot
+
         self.hass = hass
         self.volume_increment = 5
-        super(SonosDevice, self).__init__()
         self._player = player
         self.update()
-        from soco.snapshot import Snapshot
         self.soco_snapshot = Snapshot(self._player)
 
     @property
@@ -261,6 +266,10 @@ class SonosDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
+        if self._player.is_playing_line_in:
+            return SUPPORT_SOURCE_LINEIN
+        if self._player.is_playing_tv:
+            return SUPPORT_SOURCE_TV
         if 'artist' in self._trackinfo and 'title' in self._trackinfo:
             return '{artist} - {title}'.format(
                 artist=self._trackinfo['artist'],
@@ -289,6 +298,36 @@ class SonosDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
+
+    def select_source(self, source):
+        """Select input source."""
+        if source == SUPPORT_SOURCE_LINEIN:
+            self._player.switch_to_line_in()
+        elif source == SUPPORT_SOURCE_TV:
+            self._player.switch_to_tv()
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        source = []
+
+        # generate list of supported device
+        source.append(SUPPORT_SOURCE_LINEIN)
+        source.append(SUPPORT_SOURCE_TV)
+        source.append(SUPPORT_SOURCE_RADIO)
+
+        return source
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        if self._player.is_playing_line_in:
+            return SUPPORT_SOURCE_LINEIN
+        if self._player.is_playing_tv:
+            return SUPPORT_SOURCE_TV
+        if self._player.is_playing_radio:
+            return SUPPORT_SOURCE_RADIO
+        return None
 
     @only_if_coordinator
     def turn_off(self):
@@ -319,6 +358,11 @@ class SonosDevice(MediaPlayerDevice):
     def media_seek(self, position):
         """Send seek command."""
         self._player.seek(str(datetime.timedelta(seconds=int(position))))
+
+    @only_if_coordinator
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self._player.clear_queue()
 
     @only_if_coordinator
     def turn_on(self):
