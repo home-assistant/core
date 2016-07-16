@@ -1,10 +1,8 @@
 """
 Support for interface with a Sony Bravia TV.
 
-By Antonio Parraga Navarro
-
-dedicated to Isabel
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.braviatv/
 """
 import logging
 import os
@@ -19,8 +17,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.2.zip'
-    '#braviarc==0.3.2']
+    'https://github.com/aparraga/braviarc/archive/0.3.3.zip'
+    '#braviarc==0.3.3']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
@@ -38,6 +36,7 @@ SUPPORT_BRAVIA = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 
 def _get_mac_address(ip_address):
+    """Get the MAC address of the device."""
     from subprocess import Popen, PIPE
 
     pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
@@ -48,7 +47,7 @@ def _get_mac_address(ip_address):
 
 
 def _config_from_file(filename, config=None):
-    """Small configuration file management function."""
+    """Create the configuration from a file."""
     if config:
         # We're writing configuration
         bravia_config = _config_from_file(filename)
@@ -104,7 +103,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-branches
 def setup_bravia(config, pin, hass, add_devices_callback):
-    """Setup a sony bravia based on host parameter."""
+    """Setup a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     if name is None:
@@ -176,7 +175,7 @@ class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
     def __init__(self, host, mac, name, pin):
-        """Initialize the sony bravia device."""
+        """Initialize the Sony Bravia device."""
         from braviarc import braviarc
 
         self._pin = pin
@@ -221,20 +220,24 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._refresh_volume()
                 self._refresh_channels()
 
-            playing_info = self._braviarc.get_playing_info()
-            if playing_info is None or len(playing_info) == 0:
-                self._state = STATE_OFF
-            else:
+            power_status = self._braviarc.get_power_status()
+            if power_status == 'active':
                 self._state = STATE_ON
-                self._program_name = playing_info.get('programTitle')
-                self._channel_name = playing_info.get('title')
-                self._program_media_type = playing_info.get(
-                    'programMediaType')
-                self._channel_number = playing_info.get('dispNum')
-                self._source = playing_info.get('source')
-                self._content_uri = playing_info.get('uri')
-                self._duration = playing_info.get('durationSec')
-                self._start_date_time = playing_info.get('startDateTime')
+                playing_info = self._braviarc.get_playing_info()
+                if playing_info is None or len(playing_info) == 0:
+                    self._channel_name = 'App'
+                else:
+                    self._program_name = playing_info.get('programTitle')
+                    self._channel_name = playing_info.get('title')
+                    self._program_media_type = playing_info.get(
+                        'programMediaType')
+                    self._channel_number = playing_info.get('dispNum')
+                    self._source = playing_info.get('source')
+                    self._content_uri = playing_info.get('uri')
+                    self._duration = playing_info.get('durationSec')
+                    self._start_date_time = playing_info.get('startDateTime')
+            else:
+                self._state = STATE_OFF
 
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)

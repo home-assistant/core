@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.8.0']
+REQUIREMENTS = ['pyRFXtrx==0.9.0']
 
 DOMAIN = "rfxtrx"
 
@@ -40,6 +40,7 @@ DATA_TYPES = OrderedDict([
     ('Rain rate', ''),
     ('Energy usage', 'W'),
     ('Total usage', 'W'),
+    ('Sound', ''),
     ('Sensor Status', ''),
     ('Unknown', '')])
 
@@ -64,6 +65,9 @@ def _valid_device(value, device_type):
             _LOGGER.warning(msg)
             key = device.get('packetid')
             device.pop('packetid')
+
+        if not len(key) % 2 == 0:
+            key = '0' + key
 
         if get_rfx_object(key) is None:
             raise vol.Invalid('Rfxtrx device {} is invalid: '
@@ -159,7 +163,11 @@ def get_rfx_object(packetid):
     """Return the RFXObject with the packetid."""
     import RFXtrx as rfxtrxmod
 
-    binarypacket = bytearray.fromhex(packetid)
+    try:
+        binarypacket = bytearray.fromhex(packetid)
+    except ValueError:
+        return None
+
     pkt = rfxtrxmod.lowlevel.parse(binarypacket)
     if pkt is None:
         return None

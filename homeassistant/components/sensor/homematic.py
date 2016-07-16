@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 HM_STATE_HA_CAST = {
-    "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"}
+    "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
+    "WaterSensor": {0: "dry", 1: "wet", 2: "water"}
 }
 
 HM_UNIT_HA_CAST = {
@@ -27,7 +28,10 @@ HM_UNIT_HA_CAST = {
     "POWER": "W",
     "CURRENT": "mA",
     "VOLTAGE": "V",
-    "ENERGY_COUNTER": "Wh"
+    "ENERGY_COUNTER": "Wh",
+    "GAS_POWER": "m3",
+    "GAS_ENERGY_COUNTER": "m3",
+    "LUX": "lux"
 }
 
 

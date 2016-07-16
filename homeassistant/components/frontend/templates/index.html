@@ -64,8 +64,12 @@
         document
           .getElementById('ha-init-skeleton')
           .classList.add('error');
-      }
-      window.noAuth = {{ auth }}
+      };
+      window.noAuth = {{ auth }};
+      window.deferredLoading = {
+        map: '{{ map_url }}',
+        dev: '{{ dev_url }}',
+      };
     </script>
   </head>
   <body fullbleed>
@@ -76,9 +80,9 @@
     </div>
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
-    <script src='/static/{{ core_url }}'></script>
-    <link rel='import' href='/static/{{ ui_url }}' onerror='initError()' async>
-    <link rel='import' href='/static/{{ icons_url }}' async>
+    <script src='{{ core_url }}'></script>
+    <link rel='import' href='{{ ui_url }}' onerror='initError()' async>
+    <link rel='import' href='{{ icons_url }}' async>
     <script>
       var webComponentsSupported = (
         'registerElement' in document &&

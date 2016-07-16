@@ -4,7 +4,6 @@ Support for the roku media player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
-
 import logging
 
 from homeassistant.components.media_player import (
@@ -16,8 +15,8 @@ from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 
 REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.1.zip'
-    '#python-roku==3.1.1']
+    'https://github.com/bah2830/python-roku/archive/3.1.2.zip'
+    '#roku==3.1.2']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
@@ -46,8 +45,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     rokus = []
     for host in hosts:
-        rokus.append(RokuDevice(host))
-        KNOWN_HOSTS.append(host)
+        new_roku = RokuDevice(host)
+
+        if new_roku.name is None:
+            _LOGGER.error("Unable to initialize roku at %s", host)
+        else:
+            rokus.append(RokuDevice(host))
+            KNOWN_HOSTS.append(host)
 
     add_devices(rokus)
 
@@ -62,6 +66,11 @@ class RokuDevice(MediaPlayerDevice):
         from roku import Roku
 
         self.roku = Roku(host)
+        self.roku_name = None
+        self.ip_address = host
+        self.channels = []
+        self.current_app = None
+
         self.update()
 
     def update(self):
@@ -79,7 +88,7 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
-            self.current_app = None
+            _LOGGER.error("Unable to connect to roku at %s", self.ip_address)
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""

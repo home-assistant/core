@@ -377,12 +377,16 @@ def load_config(path, hass, consider_home, home_range):
     """Load devices from YAML configuration file."""
     if not os.path.isfile(path):
         return []
-    return [
-        Device(hass, consider_home, home_range, device.get('track', False),
-               str(dev_id).lower(), str(device.get('mac')).upper(),
-               device.get('name'), device.get('picture'),
-               device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
-        for dev_id, device in load_yaml_config_file(path).items()]
+    try:
+        return [
+            Device(hass, consider_home, home_range, device.get('track', False),
+                   str(dev_id).lower(), str(device.get('mac')).upper(),
+                   device.get('name'), device.get('picture'),
+                   device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
+            for dev_id, device in load_yaml_config_file(path).items()]
+    except HomeAssistantError:
+        # When YAML file could not be loaded/did not contain a dict
+        return []
 
 
 def setup_scanner_platform(hass, config, scanner, see_device):
