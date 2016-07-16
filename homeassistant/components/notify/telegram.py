@@ -48,6 +48,7 @@ def get_service(hass, config):
 
     return TelegramNotificationService(config[CONF_API_KEY], config['chat_id'])
 
+
 # pylint: disable=too-few-public-methods
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
