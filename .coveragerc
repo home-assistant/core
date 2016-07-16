@@ -129,6 +129,7 @@ omit =
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
