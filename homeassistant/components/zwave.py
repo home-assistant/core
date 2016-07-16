@@ -51,8 +51,10 @@ COMMAND_CLASS_DOOR_LOCK = 98
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 67
 COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
 COMMAND_CLASS_BATTERY = 128
+COMMAND_CLASS_SENSOR_ALARM = 156
 
 GENERIC_COMMAND_CLASS_WHATEVER = None
+GENERIC_COMMAND_CLASS_NOTIFICATION_SENSOR = 7
 GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
 GENERIC_COMMAND_CLASS_BINARY_SWITCH = 16
 GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 64
@@ -92,7 +94,8 @@ DISCOVERY_COMPONENTS = [
      [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
-      COMMAND_CLASS_ALARM],
+      COMMAND_CLASS_ALARM,
+      COMMAND_CLASS_SENSOR_ALARM],
      TYPE_WHATEVER,
      GENRE_USER),
     ('light',
@@ -110,7 +113,8 @@ DISCOVERY_COMPONENTS = [
      GENRE_USER),
     ('binary_sensor',
      [GENERIC_COMMAND_CLASS_BINARY_SENSOR,
-      GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR],
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR,
+      GENERIC_COMMAND_CLASS_NOTIFICATION_SENSOR],
      [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
@@ -353,11 +357,11 @@ def setup(hass, config):
 
     def add_node(service):
         """Switch into inclusion mode."""
-        NETWORK.controller.begin_command_add_device()
+        NETWORK.controller.add_node()
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        NETWORK.controller.begin_command_remove_device()
+        NETWORK.controller.remove_node()
 
     def heal_network(service):
         """Heal the network."""

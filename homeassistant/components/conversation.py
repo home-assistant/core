@@ -27,7 +27,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
-REQUIREMENTS = ['fuzzywuzzy==0.10.0']
+REQUIREMENTS = ['fuzzywuzzy==0.11.0']
 
 
 def setup(hass, config):
@@ -67,8 +67,8 @@ def setup(hass, config):
             }, blocking=True)
 
         else:
-            logger.error(
-                'Got unsupported command %s from text %s', command, text)
+            logger.error('Got unsupported command %s from text %s',
+                         command, text)
 
     hass.services.register(DOMAIN, SERVICE_PROCESS, process,
                            schema=SERVICE_PROCESS_SCHEMA)

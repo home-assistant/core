@@ -146,6 +146,14 @@ select_source:
       description: Name of the source to switch to. Platform dependent.
       example: 'video1'
 
+clear_playlist:
+  description: Send the media player the command to clear players playlist.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites to change source on
+      example: 'media_player.living_room_chromecast'
+
 sonos_group_players:
   description: Send Sonos media player the command for grouping all players into one (party mode).
 
