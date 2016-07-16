@@ -57,7 +57,7 @@ class RPiGPIOGarageDoor(GarageDoorDevice):
         self._relay_pin = relay_pin
         self._state_pin = state_pin
         rpi_gpio.setup_output(self._relay_pin)
-        rpi_gpio.setup_input(self._state_pin, 'DOWN')
+        rpi_gpio.setup_input(self._state_pin, 'UP')
         rpi_gpio.write_output(self._relay_pin, True)
 
     @property
