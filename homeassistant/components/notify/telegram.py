@@ -115,25 +115,24 @@ class TelegramNotificationService(BaseNotificationService):
                 _LOGGER.exception("Error sending photo.")
                 return
 
-        # send location 
+        # send location
         if ATTR_LOCATION in data:
             location_entity = data[ATTR_LOCATION]
 
             try:
-                for location_data in location:
+                for location_data in location_entity:
 
-                	if ATTR_LONGITUDE in location_data and\
-                	   ATTR_LATITUDE in location_data:
-                	   latitude = location_data[ATTR_LATITUDE]
-                	   longitude = location_data[ATTR_LATITUDE]
-                	else:
-                		_LOGGER.error("Longitude and Latitude not set for location!")
+                    if ATTR_LONGITUDE in location_data and\
+                       ATTR_LATITUDE in location_data:
+                        latitude = location_data[ATTR_LATITUDE]
+                        longitude = location_data[ATTR_LONGITUDE]
+                    else:
+                        _LOGGER.error("Longitude and Latitude not set for location!")
                         continue
 
-                    self.bot.sendLocation(chat_id=self._chat_id,
-                    	                  latitude=latitude, longitude=longitude)
+                self.bot.sendLocation(chat_id=self._chat_id, 
+                                      latitude=latitude longitude=longitude)
 
-            except (OSError, IOError, telegram.error.TelegramError,
-                    urllib.error.HTTPError):
+            except (OSError, IOError, telegram.error.TelegramError):
                 _LOGGER.exception("Error sending location.")
                 return
