@@ -90,12 +90,11 @@ class ImapSensor(Entity):
             self.connection.select()
             self._unread_count = len(self.connection.search(
                 None, 'UnSeen')[1][0].split())
-        except imaplib.IMAP4.abort:
+        except imaplib.IMAP4.error:
             _LOGGER.info("Connection to %s lost, attempting to reconnect",
                          self._server)
             try:
-                self._login()
-                self.update()
+                self.connection = self._login()
             except imaplib.IMAP4.error:
                 _LOGGER.error("Failed to reconnect.")
 
