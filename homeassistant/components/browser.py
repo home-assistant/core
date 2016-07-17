@@ -13,7 +13,8 @@ ATTR_URL = 'url'
 ATTR_URL_DEFAULT = 'https://www.google.com'
 
 SERVICE_BROWSE_URL_SCHEMA = vol.Schema({
-    vol.Required(ATTR_URL, default=ATTR_URL_DEFAULT): vol.Url,
+    # pylint: disable=no-value-for-parameter
+    vol.Required(ATTR_URL, default=ATTR_URL_DEFAULT): vol.Url(),
 })
 
 
