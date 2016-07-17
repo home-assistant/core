@@ -1,3 +1,4 @@
+"""Add an iframe panel to Home Assistant."""
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,6 +16,7 @@ CONFIG_SCHEMA = vol.Schema({
         cv.slug: {
             vol.Optional(CONF_TITLE): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
+            # pylint: disable=no-value-for-parameter
             vol.Required(CONF_URL): vol.Url(),
         }})}, extra=vol.ALLOW_EXTRA)
 
