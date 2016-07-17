@@ -14,6 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
+from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
@@ -24,7 +25,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
-DEPENDENCIES = ['recorder', 'http']
+DEPENDENCIES = ['recorder', 'frontend']
 
 URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
@@ -74,6 +75,9 @@ def setup(hass, config):
         log_entry(hass, name, message, domain, entity_id)
 
     hass.wsgi.register_view(LogbookView)
+
+    register_built_in_panel(hass, 'logbook', 'Logbook',
+                            'mdi:format-list-bulleted-type')
 
     hass.services.register(DOMAIN, 'log', log_message,
                            schema=LOG_MESSAGE_SCHEMA)
