@@ -11,6 +11,7 @@ from itertools import groupby
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
+from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
@@ -153,6 +154,7 @@ def setup(hass, config):
     """Setup the history hooks."""
     hass.wsgi.register_view(Last5StatesView)
     hass.wsgi.register_view(HistoryPeriodView)
+    register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
 
