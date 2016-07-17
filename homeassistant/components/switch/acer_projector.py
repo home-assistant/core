@@ -27,7 +27,7 @@ CMD_DICT = {LAMP: '* 0 Lamp ?\r',
             STATE_OFF: '* 0 IR 002\r'}
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pyserial<=3.0']
+REQUIREMENTS = ['pyserial<=3.1']
 
 ICON = 'mdi:projector'
 
