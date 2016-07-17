@@ -131,13 +131,9 @@ class RecorderRuns(Base):
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
-        from sqlalchemy.orm.session import Session
+        from homeassistant.components import recorder
 
-        session = Session.object_session(self)
-
-        assert session is not None, 'RecorderRuns need to be persisted'
-
-        query = session.query(distinct(States.entity_id)).filter(
+        query = recorder.query(distinct(States.entity_id)).filter(
             States.last_updated >= self.start)
 
         if point_in_time is not None:

@@ -91,8 +91,12 @@ def run_information(point_in_time=None):
 def setup(hass, config):
     """Setup the recorder."""
     # pylint: disable=global-statement
-    # pylint: disable=too-many-locals
     global _INSTANCE
+
+    if _INSTANCE is not None:
+        _LOGGER.error('Only a single instance allowed.')
+        return False
+
     purge_days = config.get(DOMAIN, {}).get(CONF_PURGE_DAYS)
 
     db_url = config.get(DOMAIN, {}).get(CONF_DB_URL, None)
@@ -130,7 +134,7 @@ def log_error(e, retry_wait=0, rollback=True,
     if rollback:
         Session().rollback()
     if retry_wait:
-        _LOGGER.info("Retrying failed query in %s seconds", QUERY_RETRY_WAIT)
+        _LOGGER.info("Retrying in %s seconds", retry_wait)
         time.sleep(retry_wait)
 
 
@@ -177,8 +181,12 @@ class Recorder(threading.Thread):
                           message="Error during connection setup: %s")
 
         if self.purge_days is not None:
-            track_point_in_utc_time(self.hass,
-                                    lambda now: self._purge_old_data(),
+            def purge_ticker():
+                """Rerun purge every second day."""
+                self._purge_old_data()
+                track_point_in_utc_time(self.hass, purge_ticker,
+                                        dt_util.utcnow() + timedelta(days=2))
+            track_point_in_utc_time(self.hass, purge_ticker,
                                     dt_util.utcnow() + timedelta(minutes=5))
 
         while True:
@@ -191,38 +199,25 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 return
 
-            elif event.event_type == EVENT_TIME_CHANGED:
+            if event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
                 continue
 
             session = Session()
             dbevent = Events.from_event(event)
             session.add(dbevent)
-
-            for _ in range(0, RETRIES):
-                try:
-                    session.commit()
-                    break
-                except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
-                              rollback=True)
+            self._commit(session)
 
             if event.event_type != EVENT_STATE_CHANGED:
                 self.queue.task_done()
                 continue
 
+            # Can possibly be combined into single session with the above
             session = Session()
             dbstate = States.from_event(event)
-
-            for _ in range(0, RETRIES):
-                try:
-                    dbstate.event_id = dbevent.event_id
-                    session.add(dbstate)
-                    session.commit()
-                    break
-                except sqlalchemy.exc.OperationalError as e:
-                    log_error(e, retry_wait=QUERY_RETRY_WAIT,
-                              rollback=True)
+            dbstate.event_id = dbevent.event_id
+            session.add(dbstate)
+            self._commit(session)
 
             self.queue.task_done()
 
@@ -292,14 +287,14 @@ class Recorder(threading.Thread):
         )
         session = Session()
         session.add(self._run)
-        session.commit()
+        self._commit(session)
 
     def _close_run(self):
         """Save end time for current run."""
         self._run.end = dt_util.utcnow()
         session = Session()
         session.add(self._run)
-        session.commit()
+        self._commit(session)
         self._run = None
 
     def _purge_old_data(self):
@@ -313,23 +308,40 @@ class Recorder(threading.Thread):
 
         purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
 
+        session = Session()
+
         _LOGGER.info("Purging events created before %s", purge_before)
-        deleted_rows = Session().query(Events).filter(
+        deleted_rows = session.query(Events).filter(
             (Events.created < purge_before)).delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s events", deleted_rows)
 
         _LOGGER.info("Purging states created before %s", purge_before)
-        deleted_rows = Session().query(States).filter(
+        deleted_rows = session.query(States).filter(
             (States.created < purge_before)).delete(synchronize_session=False)
         _LOGGER.debug("Deleted %s states", deleted_rows)
 
-        Session().commit()
-        Session().expire_all()
+        self._commit(session)
+        session.expire_all()
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
             _LOGGER.info("Vacuuming SQLite to free space")
             self.engine.execute("VACUUM")
+
+    @staticmethod
+    def _commit(session):
+        """Commit a session."""
+        import sqlalchemy.exc
+        for _ in range(0, RETRIES):
+            try:
+                session.commit()
+                return
+            except sqlalchemy.exc.OperationalError as e:
+                log_error(e, retry_wait=QUERY_RETRY_WAIT,
+                          rollback=True)
+                lasterr = e
+        session.rollback()
+        raise RuntimeError("Unable to commit session: " + str(lasterr))
 
 
 def _verify_instance():

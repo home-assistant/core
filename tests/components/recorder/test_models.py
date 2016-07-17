@@ -11,28 +11,28 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.util import dt
 from homeassistant.components.recorder.models import (
     Base, Events, States, RecorderRuns)
+import homeassistant.components.recorder as recorder
 
 engine = None
-Session = None
 
 
 def setUpModule():
     """Set up a database to use."""
-    global engine, Session
+    global engine
 
     engine = create_engine("sqlite://")
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
-    Session = scoped_session(session_factory)
+    recorder.Session = scoped_session(session_factory)
 
 
 def tearDownModule():
     """Close database."""
-    global engine, Session
+    global engine
 
     engine.dispose()
     engine = None
-    Session = None
+    recorder.Session = None
 
 
 class TestEvents(unittest.TestCase):
@@ -80,7 +80,7 @@ class TestRecorderRuns(unittest.TestCase):
 
     def setUp(self):
         """Set up recorder runs."""
-        self.session = session = Session()
+        self.session = session = recorder.Session()
         session.query(Events).delete()
         session.query(States).delete()
         session.query(RecorderRuns).delete()
