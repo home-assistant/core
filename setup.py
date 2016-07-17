@@ -13,7 +13,7 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
-    'pytz>=2016.4',
+    'pytz>=2016.6.1',
     'pip>=7.0.0',
     'jinja2>=2.8',
     'voluptuous==0.8.9',
