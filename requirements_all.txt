@@ -334,7 +334,7 @@ python-pushover==0.2
 python-telegram-bot==4.3.3
 
 # homeassistant.components.sensor.twitch
-python-twitch==1.2.0
+python-twitch==1.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
