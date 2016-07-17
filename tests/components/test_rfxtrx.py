@@ -108,6 +108,7 @@ class TestRFXTRX(unittest.TestCase):
 
         self.assertEqual(event.values['Command'], "On")
         self.assertEqual('on', entity.state)
+        self.assertEqual(self.hass.states.get('switch.test').state, 'on')
         self.assertEqual(1, len(rfxtrx.RFX_DEVICES))
         self.assertEqual(1, len(calls))
         self.assertEqual(calls[0].data,
