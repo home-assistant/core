@@ -155,11 +155,11 @@ class TestSwitchRfxtrx(unittest.TestCase):
         self.assertFalse(entity.is_on)
 
         entity_id = rfxtrx_core.RFX_DEVICES['213c7f216'].entity_id
-        entity_hass = self.hass.states.get(entity_id)   
+        entity_hass = self.hass.states.get(entity_id)
         self.assertEqual('Test', entity_hass.name)
         self.assertEqual('off', entity_hass.state)
         entity.turn_on()
-        entity_hass = self.hass.states.get(entity_id)   
+        entity_hass = self.hass.states.get(entity_id)
         self.assertEqual('on', entity_hass.state)
         entity.turn_off()
         entity_hass = self.hass.states.get(entity_id)

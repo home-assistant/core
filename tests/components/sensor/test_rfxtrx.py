@@ -75,8 +75,9 @@ class TestSensorRfxtrx(unittest.TestCase):
         self.assertEqual(TEMP_CELSIUS, entity.unit_of_measurement)
         self.assertEqual(None, entity.state)
 
-        entity_id = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature'].entity_id
-        entity = self.hass.states.get(entity_id)   
+        entity_id = rfxtrx_core.RFX_DEVICES['sensor_0502']['Temperature']\
+            .entity_id
+        entity = self.hass.states.get(entity_id)
         self.assertEqual('Test', entity.name)
         self.assertEqual('unknown', entity.state)
 
