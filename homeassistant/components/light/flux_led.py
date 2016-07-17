@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.light import Light
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/master.zip'
-                '#flux_led==0.2']
+REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.3.zip'
+                '#flux_led==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lights = []
     light_ips = []
     for ipaddr, device_config in config["devices"].items():
-        _LOGGER.info(ipaddr)
         device = {}
         device["id"] = device_config[ATTR_NAME]
         device["ipaddr"] = ipaddr
@@ -80,11 +79,12 @@ class FluxLight(Light):
         ipaddr = device['ipaddr']
         self.is_valid = True
         self._bulb = None
-        _LOGGER.info(ipaddr)
         try:
             self._bulb = flux_led.WifiLedBulb(ipaddr)
         except socket.error:
             self.is_valid = False
+            _LOGGER.error("Failed to connect to bulb %s, %s",
+                          ipaddr, self._name)
 
     @property
     def unique_id(self):
