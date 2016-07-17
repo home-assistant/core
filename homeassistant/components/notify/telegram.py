@@ -39,9 +39,9 @@ def get_service(hass, config):
     try:
         bot = telegram.Bot(token=config[CONF_API_KEY])
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '%s'.", username)
+        _LOGGER.info("Telegram bot is '%s'", username)
     except urllib.error.HTTPError:
-        _LOGGER.error("Please check your access token.")
+        _LOGGER.error("Please check your access token")
         return None
 
     return TelegramNotificationService(config[CONF_API_KEY], config['chat_id'])
@@ -66,49 +66,49 @@ class TelegramNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE)
         data = kwargs.get(ATTR_DATA, {})
 
-        # send message
         try:
             self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=title + "  " + message)
+                                 text='{} {}'.format(title, message))
         except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending message.")
+            _LOGGER.exception("Error sending message")
             return
 
-        # send photo
-        if ATTR_PHOTO in data:
-            # if not a list
+        try:
             if not isinstance(data[ATTR_PHOTO], list):
                 photos = [data[ATTR_PHOTO]]
             else:
                 photos = data[ATTR_PHOTO]
+        except TypeError:
+            return
 
-            try:
-                for photo_data in photos:
-                    caption = photo_data.get(ATTR_CAPTION, None)
+        try:
+            for photo_data in photos:
+                caption = photo_data.get(ATTR_CAPTION, None)
 
-                    # file is a url
-                    if ATTR_URL in photo_data:
-                        # use http authenticate
-                        if ATTR_USERNAME in photo_data and\
-                           ATTR_PASSWORD in photo_data:
-                            req = requests.get(
-                                photo_data[ATTR_URL],
-                                auth=HTTPBasicAuth(photo_data[ATTR_USERNAME],
-                                                   photo_data[ATTR_PASSWORD])
-                            )
-                        else:
-                            req = requests.get(photo_data[ATTR_URL])
-                        file_id = io.BytesIO(req.content)
-                    elif ATTR_FILE in photo_data:
-                        file_id = open(photo_data[ATTR_FILE], "rb")
+                if ATTR_URL in photo_data:
+                    # Use HTTP authentication
+                    if ATTR_USERNAME in photo_data and \
+                       ATTR_PASSWORD in photo_data:
+                        req = requests.get(
+                            photo_data[ATTR_URL],
+                            auth=HTTPBasicAuth(photo_data[ATTR_USERNAME],
+                                               photo_data[ATTR_PASSWORD]),
+                            timeout=5
+                        )
                     else:
-                        _LOGGER.error("No url or path is set for photo!")
-                        continue
+                        req = requests.get(photo_data[ATTR_URL],
+                                           timeout=5)
+                    file_id = io.BytesIO(req.content)
+                elif ATTR_FILE in photo_data:
+                    file_id = open(photo_data[ATTR_FILE], "rb")
+                else:
+                    _LOGGER.error("No URL or path is set for image")
+                    continue
 
-                    self.bot.sendPhoto(chat_id=self._chat_id,
-                                       photo=file_id, caption=caption)
+                self.bot.sendPhoto(chat_id=self._chat_id,
+                                   photo=file_id, caption=caption)
 
-            except (OSError, IOError, telegram.error.TelegramError,
-                    urllib.error.HTTPError):
-                _LOGGER.exception("Error sending photo.")
-                return
+        except (OSError, IOError, telegram.error.TelegramError,
+                urllib.error.HTTPError):
+            _LOGGER.exception("Error sending image")
+            return
