@@ -303,7 +303,7 @@ pynx584==0.2
 pyowm==2.3.2
 
 # homeassistant.components.switch.acer_projector
-pyserial<=3.0
+pyserial<=3.1
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
