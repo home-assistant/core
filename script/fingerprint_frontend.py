@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+"""Generate a file with all md5 hashes of the assets."""
 from collections import OrderedDict
 import glob
 import hashlib
