@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 def register_built_in_panel(hass, component_name, title=None, icon=None,
                             url_name=None, config=None):
     """Register a built-in panel."""
-
+    # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
     register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
@@ -40,6 +40,7 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
 
     Warning: this API will probably change. Use at own risk.
     """
+    # pylint: disable=too-many-arguments
     if url_name is None:
         url_name = component_name
 
@@ -71,8 +72,6 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
         data['url'] = fprinted_url
 
     PANELS[url_name] = data
-
-    # TODO register /<component_name> to index view.
 
 
 def setup(hass, config):

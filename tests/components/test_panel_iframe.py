@@ -1,5 +1,4 @@
 """The tests for the panel_iframe component."""
-from collections import defaultdict
 import unittest
 from unittest.mock import patch
 
@@ -15,6 +14,7 @@ class TestPanelIframe(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        frontend.PANELS = {}
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -23,7 +23,6 @@ class TestPanelIframe(unittest.TestCase):
 
     def test_wrong_config(self):
         """Test setup with wrong configuration."""
-
         to_try = [
             {'invalid space': {
                 'url': 'https://home-assistant.io'}},
