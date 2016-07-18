@@ -201,11 +201,12 @@ def routing_map(hass):
     class DateValidator(BaseConverter):
         """Validate dates in urls."""
 
-        regex = r'\d{4}-\d{1,2}-\d{1,2}'
+        regex = r'\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d' \
+            r'\.\d+([+-][0-2]\d:[0-5]\d|Z)'
 
         def to_python(self, value):
             """Validate and convert date."""
-            parsed = dt_util.parse_date(value)
+            parsed = dt_util.parse_datetime(value)
 
             if parsed is None:
                 raise ValidationError()
