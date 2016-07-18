@@ -16,26 +16,16 @@ REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.3.zip'
                 '#flux_led==0.3']
 
 _LOGGER = logging.getLogger(__name__)
-
 DOMAIN = "flux_led"
-
 ATTR_NAME = 'name'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME): cv.string,
 })
 
-
-def _valid_lights(value):
-    """Validate a dictionary of light definitions."""
-    config = {}
-    for key, device in value.items():
-        config[key] = DEVICE_SCHEMA(device)
-    return config
-
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required("platform"): DOMAIN,
-    vol.Optional('devices', default={}): vol.All(dict, _valid_lights),
+    vol.Required('platform'): DOMAIN,
+    vol.Optional('devices', default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional('automatic_add', default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
@@ -47,12 +37,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     light_ips = []
     for ipaddr, device_config in config["devices"].items():
         device = {}
-        device["id"] = device_config[ATTR_NAME]
-        device["ipaddr"] = ipaddr
+        device['id'] = device_config[ATTR_NAME]
+        device['ipaddr'] = ipaddr
         light = FluxLight(device)
         if light.is_valid:
             lights.append(light)
             light_ips.append(ipaddr)
+
+    if not config['automatic_add']:
+        add_devices_callback(lights)
+        return
 
     # Find the bulbs on the LAN
     scanner = flux_led.BulbScanner()
@@ -76,21 +70,21 @@ class FluxLight(Light):
         import flux_led
 
         self._name = device['id']
-        ipaddr = device['ipaddr']
+        self._ipaddr = device['ipaddr']
         self.is_valid = True
         self._bulb = None
         try:
-            self._bulb = flux_led.WifiLedBulb(ipaddr)
+            self._bulb = flux_led.WifiLedBulb(self._ipaddr)
         except socket.error:
             self.is_valid = False
             _LOGGER.error("Failed to connect to bulb %s, %s",
-                          ipaddr, self._name)
+                          self._ipaddr, self._name)
 
     @property
     def unique_id(self):
         """Return the ID of this light."""
         return "{}.{}".format(
-            self.__class__, self._name)
+            self.__class__, self._ipaddr)
 
     @property
     def name(self):
@@ -100,7 +94,6 @@ class FluxLight(Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        self.update()
         return self._bulb.isOn()
 
     def turn_on(self, **kwargs):
