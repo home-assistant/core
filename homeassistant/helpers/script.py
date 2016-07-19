@@ -76,7 +76,7 @@ class Script():
                         time_template = datetime.strptime(
                             template.render(
                                 self.hass, delay, None),
-                                "%H:%M:%S")
+                            "%H:%M:%S")
                         delay = timedelta(
                             hours=time_template.hour,
                             minutes=time_template.minute,
