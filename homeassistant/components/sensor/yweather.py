@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     yahoo_api = YahooWeatherData(woeid, yunit)
 
     # if update is false, it will never work...
-    if not yahoo_api.update():
+    if not yahoo_api.update() or not yahoo_api.yahoo.Forecast:
         _LOGGER.critical("Can't retrieve weather data from yahoo!")
         return False
 
