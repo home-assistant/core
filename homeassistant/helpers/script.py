@@ -89,7 +89,10 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
-                    delay = parseTimeDelta(template.render(self.hass, action[CONF_DELAY], None)) if isinstance(action[CONF_DELAY], str) else action[CONF_DELAY]
+                    delay = action[CONF_DELAY]
+
+                    if isinstance(delay, str):
+                        delay = parseTimeDelta(template.render(self.hass, delay, None))
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
