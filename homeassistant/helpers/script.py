@@ -7,8 +7,7 @@ from itertools import islice
 import homeassistant.util.dt as date_util
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition
-from homeassistant.helpers import template
+from homeassistant.helpers import service, condition, template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
