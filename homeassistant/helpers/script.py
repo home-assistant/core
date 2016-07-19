@@ -7,6 +7,7 @@ import homeassistant.util.dt as date_util
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers import service, condition
+from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
+CONF_DELAY_TEMPLATE = 'delay_template'
 
 
 def call_from_config(hass, config, variables=None):
@@ -68,9 +70,11 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
+                    delay = action[CONF_DELAY] if CONF_DELAY in action else template.render(self.hass, action[CONF_DELAY_TEMPLATE], None)
+
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
-                        date_util.utcnow() + action[CONF_DELAY])
+                        date_util.utcnow() + delay)
                     self._cur = cur + 1
                     if self._change_listener:
                         self._change_listener()
