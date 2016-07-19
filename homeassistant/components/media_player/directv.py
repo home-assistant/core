@@ -1,33 +1,42 @@
-import logging
+"""Support for the DirecTV recievers."""
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, ATTR_MEDIA_CHANNEL,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP,
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING)
 
 REQUIREMENTS = ['directpy==0.1']
 
 DEFAULT_PORT = 8080
 
-SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_STOP |\
-    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PREVIOUS_TRACK
 
 KNOWN_HOSTS = []
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the DirecTV platform."""
     hosts = []
 
     if discovery_info and discovery_info in KNOWN_HOSTS:
         return
 
     if discovery_info is not None:
-        hosts.append(['DirecTV_' + discovery_info[1], discovery_info[0], DEFAULT_PORT])
+        hosts.append([
+            'DirecTV_' + discovery_info[1],
+            discovery_info[0],
+            DEFAULT_PORT
+        ])
 
     elif CONF_HOST in config:
-        hosts.append([config.get(CONF_NAME, 'DirecTV Receiver'), config[CONF_HOST], DEFAULT_PORT])
+        hosts.append([
+            config.get(CONF_NAME, 'DirecTV Receiver'),
+            config[CONF_HOST], DEFAULT_PORT
+        ])
 
     dtvs = []
 
@@ -38,6 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dtvs)
 
     return True
+
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV reciever on the network."""
@@ -53,6 +63,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._current = None
 
     def update(self):
+        """Retrieve latest state."""
         self._is_standby = self.dtv.get_standby()
         if self._is_standby:
             self._current = None
@@ -67,6 +78,7 @@ class DirecTvDevice(MediaPlayerDevice):
     # MediaPlayerDevice properties and methods
     @property
     def state(self):
+        """Return the state of the device."""
         if self._is_standby:
             return STATE_OFF
         # haven't determined a way to see if the content is paused
@@ -75,6 +87,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
     @property
     def media_content_id(self):
+        """Content ID of current playing media."""
         if self._is_standby:
             return None
         else:
@@ -82,6 +95,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
     @property
     def media_duration(self):
+        """Duration of current playing media in seconds."""
         if self._is_standby:
             return None
         else:
@@ -89,6 +103,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
     @property
     def media_title(self):
+        """Title of current playing media."""
         if self._is_standby:
             return None
         else:
@@ -96,49 +111,62 @@ class DirecTvDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
+        """Title of current episode of TV show."""
         if self._is_standby:
             return None
         else:
-           if 'episodeTitle' in self._current:
-               return self._current['episodeTitle']
-           else:
-               return None
+            if 'episodeTitle' in self._current:
+                return self._current['episodeTitle']
+            else:
+                return None
 
     @property
     def supported_media_commands(self):
+        """Flag of media commands that are supported."""
         return SUPPORT_DTV
 
     @property
     def media_content_type(self):
-       if 'episodeTitle' in self._current:
-           return MEDIA_TYPE_TVSHOW
-       else:
-           return MEDIA_TYPE_VIDEO
+        """Content type of current playing media."""
+        if 'episodeTitle' in self._current:
+            return MEDIA_TYPE_TVSHOW
+        else:
+            return MEDIA_TYPE_VIDEO
 
     @property
     def media_channel(self):
+        """Channel current playing media."""
         if self._is_standby:
             return None
         else:
-            return self._current['callsign'] + ' (' + str(self._current['major']) + ')'
+            chan = self._current['callsign'] + \
+                ' (' + str(self._current['major']) + ')'
+            return chan
 
     def turn_on(self):
+        """Turn on the reciever."""
         self.dtv.key_press('poweron')
 
     def turn_off(self):
+        """Turn off the reciever."""
         self.dtv.key_press('poweroff')
 
     def media_play(self):
+        """Send play commmand."""
         self.dtv.key_press('play')
 
     def media_pause(self):
+        """Send pause commmand."""
         self.dtv.key_press('pause')
 
     def media_stop(self):
+        """Send stop commmand."""
         self.dtv.key_press('stop')
 
     def media_previous_track(self):
+        """Send rewind commmand."""
         self.dtv.key_press('rew')
 
     def media_next_track(self):
+        """Send fast forward commmand."""
         self.dtv.key_press('ffwd')
