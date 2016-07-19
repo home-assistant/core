@@ -19,11 +19,11 @@ DOMAIN = 'joaoapps_join'
 CONF_DEVICE_ID = 'device_id'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: [vol.Schema({
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_API_KEY): cv.string
-    })
+    })]
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -32,49 +32,58 @@ def setup(hass, config):
     """Setup Join services."""
     from pyjoin import (get_devices, ring_device, set_wallpaper, send_sms,
                         send_file, send_url, send_notification)
-    device_id = config[DOMAIN].get(CONF_DEVICE_ID)
-    api_key = config[DOMAIN].get(CONF_API_KEY)
-    name = config[DOMAIN].get(CONF_NAME)
-    if api_key:
-        if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join, check API key")
-            return False
+    for device in config[DOMAIN]:
+        device_id = device.get(CONF_DEVICE_ID)
+        api_key = device.get(CONF_API_KEY)
+        name = device.get(CONF_NAME)
+        if api_key:
+            if not get_devices(api_key):
+                _LOGGER.error("Error connecting to Join, check API key")
+                return False
 
-    def ring_service(service):
-        """Service to ring devices."""
-        ring_device(device_id, api_key=api_key)
+        # pylint: disable=cell-var-from-loop
+        def ring_service(service):
+            """Service to ring devices."""
+            ring_device(device_id, api_key=api_key)
 
-    def set_wallpaper_service(service):
-        """Service to set wallpaper on devices."""
-        set_wallpaper(device_id, url=service.data.get('url'), api_key=api_key)
-
-    def send_file_service(service):
-        """Service to send files to devices."""
-        send_file(device_id, url=service.data.get('url'), api_key=api_key)
-
-    def send_url_service(service):
-        """Service to open url on devices."""
-        send_url(device_id, url=service.data.get('url'), api_key=api_key)
-
-    def send_tasker_service(service):
-        """Service to open url on devices."""
-        send_notification(device_id=device_id,
-                          text=service.data.get('command'),
+        # pylint: disable=cell-var-from-loop
+        def set_wallpaper_service(service):
+            """Service to set wallpaper on devices."""
+            set_wallpaper(device_id, url=service.data.get('url'),
                           api_key=api_key)
 
-    def send_sms_service(service):
-        """Service to send sms from devices."""
-        send_sms(device_id=device_id,
-                 sms_number=service.data.get('number'),
-                 sms_text=service.data.get('message'),
-                 api_key=api_key)
+        # pylint: disable=cell-var-from-loop
+        def send_file_service(service):
+            """Service to send files to devices."""
+            send_file(device_id, url=service.data.get('url'), api_key=api_key)
 
-    name = name.lower().replace(" ", "_") + "_" if name else ""
-    hass.services.register(DOMAIN, name + 'ring', ring_service)
-    hass.services.register(DOMAIN, name + 'set_wallpaper',
-                           set_wallpaper_service)
-    hass.services.register(DOMAIN, name + 'send_sms', send_sms_service)
-    hass.services.register(DOMAIN, name + 'send_file', send_file_service)
-    hass.services.register(DOMAIN, name + 'send_url', send_url_service)
-    hass.services.register(DOMAIN, name + 'send_tasker', send_tasker_service)
+        # pylint: disable=cell-var-from-loop
+        def send_url_service(service):
+            """Service to open url on devices."""
+            send_url(device_id, url=service.data.get('url'), api_key=api_key)
+
+        # pylint: disable=cell-var-from-loop
+        def send_tasker_service(service):
+            """Service to open url on devices."""
+            send_notification(device_id=device_id,
+                              text=service.data.get('command'),
+                              api_key=api_key)
+
+        # pylint: disable=cell-var-from-loop
+        def send_sms_service(service):
+            """Service to send sms from devices."""
+            send_sms(device_id=device_id,
+                     sms_number=service.data.get('number'),
+                     sms_text=service.data.get('message'),
+                     api_key=api_key)
+
+        name = name.lower().replace(" ", "_") + "_" if name else ""
+        hass.services.register(DOMAIN, name + 'ring', ring_service)
+        hass.services.register(DOMAIN, name + 'set_wallpaper',
+                               set_wallpaper_service)
+        hass.services.register(DOMAIN, name + 'send_sms', send_sms_service)
+        hass.services.register(DOMAIN, name + 'send_file', send_file_service)
+        hass.services.register(DOMAIN, name + 'send_url', send_url_service)
+        hass.services.register(DOMAIN, name + 'send_tasker',
+                               send_tasker_service)
     return True
