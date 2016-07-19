@@ -1,6 +1,7 @@
 """Helpers to execute scripts."""
 import logging
 import threading
+import re
 from itertools import islice
 
 import homeassistant.util.dt as date_util
@@ -25,6 +26,24 @@ def call_from_config(hass, config, variables=None):
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
 
+def parseTimeDelta(s):
+    """Create timedelta object representing time delta
+       expressed in a string
+
+    Takes a string in the format produced by calling str() on
+    a python timedelta object and returns a timedelta instance
+    that would produce that string.
+
+    Acceptable formats are: "X days, HH:MM:SS" or "HH:MM:SS".
+    """
+    if s is None:
+        return None
+    d = re.match(
+            r'((?P<days>\d+) days, )?(?P<hours>\d+):'
+            r'(?P<minutes>\d+):(?P<seconds>\d+)',
+            str(s)).groupdict(0)
+    return timedelta(**dict(( (key, int(value))
+                              for key, value in d.items() )))
 
 class Script():
     """Representation of a script."""
