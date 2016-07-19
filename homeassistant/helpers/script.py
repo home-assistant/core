@@ -2,7 +2,7 @@
 import logging
 import threading
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from itertools import islice
 
 import homeassistant.util.dt as date_util
@@ -73,7 +73,8 @@ class Script():
                     delay = action[CONF_DELAY]
 
                     if isinstance(delay, str):
-                        delay = datetime.strptime(template.render(self.hass, delay, None), "%H:%M:%S")
+                        t = datetime.strptime(template.render(self.hass, delay, None), "%H:%M:%S")
+                        delay = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
