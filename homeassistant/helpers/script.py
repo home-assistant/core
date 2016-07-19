@@ -26,6 +26,7 @@ def call_from_config(hass, config, variables=None):
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
 
+
 class Script():
     """Representation of a script."""
 
@@ -72,14 +73,14 @@ class Script():
                     delay = action[CONF_DELAY]
 
                     if isinstance(delay, str):
-                        t = datetime.strptime( \
-                            template.render( \
-                                self.hass, delay, None), \
+                        time_template = datetime.strptime(
+                            template.render(
+                                self.hass, delay, None),
                                 "%H:%M:%S")
-                        delay = timedelta( \
-                            hours=t.hour, \
-                            minutes=t.minute, \
-                            seconds=t.second)
+                        delay = timedelta(
+                            hours=time_template.hour,
+                            minutes=time_template.minute,
+                            seconds=time_template.second)
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
