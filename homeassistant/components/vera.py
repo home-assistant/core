@@ -11,6 +11,7 @@ from requests.exceptions import RequestException
 
 
 from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util import convert
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
@@ -27,6 +28,8 @@ VERA_CONTROLLER = None
 
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
+
+ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
 VERA_DEVICES = defaultdict(list)
 
@@ -90,22 +93,23 @@ def map_vera_device(vera_device, remap):
     """Map vera  classes to HA types."""
     # pylint: disable=too-many-return-statements
     import pyvera as veraApi
+    if isinstance(vera_device, veraApi.VeraDimmer):
+        return 'light'
+    if isinstance(vera_device, veraApi.VeraBinarySensor):
+        return 'binary_sensor'
+    if isinstance(vera_device, veraApi.VeraSensor):
+        return 'sensor'
+    if isinstance(vera_device, veraApi.VeraArmableDevice):
+        return 'switch'
+    if isinstance(vera_device, veraApi.VeraLock):
+        return 'lock'
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
         else:
             return 'switch'
-    if isinstance(vera_device, veraApi.VeraBinarySensor):
-        return 'binary_sensor'
-    if isinstance(vera_device, veraApi.VeraSensor):
-        return 'sensor'
-    if isinstance(vera_device, veraApi.VeraDimmer):
-        return 'light'
-    if isinstance(vera_device, veraApi.VeraArmableDevice):
-        return 'switch'
-    if isinstance(vera_device, veraApi.VeraLock):
-        return 'lock'
     # VeraCurtain: NOT SUPPORTED YET
+    return None
 
 
 class VeraDevice(Entity):
@@ -154,6 +158,10 @@ class VeraDevice(Entity):
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.is_tripped
             attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
+
+        power = self.vera_device.power
+        if power:
+           attr[ATTR_CURRENT_POWER_MWH] = convert(power, float, 0.0) * 1000
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
