@@ -161,7 +161,7 @@ class VeraDevice(Entity):
 
         power = self.vera_device.power
         if power:
-           attr[ATTR_CURRENT_POWER_MWH] = convert(power, float, 0.0) * 1000
+            attr[ATTR_CURRENT_POWER_MWH] = convert(power, float, 0.0) * 1000
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
