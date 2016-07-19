@@ -376,7 +376,9 @@ CONDITION_SCHEMA = vol.Any(
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
-    vol.Required("delay"): vol.Any(vol.All(time_period, positive_timedelta), template)
+    vol.Required("delay"): vol.Any( \
+        vol.All(time_period, positive_timedelta), \
+        template)
 })
 
 SCRIPT_SCHEMA = vol.All(
