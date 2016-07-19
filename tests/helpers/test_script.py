@@ -154,7 +154,7 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj = script.Script(self.hass, [
             {'event': event},
-            {'delay': '00:00:{{ 5 }}'}},
+            {'delay': '00:00:{{ 5 }}'},
             {'event': event}])
 
         script_obj.run()
