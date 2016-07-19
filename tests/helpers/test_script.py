@@ -141,6 +141,38 @@ class TestScriptHelper(unittest.TestCase):
         assert not script_obj.is_running
         assert len(events) == 2
 
+    def test_delay_template(self):
+        """Test the delay as a template."""
+        event = 'test_evnt'
+        events = []
+
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, [
+            {'event': event,
+            {'delay': '00:00:{{ 5 }}'}},
+            {'event': event}])
+
+        script_obj.run()
+
+        self.hass.pool.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.pool.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""
         event = 'test_event'
