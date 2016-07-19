@@ -19,7 +19,6 @@ CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
-CONF_DELAY_TEMPLATE = 'delay_template'
 
 
 def call_from_config(hass, config, variables=None):
