@@ -72,8 +72,14 @@ class Script():
                     delay = action[CONF_DELAY]
 
                     if isinstance(delay, str):
-                        t = datetime.strptime(template.render(self.hass, delay, None), "%H:%M:%S")
-                        delay = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+                        t = datetime.strptime( \
+                            template.render( \
+                                self.hass, delay, None), \
+                                "%H:%M:%S")
+                        delay = timedelta( \
+                            hours=t.hour, \
+                            minutes=t.minute, \
+                            seconds=t.second)
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
