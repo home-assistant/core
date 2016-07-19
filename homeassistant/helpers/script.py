@@ -69,7 +69,7 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
-                    delay = action[CONF_DELAY] if CONF_DELAY in action else template.render(self.hass, action[CONF_DELAY_TEMPLATE], None)
+                    delay = template.render(self.hass, action[CONF_DELAY], None)
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
