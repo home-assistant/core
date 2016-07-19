@@ -2,7 +2,7 @@
 import logging
 import threading
 import re
-from datetime import timedelta
+from datetime import datetime
 from itertools import islice
 
 import homeassistant.util.dt as date_util
@@ -26,25 +26,6 @@ CONF_DELAY = "delay"
 def call_from_config(hass, config, variables=None):
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
-
-def parseTimeDelta(s):
-    """Create timedelta object representing time delta
-       expressed in a string
-
-    Takes a string in the format produced by calling str() on
-    a python timedelta object and returns a timedelta instance
-    that would produce that string.
-
-    Acceptable formats are: "X days, HH:MM:SS" or "HH:MM:SS".
-    """
-    if s is None:
-        return None
-    d = re.match(
-            r'((?P<days>\d+) days, )?(?P<hours>\d+):'
-            r'(?P<minutes>\d+):(?P<seconds>\d+)',
-            str(s)).groupdict(0)
-    return timedelta(**dict(( (key, int(value))
-                              for key, value in d.items() )))
 
 class Script():
     """Representation of a script."""
@@ -92,7 +73,7 @@ class Script():
                     delay = action[CONF_DELAY]
 
                     if isinstance(delay, str):
-                        delay = parseTimeDelta(template.render(self.hass, delay, None))
+                        delay = datetime.strptime(template.render(self.hass, delay, None), "%H:%M:%S")
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
