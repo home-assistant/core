@@ -2,6 +2,7 @@
 import logging
 import threading
 import re
+from datetime import timedelta
 from itertools import islice
 
 import homeassistant.util.dt as date_util
