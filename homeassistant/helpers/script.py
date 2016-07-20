@@ -71,6 +71,8 @@ class Script():
 
                     delay = action[CONF_DELAY]
 
+                    _LOGGER.critical(str(delay))
+
                     if isinstance(delay, str):
                         delay = vol.All(cv.time_period, cv.positive_timedelta)(template.render(self.hass, delay))
 
