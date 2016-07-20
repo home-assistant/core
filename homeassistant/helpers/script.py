@@ -69,7 +69,7 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
-                    delay = vol.All(cv.time_period, cv.positive_timedelta)(template.render(self.hass, delay))
+                    delay = vol.All(cv.time_period, cv.positive_timedelta)(template.render(self.hass, action[CONF_DELAY]))
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
