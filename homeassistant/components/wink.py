@@ -12,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "wink"
-REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
 
 SUBSCRIPTION_HANDLER = None
 CHANNELS = []
