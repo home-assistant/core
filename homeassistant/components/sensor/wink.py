@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.wink import WinkDevice
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
 
 SENSOR_TYPES = ['temperature', 'humidity']
 
