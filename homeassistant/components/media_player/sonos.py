@@ -6,8 +6,9 @@ https://home-assistant.io/components/media_player.sonos/
 """
 import datetime
 import logging
-import socket
 from os import path
+import socket
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
@@ -15,8 +16,10 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF,
+    ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -42,6 +45,10 @@ SERVICE_RESTORE = 'sonos_restore'
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
 SUPPORT_SOURCE_RADIO = 'Radio'
+
+SONOS_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
 
 # List of devices that have been registered
 DEVICES = []
@@ -96,28 +103,32 @@ def register_services(hass):
 
     hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
                            _group_players_service,
-                           descriptions.get(SERVICE_GROUP_PLAYERS))
+                           descriptions.get(SERVICE_GROUP_PLAYERS),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_UNJOIN,
                            _unjoin_service,
-                           descriptions.get(SERVICE_UNJOIN))
+                           descriptions.get(SERVICE_UNJOIN),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
                            _snapshot_service,
-                           descriptions.get(SERVICE_SNAPSHOT))
+                           descriptions.get(SERVICE_SNAPSHOT),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_RESTORE,
                            _restore_service,
-                           descriptions.get(SERVICE_RESTORE))
+                           descriptions.get(SERVICE_RESTORE),
+                           schema=SONOS_SCHEMA)
 
 
 def _apply_service(service, service_func, *service_func_args):
     """Internal func for applying a service."""
-    entity_id = service.data.get('entity_id')
+    entity_ids = service.data.get('entity_id')
 
-    if entity_id:
+    if entity_ids:
         _devices = [device for device in DEVICES
-                    if device.entity_id == entity_id]
+                    if device.entity_id in entity_ids]
     else:
         _devices = DEVICES
 
