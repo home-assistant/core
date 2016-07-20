@@ -16,6 +16,7 @@ class TestRecorder(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
+        recorder._INSTANCE = None
         self.hass = get_test_home_assistant()
         db_uri = 'sqlite://'
         with patch('homeassistant.core.Config.path', return_value=db_uri):
