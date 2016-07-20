@@ -1,15 +1,14 @@
 """Helpers to execute scripts."""
 import logging
 import threading
-import re
-from datetime import datetime, timedelta
 from itertools import islice
+
+import voluptuous as vol
 
 import homeassistant.util.dt as date_util
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition
-from homeassistant.helpers import template
+from homeassistant.helpers import service, condition, template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +25,7 @@ CONF_DELAY = "delay"
 def call_from_config(hass, config, variables=None):
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
+
 
 class Script():
     """Representation of a script."""
@@ -73,8 +73,10 @@ class Script():
                     delay = action[CONF_DELAY]
 
                     if isinstance(delay, str):
-                        t = datetime.strptime(template.render(self.hass, delay, None), "%H:%M:%S")
-                        delay = timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
+                        delay = vol.All(
+                            cv.time_period,
+                            cv.positive_timedelta)(
+                                template.render(self.hass, delay))
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,

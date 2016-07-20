@@ -1,7 +1,7 @@
 # Home Assistant core
 requests>=2,<3
 pyyaml>=3.11,<4
-pytz>=2016.4
+pytz>=2016.6.1
 pip>=7.0.0
 jinja2>=2.8
 voluptuous==0.8.9
@@ -46,7 +46,7 @@ blockchain==1.3.3
 boto3==1.3.1
 
 # homeassistant.components.http
-cherrypy==6.0.2
+cherrypy==6.1.1
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.12.0
@@ -303,7 +303,7 @@ pynx584==0.2
 pyowm==2.3.2
 
 # homeassistant.components.switch.acer_projector
-pyserial<=3.0
+pyserial<=3.1
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
@@ -331,10 +331,10 @@ python-nmap==0.6.0
 python-pushover==0.2
 
 # homeassistant.components.notify.telegram
-python-telegram-bot==4.3.3
+python-telegram-bot==5.0.0
 
 # homeassistant.components.sensor.twitch
-python-twitch==1.2.0
+python-twitch==1.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink

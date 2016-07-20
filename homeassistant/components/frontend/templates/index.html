@@ -5,14 +5,14 @@
     <title>Home Assistant</title>
 
     <link rel='manifest' href='/static/manifest.json'>
-    <link rel='icon' href='/static/favicon.ico'>
+    <link rel='icon' href='/static/icons/favicon.ico'>
     <link rel='apple-touch-icon' sizes='180x180'
-          href='/static/favicon-apple-180x180.png'>
+          href='/static/icons/favicon-apple-180x180.png'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
-    <meta name="msapplication-square70x70logo" content="/static/tile-win-70x70.png"/>
-    <meta name="msapplication-square150x150logo" content="/static/tile-win-150x150.png"/>
-    <meta name="msapplication-wide310x150logo" content="/static/tile-win-310x150.png"/>
-    <meta name="msapplication-square310x310logo" content="/static/tile-win-310x310.png"/>
+    <meta name="msapplication-square70x70logo" content="/static/icons/tile-win-70x70.png"/>
+    <meta name="msapplication-square150x150logo" content="/static/icons/tile-win-150x150.png"/>
+    <meta name="msapplication-wide310x150logo" content="/static/icons/tile-win-310x150.png"/>
+    <meta name="msapplication-square310x310logo" content="/static/icons/tile-win-310x310.png"/>
     <meta name="msapplication-TileColor" content="#3fbbf4ff"/>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='viewport' content='width=device-width, user-scalable=no'>
@@ -65,16 +65,12 @@
           .getElementById('ha-init-skeleton')
           .classList.add('error');
       };
-      window.noAuth = {{ auth }};
-      window.deferredLoading = {
-        map: '{{ map_url }}',
-        dev: '{{ dev_url }}',
-      };
+      window.noAuth = {{ no_auth }};
     </script>
   </head>
-  <body fullbleed>
+  <body>
     <div id='ha-init-skeleton'>
-      <img src='/static/favicon-192x192.png' height='192'>
+      <img src='/static/icons/favicon-192x192.png' height='192'>
       <paper-spinner active></paper-spinner>
       Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
     </div>

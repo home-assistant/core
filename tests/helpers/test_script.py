@@ -153,8 +153,8 @@ class TestScriptHelper(unittest.TestCase):
         self.hass.bus.listen(event, record_event)
 
         script_obj = script.Script(self.hass, [
-            {'event': event,
-            {'delay': '00:00:{{ 5 }}'}},
+            {'event': event},
+            {'delay': '00:00:{{ 5 }}'},
             {'event': event}])
 
         script_obj.run()

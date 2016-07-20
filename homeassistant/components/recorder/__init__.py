@@ -39,7 +39,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_PURGE_DAYS): vol.All(vol.Coerce(int),
                                                vol.Range(min=1)),
-        vol.Optional(CONF_DB_URL): vol.Url(''),
+        # pylint: disable=no-value-for-parameter
+        vol.Optional(CONF_DB_URL): vol.Url(),
     })
 }, extra=vol.ALLOW_EXTRA)
 
