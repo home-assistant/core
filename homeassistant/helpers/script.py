@@ -74,6 +74,8 @@ class Script():
                     if isinstance(delay, str):
                         delay = vol.All(cv.time_period, cv.positive_timedelta)(template.render(self.hass, delay))
 
+                    _LOGGER.critical(str(delay))
+
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
                         date_util.utcnow() + delay)
