@@ -13,14 +13,15 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['python-wink==0.7.10', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
     "opened": "opening",
     "brightness": "light",
     "vibration": "vibration",
-    "loudness": "sound"
+    "loudness": "sound",
+    "liquid_detected": "moisture"
 }
 
 
@@ -74,6 +75,8 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
             return self.wink.vibration_boolean()
         elif self.capability == "brightness":
             return self.wink.brightness_boolean()
+        elif self.capability == "liquid_detected":
+            return self.wink.liquid_boolean()
         else:
             return self.wink.state()
 

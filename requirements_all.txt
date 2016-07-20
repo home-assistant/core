@@ -347,7 +347,7 @@ python-twitch==1.3.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.10
+python-wink==0.7.11
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
