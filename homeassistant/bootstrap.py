@@ -6,10 +6,10 @@ import os
 import sys
 from collections import defaultdict
 from threading import RLock
+from typing import Any, Optional, Dict
 
 import voluptuous as vol
 
-from typing import Any, Optional, Dict
 
 import homeassistant.components as core_components
 from homeassistant.components import group, persistent_notification
@@ -205,12 +205,12 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant] = None,
-                     config_dir: Optional[str] = None,
-                     enable_log: bool = True,
-                     verbose: bool = False,
-                     skip_pip: bool = False,
-                     log_rotate_days: Any = None) \
+                     hass: Optional[core.HomeAssistant]=None,
+                     config_dir: Optional[str]=None,
+                     enable_log: bool=True,
+                     verbose: bool=False,
+                     skip_pip: bool=False,
+                     log_rotate_days: Any=None) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a config dict.
 
@@ -274,10 +274,10 @@ def from_config_dict(config: Dict[str, Any],
 
 
 def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant] = None,
-                     verbose: bool = False,
-                     skip_pip: bool = True,
-                     log_rotate_days: Any = None):
+                     hass: Optional[core.HomeAssistant]=None,
+                     verbose: bool=False,
+                     skip_pip: bool=True,
+                     log_rotate_days: Any=None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,

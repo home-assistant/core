@@ -11,6 +11,7 @@ DOWNLOAD_URL = ('https://github.com/home-assistant/home-assistant/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
+    'typing>=3',
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2016.6.1',
