@@ -3,8 +3,6 @@ Support for KNX components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/knx/
-
-(c) 2016 Daniel Matuschek <info@open-homeautomation.com>
 """
 import logging
 
@@ -83,6 +81,8 @@ class KNXConfig(object):
         self.should_poll = config.get("poll", True)
         if config.get("address"):
             self._address = parse_group_address(config.get("address"))
+        else:
+            self._address = None
         if self.config.get("state_address"):
             self._state_address = parse_group_address(
                 self.config.get("state_address"))

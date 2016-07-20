@@ -3,8 +3,6 @@ Support for KNX thermostats.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/knx/
-
-(c) 2016 Daniel Matuschek <info@open-homeautomation.com>
 """
 import logging
 
