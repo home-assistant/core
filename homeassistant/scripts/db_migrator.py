@@ -83,8 +83,6 @@ def run(args):
             print(('Fatal Error: Specified configuration directory does '
                    'not exist {} ').format(config_dir))
             return 1
-    else:
-        config_dir = config_util.get_default_config_dir()
 
     src_db = '{}/home-assistant.db'.format(config_dir)
     dst_db = '{}/home-assistant_v2.db'.format(config_dir)
