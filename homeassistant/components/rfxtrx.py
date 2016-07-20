@@ -100,6 +100,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 DEVICE_SCHEMA_SENSOR = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(ATTR_DATA_TYPE, default=[]):
         vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
 })
