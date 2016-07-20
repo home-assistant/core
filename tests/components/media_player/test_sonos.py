@@ -63,6 +63,10 @@ class SoCoMock():
         """Cause the speaker to join all other speakers in the network."""
         return
 
+    def set_sleep_timer(self, sleep_time_seconds):
+        """Set/clear the sleep timer."""
+        return
+
     def unjoin(self):
         """Cause the speaker to separate itself from other speakers."""
         return
@@ -142,6 +146,15 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device.unjoin()
         self.assertEqual(unjoinMock.call_count, 1)
         self.assertEqual(unjoinMock.call_args, mock.call())
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch.object(SoCoMock, 'set_sleep_timer')
+    def test_sonos_set_sleep_timer(self, set_sleep_timerMock):
+        """Ensuring soco methods called for sonos_set_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
+        device = sonos.DEVICES[-1]
+        device.set_sleep_timer(30)
+        set_sleep_timerMock.assert_called_once_with(30)
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')

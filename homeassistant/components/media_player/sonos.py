@@ -41,13 +41,21 @@ SERVICE_GROUP_PLAYERS = 'sonos_group_players'
 SERVICE_UNJOIN = 'sonos_unjoin'
 SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
+SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
 SUPPORT_SOURCE_RADIO = 'Radio'
 
+# Service call validation schemas
+ATTR_SLEEP_TIME = 'sleep_time'
+
 SONOS_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Required(ATTR_SLEEP_TIME): cv.positive_int,
 })
 
 # List of devices that have been registered
@@ -126,6 +134,11 @@ def register_services(hass):
                            descriptions.get(SERVICE_RESTORE),
                            schema=SONOS_SCHEMA)
 
+    hass.services.register(DOMAIN, SERVICE_SET_TIMER,
+                           _set_sleep_timer_service,
+                           descriptions.get(SERVICE_SET_TIMER),
+                           schema=SONOS_SET_TIMER_SCHEMA)
+
 
 def _apply_service(service, service_func, *service_func_args):
     """Internal func for applying a service."""
@@ -160,6 +173,13 @@ def _snapshot_service(service):
 def _restore_service(service):
     """Restore a snapshot."""
     _apply_service(service, SonosDevice.restore)
+
+
+def _set_sleep_timer_service(service):
+    """Set a timer."""
+    _apply_service(service,
+                   SonosDevice.set_sleep_timer,
+                   service.data[ATTR_SLEEP_TIME])
 
 
 def only_if_coordinator(func):
@@ -439,6 +459,16 @@ class SonosDevice(MediaPlayerDevice):
     def restore(self):
         """Restore snapshot for the player."""
         self.soco_snapshot.restore(True)
+
+    @only_if_coordinator
+    def set_sleep_timer(self, sleep_time):
+        """Set the timer on the player."""
+        if sleep_time != '':
+            if int(sleep_time) > 86399:
+                raise ValueError("Can only set timers less than one day")
+        else:
+            sleep_time = None
+        self._player.set_sleep_timer(sleep_time)
 
     @property
     def available(self):
