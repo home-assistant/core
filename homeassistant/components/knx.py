@@ -3,6 +3,8 @@ Support for KNX components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/knx/
+
+(c) 2016 Daniel Matuschek <info@open-homeautomation.com>
 """
 import logging
 
@@ -10,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "knx"
-REQUIREMENTS = ['knxip==0.3.0']
+REQUIREMENTS = ['knxip==0.3.1']
 
 EVENT_KNX_FRAME_RECEIVED = "knx_frame_received"
 
@@ -45,7 +47,12 @@ def setup(hass, config):
 
     KNXTUNNEL = KNXIPTunnel(host, port)
     try:
-        KNXTUNNEL.connect()
+        res = KNXTUNNEL.connect()
+        _LOGGER.debug("Res = %s", res)
+        if not res:
+            _LOGGER.exception("Could not connect to KNX/IP interface %s", host)
+            return False
+
     except KNXException as ex:
         _LOGGER.exception("Can't connect to KNX/IP interface: %s", ex)
         KNXTUNNEL = None
@@ -74,7 +81,8 @@ class KNXConfig(object):
 
         self.config = config
         self.should_poll = config.get("poll", True)
-        self._address = parse_group_address(config.get("address"))
+        if config.get("address"):
+            self._address = parse_group_address(config.get("address"))
         if self.config.get("state_address"):
             self._state_address = parse_group_address(
                 self.config.get("state_address"))
@@ -198,7 +206,7 @@ class KNXGroupAddress(Entity):
             return False
 
 
-class KNXMultiAddressDevice(KNXGroupAddress):
+class KNXMultiAddressDevice(Entity):
     """Representation of devices connected to a multiple KNX group address.
 
     This is needed for devices like dimmers or shutter actuators as they have
@@ -218,18 +226,21 @@ class KNXMultiAddressDevice(KNXGroupAddress):
         """
         from knxip.core import parse_group_address, KNXException
 
-        super().__init__(self, hass, config)
-
-        self.config = config
+        self._config = config
+        self._state = False
+        self._data = None
+        _LOGGER.debug("Initalizing KNX multi address device")
 
         # parse required addresses
         for name in required:
+            _LOGGER.info(name)
             paramname = name + "_address"
             addr = self._config.config.get(paramname)
             if addr is None:
                 _LOGGER.exception("Required KNX group address %s missing",
                                   paramname)
-                raise KNXException("Group address missing in configuration")
+                raise KNXException("Group address for %s missing "
+                                   "in configuration", paramname)
             addr = parse_group_address(addr)
             self.names[addr] = name
 
@@ -244,23 +255,25 @@ class KNXMultiAddressDevice(KNXGroupAddress):
                     _LOGGER.exception("Cannot parse group address %s", addr)
                 self.names[addr] = name
 
-        def handle_frame(frame):
-            """Handle an incoming KNX frame.
+    @property
+    def name(self):
+        """The entity's display name."""
+        return self._config.name
 
-            Handle an incoming frame and update our status if it contains
-            information relating to this device.
-            """
-            addr = frame.data[0]
+    @property
+    def config(self):
+        """The entity's configuration."""
+        return self._config
 
-            if addr in self.names:
-                self.values[addr] = frame.data[1]
-                self.update_ha_state()
+    @property
+    def should_poll(self):
+        """Return the state of the polling, if needed."""
+        return self._config.should_poll
 
-        hass.bus.listen(EVENT_KNX_FRAME_RECEIVED, handle_frame)
-
-    def group_write_address(self, name, value):
-        """Write to the group address with the given name."""
-        KNXTUNNEL.group_write(self.address, [value])
+    @property
+    def cache(self):
+        """The name given to the entity."""
+        return self._config.config.get("cache", True)
 
     def has_attribute(self, name):
         """Check if the attribute with the given name is defined.
@@ -277,7 +290,7 @@ class KNXMultiAddressDevice(KNXGroupAddress):
         from knxip.core import KNXException
 
         addr = None
-        for attributename, attributeaddress in self.names.items():
+        for attributeaddress, attributename in self.names.items():
             if attributename == name:
                 addr = attributeaddress
 
@@ -293,3 +306,25 @@ class KNXMultiAddressDevice(KNXGroupAddress):
             return False
 
         return res
+
+    def set_value(self, name, value):
+        """Set the value of a given named attribute."""
+        from knxip.core import KNXException
+
+        addr = None
+        for attributeaddress, attributename in self.names.items():
+            if attributename == name:
+                addr = attributeaddress
+
+        if addr is None:
+            _LOGGER.exception("Attribute %s undefined", name)
+            return False
+
+        try:
+            KNXTUNNEL.group_write(addr, value)
+        except KNXException:
+            _LOGGER.exception("Unable to write to KNX address: %s",
+                              addr)
+            return False
+
+        return True
