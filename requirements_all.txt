@@ -350,7 +350,7 @@ python-wink==0.7.10
 pyuserinput==0.1.9
 
 # homeassistant.components.vera
-pyvera==0.2.13
+pyvera==0.2.15
 
 # homeassistant.components.wemo
 pywemo==0.4.3
