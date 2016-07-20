@@ -73,14 +73,14 @@ CORE_CONFIG_SCHEMA = vol.Schema({
 })
 
 
-def get_default_config_dir():
+def get_default_config_dir() -> str:
     """Put together the default configuration directory based on OS."""
     data_dir = os.getenv('APPDATA') if os.name == "nt" \
         else os.path.expanduser('~')
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir, detect_location=True):
+def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
     """Ensure a config file exists in given configuration directory.
 
     Creating a default one if needed.
