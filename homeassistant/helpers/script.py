@@ -1,7 +1,7 @@
 """Helpers to execute scripts."""
 import logging
 import threading
-from datetime import datetime, timedelta
+import voluptuous as vol
 from itertools import islice
 
 import homeassistant.util.dt as date_util
@@ -69,17 +69,7 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
-                    delay = action[CONF_DELAY]
-
-                    if isinstance(delay, str):
-                        time_template = datetime.strptime(
-                            template.render(
-                                self.hass, delay, None),
-                            "%H:%M:%S")
-                        delay = timedelta(
-                            hours=time_template.hour,
-                            minutes=time_template.minute,
-                            seconds=time_template.second)
+                    delay = vol.All(cv.time_period, cv.positive_timedelta)(template.render(hass, delay))
 
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
