@@ -19,4 +19,4 @@ def run(args: str) -> int:
         return 1
 
     script = importlib.import_module('homeassistant.scripts.' + args[0])
-    return script.run(args[1:])
+    return script.run(args[1:])  # type: ignore
