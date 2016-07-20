@@ -9,10 +9,13 @@ from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api']
-PANELS = {}
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
+PANELS = {}
+
+# To keep track we don't register a component twice (gives a warning)
+_REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,8 +70,12 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
                        '{0}/ha-panel-{0}.html'.format(component_name))
     else:
         url = URL_PANEL_COMPONENT.format(component_name)
+
+        if url not in _REGISTERED_COMPONENTS:
+            hass.wsgi.register_static_path(url, path)
+            _REGISTERED_COMPONENTS.add(url)
+
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
-        hass.wsgi.register_static_path(url, path)
         data['url'] = fprinted_url
 
     PANELS[url_name] = data
@@ -158,6 +165,13 @@ class IndexView(HomeAssistantView):
             ui_url = '/static/frontend-{}.html'.format(
                 FINGERPRINTS['frontend.html'])
 
+        if request.path == '/':
+            panel = 'states'
+        else:
+            panel = request.path.split('/')[1]
+
+        panel_url = PANELS[panel]['url'] if panel != 'states' else ''
+
         # auto login if no password was set
         no_auth = 'false' if self.hass.config.api.api_password else 'true'
 
@@ -168,6 +182,7 @@ class IndexView(HomeAssistantView):
         # pylint: disable=no-member
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
-            icons_url=icons_url, icons=FINGERPRINTS['mdi.html'])
+            icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
+            panel_url=panel_url)
 
         return self.Response(resp, mimetype='text/html')
