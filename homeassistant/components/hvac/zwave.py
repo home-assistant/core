@@ -98,9 +98,10 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_properties()
-            self.update_ha_state(True)
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     def update_properties(self):
