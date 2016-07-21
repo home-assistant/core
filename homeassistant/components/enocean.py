@@ -5,6 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/EnOcean/
 """
 
+from abc import ABCMeta, abstractmethod
+from typing import Dict
+
+from homeassistant.core import HomeAssistant
+
 DOMAIN = "enocean"
 
 REQUIREMENTS = ['enocean==0.31']
@@ -14,7 +19,7 @@ CONF_DEVICE = "device"
 ENOCEAN_DONGLE = None
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: Dict) -> bool:
     """Setup the EnOcean component."""
     global ENOCEAN_DONGLE
 
@@ -26,24 +31,26 @@ def setup(hass, config):
 
 class EnOceanDongle:
     """Representation of an EnOcean dongle."""
+    from homeassistant.components.enocean import EnOceanDevice
+    from enocean.protocol.packet import Packet, RadioPacket
 
-    def __init__(self, hass, ser):
+    def __init__(self, hass: HomeAssistant, ser: str) -> None:
         """Initialize the EnOcean dongle."""
         from enocean.communicators.serialcommunicator import SerialCommunicator
         self.__communicator = SerialCommunicator(port=ser,
                                                  callback=self.callback)
         self.__communicator.start()
-        self.__devices = []
+        self.__devices = []  # type: List[EnOceanDevice]
 
-    def register_device(self, dev):
+    def register_device(self, dev: EnOceanDevice) -> None:
         """Register another device."""
         self.__devices.append(dev)
 
-    def send_command(self, command):
+    def send_command(self, command: Packet) -> None:
         """Send a command from the EnOcean dongle."""
         self.__communicator.send(command)
 
-    def _combine_hex(self, data):  # pylint: disable=no-self-use
+    def _combine_hex(self, data) -> int:  # pylint: disable=no-self-use
         """Combine list of integer values to one big integer."""
         output = 0x00
         for i, j in enumerate(reversed(data)):
@@ -51,7 +58,7 @@ class EnOceanDongle:
         return output
 
     # pylint: disable=too-many-branches
-    def callback(self, temp):
+    def callback(self, temp: RadioPacket):
         """Callback function for EnOcean Device.
 
         This is the callback function called by
@@ -59,6 +66,7 @@ class EnOceanDongle:
         packet.
         """
         from enocean.protocol.packet import RadioPacket
+        # TODO: Remove test in the future in favor of gradual typing.
         if isinstance(temp, RadioPacket):
             rxtype = None
             value = None
@@ -100,12 +108,13 @@ class EnOceanDongle:
 
 
 # pylint: disable=too-few-public-methods
-class EnOceanDevice():
+class EnOceanDevice(metaclass=ABCMeta):
     """Parent class for all devices associated with the EnOcean component."""
 
     def __init__(self):
         """Initialize the device."""
         ENOCEAN_DONGLE.register_device(self)
+        self.dev_id = None
         self.stype = ""
         self.sensorid = [0x00, 0x00, 0x00, 0x00]
 
@@ -115,3 +124,7 @@ class EnOceanDevice():
         from enocean.protocol.packet import Packet
         packet = Packet(packet_type, data=data, optional=optional)
         ENOCEAN_DONGLE.send_command(packet)
+
+    @abstractmethod
+    def value_changed(value):
+        raise NotImplementedError
