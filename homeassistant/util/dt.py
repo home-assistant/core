@@ -2,12 +2,12 @@
 import datetime as dt
 import re
 
-from typing import Union, Optional
+from typing import Any, Union, Optional, Tuple  # NOQA
 
 import pytz
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = DEFAULT_TIME_ZONE = pytz.utc
+UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: pytz.UTC
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -160,7 +160,7 @@ def parse_time(time_str):
 
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
-def get_age(date):
+def get_age(date: dt.datetime) -> str:
     # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
@@ -177,7 +177,7 @@ def get_age(date):
         elif number > 1:
             return "%d %ss" % (number, unit)
 
-    def q_n_r(first: int, second: int):
+    def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
         return first // second, first % second
 

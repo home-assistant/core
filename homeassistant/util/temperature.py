@@ -3,7 +3,7 @@
 import logging
 
 
-def fahrenheit_to_celcius(fahrenheit):
+def fahrenheit_to_celcius(fahrenheit: float) -> float:
     """**DEPRECATED** Convert a Fahrenheit temperature to Celsius."""
     logging.getLogger(__name__).warning(
         'fahrenheit_to_celcius is now fahrenheit_to_celsius '
@@ -11,12 +11,12 @@ def fahrenheit_to_celcius(fahrenheit):
     return fahrenheit_to_celsius(fahrenheit)
 
 
-def fahrenheit_to_celsius(fahrenheit):
+def fahrenheit_to_celsius(fahrenheit: float) -> float:
     """Convert a Fahrenheit temperature to Celsius."""
     return (fahrenheit - 32.0) / 1.8
 
 
-def celcius_to_fahrenheit(celcius):
+def celcius_to_fahrenheit(celcius: float) -> float:
     """**DEPRECATED** Convert a Celsius temperature to Fahrenheit."""
     logging.getLogger(__name__).warning(
         'celcius_to_fahrenheit is now celsius_to_fahrenheit correcting '
@@ -24,6 +24,6 @@ def celcius_to_fahrenheit(celcius):
     return celsius_to_fahrenheit(celcius)
 
 
-def celsius_to_fahrenheit(celsius):
+def celsius_to_fahrenheit(celsius: float) -> float:
     """Convert a Celsius temperature to Fahrenheit."""
     return celsius * 1.8 + 32.0
