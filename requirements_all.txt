@@ -454,3 +454,6 @@ yahooweather==0.4
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
+
+# homeassistant.components.media_player.russound_rnet
+https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
