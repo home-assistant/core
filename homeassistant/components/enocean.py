@@ -32,9 +32,13 @@ def setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
 # pylint: disable=too-few-public-methods
 class EnOceanDevice(metaclass=ABCMeta):
     """Parent class for all devices associated with the EnOcean component."""
+    Packet = None
 
     def __init__(self) -> None:
         """Initialize the device."""
+        from enocean.protocol.packet import Packet
+        EnOceanDevice.Packet = Packet
+
         ENOCEAN_DONGLE.register_device(self)
         self.dev_id = None
         self.stype = ""
@@ -44,8 +48,8 @@ class EnOceanDevice(metaclass=ABCMeta):
     def send_command(self, data: Sequence[int],
                      optional: Sequence, packet_type: int):
         """Send a command via the EnOcean dongle."""
-        from enocean.protocol.packet import Packet
-        packet = Packet(packet_type, data=data, optional=optional)
+        packet = EnOceanDevice.Packet(packet_type, data=data,
+                                      optional=optional)
         ENOCEAN_DONGLE.send_command(packet)
 
     @abstractmethod
@@ -56,9 +60,13 @@ class EnOceanDevice(metaclass=ABCMeta):
 
 class EnOceanDongle:
     """Representation of an EnOcean dongle."""
+    Packet, RadioPacket = None, None
 
     def __init__(self, hass: HomeAssistant, ser: str) -> None:
         """Initialize the EnOcean dongle."""
+        from enocean.protocol.packet import Packet, RadioPacket
+        EnOceanDongle.Packet, EnOceanDongle.RadioPacket = Packet, RadioPacket
+
         from enocean.communicators.serialcommunicator import SerialCommunicator
         self.__communicator = SerialCommunicator(port=ser,
                                                  callback=self.callback)
@@ -81,50 +89,49 @@ class EnOceanDongle:
         return output
 
     # pylint: disable=too-many-branches
-    def callback(self, temp):
+    def callback(self, temp: EnOceanDongle.RadioPacket):  # NOQA
         """Callback function for EnOcean Device.
 
         This is the callback function called by
         python-enocan whenever there is an incoming
         packet.
         """
-        from enocean.protocol.packet import RadioPacket
-        # TODO: Remove test in the future in favor of gradual typing.
-        if isinstance(temp, RadioPacket):
-            rxtype = None
-            value = None
-            if temp.data[6] == 0x30:
-                rxtype = "wallswitch"
+        rxtype = None
+        value = None
+
+        if temp.data[6] == 0x30:
+            rxtype = "wallswitch"
+            value = 1
+        elif temp.data[6] == 0x20:
+            rxtype = "wallswitch"
+            value = 0
+        elif temp.data[4] == 0x0c:
+            rxtype = "power"
+            value = temp.data[3] + (temp.data[2] << 8)
+        elif temp.data[2] == 0x60:
+            rxtype = "switch_status"
+            if temp.data[3] == 0xe4:
                 value = 1
-            elif temp.data[6] == 0x20:
-                rxtype = "wallswitch"
+            elif temp.data[3] == 0x80:
                 value = 0
-            elif temp.data[4] == 0x0c:
-                rxtype = "power"
-                value = temp.data[3] + (temp.data[2] << 8)
-            elif temp.data[2] == 0x60:
-                rxtype = "switch_status"
-                if temp.data[3] == 0xe4:
-                    value = 1
-                elif temp.data[3] == 0x80:
-                    value = 0
-            elif temp.data[0] == 0xa5 and temp.data[1] == 0x02:
-                rxtype = "dimmerstatus"
-                value = temp.data[2]
-            for device in self.__devices:
-                if rxtype == "wallswitch" and device.stype == "listener":
-                    if temp.sender == self._combine_hex(device.dev_id):
-                        device.value_changed(value, temp.data[1])
-                if rxtype == "power" and device.stype == "powersensor":
-                    if temp.sender == self._combine_hex(device.dev_id):
-                        device.value_changed(value)
-                if rxtype == "power" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
-                        if value > 10:
-                            device.value_changed(1)
-                if rxtype == "switch_status" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
-                        device.value_changed(value)
-                if rxtype == "dimmerstatus" and device.stype == "dimmer":
-                    if temp.sender == self._combine_hex(device.dev_id):
-                        device.value_changed(value)
+        elif temp.data[0] == 0xa5 and temp.data[1] == 0x02:
+            rxtype = "dimmerstatus"
+            value = temp.data[2]
+
+        for device in self.__devices:
+            if rxtype == "wallswitch" and device.stype == "listener":
+                if temp.sender == self._combine_hex(device.dev_id):
+                    device.value_changed((value, temp.data[1]))
+            if rxtype == "power" and device.stype == "powersensor":
+                if temp.sender == self._combine_hex(device.dev_id):
+                    device.value_changed(value)
+            if rxtype == "power" and device.stype == "switch":
+                if temp.sender == self._combine_hex(device.dev_id):
+                    if value > 10:
+                        device.value_changed(1)
+            if rxtype == "switch_status" and device.stype == "switch":
+                if temp.sender == self._combine_hex(device.dev_id):
+                    device.value_changed(value)
+            if rxtype == "dimmerstatus" and device.stype == "dimmer":
+                if temp.sender == self._combine_hex(device.dev_id):
+                    device.value_changed(value)

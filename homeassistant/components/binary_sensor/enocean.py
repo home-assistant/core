@@ -42,12 +42,13 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         """The default name for the binary sensor."""
         return self.devname
 
-    def value_changed(self, value, value2):
+    def value_changed(self, value):
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated
         with this platform.
         """
+        (value1, value2) = value
         self.update_ha_state()
         if value2 == 0x70:
             self.which = 0
@@ -62,6 +63,6 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
             self.which = 1
             self.onoff = 1
         self.hass.bus.fire('button_pressed', {"id": self.dev_id,
-                                              'pushed': value,
+                                              'pushed': value1,
                                               'which': self.which,
                                               'onoff': self.onoff})
