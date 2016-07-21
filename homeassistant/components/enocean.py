@@ -29,10 +29,33 @@ def setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
     return True
 
 
+# pylint: disable=too-few-public-methods
+class EnOceanDevice(metaclass=ABCMeta):
+    """Parent class for all devices associated with the EnOcean component."""
+
+    def __init__(self) -> None:
+        """Initialize the device."""
+        ENOCEAN_DONGLE.register_device(self)
+        self.dev_id = None
+        self.stype = ""
+        self.sensorid = [0x00, 0x00, 0x00, 0x00]
+
+    # pylint: disable=no-self-use
+    def send_command(self, data: Sequence[int],
+                     optional: Sequence, packet_type: int):
+        """Send a command via the EnOcean dongle."""
+        from enocean.protocol.packet import Packet
+        packet = Packet(packet_type, data=data, optional=optional)
+        ENOCEAN_DONGLE.send_command(packet)
+
+    @abstractmethod
+    def value_changed(self, value: Any) -> None:
+        """Update the internal state of this device."""
+        raise NotImplementedError
+
+
 class EnOceanDongle:
     """Representation of an EnOcean dongle."""
-    from homeassistant.components.enocean import EnOceanDevice
-    from enocean.protocol.packet import Packet, RadioPacket
 
     def __init__(self, hass: HomeAssistant, ser: str) -> None:
         """Initialize the EnOcean dongle."""
@@ -46,7 +69,7 @@ class EnOceanDongle:
         """Register another device."""
         self.__devices.append(dev)
 
-    def send_command(self, command: Packet) -> None:
+    def send_command(self, command) -> None:
         """Send a command from the EnOcean dongle."""
         self.__communicator.send(command)
 
@@ -58,7 +81,7 @@ class EnOceanDongle:
         return output
 
     # pylint: disable=too-many-branches
-    def callback(self, temp: RadioPacket):
+    def callback(self, temp):
         """Callback function for EnOcean Device.
 
         This is the callback function called by
@@ -105,27 +128,3 @@ class EnOceanDongle:
                 if rxtype == "dimmerstatus" and device.stype == "dimmer":
                     if temp.sender == self._combine_hex(device.dev_id):
                         device.value_changed(value)
-
-
-# pylint: disable=too-few-public-methods
-class EnOceanDevice(metaclass=ABCMeta):
-    """Parent class for all devices associated with the EnOcean component."""
-
-    def __init__(self) -> None:
-        """Initialize the device."""
-        ENOCEAN_DONGLE.register_device(self)
-        self.dev_id = None
-        self.stype = ""
-        self.sensorid = [0x00, 0x00, 0x00, 0x00]
-
-    # pylint: disable=no-self-use
-    def send_command(self, data: Sequence[int],
-                     optional: Sequence, packet_type: int):
-        """Send a command via the EnOcean dongle."""
-        from enocean.protocol.packet import Packet
-        packet = Packet(packet_type, data=data, optional=optional)
-        ENOCEAN_DONGLE.send_command(packet)
-
-    @abstractmethod
-    def value_changed(self, value: Any) -> None:
-        raise NotImplementedError

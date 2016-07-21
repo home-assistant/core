@@ -24,7 +24,7 @@ CONF_SENDER_ID = "sender_id"
 
 
 def setup_platform(hass: HomeAssistant, config: Dict[str, Any],
-                   add_devices, discovery_info=None):
+                   add_devices: Callable, discovery_info=None):
     """Setup the EnOcean light platform."""
     sender_id = config.get(CONF_SENDER_ID, None)
     devname = config.get(CONF_NAME, "Enocean actuator")
