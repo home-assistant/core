@@ -17,7 +17,7 @@ from homeassistant.helpers import discovery
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.9"]
+REQUIREMENTS = ["pyhomematic==0.1.10"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
