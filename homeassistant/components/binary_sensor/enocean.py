@@ -5,6 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.enocean/
 """
 
+from typing import Any, Callable, Dict
+
+from homeassistant.core import HomeAssistant
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components import enocean
 from homeassistant.const import CONF_NAME
@@ -14,7 +17,8 @@ DEPENDENCIES = ["enocean"]
 CONF_ID = "id"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config: Dict[str, Any],
+                   add_devices: Callable, discovery_info=None):
     """Setup the Binary Sensor platform fo EnOcean."""
     dev_id = config.get(CONF_ID, None)
     devname = config.get(CONF_NAME, "EnOcean binary sensor")

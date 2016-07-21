@@ -6,7 +6,7 @@ https://home-assistant.io/components/EnOcean/
 """
 
 from abc import ABCMeta, abstractmethod
-from typing import Dict
+from typing import Any, Sequence, Dict
 
 from homeassistant.core import HomeAssistant
 
@@ -19,7 +19,7 @@ CONF_DEVICE = "device"
 ENOCEAN_DONGLE = None
 
 
-def setup(hass: HomeAssistant, config: Dict) -> bool:
+def setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
     """Setup the EnOcean component."""
     global ENOCEAN_DONGLE
 
@@ -111,7 +111,7 @@ class EnOceanDongle:
 class EnOceanDevice(metaclass=ABCMeta):
     """Parent class for all devices associated with the EnOcean component."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the device."""
         ENOCEAN_DONGLE.register_device(self)
         self.dev_id = None
@@ -119,12 +119,13 @@ class EnOceanDevice(metaclass=ABCMeta):
         self.sensorid = [0x00, 0x00, 0x00, 0x00]
 
     # pylint: disable=no-self-use
-    def send_command(self, data, optional, packet_type):
+    def send_command(self, data: Sequence[int],
+                     optional: Sequence, packet_type: int):
         """Send a command via the EnOcean dongle."""
         from enocean.protocol.packet import Packet
         packet = Packet(packet_type, data=data, optional=optional)
         ENOCEAN_DONGLE.send_command(packet)
 
     @abstractmethod
-    def value_changed(value):
+    def value_changed(self, value: Any) -> None:
         raise NotImplementedError

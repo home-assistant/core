@@ -7,9 +7,12 @@ https://home-assistant.io/components/light.enocean/
 import logging
 import math
 
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
+from typing import Any, Callable, Dict
+
+from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_NAME
 from homeassistant.components import enocean
+from homeassistant.components.light import Light, ATTR_BRIGHTNESS
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +23,8 @@ CONF_ID = "id"
 CONF_SENDER_ID = "sender_id"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config: Dict[str, Any],
+                   add_devices, discovery_info=None):
     """Setup the EnOcean light platform."""
     sender_id = config.get(CONF_SENDER_ID, None)
     devname = config.get(CONF_NAME, "Enocean actuator")
@@ -32,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EnOceanLight(enocean.EnOceanDevice, Light):
     """Representation of an EnOcean light source."""
 
-    def __init__(self, sender_id, devname, dev_id):
+    def __init__(self, sender_id, devname, dev_id) -> None:
         """Initialize the EnOcean light source."""
         enocean.EnOceanDevice.__init__(self)
         self._on_state = False
@@ -48,7 +52,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         return self._devname
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Brightness of the light.
 
         This method is optional. Removing it indicates to Home Assistant
@@ -57,11 +61,11 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         return self._brightness
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """If light is on."""
         return self._on_state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn the light source on or sets a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
@@ -76,7 +80,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self.send_command(command, [], 0x01)
         self._on_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn the light source off."""
         command = [0xa5, 0x02, 0x00, 0x01, 0x09]
         command.extend(self._sender_id)
@@ -84,7 +88,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self.send_command(command, [], 0x01)
         self._on_state = False
 
-    def value_changed(self, val):
+    def value_changed(self, val: int) -> None:
         """Update the internal state of this device."""
         self._brightness = math.floor(val / 100.0 * 256.0)
         self._on_state = bool(val != 0)

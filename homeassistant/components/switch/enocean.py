@@ -7,6 +7,9 @@ https://home-assistant.io/components/switch.enocean/
 
 import logging
 
+from typing import Any, Dict, Callable
+
+from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_NAME
 from homeassistant.components import enocean
 from homeassistant.helpers.entity import ToggleEntity
@@ -19,7 +22,8 @@ DEPENDENCIES = ["enocean"]
 CONF_ID = "id"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config: Dict[str, Any],
+                   add_devices: Callable, discovery_info=None) -> None:
     """Setup the EnOcean switch platform."""
     dev_id = config.get(CONF_ID, None)
     devname = config.get(CONF_NAME, "Enocean actuator")
@@ -30,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
     """Representation of an EnOcean switch device."""
 
-    def __init__(self, dev_id, devname):
+    def __init__(self, dev_id, devname: str) -> None:
         """Initialize the EnOcean switch device."""
         enocean.EnOceanDevice.__init__(self)
         self.dev_id = dev_id
@@ -41,16 +45,16 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
         self.stype = "switch"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return whether the switch is on or off."""
         return self._on_state
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the device name."""
         return self._devname
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn on the switch."""
         optional = [0x03, ]
         optional.extend(self.dev_id)
@@ -60,9 +64,9 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
                           packet_type=0x01)
         self._on_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn off the switch."""
-        optional = [0x03, ]
+        optional = [0x03]
         optional.extend(self.dev_id)
         optional.extend([0xff, 0x00])
         self.send_command(data=[0xD2, 0x01, 0x00, 0x00, 0x00,
@@ -70,7 +74,7 @@ class EnOceanSwitch(enocean.EnOceanDevice, ToggleEntity):
                           packet_type=0x01)
         self._on_state = False
 
-    def value_changed(self, val):
+    def value_changed(self, val: bool) -> None:
         """Update the internal state of the switch."""
         self._on_state = val
         self.update_ha_state()
