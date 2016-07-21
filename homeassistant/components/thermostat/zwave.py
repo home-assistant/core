@@ -81,7 +81,8 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_properties()
             self.update_ha_state()
 
