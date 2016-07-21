@@ -1,18 +1,18 @@
 """
+
 Support for interfacing with Russound CAV units
-via RNET Protocol
+via RNET Protocol.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.russound_rnet/
 """
 import logging
 
-from homeassistant.loader import get_component
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, STATE_OFF, STATE_ON)
+    CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
     'https://github.com/laf/russound/archive/0.1.6.zip'
@@ -27,8 +27,7 @@ SUPPORTED_COMMANDS = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
 _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup the Russound RNET platform """
-
+    """Setup the Russound RNET platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     keypad = config.get('keypad', '70')
@@ -49,16 +48,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if russ.is_connected():
         for zone_id, extra in config[ZONES].items():
-            add_devices([RussoundRNETDevice(hass, russ, sources, zone_id, extra)])
+            add_devices([RussoundRNETDevice(hass, russ, sources, zone_id,
+                                            extra)])
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)
 
 # pylint: disable=abstract-method, too-many-public-methods,
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class RussoundRNETDevice(MediaPlayerDevice):
-    """ Representation of a Russound RNET device. """
-
+    """Representation of a Russound RNET device."""
     def __init__(self, hass, russ, sources, zone_id, extra):
+        """Initialise the Russound RNET device."""
         self._name = extra['name']
         self._russ = russ
         self._state = STATE_OFF
@@ -111,11 +111,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
             self._russ.set_source('1', self._zone_id, index)
 
     @property
-    def state(self):
-        return self._state
-
-    @property
     def source_list(self):
         """List of available input sources."""
-
         return self._sources
+
