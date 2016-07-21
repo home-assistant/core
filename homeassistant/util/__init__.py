@@ -1,5 +1,5 @@
 """Helper methods for various modules."""
-import collections
+from collections.abc import MutableSet
 from itertools import chain
 import threading
 import queue
@@ -128,7 +128,7 @@ class OrderedEnum(enum.Enum):
         return NotImplemented
 
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(MutableSet):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
     def __init__(self, iterable=None):
