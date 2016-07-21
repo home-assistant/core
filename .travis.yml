@@ -9,7 +9,12 @@ matrix:
     - python: "3.5"
       env: TOXENV=lint
     - python: "3.5"
+      env: TOXENV=typing
+    - python: "3.5"
       env: TOXENV=py35
+  allow_failures:
+    - python: "3.5"
+      env: TOXENV=typing
 cache:
   directories:
     - $HOME/.cache/pip
