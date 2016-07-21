@@ -56,7 +56,12 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
     @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
-        return self._value.data
+        if self._value.data <= 5:
+            return 100
+        elif self._value.data >= 95:
+            return 0
+        else:
+            return None
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
