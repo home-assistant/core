@@ -8,21 +8,22 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushbullet.py==0.10.0']
 
 
 # pylint: disable=unused-argument
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the PushBullet notification service."""
     from pushbullet import PushBullet
     from pushbullet import InvalidKeyError
 
+    name = config.get(CONF_NAME)
     if CONF_API_KEY not in config:
         _LOGGER.error("Unable to find config key '%s'", CONF_API_KEY)
-        return None
+        return False
 
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
@@ -30,20 +31,26 @@ def get_service(hass, config):
         _LOGGER.error(
             "Wrong API key supplied. "
             "Get it at https://www.pushbullet.com/account")
-        return None
+        return False
 
-    return PushBulletNotificationService(pushbullet)
+    add_devices([PushBulletNotificationService(pushbullet, name)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 
-    def __init__(self, pb):
+    def __init__(self, pb, name):
         """Initialize the service."""
         self.pushbullet = pb
+        self._name = name
         self.pbtargets = {}
         self.refresh()
+
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
 
     def refresh(self):
         """Refresh devices, contacts, etc.
@@ -64,7 +71,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 tgt in self.pushbullet.channels},
         }
 
-    def send_message(self, message=None, **kwargs):
+    def send_message(self, message, **kwargs):
         """Send a message to a specified target.
 
         If no target specified, a 'normal' push will be sent to all devices

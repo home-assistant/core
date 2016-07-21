@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.join/
 import logging
 import voluptuous as vol
 from homeassistant.components.notify import (
-    ATTR_DATA, ATTR_TITLE, BaseNotificationService)
+    ATTR_FORMATS, ATTR_TITLE, BaseNotificationService)
 from homeassistant.const import CONF_PLATFORM, CONF_NAME, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -28,32 +28,39 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 # pylint: disable=unused-variable
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Join notification service."""
     device_id = config.get(CONF_DEVICE_ID)
     api_key = config.get(CONF_API_KEY)
+    name = config.get(CONF_NAME)
     if api_key:
         from pyjoin import get_devices
         if not get_devices(api_key):
             _LOGGER.error("Error connecting to Join, check API key")
             return False
-    return JoinNotificationService(device_id, api_key)
+    add_devices([JoinNotificationService(name, device_id, api_key)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class JoinNotificationService(BaseNotificationService):
     """Implement the notification service for Join."""
 
-    def __init__(self, device_id, api_key=None):
+    def __init__(self, name, device_id, api_key=None):
         """Initialize the service."""
         self._device_id = device_id
         self._api_key = api_key
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         from pyjoin import send_notification
         title = kwargs.get(ATTR_TITLE)
-        data = kwargs.get(ATTR_DATA) or {}
+        data = kwargs.get(ATTR_FORMATS) or {}
         send_notification(device_id=self._device_id,
                           text=message,
                           title=title,

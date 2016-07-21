@@ -7,7 +7,7 @@ https://home-assistant.io/components/notify.twitter/
 import logging
 
 from homeassistant.components.notify import DOMAIN, BaseNotificationService
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,33 +18,42 @@ CONF_CONSUMER_SECRET = "consumer_secret"
 CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Twitter notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_CONSUMER_KEY, CONF_CONSUMER_SECRET,
                                      CONF_ACCESS_TOKEN,
                                      CONF_ACCESS_TOKEN_SECRET]},
                            _LOGGER):
-        return None
+        return False
 
-    return TwitterNotificationService(config[CONF_CONSUMER_KEY],
-                                      config[CONF_CONSUMER_SECRET],
-                                      config[CONF_ACCESS_TOKEN],
-                                      config[CONF_ACCESS_TOKEN_SECRET])
+    add_devices([TwitterNotificationService(
+        config.get(CONF_CONSUMER_KEY),
+        config.get(CONF_CONSUMER_SECRET),
+        config.get(CONF_ACCESS_TOKEN),
+        config.get(CONF_ACCESS_TOKEN_SECRET),
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class TwitterNotificationService(BaseNotificationService):
     """Implement notification service for the Twitter service."""
 
+    # pylint: disable=too-many-arguments
     def __init__(self, consumer_key, consumer_secret, access_token_key,
-                 access_token_secret):
+                 access_token_secret, name):
         """Initialize the service."""
         from TwitterAPI import TwitterAPI
+        self._name = name
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Tweet some message."""
         resp = self.api.request('statuses/update', {'status': message})
         if resp.status_code != 200:

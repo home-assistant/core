@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.twilio_sms/
 """
 import logging
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.notify import (
     ATTR_TARGET, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
@@ -18,14 +19,14 @@ CONF_AUTH_TOKEN = "auth_token"
 CONF_FROM_NUMBER = "from_number"
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Twilio SMS notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_ACCOUNT_SID,
                                      CONF_AUTH_TOKEN,
                                      CONF_FROM_NUMBER]},
                            _LOGGER):
-        return None
+        return False
 
     # pylint: disable=import-error
     from twilio.rest import TwilioRestClient
@@ -33,18 +34,24 @@ def get_service(hass, config):
     twilio_client = TwilioRestClient(config[CONF_ACCOUNT_SID],
                                      config[CONF_AUTH_TOKEN])
 
-    return TwilioSMSNotificationService(twilio_client,
-                                        config[CONF_FROM_NUMBER])
+    add_devices([TwilioSMSNotificationService(
+        twilio_client, config.get(CONF_FROM_NUMBER), config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class TwilioSMSNotificationService(BaseNotificationService):
     """Implement the notification service for the Twilio SMS service."""
 
-    def __init__(self, twilio_client, from_number):
+    def __init__(self, twilio_client, from_number, name):
         """Initialize the service."""
         self.client = twilio_client
         self.from_number = from_number
+        self._name = name
+
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
 
     def send_message(self, message="", **kwargs):
         """Send SMS to specified target user cell."""

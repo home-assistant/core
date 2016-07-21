@@ -25,7 +25,7 @@ CONF_CONTEXT = "context"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "aws_lambda",
-    vol.Optional(CONF_NAME): vol.Coerce(str),
+    vol.Required(CONF_NAME): vol.Coerce(str),
     vol.Optional(CONF_REGION, default="us-east-1"): vol.Coerce(str),
     vol.Inclusive(CONF_ACCESS_KEY_ID, "credentials"): vol.Coerce(str),
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, "credentials"): vol.Coerce(str),
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the AWS Lambda notification service."""
     context_str = json.dumps({'hass': hass.config.as_dict(),
                               'custom': config[CONF_CONTEXT]})
@@ -58,19 +58,25 @@ def get_service(hass, config):
 
     lambda_client = boto3.client("lambda", **aws_config)
 
-    return AWSLambda(lambda_client, context)
+    add_devices([AWSLambda(lambda_client, context, config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class AWSLambda(BaseNotificationService):
     """Implement the notification service for the AWS Lambda service."""
 
-    def __init__(self, lambda_client, context):
+    def __init__(self, lambda_client, context, name):
         """Initialize the service."""
         self.client = lambda_client
         self.context = context
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send notification to specified LAMBDA ARN."""
         targets = kwargs.get(ATTR_TARGET)
 

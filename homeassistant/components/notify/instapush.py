@@ -11,14 +11,14 @@ import requests
 
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.instapush.im/v1/'
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the instapush notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY,
@@ -26,7 +26,7 @@ def get_service(hass, config):
                                      'event',
                                      'tracker']},
                            _LOGGER):
-        return None
+        return False
 
     headers = {'x-instapush-appid': config[CONF_API_KEY],
                'x-instapush-appsecret': config['app_secret']}
@@ -36,29 +36,31 @@ def get_service(hass, config):
                                 headers=headers).json()
     except ValueError:
         _LOGGER.error('Unexpected answer from Instapush API.')
-        return None
+        return False
 
     if 'error' in response:
         _LOGGER.error(response['msg'])
-        return None
+        return False
 
     if len([app for app in response if app['title'] == config['event']]) == 0:
         _LOGGER.error(
             "No app match your given value. "
             "Please create an app at https://instapush.im")
-        return None
+        return False
 
-    return InstapushNotificationService(
+    add_devices([InstapushNotificationService(
         config[CONF_API_KEY], config['app_secret'], config['event'],
-        config['tracker'])
+        config['tracker'], config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class InstapushNotificationService(BaseNotificationService):
     """Implement the notification service for Instapush."""
 
-    def __init__(self, api_key, app_secret, event, tracker):
+    # pylint: disable=too-many-arguments
+    def __init__(self, api_key, app_secret, event, tracker, name):
         """Initialize the service."""
+        self._name = name
         self._api_key = api_key
         self._app_secret = app_secret
         self._event = event
@@ -68,7 +70,12 @@ class InstapushNotificationService(BaseNotificationService):
             'x-instapush-appsecret': self._app_secret,
             'Content-Type': 'application/json'}
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
         data = {"event": self._event,

@@ -17,17 +17,18 @@ REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Return the notify service."""
     if not validate_config({DOMAIN: config}, {DOMAIN: [CONF_HOST, CONF_NAME]},
                            _LOGGER):
-        return None
+        return False
 
     host = config.get(CONF_HOST, None)
+    name = config.get(CONF_NAME)
 
     if not host:
         _LOGGER.error('No host provided.')
-        return None
+        return False
 
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -38,23 +39,29 @@ def get_service(hass, config):
         client.register()
     except PyLGTVPairException:
         _LOGGER.error('Pairing failed.')
-        return None
+        return False
     except OSError:
         _LOGGER.error('Host unreachable.')
-        return None
+        return False
 
-    return LgWebOSNotificationService(client)
+    add_devices([LgWebOSNotificationService(client, name)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class LgWebOSNotificationService(BaseNotificationService):
     """Implement the notification service for LG WebOS TV."""
 
-    def __init__(self, client):
+    def __init__(self, client, name):
         """Initialize the service."""
         self._client = client
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to the tv."""
         from pylgtv import PyLGTVPairException
 

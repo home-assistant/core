@@ -8,6 +8,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
@@ -15,12 +16,12 @@ from homeassistant.helpers import validate_config
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the mail notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['recipient']},
                            _LOGGER):
-        return None
+        return False
 
     smtp_server = config.get('server', 'localhost')
     port = int(config.get('port', '25'))
@@ -43,7 +44,7 @@ def get_service(hass, config):
 
             except (smtplib.SMTPException, smtplib.SMTPSenderRefused):
                 _LOGGER.exception("Please check your settings.")
-                return None
+                return False
 
     except smtplib.socket.gaierror:
         _LOGGER.exception(
@@ -51,31 +52,31 @@ def get_service(hass, config):
             "Please check the IP address or hostname of your SMTP server.",
             smtp_server, port)
 
-        return None
+        return False
 
     except smtplib.SMTPAuthenticationError:
         _LOGGER.exception(
             "Login not possible. "
             "Please check your setting and/or your credentials.")
 
-        return None
+        return False
 
     finally:
         if server:
             server.quit()
 
-    return MailNotificationService(
-        smtp_server, port, config['sender'], starttls, username, password,
-        config['recipient'], debug)
+    add_devices([MailNotificationService(
+        smtp_server, port, config.get('sender'), starttls, username, password,
+        config.get('recipient'), debug, config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
+# pylint: disable=too-few-public-methods,too-many-instance-attributes
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,abstract-method
     def __init__(self, server, port, sender, starttls, username,
-                 password, recipient, debug):
+                 password, recipient, debug, name):
         """Initialize the service."""
         self._server = server
         self._port = port
@@ -86,6 +87,12 @@ class MailNotificationService(BaseNotificationService):
         self.recipient = recipient
         self.debug = debug
         self.tries = 2
+        self._name = name
+
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""

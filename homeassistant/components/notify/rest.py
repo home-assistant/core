@@ -8,6 +8,7 @@ import logging
 
 import requests
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
@@ -20,12 +21,12 @@ DEFAULT_TITLE_PARAM_NAME = None
 DEFAULT_TARGET_PARAM_NAME = None
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the REST notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['resource', ]},
                            _LOGGER):
-        return None
+        return False
 
     method = config.get('method', DEFAULT_METHOD)
     message_param_name = config.get('message_param_name',
@@ -35,25 +36,35 @@ def get_service(hass, config):
     target_param_name = config.get('target_param_name',
                                    DEFAULT_TARGET_PARAM_NAME)
 
-    return RestNotificationService(config['resource'], method,
-                                   message_param_name, title_param_name,
-                                   target_param_name)
+    add_devices([RestNotificationService(
+        config.get('resource'),
+        method,
+        message_param_name,
+        title_param_name,
+        target_param_name,
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods, too-many-arguments
+# pylint: disable=too-few-public-methods,too-many-arguments,abstract-method
 class RestNotificationService(BaseNotificationService):
     """Implement the notification service for REST."""
 
     def __init__(self, resource, method, message_param_name,
-                 title_param_name, target_param_name):
+                 title_param_name, target_param_name, name):
         """Initialize the service."""
         self._resource = resource
         self._method = method.upper()
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         data = {
             self._message_param_name: message

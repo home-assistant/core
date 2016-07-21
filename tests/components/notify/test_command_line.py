@@ -3,8 +3,8 @@ import os
 import tempfile
 import unittest
 
+from homeassistant.components.notify import command_line
 import homeassistant.components.notify as notify
-
 from tests.common import get_test_home_assistant
 
 from unittest.mock import patch
@@ -23,18 +23,27 @@ class TestCommandLine(unittest.TestCase):
 
     def test_bad_config(self):
         """Test set up the platform with bad/missing config."""
-        self.assertFalse(notify.setup(self.hass, {
+        devices = []
+
+        def add_dev_callback(devs):
+            """Add a callback to add devices."""
+            for dev in devs:
+                devices.append(dev)
+
+        self.assertFalse(command_line.setup_platform(self.hass, {
             'notify': {
                 'name': 'test',
                 'platform': 'bad_platform',
             }
-        }))
-        self.assertFalse(notify.setup(self.hass, {
+        }, add_dev_callback))
+        self.assertFalse(command_line.setup_platform(self.hass, {
             'notify': {
                 'name': 'test',
                 'platform': 'command_line',
             }
-        }))
+        }, add_dev_callback))
+
+        self.assertEqual(0, len(devices))
 
     def test_command_line_output(self):
         """Test the command line output."""
@@ -49,8 +58,8 @@ class TestCommandLine(unittest.TestCase):
                 }
             }))
 
-            self.hass.services.call('notify', 'test', {'message': message},
-                                    blocking=True)
+            self.hass.services.call('notify', 'send_message',
+                                    {'message': message}, blocking=True)
 
             result = open(filename).read()
             # the echo command adds a line break
@@ -67,6 +76,6 @@ class TestCommandLine(unittest.TestCase):
             }
         }))
 
-        self.hass.services.call('notify', 'test', {'message': 'error'},
+        self.hass.services.call('notify', 'send_message', {'message': 'error'},
                                 blocking=True)
         self.assertEqual(1, mock_error.call_count)

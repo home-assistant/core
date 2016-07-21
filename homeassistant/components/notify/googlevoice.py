@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TARGET, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,30 +17,38 @@ REQUIREMENTS = ['https://github.com/w1ll1am23/pygooglevoice-sms/archive/'
                 'pygooglevoice-sms==0.0.1']
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Google Voice SMS notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_USERNAME,
                                      CONF_PASSWORD]},
                            _LOGGER):
-        return None
+        return False
 
-    return GoogleVoiceSMSNotificationService(config[CONF_USERNAME],
-                                             config[CONF_PASSWORD])
+    add_devices([GoogleVoiceSMSNotificationService(
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class GoogleVoiceSMSNotificationService(BaseNotificationService):
     """Implement the notification service for the Google Voice SMS service."""
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, name):
         """Initialize the service."""
         from googlevoicesms import Voice
         self.voice = Voice()
         self.username = username
         self.password = password
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)
 

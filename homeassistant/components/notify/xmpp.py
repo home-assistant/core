@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.xmpp/
 """
 import logging
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
@@ -18,32 +19,39 @@ REQUIREMENTS = ['sleekxmpp==1.3.1',
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['sender', 'password', 'recipient']},
                            _LOGGER):
-        return None
+        return False
 
-    return XmppNotificationService(
+    add_devices([XmppNotificationService(
         config.get('sender'),
         config.get('password'),
         config.get('recipient'),
-        config.get('tls', True))
+        config.get('tls', True),
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,too-many-arguments,abstract-method
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
-    def __init__(self, sender, password, recipient, tls):
+    def __init__(self, sender, password, recipient, tls, name):
         """Initialize the service."""
         self._sender = sender
         self._password = password
         self._recipient = recipient
         self._tls = tls
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
         data = "{}: {}".format(title, message) if title else message
