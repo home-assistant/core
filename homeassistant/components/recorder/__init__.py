@@ -301,15 +301,6 @@ class Recorder(threading.Thread):
 
         purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
 
-        def _purge_events(session):
-            deleted_rows = session.query(Events) \
-                                  .filter((Events.created < purge_before)) \
-                                  .delete(synchronize_session=False)
-            _LOGGER.debug("Deleted %s events", deleted_rows)
-
-        if self._commit(_purge_events):
-            _LOGGER.info("Purged events created before %s", purge_before)
-
         def _purge_states(session):
             deleted_rows = session.query(States) \
                                   .filter((States.created < purge_before)) \
@@ -318,6 +309,15 @@ class Recorder(threading.Thread):
 
         if self._commit(_purge_states):
             _LOGGER.info("Purged states created before %s", purge_before)
+
+        def _purge_events(session):
+            deleted_rows = session.query(Events) \
+                                  .filter((Events.created < purge_before)) \
+                                  .delete(synchronize_session=False)
+            _LOGGER.debug("Deleted %s events", deleted_rows)
+
+        if self._commit(_purge_events):
+            _LOGGER.info("Purged events created before %s", purge_before)
 
         Session().expire_all()
 

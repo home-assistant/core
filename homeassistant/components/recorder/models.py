@@ -20,7 +20,7 @@ Base = declarative_base()
 _LOGGER = logging.getLogger(__name__)
 
 
-class Events(Base):
+class Events(Base):  # type: ignore
     # pylint: disable=too-few-public-methods
     """Event history data."""
 
@@ -55,7 +55,7 @@ class Events(Base):
             return None
 
 
-class States(Base):
+class States(Base):   # type: ignore
     # pylint: disable=too-few-public-methods
     """State change history."""
 
@@ -114,7 +114,7 @@ class States(Base):
             return None
 
 
-class RecorderRuns(Base):
+class RecorderRuns(Base):   # type: ignore
     # pylint: disable=too-few-public-methods
     """Representation of recorder run."""
 
@@ -131,9 +131,13 @@ class RecorderRuns(Base):
         Specify point_in_time if you want to know which existed at that point
         in time inside the run.
         """
-        from homeassistant.components import recorder
+        from sqlalchemy.orm.session import Session
 
-        query = recorder.query(distinct(States.entity_id)).filter(
+        session = Session.object_session(self)
+
+        assert session is not None, 'RecorderRuns need to be persisted'
+
+        query = session.query(distinct(States.entity_id)).filter(
             States.last_updated >= self.start)
 
         if point_in_time is not None:
