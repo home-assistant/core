@@ -202,7 +202,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.6.7
+netdisco==0.7.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
