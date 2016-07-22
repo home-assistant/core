@@ -49,8 +49,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            self.update_ha_state(True)
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
@@ -61,7 +62,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         elif self._value.data >= 95:
             return 0
         else:
-            return None
+            return 100 - self._value.data
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
