@@ -1,8 +1,8 @@
 """The tests for the Recorder component."""
-# pylint: disable=too-many-public-methods,protected-access
-import unittest
+# pylint: disable=protected-access
 import json
 from datetime import datetime, timedelta
+import unittest
 from unittest.mock import patch
 
 from homeassistant.const import MATCH_ALL

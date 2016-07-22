@@ -1,5 +1,4 @@
 """The tests for the Recorder component."""
-# pylint: disable=too-many-public-methods,protected-access
 import unittest
 from datetime import datetime
 
@@ -13,31 +12,32 @@ from homeassistant.components.recorder.models import (
     Base, Events, States, RecorderRuns)
 import homeassistant.components.recorder as recorder
 
-engine = None
+ENGINE = None
 
 
-def setUpModule():
+def setUpModule():  # pylint: disable=invalid-name
     """Set up a database to use."""
-    global engine
+    global ENGINE
 
-    engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
+    ENGINE = create_engine("sqlite://")
+    Base.metadata.create_all(ENGINE)
+    session_factory = sessionmaker(bind=ENGINE)
     recorder.Session = scoped_session(session_factory)
 
 
-def tearDownModule():
+def tearDownModule():  # pylint: disable=invalid-name
     """Close database."""
-    global engine
+    global ENGINE
 
-    engine.dispose()
-    engine = None
+    ENGINE.dispose()
+    ENGINE = None
     recorder.Session = None
 
 
 class TestEvents(unittest.TestCase):
     """Test Events model."""
 
+    # pylint: disable=no-self-use
     def test_from_event(self):
         """Test converting event to db event."""
         event = ha.Event('test_event', {
@@ -48,6 +48,8 @@ class TestEvents(unittest.TestCase):
 
 class TestStates(unittest.TestCase):
     """Test States model."""
+
+    # pylint: disable=no-self-use
 
     def test_from_event(self):
         """Test converting event to db state."""
@@ -78,14 +80,14 @@ class TestStates(unittest.TestCase):
 class TestRecorderRuns(unittest.TestCase):
     """Test recorder run model."""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Set up recorder runs."""
         self.session = session = recorder.Session()
         session.query(Events).delete()
         session.query(States).delete()
         session.query(RecorderRuns).delete()
 
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Clean up."""
         self.session.rollback()
 
