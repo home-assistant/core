@@ -2,6 +2,7 @@
 import datetime as dt
 import re
 
+# pylint: disable=unused-import
 from typing import Any, Union, Optional, Tuple  # NOQA
 
 import pytz
@@ -202,7 +203,5 @@ def get_age(date: dt.datetime) -> str:
     minute, second = q_n_r(second, 60)
     if minute > 0:
         return formatn(minute, 'minute')
-    if second > 0:
-        return formatn(second, 'second')
 
-    return "0 second"
+    return formatn(second, 'second') if second > 0 else "0 seconds"

@@ -12,6 +12,8 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
+from typing import Any
+
 from .dt import as_local, utcnow
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
@@ -36,7 +38,7 @@ def slugify(text):
     return RE_SLUGIFY.sub("", text)
 
 
-def repr_helper(inp):
+def repr_helper(inp: Any) -> str:
     """Help creating a more readable string representation of objects."""
     if isinstance(inp, (dict, MappingProxyType)):
         return ", ".join(
