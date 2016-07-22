@@ -281,7 +281,6 @@ class Recorder(threading.Thread):
             start=self.recording_start,
             created=dt_util.utcnow()
         )
-
         self._commit(self._run)
 
     def _close_run(self):
