@@ -27,9 +27,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     qsusb = qwikswitch.QSUSB[discovery_info['qsusb_id']]
 
+    devices = []
     for item in qsusb.ha_devices:
         if item['type'] not in ['dim', 'rel']:
             continue
         dev = QSLight(item, qsusb)
-        add_devices([dev])
+        devices.append(dev)
         qsusb.ha_objects[item['id']] = dev
+    add_devices(devices)

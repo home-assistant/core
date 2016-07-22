@@ -5,18 +5,26 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch/
 """
 import logging
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.discovery import load_platform
 
 REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
                 '#pyqwikswitch==0.4']
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
+CV_DIM = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required('url', default='http://127.0.0.1:2020'): vol.Coerce(str),
+    vol.Optional('dimmer_adjust', default=1): CV_DIM,
+    vol.Optional('button_events'): vol.Coerce(str)
+})
+
 DOMAIN = 'qwikswitch'
-QSUSB = None
+QSUSB = {}
 
 
 class QSToggleEntity(object):
@@ -95,20 +103,24 @@ def setup(hass, config):
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
-    cmd_buttons = config[DOMAIN].get('button_events', ','.join(CMD_BUTTONS))
+    cmd_buttons = config[DOMAIN][0].get('button_events', ','.join(CMD_BUTTONS))
     cmd_buttons = cmd_buttons.split(',')
 
-    try:
-        url = config[DOMAIN].get('url', 'http://127.0.0.1:2020')
-        dimmer_adjust = float(config[DOMAIN].get('dimmer_adjust', '1'))
-        qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
+    url = config[DOMAIN][0]['url']
+    dimmer_adjust = config[DOMAIN][0]['dimmer_adjust']
 
-        # Ensure qsusb terminates threads correctly
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             lambda event: qsusb.stop())
-    except ValueError as val_err:
-        _LOGGER.error(str(val_err))
-        return False
+    qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
+
+    def _stop(event):
+        """Stop the listener queue and clen up."""
+        qsusb.stop()
+        _LOGGER.info("Waiting for long poll to QSUSB to time out")
+        nonlocal qsusb
+        qsusb = None
+        del QSUSB[DOMAIN]
+
+    # Ensure qsusb terminates threads correctly
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
     qsusb.ha_devices = qsusb.devices()
     qsusb.ha_objects = {}
@@ -120,18 +132,18 @@ def setup(hass, config):
             item[QS_TYPE] = 'switch'
             item[QS_NAME] = item[QS_NAME][:-7]
 
-    global QSUSB
-    if QSUSB is None:
-        QSUSB = {}
-    QSUSB[id(qsusb)] = qsusb
+    QSUSB[DOMAIN] = qsusb
 
     # Load sub-components for qwikswitch
     for comp_name in ('switch', 'light'):
         load_platform(hass, comp_name, 'qwikswitch',
-                      {'qsusb_id': id(qsusb)}, config)
+                      {'qsusb_id': DOMAIN}, config)
 
     def qs_callback(item):
         """Typically a button press or update signal."""
+        if qsusb is None:  # Shutting down
+            _LOGGER.info("Done")
+            return
         # If button pressed, fire a hass event
         if item.get(QS_CMD, '') in cmd_buttons:
             hass.bus.fire('qwikswitch.button.' + item.get(QS_ID, '@no_id'))
@@ -146,5 +158,5 @@ def setup(hass, config):
                 qsusb.ha_objects[item[QS_ID]].update_value(
                     round(min(item[PQS_VALUE], 100) * 2.55))
 
-    qsusb.listen(callback=qs_callback, timeout=30)
+    qsusb.listen(callback=qs_callback, timeout=5)
     return True
