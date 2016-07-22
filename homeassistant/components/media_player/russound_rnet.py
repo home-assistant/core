@@ -1,10 +1,8 @@
-"""
-
-Support for interfacing with Russound CAV units
+"""Support for interfacing with Russound CAV units
 via RNET Protocol.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.russound_rnet/
+https://home-assistant.io/components/media_player.russound_rnet/ .
 """
 import logging
 
@@ -64,6 +62,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
         self._state = STATE_OFF
         self._sources = sources
         self._zone_id = zone_id
+        self._volume = 0
 
     @property
     def name(self):
@@ -83,12 +82,12 @@ class RussoundRNETDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return 0
+        return self._volume
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        volume = volume * 100
-        self._russ.set_volume('1', self._zone_id, volume)
+        self._volume = volume * 100
+        self._russ.set_volume('1', self._zone_id, self._volume)
 
     def turn_on(self):
         """Turn the media player on."""
