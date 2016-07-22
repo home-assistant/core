@@ -78,32 +78,6 @@ class KNXThermostat(KNXMultiAddressDevice, ThermostatDevice):
         self.set_value("setpoint", float_to_knx2(temperature))
         _LOGGER.debug("Set target temperature to %s", temperature)
 
-    @property
-    def is_away_mode_on(self):
-        """Return if away mode is on."""
-        return self._away
-
-    @property
-    def is_fan_on(self):
-        """Return true if the fan is on."""
-        return self._is_fan_on
-
-    def turn_away_mode_on(self):
-        """Turn away mode on."""
-        self._away = True
-
-    def turn_away_mode_off(self):
-        """Turn away mode off."""
-        self._away = False
-
-    def turn_fan_on(self):
-        """Turn fan on."""
-        self._is_fan_on = True
-
-    def turn_fan_off(self):
-        """Turn fan off."""
-        self._is_fan_on = False
-
     def set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
         raise NotImplementedError()
