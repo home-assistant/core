@@ -20,7 +20,7 @@ Base = declarative_base()
 _LOGGER = logging.getLogger(__name__)
 
 
-class Events(Base):
+class Events(Base):  # type: ignore
     # pylint: disable=too-few-public-methods
     """Event history data."""
 
@@ -55,7 +55,7 @@ class Events(Base):
             return None
 
 
-class States(Base):
+class States(Base):   # type: ignore
     # pylint: disable=too-few-public-methods
     """State change history."""
 
@@ -114,7 +114,7 @@ class States(Base):
             return None
 
 
-class RecorderRuns(Base):
+class RecorderRuns(Base):   # type: ignore
     # pylint: disable=too-few-public-methods
     """Representation of recorder run."""
 
