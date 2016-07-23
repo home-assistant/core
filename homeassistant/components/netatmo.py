@@ -50,16 +50,13 @@ def setup(hass, config):
             "Please check your settings for NatAtmo API.")
         return False
 
-    components = ['sensor']
-
     raw_wellcome_data = lnetatmo.postRequest(lnetatmo._GETHOMEDATA_REQ,
-                        {"access_token": NETATMO_AUTH.accessToken})
+                                             {"access_token": NETATMO_AUTH.accessToken})
     cameras = raw_wellcome_data['body']['homes']
 
     if cameras:
-        components.append('camera')
+        discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
-    for component in components:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
     return True
