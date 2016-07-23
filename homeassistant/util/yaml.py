@@ -2,6 +2,7 @@
 import logging
 import os
 from collections import OrderedDict
+from typing import Union, List, Dict
 
 import glob
 import yaml
@@ -21,15 +22,16 @@ _SECRET_YAML = 'secrets.yaml'
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
-    def compose_node(self, parent, index):
+    def compose_node(self, parent: yaml.nodes.Node, index) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
-        last_line = self.line
-        node = super(SafeLineLoader, self).compose_node(parent, index)
+        last_line = self.line  # type: int
+        node = super(SafeLineLoader,
+                     self).compose_node(parent, index)  # type: yaml.nodes.Node
         node.__line__ = last_line + 1
         return node
 
 
-def load_yaml(fname):
+def load_yaml(fname: str) -> Union[List, Dict]:
     """Load a YAML file."""
     try:
         with open(fname, encoding='utf-8') as conf_file:
@@ -41,7 +43,8 @@ def load_yaml(fname):
         raise HomeAssistantError(exc)
 
 
-def _include_yaml(loader, node):
+def _include_yaml(loader: SafeLineLoader,
+                  node: yaml.nodes.Node) -> Union[List, Dict]:
     """Load another YAML file and embeds it using the !include tag.
 
     Example:
@@ -51,9 +54,10 @@ def _include_yaml(loader, node):
     return load_yaml(fname)
 
 
-def _include_dir_named_yaml(loader, node):
+def _include_dir_named_yaml(loader: SafeLineLoader,
+                            node: yaml.nodes.Node):
     """Load multiple files from directory as a dictionary."""
-    mapping = OrderedDict()
+    mapping = OrderedDict()  # type: OrderedDict
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
         filename = os.path.splitext(os.path.basename(fname))[0]
@@ -61,9 +65,10 @@ def _include_dir_named_yaml(loader, node):
     return mapping
 
 
-def _include_dir_merge_named_yaml(loader, node):
+def _include_dir_merge_named_yaml(loader: SafeLineLoader,
+                                  node: yaml.nodes.Node):
     """Load multiple files from directory as a merged dictionary."""
-    mapping = OrderedDict()
+    mapping = OrderedDict()  # type: OrderedDict
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     for fname in glob.glob(files):
         if os.path.basename(fname) == _SECRET_YAML:
@@ -74,17 +79,20 @@ def _include_dir_merge_named_yaml(loader, node):
     return mapping
 
 
-def _include_dir_list_yaml(loader, node):
+def _include_dir_list_yaml(loader: SafeLineLoader,
+                           node: yaml.nodes.Node):
     """Load multiple files from directory as a list."""
     files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
     return [load_yaml(f) for f in glob.glob(files)
             if os.path.basename(f) != _SECRET_YAML]
 
 
-def _include_dir_merge_list_yaml(loader, node):
+def _include_dir_merge_list_yaml(loader: SafeLineLoader,
+                                 node: yaml.nodes.Node):
     """Load multiple files from directory as a merged list."""
-    files = os.path.join(os.path.dirname(loader.name), node.value, '*.yaml')
-    merged_list = []
+    files = os.path.join(os.path.dirname(loader.name),
+                         node.value, '*.yaml')  # type: str
+    merged_list = []  # type: List
     for fname in glob.glob(files):
         if os.path.basename(fname) == _SECRET_YAML:
             continue
@@ -94,12 +102,13 @@ def _include_dir_merge_list_yaml(loader, node):
     return merged_list
 
 
-def _ordered_dict(loader, node):
+def _ordered_dict(loader: SafeLineLoader,
+                  node: yaml.nodes.MappingNode) -> OrderedDict:
     """Load YAML mappings into an ordered dictionary to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
 
-    seen = {}
+    seen = {}  # type: Dict
     min_line = None
     for (key, _), (node, _) in zip(nodes, node.value):
         line = getattr(node, '__line__', 'unknown')
@@ -116,12 +125,13 @@ def _ordered_dict(loader, node):
         seen[key] = line
 
     processed = OrderedDict(nodes)
-    processed.__config_file__ = loader.name
-    processed.__line__ = min_line
+    setattr(processed, '__config_file__', loader.name)
+    setattr(processed, '__line__', min_line)
     return processed
 
 
-def _env_var_yaml(loader, node):
+def _env_var_yaml(loader: SafeLineLoader,
+                  node: yaml.nodes.Node):
     """Load environment variables and embed it into the configuration YAML."""
     if node.value in os.environ:
         return os.environ[node.value]
@@ -131,7 +141,8 @@ def _env_var_yaml(loader, node):
 
 
 # pylint: disable=protected-access
-def _secret_yaml(loader, node):
+def _secret_yaml(loader: SafeLineLoader,
+                 node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     # Create secret cache on loader and load secrets.yaml
     if not hasattr(loader, '_SECRET_CACHE'):
