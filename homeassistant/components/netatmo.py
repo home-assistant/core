@@ -24,21 +24,6 @@ NETATMO_AUTH = None
 _LOGGER = logging.getLogger(__name__)
 
 
-def have_netatmo_component(component, config):
-    """Test if a certain netatmo component
-       is among the configuration variables."""
-    cameras = (value for key, value in config.items() if component in key)
-    for camera in cameras:
-        if isinstance(camera, list):
-            for sub_camera in camera:
-                if sub_camera['platform'] == 'netatmo':
-                    return True
-        else:
-            if camera['platform'] == 'netatmo':
-                return True
-    return False
-
-
 def setup(hass, config):
     """Setup the Netatmo devices."""
     if not validate_config(config,
@@ -65,8 +50,14 @@ def setup(hass, config):
             "Please check your settings for NatAtmo API.")
         return False
 
-    components = [component for component in ('camera', 'sensor')
-                  if have_netatmo_component(component, config)]
+    components = ['sensor']
+
+    raw_wellcome_data = lnetatmo.postRequest(lnetatmo._GETHOMEDATA_REQ,
+                                             {"access_token": NETATMO_AUTH.accessToken})
+    cameras = raw_wellcome_data['body']['homes']
+
+    if cameras:
+        components.append('camera')
 
     for component in components:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
