@@ -51,7 +51,7 @@ def setup(hass, config):
         return False
 
     raw_wellcome_data = lnetatmo.postRequest(lnetatmo._GETHOMEDATA_REQ,
-                                             {"access_token": NETATMO_AUTH.accessToken})
+                        {"access_token": NETATMO_AUTH.accessToken})
     cameras = raw_wellcome_data['body']['homes']
 
     if cameras:
