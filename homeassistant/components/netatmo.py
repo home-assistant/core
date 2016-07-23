@@ -23,6 +23,8 @@ NETATMO_AUTH = None
 
 _LOGGER = logging.getLogger(__name__)
 
+BASE_URL       = "https://api.netatmo.com/"
+GETHOMEDATA_REQ = BASE_URL + "api/gethomedata"
 
 def setup(hass, config):
     """Setup the Netatmo devices."""
@@ -51,7 +53,7 @@ def setup(hass, config):
         return False
 
     raw_wellcome_data = lnetatmo.postRequest(
-        lnetatmo._GETHOMEDATA_REQ,
+        GETHOMEDATA_REQ,
         {"access_token": NETATMO_AUTH.accessToken},
     )
 
