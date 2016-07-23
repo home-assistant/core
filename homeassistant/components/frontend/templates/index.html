@@ -73,7 +73,7 @@
           .classList.add('error');
       };
       window.noAuth = {{ no_auth }};
-      window.Polymer = {lazyRegister: true};
+      window.Polymer = {lazyRegister: true, useNativeCSSProperties: true, dom: 'shady'};
     </script>
   </head>
   <body>
@@ -96,11 +96,11 @@
         'import' in document.createElement('link') &&
         'content' in document.createElement('template'));
       if (!webComponentsSupported) {
-        var e = document.createElement('script')
-        e.async = true
+        var e = document.createElement('script');
+        e.async = true;
         e.onerror = initError;
-        e.src = '/static/webcomponents-lite.min.js'
-        document.head.appendChild(script)
+        e.src = '/static/webcomponents-lite.min.js';
+        document.head.appendChild(e);
       }
     </script>
   </body>
