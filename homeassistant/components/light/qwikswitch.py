@@ -20,12 +20,12 @@ class QSLight(qwikswitch.QSToggleEntity, Light):
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Store add_devices for the light components."""
-    if discovery_info is None or 'qsusb_id' not in discovery_info:
+    if discovery_info is None:
         logging.getLogger(__name__).error(
             'Configure main Qwikswitch component')
         return False
 
-    qsusb = qwikswitch.QSUSB[discovery_info['qsusb_id']]
+    qsusb = qwikswitch.QSUSB[qwikswitch.DOMAIN]
 
     devices = []
     for item in qsusb.ha_devices:
@@ -35,3 +35,4 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices.append(dev)
         qsusb.ha_objects[item['id']] = dev
     add_devices(devices)
+    return True
