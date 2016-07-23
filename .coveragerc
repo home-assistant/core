@@ -152,6 +152,7 @@ omit =
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
+    homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
