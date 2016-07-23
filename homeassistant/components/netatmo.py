@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def have_netatmo_component(component, config):
-
+    """ Test if a certain netatmo component is among the configuration variables. """
     cameras = (value for key, value in config.items() if component in key)
     for camera in cameras:
         if isinstance(camera, list):
