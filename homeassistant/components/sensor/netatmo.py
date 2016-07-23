@@ -11,9 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
 
-
-DEPENDENCIES = ["netatmo"]
-
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
