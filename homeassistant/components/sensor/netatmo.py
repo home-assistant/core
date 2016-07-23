@@ -10,6 +10,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
+from urllib.error import HTTPError
 from homeassistant.const import (
     CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
 
