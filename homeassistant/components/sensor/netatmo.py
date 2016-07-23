@@ -48,7 +48,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available Netatmo weather sensors."""
-
     try:
         NETATMO_AUTH = lnetatmo.ClientAuth(config['netatmo'][CONF_API_KEY],
                                            config['netatmo'][CONF_SECRET_KEY],
