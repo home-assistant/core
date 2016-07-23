@@ -9,8 +9,9 @@ import voluptuous as vol
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
-from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.switch import SwitchDevice
 
 DOMAIN = 'qwikswitch'
 REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
@@ -52,6 +53,7 @@ class QSToggleEntity(object):
         self._value = qsitem[PQS_VALUE]
         self._qsusb = qsusb
         self._dim = qsitem[PQS_TYPE] == QSType.dimmer
+        QSUSB[self._id] = self
 
     @property
     def brightness(self):
@@ -97,11 +99,23 @@ class QSToggleEntity(object):
             self.update_value(0)
 
 
+class QSSwitch(QSToggleEntity, SwitchDevice):
+    """Switch based on a Qwikswitch relay module."""
+
+    pass
+
+
+class QSLight(QSToggleEntity, Light):
+    """Light based on a Qwikswitch relay/dimmer module."""
+
+    pass
+
+
 # pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the QSUSB component."""
     from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
-                              QS_TYPE, PQS_VALUE, PQS_TYPE, QSType)
+                              PQS_VALUE, PQS_TYPE, QSType)
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -114,37 +128,41 @@ def setup(hass, config):
     qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
 
     def _stop(event):
-        """Stop the listener queue and clen up."""
+        """Stop the listener queue and clean up."""
         nonlocal qsusb
         qsusb.stop()
-        _LOGGER.info("Waiting for long poll to QSUSB to time out")
         qsusb = None
-        del QSUSB[DOMAIN]
+        global QSUSB
+        QSUSB = {}
+        _LOGGER.info("Waiting for long poll to QSUSB to time out")
 
-    # Ensure qsusb terminates threads correctly
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _stop)
 
-    qsusb.ha_devices = qsusb.devices()
-    qsusb.ha_objects = {}
+    # Discover all devices in QSUSB
+    devices = qsusb.devices()
+    QSUSB['switch'] = []
+    QSUSB['light'] = []
+    for item in devices:
+        if item[PQS_TYPE] == QSType.relay and (item[QS_NAME].lower()
+                                               .endswith(' switch')):
+            item[QS_NAME] = item[QS_NAME][:-7]  # Remove ' switch' postfix
+            QSUSB['switch'].append(QSSwitch(item, qsusb))
+        elif item[PQS_TYPE] in [QSType.relay, QSType.dimmer]:
+            QSUSB['light'].append(QSLight(item, qsusb))
+        else:
+            _LOGGER.warning("Ignored unknown QSUSB device: %s", item)
 
-    # Identify switches & remove ' Switch' postfix in name
-    for item in qsusb.ha_devices:
-        if item[PQS_TYPE] == QSType.relay and \
-           item[QS_NAME].lower().endswith(' switch'):
-            item[QS_TYPE] = 'switch'
-            item[QS_NAME] = item[QS_NAME][:-7]
-
-    QSUSB[DOMAIN] = qsusb
-
-    # Load sub-components for qwikswitch
+    # Load platforms
     for comp_name in ('switch', 'light'):
-        load_platform(hass, comp_name, 'qwikswitch', {}, config)
+        if len(QSUSB[comp_name]) > 0:
+            load_platform(hass, comp_name, 'qwikswitch', {}, config)
 
     def qs_callback(item):
         """Typically a button press or update signal."""
         if qsusb is None:  # Shutting down
             _LOGGER.info("Done")
             return
+
         # If button pressed, fire a hass event
         if item.get(QS_CMD, '') in cmd_buttons:
             hass.bus.fire('qwikswitch.button.' + item.get(QS_ID, '@no_id'))
@@ -155,8 +173,8 @@ def setup(hass, config):
         if qsreply is False:
             return
         for item in qsreply:
-            if item[QS_ID] in qsusb.ha_objects:
-                qsusb.ha_objects[item[QS_ID]].update_value(
+            if item[QS_ID] in QSUSB:
+                QSUSB[item[QS_ID]].update_value(
                     round(min(item[PQS_VALUE], 100) * 2.55))
 
     def _start(event):
