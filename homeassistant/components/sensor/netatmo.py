@@ -10,6 +10,9 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
+from homeassistant.const import (
+    CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +47,20 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available Netatmo weather sensors."""
-    netatmo = get_component('netatmo')
-    data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
+
+        try:
+            NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
+                                               config[DOMAIN][CONF_SECRET_KEY],
+                                               config[DOMAIN][CONF_USERNAME],
+                                               config[DOMAIN][CONF_PASSWORD],
+                                               "read_station read_camera "
+                                               "access_camera")
+        except HTTPError:
+            _LOGGER.error(
+                "Connection error "
+                "Please check your settings for NatAtmo API.")
+
+    data = NetAtmoData(NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
     try:
