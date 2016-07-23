@@ -13,7 +13,7 @@ from homeassistant.loader import get_component
 from urllib.error import HTTPError
 from homeassistant.const import (
     CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
-
+import lnetatmo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,10 +50,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available Netatmo weather sensors."""
 
     try:
-        NETATMO_AUTH = lnetatmo.ClientAuth(config[DOMAIN][CONF_API_KEY],
-                                           config[DOMAIN][CONF_SECRET_KEY],
-                                           config[DOMAIN][CONF_USERNAME],
-                                           config[DOMAIN][CONF_PASSWORD],
+        NETATMO_AUTH = lnetatmo.ClientAuth(config['netatmo'][CONF_API_KEY],
+                                           config['netatmo'][CONF_SECRET_KEY],
+                                           config['netatmo'][CONF_USERNAME],
+                                           config['netatmo'][CONF_PASSWORD],
                                            "read_station read_camera "
                                            "access_camera")
     except HTTPError:
@@ -235,7 +235,6 @@ class NetAtmoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import lnetatmo
         dev_list = lnetatmo.DeviceList(self.auth)
 
         if self.station is not None:
