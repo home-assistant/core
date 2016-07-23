@@ -13,7 +13,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
 DOMAIN = "discovery"
-REQUIREMENTS = ['netdisco==0.6.7']
+REQUIREMENTS = ['netdisco==0.7.0']
 
 SCAN_INTERVAL = 300  # seconds
 
