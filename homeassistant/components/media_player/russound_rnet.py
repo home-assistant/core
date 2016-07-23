@@ -1,8 +1,8 @@
-"""Support for interfacing with Russound CAV units
-via RNET Protocol.
+"""
+Support for interfacing with Russound via RNET Protocol.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.russound_rnet/ .
+https://home-assistant.io/components/media_player.russound_rnet/
 """
 import logging
 
@@ -19,10 +19,11 @@ REQUIREMENTS = [
 ZONES = 'zones'
 SOURCES = 'sources'
 
-SUPPORTED_COMMANDS = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+SUPPORT_RUSSOUND = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
                      SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Russound RNET platform."""
@@ -51,10 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)
 
+
 # pylint: disable=abstract-method, too-many-public-methods,
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class RussoundRNETDevice(MediaPlayerDevice):
     """Representation of a Russound RNET device."""
+
     def __init__(self, hass, russ, sources, zone_id, extra):
         """Initialise the Russound RNET device."""
         self._name = extra['name']
@@ -77,7 +80,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORTED_COMMANDS
+        return SUPPORT_RUSSOUND
 
     @property
     def volume_level(self):
@@ -113,4 +116,3 @@ class RussoundRNETDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self._sources
-
