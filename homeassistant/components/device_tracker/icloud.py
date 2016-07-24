@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.icloud/
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_START)
@@ -13,10 +14,15 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyicloud==0.8.3']
+REQUIREMENTS = ['pyicloud==0.9.1']
 
 CONF_INTERVAL = 'interval'
-DEFAULT_INTERVAL = 8
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_USERNAME): vol.Coerce(str),
+    vol.Required(CONF_PASSWORD): vol.Coerce(str),
+    vol.Optional(CONF_INTERVAL, default=8): vol.Coerce(int)
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup_scanner(hass, config, see):
@@ -25,13 +31,8 @@ def setup_scanner(hass, config, see):
     from pyicloud.exceptions import PyiCloudFailedLoginException
     from pyicloud.exceptions import PyiCloudNoDevicesException
 
-    # Get the username and password from the configuration.
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    if username is None or password is None:
-        _LOGGER.error('Must specify a username and password')
-        return False
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     try:
         _LOGGER.info('Logging into iCloud Account')
@@ -75,9 +76,7 @@ def setup_scanner(hass, config, see):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, update_icloud)
 
-    track_utc_time_change(
-        hass, update_icloud, second=0,
-        minute=range(0, 60, config.get(CONF_INTERVAL, DEFAULT_INTERVAL))
-    )
+    track_utc_time_change(hass, update_icloud, second=0,
+                          minute=range(0, 60, config[CONF_INTERVAL]))
 
     return True
