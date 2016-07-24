@@ -62,7 +62,7 @@ def setup_scanner(hass, config, see):
                 # If the device has a location add it. If not do nothing
                 if location:
                     see(
-                        dev_id=slugify(status['name']),
+                        dev_id=slugify(status['name'].replace(' ', '', 99)),
                         host_name=status['name'],
                         gps=(location['latitude'], location['longitude']),
                         battery=status['batteryLevel']*100,
