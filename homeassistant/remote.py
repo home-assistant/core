@@ -75,7 +75,7 @@ class API(object):
 
         return self.status == APIStatus.OK
 
-    def __call__(self, method, path, data=None):
+    def __call__(self, method, path, data=None, timeout=5):
         """Make a call to the Home Assistant API."""
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
@@ -85,10 +85,11 @@ class API(object):
         try:
             if method == METHOD_GET:
                 return requests.get(
-                    url, params=data, timeout=5, headers=self._headers)
+                    url, params=data, timeout=timeout, headers=self._headers)
             else:
                 return requests.request(
-                    method, url, data=data, timeout=5, headers=self._headers)
+                    method, url, data=data, timeout=timeout,
+                    headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -510,12 +511,12 @@ def get_services(api):
         return {}
 
 
-def call_service(api, domain, service, service_data=None):
+def call_service(api, domain, service, service_data=None, timeout=5):
     """Call a service at the remote API."""
     try:
         req = api(METHOD_POST,
                   URL_API_SERVICES_SERVICE.format(domain, service),
-                  service_data)
+                  service_data, timeout=timeout)
 
         if req.status_code != 200:
             _LOGGER.error("Error calling service: %d - %s",
