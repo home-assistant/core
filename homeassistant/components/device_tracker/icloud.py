@@ -11,18 +11,21 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyicloud==0.9.1']
 
 CONF_INTERVAL = 'interval'
+KEEPALIVE_INTERVAL = 4
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): vol.Coerce(str),
     vol.Required(CONF_PASSWORD): vol.Coerce(str),
-    vol.Optional(CONF_INTERVAL, default=8): vol.Coerce(int)
-    }, extra=vol.ALLOW_EXTRA)
+    vol.Optional(CONF_INTERVAL, default=8): vol.All(vol.Coerce(int),
+                                                    vol.Range(min=1))
+    })
 
 
 def setup_scanner(hass, config, see):
@@ -47,8 +50,6 @@ def setup_scanner(hass, config, see):
         api.authenticate()
         _LOGGER.info("Authenticate against iCloud")
 
-    track_utc_time_change(hass, keep_alive, second=0, minute=4)
-
     def update_icloud(now):
         """Authenticate against iCloud and scan for devices."""
         try:
@@ -68,15 +69,20 @@ def setup_scanner(hass, config, see):
                         battery=status['batteryLevel']*100,
                         gps_accuracy=location['horizontalAccuracy']
                     )
-                else:
-                    # No location found for the device so continue
-                    continue
         except PyiCloudNoDevicesException:
             _LOGGER.info('No iCloud Devices found!')
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, update_icloud)
 
+    interval = config[CONF_INTERVAL]
     track_utc_time_change(hass, update_icloud, second=0,
-                          minute=range(0, 60, config[CONF_INTERVAL]))
+                          minute=range(0, 60, interval))
+
+    # Schedule keepalives between the updates
+    keep_alive_start = KEEPALIVE_INTERVAL
+    while keep_alive_start < interval:
+        track_utc_time_change(hass, keep_alive, second=0,
+                              minute=range(keep_alive_start, 60, interval))
+        keep_alive_start += KEEPALIVE_INTERVAL
 
     return True
