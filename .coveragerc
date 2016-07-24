@@ -91,6 +91,7 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
+    homeassistant/components/thermostat/knx.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -129,6 +130,7 @@ omit =
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
@@ -151,6 +153,7 @@ omit =
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
+    homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py

@@ -18,6 +18,13 @@
     <meta name='viewport' content='width=device-width, user-scalable=no'>
     <meta name='theme-color' content='#03a9f4'>
     <style>
+      body {
+        font-family: 'Roboto', 'Noto', sans-serif;
+        font-weight: 300;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
       #ha-init-skeleton {
         display: -webkit-flex;
         display: flex;
@@ -66,6 +73,7 @@
           .classList.add('error');
       };
       window.noAuth = {{ no_auth }};
+      window.Polymer = {lazyRegister: true, useNativeCSSProperties: true, dom: 'shady'};
     </script>
   </head>
   <body>
@@ -77,7 +85,10 @@
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
     <script src='{{ core_url }}'></script>
-    <link rel='import' href='{{ ui_url }}' onerror='initError()' async>
+    <link rel='import' href='{{ ui_url }}' onerror='initError()'>
+    {% if panel_url %}
+      <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
+    {% endif %}
     <link rel='import' href='{{ icons_url }}' async>
     <script>
       var webComponentsSupported = (
@@ -85,11 +96,11 @@
         'import' in document.createElement('link') &&
         'content' in document.createElement('template'));
       if (!webComponentsSupported) {
-        var script = document.createElement('script')
-        script.async = true
-        script.onerror = initError;
-        script.src = '/static/webcomponents-lite.min.js'
-        document.head.appendChild(script)
+        var e = document.createElement('script');
+        e.async = true;
+        e.onerror = initError;
+        e.src = '/static/webcomponents-lite.min.js';
+        document.head.appendChild(e);
       }
     </script>
   </body>

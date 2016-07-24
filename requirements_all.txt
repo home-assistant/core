@@ -4,7 +4,8 @@ pyyaml>=3.11,<4
 pytz>=2016.6.1
 pip>=7.0.0
 jinja2>=2.8
-voluptuous==0.8.9
+voluptuous==0.9.1
+typing>=3,<4
 sqlalchemy==1.0.14
 
 # homeassistant.components.isy994
@@ -97,6 +98,9 @@ hikvision==0.4
 # homeassistant.components.sensor.dht
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
+# homeassistant.components.light.flux_led
+https://github.com/Danielhiversen/flux_led/archive/0.3.zip#flux_led==0.3
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
 
@@ -137,6 +141,9 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 
 # homeassistant.components.qwikswitch
 https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
+
+# homeassistant.components.media_player.russound_rnet
+https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
@@ -179,7 +186,7 @@ insteon_hub==0.4.5
 jsonrpc-requests==0.3
 
 # homeassistant.components.knx
-knxip==0.3.0
+knxip==0.3.2
 
 # homeassistant.components.light.lifx
 liffylights==0.9.4
@@ -198,7 +205,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.discovery
-netdisco==0.6.7
+netdisco==0.7.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.2.10
@@ -278,7 +285,7 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.9
+pyhomematic==0.1.10
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.8.3
@@ -344,13 +351,13 @@ python-twitch==1.3.0
 # homeassistant.components.rollershutter.wink
 # homeassistant.components.sensor.wink
 # homeassistant.components.switch.wink
-python-wink==0.7.10
+python-wink==0.7.11
 
 # homeassistant.components.keyboard
 pyuserinput==0.1.9
 
 # homeassistant.components.vera
-pyvera==0.2.13
+pyvera==0.2.15
 
 # homeassistant.components.wemo
 pywemo==0.4.3
@@ -374,10 +381,10 @@ schiene==0.17
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid>=1.6.0,<1.7.0
+sendgrid==3.0.7
 
 # homeassistant.components.notify.slack
-slacker==0.9.21
+slacker==0.9.24
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
