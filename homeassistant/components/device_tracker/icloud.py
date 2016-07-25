@@ -33,6 +33,7 @@ def setup_scanner(hass, config, see):
     from pyicloud import PyiCloudService
     from pyicloud.exceptions import PyiCloudFailedLoginException
     from pyicloud.exceptions import PyiCloudNoDevicesException
+    logging.getLogger("pyicloud.base").setLevel(logging.WARNING)
 
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -46,15 +47,17 @@ def setup_scanner(hass, config, see):
         return False
 
     def keep_alive(now):
-        """Keep authenticating iCloud connection."""
+        """Keep authenticating iCloud connection.
+
+        The session timeouts if we are not using it so we
+        have to re-authenticate & this will send an email.
+        """
         api.authenticate()
         _LOGGER.info("Authenticate against iCloud")
 
     def update_icloud(now):
         """Authenticate against iCloud and scan for devices."""
         try:
-            # The session timeouts if we are not using it so we
-            # have to re-authenticate. This will send an email.
             keep_alive(None)
             # Loop through every device registered with the iCloud account
             for device in api.devices:
@@ -74,15 +77,12 @@ def setup_scanner(hass, config, see):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, update_icloud)
 
-    interval = config[CONF_INTERVAL]
-    track_utc_time_change(hass, update_icloud, second=0,
-                          minute=range(0, 60, interval))
-
+    update_minutes = list(range(0, 60, config[CONF_INTERVAL]))
     # Schedule keepalives between the updates
-    keep_alive_start = KEEPALIVE_INTERVAL
-    while keep_alive_start < interval:
-        track_utc_time_change(hass, keep_alive, second=0,
-                              minute=range(keep_alive_start, 60, interval))
-        keep_alive_start += KEEPALIVE_INTERVAL
+    keepalive_minutes = list(x for x in range(0, 60, KEEPALIVE_INTERVAL)
+                         if x not in update_minutes)
+
+    track_utc_time_change(hass, update_icloud, second=0, minute=update_minutes)
+    track_utc_time_change(hass, keep_alive, second=0, minute=keepalive_minutes)
 
     return True
