@@ -12,10 +12,12 @@ import queue
 import threading
 import time
 from datetime import timedelta
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
+import homeassistant.util.package as pkg_util
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
@@ -24,6 +26,11 @@ from homeassistant.helpers.event import track_point_in_utc_time
 DOMAIN = "recorder"
 
 REQUIREMENTS = ['sqlalchemy==1.0.14']
+
+PROTO_REQUIREMENTS = {
+    'mysql': 'mysqlclient==1.3.7',
+    'postgresql': 'psycopg2==2.6.2',
+}
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -104,6 +111,11 @@ def setup(hass, config):
         db_url = DEFAULT_URL.format(
             hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
+    parsed = urlparse(db_url)
+    if parsed.scheme in PROTO_REQUIREMENTS:
+        pkg_util.install_package(PROTO_REQUIREMENTS[parsed.scheme],
+                                 target=hass.config.path('deps'))
+
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url)
 
     return True
@@ -171,7 +183,8 @@ class Recorder(threading.Thread):
 
         while True:
             try:
-                self._setup_connection()
+                if not self._setup_connection():
+                    return
                 self._setup_run()
                 break
             except sqlalchemy.exc.SQLAlchemyError as e:
@@ -250,12 +263,18 @@ class Recorder(threading.Thread):
                 connect_args={'check_same_thread': False},
                 poolclass=StaticPool)
         else:
-            self.engine = create_engine(self.db_url, echo=False)
+            try:
+                self.engine = create_engine(self.db_url, echo=False)
+            except ImportError as ex:
+                _LOGGER.error('Supplied database URL requires dependency that '
+                              'was not installed: %s', ex)
+                return False
 
         models.Base.metadata.create_all(self.engine)
         session_factory = sessionmaker(bind=self.engine)
         Session = scoped_session(session_factory)
         self.db_ready.set()
+        return True
 
     def _close_connection(self):
         """Close the connection."""
