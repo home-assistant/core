@@ -2,15 +2,19 @@
 import re
 
 from typing import Any, Iterable, Tuple, List, Dict
-from logging import Logger
 
 from homeassistant.const import CONF_PLATFORM
+
+# Typing Imports and TypeAlias
+# pylint: disable=using-constant-test,unused-import
+if False:
+    from logging import Logger  # NOQA
 
 # pylint: disable=invalid-name
 ConfigType = Dict[str, Any]
 
 
-def validate_config(config: ConfigType, items: Dict, logger: Logger) -> bool:
+def validate_config(config: ConfigType, items: Dict, logger: 'Logger') -> bool:
     """Validate if all items are available in the configuration.
 
     config is the general dictionary with all the configurations.
