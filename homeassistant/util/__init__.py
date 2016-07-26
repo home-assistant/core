@@ -12,7 +12,7 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
-from typing import Any
+from typing import Any, Sequence
 
 from .dt import as_local, utcnow
 
@@ -31,7 +31,7 @@ def sanitize_path(path):
     return RE_SANITIZE_PATH.sub("", path)
 
 
-def slugify(text):
+def slugify(text: str) -> str:
     """Slugify a given text."""
     text = text.lower().replace(" ", "_")
 
@@ -59,17 +59,18 @@ def convert(value, to_type, default=None):
         return default
 
 
-def ensure_unique_string(preferred_string, current_strings):
+def ensure_unique_string(preferred_string: str,
+                         current_strings: Sequence[str]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
     """
     test_string = preferred_string
-    current_strings = set(current_strings)
+    current_strings_set = set(current_strings)
 
     tries = 1
 
-    while test_string in current_strings:
+    while test_string in current_strings_set:
         tries += 1
         test_string = "{}_{}".format(preferred_string, tries)
 
