@@ -1,6 +1,5 @@
 """
 Support for the Yahoo! Weather service.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yweather/
 """
@@ -19,16 +18,18 @@ SENSOR_TYPES = {
     'weather_current': ['Current', None],
     'weather': ['Condition', None],
     'temperature': ['Temperature', "temperature"],
-    'temp_min': ['Temperature', "temperature"],
-    'temp_max': ['Temperature', "temperature"],
+    'temp_min': ['Temperature Min', "temperature"],
+    'temp_max': ['Temperature Max', "temperature"],
     'wind_speed': ['Wind speed', "speed"],
     'humidity': ['Humidity', "%"],
     'pressure': ['Pressure', "pressure"],
     'visibility': ['Visibility', "distance"],
 }
+DEFAULT_NAME = "Yweather"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "yweather",
+    vol.Optional("name"): vol.Coerce(str),
     vol.Optional("woeid"): vol.Coerce(str),
     vol.Optional("forecast"): vol.Coerce(int),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
@@ -48,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = hass.config.temperature_unit
     woeid = config.get("woeid", None)
     forecast = config.get("forecast", 0)
+
 
     # convert unit
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
@@ -80,8 +82,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     dev = []
+    name = config.get('name', DEFAULT_NAME)
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(YahooWeatherSensor(yahoo_api, forecast, variable))
+        dev.append(YahooWeatherSensor(yahoo_api, forecast, variable, name))
 
     add_devices(dev)
 
@@ -90,9 +93,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class YahooWeatherSensor(Entity):
     """Implementation of an Yahoo! weather sensor."""
 
-    def __init__(self, weather_data, forecast, sensor_type):
+    def __init__(self, weather_data, forecast, sensor_type, name):
         """Initialize the sensor."""
-        self._client = 'Weather'
+        self._client = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self._type = sensor_type
         self._state = STATE_UNKNOWN
