@@ -295,3 +295,7 @@ class TestRemoteClasses(unittest.TestCase):
         hass.pool.block_till_done()
 
         self.assertEqual(1, len(test_value))
+
+    def test_get_config(self):
+        """Test the return of the configuration."""
+        self.assertEqual(hass.config.as_dict(), remote.get_config(master_api))
