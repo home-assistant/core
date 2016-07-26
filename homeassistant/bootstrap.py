@@ -72,6 +72,7 @@ def _handle_requirements(hass, component, name):
 def _setup_component(hass, domain, config):
     """Setup a component for Home Assistant."""
     # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
@@ -149,8 +150,14 @@ def _setup_component(hass, domain, config):
         _CURRENT_SETUP.append(domain)
 
         try:
-            if not component.setup(hass, config):
+            result = component.setup(hass, config)
+            if result is False:
                 _LOGGER.error('component %s failed to initialize', domain)
+                return False
+            elif result is not True:
+                _LOGGER.error('component %s did not return boolean if setup '
+                              'was successful. Disabling component.', domain)
+                loader.set_component(domain, None)
                 return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
