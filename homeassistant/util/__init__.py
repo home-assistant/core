@@ -375,8 +375,6 @@ class ThreadPool(object):
     def block_till_done(self):
         """Block till current work is done."""
         self._work_queue.join()
-        # import traceback
-        # traceback.print_stack()
 
     def stop(self):
         """Finish all the jobs and stops all the threads."""
@@ -401,7 +399,7 @@ class ThreadPool(object):
             # Get new item from work_queue
             job = self._work_queue.get().item
 
-            if job == self._quit_task:
+            if job is self._quit_task:
                 self._work_queue.task_done()
                 return
 
