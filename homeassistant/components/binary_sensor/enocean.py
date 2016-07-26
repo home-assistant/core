@@ -5,6 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.enocean/
 """
 
+from typing import Any, Callable, Dict
+
+from homeassistant.core import HomeAssistant
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components import enocean
 from homeassistant.const import CONF_NAME
@@ -14,7 +17,8 @@ DEPENDENCIES = ["enocean"]
 CONF_ID = "id"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config: Dict[str, Any],
+                   add_devices: Callable, discovery_info=None):
     """Setup the Binary Sensor platform fo EnOcean."""
     dev_id = config.get(CONF_ID, None)
     devname = config.get(CONF_NAME, "EnOcean binary sensor")
@@ -38,12 +42,13 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         """The default name for the binary sensor."""
         return self.devname
 
-    def value_changed(self, value, value2):
+    def value_changed(self, value):
         """Fire an event with the data that have changed.
 
         This method is called when there is an incoming packet associated
         with this platform.
         """
+        (value1, value2) = value
         self.update_ha_state()
         if value2 == 0x70:
             self.which = 0
@@ -58,6 +63,6 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
             self.which = 1
             self.onoff = 1
         self.hass.bus.fire('button_pressed', {"id": self.dev_id,
-                                              'pushed': value,
+                                              'pushed': value1,
                                               'which': self.which,
                                               'onoff': self.onoff})
