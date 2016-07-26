@@ -291,7 +291,7 @@ pyfttt==0.3
 pyhomematic==0.1.10
 
 # homeassistant.components.device_tracker.icloud
-pyicloud==0.8.3
+pyicloud==0.9.1
 
 # homeassistant.components.sensor.lastfm
 pylast==1.6.0
