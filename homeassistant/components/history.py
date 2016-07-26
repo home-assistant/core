@@ -171,14 +171,14 @@ class HistoryPeriodView(HomeAssistantView):
 
     url = '/api/history/period'
     name = 'api:history:view-period'
-    extra_urls = ['/api/history/period/<date:date>']
+    extra_urls = ['/api/history/period/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def get(self, request, datetime=None):
         """Return history over a period of time."""
         one_day = timedelta(days=1)
 
-        if date:
-            start_time = dt_util.as_utc(date)
+        if datetime:
+            start_time = dt_util.as_utc(datetime)
         else:
             start_time = dt_util.utcnow() - one_day
 

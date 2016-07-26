@@ -86,11 +86,11 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<date:date>']
+    extra_urls = ['/api/logbook/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def get(self, request, datetime=None):
         """Retrieve logbook entries."""
-        start_day = dt_util.as_utc(date or dt_util.start_of_local_day())
+        start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
         end_day = start_day + timedelta(days=1)
 
         events = recorder.get_model('Events')
