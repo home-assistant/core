@@ -139,8 +139,8 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
         else:
-            chan = "{} ({})".format(self._current['callsign'], \
-                self._current['major'])
+            chan = "{} ({})".format(self._current['callsign'],
+                                    self._current['major'])
             return chan
 
     def turn_on(self):
