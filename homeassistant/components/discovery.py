@@ -30,6 +30,7 @@ SERVICE_HANDLERS = {
     'roku': ('media_player', 'roku'),
     'sonos': ('media_player', 'sonos'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
+    'directv': ('media_player', 'directv'),
 }
 
 
