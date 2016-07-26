@@ -44,7 +44,6 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-        self._node = value.node
         self._state = value.data
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -53,7 +52,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
         """Called when a value has changed on the network."""
         if self._value.value_id == value.value_id:
             self._state = value.data
-            self.update_ha_state(True)
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
