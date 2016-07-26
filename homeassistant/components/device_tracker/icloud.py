@@ -80,7 +80,7 @@ def setup_scanner(hass, config, see):
     update_minutes = list(range(0, 60, config[CONF_INTERVAL]))
     # Schedule keepalives between the updates
     keepalive_minutes = list(x for x in range(0, 60, KEEPALIVE_INTERVAL)
-                         if x not in update_minutes)
+                             if x not in update_minutes)
 
     track_utc_time_change(hass, update_icloud, second=0, minute=update_minutes)
     track_utc_time_change(hass, keep_alive, second=0, minute=keepalive_minutes)
