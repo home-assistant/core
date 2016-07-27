@@ -5,7 +5,7 @@ import unittest
 from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE, )
+    ATTR_ASSUMED_STATE, STATE_NOT_HOME, )
 import homeassistant.components.group as group
 
 from tests.common import get_test_home_assistant
@@ -294,3 +294,18 @@ class TestComponentsGroup(unittest.TestCase):
 
         state = self.hass.states.get(test_group.entity_id)
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+
+    def test_group_updated_after_device_tracker_zone_change(self):
+        """Test group state is changed when device tracker in group changes
+        zones from home"""
+        self.hass.states.set('device_tracker.Adam', STATE_HOME)
+        self.hass.states.set('device_tracker.Eve', STATE_NOT_HOME)
+        self.hass.pool.block_till_done()
+        group.Group(
+            self.hass, 'peeps',
+            ['device_tracker.Adam', 'device_tracker.Eve'])
+        self.hass.states.set('device_tracker.Adam', 'cool_state_not_home')
+        self.hass.pool.block_till_done()
+        self.assertEqual(STATE_NOT_HOME,
+                         self.hass.states.get(
+                             group.ENTITY_ID_FORMAT.format('peeps')).state)
