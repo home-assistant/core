@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpchc/
 """
 import logging
-import requests
 import re
+import requests
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice)
@@ -28,8 +28,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([MpcHcDevice(name, url)])
 
 
+# pylint: disable=abstract-method
 class MpcHcDevice(MediaPlayerDevice):
     """Representation of a MPC-HC server."""
+
     def __init__(self, name, url):
         """Initialize the MPC-HC device."""
         self._name = name
@@ -46,10 +48,10 @@ class MpcHcDevice(MediaPlayerDevice):
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
             self._player_variables = dict()
-            for s in mpchc_variables:
-                self._player_variables[s[0]] = s[1].lower()
+            for var in mpchc_variables:
+                self._player_variables[var[0]] = var[1].lower()
         except requests.exceptions.RequestException:
-            _LOGGER.error("Could not connect to MPC-HC at: {}".format(self._host))
+            _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
 
     @property
     def name(self):
