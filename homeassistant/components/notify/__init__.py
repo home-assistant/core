@@ -12,7 +12,6 @@ import voluptuous as vol
 import requests
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.loader import get_component
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -190,8 +189,8 @@ def setup(hass, config):
 
         # load gps coordinate from device tracker or params
         device_id = service.data.get(ATTR_DEVICE, None)
-        if device_id is not None:
-            tracker = get_component(device_id)
+        if device_id is not None and device_id in hass.entities:
+            tracker = hass.entities.get(device_id)
             if not tracker.gps:
                 _LOGGER.error("No gps data on device.")
                 return
@@ -253,17 +252,16 @@ class BaseNotificationService(Entity):
         """Return True if the entity should be hidden from UIs."""
         return True
 
-    @staticmethod
-    def load_photo(url=None, file=None, camera_entity=None, username=None,
-                   password=None):
+    def load_photo(self, url=None, file=None, camera_entity=None,
+                   username=None, password=None):
         """Load photo into ByteIO/File container from a source."""
         try:
             if camera_entity is not None:
                 # load photo from camera entity
-                cam = get_component(camera_entity)
+                cam = self.hass.entities.get(camera_entity, None)
                 if cam is None:
                     _LOGGER.error("Campera entity not found!")
-                    return
+                    return None
                 return io.BytesIO(cam.camera_image())
 
             elif url is not None:

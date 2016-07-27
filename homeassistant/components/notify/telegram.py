@@ -80,7 +80,7 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a photo."""
         import telegram
 
-        data = BaseNotificationService.load_photo(**photo)
+        data = self.load_photo(**photo)
         if data is None:
             _LOGGER.error("No photo found!")
             return
