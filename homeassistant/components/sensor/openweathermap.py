@@ -27,10 +27,12 @@ SENSOR_TYPES = {
     'rain': ['Rain', 'mm'],
     'snow': ['Snow', 'mm']
 }
+DEFAULT_NAME = "Openweathermap"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'openweathermap',
     vol.Required(CONF_API_KEY): vol.Coerce(str),
+    vol.Optional("name"): vol.Coerce(str),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
     vol.Optional('forecast', default=False): cv.boolean
@@ -61,19 +63,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = WeatherData(owm, forecast, hass.config.latitude,
                        hass.config.longitude)
+    name = config.get('name', DEFAULT_NAME)
     dev = []
     try:
         for variable in config['monitored_conditions']:
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(OpenWeatherMapSensor(data, variable, unit))
+                dev.append(OpenWeatherMapSensor(data, variable, unit, name))
     except KeyError:
         pass
 
     if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
+        dev.append(OpenWeatherMapSensor(data, 'forecast', unit, name))
 
     add_devices(dev)
 
@@ -82,9 +85,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenWeatherMapSensor(Entity):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(self, weather_data, sensor_type, temp_unit):
+    def __init__(self, weather_data, sensor_type, temp_unit, name):
         """Initialize the sensor."""
-        self.client_name = 'Weather'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.owa_client = weather_data
         self.temp_unit = temp_unit
