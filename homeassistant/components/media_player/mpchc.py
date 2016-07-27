@@ -19,24 +19,21 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MPC-HC platform."""
     name = config.get("name", "MPC-HC")
-    address = config.get("address")
-    port = config.get('port', 13579)
+    url = '{}:{}'.format(config.get('host'), config.get('port', '13579'))
 
-    if address is None:
-        _LOGGER.error("Missing address in config")
+    if config.get('host') is None:
+        _LOGGER.error("Missing NPC-HC host address in config")
         return False
 
-    add_devices([MpcHcDevice(name, address, port)])
+    add_devices([MpcHcDevice(name, url)])
 
 
 class MpcHcDevice(MediaPlayerDevice):
     """Representation of a MPC-HC server."""
-    def __init__(self, name, address, port):
+    def __init__(self, name, url):
         """Initialize the MPC-HC device."""
         self._name = name
-        self._address = address
-        self._port = port
-        self._host = "http://{}:{}".format(self._address, self._port)
+        self._url = url
 
         self.update()
 
@@ -44,7 +41,7 @@ class MpcHcDevice(MediaPlayerDevice):
         self._player_variables = dict()
 
         try:
-            response = requests.get("{}/variables.html".format(self._host), data=None, timeout=3)
+            response = requests.get("{}/variables.html".format(self._url), data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
