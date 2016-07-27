@@ -44,8 +44,7 @@ class MpcHcDevice(MediaPlayerDevice):
         self._player_variables = dict()
 
         try:
-            with requests.Session() as sess:
-                response = requests.get("{}/variables.html".format(self._host), data=None, timeout=3)
+            response = requests.get("{}/variables.html".format(self._host), data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
