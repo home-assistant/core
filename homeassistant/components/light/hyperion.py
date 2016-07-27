@@ -19,26 +19,24 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup a Hyperion server remote."""
     host = config.get(CONF_HOST, None)
     port = config.get("port", 19444)
-    color = config.get("color", [255, 255, 255])
-    device = Hyperion(config.get('name', host), host, port, color)
+    default_color = config.get("default_color", [255, 255, 255])
+    device = Hyperion(config.get('name', host), host, port, default_color)
     if device.setup():
         add_devices_callback([device])
         return True
-    else:
-        return False
+    return False
 
 
 class Hyperion(Light):
     """Representation of a Hyperion remote."""
 
-    def __init__(self, name, host, port, color):
+    def __init__(self, name, host, port, default_color):
         """Initialize the light."""
         self._host = host
         self._port = port
         self._name = name
-        self._is_available = True
-        self._is_on = False
-        self._rgb_color = color
+        self._default_color = default_color
+        self._rgb_color = [0, 0, 0]
 
     @property
     def name(self):
@@ -52,48 +50,43 @@ class Hyperion(Light):
 
     @property
     def is_on(self):
-        """Return true if the device is online."""
-        return self._is_on
+        """Return true if not black."""
+        return self._rgb_color != [0, 0, 0]
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
-        if self._is_available:
-            if ATTR_RGB_COLOR in kwargs:
-                self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_RGB_COLOR in kwargs:
+            self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        else:
+            self._rgb_color = self._default_color
 
-            self.json_request({"command": "color", "priority": 128,
-                               "color": self._rgb_color})
+        self.json_request({"command": "color", "priority": 128,
+                           "color": self._rgb_color})
 
     def turn_off(self, **kwargs):
-        """Disconnect the remote."""
+        """Disconnect all remotes."""
         self.json_request({"command": "clearall"})
+        self._rgb_color = [0, 0, 0]
 
     def update(self):
-        """Ping the remote."""
-        # Check if it's up, and showing color
-        self._is_available = self.json_request()
+        """Get the remote's active color."""
         response = self.json_request({"command": "serverinfo"})
         if response:
-            if response["info"]["priorities"] == []:
-                self._is_on = False
+            if response["info"]["activeLedColor"] == []:
+                self._rgb_color = [0, 0, 0]
             else:
-                self._is_on = True
+                self._rgb_color =\
+                    response["info"]["activeLedColor"][0]["RGB Value"]
 
     def setup(self):
         """Get the hostname of the remote."""
         response = self.json_request({"command": "serverinfo"})
         if response:
-            if self._name == self._host:
-                self._name = response["info"]["hostname"]
-            if response["info"]["priorities"] == []:
-                self._is_on = False
-            else:
-                self._is_on = True
+            self._name = response["info"]["hostname"]
             return True
-
         return False
 
-    def json_request(self, request=None, wait_for_response=False):
+    def json_request(self, request, wait_for_response=False):
         """Communicate with the JSON server."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(5)
@@ -103,11 +96,6 @@ class Hyperion(Light):
         except OSError:
             sock.close()
             return False
-
-        if not request:
-            # No communication needed, simple presence detection returns True
-            sock.close()
-            return True
 
         sock.send(bytearray(json.dumps(request) + "\n", "utf-8"))
         try:
