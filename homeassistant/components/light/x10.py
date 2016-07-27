@@ -4,7 +4,7 @@ Support for X10 lights.
 Requires heyu x10 interface
 http://www.heyu.org
 
-To enable x10 lights, add something like this to your `configuration.yaml` file:
+To enable x10 lights, add something like this to your `configuration.yaml`:
 
     light:
     - platform: x10
@@ -24,29 +24,36 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, Light
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def x10_command(command):
-    return check_output(["heyu"] + command.split(' '),stderr=STDOUT)
+    """Execute X10 command and check output."""
+    return check_output(["heyu"] + command.split(' '), stderr=STDOUT)
+
 
 def get_status():
-    output = check_output("heyu info | grep monitored",shell=True)
+    """Get on/off status for all x10 units in default housecode."""
+    output = check_output("heyu info | grep monitored", shell=True)
     return output.decode('utf-8').split(' ')[-1].strip('\n()')
 
+
 def get_unit_status(code):
+    """Get on/off status for given unit."""
     unit = int(code[1])
     return get_status()[16 - int(unit)] == '1'
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialize Awesome Light platform."""
-
     # Verify that heyu is active
     try:
         x10_command("info")
-    except CalledProcessError as e:
-        _LOGGER.error(e.output)
+    except CalledProcessError as err:
+        _LOGGER.error(err.output)
         return False
 
     # Add devices
     add_devices(X10Light(light) for light in config['lights'])
+
 
 class X10Light(Light):
     """Represents an X10 Light in Home Assistant."""
@@ -60,7 +67,7 @@ class X10Light(Light):
 
     @property
     def name(self):
-        """Return the display name of this light"""
+        """Return the display name of this light."""
         return self._name
 
     @property
@@ -79,13 +86,13 @@ class X10Light(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        x10_command("on "+ self._id)
+        x10_command("on " + self._id)
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._is_on = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        x10_command("off "+ self._id)
+        x10_command("off " + self._id)
         self._is_on = False
 
     def update(self):
