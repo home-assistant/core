@@ -45,7 +45,7 @@ SENSOR_TYPES = {
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
 }
-+DEFAULT_NAME = "Forecast.io"
+DEFAULT_NAME = "Forecast.io"
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
