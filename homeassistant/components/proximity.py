@@ -120,7 +120,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return self.unit_of_measurement
+        return self.unit_of_measure
 
     @property
     def state_attributes(self):
