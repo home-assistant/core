@@ -15,6 +15,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MPC-HC platform."""
@@ -40,10 +41,12 @@ class MpcHcDevice(MediaPlayerDevice):
         self.update()
 
     def update(self):
+        """Get the latest details."""
         self._player_variables = dict()
 
         try:
-            response = requests.get("{}/variables.html".format(self._url), data=None, timeout=3)
+            response = requests.get("{}/variables.html".format(self._url),
+                                    data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
@@ -61,48 +64,39 @@ class MpcHcDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        try:
-            if self._player_variables['statestring'] == 'playing':
-                return STATE_PLAYING
-            elif self._player_variables['statestring'] == 'paused':
-                return STATE_PAUSED
-            else:
-                return STATE_IDLE
-        except KeyError:
-            return STATE_OFF
+        state = self._player_variables.get('statestring', None)
 
+        if state is None:
+            return STATE_OFF
+        if state == 'playing':
+            return STATE_PLAYING
+        elif state == 'paused':
+            return STATE_PAUSED
+        else:
+            return STATE_IDLE
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        try:
-            return self._player_variables['file']
-        except KeyError:
-            return None
+        return self._player_variables.get('file', None)
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        try:
-            return int(self._player_variables['volumelevel']) / 100.0
-        except KeyError:
-            return False
+        return int(self._player_variables.get('volumelevel', 0)) / 100.0
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        try:
-            return self._player_variables['muted'] == '1'
-        except KeyError:
-            return False
+        return self._player_variables.get('muted', '0') == '1'
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        try:
-            duration_components = self._player_variables['durationstring'].split(':')
-            return int(duration_components[0]) * 3600 + \
-                   int(duration_components[1]) * 60 + \
-                   int(duration_components[2])
-        except KeyError:
-            return False
+        duration = self._player_variables.get('durationstring',
+                                              "00:00:00").split(':')
+
+        return \
+            int(duration[0]) * 3600 + \
+            int(duration[1]) * 60 + \
+            int(duration[2])
