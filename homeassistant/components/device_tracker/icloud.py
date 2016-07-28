@@ -11,7 +11,8 @@ from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util import slugify
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (ENTITY_ID_FORMAT,
+                                                     PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +56,8 @@ def setup_scanner(hass, config, see):
         api.authenticate()
         _LOGGER.info("Authenticate against iCloud")
 
+    seen_devices = {}
+
     def update_icloud(now):
         """Authenticate against iCloud and scan for devices."""
         try:
@@ -62,11 +65,20 @@ def setup_scanner(hass, config, see):
             # Loop through every device registered with the iCloud account
             for device in api.devices:
                 status = device.status()
+                dev_id = slugify(status['name'].replace(' ', '', 99))
+
+                # An entity will not be created by see() when track=false in
+                # 'known_devices.yaml', but we need to see() it at least once
+                entity = hass.states.get(ENTITY_ID_FORMAT.format(dev_id))
+                if entity is None and dev_id in seen_devices:
+                    continue
+                seen_devices[dev_id] = True
+
                 location = device.location()
                 # If the device has a location add it. If not do nothing
                 if location:
                     see(
-                        dev_id=slugify(status['name'].replace(' ', '', 99)),
+                        dev_id=dev_id,
                         host_name=status['name'],
                         gps=(location['latitude'], location['longitude']),
                         battery=status['batteryLevel']*100,
