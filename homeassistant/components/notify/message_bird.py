@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TARGET, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.helpers import validate_config
 
 CONF_SENDER = 'sender'
@@ -29,20 +29,21 @@ def is_valid_sender(sender):
 
 
 # pylint: disable=unused-argument
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the MessageBird notification service."""
     import messagebird
 
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY]},
                            _LOGGER):
-        return None
+        return False
 
     sender = config.get(CONF_SENDER, 'HA')
+    name = config.get(CONF_NAME)
     if not is_valid_sender(sender):
         _LOGGER.error('Sender is invalid: It must be a phone number or '
                       'a string not longer than 11 characters.')
-        return None
+        return False
 
     client = messagebird.Client(config[CONF_API_KEY])
     try:
@@ -50,21 +51,27 @@ def get_service(hass, config):
         client.balance()
     except messagebird.client.ErrorException:
         _LOGGER.error('The specified MessageBird API key is invalid.')
-        return None
+        return False
 
-    return MessageBirdNotificationService(sender, client)
+    add_devices([MessageBirdNotificationService(sender, client, name)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method,abstract-method
 class MessageBirdNotificationService(BaseNotificationService):
     """Implement the notification service for MessageBird."""
 
-    def __init__(self, sender, client):
+    def __init__(self, sender, client, name):
         """Initialize the service."""
         self.sender = sender
         self.client = client
+        self._name = name
 
-    def send_message(self, message=None, **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a specified target."""
         from messagebird.client import ErrorException
 

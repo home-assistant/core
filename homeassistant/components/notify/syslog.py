@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.syslog/
 """
 import logging
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
@@ -13,12 +14,12 @@ from homeassistant.helpers import validate_config
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the syslog notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['facility', 'option', 'priority']},
                            _LOGGER):
-        return None
+        return False
 
     import syslog
 
@@ -62,21 +63,28 @@ def get_service(hass, config):
         -2: syslog.LOG_DEBUG
     }.get(config['priority'], -1)
 
-    return SyslogNotificationService(_facility, _option, _priority)
+    add_devices([SyslogNotificationService(_facility, _option, _priority,
+                                           config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class SyslogNotificationService(BaseNotificationService):
     """Implement the syslog notification service."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, facility, option, priority):
+    def __init__(self, facility, option, priority, name):
         """Initialize the service."""
         self._facility = facility
         self._option = option
         self._priority = priority
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         import syslog
 

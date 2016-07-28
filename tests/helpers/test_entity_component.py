@@ -74,6 +74,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         # group exists
         assert 2 == len(self.hass.states.entity_ids())
+        assert 1 == len(self.hass.entities)
         assert ['group.everyone'] == self.hass.states.entity_ids('group')
 
         group = self.hass.states.get('group.everyone')
@@ -84,6 +85,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.add_entities([EntityTest(name='hello2')])
 
         assert 3 == len(self.hass.states.entity_ids())
+        assert 2 == len(self.hass.entities)
         group = self.hass.states.get('group.everyone')
 
         assert ['test_domain.hello', 'test_domain.hello2'] == \
@@ -108,6 +110,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert not no_poll_ent.update_ha_state.called
         assert poll_ent.update_ha_state.called
+        assert 2 == len(self.hass.entities)
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -118,36 +121,43 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         component.add_entities([ent2])
         assert 1 == len(self.hass.states.entity_ids())
+        assert 1 == len(self.hass.entities)
         ent2.update_ha_state = lambda *_: component.add_entities([ent1])
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
         self.hass.pool.block_till_done()
 
         assert 2 == len(self.hass.states.entity_ids())
+        assert 2 == len(self.hass.entities)
 
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         assert 0 == len(self.hass.states.entity_ids())
+        assert 0 == len(self.hass.entities)
 
         component.add_entities([None, EntityTest(unique_id='not_very_unique')])
 
         assert 1 == len(self.hass.states.entity_ids())
+        assert 1 == len(self.hass.entities)
 
         component.add_entities([EntityTest(unique_id='not_very_unique')])
 
         assert 1 == len(self.hass.states.entity_ids())
+        assert 1 == len(self.hass.entities)
 
     def test_not_assigning_entity_id_if_prescribes_one(self):
         """Test for not assigning an entity ID."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
         assert 'hello.world' not in self.hass.states.entity_ids()
+        assert 0 == len(self.hass.entities)
 
         component.add_entities([EntityTest(entity_id='hello.world')])
 
         assert 'hello.world' in self.hass.states.entity_ids()
+        assert 1 == len(self.hass.entities)
 
     def test_extract_from_service_returns_all_if_no_entity_id(self):
         """Test the extraction of everything from service."""
@@ -162,6 +172,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert ['test_domain.test_1', 'test_domain.test_2'] == \
             sorted(ent.entity_id for ent in
                    component.extract_from_service(call))
+        assert 2 == len(self.hass.entities)
 
     def test_extract_from_service_filter_out_non_existing_entities(self):
         """Test the extraction of non existing entities from service."""
@@ -177,6 +188,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert ['test_domain.test_2'] == \
                [ent.entity_id for ent in component.extract_from_service(call)]
+        assert 2 == len(self.hass.entities)
 
     def test_setup_loads_platforms(self):
         """Test the loading of the platforms."""

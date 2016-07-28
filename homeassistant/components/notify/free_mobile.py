@@ -7,35 +7,43 @@ https://home-assistant.io/components/notify.free_mobile/
 import logging
 
 from homeassistant.components.notify import DOMAIN, BaseNotificationService
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['freesms==0.1.0']
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Free Mobile SMS notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_USERNAME,
                                      CONF_ACCESS_TOKEN]},
                            _LOGGER):
-        return None
+        return False
 
-    return FreeSMSNotificationService(config[CONF_USERNAME],
-                                      config[CONF_ACCESS_TOKEN])
+    add_devices([FreeSMSNotificationService(
+        config.get(CONF_USERNAME),
+        config.get(CONF_ACCESS_TOKEN),
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class FreeSMSNotificationService(BaseNotificationService):
     """Implement a notification service for the Free Mobile SMS service."""
 
-    def __init__(self, username, access_token):
+    def __init__(self, username, access_token, name):
         """Initialize the service."""
         from freesms import FreeClient
         self.free_client = FreeClient(username, access_token)
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 

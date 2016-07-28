@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,41 +16,49 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushetta==1.0.15']
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Pushetta notification service."""
     from pushetta import Pushetta, exceptions
 
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY, 'channel_name']},
                            _LOGGER):
-        return None
+        return False
 
     try:
         pushetta = Pushetta(config[CONF_API_KEY])
         pushetta.pushMessage(config['channel_name'], "Home Assistant started")
     except exceptions.TokenValidationError:
         _LOGGER.error("Please check your access token")
-        return None
+        return False
     except exceptions.ChannelNotFoundError:
         _LOGGER.error("Channel '%s' not found", config['channel_name'])
-        return None
+        return False
 
-    return PushettaNotificationService(config[CONF_API_KEY],
-                                       config['channel_name'])
+    add_devices([PushettaNotificationService(
+        config.get(CONF_API_KEY),
+        config.get('channel_name'),
+        config.get(CONF_NAME))])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class PushettaNotificationService(BaseNotificationService):
     """Implement the notification service for Pushetta."""
 
-    def __init__(self, api_key, channel_name):
+    def __init__(self, api_key, channel_name, name):
         """Initialize the service."""
         from pushetta import Pushetta
         self._api_key = api_key
         self._channel_name = channel_name
+        self._name = name
         self.pushetta = Pushetta(self._api_key)
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE)
         self.pushetta.pushMessage(self._channel_name,

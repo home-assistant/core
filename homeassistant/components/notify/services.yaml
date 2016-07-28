@@ -1,7 +1,11 @@
-notify:
-  description: Send a notification
+send_message:
+  description: Send a message notification
 
   fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'notify.notify'
+
     message:
       description: Message body of the notification.
       example: The garage door has been open for 10 minutes.
@@ -14,6 +18,62 @@ notify:
       description: Target of the notification. Optional depending on the platform
       example: platform specific
 
-    data:
+    formats:
       description: Extended information for notification. Optional depending on the platform
       example: platform specific
+
+send_photo:
+  description: Send a photo. URL, File or a camera entity is requred.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'notify.notify'
+
+    url:
+      description: URL for photo
+      example: A url they give a picture for notification
+
+    file:
+      description: A local file path for picture notification.
+      example: '/tmp/webcam.png'
+
+    camera_entity:
+      description: Name of camera entity from loading image
+      example: 'camera.front_dor'
+
+    caption:
+      description: Optional depending on the platform if support it.
+      example: 'Image caption title'
+
+    username:
+      description: Optional if URL is set for basic authenticate
+      example: 'admin'
+
+    password:
+      description: Optional if URL is set for basic authenticate
+      example: 'password'
+
+send_location:
+  description: Send a location. latitude and longitude or a device tracker entity is requred.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: 'notify.notify'
+
+    latitude:
+      description: Latitude for position
+      example: 48.239469
+
+    longitude:
+      description: Longitude for postion
+      example: 7.193025
+
+    device_entity:
+      description: Name of device tracker entity from loading gps data
+      example: 'device_tracker.phone_xy'
+
+    caption:
+      description: Optional depending on the platform if support it.
+      example: 'Location caption title'

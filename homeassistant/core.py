@@ -97,6 +97,7 @@ class HomeAssistant(object):
         self.states = StateMachine(self.bus)
         self.config = Config()
         self.state = CoreState.not_running
+        self.entities = {}
 
     @property
     def is_running(self) -> bool:

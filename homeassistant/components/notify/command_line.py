@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.command_line/
 """
 import logging
 import subprocess
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import validate_config
 from homeassistant.components.notify import (
     DOMAIN, BaseNotificationService)
@@ -13,27 +14,34 @@ from homeassistant.components.notify import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Command Line notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: ['command']},
                            _LOGGER):
-        return None
+        return False
 
     command = config['command']
 
-    return CommandLineNotificationService(command)
+    add_devices([CommandLineNotificationService(config.get(CONF_NAME),
+                                                command)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class CommandLineNotificationService(BaseNotificationService):
     """Implement the notification service for the Command Line service."""
 
-    def __init__(self, command):
+    def __init__(self, name, command):
         """Initialize the service."""
         self.command = command
+        self._name = name
 
-    def send_message(self, message="", **kwargs):
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
+
+    def send_message(self, message, **kwargs):
         """Send a message to a command line."""
         try:
             proc = subprocess.Popen(self.command, universal_newlines=True,

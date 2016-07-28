@@ -122,6 +122,7 @@ class EntityComponent(object):
                 self.entities.keys())
 
         self.entities[entity.entity_id] = entity
+        self.hass.entities[entity.entity_id] = entity
         entity.update_ha_state()
 
         return True

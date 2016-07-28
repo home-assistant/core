@@ -11,38 +11,46 @@ import requests
 
 from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://www.notifymyandroid.com/publicapi/'
 
 
-def get_service(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the NMA notification service."""
     if not validate_config({DOMAIN: config},
                            {DOMAIN: [CONF_API_KEY]},
                            _LOGGER):
-        return None
+        return False
 
+    api_key = config.get(CONF_API_KEY)
+    name = config.get(CONF_NAME)
     response = requests.get(_RESOURCE + 'verify',
-                            params={"apikey": config[CONF_API_KEY]})
+                            params={"apikey": api_key})
     tree = ET.fromstring(response.content)
 
     if tree[0].tag == 'error':
         _LOGGER.error("Wrong API key supplied. %s", tree[0].text)
-        return None
+        return False
 
-    return NmaNotificationService(config[CONF_API_KEY])
+    add_devices([NmaNotificationService(api_key, name)])
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,abstract-method
 class NmaNotificationService(BaseNotificationService):
     """Implement the notification service for NMA."""
 
-    def __init__(self, api_key):
+    def __init__(self, api_key, name):
         """Initialize the service."""
         self._api_key = api_key
+        self._name = name
+
+    @property
+    def name(self):
+        """Return name of notification entity."""
+        return self._name
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
