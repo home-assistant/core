@@ -88,12 +88,15 @@ class SpeedtestSensor(Entity):
         if data is None:
             entity_id = 'sensor.speedtest_' + self._name.lower()
             states = recorder.get_model('States')
-            last_state = recorder.execute(
-                recorder.query('States').filter(
-                    (states.entity_id == entity_id) &
-                    (states.last_changed == states.last_updated) &
-                    (states.state != 'unknown')
-                ).order_by(states.state_id.desc()).limit(1))
+            try:
+                last_state = recorder.execute(
+                    recorder.query('States').filter(
+                        (states.entity_id == entity_id) &
+                        (states.last_changed == states.last_updated) &
+                        (states.state != 'unknown')
+                    ).order_by(states.state_id.desc()).limit(1))
+            except TypeError:
+                return
             if not last_state:
                 return
             self._state = last_state[0].state
