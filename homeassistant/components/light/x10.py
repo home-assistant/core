@@ -1,23 +1,9 @@
 """
 Support for X10 lights.
 
-Requires heyu x10 interface
-http://www.heyu.org
-
-To enable x10 lights, add something like this to your `configuration.yaml`:
-
-    light:
-    - platform: x10
-        lights:
-        - name: Living Room Lamp
-            id: a2
-        - name: Bedroom Lamp
-            id: a3
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.x10/
 """
-
 import logging
 from subprocess import check_output, CalledProcessError, STDOUT
 from homeassistant.components.light import ATTR_BRIGHTNESS, Light
@@ -43,20 +29,18 @@ def get_unit_status(code):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Initialize Awesome Light platform."""
-    # Verify that heyu is active
+    """Setup the x10 Light platform."""
     try:
         x10_command("info")
     except CalledProcessError as err:
         _LOGGER.error(err.output)
         return False
 
-    # Add devices
     add_devices(X10Light(light) for light in config['lights'])
 
 
 class X10Light(Light):
-    """Represents an X10 Light in Home Assistant."""
+    """Representation of an X10 Light."""
 
     def __init__(self, light):
         """Initialize an X10 Light."""
@@ -72,16 +56,12 @@ class X10Light(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255).
-
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-        """
+        """Brightness of the light (an integer in the range 1-255)."""
         return self._brightness
 
     @property
     def is_on(self):
-        """If light is on."""
+        """Return true if light is on."""
         return self._is_on
 
     def turn_on(self, **kwargs):
@@ -96,8 +76,5 @@ class X10Light(Light):
         self._is_on = False
 
     def update(self):
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assitant.
-        """
+        """Fetch new state data for this light."""
         self._is_on = get_unit_status(self._id)
