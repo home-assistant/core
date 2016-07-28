@@ -10,11 +10,13 @@ import sys
 from subprocess import check_output
 
 import homeassistant.util.dt as dt_util
+from homeassistant.components import recorder
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
+DEPENDENCIES = ['recorder']
 _LOGGER = logging.getLogger(__name__)
 
 _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
@@ -85,8 +87,17 @@ class SpeedtestSensor(Entity):
         """Get the latest data and update the states."""
         data = self.speedtest_client.data
         if data is None:
-            return
-
+            entity_id = 'sensor.speedtest_' + self._name.lower()
+            states = recorder.get_model('States')
+            last_state = recorder.execute(
+                recorder.query('States').filter(
+                    (states.entity_id == entity_id) &
+                    (states.last_changed == states.last_updated) &
+                    (states.state != 'unknown')
+                ).order_by(states.state_id.desc()).limit(1))
+            if not last_state:
+                return
+            self._state = last_state[0].state
         elif self.type == 'ping':
             self._state = data['ping']
         elif self.type == 'download':
