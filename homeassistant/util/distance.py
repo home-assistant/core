@@ -18,12 +18,12 @@ def miles_to_kilometers(mi):
 
 def kilometers_to_meters(km):
     """Convert the given kilometers to meters."""
-    return km * .001
+    return km * 1000
 
 
 def meters_to_kilometers(m):
     """Convert the given meters to kilometers."""
-    return m * 1000
+    return m * 0.001
 
 
 def meters_to_feet(m):
