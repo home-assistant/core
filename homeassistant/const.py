@@ -118,6 +118,12 @@ TEMP_CELCIUS = "°C"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
+# Day attribute
+ATTR_DAY = "day"
+
+# Date attribute
+ATTR_DATE = "date"
+
 # Contains the information that is discovered
 ATTR_DISCOVERED = "discovered"
 
