@@ -12,6 +12,8 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.location import distance
+from homeassistant.util.distance import convert
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 
 DEPENDENCIES = ['zone', 'device_tracker']
 
@@ -22,6 +24,9 @@ DEFAULT_TOLERANCE = 1
 
 # Default zone
 DEFAULT_PROXIMITY_ZONE = 'home'
+
+# Default unit of measure
+DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 # Entity attributes
 ATTR_DIST_FROM = 'dist_to_zone'
@@ -54,6 +59,9 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
         # Get the zone to monitor proximity to from configuration.yaml.
         proximity_zone = prox.get('zone', DEFAULT_PROXIMITY_ZONE)
 
+        # Get the unit of measurement from configuration.yaml.
+        unit_of_measure = prox.get(ATTR_UNIT_OF_MEASUREMENT, DEFAULT_UNIT_OF_MEASUREMENT)
+
         entity_id = DOMAIN + '.' + proximity_zone
         proximity_zone = 'zone.' + proximity_zone
 
@@ -67,7 +75,8 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
 
         proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
                               dir_of_travel, nearest, ignored_zones,
-                              proximity_devices, tolerance, proximity_zone)
+                              proximity_devices, tolerance, proximity_zone,
+                              unit_of_measure)
         proximity.entity_id = entity_id
 
         proximity.update_ha_state()
@@ -85,7 +94,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
                  nearest, ignored_zones, proximity_devices, tolerance,
-                 proximity_zone):
+                 proximity_zone, unit_of_measure):
         """Initialize the proximity."""
         self.hass = hass
         self.friendly_name = zone_friendly_name
@@ -96,6 +105,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         self.proximity_devices = proximity_devices
         self.tolerance = tolerance
         self.proximity_zone = proximity_zone
+        self.unit_of_measurement = unit_of_measure
 
     @property
     def name(self):
@@ -110,7 +120,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "km"
+        return self.unit_of_measurement
 
     @property
     def state_attributes(self):
@@ -184,7 +194,8 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
                                     device_state.attributes['longitude'])
 
             # Add the device and distance to a dictionary.
-            distances_to_zone[device] = round(dist_to_zone / 1000, 1)
+            distances_to_zone[device] = round(
+                convert(dist_to_zone, 'm', self.unit_of_measurement), 1)
 
         # Loop through each of the distances collected and work out the
         # closest.
