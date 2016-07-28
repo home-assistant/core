@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.speedtest/
 import logging
 import re
 import sys
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import DOMAIN
@@ -112,9 +112,13 @@ class SpeedtestData(object):
         import speedtest_cli
 
         _LOGGER.info('Executing speedtest')
-        re_output = _SPEEDTEST_REGEX.split(
-            check_output([sys.executable, speedtest_cli.__file__,
-                          '--simple']).decode("utf-8"))
+        try:
+            re_output = _SPEEDTEST_REGEX.split(
+                check_output([sys.executable, speedtest_cli.__file__,
+                              '--simple']).decode("utf-8"))
+        except CalledProcessError as process_error:
+            _LOGGER.error('Error executing speedtest: %s', process_error)
+            return
         self.data = {'ping': round(float(re_output[1]), 2),
                      'download': round(float(re_output[2]), 2),
                      'upload': round(float(re_output[3]), 2)}
