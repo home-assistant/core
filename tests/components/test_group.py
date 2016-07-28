@@ -296,7 +296,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
     def test_group_updated_after_device_tracker_zone_change(self):
-        """Test group state change when device tracker in group changes zone."""
+        """Test group state when device tracker in group changes zone."""
         self.hass.states.set('device_tracker.Adam', STATE_HOME)
         self.hass.states.set('device_tracker.Eve', STATE_NOT_HOME)
         self.hass.pool.block_till_done()
