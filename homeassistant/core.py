@@ -158,14 +158,14 @@ class HomeAssistant(object):
         except AttributeError:
             pass
         try:
-            while not request_shutdown.isSet():
+            while not request_shutdown.is_set():
                 time.sleep(1)
         except KeyboardInterrupt:
             pass
         finally:
             self.stop()
 
-        return RESTART_EXIT_CODE if request_restart.isSet() else 0
+        return RESTART_EXIT_CODE if request_restart.is_set() else 0
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -233,7 +233,7 @@ class Event(object):
 class EventBus(object):
     """Allows firing of and listening for events."""
 
-    def __init__(self, pool: util.ThreadPool):
+    def __init__(self, pool: util.ThreadPool) -> None:
         """Initialize a new event bus."""
         self._listeners = {}
         self._lock = threading.Lock()
@@ -792,7 +792,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
         calc_now = dt_util.utcnow
 
-        while not stop_event.isSet():
+        while not stop_event.is_set():
             now = calc_now()
 
             # First check checks if we are not on a second matching the
@@ -816,7 +816,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
             last_fired_on_second = now.second
 
             # Event might have been set while sleeping
-            if not stop_event.isSet():
+            if not stop_event.is_set():
                 try:
                     hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
                 except HomeAssistantError:
