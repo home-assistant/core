@@ -23,6 +23,9 @@ NETATMO_AUTH = None
 
 _LOGGER = logging.getLogger(__name__)
 
+BASE_URL = "https://api.netatmo.com/"
+GETHOMEDATA_REQ = BASE_URL + "api/gethomedata"
+
 
 def setup(hass, config):
     """Setup the Netatmo devices."""
@@ -50,7 +53,16 @@ def setup(hass, config):
             "Please check your settings for NatAtmo API.")
         return False
 
-    for component in 'camera', 'sensor':
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    raw_wellcome_data = lnetatmo.postRequest(
+        GETHOMEDATA_REQ,
+        {"access_token": NETATMO_AUTH.accessToken},
+    )
+
+    cameras = raw_wellcome_data['body']['homes']
+
+    if cameras:
+        discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+
+    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
     return True
