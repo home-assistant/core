@@ -1,13 +1,11 @@
 """
 Support for particulate matter sensors connected to a serial port.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.particulate_matter/
 """
 import logging
-import threading
-import time
 from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.util import Throttle
@@ -17,12 +15,12 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pmsensor==0.2']
 
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_DEVICE = "serial_device"
 CONF_BRAND = "brand"
-#SCAN_INTERVAL = timedelta(minutes=10)
-SCAN_INTERVAL = 10
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'serial_pm',
@@ -37,17 +35,14 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available PM sensors."""
-
     from pmsensor import serial_data_collector as pm
-
-    #SCAN_INTERVAL.minutes = config.get(CONF_SCAN_INTERVAL)
 
     try:
         coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
                                   pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)])
     except KeyError:
         _LOGGER.error("Brand %s not supported", config.get(CONF_BRAND))
-        _LOGGER.error(" supported brands: ", pm.SUPPORTED_SENSORS)
+        _LOGGER.error(" supported brands: %s", pm.SUPPORTED_SENSORS)
 
     dev = []
 
@@ -63,8 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ParticulateMatterSensor(Entity):
     """Representation of an Particulate matter sensor."""
-
-    # pylint: disable=too-many-arguments
 
     def __init__(self, pmDataCollector, name, pmname):
         """Initialize a new PM sensor."""
@@ -88,9 +81,9 @@ class ParticulateMatterSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return "µg/m³"
 
-    #@Throttle(SCAN_INTERVAL)
+    @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Read from sensor and update the state"""
+        """Read from sensor and update the state."""
         _LOGGER.debug("Reading data from PM sensor")
         try:
             self._state = self._collector.read_data()[self._pmname]
