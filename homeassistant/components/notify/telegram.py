@@ -12,7 +12,8 @@ from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_DATA, DOMAIN, BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY, ATTR_LONGITUDE, ATTR_LATITUDE)
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ ATTR_URL = "url"
 ATTR_CAPTION = "caption"
 ATTR_USERNAME = "username"
 ATTR_PASSWORD = "password"
+ATTR_LOCATION = "location"
 
 
 def get_service(hass, config):
@@ -63,52 +65,83 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a message to a user."""
         import telegram
 
-        title = kwargs.get(ATTR_TITLE)
         data = kwargs.get(ATTR_DATA, {})
 
-        # send message
-        try:
-            self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=title + "  " + message)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending message.")
-            return
-
-        # send photo
         if ATTR_PHOTO in data:
-            # if not a list
-            if not isinstance(data[ATTR_PHOTO], list):
-                photos = [data[ATTR_PHOTO]]
-            else:
-                photos = data[ATTR_PHOTO]
+            self.send_photo(data)
+        elif ATTR_LOCATION in data:
+            self.send_location(data)
+        else:
+            title = kwargs.get(ATTR_TITLE)
 
             try:
-                for photo_data in photos:
-                    caption = photo_data.get(ATTR_CAPTION, None)
+                self.bot.sendMessage(chat_id=self._chat_id,
+                                     text=title + "  " + message)
+            except telegram.error.TelegramError:
+                _LOGGER.exception("Error sending message.")
+                return
 
-                    # file is a url
-                    if ATTR_URL in photo_data:
-                        # use http authenticate
-                        if ATTR_USERNAME in photo_data and\
-                           ATTR_PASSWORD in photo_data:
-                            req = requests.get(
-                                photo_data[ATTR_URL],
-                                auth=HTTPBasicAuth(photo_data[ATTR_USERNAME],
-                                                   photo_data[ATTR_PASSWORD])
-                            )
-                        else:
-                            req = requests.get(photo_data[ATTR_URL])
-                        file_id = io.BytesIO(req.content)
-                    elif ATTR_FILE in photo_data:
-                        file_id = open(photo_data[ATTR_FILE], "rb")
+    def send_photo(self, data):
+        """Send a photo to a user."""
+        import telegram
+
+        if not isinstance(data[ATTR_PHOTO], list):
+            photos = [data[ATTR_PHOTO]]
+        else:
+            photos = data[ATTR_PHOTO]
+
+        try:
+            for photo_data in photos:
+                caption = photo_data.get(ATTR_CAPTION, None)
+
+                # file is a url
+                if ATTR_URL in photo_data:
+                    # use http authenticate
+                    if ATTR_USERNAME in photo_data and\
+                       ATTR_PASSWORD in photo_data:
+                        req = requests.get(
+                            photo_data[ATTR_URL],
+                            auth=HTTPBasicAuth(photo_data[ATTR_USERNAME],
+                                               photo_data[ATTR_PASSWORD])
+                        )
                     else:
-                        _LOGGER.error("No url or path is set for photo!")
+                        req = requests.get(photo_data[ATTR_URL])
+                    file_id = io.BytesIO(req.content)
+                elif ATTR_FILE in photo_data:
+                    file_id = open(photo_data[ATTR_FILE], "rb")
+                else:
+                    _LOGGER.error("No url or path is set for photo!")
+                    continue
+
+                self.bot.sendPhoto(chat_id=self._chat_id,
+                                   photo=file_id, caption=caption)
+
+        except (OSError, IOError, telegram.error.TelegramError,
+                urllib.error.HTTPError):
+            _LOGGER.exception("Error sending photo.")
+            return
+
+    def send_location(self, data):
+        """Send a location to a user."""
+        import telegram
+
+        if ATTR_LOCATION in data:
+            location_entity = data[ATTR_LOCATION]
+
+            try:
+                for location_data in location_entity:
+
+                    if ATTR_LONGITUDE in location_data and\
+                       ATTR_LATITUDE in location_data:
+                        latitude = location_data[ATTR_LATITUDE]
+                        longitude = location_data[ATTR_LONGITUDE]
+                    else:
+                        _LOGGER.error("Long and Lat not set for location!")
                         continue
 
-                    self.bot.sendPhoto(chat_id=self._chat_id,
-                                       photo=file_id, caption=caption)
+                self.bot.sendLocation(chat_id=self._chat_id,
+                                      latitude=latitude, longitude=longitude)
 
-            except (OSError, IOError, telegram.error.TelegramError,
-                    urllib.error.HTTPError):
-                _LOGGER.exception("Error sending photo.")
+            except (OSError, IOError, telegram.error.TelegramError):
+                _LOGGER.exception("Error sending location.")
                 return
