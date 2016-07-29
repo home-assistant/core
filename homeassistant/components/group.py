@@ -304,8 +304,9 @@ class Group(Entity):
             if gr_on is None:
                 return
 
-            if tr_state is None or (gr_state == gr_on and
-                                    tr_state.state == gr_off):
+            if tr_state is None or ((gr_state == gr_on and
+                                     tr_state.state == gr_off) or
+                                    tr_state.state not in (gr_on, gr_off)):
                 if states is None:
                     states = self._tracking_states
 
