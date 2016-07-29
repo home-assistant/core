@@ -38,6 +38,7 @@ SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
+EVENT_NODE_EVENT = "zwave.node_event"
 
 COMMAND_CLASS_WHATEVER = None
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
@@ -180,8 +181,10 @@ DISCOVERY_COMPONENTS = [
 
 ATTR_NODE_ID = "node_id"
 ATTR_VALUE_ID = "value_id"
+ATTR_OBJECT_ID = "object_id"
 
 ATTR_SCENE_ID = "scene_id"
+ATTR_BASIC_LEVEL = "basic_level"
 
 NETWORK = None
 
@@ -204,6 +207,14 @@ def _node_name(node):
 def _value_name(value):
     """Return the name of the value."""
     return "{} {}".format(_node_name(value.node), value.label)
+
+
+def _node_object_id(node):
+    """Return the object_id of the node."""
+    node_object_id = "{}_{}".format(slugify(_node_name(node)),
+                                    node.node_id)
+
+    return node_object_id
 
 
 def _object_id(value):
@@ -293,7 +304,9 @@ def setup(hass, config):
             print("")
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
-                                    ZWaveNetwork.SIGNAL_VALUE_ADDED):
+                                    ZWaveNetwork.SIGNAL_VALUE_ADDED,
+                                    ZWaveNetwork.SIGNAL_SCENE_EVENT,
+                                    ZWaveNetwork.SIGNAL_NODE_EVENT):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -363,18 +376,25 @@ def setup(hass, config):
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
-        name = _node_name(node)
-        object_id = "{}_{}".format(slugify(name), node.node_id)
-
         hass.bus.fire(EVENT_SCENE_ACTIVATED, {
-            ATTR_ENTITY_ID: object_id,
+            ATTR_ENTITY_ID: _node_object_id(node),
+            ATTR_OBJECT_ID: _node_object_id(node),
             ATTR_SCENE_ID: scene_id
+        })
+
+    def node_event_activated(node, value):
+        """Called when a nodeevent is activated on any node in the network."""
+        hass.bus.fire(EVENT_NODE_EVENT, {
+            ATTR_OBJECT_ID: _node_object_id(node),
+            ATTR_BASIC_LEVEL: value
         })
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
+    dispatcher.connect(
+        node_event_activated, ZWaveNetwork.SIGNAL_NODE_EVENT, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
