@@ -409,7 +409,7 @@ Polymer({
 
   // Unmount React node when panel no longer in use.
   detached: function () {
-    ReactDOM.unmountComponentAtNode(this);
+    ReactDOM.unmountComponentAtNode(this.$.mount);
   },
 });
 </script>
