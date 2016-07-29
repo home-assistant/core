@@ -249,6 +249,15 @@ def multiply(value, amount):
         return value
 
 
+def divide(value, amount):
+    """Filter to convert value to float and divide it."""
+    try:
+        return float(value) / amount
+    except (ValueError, TypeError):
+        # If value can't be converted to float
+        return value
+
+
 def timestamp_local(value):
     """Filter to convert given timestamp to local date/time."""
     try:
@@ -286,5 +295,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['divide'] = divide
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
