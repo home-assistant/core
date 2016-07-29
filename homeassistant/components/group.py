@@ -12,8 +12,8 @@ import voluptuous as vol
 import homeassistant.core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_UNLOCKED, 
-    STATE_UNKNOWN, ATTR_ASSUMED_STATE)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED, 
+    STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
 from homeassistant.helpers.entity import (
     Entity, generate_entity_id, split_entity_id)
 from homeassistant.helpers.event import track_state_change
