@@ -1,4 +1,5 @@
 """Handle the frontend for Home Assistant."""
+import hashlib
 import logging
 import os
 
@@ -25,20 +26,27 @@ def register_built_in_panel(hass, component_name, title=None, icon=None,
     # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
 
+    if hass.wsgi.development:
+        url = ('/static/home-assistant-polymer/panels/'
+               '{0}/ha-panel-{0}.html'.format(component_name))
+    else:
+        url = None  # use default url generate mechanism
+
     register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
-                   FINGERPRINTS[path], title, icon, url_name, config)
+                   FINGERPRINTS[path], title, icon, url_name, url, config)
 
 
-def register_panel(hass, component_name, path, md5, title=None, icon=None,
-                   url_name=None, config=None):
+def register_panel(hass, component_name, path, md5=None, title=None, icon=None,
+                   url_name=None, url=None, config=None):
     """Register a panel for the frontend.
 
     component_name: name of the web component
     path: path to the HTML of the web component
-    md5: the md5 hash of the web component (for versioning)
+    md5: the md5 hash of the web component (for versioning, optional)
     title: title to show in the sidebar (optional)
     icon: icon to show next to title in sidebar (optional)
     url_name: name to use in the url (defaults to component_name)
+    url: for the web component (for dev environment, optional)
     config: config to be passed into the web component
 
     Warning: this API will probably change. Use at own risk.
@@ -50,8 +58,13 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
     if url_name in PANELS:
         _LOGGER.warning('Overwriting component %s', url_name)
     if not os.path.isfile(path):
-        _LOGGER.warning('Panel %s component does not exist: %s',
-                        component_name, path)
+        _LOGGER.error('Panel %s component does not exist: %s',
+                      component_name, path)
+        return
+
+    if md5 is None:
+        with open(path) as fil:
+            md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
     data = {
         'url_name': url_name,
@@ -65,9 +78,8 @@ def register_panel(hass, component_name, path, md5, title=None, icon=None,
     if config is not None:
         data['config'] = config
 
-    if hass.wsgi.development:
-        data['url'] = ('/static/home-assistant-polymer/panels/'
-                       '{0}/ha-panel-{0}.html'.format(component_name))
+    if url is not None:
+        data['url'] = url
     else:
         url = URL_PANEL_COMPONENT.format(component_name)
 
