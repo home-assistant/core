@@ -68,7 +68,6 @@ def setup(hass, config):
         _LOGGER.warning('Not able to connect to GPSD')
         return False
 
-
     gpsd = Gpsd(hass, host, port)
     gpsd.point_in_time_listener(dt_util.utcnow())
 
