@@ -44,20 +44,30 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Setup the GPSD component."""
-    #from gps3 import gps3
-
     conf = config[DOMAIN]
     host = util.convert(conf.get(CONF_HOST), str, DEFAULT_HOST)
-    port = util.convert(conf.get(CONF_PORT), str, DEFAULT_PORT)
+    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
 
     # Will hopefully be possible with the next gps3 update
     # https://github.com/wadda/gps3/issues/11
+    # from gps3 import gps3
     # try:
     #     gpsd_socket = gps3.GPSDSocket()
     #     gpsd_socket.connect(host=host, port=port)
-    # except OSError:
+    # except GPSError:
     #     _LOGGER.warning('Not able to connect to GPSD')
     #     return False
+    import socket
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect((host, port))
+        sock.shutdown(2)
+        _LOGGER.debug('Connection to GPSD possible')
+    except socket.error:
+        _LOGGER.warning('Not able to connect to GPSD')
+        return False
+
 
     gpsd = Gpsd(hass, host, port)
     gpsd.point_in_time_listener(dt_util.utcnow())
