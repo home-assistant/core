@@ -130,6 +130,7 @@ omit =
     homeassistant/components/foursquare.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
+    homeassistant/components/gpsd.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
