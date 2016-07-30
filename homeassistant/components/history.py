@@ -4,13 +4,13 @@ Provide pre-made queries on top of the recorder component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history/
 """
-import re
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
+from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
 DOMAIN = 'history'
@@ -18,9 +18,6 @@ DEPENDENCIES = ['recorder', 'http']
 
 SIGNIFICANT_DOMAINS = ('thermostat',)
 IGNORE_DOMAINS = ('zone', 'scene',)
-
-URL_HISTORY_PERIOD = re.compile(
-    r'/api/history/period(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
 
 
 def last_5_states(entity_id):
@@ -153,6 +150,7 @@ def setup(hass, config):
     """Setup the history hooks."""
     hass.wsgi.register_view(Last5StatesView)
     hass.wsgi.register_view(HistoryPeriodView)
+    register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
 
@@ -173,14 +171,14 @@ class HistoryPeriodView(HomeAssistantView):
 
     url = '/api/history/period'
     name = 'api:history:view-period'
-    extra_urls = ['/api/history/period/<date:date>']
+    extra_urls = ['/api/history/period/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def get(self, request, datetime=None):
         """Return history over a period of time."""
         one_day = timedelta(days=1)
 
-        if date:
-            start_time = dt_util.as_utc(dt_util.start_of_local_day(date))
+        if datetime:
+            start_time = dt_util.as_utc(datetime)
         else:
             start_time = dt_util.utcnow() - one_day
 

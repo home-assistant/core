@@ -1,5 +1,6 @@
 flake8>=2.6.0
 pylint>=1.5.6
+astroid>=1.4.8
 coveralls>=1.1
 pytest>=2.9.2
 pytest-cov>=2.2.1
@@ -7,3 +8,4 @@ pytest-timeout>=1.0.0
 pytest-capturelog>=0.7
 pydocstyle>=1.0.0
 requests_mock>=1.0
+mypy-lang>=0.4

@@ -39,6 +39,7 @@ class RPiGPIOSwitch(ToggleEntity):
         self._invert_logic = invert_logic
         self._state = False
         rpi_gpio.setup_output(self._port)
+        rpi_gpio.write_output(self._port, 1 if self._invert_logic else 0)
 
     @property
     def name(self):

@@ -91,6 +91,7 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
+    homeassistant/components/thermostat/knx.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -129,21 +130,25 @@ omit =
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/light/blinksticklight.py
+    homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/osramlightify.py
+    homeassistant/components/light/x10.py
     homeassistant/components/lirc.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/cmus.py
     homeassistant/components/media_player/denon.py
+    homeassistant/components/media_player/directv.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
+    homeassistant/components/media_player/mpchc.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/panasonic_viera.py
@@ -151,6 +156,7 @@ omit =
     homeassistant/components/media_player/pioneer.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
+    homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/samsungtv.py
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/sonos.py
@@ -161,7 +167,6 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
-    homeassistant/components/notify/googlevoice.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/joaoapps_join.py
     homeassistant/components/notify/message_bird.py

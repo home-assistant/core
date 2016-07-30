@@ -7,6 +7,9 @@ import sys
 from collections import defaultdict
 from threading import RLock
 
+from types import ModuleType
+from typing import Any, Optional, Dict
+
 import voluptuous as vol
 
 import homeassistant.components as core_components
@@ -30,7 +33,8 @@ ATTR_COMPONENT = 'component'
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
-def setup_component(hass, domain, config=None):
+def setup_component(hass: core.HomeAssistant, domain: str,
+                    config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies."""
     if domain in hass.config.components:
         return True
@@ -53,7 +57,8 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(hass, component, name):
+def _handle_requirements(hass: core.HomeAssistant, component,
+                         name: str) -> bool:
     """Install the requirements for a component."""
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
@@ -67,9 +72,10 @@ def _handle_requirements(hass, component, name):
     return True
 
 
-def _setup_component(hass, domain, config):
+def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
     """Setup a component for Home Assistant."""
     # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
@@ -147,8 +153,14 @@ def _setup_component(hass, domain, config):
         _CURRENT_SETUP.append(domain)
 
         try:
-            if not component.setup(hass, config):
+            result = component.setup(hass, config)
+            if result is False:
                 _LOGGER.error('component %s failed to initialize', domain)
+                return False
+            elif result is not True:
+                _LOGGER.error('component %s did not return boolean if setup '
+                              'was successful. Disabling component.', domain)
+                loader.set_component(domain, None)
                 return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
@@ -169,7 +181,8 @@ def _setup_component(hass, domain, config):
         return True
 
 
-def prepare_setup_platform(hass, config, domain, platform_name):
+def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
+                           platform_name: str) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup."""
     _ensure_loader_prepared(hass)
 
@@ -202,9 +215,14 @@ def prepare_setup_platform(hass, config, domain, platform_name):
 
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
-def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, skip_pip=False,
-                     log_rotate_days=None):
+def from_config_dict(config: Dict[str, Any],
+                     hass: Optional[core.HomeAssistant]=None,
+                     config_dir: Optional[str]=None,
+                     enable_log: bool=True,
+                     verbose: bool=False,
+                     skip_pip: bool=False,
+                     log_rotate_days: Any=None) \
+                     -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
@@ -266,8 +284,11 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False, skip_pip=True,
-                     log_rotate_days=None):
+def from_config_file(config_path: str,
+                     hass: Optional[core.HomeAssistant]=None,
+                     verbose: bool=False,
+                     skip_pip: bool=True,
+                     log_rotate_days: Any=None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -292,7 +313,8 @@ def from_config_file(config_path, hass=None, verbose=False, skip_pip=True,
                             skip_pip=skip_pip)
 
 
-def enable_logging(hass, verbose=False, log_rotate_days=None):
+def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                   log_rotate_days=None) -> None:
     """Setup the logging."""
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
@@ -343,12 +365,12 @@ def enable_logging(hass, verbose=False, log_rotate_days=None):
             'Unable to setup error log %s (access denied)', err_log_path)
 
 
-def _ensure_loader_prepared(hass):
+def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
     """Ensure Home Assistant loader is prepared."""
     if not loader.PREPARED:
         loader.prepare(hass)
 
 
-def _mount_local_lib_path(config_dir):
+def _mount_local_lib_path(config_dir: str) -> None:
     """Add local library to Python Path."""
     sys.path.insert(0, os.path.join(config_dir, 'deps'))

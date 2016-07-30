@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
 import logging
-import re
 from datetime import timedelta
 from itertools import groupby
 
@@ -14,6 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
+from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
@@ -24,9 +24,7 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
-DEPENDENCIES = ['recorder', 'http']
-
-URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
+DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +73,9 @@ def setup(hass, config):
 
     hass.wsgi.register_view(LogbookView)
 
+    register_built_in_panel(hass, 'logbook', 'Logbook',
+                            'mdi:format-list-bulleted-type')
+
     hass.services.register(DOMAIN, 'log', log_message,
                            schema=LOG_MESSAGE_SCHEMA)
     return True
@@ -85,16 +86,11 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<date:date>']
+    extra_urls = ['/api/logbook/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def get(self, request, datetime=None):
         """Retrieve logbook entries."""
-        if date:
-            start_day = dt_util.start_of_local_day(date)
-        else:
-            start_day = dt_util.start_of_local_day()
-
-        start_day = dt_util.as_utc(start_day)
+        start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
         end_day = start_day + timedelta(days=1)
 
         events = recorder.get_model('Events')

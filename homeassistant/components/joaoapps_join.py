@@ -19,26 +19,19 @@ DOMAIN = 'joaoapps_join'
 CONF_DEVICE_ID = 'device_id'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [{
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_API_KEY): cv.string
-    })
+    }])
 }, extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=too-many-locals
-def setup(hass, config):
-    """Setup Join services."""
-    from pyjoin import (get_devices, ring_device, set_wallpaper, send_sms,
+def register_device(hass, device_id, api_key, name):
+    """Method to register services for each join device listed."""
+    from pyjoin import (ring_device, set_wallpaper, send_sms,
                         send_file, send_url, send_notification)
-    device_id = config[DOMAIN].get(CONF_DEVICE_ID)
-    api_key = config[DOMAIN].get(CONF_API_KEY)
-    name = config[DOMAIN].get(CONF_NAME)
-    if api_key:
-        if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join, check API key")
-            return False
 
     def ring_service(service):
         """Service to ring devices."""
@@ -69,7 +62,6 @@ def setup(hass, config):
                  sms_text=service.data.get('message'),
                  api_key=api_key)
 
-    name = name.lower().replace(" ", "_") + "_" if name else ""
     hass.services.register(DOMAIN, name + 'ring', ring_service)
     hass.services.register(DOMAIN, name + 'set_wallpaper',
                            set_wallpaper_service)
@@ -77,4 +69,19 @@ def setup(hass, config):
     hass.services.register(DOMAIN, name + 'send_file', send_file_service)
     hass.services.register(DOMAIN, name + 'send_url', send_url_service)
     hass.services.register(DOMAIN, name + 'send_tasker', send_tasker_service)
+
+
+def setup(hass, config):
+    """Setup Join services."""
+    from pyjoin import get_devices
+    for device in config[DOMAIN]:
+        device_id = device.get(CONF_DEVICE_ID)
+        api_key = device.get(CONF_API_KEY)
+        name = device.get(CONF_NAME)
+        name = name.lower().replace(" ", "_") + "_" if name else ""
+        if api_key:
+            if not get_devices(api_key):
+                _LOGGER.error("Error connecting to Join, check API key")
+                return False
+        register_device(hass, device_id, api_key, name)
     return True

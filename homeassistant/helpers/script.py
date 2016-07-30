@@ -3,10 +3,12 @@ import logging
 import threading
 from itertools import islice
 
+import voluptuous as vol
+
 import homeassistant.util.dt as date_util
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition
+from homeassistant.helpers import service, condition, template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,9 +70,17 @@ class Script():
                         self._delay_listener = None
                         self.run(variables)
 
+                    delay = action[CONF_DELAY]
+
+                    if isinstance(delay, str):
+                        delay = vol.All(
+                            cv.time_period,
+                            cv.positive_timedelta)(
+                                template.render(self.hass, delay))
+
                     self._delay_listener = track_point_in_utc_time(
                         self.hass, script_delay,
-                        date_util.utcnow() + action[CONF_DELAY])
+                        date_util.utcnow() + delay)
                     self._cur = cur + 1
                     if self._change_listener:
                         self._change_listener()
