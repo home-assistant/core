@@ -94,14 +94,15 @@ def setup_proximity_component(hass, config):
 
 def setup(hass, config):
     """Get the zones and offsets from configuration.yaml."""
+    result = True
     if isinstance(config[DOMAIN], list):
         for proximity_config in config[DOMAIN]:
             if not setup_proximity_component(hass, proximity_config):
-                return False
+                result = False
     elif not setup_proximity_component(hass, config[DOMAIN]):
-        return False
+        result = False
 
-    return True
+    return result
 
 
 class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
