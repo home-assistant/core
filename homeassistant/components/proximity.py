@@ -36,54 +36,61 @@ ATTR_NEAREST = 'nearest'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
+def setup_proximity_device(hass, proximity_config):   # pylint: disable=too-many-locals,too-many-statements
+    ignored_zones = []
+    if 'ignored_zones' in proximity_config:
+        for variable in proximity_config['ignored_zones']:
+            ignored_zones.append(variable)
+
+    # Get the devices from configuration.yaml.
+    if 'devices' not in proximity_config:
+        _LOGGER.error('devices not found in config')
+        return False
+
+    proximity_devices = []
+    for variable in proximity_config['devices']:
+        proximity_devices.append(variable)
+
+    # Get the direction of travel tolerance from configuration.yaml.
+    tolerance = proximity_config.get('tolerance', DEFAULT_TOLERANCE)
+
+    # Get the zone to monitor proximity to from configuration.yaml.
+    proximity_zone = proximity_config.get('zone', DEFAULT_PROXIMITY_ZONE)
+
+    # Get the unit of measurement from configuration.yaml.
+    unit_of_measure = proximity_config.get(ATTR_UNIT_OF_MEASUREMENT,
+                                           DEFAULT_UNIT_OF_MEASUREMENT)
+
+    entity_id = DOMAIN + '.' + proximity_zone
+    proximity_zone = 'zone.' + proximity_zone
+
+    state = hass.states.get(proximity_zone)
+    zone_friendly_name = (state.name).lower()
+
+    # Set the default values.
+    dist_to_zone = 'not set'
+    dir_of_travel = 'not set'
+    nearest = 'not set'
+
+    proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
+                          dir_of_travel, nearest, ignored_zones,
+                          proximity_devices, tolerance, proximity_zone,
+                          unit_of_measure)
+    proximity.entity_id = entity_id
+
+    proximity.update_ha_state()
+
+    # Main command to monitor proximity of devices.
+    track_state_change(hass, proximity_devices,
+                       proximity.check_proximity_state_change)
+
+def setup(hass, config):
     """Get the zones and offsets from configuration.yaml."""
-    for prox in config[DOMAIN]:
-        ignored_zones = []
-        if 'ignored_zones' in prox:
-            for variable in prox['ignored_zones']:
-                ignored_zones.append(variable)
-
-        # Get the devices from configuration.yaml.
-        if 'devices' not in prox:
-            _LOGGER.error('devices not found in config')
-            return False
-
-        proximity_devices = []
-        for variable in prox['devices']:
-            proximity_devices.append(variable)
-
-        # Get the direction of travel tolerance from configuration.yaml.
-        tolerance = prox.get('tolerance', DEFAULT_TOLERANCE)
-
-        # Get the zone to monitor proximity to from configuration.yaml.
-        proximity_zone = prox.get('zone', DEFAULT_PROXIMITY_ZONE)
-
-        # Get the unit of measurement from configuration.yaml.
-        unit_of_measure = prox.get(ATTR_UNIT_OF_MEASUREMENT, DEFAULT_UNIT_OF_MEASUREMENT)
-
-        entity_id = DOMAIN + '.' + proximity_zone
-        proximity_zone = 'zone.' + proximity_zone
-
-        state = hass.states.get(proximity_zone)
-        zone_friendly_name = (state.name).lower()
-
-        # Set the default values.
-        dist_to_zone = 'not set'
-        dir_of_travel = 'not set'
-        nearest = 'not set'
-
-        proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
-                              dir_of_travel, nearest, ignored_zones,
-                              proximity_devices, tolerance, proximity_zone,
-                              unit_of_measure)
-        proximity.entity_id = entity_id
-
-        proximity.update_ha_state()
-
-        # Main command to monitor proximity of devices.
-        track_state_change(hass, proximity_devices,
-                           proximity.check_proximity_state_change)
+    if isinstance(config[DOMAIN], list):
+        for proximity_config in config[DOMAIN]:
+            setup_proximity_device(hass, proximity_config)
+    else:
+        setup_proximity_device(config[DOMAIN])
 
     return True
 
