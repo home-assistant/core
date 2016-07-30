@@ -3,20 +3,16 @@
 import unittest
 import homeassistant.util.distance as distance_util
 
-epsilon = 0.000001
-
-def is_less_than_epsilon(actual, expected):
-    return abs(actual - expected) < epsilon
 
 class TestDistanceUtil(unittest.TestCase):
     """Test the distance utility functions."""
 
     def test_kilometers_to_miles(self):
         """Test conversion from kilometers to miles."""
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_miles(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_miles(1), 0.621371))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_miles(0.5), 0.310686))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_miles(-1), -0.621371))
+        self.assertEqual(distance_util.kilometers_to_miles(0), 0)
+        self.assertEqual(distance_util.kilometers_to_miles(1), 0.621371)
+        self.assertEqual(distance_util.kilometers_to_miles(0.5), 0.3106855)
+        self.assertEqual(distance_util.kilometers_to_miles(-1), -0.621371)
 
         exceptionThrown = False
         try:
@@ -28,10 +24,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_miles_to_kilometer(self):
         """Test conversion from miles to kilometers."""
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_kilometers(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_kilometers(1), 1.60934))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_kilometers(0.5), 0.804672))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_kilometers(-1), -1.60934))
+        self.assertEqual(distance_util.miles_to_kilometers(0), 0)
+        self.assertEqual(distance_util.miles_to_kilometers(1), 1.60934)
+        self.assertEqual(distance_util.miles_to_kilometers(0.5), 0.80467)
+        self.assertEqual(distance_util.miles_to_kilometers(-1), -1.60934)
 
         exceptionThrown = False
         try:
@@ -43,10 +39,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_kilometers_to_meters(self):
         """Test conversion from kilometers to meters."""
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_meters(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_meters(1), 1000))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_meters(0.5), 500))
-        self.assertTrue(is_less_than_epsilon(distance_util.kilometers_to_meters(-1), -1000))
+        self.assertEqual(distance_util.kilometers_to_meters(0), 0)
+        self.assertEqual(distance_util.kilometers_to_meters(1), 1000)
+        self.assertEqual(distance_util.kilometers_to_meters(0.5), 500)
+        self.assertEqual(distance_util.kilometers_to_meters(-1), -1000)
 
         exceptionThrown = False
         try:
@@ -58,10 +54,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_meters_to_kilometers(self):
         """Test conversion from meters to kilometers."""
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_kilometers(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_kilometers(1), 0.001))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_kilometers(500), 0.5))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_kilometers(-1), -0.001))
+        self.assertEqual(distance_util.meters_to_kilometers(0), 0)
+        self.assertEqual(distance_util.meters_to_kilometers(1), 0.001)
+        self.assertEqual(distance_util.meters_to_kilometers(500), 0.5)
+        self.assertEqual(distance_util.meters_to_kilometers(-1), -0.001)
 
         exceptionThrown = False
         try:
@@ -73,10 +69,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_meters_to_feet(self):
         """Test conversion from meters to feet."""
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_feet(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_feet(1), 3.28084))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_feet(500), 1640.42))
-        self.assertTrue(is_less_than_epsilon(distance_util.meters_to_feet(-1), -3.28084))
+        self.assertEqual(distance_util.meters_to_feet(0), 0)
+        self.assertEqual(distance_util.meters_to_feet(1), 3.28084)
+        self.assertEqual(distance_util.meters_to_feet(500), 1640.42)
+        self.assertEqual(distance_util.meters_to_feet(-1), -3.28084)
 
         exceptionThrown = False
         try:
@@ -88,10 +84,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_feet_to_meters(self):
         """Test conversion from feet to meters."""
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_meters(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_meters(1), 0.3048))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_meters(500), 152.4))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_meters(-1), -0.3048))
+        self.assertEqual(distance_util.feet_to_meters(0), 0)
+        self.assertEqual(distance_util.feet_to_meters(1), 0.3048)
+        self.assertEqual(distance_util.feet_to_meters(500), 152.4)
+        self.assertEqual(distance_util.feet_to_meters(-1), -0.3048)
 
         exceptionThrown = False
         try:
@@ -103,10 +99,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_feet_to_miles(self):
         """Test conversion from feet to miles."""
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_miles(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_miles(1), 0.000189394))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_miles(500), 0.094697))
-        self.assertTrue(is_less_than_epsilon(distance_util.feet_to_miles(-1), -0.000189394))
+        self.assertEqual(distance_util.feet_to_miles(0), 0)
+        self.assertEqual(distance_util.feet_to_miles(1), 0.000189394)
+        self.assertEqual(distance_util.feet_to_miles(500), 0.094697)
+        self.assertEqual(distance_util.feet_to_miles(-1), -0.000189394)
 
         exceptionThrown = False
         try:
@@ -118,10 +114,10 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_miles_to_feet(self):
         """Test conversion from miles to feet."""
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_ft(0), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_ft(1), 5280))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_ft(.5), 2740))
-        self.assertTrue(is_less_than_epsilon(distance_util.miles_to_ft(-1), -5280))
+        self.assertEqual(distance_util.miles_to_ft(0), 0)
+        self.assertEqual(distance_util.miles_to_ft(1), 5280)
+        self.assertEqual(distance_util.miles_to_ft(.5), 2640)
+        self.assertEqual(distance_util.miles_to_ft(-1), -5280)
 
         exceptionThrown = False
         try:
@@ -159,27 +155,27 @@ class TestDistanceUtil(unittest.TestCase):
     def test_convert_from_miles(self):
         """Test conversion from miles to other units."""
         miles = 5
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(miles, 'mi', 'km'), 8.04672))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(miles, 'mi', 'm'), 8046.72))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(miles, 'mi', 'ft'), 26400))
+        self.assertEqual(distance_util.convert(miles, 'mi', 'km'), 8.0467)
+        self.assertEqual(distance_util.convert(miles, 'mi', 'm'), 8046.7)
+        self.assertEqual(distance_util.convert(miles, 'mi', 'ft'), 26400)
 
     def test_convert_from_feet(self):
         """Test conversion from feet to other units."""
         feet = 5000
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(feet, 'ft', 'km'), 1.524))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(feet, 'ft', 'm'), 1524))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(feet, 'ft', 'mi'), 0.9469697))
+        self.assertEqual(distance_util.convert(feet, 'ft', 'km'), 1.524)
+        self.assertEqual(distance_util.convert(feet, 'ft', 'm'), 1524)
+        self.assertEqual(distance_util.convert(feet, 'ft', 'mi'), 0.9469700000000001)
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
         km = 5
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(km, 'km', 'ft'), 16404.2208))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(km, 'km', 'm'), 5000))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(km, 'km', 'mi'), 3.10686))
+        self.assertEqual(distance_util.convert(km, 'km', 'ft'), 16404.2)
+        self.assertEqual(distance_util.convert(km, 'km', 'm'), 5000)
+        self.assertEqual(distance_util.convert(km, 'km', 'mi'), 3.106855)
 
     def test_convert_from_meters(self):
         """Test conversion from meters to other units."""
         m = 5000
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(m, 'm', 'ft'), 0))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(m, 'm', 'km'), 5))
-        self.assertTrue(is_less_than_epsilon(distance_util.convert(m, 'm', 'mi'), 0))
+        self.assertEqual(distance_util.convert(m, 'm', 'ft'), 16404.2)
+        self.assertEqual(distance_util.convert(m, 'm', 'km'), 5)
+        self.assertEqual(distance_util.convert(m, 'm', 'mi'), 3.106855)
