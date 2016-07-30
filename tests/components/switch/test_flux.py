@@ -564,4 +564,3 @@ class TestSwitchFlux(unittest.TestCase):
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 3708)
-
