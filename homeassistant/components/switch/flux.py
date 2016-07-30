@@ -61,12 +61,13 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
                     brightness=brightness,
                     transition=30)
 
+
 def set_lights_temp(hass, lights, kelvin, mode):
     """Set color of array of lights."""
     if mode == 'mired':
-        temp = 1000000/kelvin
+        temp=1000000/kelvin
     else:
-        temp = kelvin
+        temp=kelvin
     for light in lights:
         if is_on(hass, light):
             turn_on(hass, light,
@@ -117,7 +118,7 @@ class FluxSwitch(SwitchDevice):
         self._sunset_colortemp = sunset_colortemp
         self._stop_colortemp = stop_colortemp
         self._brightness = brightness
-        self._mode = mode        
+        self._mode = mode
         self.tracker = None
 
     @property
@@ -166,21 +167,21 @@ class FluxSwitch(SwitchDevice):
                 temp = self._start_colortemp - temp_offset
             else:
                 temp = self._start_colortemp + temp_offset
-            if self._mode == 'xy':    
+            if self._mode == 'xy':
                 x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
                 brightness = self._brightness if self._brightness else b_val
                 set_lights_xy(self.hass, self._lights, x_val,
                               y_val, brightness)
-                _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
-                             " of day cycle complete at %s", x_val, y_val,
+                _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, "
+                             "%s%% of day cycle complete at %s", x_val, y_val,
                              brightness, round(percentage_of_day_complete*100),
                              as_local(now))
             else:
                 set_lights_temp(self.hass, self._lights, temp, self._mode)
                 _LOGGER.info("Lights updated to temp:%s, %s%%"
-                            " of day cycle complete at %s", temp,
-                            round(percentage_of_day_complete*100),
-                            as_local(now))
+                             " of day cycle complete at %s", temp,
+                             round(percentage_of_day_complete*100),
+                             as_local(now))
         else:
             # Nightime
             if now < stop_time and now > start_time:
@@ -209,9 +210,9 @@ class FluxSwitch(SwitchDevice):
             else:
                 set_lights_temp(self.hass, self._lights, temp, self._mode)
                 _LOGGER.info("Lights updated to temp:%s, %s%%"
-                            " of night cycle complete at %s", temp,
-                            round(percentage_of_night_complete*100),
-                            as_local(now))
+                             " of night cycle complete at %s", temp,
+                             round(percentage_of_night_complete*100),
+                             as_local(now))
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
