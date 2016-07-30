@@ -25,7 +25,7 @@ def miles_to_kilometers(miles):
 
 def kilometers_to_meters(kilometers):
     """Convert the given kilometers to meters."""
-    if not isinstance(km, Number):
+    if not isinstance(kilometers, Number):
         raise TypeError(str(kilometers) + ' is not of numeric type')
 
     return kilometers * 1000
@@ -33,7 +33,7 @@ def kilometers_to_meters(kilometers):
 
 def meters_to_kilometers(meters):
     """Convert the given meters to kilometers."""
-    if not isinstance(m, Number):
+    if not isinstance(meters, Number):
         raise TypeError(str(meters) + ' is not of numeric type')
 
     return meters * 0.001
