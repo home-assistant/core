@@ -30,6 +30,11 @@ class TestDistanceUtil(unittest.TestCase):
         with self.assertRaises(ValueError):
             distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
 
+    def test_convert_nonnumeric_value(self):
+        """Test exception is thrown for nonnumeric type."""
+        with self.assertRaises(TypeError):
+            distance_util.convert('a', KILOMETERS, METERS)
+
     def test_convert_from_miles(self):
         """Test conversion from miles to other units."""
         miles = 5
