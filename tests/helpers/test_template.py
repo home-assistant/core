@@ -117,6 +117,34 @@ class TestUtilTemplate(unittest.TestCase):
                 template.render(self.hass,
                                 '{{ %s | multiply(10) | round }}' % inp))
 
+    def test_timestamp_local(self):
+        """Test the timestamps to local filter."""
+        tests = {
+            None: 'None',
+            1469119144: '2016-07-21 16:39:04',
+        }
+
+        for inp, out in tests.items():
+            self.assertEqual(
+                out,
+                template.render(self.hass,
+                                '{{ %s | timestamp_local }}' % inp))
+
+    def test_timestamp_utc(self):
+        """Test the timestamps to local filter."""
+        tests = {
+            None: 'None',
+            1469119144: '2016-07-21 16:39:04',
+            dt_util.as_timestamp(dt_util.utcnow()):
+                dt_util.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        for inp, out in tests.items():
+            self.assertEqual(
+                out,
+                template.render(self.hass,
+                                '{{ %s | timestamp_utc }}' % inp))
+
     def test_passing_vars_as_keywords(self):
         """."""
         self.assertEqual(

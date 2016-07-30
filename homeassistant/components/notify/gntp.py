@@ -22,7 +22,7 @@ def get_service(hass, config):
     """Get the GNTP notification service."""
     if config.get('app_icon') is None:
         icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",
-                                 "www_static", "favicon-192x192.png")
+                                 "www_static", "icons", "favicon-192x192.png")
         app_icon = open(icon_file, 'rb').read()
     else:
         app_icon = config.get('app_icon')

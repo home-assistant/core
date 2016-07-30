@@ -98,9 +98,10 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_properties()
-            self.update_ha_state(True)
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     def update_properties(self):
@@ -135,7 +136,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     self._current_swing_mode = value.data
-                    self._swing_list = [0, 1]
+                    self._swing_list = list(value.data_items)
                     _LOGGER.debug("self._swing_list=%s", self._swing_list)
 
     @property
@@ -235,5 +236,5 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
             for value in self._node.get_values(
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
-                    value.data = int(swing_mode)
+                    value.data = bytes(swing_mode, 'utf-8')
                     break
