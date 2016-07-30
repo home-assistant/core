@@ -86,33 +86,35 @@ def convert(value, unit_1, unit_2):
         _LOGGER.error('Unknown unit of measure: ' + str(unit_2))
         raise ValueError('Unknown unit of measure: ' + str(unit_2))
 
+    result = None
+
     if unit_1 == 'mi':
         if unit_2 == 'km':
-            return miles_to_kilometers(value)
+            result = miles_to_kilometers(value)
         elif unit_2 == 'm':
-            return kilometers_to_meters(miles_to_kilometers(value))
+            result = kilometers_to_meters(miles_to_kilometers(value))
         elif unit_2 == 'ft':
-            return miles_to_ft(value)
+            result = miles_to_feet(value)
     elif unit_1 == 'ft':
         if unit_2 == 'mi':
-            return feet_to_miles(value)
+            result = feet_to_miles(value)
         elif unit_2 == 'km':
-            return meters_to_kilometers(feet_to_meters(value))
+            result = meters_to_kilometers(feet_to_meters(value))
         elif unit_2 == 'm':
-            return feet_to_meters(value)
+            result = feet_to_meters(value)
     elif unit_1 == 'km':
         if unit_2 == 'mi':
-            return kilometers_to_miles(value)
+            result = kilometers_to_miles(value)
         elif unit_2 == 'm':
-            return kilometers_to_meters(value)
+            result = kilometers_to_meters(value)
         elif unit_2 == 'ft':
-            return meters_to_feet(kilometers_to_meters(value))
+            result = meters_to_feet(kilometers_to_meters(value))
     elif unit_1 == 'm':
         if unit_2 == 'km':
-            return meters_to_kilometers(value)
+            result = meters_to_kilometers(value)
         elif unit_2 == 'ft':
-            return meters_to_feet(value)
+            result = meters_to_feet(value)
         elif unit_2 == 'mi':
-            return kilometers_to_miles(meters_to_kilometers(value))
+            result = kilometers_to_miles(meters_to_kilometers(value))
 
-    return None
+    return result
