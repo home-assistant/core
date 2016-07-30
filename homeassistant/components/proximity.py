@@ -84,13 +84,16 @@ def setup_proximity_device(hass, proximity_config):   # pylint: disable=too-many
     track_state_change(hass, proximity_devices,
                        proximity.check_proximity_state_change)
 
+    return True
+
 def setup(hass, config):
     """Get the zones and offsets from configuration.yaml."""
     if isinstance(config[DOMAIN], list):
         for proximity_config in config[DOMAIN]:
-            setup_proximity_device(hass, proximity_config)
-    else:
-        setup_proximity_device(hass, config[DOMAIN])
+            if not setup_proximity_component(hass, proximity_config):
+                return False
+    elif not setup_proximity_component(hass, config[DOMAIN]):
+        return False
 
     return True
 
