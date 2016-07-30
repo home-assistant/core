@@ -66,6 +66,25 @@ class TestProximity:
             state = self.hass.states.get('proximity.' + prox)
             assert state.state == '0'
 
+    def test_proximities_missing_devices(self):
+        """Test a list of proximities with one missing devices."""
+        assert not proximity.setup(self.hass, {
+            'proximity': [{
+                'zone': 'home',
+                'ignored_zones': {
+                    'work'
+                },
+                'devices': {
+                    'device_tracker.test1',
+                    'device_tracker.test2'
+                },
+                'tolerance': '1'
+            }, {
+                'zone': 'work',
+                'tolerance': '1'
+            }]
+        })
+
     def test_proximity(self):
         """Test the proximity."""
         assert proximity.setup(self.hass, {
