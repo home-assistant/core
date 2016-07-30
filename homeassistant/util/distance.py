@@ -97,7 +97,7 @@ def convert(value, unit_1, unit_2):
         if unit_2 == 'mi':
             return feet_to_miles(value)
         elif unit_2 == 'km':
-            return miles_to_kilometers(feet_to_meters(value))
+            return meters_to_kilometers(feet_to_meters(value))
         elif unit_2 == 'm':
             return feet_to_meters(value)
     elif unit_1 == 'km':
@@ -106,7 +106,7 @@ def convert(value, unit_1, unit_2):
         elif unit_2 == 'm':
             return kilometers_to_meters(value)
         elif unit_2 == 'ft':
-            return kilometers_to_meters(meters_to_feet(value))
+            return meters_to_feet(kilometers_to_meters(value))
     elif unit_1 == 'm':
         if unit_2 == 'km':
             return meters_to_kilometers(value)
