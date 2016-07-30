@@ -163,7 +163,7 @@ class FluxSwitch(SwitchDevice):
 
         if start_time < now < sunset:
             # Daytime
-            time = 'day'
+            time_state = 'day'
             temp_range = abs(self._start_colortemp - self._sunset_colortemp)
             day_length = int(sunset.timestamp() - start_time.timestamp())
             seconds_from_start = int(now.timestamp() - start_time.timestamp())
@@ -175,7 +175,7 @@ class FluxSwitch(SwitchDevice):
                 temp = self._start_colortemp + temp_offset
         else:
             # Nightime
-            time = 'night'
+            time_state = 'night'
             if now < stop_time and now > start_time:
                 now_time = now
             else:
@@ -198,14 +198,14 @@ class FluxSwitch(SwitchDevice):
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
                          " of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
-                             percentage_complete * 100), time,
+                             percentage_complete * 100), time_state,
                          as_local(now))
         else:
             set_lights_temp(self.hass, self._lights, temp, self._mode)
             _LOGGER.info("Lights updated to temp:%s, %s%%"
                          " of %s cycle complete at %s", temp,
                          round(percentage_complete * 100),
-                         time, as_local(now))
+                         time_state, as_local(now))
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
