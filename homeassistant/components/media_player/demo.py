@@ -8,7 +8,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 
 
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/1.jpg'
+YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -32,10 +32,10 @@ YOUTUBE_PLAYER_SUPPORT = \
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -152,7 +152,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         """Flag of media commands that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         self.youtube_id = media_id
         self.update_ha_state()
@@ -208,17 +208,18 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/107771475912710/picture'
+        return 'https://graph.facebook.com/v2.5/107771475912710/' \
+            'picture?type=large'
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self.tracks[self._cur_track][1]
+        return self.tracks[self._cur_track][1] if len(self.tracks) > 0 else ""
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.tracks[self._cur_track][0]
+        return self.tracks[self._cur_track][0] if len(self.tracks) > 0 else ""
 
     @property
     def media_album_name(self):
@@ -256,6 +257,13 @@ class DemoMusicPlayer(AbstractDemoPlayer):
             self._cur_track += 1
             self.update_ha_state()
 
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self.tracks = []
+        self._cur_track = 0
+        self._player_state = STATE_OFF
+        self.update_ha_state()
+
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
@@ -267,6 +275,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         super().__init__('Lounge room')
         self._cur_episode = 1
         self._episode_count = 13
+        self._source = 'dvd'
 
     @property
     def media_content_id(self):
@@ -286,7 +295,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return 'https://graph.facebook.com/HouseofCards/picture'
+        return 'https://graph.facebook.com/v2.5/HouseofCards/picture?width=400'
 
     @property
     def media_title(self):
@@ -314,6 +323,11 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return "Netflix"
 
     @property
+    def source(self):
+        """Return the current input source."""
+        return self._source
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
@@ -337,3 +351,8 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         if self._cur_episode < self._episode_count:
             self._cur_episode += 1
             self.update_ha_state()
+
+    def select_source(self, source):
+        """Set the input source."""
+        self._source = source
+        self.update_ha_state()

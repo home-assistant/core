@@ -5,18 +5,18 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo thermostats."""
     add_devices([
-        DemoThermostat("Nest", 21, TEMP_CELCIUS, False, 19, False),
+        DemoThermostat("Nest", 21, TEMP_CELSIUS, False, 19, False),
         DemoThermostat("Thermostat", 68, TEMP_FAHRENHEIT, True, 77, True),
     ])
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, abstract-method
 class DemoThermostat(ThermostatDevice):
     """Representation of a demo thermostat."""
 

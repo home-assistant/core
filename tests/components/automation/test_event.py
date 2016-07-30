@@ -1,6 +1,7 @@
 """The tests for the Event automation."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import get_test_home_assistant
@@ -12,6 +13,7 @@ class TestAutomationEvent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         self.calls = []
 
         def record_call(service):
@@ -26,7 +28,7 @@ class TestAutomationEvent(unittest.TestCase):
 
     def test_if_fires_on_event(self):
         """Test the firing of events."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -36,7 +38,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'service': 'test.automation',
                 }
             }
-        }))
+        })
 
         self.hass.bus.fire('test_event')
         self.hass.pool.block_till_done()
@@ -44,7 +46,7 @@ class TestAutomationEvent(unittest.TestCase):
 
     def test_if_fires_on_event_with_data(self):
         """Test the firing of events with data."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -55,7 +57,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'service': 'test.automation',
                 }
             }
-        }))
+        })
 
         self.hass.bus.fire('test_event', {'some_attr': 'some_value',
                                           'another': 'value'})
@@ -64,7 +66,7 @@ class TestAutomationEvent(unittest.TestCase):
 
     def test_if_not_fires_if_event_data_not_matches(self):
         """Test firing of event if no match."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -75,7 +77,7 @@ class TestAutomationEvent(unittest.TestCase):
                     'service': 'test.automation',
                 }
             }
-        }))
+        })
 
         self.hass.bus.fire('test_event', {'some_attr': 'some_other_value'})
         self.hass.pool.block_till_done()

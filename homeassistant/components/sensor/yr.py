@@ -5,18 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.yr/
 """
 import logging
-
 import requests
+import voluptuous as vol
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_PLATFORM, CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION,
+    CONF_MONITORED_CONDITIONS
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
-from homeassistant.util import location
 
 _LOGGER = logging.getLogger(__name__)
 
-
-REQUIREMENTS = ['xmltodict']
+REQUIREMENTS = ['xmltodict==0.10.2']
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -36,20 +38,25 @@ SENSOR_TYPES = {
     'dewpointTemperature': ['Dewpoint temperature', '°C'],
 }
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'yr',
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
+        [vol.In(SENSOR_TYPES.keys())],
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_ELEVATION): vol.Coerce(int),
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    elevation = config.get('elevation')
+    elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
-
-    if elevation is None:
-        elevation = location.elevation(latitude,
-                                       longitude)
 
     coordinates = dict(lat=latitude,
                        lon=longitude,
@@ -58,12 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     weather = YrData(coordinates)
 
     dev = []
-    if 'monitored_conditions' in config:
-        for variable in config['monitored_conditions']:
-            if variable not in SENSOR_TYPES:
-                _LOGGER.error('Sensor type: "%s" does not exist', variable)
-            else:
-                dev.append(YrSensor(variable, weather))
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        dev.append(YrSensor(sensor_type, weather))
 
     # add symbol as default sensor
     if len(dev) == 0:
@@ -102,7 +105,7 @@ class YrSensor(Entity):
         """Weather symbol if type is symbol."""
         if self.type != 'symbol':
             return None
-        return "http://api.met.no/weatherapi/weathericon/1.1/" \
+        return "//api.met.no/weatherapi/weathericon/1.1/" \
                "?symbol={0};content_type=image/png".format(self._state)
 
     @property
@@ -129,10 +132,8 @@ class YrSensor(Entity):
 
         # Find sensor
         for time_entry in self._weather.data['product']['time']:
-            valid_from = dt_util.str_to_datetime(
-                time_entry['@from'], "%Y-%m-%dT%H:%M:%SZ")
-            valid_to = dt_util.str_to_datetime(
-                time_entry['@to'], "%Y-%m-%dT%H:%M:%SZ")
+            valid_from = dt_util.parse_datetime(time_entry['@from'])
+            valid_to = dt_util.parse_datetime(time_entry['@to'])
 
             loc_data = time_entry['location']
 
@@ -195,5 +196,4 @@ class YrData(object):
         model = self.data['meta']['model']
         if '@nextrun' not in model:
             model = model[0]
-        self._nextrun = dt_util.str_to_datetime(model['@nextrun'],
-                                                "%Y-%m-%dT%H:%M:%SZ")
+        self._nextrun = dt_util.parse_datetime(model['@nextrun'])

@@ -1,6 +1,7 @@
 """The tests for the MQTT roller shutter platform."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 import homeassistant.components.rollershutter as rollershutter
 from tests.common import mock_mqtt_component, fire_mqtt_message
@@ -22,8 +23,9 @@ class TestRollershutterMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        self.assertTrue(rollershutter.setup(self.hass, {
-            'rollershutter': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, rollershutter.DOMAIN, {
+            rollershutter.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -33,7 +35,7 @@ class TestRollershutterMQTT(unittest.TestCase):
                 'payload_down': 'DOWN',
                 'payload_stop': 'STOP'
             }
-        }))
+        })
 
         state = self.hass.states.get('rollershutter.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
@@ -58,15 +60,16 @@ class TestRollershutterMQTT(unittest.TestCase):
 
     def test_send_move_up_command(self):
         """Test the sending of move_up."""
-        self.assertTrue(rollershutter.setup(self.hass, {
-            'rollershutter': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, rollershutter.DOMAIN, {
+            rollershutter.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
                 'qos': 2
             }
-        }))
+        })
 
         state = self.hass.states.get('rollershutter.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
@@ -81,15 +84,16 @@ class TestRollershutterMQTT(unittest.TestCase):
 
     def test_send_move_down_command(self):
         """Test the sending of move_down."""
-        self.assertTrue(rollershutter.setup(self.hass, {
-            'rollershutter': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, rollershutter.DOMAIN, {
+            rollershutter.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
                 'qos': 2
             }
-        }))
+        })
 
         state = self.hass.states.get('rollershutter.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
@@ -104,15 +108,16 @@ class TestRollershutterMQTT(unittest.TestCase):
 
     def test_send_stop_command(self):
         """Test the sending of stop."""
-        self.assertTrue(rollershutter.setup(self.hass, {
-            'rollershutter': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, rollershutter.DOMAIN, {
+            rollershutter.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
                 'qos': 2
             }
-        }))
+        })
 
         state = self.hass.states.get('rollershutter.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
@@ -127,8 +132,9 @@ class TestRollershutterMQTT(unittest.TestCase):
 
     def test_state_attributes_current_position(self):
         """Test the current position."""
-        self.assertTrue(rollershutter.setup(self.hass, {
-            'rollershutter': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, rollershutter.DOMAIN, {
+            rollershutter.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -137,7 +143,7 @@ class TestRollershutterMQTT(unittest.TestCase):
                 'payload_down': 'DOWN',
                 'payload_stop': 'STOP'
             }
-        }))
+        })
 
         state_attributes_dict = self.hass.states.get(
             'rollershutter.test').attributes

@@ -1,36 +1,31 @@
 """
-This module provides an API and a HTTP interface for debug purposes.
+This module provides WSGI application to serve the Home Assistant API.
 
-For more details about the RESTful API, please refer to the documentation at
-https://home-assistant.io/developers/api/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/http/
 """
-import gzip
+import hmac
 import json
 import logging
-import os
-import ssl
+import mimetypes
 import threading
-import time
-from datetime import timedelta
-from http import cookies
-from http.server import HTTPServer, SimpleHTTPRequestHandler
-from socketserver import ThreadingMixIn
-from urllib.parse import parse_qs, urlparse
+import re
+import ssl
+import voluptuous as vol
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.core as ha
 import homeassistant.remote as rem
-import homeassistant.util as util
-import homeassistant.util.dt as date_util
+from homeassistant import util
 from homeassistant.const import (
-    CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_ACCEPT_ENCODING,
-    HTTP_HEADER_CACHE_CONTROL, HTTP_HEADER_CONTENT_ENCODING,
-    HTTP_HEADER_CONTENT_LENGTH, HTTP_HEADER_CONTENT_TYPE, HTTP_HEADER_EXPIRES,
-    HTTP_HEADER_HA_AUTH, HTTP_HEADER_VARY, HTTP_METHOD_NOT_ALLOWED,
-    HTTP_NOT_FOUND, HTTP_OK, HTTP_UNAUTHORIZED, HTTP_UNPROCESSABLE_ENTITY,
-    SERVER_PORT)
+    SERVER_PORT, HTTP_HEADER_HA_AUTH, HTTP_HEADER_CACHE_CONTROL,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
+    HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
+from homeassistant.helpers.entity import split_entity_id
+import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
+REQUIREMENTS = ("cherrypy==6.1.1", "static3==0.7.0", "Werkzeug==0.11.10")
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -38,444 +33,500 @@ CONF_SERVER_PORT = "server_port"
 CONF_DEVELOPMENT = "development"
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_KEY = 'ssl_key'
+CONF_CORS_ORIGINS = 'cors_allowed_origins'
 
 DATA_API_PASSWORD = 'api_password'
 
-# Throttling time in seconds for expired sessions check
-SESSION_CLEAR_INTERVAL = timedelta(seconds=20)
-SESSION_TIMEOUT_SECONDS = 1800
-SESSION_KEY = 'sessionId'
+# TLS configuation follows the best-practice guidelines
+# specified here: https://wiki.mozilla.org/Security/Server_Side_TLS
+# Intermediate guidelines are followed.
+SSL_VERSION = ssl.PROTOCOL_SSLv23
+SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
+if hasattr(ssl, 'OP_NO_COMPRESSION'):
+    SSL_OPTS |= ssl.OP_NO_COMPRESSION
+CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
+          "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
+          "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
+          "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:" \
+          "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:" \
+          "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:" \
+          "ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:" \
+          "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:" \
+          "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:" \
+          "DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:" \
+          "ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:" \
+          "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
+          "AES256-SHA:DES-CBC3-SHA:!DSS"
+
+_FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_PASSWORD): cv.string,
+        vol.Optional(CONF_SERVER_HOST): cv.string,
+        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_DEVELOPMENT): cv.string,
+        vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_SSL_KEY): cv.isfile,
+        vol.Optional(CONF_CORS_ORIGINS): cv.ensure_list
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+class HideSensitiveFilter(logging.Filter):
+    """Filter API password calls."""
+
+    # pylint: disable=too-few-public-methods
+    def __init__(self, hass):
+        """Initialize sensitive data filter."""
+        super().__init__()
+        self.hass = hass
+
+    def filter(self, record):
+        """Hide sensitive data in messages."""
+        if self.hass.wsgi.api_password is None:
+            return True
+
+        record.msg = record.msg.replace(self.hass.wsgi.api_password, '*******')
+
+        return True
 
 
 def setup(hass, config):
     """Set up the HTTP API and debug interface."""
+    _LOGGER.addFilter(HideSensitiveFilter(hass))
+
     conf = config.get(DOMAIN, {})
 
     api_password = util.convert(conf.get(CONF_API_PASSWORD), str)
-
-    # If no server host is given, accept all incoming requests
     server_host = conf.get(CONF_SERVER_HOST, '0.0.0.0')
     server_port = conf.get(CONF_SERVER_PORT, SERVER_PORT)
     development = str(conf.get(CONF_DEVELOPMENT, "")) == "1"
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
+    cors_origins = conf.get(CONF_CORS_ORIGINS, [])
 
-    try:
-        server = HomeAssistantHTTPServer(
-            (server_host, server_port), RequestHandler, hass, api_password,
-            development, ssl_certificate, ssl_key)
-    except OSError:
-        # If address already in use
-        _LOGGER.exception("Error setting up HTTP server")
-        return False
+    server = HomeAssistantWSGI(
+        hass,
+        development=development,
+        server_host=server_host,
+        server_port=server_port,
+        api_password=api_password,
+        ssl_certificate=ssl_certificate,
+        ssl_key=ssl_key,
+        cors_origins=cors_origins
+    )
 
-    hass.bus.listen_once(
-        ha.EVENT_HOMEASSISTANT_START,
-        lambda event:
-        threading.Thread(target=server.start, daemon=True,
-                         name='HTTP-server').start())
+    def start_wsgi_server(event):
+        """Start the WSGI server."""
+        server.start()
 
-    hass.http = server
-    hass.config.api = rem.API(util.get_local_ip(), api_password, server_port,
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_wsgi_server)
+
+    def stop_wsgi_server(event):
+        """Stop the WSGI server."""
+        server.stop()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_wsgi_server)
+
+    hass.wsgi = server
+    hass.config.api = rem.API(server_host if server_host != '0.0.0.0'
+                              else util.get_local_ip(),
+                              api_password, server_port,
                               ssl_certificate is not None)
 
     return True
 
 
-# pylint: disable=too-many-instance-attributes
-class HomeAssistantHTTPServer(ThreadingMixIn, HTTPServer):
-    """Handle HTTP requests in a threaded fashion."""
+def request_class():
+    """Generate request class.
 
-    # pylint: disable=too-few-public-methods
-    allow_reuse_address = True
-    daemon_threads = True
+    Done in method because of imports.
+    """
+    from werkzeug.exceptions import BadRequest
+    from werkzeug.wrappers import BaseRequest, AcceptMixin
+    from werkzeug.utils import cached_property
 
+    class Request(BaseRequest, AcceptMixin):
+        """Base class for incoming requests."""
+
+        @cached_property
+        def json(self):
+            """Get the result of json.loads if possible."""
+            if not self.data:
+                return None
+            # elif 'json' not in self.environ.get('CONTENT_TYPE', ''):
+            #     raise BadRequest('Not a JSON request')
+            try:
+                return json.loads(self.data.decode(
+                    self.charset, self.encoding_errors))
+            except (TypeError, ValueError):
+                raise BadRequest('Unable to read JSON request')
+
+    return Request
+
+
+def routing_map(hass):
+    """Generate empty routing map with HA validators."""
+    from werkzeug.routing import Map, BaseConverter, ValidationError
+
+    class EntityValidator(BaseConverter):
+        """Validate entity_id in urls."""
+
+        regex = r"(\w+)\.(\w+)"
+
+        def __init__(self, url_map, exist=True, domain=None):
+            """Initilalize entity validator."""
+            super().__init__(url_map)
+            self._exist = exist
+            self._domain = domain
+
+        def to_python(self, value):
+            """Validate entity id."""
+            if self._exist and hass.states.get(value) is None:
+                raise ValidationError()
+            if self._domain is not None and \
+               split_entity_id(value)[0] != self._domain:
+                raise ValidationError()
+
+            return value
+
+        def to_url(self, value):
+            """Convert entity_id for a url."""
+            return value
+
+    class DateValidator(BaseConverter):
+        """Validate dates in urls."""
+
+        regex = r'\d{4}-\d{1,2}-\d{1,2}'
+
+        def to_python(self, value):
+            """Validate and convert date."""
+            parsed = dt_util.parse_date(value)
+
+            if parsed is None:
+                raise ValidationError()
+
+            return parsed
+
+        def to_url(self, value):
+            """Convert date to url value."""
+            return value.isoformat()
+
+    class DateTimeValidator(BaseConverter):
+        """Validate datetimes in urls formatted per ISO 8601."""
+
+        regex = r'\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d' \
+            r'\.\d+([+-][0-2]\d:[0-5]\d|Z)'
+
+        def to_python(self, value):
+            """Validate and convert date."""
+            parsed = dt_util.parse_datetime(value)
+
+            if parsed is None:
+                raise ValidationError()
+
+            return parsed
+
+        def to_url(self, value):
+            """Convert date to url value."""
+            return value.isoformat()
+
+    return Map(converters={
+        'entity': EntityValidator,
+        'date': DateValidator,
+        'datetime': DateTimeValidator,
+    })
+
+
+class HomeAssistantWSGI(object):
+    """WSGI server for Home Assistant."""
+
+    # pylint: disable=too-many-instance-attributes, too-many-locals
     # pylint: disable=too-many-arguments
-    def __init__(self, server_address, request_handler_class,
-                 hass, api_password, development, ssl_certificate, ssl_key):
-        """Initialize the server."""
-        super().__init__(server_address, request_handler_class)
 
-        self.server_address = server_address
+    def __init__(self, hass, development, api_password, ssl_certificate,
+                 ssl_key, server_host, server_port, cors_origins):
+        """Initilalize the WSGI Home Assistant server."""
+        from werkzeug.wrappers import Response
+
+        Response.mimetype = 'text/html'
+
+        # pylint: disable=invalid-name
+        self.Request = request_class()
+        self.url_map = routing_map(hass)
+        self.views = {}
         self.hass = hass
-        self.api_password = api_password
+        self.extra_apps = {}
         self.development = development
-        self.paths = []
-        self.sessions = SessionStore()
-        self.use_ssl = ssl_certificate is not None
-
-        # We will lazy init this one if needed
+        self.api_password = api_password
+        self.ssl_certificate = ssl_certificate
+        self.ssl_key = ssl_key
+        self.server_host = server_host
+        self.server_port = server_port
+        self.cors_origins = cors_origins
         self.event_forwarder = None
+        self.server = None
 
-        if development:
-            _LOGGER.info("running http in development mode")
+    def register_view(self, view):
+        """Register a view with the WSGI server.
 
-        if ssl_certificate is not None:
-            context = ssl.create_default_context(
-                purpose=ssl.Purpose.CLIENT_AUTH)
-            context.load_cert_chain(ssl_certificate, keyfile=ssl_key)
-            self.socket = context.wrap_socket(self.socket, server_side=True)
+        The view argument must be a class that inherits from HomeAssistantView.
+        It is optional to instantiate it before registering; this method will
+        handle it either way.
+        """
+        from werkzeug.routing import Rule
+
+        if view.name in self.views:
+            _LOGGER.warning("View '%s' is being overwritten", view.name)
+        if isinstance(view, type):
+            # Instantiate the view, if needed
+            view = view(self.hass)
+
+        self.views[view.name] = view
+
+        rule = Rule(view.url, endpoint=view.name)
+        self.url_map.add(rule)
+        for url in view.extra_urls:
+            rule = Rule(url, endpoint=view.name)
+            self.url_map.add(rule)
+
+    def register_redirect(self, url, redirect_to):
+        """Register a redirect with the server.
+
+        If given this must be either a string or callable. In case of a
+        callable it's called with the url adapter that triggered the match and
+        the values of the URL as keyword arguments and has to return the target
+        for the redirect, otherwise it has to be a string with placeholders in
+        rule syntax.
+        """
+        from werkzeug.routing import Rule
+
+        self.url_map.add(Rule(url, redirect_to=redirect_to))
+
+    def register_static_path(self, url_root, path, cache_length=31):
+        """Register a folder to serve as a static path.
+
+        Specify optional cache length of asset in days.
+        """
+        from static import Cling
+
+        headers = []
+
+        if cache_length and not self.development:
+            # 1 year in seconds
+            cache_time = cache_length * 86400
+
+            headers.append({
+                'prefix': '',
+                HTTP_HEADER_CACHE_CONTROL:
+                "public, max-age={}".format(cache_time)
+            })
+
+        self.register_wsgi_app(url_root, Cling(path, headers=headers))
+
+    def register_wsgi_app(self, url_root, app):
+        """Register a path to serve a WSGI app."""
+        if url_root in self.extra_apps:
+            _LOGGER.warning("Url root '%s' is being overwritten", url_root)
+
+        self.extra_apps[url_root] = app
 
     def start(self):
-        """Start the HTTP server."""
-        def stop_http(event):
-            """Stop the HTTP server."""
-            self.shutdown()
+        """Start the wsgi server."""
+        from cherrypy import wsgiserver
+        from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
 
-        self.hass.bus.listen_once(ha.EVENT_HOMEASSISTANT_STOP, stop_http)
+        # pylint: disable=too-few-public-methods,super-init-not-called
+        class ContextSSLAdapter(BuiltinSSLAdapter):
+            """SSL Adapter that takes in an SSL context."""
 
-        protocol = 'https' if self.use_ssl else 'http'
+            def __init__(self, context):
+                self.context = context
 
-        _LOGGER.info(
-            "Starting web interface at %s://%s:%d",
-            protocol, self.server_address[0], self.server_address[1])
+        # pylint: disable=no-member
+        self.server = wsgiserver.CherryPyWSGIServer(
+            (self.server_host, self.server_port), self,
+            server_name='Home Assistant')
 
-        # 31-1-2015: Refactored frontend/api components out of this component
-        # To prevent stuff from breaking, load the two extracted components
-        bootstrap.setup_component(self.hass, 'api')
-        bootstrap.setup_component(self.hass, 'frontend')
+        if self.ssl_certificate:
+            context = ssl.SSLContext(SSL_VERSION)
+            context.options |= SSL_OPTS
+            context.set_ciphers(CIPHERS)
+            context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+            self.server.ssl_adapter = ContextSSLAdapter(context)
 
-        self.serve_forever()
+        threading.Thread(target=self.server.start, daemon=True,
+                         name='WSGI-server').start()
 
-    def register_path(self, method, url, callback, require_auth=True):
-        """Register a path with the server."""
-        self.paths.append((method, url, callback, require_auth))
+    def stop(self):
+        """Stop the wsgi server."""
+        self.server.stop()
 
-    def log_message(self, fmt, *args):
-        """Redirect built-in log to HA logging."""
-        # pylint: disable=no-self-use
-        _LOGGER.info(fmt, *args)
+    def dispatch_request(self, request):
+        """Handle incoming request."""
+        from werkzeug.exceptions import (
+            MethodNotAllowed, NotFound, BadRequest, Unauthorized,
+        )
+        from werkzeug.routing import RequestRedirect
+
+        with request:
+            adapter = self.url_map.bind_to_environ(request.environ)
+            try:
+                endpoint, values = adapter.match()
+                return self.views[endpoint].handle_request(request, **values)
+            except RequestRedirect as ex:
+                return ex
+            except (BadRequest, NotFound, MethodNotAllowed,
+                    Unauthorized) as ex:
+                resp = ex.get_response(request.environ)
+                if request.accept_mimetypes.accept_json:
+                    resp.data = json.dumps({
+                        "result": "error",
+                        "message": str(ex),
+                    })
+                    resp.mimetype = "application/json"
+                return resp
+
+    def base_app(self, environ, start_response):
+        """WSGI Handler of requests to base app."""
+        request = self.Request(environ)
+        response = self.dispatch_request(request)
+
+        if self.cors_origins:
+            cors_check = (environ.get("HTTP_ORIGIN") in self.cors_origins)
+            cors_headers = ", ".join(ALLOWED_CORS_HEADERS)
+            if cors_check:
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN] = \
+                    environ.get("HTTP_ORIGIN")
+                response.headers[HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS] = \
+                    cors_headers
+
+        return response(environ, start_response)
+
+    def __call__(self, environ, start_response):
+        """Handle a request for base app + extra apps."""
+        from werkzeug.wsgi import DispatcherMiddleware
+
+        if not self.hass.is_running:
+            from werkzeug.exceptions import BadRequest
+            return BadRequest()(environ, start_response)
+
+        app = DispatcherMiddleware(self.base_app, self.extra_apps)
+        # Strip out any cachebusting MD5 fingerprints
+        fingerprinted = _FINGERPRINT.match(environ.get('PATH_INFO', ''))
+        if fingerprinted:
+            environ['PATH_INFO'] = "{}.{}".format(*fingerprinted.groups())
+        return app(environ, start_response)
 
 
-# pylint: disable=too-many-public-methods,too-many-locals
-class RequestHandler(SimpleHTTPRequestHandler):
-    """Handle incoming HTTP requests.
+class HomeAssistantView(object):
+    """Base view for all views."""
 
-    We extend from SimpleHTTPRequestHandler instead of Base so we
-    can use the guess content type methods.
-    """
+    extra_urls = []
+    requires_auth = True  # Views inheriting from this class can override this
 
-    server_version = "HomeAssistant/1.0"
+    def __init__(self, hass):
+        """Initilalize the base view."""
+        from werkzeug.wrappers import Response
 
-    def __init__(self, req, client_addr, server):
-        """Constructor, call the base constructor and set up session."""
-        # Track if this was an authenticated request
-        self.authenticated = False
-        SimpleHTTPRequestHandler.__init__(self, req, client_addr, server)
+        if not hasattr(self, 'url'):
+            class_name = self.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "url"'.format(class_name)
+            )
 
-    def log_message(self, fmt, *arguments):
-        """Redirect built-in log to HA logging."""
-        if self.server.api_password is None:
-            _LOGGER.info(fmt, *arguments)
-        else:
-            _LOGGER.info(
-                fmt, *(arg.replace(self.server.api_password, '*******')
-                       if isinstance(arg, str) else arg for arg in arguments))
+        if not hasattr(self, 'name'):
+            class_name = self.__class__.__name__
+            raise AttributeError(
+                '{0} missing required attribute "name"'.format(class_name)
+            )
 
-    def _handle_request(self, method):  # pylint: disable=too-many-branches
-        """Perform some common checks and call appropriate method."""
-        url = urlparse(self.path)
+        self.hass = hass
+        # pylint: disable=invalid-name
+        self.Response = Response
 
-        # Read query input. parse_qs gives a list for each value, we want last
-        data = {key: data[-1] for key, data in parse_qs(url.query).items()}
+    def handle_request(self, request, **values):
+        """Handle request to url."""
+        from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 
-        # Did we get post input ?
-        content_length = int(self.headers.get(HTTP_HEADER_CONTENT_LENGTH, 0))
+        try:
+            handler = getattr(self, request.method.lower())
+        except AttributeError:
+            raise MethodNotAllowed
 
-        if content_length:
-            body_content = self.rfile.read(content_length).decode("UTF-8")
+        # Auth code verbose on purpose
+        authenticated = False
+
+        if self.hass.wsgi.api_password is None:
+            authenticated = True
+
+        elif hmac.compare_digest(request.headers.get(HTTP_HEADER_HA_AUTH, ''),
+                                 self.hass.wsgi.api_password):
+            # A valid auth header has been set
+            authenticated = True
+
+        elif hmac.compare_digest(request.args.get(DATA_API_PASSWORD, ''),
+                                 self.hass.wsgi.api_password):
+            authenticated = True
+
+        if authenticated:
+            _LOGGER.info('Successful login/request from %s',
+                         request.remote_addr)
+        elif self.requires_auth and not authenticated:
+            _LOGGER.warning('Login attempt or request with an invalid'
+                            'password from %s', request.remote_addr)
+            raise Unauthorized()
+
+        request.authenticated = authenticated
+
+        result = handler(request, **values)
+
+        if isinstance(result, self.Response):
+            # The method handler returned a ready-made Response, how nice of it
+            return result
+
+        status_code = 200
+
+        if isinstance(result, tuple):
+            result, status_code = result
+
+        return self.Response(result, status=status_code)
+
+    def json(self, result, status_code=200):
+        """Return a JSON response."""
+        msg = json.dumps(
+            result,
+            sort_keys=True,
+            cls=rem.JSONEncoder
+        ).encode('UTF-8')
+        return self.Response(msg, mimetype="application/json",
+                             status=status_code)
+
+    def json_message(self, error, status_code=200):
+        """Return a JSON message response."""
+        return self.json({'message': error}, status_code)
+
+    def file(self, request, fil, mimetype=None):
+        """Return a file."""
+        from werkzeug.wsgi import wrap_file
+        from werkzeug.exceptions import NotFound
+
+        if isinstance(fil, str):
+            if mimetype is None:
+                mimetype = mimetypes.guess_type(fil)[0]
 
             try:
-                data.update(json.loads(body_content))
-            except (TypeError, ValueError):
-                # TypeError if JSON object is not a dict
-                # ValueError if we could not parse JSON
-                _LOGGER.exception(
-                    "Exception parsing JSON: %s", body_content)
-                self.write_json_message(
-                    "Error parsing JSON", HTTP_UNPROCESSABLE_ENTITY)
-                return
-
-        self.authenticated = (self.server.api_password is None or
-                              self.headers.get(HTTP_HEADER_HA_AUTH) ==
-                              self.server.api_password or
-                              data.get(DATA_API_PASSWORD) ==
-                              self.server.api_password or
-                              self.verify_session())
-
-        if '_METHOD' in data:
-            method = data.pop('_METHOD')
-
-        # Var to keep track if we found a path that matched a handler but
-        # the method was different
-        path_matched_but_not_method = False
-
-        # Var to hold the handler for this path and method if found
-        handle_request_method = False
-        require_auth = True
-
-        # Check every handler to find matching result
-        for t_method, t_path, t_handler, t_auth in self.server.paths:
-            # we either do string-comparison or regular expression matching
-            # pylint: disable=maybe-no-member
-            if isinstance(t_path, str):
-                path_match = url.path == t_path
-            else:
-                path_match = t_path.match(url.path)
-
-            if path_match and method == t_method:
-                # Call the method
-                handle_request_method = t_handler
-                require_auth = t_auth
-                break
-
-            elif path_match:
-                path_matched_but_not_method = True
-
-        # Did we find a handler for the incoming request?
-        if handle_request_method:
-            # For some calls we need a valid password
-            msg = "API password missing or incorrect."
-            if require_auth and not self.authenticated:
-                self.write_json_message(msg, HTTP_UNAUTHORIZED)
-                _LOGGER.warning(msg)
-                return
-
-            handle_request_method(self, path_match, data)
-
-        elif path_matched_but_not_method:
-            self.send_response(HTTP_METHOD_NOT_ALLOWED)
-            self.end_headers()
-
-        else:
-            self.send_response(HTTP_NOT_FOUND)
-            self.end_headers()
-
-    def do_HEAD(self):  # pylint: disable=invalid-name
-        """HEAD request handler."""
-        self._handle_request('HEAD')
-
-    def do_GET(self):  # pylint: disable=invalid-name
-        """GET request handler."""
-        self._handle_request('GET')
-
-    def do_POST(self):  # pylint: disable=invalid-name
-        """POST request handler."""
-        self._handle_request('POST')
-
-    def do_PUT(self):  # pylint: disable=invalid-name
-        """PUT request handler."""
-        self._handle_request('PUT')
-
-    def do_DELETE(self):  # pylint: disable=invalid-name
-        """DELETE request handler."""
-        self._handle_request('DELETE')
-
-    def write_json_message(self, message, status_code=HTTP_OK):
-        """Helper method to return a message to the caller."""
-        self.write_json({'message': message}, status_code=status_code)
-
-    def write_json(self, data=None, status_code=HTTP_OK, location=None):
-        """Helper method to return JSON to the caller."""
-        json_data = json.dumps(data, indent=4, sort_keys=True,
-                               cls=rem.JSONEncoder).encode('UTF-8')
-        self.send_response(status_code)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(json_data)))
-
-        if location:
-            self.send_header('Location', location)
-
-        self.set_session_cookie_header()
-
-        self.end_headers()
-
-        if data is not None:
-            self.wfile.write(json_data)
-
-    def write_text(self, message, status_code=HTTP_OK):
-        """Helper method to return a text message to the caller."""
-        msg_data = message.encode('UTF-8')
-        self.send_response(status_code)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN)
-        self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(msg_data)))
-
-        self.set_session_cookie_header()
-
-        self.end_headers()
-
-        self.wfile.write(msg_data)
-
-    def write_file(self, path, cache_headers=True):
-        """Return a file to the user."""
-        try:
-            with open(path, 'rb') as inp:
-                self.write_file_pointer(self.guess_type(path), inp,
-                                        cache_headers)
-
-        except IOError:
-            self.send_response(HTTP_NOT_FOUND)
-            self.end_headers()
-            _LOGGER.exception("Unable to serve %s", path)
-
-    def write_file_pointer(self, content_type, inp, cache_headers=True):
-        """Helper function to write a file pointer to the user."""
-        do_gzip = 'gzip' in self.headers.get(HTTP_HEADER_ACCEPT_ENCODING, '')
-
-        self.send_response(HTTP_OK)
-        self.send_header(HTTP_HEADER_CONTENT_TYPE, content_type)
-
-        if cache_headers:
-            self.set_cache_header()
-        self.set_session_cookie_header()
-
-        if do_gzip:
-            gzip_data = gzip.compress(inp.read())
-
-            self.send_header(HTTP_HEADER_CONTENT_ENCODING, "gzip")
-            self.send_header(HTTP_HEADER_VARY, HTTP_HEADER_ACCEPT_ENCODING)
-            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(len(gzip_data)))
-
-        else:
-            fst = os.fstat(inp.fileno())
-            self.send_header(HTTP_HEADER_CONTENT_LENGTH, str(fst[6]))
-
-        self.end_headers()
-
-        if self.command == 'HEAD':
-            return
-
-        elif do_gzip:
-            self.wfile.write(gzip_data)
-
-        else:
-            self.copyfile(inp, self.wfile)
-
-    def set_cache_header(self):
-        """Add cache headers if not in development."""
-        if self.server.development:
-            return
-
-        # 1 year in seconds
-        cache_time = 365 * 86400
-
-        self.send_header(
-            HTTP_HEADER_CACHE_CONTROL,
-            "public, max-age={}".format(cache_time))
-        self.send_header(
-            HTTP_HEADER_EXPIRES,
-            self.date_time_string(time.time()+cache_time))
-
-    def set_session_cookie_header(self):
-        """Add the header for the session cookie and return session ID."""
-        if not self.authenticated:
-            return None
-
-        session_id = self.get_cookie_session_id()
-
-        if session_id is not None:
-            self.server.sessions.extend_validation(session_id)
-            return session_id
-
-        self.send_header(
-            'Set-Cookie',
-            '{}={}'.format(SESSION_KEY, self.server.sessions.create())
-        )
-
-        return session_id
-
-    def verify_session(self):
-        """Verify that we are in a valid session."""
-        return self.get_cookie_session_id() is not None
-
-    def get_cookie_session_id(self):
-        """Extract the current session ID from the cookie.
-
-        Return None if not set or invalid.
-        """
-        if 'Cookie' not in self.headers:
-            return None
-
-        cookie = cookies.SimpleCookie()
-        try:
-            cookie.load(self.headers["Cookie"])
-        except cookies.CookieError:
-            return None
-
-        morsel = cookie.get(SESSION_KEY)
-
-        if morsel is None:
-            return None
-
-        session_id = cookie[SESSION_KEY].value
-
-        if self.server.sessions.is_valid(session_id):
-            return session_id
-
-        return None
-
-    def destroy_session(self):
-        """Destroy the session."""
-        session_id = self.get_cookie_session_id()
-
-        if session_id is None:
-            return
-
-        self.send_header('Set-Cookie', '')
-        self.server.sessions.destroy(session_id)
-
-
-def session_valid_time():
-    """Time till when a session will be valid."""
-    return date_util.utcnow() + timedelta(seconds=SESSION_TIMEOUT_SECONDS)
-
-
-class SessionStore(object):
-    """Responsible for storing and retrieving HTTP sessions."""
-
-    def __init__(self):
-        """Setup the session store."""
-        self._sessions = {}
-        self._lock = threading.RLock()
-
-    @util.Throttle(SESSION_CLEAR_INTERVAL)
-    def _remove_expired(self):
-        """Remove any expired sessions."""
-        now = date_util.utcnow()
-        for key in [key for key, valid_time in self._sessions.items()
-                    if valid_time < now]:
-            self._sessions.pop(key)
-
-    def is_valid(self, key):
-        """Return True if a valid session is given."""
-        with self._lock:
-            self._remove_expired()
-
-            return (key in self._sessions and
-                    self._sessions[key] > date_util.utcnow())
-
-    def extend_validation(self, key):
-        """Extend a session validation time."""
-        with self._lock:
-            if key not in self._sessions:
-                return
-            self._sessions[key] = session_valid_time()
-
-    def destroy(self, key):
-        """Destroy a session by key."""
-        with self._lock:
-            self._sessions.pop(key, None)
-
-    def create(self):
-        """Create a new session."""
-        with self._lock:
-            session_id = util.get_random_string(20)
-
-            while session_id in self._sessions:
-                session_id = util.get_random_string(20)
-
-            self._sessions[session_id] = session_valid_time()
-
-            return session_id
+                fil = open(fil, mode='br')
+            except IOError:
+                raise NotFound()
+
+        return self.Response(wrap_file(request.environ, fil),
+                             mimetype=mimetype, direct_passthrough=True)
+
+    def options(self, request):
+        """Default handler for OPTIONS (necessary for CORS preflight)."""
+        return self.Response('', status=200)

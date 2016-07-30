@@ -26,9 +26,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             _LOGGER.error("Missing required variable: host")
             continue
         host = switch.get('host')
+        mac = switch.get('mac')
         try:
             switches.append(S20Switch(switch.get('name', DEFAULT_NAME),
-                                      S20(host)))
+                                      S20(host, mac=mac)))
             _LOGGER.info("Initialized S20 at %s", host)
         except S20Exception:
             _LOGGER.exception("S20 at %s couldn't be initialized",

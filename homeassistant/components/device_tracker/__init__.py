@@ -12,11 +12,13 @@ import os
 import threading
 
 from homeassistant.bootstrap import prepare_setup_platform
-from homeassistant.components import discovery, group, zone
+from homeassistant.components import group, zone
+from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 
@@ -25,6 +27,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 DOMAIN = "device_tracker"
 DEPENDENCIES = ['zone']
 
@@ -60,7 +63,7 @@ ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
 
 DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_NETGEAR: 'netgear',
+    SERVICE_NETGEAR: 'netgear',
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,8 +96,11 @@ def setup(hass, config):
     yaml_path = hass.config.path(YAML_DEVICES)
 
     conf = config.get(DOMAIN, {})
+
+    # Config can be an empty list. In that case, substitute a dict
     if isinstance(conf, list):
-        conf = conf[0]
+        conf = conf[0] if len(conf) > 0 else {}
+
     consider_home = timedelta(
         seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
                              DEFAULT_CONSIDER_HOME))
@@ -129,8 +135,7 @@ def setup(hass, config):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
 
-    for p_type, p_config in \
-            config_per_platform(config, DOMAIN, _LOGGER):
+    for p_type, p_config in config_per_platform(config, DOMAIN):
         setup_platform(p_type, p_config)
 
     def device_tracker_discovered(service, info):
@@ -193,7 +198,7 @@ class DeviceTracker(object):
                 if not device:
                     dev_id = util.slugify(host_name or '') or util.slugify(mac)
             else:
-                dev_id = str(dev_id).lower()
+                dev_id = cv.slug(str(dev_id).lower())
                 device = self.devices.get(dev_id)
 
             if device:
@@ -204,6 +209,7 @@ class DeviceTracker(object):
                 return
 
             # If no device can be found, create it
+            dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
             device = Device(
                 self.hass, self.consider_home, self.home_range, self.track_new,
                 dev_id, mac, (host_name or dev_id).replace('_', ' '))
@@ -371,12 +377,16 @@ def load_config(path, hass, consider_home, home_range):
     """Load devices from YAML configuration file."""
     if not os.path.isfile(path):
         return []
-    return [
-        Device(hass, consider_home, home_range, device.get('track', False),
-               str(dev_id).lower(), str(device.get('mac')).upper(),
-               device.get('name'), device.get('picture'),
-               device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
-        for dev_id, device in load_yaml_config_file(path).items()]
+    try:
+        return [
+            Device(hass, consider_home, home_range, device.get('track', False),
+                   str(dev_id).lower(), str(device.get('mac')).upper(),
+                   device.get('name'), device.get('picture'),
+                   device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
+            for dev_id, device in load_yaml_config_file(path).items()]
+    except HomeAssistantError:
+        # When YAML file could not be loaded/did not contain a dict
+        return []
 
 
 def setup_scanner_platform(hass, config, scanner, see_device):

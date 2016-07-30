@@ -14,7 +14,7 @@ from homeassistant.helpers import validate_config
 CONF_SENDER = 'sender'
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['messagebird==1.1.1']
+REQUIREMENTS = ['messagebird==1.2.0']
 
 
 def is_valid_sender(sender):

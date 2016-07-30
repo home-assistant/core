@@ -170,8 +170,8 @@ class TestLight(unittest.TestCase):
         light.turn_on(self.hass, dev1.entity_id,
                       transition=10, brightness=20)
         light.turn_on(
-            self.hass, dev2.entity_id, rgb_color=[255, 255, 255])
-        light.turn_on(self.hass, dev3.entity_id, xy_color=[.4, .6])
+            self.hass, dev2.entity_id, rgb_color=(255, 255, 255))
+        light.turn_on(self.hass, dev3.entity_id, xy_color=(.4, .6))
 
         self.hass.pool.block_till_done()
 
@@ -182,10 +182,10 @@ class TestLight(unittest.TestCase):
             data)
 
         method, data = dev2.last_call('turn_on')
-        self.assertEquals(data[light.ATTR_RGB_COLOR], [255, 255, 255])
+        self.assertEquals(data[light.ATTR_RGB_COLOR], (255, 255, 255))
 
         method, data = dev3.last_call('turn_on')
-        self.assertEqual({light.ATTR_XY_COLOR: [.4, .6]}, data)
+        self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
 
         # One of the light profiles
         prof_name, prof_x, prof_y, prof_bri = 'relax', 0.5119, 0.4147, 144
@@ -195,23 +195,24 @@ class TestLight(unittest.TestCase):
         # Specify a profile and attributes to overwrite it
         light.turn_on(
             self.hass, dev2.entity_id,
-            profile=prof_name, brightness=100, xy_color=[.4, .6])
+            profile=prof_name, brightness=100, xy_color=(.4, .6))
 
         self.hass.pool.block_till_done()
 
         method, data = dev1.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: prof_bri,
-             light.ATTR_XY_COLOR: [prof_x, prof_y]},
+             light.ATTR_XY_COLOR: (prof_x, prof_y)},
             data)
 
         method, data = dev2.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: [.4, .6]},
+             light.ATTR_XY_COLOR: (.4, .6)},
             data)
 
         # Test shitty data
+        light.turn_on(self.hass)
         light.turn_on(self.hass, dev1.entity_id, profile="nonexisting")
         light.turn_on(self.hass, dev2.entity_id, xy_color=["bla-di-bla", 5])
         light.turn_on(self.hass, dev3.entity_id, rgb_color=[255, None, 2])
@@ -227,7 +228,7 @@ class TestLight(unittest.TestCase):
         method, data = dev3.last_call('turn_on')
         self.assertEqual({}, data)
 
-        # faulty attributes should not overwrite profile data
+        # faulty attributes will not trigger a service call
         light.turn_on(
             self.hass, dev1.entity_id,
             profile=prof_name, brightness='bright', rgb_color='yellowish')
@@ -235,10 +236,7 @@ class TestLight(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         method, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_BRIGHTNESS: prof_bri,
-             light.ATTR_XY_COLOR: [prof_x, prof_y]},
-            data)
+        self.assertEqual({}, data)
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
@@ -280,5 +278,5 @@ class TestLight(unittest.TestCase):
         method, data = dev1.last_call('turn_on')
 
         self.assertEqual(
-            {light.ATTR_XY_COLOR: [.4, .6], light.ATTR_BRIGHTNESS: 100},
+            {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
             data)

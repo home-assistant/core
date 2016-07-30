@@ -9,7 +9,8 @@ import logging
 from urllib.error import URLError
 
 from homeassistant.components.thermostat import (
-    STATE_COOL, STATE_HEAT, STATE_IDLE, ThermostatDevice)
+    STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_IDLE, STATE_OFF,
+    ThermostatDevice)
 from homeassistant.const import CONF_HOST, TEMP_FAHRENHEIT
 
 REQUIREMENTS = ['radiotherm==1.2']
@@ -45,6 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(tstats)
 
 
+# pylint: disable=abstract-method
 class RadioThermostat(ThermostatDevice):
     """Representation of a Radio Thermostat."""
 
@@ -80,7 +82,7 @@ class RadioThermostat(ThermostatDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return round(self._current_temperature, 1)
+        return self._current_temperature
 
     @property
     def operation(self):
@@ -90,7 +92,7 @@ class RadioThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return round(self._target_temperature, 1)
+        return self._target_temperature
 
     def update(self):
         """Update the data from the thermostat."""
@@ -121,3 +123,14 @@ class RadioThermostat(ThermostatDevice):
         now = datetime.datetime.now()
         self.device.time = {'day': now.weekday(),
                             'hour': now.hour, 'minute': now.minute}
+
+    def set_hvac_mode(self, mode):
+        """Set HVAC mode (auto, cool, heat, off)."""
+        if mode == STATE_OFF:
+            self.device.tmode = 0
+        elif mode == STATE_AUTO:
+            self.device.tmode = 3
+        elif mode == STATE_COOL:
+            self.device.t_cool = self._target_temperature
+        elif mode == STATE_HEAT:
+            self.device.t_heat = self._target_temperature

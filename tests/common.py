@@ -4,11 +4,13 @@ from datetime import timedelta
 from unittest import mock
 
 from homeassistant import core as ha, loader
+from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
+import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, TEMP_CELSIUS)
 from homeassistant.components import sun, mqtt
 
 _TEST_INSTANCE_PORT = SERVER_PORT
@@ -16,7 +18,7 @@ _TEST_INSTANCE_PORT = SERVER_PORT
 
 def get_test_config_dir():
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "config")
+    return os.path.join(os.path.dirname(__file__), "testing_config")
 
 
 def get_test_home_assistant(num_threads=None):
@@ -33,6 +35,9 @@ def get_test_home_assistant(num_threads=None):
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
+    hass.config.elevation = 0
+    hass.config.time_zone = date_util.get_time_zone('US/Pacific')
+    hass.config.temperature_unit = TEMP_CELSIUS
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
@@ -101,6 +106,13 @@ def ensure_sun_set(hass):
     fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
+def load_fixture(filename):
+    """Helper to load a fixture."""
+    path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
+    with open(path) as fp:
+        return fp.read()
+
+
 def mock_state_change_event(hass, new_state, old_state=None):
     """Mock state change envent."""
     event_data = {
@@ -116,37 +128,37 @@ def mock_state_change_event(hass, new_state, old_state=None):
 
 def mock_http_component(hass):
     """Mock the HTTP component."""
-    hass.http = MockHTTP()
+    hass.wsgi = mock.MagicMock()
     hass.config.components.append('http')
 
 
 @mock.patch('homeassistant.components.mqtt.MQTT')
 def mock_mqtt_component(hass, mock_mqtt):
     """Mock the MQTT component."""
-    mqtt.setup(hass, {
+    _setup_component(hass, mqtt.DOMAIN, {
         mqtt.DOMAIN: {
             mqtt.CONF_BROKER: 'mock-broker',
         }
     })
-    hass.config.components.append(mqtt.DOMAIN)
     return mock_mqtt
-
-
-class MockHTTP(object):
-    """Mock the HTTP module."""
-
-    def register_path(self, method, url, callback, require_auth=True):
-        """Register a path."""
-        pass
 
 
 class MockModule(object):
     """Representation of a fake module."""
 
-    def __init__(self, domain=None, dependencies=[], setup=None):
+    def __init__(self, domain=None, dependencies=None, setup=None,
+                 requirements=None, config_schema=None, platform_schema=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
-        self.DEPENDENCIES = dependencies
+        self.DEPENDENCIES = dependencies or []
+        self.REQUIREMENTS = requirements or []
+
+        if config_schema is not None:
+            self.CONFIG_SCHEMA = config_schema
+
+        if platform_schema is not None:
+            self.PLATFORM_SCHEMA = platform_schema
+
         # Setup a mock setup if none given.
         if setup is None:
             self.setup = lambda hass, config: True
@@ -157,10 +169,14 @@ class MockModule(object):
 class MockPlatform(object):
     """Provide a fake platform."""
 
-    def __init__(self, setup_platform=None, dependencies=[]):
+    def __init__(self, setup_platform=None, dependencies=None,
+                 platform_schema=None):
         """Initialize the platform."""
-        self.DEPENDENCIES = dependencies
+        self.DEPENDENCIES = dependencies or []
         self._setup_platform = setup_platform
+
+        if platform_schema is not None:
+            self.PLATFORM_SCHEMA = platform_schema
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
         """Setup the platform."""

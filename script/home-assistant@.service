@@ -1,5 +1,7 @@
 # This is a simple service file for systems with systemd to tun HA as user.
 #
+# For details please check https://home-assistant.io/getting-started/autostart/
+#
 [Unit]
 Description=Home Assistant for %i
 After=network.target
@@ -7,9 +9,12 @@ After=network.target
 [Service]
 Type=simple
 User=%i
-WorkingDirectory=%h
-ExecStart=/usr/bin/hass --config %h/.homeassistant/
+# Enable the following line if you get network-related HA errors during boot
+#ExecStartPre=/usr/bin/sleep 60
+# Use `whereis hass` to determine the path of hass
+ExecStart=/usr/bin/hass --runner
 SendSIGKILL=no
+RestartForceExitStatus=100
 
 [Install]
 WantedBy=multi-user.target

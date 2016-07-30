@@ -1,6 +1,7 @@
 """The tests for the MQTT switch platform."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.switch as switch
 from tests.common import (
@@ -21,8 +22,9 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        self.assertTrue(switch.setup(self.hass, {
-            'switch': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, switch.DOMAIN, {
+            switch.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -30,7 +32,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_on': 1,
                 'payload_off': 0
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
@@ -50,8 +52,9 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        self.assertTrue(switch.setup(self.hass, {
-            'switch': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, switch.DOMAIN, {
+            switch.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'command_topic': 'command-topic',
@@ -59,7 +62,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_off': 'beer off',
                 'qos': '2'
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
@@ -83,8 +86,9 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
-        self.assertTrue(switch.setup(self.hass, {
-            'switch': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, switch.DOMAIN, {
+            switch.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -93,7 +97,7 @@ class TestSensorMQTT(unittest.TestCase):
                 'payload_off': 'beer off',
                 'value_template': '{{ value_json.val }}'
             }
-        }))
+        })
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)

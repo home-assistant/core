@@ -5,7 +5,7 @@ from homeassistant.const import __version__
 
 PACKAGE_NAME = 'homeassistant'
 HERE = os.path.abspath(os.path.dirname(__file__))
-DOWNLOAD_URL = ('https://github.com/balloob/home-assistant/archive/'
+DOWNLOAD_URL = ('https://github.com/home-assistant/home-assistant/archive/'
                 '{}.zip'.format(__version__))
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
@@ -13,10 +13,12 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
-    'pytz>=2015.4',
+    'pytz>=2016.6.1',
     'pip>=7.0.0',
-    'vincenty==0.1.3',
     'jinja2>=2.8',
+    'voluptuous==0.9.1',
+    'typing>=3,<4',
+    'sqlalchemy==1.0.14',
 ]
 
 setup(

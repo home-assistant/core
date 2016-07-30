@@ -3,25 +3,26 @@
 import logging
 import logging.handlers
 import os
-import shutil
 import sys
 from collections import defaultdict
 from threading import RLock
 
+from types import ModuleType
+from typing import Any, Optional, Dict
+
+import voluptuous as vol
+
 import homeassistant.components as core_components
-import homeassistant.components.group as group
-import homeassistant.config as config_util
+from homeassistant.components import group, persistent_notification
+import homeassistant.config as conf_util
 import homeassistant.core as core
+import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
-import homeassistant.util.dt as date_util
-import homeassistant.util.location as loc_util
 import homeassistant.util.package as pkg_util
-from homeassistant.const import (
-    CONF_CUSTOMIZE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
-    CONF_TEMPERATURE_UNIT, CONF_TIME_ZONE, EVENT_COMPONENT_LOADED,
-    TEMP_CELCIUS, TEMP_FAHRENHEIT, __version__)
-from homeassistant.helpers import event_decorators, service
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import (
+    event_decorators, service, config_per_platform, extract_domain_configs)
 
 _LOGGER = logging.getLogger(__name__)
 _SETUP_LOCK = RLock()
@@ -29,11 +30,11 @@ _CURRENT_SETUP = []
 
 ATTR_COMPONENT = 'component'
 
-PLATFORM_FORMAT = '{}.{}'
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
 
-def setup_component(hass, domain, config=None):
+def setup_component(hass: core.HomeAssistant, domain: str,
+                    config: Optional[Dict]=None) -> bool:
     """Setup a component and all its dependencies."""
     if domain in hass.config.components:
         return True
@@ -56,13 +57,14 @@ def setup_component(hass, domain, config=None):
     return True
 
 
-def _handle_requirements(hass, component, name):
+def _handle_requirements(hass: core.HomeAssistant, component,
+                         name: str) -> bool:
     """Install the requirements for a component."""
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
 
     for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('lib')):
+        if not pkg_util.install_package(req, target=hass.config.path('deps')):
             _LOGGER.error('Not initializing %s because could not install '
                           'dependency %s', name, req)
             return False
@@ -70,9 +72,10 @@ def _handle_requirements(hass, component, name):
     return True
 
 
-def _setup_component(hass, domain, config):
+def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
     """Setup a component for Home Assistant."""
-    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-return-statements,too-many-branches
+    # pylint: disable=too-many-statements
     if domain in hass.config.components:
         return True
 
@@ -96,14 +99,68 @@ def _setup_component(hass, domain, config):
                 domain, ", ".join(missing_deps))
             return False
 
+        if hasattr(component, 'CONFIG_SCHEMA'):
+            try:
+                config = component.CONFIG_SCHEMA(config)
+            except vol.MultipleInvalid as ex:
+                cv.log_exception(_LOGGER, ex, domain, config)
+                return False
+
+        elif hasattr(component, 'PLATFORM_SCHEMA'):
+            platforms = []
+            for p_name, p_config in config_per_platform(config, domain):
+                # Validate component specific platform schema
+                try:
+                    p_validated = component.PLATFORM_SCHEMA(p_config)
+                except vol.MultipleInvalid as ex:
+                    cv.log_exception(_LOGGER, ex, domain, p_config)
+                    return False
+
+                # Not all platform components follow same pattern for platforms
+                # So if p_name is None we are not going to validate platform
+                # (the automation component is one of them)
+                if p_name is None:
+                    platforms.append(p_validated)
+                    continue
+
+                platform = prepare_setup_platform(hass, config, domain,
+                                                  p_name)
+
+                if platform is None:
+                    return False
+
+                # Validate platform specific schema
+                if hasattr(platform, 'PLATFORM_SCHEMA'):
+                    try:
+                        p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    except vol.MultipleInvalid as ex:
+                        cv.log_exception(_LOGGER, ex, '{}.{}'
+                                         .format(domain, p_name), p_validated)
+                        return False
+
+                platforms.append(p_validated)
+
+            # Create a copy of the configuration with all config for current
+            # component removed and add validated config back in.
+            filter_keys = extract_domain_configs(config, domain)
+            config = {key: value for key, value in config.items()
+                      if key not in filter_keys}
+            config[domain] = platforms
+
         if not _handle_requirements(hass, component, domain):
             return False
 
         _CURRENT_SETUP.append(domain)
 
         try:
-            if not component.setup(hass, config):
+            result = component.setup(hass, config)
+            if result is False:
                 _LOGGER.error('component %s failed to initialize', domain)
+                return False
+            elif result is not True:
+                _LOGGER.error('component %s did not return boolean if setup '
+                              'was successful. Disabling component.', domain)
+                loader.set_component(domain, None)
                 return False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
@@ -124,13 +181,14 @@ def _setup_component(hass, domain, config):
         return True
 
 
-def prepare_setup_platform(hass, config, domain, platform_name):
+def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
+                           platform_name: str) -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup."""
     _ensure_loader_prepared(hass)
 
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
-    platform = loader.get_component(platform_path)
+    platform = loader.get_platform(domain, platform_name)
 
     # Not found
     if platform is None:
@@ -156,15 +214,15 @@ def prepare_setup_platform(hass, config, domain, platform_name):
     return platform
 
 
-def mount_local_lib_path(config_dir):
-    """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'lib'))
-
-
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
-def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
-                     verbose=False, daemon=False, skip_pip=False,
-                     log_rotate_days=None):
+def from_config_dict(config: Dict[str, Any],
+                     hass: Optional[core.HomeAssistant]=None,
+                     config_dir: Optional[str]=None,
+                     enable_log: bool=True,
+                     verbose: bool=False,
+                     skip_pip: bool=False,
+                     log_rotate_days: Any=None) \
+                     -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a config dict.
 
     Dynamically loads required components and its dependencies.
@@ -174,13 +232,20 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            mount_local_lib_path(config_dir)
+            _mount_local_lib_path(config_dir)
 
-    process_ha_config_upgrade(hass)
-    process_ha_core_config(hass, config.get(core.DOMAIN, {}))
+    core_config = config.get(core.DOMAIN, {})
+
+    try:
+        conf_util.process_ha_core_config(hass, core_config)
+    except vol.Invalid as ex:
+        cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
+        return None
+
+    conf_util.process_ha_config_upgrade(hass)
 
     if enable_log:
-        enable_logging(hass, verbose, daemon, log_rotate_days)
+        enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -202,8 +267,9 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     if not core_components.setup(hass, config):
         _LOGGER.error('Home Assistant core failed to initialize. '
                       'Further initialization aborted.')
-
         return hass
+
+    persistent_notification.setup(hass, config)
 
     _LOGGER.info('Home Assistant core initialized')
 
@@ -218,8 +284,11 @@ def from_config_dict(config, hass=None, config_dir=None, enable_log=True,
     return hass
 
 
-def from_config_file(config_path, hass=None, verbose=False, daemon=False,
-                     skip_pip=True, log_rotate_days=None):
+def from_config_file(config_path: str,
+                     hass: Optional[core.HomeAssistant]=None,
+                     verbose: bool=False,
+                     skip_pip: bool=True,
+                     log_rotate_days: Any=None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -231,39 +300,41 @@ def from_config_file(config_path, hass=None, verbose=False, daemon=False,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    mount_local_lib_path(config_dir)
+    _mount_local_lib_path(config_dir)
 
-    enable_logging(hass, verbose, daemon, log_rotate_days)
+    enable_logging(hass, verbose, log_rotate_days)
 
-    config_dict = config_util.load_yaml_config_file(config_path)
+    try:
+        config_dict = conf_util.load_yaml_config_file(config_path)
+    except HomeAssistantError:
+        return None
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
 
 
-def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
+def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                   log_rotate_days=None) -> None:
     """Setup the logging."""
-    if not daemon:
-        logging.basicConfig(level=logging.INFO)
-        fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-               "[%(name)s] %(message)s%(reset)s")
-        try:
-            from colorlog import ColoredFormatter
-            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-                fmt,
-                datefmt='%y-%m-%d %H:%M:%S',
-                reset=True,
-                log_colors={
-                    'DEBUG': 'cyan',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red',
-                    'CRITICAL': 'red',
-                }
-            ))
-        except ImportError:
-            _LOGGER.warning(
-                "Colorlog package not found, console coloring disabled")
+    logging.basicConfig(level=logging.INFO)
+    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
+           "[%(name)s] %(message)s%(reset)s")
+    try:
+        from colorlog import ColoredFormatter
+        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+            fmt,
+            datefmt='%y-%m-%d %H:%M:%S',
+            reset=True,
+            log_colors={
+                'DEBUG': 'cyan',
+                'INFO': 'green',
+                'WARNING': 'yellow',
+                'ERROR': 'red',
+                'CRITICAL': 'red',
+            }
+        ))
+    except ImportError:
+        pass
 
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
@@ -294,107 +365,12 @@ def enable_logging(hass, verbose=False, daemon=False, log_rotate_days=None):
             'Unable to setup error log %s (access denied)', err_log_path)
 
 
-def process_ha_config_upgrade(hass):
-    """Upgrade config if necessary."""
-    version_path = hass.config.path('.HA_VERSION')
-
-    try:
-        with open(version_path, 'rt') as inp:
-            conf_version = inp.readline().strip()
-    except FileNotFoundError:
-        # Last version to not have this file
-        conf_version = '0.7.7'
-
-    if conf_version == __version__:
-        return
-
-    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
-                 __version__)
-
-    lib_path = hass.config.path('lib')
-    if os.path.isdir(lib_path):
-        shutil.rmtree(lib_path)
-
-    with open(version_path, 'wt') as outp:
-        outp.write(__version__)
-
-
-def process_ha_core_config(hass, config):
-    """Process the [homeassistant] section from the config."""
-    hac = hass.config
-
-    def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
-        if time_zone_str is None:
-            return
-
-        time_zone = date_util.get_time_zone(time_zone_str)
-
-        if time_zone:
-            hac.time_zone = time_zone
-            date_util.set_default_time_zone(time_zone)
-        else:
-            _LOGGER.error('Received invalid time zone %s', time_zone_str)
-
-    for key, attr, typ in ((CONF_LATITUDE, 'latitude', float),
-                           (CONF_LONGITUDE, 'longitude', float),
-                           (CONF_NAME, 'location_name', str)):
-        if key in config:
-            try:
-                setattr(hac, attr, typ(config[key]))
-            except ValueError:
-                _LOGGER.error('Received invalid %s value for %s: %s',
-                              typ.__name__, key, attr)
-
-    set_time_zone(config.get(CONF_TIME_ZONE))
-
-    customize = config.get(CONF_CUSTOMIZE)
-
-    if isinstance(customize, dict):
-        for entity_id, attrs in config.get(CONF_CUSTOMIZE, {}).items():
-            if not isinstance(attrs, dict):
-                continue
-            Entity.overwrite_attribute(entity_id, attrs.keys(), attrs.values())
-
-    if CONF_TEMPERATURE_UNIT in config:
-        unit = config[CONF_TEMPERATURE_UNIT]
-
-        if unit == 'C':
-            hac.temperature_unit = TEMP_CELCIUS
-        elif unit == 'F':
-            hac.temperature_unit = TEMP_FAHRENHEIT
-
-    # If we miss some of the needed values, auto detect them
-    if None not in (
-            hac.latitude, hac.longitude, hac.temperature_unit, hac.time_zone):
-        return
-
-    _LOGGER.info('Auto detecting location and temperature unit')
-
-    info = loc_util.detect_location_info()
-
-    if info is None:
-        _LOGGER.error('Could not detect location information')
-        return
-
-    if hac.latitude is None and hac.longitude is None:
-        hac.latitude = info.latitude
-        hac.longitude = info.longitude
-
-    if hac.temperature_unit is None:
-        if info.use_fahrenheit:
-            hac.temperature_unit = TEMP_FAHRENHEIT
-        else:
-            hac.temperature_unit = TEMP_CELCIUS
-
-    if hac.location_name is None:
-        hac.location_name = info.city
-
-    if hac.time_zone is None:
-        set_time_zone(info.time_zone)
-
-
-def _ensure_loader_prepared(hass):
+def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
     """Ensure Home Assistant loader is prepared."""
     if not loader.PREPARED:
         loader.prepare(hass)
+
+
+def _mount_local_lib_path(config_dir: str) -> None:
+    """Add local library to Python Path."""
+    sys.path.insert(0, os.path.join(config_dir, 'deps'))

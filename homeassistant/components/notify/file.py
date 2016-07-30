@@ -44,12 +44,12 @@ class FileNotificationService(BaseNotificationService):
             if os.stat(self.filepath).st_size == 0:
                 title = '{} notifications (Log started: {})\n{}\n'.format(
                     kwargs.get(ATTR_TITLE),
-                    dt_util.strip_microseconds(dt_util.utcnow()),
+                    dt_util.utcnow().isoformat(),
                     '-' * 80)
                 file.write(title)
 
             if self.add_timestamp == 1:
-                text = '{} {}\n'.format(dt_util.utcnow(), message)
+                text = '{} {}\n'.format(dt_util.utcnow().isoformat(), message)
                 file.write(text)
             else:
                 text = '{}\n'.format(message)

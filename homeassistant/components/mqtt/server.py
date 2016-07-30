@@ -1,4 +1,9 @@
-"""MQTT server."""
+"""
+Support for a local MQTT broker.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mqtt/#use-the-embedded-broker
+"""
 import asyncio
 import logging
 import tempfile
@@ -7,7 +12,7 @@ import threading
 from homeassistant.components.mqtt import PROTOCOL_311
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['hbmqtt==0.6.3']
+REQUIREMENTS = ['hbmqtt==0.7.1']
 DEPENDENCIES = ['http']
 
 

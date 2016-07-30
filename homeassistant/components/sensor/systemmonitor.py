@@ -1,5 +1,5 @@
 """
-Support for monitoring the local system..
+Support for monitoring the local system.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.systemmonitor/
@@ -10,7 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['psutil==4.1.0']
+REQUIREMENTS = ['psutil==4.3.0']
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -24,9 +24,9 @@ SENSOR_TYPES = {
     'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
     'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
     'network_out': ['Sent', 'MiB', 'mdi:server-network'],
-    'network_in': ['Recieved', 'MiB', 'mdi:server-network'],
+    'network_in': ['Received', 'MiB', 'mdi:server-network'],
     'packets_out': ['Packets sent', '', 'mdi:server-network'],
-    'packets_in': ['Packets recieved', '', 'mdi:server-network'],
+    'packets_in': ['Packets received', '', 'mdi:server-network'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last Boot', '', 'mdi:clock'],
@@ -131,9 +131,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'ipv6_address':
             self._state = psutil.net_if_addrs()[self.argument][1][1]
         elif self.type == 'last_boot':
-            self._state = dt_util.datetime_to_date_str(
-                dt_util.as_local(
-                    dt_util.utc_from_timestamp(psutil.boot_time())))
+            self._state = dt_util.as_local(
+                dt_util.utc_from_timestamp(psutil.boot_time())
+            ).date().isoformat()
         elif self.type == 'since_last_boot':
             self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 psutil.boot_time())

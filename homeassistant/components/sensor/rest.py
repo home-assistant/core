@@ -5,22 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
-from datetime import timedelta
 
 import requests
 
 from homeassistant.const import CONF_VALUE_TEMPLATE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_METHOD = 'GET'
-
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-variable
@@ -96,7 +91,6 @@ class RestData(object):
         self._verify_ssl = verify_ssl
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from REST service with GET method."""
         try:

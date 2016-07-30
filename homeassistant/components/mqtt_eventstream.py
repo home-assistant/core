@@ -6,9 +6,11 @@ https://home-assistant.io/components/mqtt_eventstream/
 """
 import json
 
+import voluptuous as vol
+
 import homeassistant.loader as loader
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt import SERVICE_PUBLISH as MQTT_SVC_PUBLISH
+from homeassistant.components.mqtt import (
+    valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
     ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
@@ -18,12 +20,23 @@ from homeassistant.remote import JSONEncoder
 DOMAIN = "mqtt_eventstream"
 DEPENDENCIES = ['mqtt']
 
+CONF_PUBLISH_TOPIC = 'publish_topic'
+CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, config):
-    """Setup th MQTT eventstream component."""
+    """Setup the MQTT eventstream component."""
     mqtt = loader.get_component('mqtt')
-    pub_topic = config[DOMAIN].get('publish_topic', None)
-    sub_topic = config[DOMAIN].get('subscribe_topic', None)
+    conf = config.get(DOMAIN, {})
+    pub_topic = conf.get(CONF_PUBLISH_TOPIC)
+    sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
 
     def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
@@ -36,8 +49,8 @@ def setup(hass, config):
         # to the MQTT topic, or you will end up in an infinite loop.
         if event.event_type == EVENT_CALL_SERVICE:
             if (
-                    event.data.get('domain') == MQTT_DOMAIN and
-                    event.data.get('service') == MQTT_SVC_PUBLISH and
+                    event.data.get('domain') == mqtt.DOMAIN and
+                    event.data.get('service') == mqtt.SERVICE_PUBLISH and
                     event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic
             ):
                 return

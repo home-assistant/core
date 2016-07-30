@@ -7,15 +7,18 @@ https://home-assistant.io/components/media_player/
 import logging
 import os
 
-from homeassistant.components import discovery
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE,
+    SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
@@ -26,14 +29,9 @@ SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-DISCOVERY_PLATFORMS = {
-    discovery.SERVICE_CAST: 'cast',
-    discovery.SERVICE_SONOS: 'sonos',
-    discovery.SERVICE_PLEX: 'plex',
-    discovery.SERVICE_SQUEEZEBOX: 'squeezebox',
-}
-
 SERVICE_PLAY_MEDIA = 'play_media'
+SERVICE_SELECT_SOURCE = 'select_source'
+SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -54,6 +52,9 @@ ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
+ATTR_INPUT_SOURCE = 'source'
+ATTR_INPUT_SOURCE_LIST = 'source_list'
+ATTR_MEDIA_ENQUEUE = 'enqueue'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -73,7 +74,11 @@ SUPPORT_TURN_ON = 128
 SUPPORT_TURN_OFF = 256
 SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
+SUPPORT_SELECT_SOURCE = 2048
+SUPPORT_STOP = 4096
+SUPPORT_CLEAR_PLAYLIST = 8192
 
+# simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: 'turn_on',
     SERVICE_TURN_OFF: 'turn_off',
@@ -83,9 +88,11 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_PLAY_PAUSE: 'media_play_pause',
     SERVICE_MEDIA_PLAY: 'media_play',
     SERVICE_MEDIA_PAUSE: 'media_pause',
+    SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_PLAY_MEDIA: 'play_media',
+    SERVICE_SELECT_SOURCE: 'select_source',
+    SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
 }
 
 ATTR_TO_PROPERTY = [
@@ -107,7 +114,37 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_SUPPORTED_MEDIA_COMMANDS,
+    ATTR_INPUT_SOURCE,
+    ATTR_INPUT_SOURCE_LIST,
 ]
+
+# Service call validation schemas
+MEDIA_PLAYER_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+MEDIA_PLAYER_MUTE_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean,
+})
+
+MEDIA_PLAYER_SET_VOLUME_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float,
+})
+
+MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SEEK_POSITION):
+        vol.All(vol.Coerce(float), vol.Range(min=0)),
+})
+
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    ATTR_MEDIA_ENQUEUE: cv.boolean,
+})
+
+MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_INPUT_SOURCE): cv.string,
+})
 
 
 def is_on(hass, entity_id=None):
@@ -189,6 +226,12 @@ def media_pause(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
 
 
+def media_stop(hass, entity_id=None):
+    """Send the media player the stop command."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
+
+
 def media_next_track(hass, entity_id=None):
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -208,7 +251,7 @@ def media_seek(hass, position, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_MEDIA_SEEK, data)
 
 
-def play_media(hass, media_type, media_id, entity_id=None):
+def play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type,
             ATTR_MEDIA_CONTENT_ID: media_id}
@@ -216,14 +259,32 @@ def play_media(hass, media_type, media_id, entity_id=None):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
+    if enqueue:
+        data[ATTR_MEDIA_ENQUEUE] = enqueue
+
     hass.services.call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+
+
+def select_source(hass, source, entity_id=None):
+    """Send the media player the command to select input source."""
+    data = {ATTR_INPUT_SOURCE: source}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
+
+
+def clear_playlist(hass, entity_id=None):
+    """Send the media player the command for clear playlist."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
 
 def setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
-        DISCOVERY_PLATFORMS)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     component.setup(config)
 
@@ -242,17 +303,12 @@ def setup(hass, config):
 
     for service in SERVICE_TO_METHOD:
         hass.services.register(DOMAIN, service, media_player_service_handler,
-                               descriptions.get(service))
+                               descriptions.get(service),
+                               schema=MEDIA_PLAYER_SCHEMA)
 
     def volume_set_service(service):
         """Set specified volume on the media player."""
         volume = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-
-        if volume is None:
-            _LOGGER.error(
-                'Received call to %s without attribute %s',
-                service.service, ATTR_MEDIA_VOLUME_LEVEL)
-            return
 
         for player in component.extract_from_service(service):
             player.set_volume_level(volume)
@@ -261,17 +317,12 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_VOLUME_SET, volume_set_service,
-                           descriptions.get(SERVICE_VOLUME_SET))
+                           descriptions.get(SERVICE_VOLUME_SET),
+                           schema=MEDIA_PLAYER_SET_VOLUME_SCHEMA)
 
     def volume_mute_service(service):
         """Mute (true) or unmute (false) the media player."""
         mute = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-
-        if mute is None:
-            _LOGGER.error(
-                'Received call to %s without attribute %s',
-                service.service, ATTR_MEDIA_VOLUME_MUTED)
-            return
 
         for player in component.extract_from_service(service):
             player.mute_volume(mute)
@@ -280,17 +331,12 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_VOLUME_MUTE, volume_mute_service,
-                           descriptions.get(SERVICE_VOLUME_MUTE))
+                           descriptions.get(SERVICE_VOLUME_MUTE),
+                           schema=MEDIA_PLAYER_MUTE_VOLUME_SCHEMA)
 
     def media_seek_service(service):
         """Seek to a position."""
         position = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-
-        if position is None:
-            _LOGGER.error(
-                'Received call to %s without attribute %s',
-                service.service, ATTR_MEDIA_SEEK_POSITION)
-            return
 
         for player in component.extract_from_service(service):
             player.media_seek(position)
@@ -299,30 +345,43 @@ def setup(hass, config):
                 player.update_ha_state(True)
 
     hass.services.register(DOMAIN, SERVICE_MEDIA_SEEK, media_seek_service,
-                           descriptions.get(SERVICE_MEDIA_SEEK))
+                           descriptions.get(SERVICE_MEDIA_SEEK),
+                           schema=MEDIA_PLAYER_MEDIA_SEEK_SCHEMA)
+
+    def select_source_service(service):
+        """Change input to selected source."""
+        input_source = service.data.get(ATTR_INPUT_SOURCE)
+
+        for player in component.extract_from_service(service):
+            player.select_source(input_source)
+
+            if player.should_poll:
+                player.update_ha_state(True)
+
+    hass.services.register(DOMAIN, SERVICE_SELECT_SOURCE,
+                           select_source_service,
+                           descriptions.get(SERVICE_SELECT_SOURCE),
+                           schema=MEDIA_PLAYER_SELECT_SOURCE_SCHEMA)
 
     def play_media_service(service):
         """Play specified media_id on the media player."""
         media_type = service.data.get(ATTR_MEDIA_CONTENT_TYPE)
         media_id = service.data.get(ATTR_MEDIA_CONTENT_ID)
+        enqueue = service.data.get(ATTR_MEDIA_ENQUEUE)
 
-        if media_type is None or media_id is None:
-            missing_attr = (ATTR_MEDIA_CONTENT_TYPE if media_type is None
-                            else ATTR_MEDIA_CONTENT_ID)
-            _LOGGER.error(
-                'Received call to %s without attribute %s',
-                service.service, missing_attr)
-            return
+        kwargs = {
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        }
 
         for player in component.extract_from_service(service):
-            player.play_media(media_type, media_id)
+            player.play_media(media_type, media_id, **kwargs)
 
             if player.should_poll:
                 player.update_ha_state(True)
 
-    hass.services.register(
-        DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
-        descriptions.get(SERVICE_PLAY_MEDIA))
+    hass.services.register(DOMAIN, SERVICE_PLAY_MEDIA, play_media_service,
+                           descriptions.get(SERVICE_PLAY_MEDIA),
+                           schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA)
 
     return True
 
@@ -430,6 +489,16 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def source(self):
+        """Name of the current input source."""
+        return None
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return None
+
+    @property
     def supported_media_commands(self):
         """Flag media commands that are supported."""
         return 0
@@ -458,6 +527,10 @@ class MediaPlayerDevice(Entity):
         """Send pause command."""
         raise NotImplementedError()
 
+    def media_stop(self):
+        """Send stop command."""
+        raise NotImplementedError()
+
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
@@ -474,11 +547,24 @@ class MediaPlayerDevice(Entity):
         """Play a piece of media."""
         raise NotImplementedError()
 
+    def select_source(self, source):
+        """Select input source."""
+        raise NotImplementedError()
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
         """Boolean if pause is supported."""
         return bool(self.supported_media_commands & SUPPORT_PAUSE)
+
+    @property
+    def support_stop(self):
+        """Boolean if stop is supported."""
+        return bool(self.supported_media_commands & SUPPORT_STOP)
 
     @property
     def support_seek(self):
@@ -509,6 +595,16 @@ class MediaPlayerDevice(Entity):
     def support_play_media(self):
         """Boolean if play media command supported."""
         return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+
+    @property
+    def support_select_source(self):
+        """Boolean if select source command supported."""
+        return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
+
+    @property
+    def support_clear_playlist(self):
+        """Boolean if clear playlist command supported."""
+        return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
 
     def toggle(self):
         """Toggle the power on the media player."""

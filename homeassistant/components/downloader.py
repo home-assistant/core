@@ -10,8 +10,10 @@ import re
 import threading
 
 import requests
+import voluptuous as vol
 
 from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import sanitize_filename
 
 DOMAIN = "downloader"
@@ -20,6 +22,12 @@ SERVICE_DOWNLOAD_FILE = "download_file"
 
 ATTR_URL = "url"
 ATTR_SUBDIR = "subdir"
+
+SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
+    # pylint: disable=no-value-for-parameter
+    vol.Required(ATTR_URL): vol.Url(),
+    vol.Optional(ATTR_SUBDIR): cv.string,
+})
 
 CONF_DOWNLOAD_DIR = 'download_dir'
 
@@ -48,10 +56,6 @@ def setup(hass, config):
 
     def download_file(service):
         """Start thread to download file specified in the URL."""
-        if ATTR_URL not in service.data:
-            logger.error("Service called but 'url' parameter not specified.")
-            return
-
         def do_download():
             """Download the file."""
             try:
@@ -127,7 +131,7 @@ def setup(hass, config):
 
         threading.Thread(target=do_download).start()
 
-    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE,
-                           download_file)
+    hass.services.register(DOMAIN, SERVICE_DOWNLOAD_FILE, download_file,
+                           schema=SERVICE_DOWNLOAD_FILE_SCHEMA)
 
     return True

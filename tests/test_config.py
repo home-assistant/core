@@ -1,19 +1,29 @@
 """Test config utils."""
 # pylint: disable=too-many-public-methods,protected-access
+import os
+import tempfile
 import unittest
 import unittest.mock as mock
-import os
 
-from homeassistant.core import DOMAIN, HomeAssistantError
+import pytest
+from voluptuous import MultipleInvalid
+
+from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
-    CONF_TIME_ZONE)
+    CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
+    TEMP_FAHRENHEIT)
+from homeassistant.util import location as location_util, dt as dt_util
+from homeassistant.helpers.entity import Entity
 
-from tests.common import get_test_config_dir
+from tests.common import (
+    get_test_config_dir, get_test_home_assistant)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
+VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
+ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
 def create_file(path):
@@ -27,8 +37,16 @@ class TestConfig(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up."""
+        dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
+
         if os.path.isfile(YAML_PATH):
             os.remove(YAML_PATH)
+
+        if os.path.isfile(VERSION_PATH):
+            os.remove(VERSION_PATH)
+
+        if hasattr(self, 'hass'):
+            self.hass.stop()
 
     def test_create_default_config(self):
         """Test creation of default config."""
@@ -105,8 +123,15 @@ class TestConfig(unittest.TestCase):
             [('hello', 0), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=location_util.LocationInfo(
+                    '0.0.0.0', 'US', 'United States', 'CA', 'California',
+                    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+                    -117.2073, True))
+    @mock.patch('homeassistant.util.location.elevation', return_value=101)
     @mock.patch('builtins.print')
-    def test_create_default_config_detect_location(self, mock_print):
+    def test_create_default_config_detect_location(self, mock_detect,
+                                                   mock_elev, mock_print):
         """Test that detect location sets the correct config keys."""
         config_util.ensure_config_exists(CONFIG_DIR)
 
@@ -117,15 +142,16 @@ class TestConfig(unittest.TestCase):
         ha_conf = config[DOMAIN]
 
         expected_values = {
-            CONF_LATITUDE: 2.0,
-            CONF_LONGITUDE: 1.0,
+            CONF_LATITUDE: 32.8594,
+            CONF_LONGITUDE: -117.2073,
+            CONF_ELEVATION: 101,
             CONF_TEMPERATURE_UNIT: 'F',
             CONF_NAME: 'Home',
             CONF_TIME_ZONE: 'America/Los_Angeles'
         }
 
-        self.assertEqual(expected_values, ha_conf)
-        self.assertTrue(mock_print.called)
+        assert expected_values == ha_conf
+        assert mock_print.called
 
     @mock.patch('builtins.print')
     def test_create_default_config_returns_none_if_write_error(self,
@@ -138,3 +164,152 @@ class TestConfig(unittest.TestCase):
             config_util.create_default_config(
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
+
+    def test_core_config_schema(self):
+        for value in (
+            {'temperature_unit': 'K'},
+            {'time_zone': 'non-exist'},
+            {'latitude': '91'},
+            {'longitude': -181},
+            {'customize': 'bla'},
+            {'customize': {'invalid_entity_id': {}}},
+            {'customize': {'light.sensor': 100}},
+        ):
+            with pytest.raises(MultipleInvalid):
+                config_util.CORE_CONFIG_SCHEMA(value)
+
+        config_util.CORE_CONFIG_SCHEMA({
+            'name': 'Test name',
+            'latitude': '-23.45',
+            'longitude': '123.45',
+            'temperature_unit': 'c',
+            'customize': {
+                'sensor.temperature': {
+                    'hidden': True,
+                },
+            },
+        })
+
+    def test_entity_customization(self):
+        """Test entity customization through configuration."""
+        self.hass = get_test_home_assistant()
+
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        config_util.process_ha_core_config(self.hass, config)
+
+        entity = Entity()
+        entity.entity_id = 'test.test'
+        entity.hass = self.hass
+        entity.update_ha_state()
+
+        state = self.hass.states.get('test.test')
+
+        assert state.attributes['hidden']
+
+    def test_remove_lib_on_upgrade(self):
+        """Test removal of library on upgrade."""
+        with tempfile.TemporaryDirectory() as config_dir:
+            version_path = os.path.join(config_dir, '.HA_VERSION')
+            lib_dir = os.path.join(config_dir, 'deps')
+            check_file = os.path.join(lib_dir, 'check')
+
+            with open(version_path, 'wt') as outp:
+                outp.write('0.7.0')
+
+            os.mkdir(lib_dir)
+
+            with open(check_file, 'w'):
+                pass
+
+            self.hass = get_test_home_assistant()
+            self.hass.config.config_dir = config_dir
+
+            assert os.path.isfile(check_file)
+            config_util.process_ha_config_upgrade(self.hass)
+            assert not os.path.isfile(check_file)
+
+    def test_not_remove_lib_if_not_upgrade(self):
+        """Test removal of library with no upgrade."""
+        with tempfile.TemporaryDirectory() as config_dir:
+            version_path = os.path.join(config_dir, '.HA_VERSION')
+            lib_dir = os.path.join(config_dir, 'deps')
+            check_file = os.path.join(lib_dir, 'check')
+
+            with open(version_path, 'wt') as outp:
+                outp.write(__version__)
+
+            os.mkdir(lib_dir)
+
+            with open(check_file, 'w'):
+                pass
+
+            self.hass = get_test_home_assistant()
+            self.hass.config.config_dir = config_dir
+
+            config_util.process_ha_config_upgrade(self.hass)
+
+            assert os.path.isfile(check_file)
+
+    def test_loading_configuration(self):
+        """Test loading core config onto hass object."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {
+            'latitude': 60,
+            'longitude': 50,
+            'elevation': 25,
+            'name': 'Huis',
+            'temperature_unit': 'F',
+            'time_zone': 'America/New_York',
+        })
+
+        assert config.latitude == 60
+        assert config.longitude == 50
+        assert config.elevation == 25
+        assert config.location_name == 'Huis'
+        assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.time_zone.zone == 'America/New_York'
+
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=location_util.LocationInfo(
+                    '0.0.0.0', 'US', 'United States', 'CA', 'California',
+                    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+                    -117.2073, True))
+    @mock.patch('homeassistant.util.location.elevation', return_value=101)
+    def test_discovering_configuration(self, mock_detect, mock_elevation):
+        """Test auto discovery for missing core configs."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {})
+
+        assert config.latitude == 32.8594
+        assert config.longitude == -117.2073
+        assert config.elevation == 101
+        assert config.location_name == 'San Diego'
+        assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.time_zone.zone == 'America/Los_Angeles'
+
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=None)
+    @mock.patch('homeassistant.util.location.elevation', return_value=0)
+    def test_discovering_configuration_auto_detect_fails(self, mock_detect,
+                                                         mock_elevation):
+        """Test config remains unchanged if discovery fails."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {})
+
+        blankConfig = Config()
+        assert config.latitude == blankConfig.latitude
+        assert config.longitude == blankConfig.longitude
+        assert config.elevation == blankConfig.elevation
+        assert config.location_name == blankConfig.location_name
+        assert config.temperature_unit == blankConfig.temperature_unit
+        assert config.time_zone == blankConfig.time_zone

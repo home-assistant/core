@@ -2,6 +2,7 @@
 import unittest
 import os
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
@@ -31,11 +32,13 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         topic = '/location/paulus'
         location = 'work'
 
-        self.assertTrue(device_tracker.setup(self.hass, {
+        self.hass.config.components = ['mqtt', 'zone']
+        assert _setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',
                 'devices': {dev_id: topic}
-            }}))
+            }
+        })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.pool.block_till_done()
         self.assertEqual(location, self.hass.states.get(enttiy_id).state)

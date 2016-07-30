@@ -6,7 +6,10 @@ at https://home-assistant.io/components/input_slider/
 """
 import logging
 
-from homeassistant.const import ATTR_ENTITY_ID
+import voluptuous as vol
+
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import slugify
@@ -28,6 +31,11 @@ ATTR_MAX = 'max'
 ATTR_STEP = 'step'
 
 SERVICE_SELECT_VALUE = 'select_value'
+
+SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): vol.Coerce(float),
+})
 
 
 def select_value(hass, entity_id, value):
@@ -60,18 +68,18 @@ def setup(hass, config):
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
-        state = cfg.get(CONF_INITIAL)
-        step = cfg.get(CONF_STEP)
+        state = cfg.get(CONF_INITIAL, minimum)
+        step = cfg.get(CONF_STEP, 1)
         icon = cfg.get(CONF_ICON)
+        unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if state < minimum:
             state = minimum
         if state > maximum:
             state = maximum
 
-        entities.append(
-            InputSlider(object_id, name, state, minimum, maximum, step, icon)
-            )
+        entities.append(InputSlider(object_id, name, state, minimum, maximum,
+                                    step, icon, unit))
 
     if not entities:
         return False
@@ -81,10 +89,11 @@ def setup(hass, config):
         target_inputs = component.extract_from_service(call)
 
         for input_slider in target_inputs:
-            input_slider.select_value(call.data.get(ATTR_VALUE))
+            input_slider.select_value(call.data[ATTR_VALUE])
 
     hass.services.register(DOMAIN, SERVICE_SELECT_VALUE,
-                           select_value_service)
+                           select_value_service,
+                           schema=SERVICE_SELECT_VALUE_SCHEMA)
 
     component.add_entities(entities)
 
@@ -94,8 +103,9 @@ def setup(hass, config):
 class InputSlider(Entity):
     """Represent an slider."""
 
-    # pylint: disable=too-many-arguments
-    def __init__(self, object_id, name, state, minimum, maximum, step, icon):
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
+    def __init__(self, object_id, name, state, minimum, maximum, step, icon,
+                 unit):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -104,6 +114,7 @@ class InputSlider(Entity):
         self._maximum = maximum
         self._step = step
         self._icon = icon
+        self._unit = unit
 
     @property
     def should_poll(self):
@@ -126,6 +137,11 @@ class InputSlider(Entity):
         return self._current_value
 
     @property
+    def unit_of_measurement(self):
+        """Unit of measurement of slider."""
+        return self._unit
+
+    @property
     def state_attributes(self):
         """State attributes."""
         return {
@@ -136,7 +152,7 @@ class InputSlider(Entity):
 
     def select_value(self, value):
         """Select new value."""
-        num_value = int(value)
+        num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
             _LOGGER.warning('Invalid value: %s (range %s - %s)',
                             num_value, self._minimum, self._maximum)

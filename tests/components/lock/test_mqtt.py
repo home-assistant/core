@@ -1,6 +1,7 @@
 """The tests for the MQTT lock platform."""
 import unittest
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
                                  ATTR_ASSUMED_STATE)
 import homeassistant.components.lock as lock
@@ -22,8 +23,9 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        self.assertTrue(lock.setup(self.hass, {
-            'lock': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, lock.DOMAIN, {
+            lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -31,7 +33,7 @@ class TestLockMQTT(unittest.TestCase):
                 'payload_lock': 'LOCK',
                 'payload_unlock': 'UNLOCK'
             }
-        }))
+        })
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
@@ -51,8 +53,9 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        self.assertTrue(lock.setup(self.hass, {
-            'lock': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, lock.DOMAIN, {
+            lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'command_topic': 'command-topic',
@@ -60,7 +63,7 @@ class TestLockMQTT(unittest.TestCase):
                 'payload_unlock': 'UNLOCK',
                 'qos': 2
             }
-        }))
+        })
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
@@ -84,8 +87,9 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
-        self.assertTrue(lock.setup(self.hass, {
-            'lock': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, lock.DOMAIN, {
+            lock.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'state-topic',
@@ -94,7 +98,7 @@ class TestLockMQTT(unittest.TestCase):
                 'payload_unlock': 'UNLOCK',
                 'value_template': '{{ value_json.val }}'
             }
-        }))
+        })
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)

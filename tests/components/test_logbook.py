@@ -12,7 +12,7 @@ from homeassistant.components import logbook
 from tests.common import mock_http_component, get_test_home_assistant
 
 
-class TestComponentHistory(unittest.TestCase):
+class TestComponentLogbook(unittest.TestCase):
     """Test the History component."""
 
     def setUp(self):
@@ -37,7 +37,7 @@ class TestComponentHistory(unittest.TestCase):
             logbook.ATTR_NAME: 'Alarm',
             logbook.ATTR_MESSAGE: 'is triggered',
             logbook.ATTR_DOMAIN: 'switch',
-            logbook.ATTR_ENTITY_ID: 'test_switch'
+            logbook.ATTR_ENTITY_ID: 'switch.test_switch'
         }, True)
         self.hass.pool.block_till_done()
 
@@ -48,7 +48,7 @@ class TestComponentHistory(unittest.TestCase):
         self.assertEqual('is triggered', last_call.data.get(
             logbook.ATTR_MESSAGE))
         self.assertEqual('switch', last_call.data.get(logbook.ATTR_DOMAIN))
-        self.assertEqual('test_switch', last_call.data.get(
+        self.assertEqual('switch.test_switch', last_call.data.get(
             logbook.ATTR_ENTITY_ID))
 
     def test_service_call_create_log_book_entry_no_message(self):
@@ -68,7 +68,7 @@ class TestComponentHistory(unittest.TestCase):
         """Test humanify filter too frequent sensor values."""
         entity_id = 'sensor.bla'
 
-        pointA = dt_util.strip_microseconds(dt_util.utcnow().replace(minute=2))
+        pointA = dt_util.utcnow().replace(minute=2)
         pointB = pointA.replace(minute=5)
         pointC = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
 

@@ -3,7 +3,7 @@
 import unittest
 
 import homeassistant.components.configurator as configurator
-from homeassistant.const import EVENT_TIME_CHANGED
+from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
 
 from tests.common import get_test_home_assistant
 
@@ -40,26 +40,25 @@ class TestConfigurator(unittest.TestCase):
 
     def test_request_all_info(self):
         """Test request config with all possible info."""
-        values = [
-            "config_description", "config image url",
-            "config submit caption", []]
-
-        keys = [
-            configurator.ATTR_DESCRIPTION, configurator.ATTR_DESCRIPTION_IMAGE,
-            configurator.ATTR_SUBMIT_CAPTION, configurator.ATTR_FIELDS]
-
-        exp_attr = dict(zip(keys, values))
-
-        exp_attr[configurator.ATTR_CONFIGURE_ID] = configurator.request_config(
-            self.hass, "Test Request", lambda _: None,
-            *values)
+        exp_attr = {
+            ATTR_FRIENDLY_NAME: "Test Request",
+            configurator.ATTR_DESCRIPTION: "config description",
+            configurator.ATTR_DESCRIPTION_IMAGE: "config image url",
+            configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
+            configurator.ATTR_FIELDS: [],
+            configurator.ATTR_CONFIGURE_ID: configurator.request_config(
+                self.hass, "Test Request", lambda _: None,
+                "config description", "config image url",
+                "config submit caption"
+            )
+        }
 
         states = self.hass.states.all()
         self.assertEqual(1, len(states))
         state = states[0]
 
         self.assertEqual(configurator.STATE_CONFIGURE, state.state)
-        self.assertEqual(exp_attr, state.attributes)
+        assert exp_attr == dict(state.attributes)
 
     def test_callback_called_on_configure(self):
         """Test if our callback gets called when configure service called."""

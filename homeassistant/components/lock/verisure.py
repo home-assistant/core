@@ -39,12 +39,17 @@ class VerisureDoorlock(LockDevice):
     @property
     def name(self):
         """Return the name of the lock."""
-        return 'Lock {}'.format(self._id)
+        return '{}'.format(hub.lock_status[self._id].location)
 
     @property
     def state(self):
         """Return the state of the lock."""
         return self._state
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
 
     @property
     def code_format(self):

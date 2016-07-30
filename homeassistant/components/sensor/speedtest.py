@@ -7,14 +7,13 @@ https://home-assistant.io/components/sensor.speedtest/
 import logging
 import re
 import sys
-from datetime import timedelta
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 
 import homeassistant.util.dt as dt_util
+from homeassistant.components import recorder
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['speedtest-cli==0.3.4']
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +23,7 @@ _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
                               r'Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_DAY = 'day'
@@ -32,9 +32,6 @@ SENSOR_TYPES = {
     'download': ['Download', 'Mbit/s'],
     'upload': ['Upload', 'Mbit/s'],
 }
-
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -88,13 +85,27 @@ class SpeedtestSensor(Entity):
     def update(self):
         """Get the latest data and update the states."""
         data = self.speedtest_client.data
-        if data is not None:
-            if self.type == 'ping':
-                self._state = data['ping']
-            elif self.type == 'download':
-                self._state = data['download']
-            elif self.type == 'upload':
-                self._state = data['upload']
+        if data is None:
+            entity_id = 'sensor.speedtest_' + self._name.lower()
+            states = recorder.get_model('States')
+            try:
+                last_state = recorder.execute(
+                    recorder.query('States').filter(
+                        (states.entity_id == entity_id) &
+                        (states.last_changed == states.last_updated) &
+                        (states.state != 'unknown')
+                    ).order_by(states.state_id.desc()).limit(1))
+            except TypeError:
+                return
+            if not last_state:
+                return
+            self._state = last_state[0].state
+        elif self.type == 'ping':
+            self._state = data['ping']
+        elif self.type == 'download':
+            self._state = data['download']
+        elif self.type == 'upload':
+            self._state = data['upload']
 
 
 class SpeedtestData(object):
@@ -103,20 +114,24 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
-        self.hass = hass
-        self.path = hass.config.path
-        track_time_change(self.hass, self.update,
+        track_time_change(hass, self.update,
+                          second=config.get(CONF_SECOND, 0),
                           minute=config.get(CONF_MINUTE, 0),
                           hour=config.get(CONF_HOUR, None),
                           day=config.get(CONF_DAY, None))
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, now):
         """Get the latest data from speedtest.net."""
+        import speedtest_cli
+
         _LOGGER.info('Executing speedtest')
-        re_output = _SPEEDTEST_REGEX.split(
-            check_output([sys.executable, self.path(
-                'lib', 'speedtest_cli.py'), '--simple']).decode("utf-8"))
+        try:
+            re_output = _SPEEDTEST_REGEX.split(
+                check_output([sys.executable, speedtest_cli.__file__,
+                              '--simple']).decode("utf-8"))
+        except CalledProcessError as process_error:
+            _LOGGER.error('Error executing speedtest: %s', process_error)
+            return
         self.data = {'ping': round(float(re_output[1]), 2),
                      'download': round(float(re_output[2]), 2),
                      'upload': round(float(re_output[3]), 2)}

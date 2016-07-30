@@ -14,6 +14,9 @@ import threading
 import time
 from types import MappingProxyType
 
+from typing import Any, Callable
+import voluptuous as vol
+
 import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -25,7 +28,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELCIUS,
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
@@ -47,64 +50,17 @@ MIN_WORKER_THREAD = 2
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeAssistant(object):
-    """Root object of the Home Assistant home automation."""
+class CoreState(enum.Enum):
+    """Represent the current state of Home Assistant."""
 
-    def __init__(self):
-        """Initialize new Home Assistant object."""
-        self.pool = pool = create_worker_pool()
-        self.bus = EventBus(pool)
-        self.services = ServiceRegistry(self.bus, pool)
-        self.states = StateMachine(self.bus)
-        self.config = Config()
+    not_running = "NOT_RUNNING"
+    starting = "STARTING"
+    running = "RUNNING"
+    stopping = "STOPPING"
 
-    def start(self):
-        """Start home assistant."""
-        _LOGGER.info(
-            "Starting Home Assistant (%d threads)", self.pool.worker_count)
-
-        create_timer(self)
-        self.bus.fire(EVENT_HOMEASSISTANT_START)
-
-    def block_till_stopped(self):
-        """Register service homeassistant/stop and will block until called."""
-        request_shutdown = threading.Event()
-        request_restart = threading.Event()
-
-        def stop_homeassistant(*args):
-            """Stop Home Assistant."""
-            request_shutdown.set()
-
-        def restart_homeassistant(*args):
-            """Reset Home Assistant."""
-            request_restart.set()
-            request_shutdown.set()
-
-        self.services.register(
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
-        self.services.register(
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant)
-
-        try:
-            signal.signal(signal.SIGTERM, stop_homeassistant)
-        except ValueError:
-            _LOGGER.warning(
-                'Could not bind to SIGTERM. Are you running in a thread?')
-
-        while not request_shutdown.isSet():
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                break
-
-        self.stop()
-        return RESTART_EXIT_CODE if request_restart.isSet() else 0
-
-    def stop(self):
-        """Stop Home Assistant and shuts down all threads."""
-        _LOGGER.info("Stopping")
-        self.bus.fire(EVENT_HOMEASSISTANT_STOP)
-        self.pool.stop()
+    def __str__(self) -> str:
+        """Return the event."""
+        return self.value
 
 
 class JobPriority(util.OrderedEnum):
@@ -127,8 +83,97 @@ class JobPriority(util.OrderedEnum):
             return JobPriority.EVENT_SERVICE
         elif event_type == EVENT_SERVICE_EXECUTED:
             return JobPriority.EVENT_CALLBACK
-        else:
-            return JobPriority.EVENT_DEFAULT
+        return JobPriority.EVENT_DEFAULT
+
+
+class HomeAssistant(object):
+    """Root object of the Home Assistant home automation."""
+
+    def __init__(self):
+        """Initialize new Home Assistant object."""
+        self.pool = pool = create_worker_pool()
+        self.bus = EventBus(pool)
+        self.services = ServiceRegistry(self.bus, self.add_job)
+        self.states = StateMachine(self.bus)
+        self.config = Config()
+        self.state = CoreState.not_running
+
+    @property
+    def is_running(self) -> bool:
+        """Return if Home Assistant is running."""
+        return self.state == CoreState.running
+
+    def start(self) -> None:
+        """Start home assistant."""
+        _LOGGER.info(
+            "Starting Home Assistant (%d threads)", self.pool.worker_count)
+        self.state = CoreState.starting
+
+        create_timer(self)
+        self.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.pool.block_till_done()
+        self.state = CoreState.running
+
+    def add_job(self,
+                target: Callable[..., None],
+                *args: Any,
+                priority: JobPriority=JobPriority.EVENT_DEFAULT) -> None:
+        """Add job to the worker pool.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        self.pool.add_job(priority, (target,) + args)
+
+    def block_till_stopped(self) -> int:
+        """Register service homeassistant/stop and will block until called."""
+        request_shutdown = threading.Event()
+        request_restart = threading.Event()
+
+        def stop_homeassistant(*args):
+            """Stop Home Assistant."""
+            request_shutdown.set()
+
+        def restart_homeassistant(*args):
+            """Reset Home Assistant."""
+            _LOGGER.warning('Home Assistant requested a restart.')
+            request_restart.set()
+            request_shutdown.set()
+
+        self.services.register(
+            DOMAIN, SERVICE_HOMEASSISTANT_STOP, stop_homeassistant)
+        self.services.register(
+            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, restart_homeassistant)
+
+        try:
+            signal.signal(signal.SIGTERM, stop_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGTERM. Are you running in a thread?')
+        try:
+            signal.signal(signal.SIGHUP, restart_homeassistant)
+        except ValueError:
+            _LOGGER.warning(
+                'Could not bind to SIGHUP. Are you running in a thread?')
+        except AttributeError:
+            pass
+        try:
+            while not request_shutdown.is_set():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.stop()
+
+        return RESTART_EXIT_CODE if request_restart.is_set() else 0
+
+    def stop(self) -> None:
+        """Stop Home Assistant and shuts down all threads."""
+        _LOGGER.info("Stopping")
+        self.state = CoreState.stopping
+        self.bus.fire(EVENT_HOMEASSISTANT_STOP)
+        self.pool.stop()
+        self.state = CoreState.not_running
 
 
 class EventOrigin(enum.Enum):
@@ -154,8 +199,7 @@ class Event(object):
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
-        self.time_fired = dt_util.strip_microseconds(
-            time_fired or dt_util.utcnow())
+        self.time_fired = time_fired or dt_util.utcnow()
 
     def as_dict(self):
         """Create a dict representation of this Event."""
@@ -163,7 +207,7 @@ class Event(object):
             'event_type': self.event_type,
             'data': dict(self.data),
             'origin': str(self.origin),
-            'time_fired': dt_util.datetime_to_str(self.time_fired),
+            'time_fired': self.time_fired,
         }
 
     def __repr__(self):
@@ -189,11 +233,11 @@ class Event(object):
 class EventBus(object):
     """Allows firing of and listening for events."""
 
-    def __init__(self, pool=None):
+    def __init__(self, pool: util.ThreadPool) -> None:
         """Initialize a new event bus."""
         self._listeners = {}
         self._lock = threading.Lock()
-        self._pool = pool or create_worker_pool()
+        self._pool = pool
 
     @property
     def listeners(self):
@@ -202,7 +246,7 @@ class EventBus(object):
             return {key: len(self._listeners[key])
                     for key in self._listeners}
 
-    def fire(self, event_type, event_data=None, origin=EventOrigin.local):
+    def fire(self, event_type: str, event_data=None, origin=EventOrigin.local):
         """Fire an event."""
         if not self._pool.running:
             raise HomeAssistantError('Home Assistant has shut down.')
@@ -257,7 +301,7 @@ class EventBus(object):
             # available to execute this listener it might occur that the
             # listener gets lined up twice to be executed.
             # This will make sure the second time it does nothing.
-            onetime_listener.run = True
+            setattr(onetime_listener, 'run', True)
 
             self.remove_listener(event_type, onetime_listener)
 
@@ -308,15 +352,9 @@ class State(object):
         self.entity_id = entity_id.lower()
         self.state = str(state)
         self.attributes = MappingProxyType(attributes or {})
-        self.last_updated = dt_util.strip_microseconds(
-            last_updated or dt_util.utcnow())
+        self.last_updated = last_updated or dt_util.utcnow()
 
-        # Strip microsecond from last_changed else we cannot guarantee
-        # state == State.from_dict(state.as_dict())
-        # This behavior occurs because to_dict uses datetime_to_str
-        # which does not preserve microseconds
-        self.last_changed = dt_util.strip_microseconds(
-            last_changed or self.last_updated)
+        self.last_changed = last_changed or self.last_updated
 
     @property
     def domain(self):
@@ -344,8 +382,8 @@ class State(object):
         return {'entity_id': self.entity_id,
                 'state': self.state,
                 'attributes': dict(self.attributes),
-                'last_changed': dt_util.datetime_to_str(self.last_changed),
-                'last_updated': dt_util.datetime_to_str(self.last_updated)}
+                'last_changed': self.last_changed,
+                'last_updated': self.last_updated}
 
     @classmethod
     def from_dict(cls, json_dict):
@@ -359,13 +397,13 @@ class State(object):
 
         last_changed = json_dict.get('last_changed')
 
-        if last_changed:
-            last_changed = dt_util.str_to_datetime(last_changed)
+        if isinstance(last_changed, str):
+            last_changed = dt_util.parse_datetime(last_changed)
 
         last_updated = json_dict.get('last_updated')
 
-        if last_updated:
-            last_updated = dt_util.str_to_datetime(last_updated)
+        if isinstance(last_updated, str):
+            last_updated = dt_util.parse_datetime(last_updated)
 
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
@@ -384,7 +422,7 @@ class State(object):
 
         return "<state {}={}{} @ {}>".format(
             self.entity_id, self.state, attr,
-            dt_util.datetime_to_local_str(self.last_changed))
+            dt_util.as_local(self.last_changed).isoformat())
 
 
 class StateMachine(object):
@@ -453,7 +491,7 @@ class StateMachine(object):
 
             return True
 
-    def set(self, entity_id, new_state, attributes=None):
+    def set(self, entity_id, new_state, attributes=None, force_update=False):
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -469,7 +507,8 @@ class StateMachine(object):
             old_state = self._states.get(entity_id)
 
             is_existing = old_state is not None
-            same_state = is_existing and old_state.state == new_state
+            same_state = (is_existing and old_state.state == new_state and
+                          not force_update)
             same_attr = is_existing and old_state.attributes == attributes
 
             if same_state and same_attr:
@@ -494,13 +533,14 @@ class StateMachine(object):
 class Service(object):
     """Represents a callable service."""
 
-    __slots__ = ['func', 'description', 'fields']
+    __slots__ = ['func', 'description', 'fields', 'schema']
 
-    def __init__(self, func, description, fields):
+    def __init__(self, func, description, fields, schema):
         """Initialize a service."""
         self.func = func
         self.description = description or ''
         self.fields = fields or {}
+        self.schema = schema
 
     def as_dict(self):
         """Return dictionary representation of this service."""
@@ -511,7 +551,14 @@ class Service(object):
 
     def __call__(self, call):
         """Execute the service."""
-        self.func(call)
+        try:
+            if self.schema:
+                call.data = self.schema(call.data)
+
+            self.func(call)
+        except vol.MultipleInvalid as ex:
+            _LOGGER.error('Invalid service data for %s.%s: %s',
+                          call.domain, call.service, ex)
 
 
 # pylint: disable=too-few-public-methods
@@ -539,11 +586,11 @@ class ServiceCall(object):
 class ServiceRegistry(object):
     """Offers services over the eventbus."""
 
-    def __init__(self, bus, pool=None):
+    def __init__(self, bus, add_job):
         """Initialize a service registry."""
         self._services = {}
         self._lock = threading.Lock()
-        self._pool = pool or create_worker_pool()
+        self._add_job = add_job
         self._bus = bus
         self._cur_id = 0
         bus.listen(EVENT_CALL_SERVICE, self._event_to_service_call)
@@ -560,16 +607,20 @@ class ServiceRegistry(object):
         """Test if specified service exists."""
         return service in self._services.get(domain, [])
 
-    def register(self, domain, service, service_func, description=None):
+    # pylint: disable=too-many-arguments
+    def register(self, domain, service, service_func, description=None,
+                 schema=None):
         """
         Register a service.
 
         Description is a dict containing key 'description' to describe
         the service and a key 'fields' to describe the fields.
+
+        Schema is called to coerce and validate the service data.
         """
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
-                              description.get('fields', {}))
+                              description.get('fields', {}), schema)
         with self._lock:
             if domain in self._services:
                 self._services[domain][service] = service_obj
@@ -638,13 +689,11 @@ class ServiceRegistry(object):
         service_call = ServiceCall(domain, service, service_data, call_id)
 
         # Add a job to the pool that calls _execute_service
-        self._pool.add_job(JobPriority.EVENT_SERVICE,
-                           (self._execute_service,
-                            (service_handler, service_call)))
+        self._add_job(self._execute_service, service_handler, service_call,
+                      priority=JobPriority.EVENT_SERVICE)
 
-    def _execute_service(self, service_and_call):
+    def _execute_service(self, service, call):
         """Execute a service and fires a SERVICE_EXECUTED event."""
-        service, call = service_and_call
         service(call)
 
         if call.call_id is not None:
@@ -665,6 +714,7 @@ class Config(object):
         """Initialize a new config object."""
         self.latitude = None
         self.longitude = None
+        self.elevation = None
         self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
@@ -691,7 +741,7 @@ class Config(object):
 
     def temperature(self, value, unit):
         """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELCIUS, TEMP_FAHRENHEIT) and
+        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
                 self.temperature_unit and unit != self.temperature_unit):
             return value, unit
 
@@ -742,7 +792,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
 
         calc_now = dt_util.utcnow
 
-        while not stop_event.isSet():
+        while not stop_event.is_set():
             now = calc_now()
 
             # First check checks if we are not on a second matching the
@@ -766,7 +816,7 @@ def create_timer(hass, interval=TIMER_INTERVAL):
             last_fired_on_second = now.second
 
             # Event might have been set while sleeping
-            if not stop_event.isSet():
+            if not stop_event.is_set():
                 try:
                     hass.bus.fire(EVENT_TIME_CHANGED, {ATTR_NOW: now})
                 except HomeAssistantError:
@@ -790,8 +840,8 @@ def create_worker_pool(worker_count=None):
     def job_handler(job):
         """Called whenever a job is available to do."""
         try:
-            func, arg = job
-            func(arg)
+            func, *args = job
+            func(*args)
         except Exception:  # pylint: disable=broad-except
             # Catch any exception our service/event_listener might throw
             # We do not want to crash our ThreadPool
@@ -805,6 +855,6 @@ def create_worker_pool(worker_count=None):
 
         for start, job in current_jobs:
             _LOGGER.warning("WorkerPool:Current job from %s: %s",
-                            dt_util.datetime_to_local_str(start), job)
+                            dt_util.as_local(start).isoformat(), job)
 
     return util.ThreadPool(job_handler, worker_count, busy_callback)

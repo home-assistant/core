@@ -7,9 +7,13 @@ https://home-assistant.io/components/rollershutter/
 import os
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.const import (
     SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
@@ -25,12 +29,13 @@ ENTITY_ID_ALL_ROLLERSHUTTERS = group.ENTITY_ID_FORMAT.format(
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {}
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
+
+ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 
 def is_open(hass, entity_id=None):
@@ -60,8 +65,7 @@ def stop(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for roller shutters."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_ROLLERSHUTTERS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_ROLLERSHUTTERS)
     component.setup(config)
 
     def handle_rollershutter_service(service):
@@ -84,14 +88,16 @@ def setup(hass, config):
 
     hass.services.register(DOMAIN, SERVICE_MOVE_UP,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_MOVE_UP))
+                           descriptions.get(SERVICE_MOVE_UP),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_MOVE_DOWN,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_MOVE_DOWN))
+                           descriptions.get(SERVICE_MOVE_DOWN),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_rollershutter_service,
-                           descriptions.get(SERVICE_STOP))
-
+                           descriptions.get(SERVICE_STOP),
+                           schema=ROLLERSHUTTER_SERVICE_SCHEMA)
     return True
 
 

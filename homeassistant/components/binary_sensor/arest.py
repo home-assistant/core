@@ -9,7 +9,8 @@ from datetime import timedelta
 
 import requests
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (BinarySensorDevice,
+                                                    SENSOR_CLASSES)
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +26,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
+
+    sensor_class = config.get('sensor_class')
+    if sensor_class not in SENSOR_CLASSES:
+        _LOGGER.warning('Unknown sensor class: %s', sensor_class)
+        sensor_class = None
 
     if None in (resource, pin):
         _LOGGER.error('Not all required config keys present: %s',
@@ -45,21 +51,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     arest = ArestData(resource, pin)
 
-    add_devices([ArestBinarySensor(arest,
-                                   resource,
-                                   config.get('name', response['name']),
-                                   pin)])
+    add_devices([ArestBinarySensor(
+        arest,
+        resource,
+        config.get('name', response['name']),
+        sensor_class,
+        pin)])
 
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 class ArestBinarySensor(BinarySensorDevice):
     """Implement an aREST binary sensor for a pin."""
 
-    def __init__(self, arest, resource, name, pin):
+    def __init__(self, arest, resource, name, sensor_class, pin):
         """Initialize the aREST device."""
         self.arest = arest
         self._resource = resource
         self._name = name
+        self._sensor_class = sensor_class
         self._pin = pin
         self.update()
 
@@ -78,6 +87,11 @@ class ArestBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return bool(self.arest.data.get('state'))
+
+    @property
+    def sensor_class(self):
+        """Return the class of this sensor."""
+        return self._sensor_class
 
     def update(self):
         """Get the latest data from aREST API."""

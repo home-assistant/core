@@ -1,13 +1,16 @@
 homeassistant:
-  # Omitted values in this section will be auto detected using freegeoip.net
+  # Omitted values in this section will be auto detected using freegeoip.io
 
   # Location required to calculate the time the sun rises and sets.  
-  # Cooridinates are also used for location for weather related components. 
-  # Google Maps can be used to determine more precise GPS cooridinates.
+  # Coordinates are also used for location for weather related components.
+  # Google Maps can be used to determine more precise GPS coordinates.
   latitude: 32.87336
   longitude: 117.22743
 
-  # C for Celcius, F for Fahrenheit
+  # Impacts weather/sunrise data
+  elevation: 665
+
+  # C for Celsius, F for Fahrenheit
   temperature_unit: C
 
   # Pick yours from here:
@@ -22,6 +25,9 @@ http:
   # Set to 1 to enable development mode
   # development: 1
 
+# Enable the frontend
+frontend:
+
 light:
 #  platform: hue
 
@@ -30,17 +36,12 @@ wink:
   access_token: 'YOUR_TOKEN'
 
 device_tracker:
-  # The following types are available: ddwrt, netgear, tomato, luci,
-  # and nmap_tracker
+  # The following tracker are available:
+  # https://home-assistant.io/components/#presence-detection
   platform: netgear
   host: 192.168.1.1
   username: admin
   password: PASSWORD
-  # http_id is needed for Tomato routers only
-  # http_id: ABCDEFGHH
-  # For nmap_tracker, only the IP addresses to scan are needed:
-  # hosts: 192.168.1.1/24 # netmask prefix notation or
-  # hosts: 192.168.1.1-255 # address range
 
 chromecast:
 
@@ -71,24 +72,25 @@ device_sun_light_trigger:
 # A comma separated list of states that have to be tracked as a single group
 # Grouped states should share the same type of states (ON/OFF or HOME/NOT_HOME)
 # You can also have groups within groups.
+# https://home-assistant.io/components/group/
 group:
-  Home:
-    - group.living_room
-    - group.kitchen
-  living_room:
-    - light.Bowl
-    - light.Ceiling
-    - light.TV_back_light
-  kitchen:
-    - light.fan_bulb_1
-    - light.fan_bulb_2
-  children:
-   - device_tracker.child_1
-   - device_tracker.child_2
+  default_view:
+    view: yes
+    entities:
+      - group.awesome_people
+      - group.climate
 
-process:
-  # items are which processes to look for: <entity_id>: <search string within ps>
-  xbmc: XBMC.App
+  kitchen:
+    name: Kitchen
+    entities:
+      - switch.kitchen_pin_3
+  upstairs:
+    name: Kids
+    icon: mdi:account-multiple
+    view: yes
+    entities:
+      - input_boolean.notify_home
+      - camera.demo_camera
 
 example:
 
@@ -102,6 +104,7 @@ browser:
 
 keyboard:
 
+# https://home-assistant.io/getting-started/automation/
 automation:
 - alias: 'Rule 1 Light on in the evening'
   trigger:
@@ -123,7 +126,6 @@ automation:
     entity_id: group.living_room
 
 - alias: 'Rule 2 - Away Mode'
-
   trigger:
    - platform: state
      entity_id: group.all_devices
@@ -136,6 +138,14 @@ automation:
 
 # Sensors need to be added into the configuration.yaml as sensor:, sensor 2:, sensor 3:, etc. 
 # Each sensor label should be unique or your sensors might not load correctly.
+# Another way to do is to collect all entries under one "sensor:"
+# sensor:
+#   - platform: mqtt
+#     name: "MQTT Sensor 1"
+#   - platform: mqtt
+#     name: "MQTT Sensor 2"
+#
+# Details: https://home-assistant.io/getting-started/devices/
 
 sensor:
   platform: systemmonitor
@@ -146,14 +156,6 @@ sensor:
       arg: '/home'
     - type: 'disk_use'
       arg: '/home'
-    - type: 'disk_free'
-      arg: '/'
-    - type: 'memory_use_percent'
-    - type: 'memory_use'
-    - type: 'memory_free'
-    - type: 'processor_use'
-    - type: 'process'
-      arg: 'octave-cli'
 
 sensor 2:
   platform: forecast
@@ -163,14 +165,6 @@ sensor 2:
     - precip_type
     - precip_intensity
     - temperature
-    - dew_point
-    - wind_speed
-    - wind_bearing
-    - cloud_cover
-    - humidity
-    - pressure
-    - visibility
-    - ozone
 
 script:
   # Turns on the bedroom lights and then the living room lights 1 minute later

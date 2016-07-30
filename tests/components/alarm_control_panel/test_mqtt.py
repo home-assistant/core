@@ -1,7 +1,7 @@
 """The tests the MQTT alarm control panel component."""
 import unittest
-from unittest.mock import patch
 
+from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
@@ -25,37 +25,37 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         """Stop down stuff we started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.alarm_control_panel.mqtt._LOGGER.error')
-    def test_fail_setup_without_state_topic(self, mock_error):
+    def test_fail_setup_without_state_topic(self):
         """Test for failing with no state topic."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert not _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'command_topic': 'alarm/command'
-            }}))
+            }
+        })
 
-        self.assertEqual(1, mock_error.call_count)
-
-    @patch('homeassistant.components.alarm_control_panel.mqtt._LOGGER.error')
-    def test_fail_setup_without_command_topic(self, mock_error):
+    def test_fail_setup_without_command_topic(self):
         """Test failing with no command topic."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert not _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'state_topic': 'alarm/state'
-            }}))
-
-        self.assertEqual(1, mock_error.call_count)
+            }
+        })
 
     def test_update_state_via_state_topic(self):
         """Test updating with via state topic."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-            }}))
+            }
+        })
 
         entity_id = 'alarm_control_panel.test'
 
@@ -71,13 +71,15 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_ignore_update_state_if_unknown_via_state_topic(self):
         """Test ignoring updates via state topic."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-            }}))
+            }
+        })
 
         entity_id = 'alarm_control_panel.test'
 
@@ -90,13 +92,15 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_arm_home_publishes_mqtt(self):
         """Test publishing of MQTT messages while armed."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-            }}))
+            }
+        })
 
         alarm_control_panel.alarm_arm_home(self.hass)
         self.hass.pool.block_till_done()
@@ -105,14 +109,16 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_arm_home_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
                 'code': '1234'
-            }}))
+            }
+        })
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_arm_home(self.hass, 'abcd')
@@ -121,13 +127,15 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_arm_away_publishes_mqtt(self):
         """Test publishing of MQTT messages while armed."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-            }}))
+            }
+        })
 
         alarm_control_panel.alarm_arm_away(self.hass)
         self.hass.pool.block_till_done()
@@ -136,14 +144,16 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_arm_away_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
                 'code': '1234'
-            }}))
+            }
+        })
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_arm_away(self.hass, 'abcd')
@@ -152,13 +162,15 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_disarm_publishes_mqtt(self):
         """Test publishing of MQTT messages while disarmed."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
-            }}))
+            }
+        })
 
         alarm_control_panel.alarm_disarm(self.hass)
         self.hass.pool.block_till_done()
@@ -167,14 +179,16 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
     def test_disarm_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
-        self.assertTrue(alarm_control_panel.setup(self.hass, {
-            'alarm_control_panel': {
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
                 'state_topic': 'alarm/state',
                 'command_topic': 'alarm/command',
                 'code': '1234'
-            }}))
+            }
+        })
 
         call_count = self.mock_publish.call_count
         alarm_control_panel.alarm_disarm(self.hass, 'abcd')

@@ -15,6 +15,7 @@ from homeassistant.util import convert, dt as dt_util, location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
+DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def render_with_possible_json_value(hass, template, value,
@@ -33,8 +34,8 @@ def render_with_possible_json_value(hass, template, value,
 
     try:
         return render(hass, template, variables)
-    except TemplateError:
-        _LOGGER.exception('Error parsing value')
+    except TemplateError as ex:
+        _LOGGER.error('Error parsing value: %s', ex)
         return value if error_value is _SENTINEL else error_value
 
 
@@ -56,6 +57,8 @@ def render(hass, template, variables=None, **kwargs):
             'now': dt_util.as_local(utcnow),
             'states': AllStates(hass),
             'utcnow': utcnow,
+            'as_timestamp': dt_util.as_timestamp,
+            'relative_time': dt_util.get_age
         }).render(kwargs).strip()
     except jinja2.TemplateError as err:
         raise TemplateError(err)
@@ -246,6 +249,25 @@ def multiply(value, amount):
         return value
 
 
+def timestamp_local(value):
+    """Filter to convert given timestamp to local date/time."""
+    try:
+        return dt_util.as_local(
+            dt_util.utc_from_timestamp(value)).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
+def timestamp_utc(value):
+    """Filter to convert gibrn timestamp to UTC date/time."""
+    try:
+        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
 def forgiving_float(value):
     """Try to convert value to a float."""
     try:
@@ -264,3 +286,5 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['timestamp_local'] = timestamp_local
+ENV.filters['timestamp_utc'] = timestamp_utc

@@ -10,7 +10,7 @@ https://home-assistant.io/components/thermostat.heatmiser/
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 
 CONF_IPADDRESS = 'ipaddress'
 CONF_PORT = 'port'
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HeatmiserV3Thermostat(ThermostatDevice):
     """Representation of a HeatmiserV3 thermostat."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, heatmiser, device, name, serport):
         """Initialize the thermostat."""
         self.heatmiser = heatmiser
@@ -79,7 +79,7 @@ class HeatmiserV3Thermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

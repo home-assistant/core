@@ -18,6 +18,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 from homeassistant.loader import get_component
+from homeassistant.helpers.event import (track_utc_time_change)
 
 REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -113,6 +114,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
 
     plex_clients = {}
     plex_sessions = {}
+    track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
@@ -120,7 +122,11 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex devices")
+            _LOGGER.exception('Error listing plex devices')
+            return
+        except OSError:
+            _LOGGER.error(
+                'Could not connect to plex server at http://%s', host)
             return
 
         new_plex_clients = []
@@ -146,7 +152,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         try:
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error listing plex sessions")
+            _LOGGER.exception('Error listing plex sessions')
             return
 
         plex_sessions.clear()
@@ -164,7 +170,7 @@ def request_configuration(host, hass, add_devices_callback):
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING[host], "Failed to register, please try again.")
+            _CONFIGURING[host], 'Failed to register, please try again.')
 
         return
 
@@ -173,10 +179,10 @@ def request_configuration(host, hass, add_devices_callback):
         setup_plexserver(host, data.get('token'), hass, add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
-        hass, "Plex Media Server", plex_configuration_callback,
+        hass, 'Plex Media Server', plex_configuration_callback,
         description=('Enter the X-Plex-Token'),
-        description_image="/static/images/config_plex_mediaserver.png",
-        submit_caption="Confirm",
+        description_image='/static/images/config_plex_mediaserver.png',
+        submit_caption='Confirm',
         fields=[{'id': 'token', 'name': 'X-Plex-Token', 'type': ''}]
     )
 
@@ -199,7 +205,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
-        return "{}.{}".format(
+        return '{}.{}'.format(
             self.__class__, self.device.machineIdentifier or self.device.name)
 
     @property

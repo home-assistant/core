@@ -3,6 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
@@ -15,6 +16,7 @@ class TestAutomationTime(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.append('group')
         self.calls = []
 
         def record_call(service):
@@ -28,7 +30,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_hour_matches(self):
         """Test for firing if hour is matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -38,7 +40,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
 
@@ -47,7 +49,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_minute_matches(self):
         """Test for firing if minutes are matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -57,7 +59,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(minute=0))
 
@@ -66,7 +68,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_second_matches(self):
         """Test for firing if seconds are matching."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -76,7 +78,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
 
@@ -85,7 +87,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_when_all_matches(self):
         """Test for firing if everything matches."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -97,7 +99,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=2, second=3))
@@ -107,7 +109,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_seconds(self):
         """Test for firing periodically every second."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -117,7 +119,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=0, second=2))
@@ -127,7 +129,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_minutes(self):
         """Test for firing periodically every minute."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -137,7 +139,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=0, minute=2, second=0))
@@ -147,7 +149,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_periodic_hours(self):
         """Test for firing periodically every hour."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -157,7 +159,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=2, minute=0, second=0))
@@ -167,27 +169,32 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_fires_using_after(self):
         """Test for firing after."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
                     'after': '5:00:00',
                 },
                 'action': {
-                    'service': 'test.automation'
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.platform }} - '
+                                '{{ trigger.now.hour }}'
+                    },
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
 
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
+        self.assertEqual('time - 5', self.calls[0].data['some'])
 
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
-        self.assertTrue(automation.setup(self.hass, {
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -196,7 +203,7 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=5, minute=0, second=0))
@@ -204,13 +211,12 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    @patch('homeassistant.components.automation.time._LOGGER.error')
-    def test_if_not_fires_using_wrong_after(self, mock_error):
+    def test_if_not_fires_using_wrong_after(self):
         """YAML translates time values to total seconds.
 
         This should break the before rule.
         """
-        self.assertTrue(automation.setup(self.hass, {
+        assert not _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
@@ -221,18 +227,17 @@ class TestAutomationTime(unittest.TestCase):
                     'service': 'test.automation'
                 }
             }
-        }))
+        })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(
             hour=1, minute=0, second=5))
 
         self.hass.pool.block_till_done()
         self.assertEqual(0, len(self.calls))
-        self.assertEqual(2, mock_error.call_count)
 
     def test_if_action_before(self):
         """Test for if action before."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -251,14 +256,14 @@ class TestAutomationTime(unittest.TestCase):
         before_10 = dt_util.now().replace(hour=8)
         after_10 = dt_util.now().replace(hour=14)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -267,7 +272,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_after(self):
         """Test for if action after."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -286,14 +291,14 @@ class TestAutomationTime(unittest.TestCase):
         before_10 = dt_util.now().replace(hour=8)
         after_10 = dt_util.now().replace(hour=14)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=before_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(0, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=after_10):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -302,7 +307,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_one_weekday(self):
         """Test for if action with one weekday."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -322,14 +327,14 @@ class TestAutomationTime(unittest.TestCase):
         monday = dt_util.now() - timedelta(days=days_past_monday)
         tuesday = monday + timedelta(days=1)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
@@ -338,7 +343,7 @@ class TestAutomationTime(unittest.TestCase):
 
     def test_if_action_list_weekday(self):
         """Test for action with a list of weekdays."""
-        automation.setup(self.hass, {
+        assert _setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'event',
@@ -359,21 +364,21 @@ class TestAutomationTime(unittest.TestCase):
         tuesday = monday + timedelta(days=1)
         wednesday = tuesday + timedelta(days=1)
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=monday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=tuesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()
 
         self.assertEqual(2, len(self.calls))
 
-        with patch('homeassistant.components.automation.time.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.now',
                    return_value=wednesday):
             self.hass.bus.fire('test_event')
             self.hass.pool.block_till_done()

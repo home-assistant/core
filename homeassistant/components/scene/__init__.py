@@ -7,9 +7,12 @@ https://home-assistant.io/components/scene/
 import logging
 from collections import namedtuple
 
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, CONF_PLATFORM)
 from homeassistant.helpers import extract_domain_configs
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -18,6 +21,10 @@ DEPENDENCIES = ['group']
 STATE = 'scening'
 
 CONF_ENTITIES = "entities"
+
+SCENE_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
 
@@ -61,7 +68,8 @@ def setup(hass, config):
         for scene in target_scenes:
             scene.activate()
 
-    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service)
+    hass.services.register(DOMAIN, SERVICE_TURN_ON, handle_scene_service,
+                           schema=SCENE_SERVICE_SCHEMA)
 
     return True
 

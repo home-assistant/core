@@ -24,6 +24,8 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._is_volume_muted = False
         self._media_title = None
         self._supported_media_commands = 0
+        self._source = None
+        self._tracks = 12
 
         self.service_calls = {
             'turn_on': mock_service(
@@ -55,6 +57,12 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
             'media_play_pause': mock_service(
                 hass, media_player.DOMAIN,
                 media_player.SERVICE_MEDIA_PLAY_PAUSE),
+            'select_source': mock_service(
+                hass, media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOURCE),
+            'clear_playlist': mock_service(
+                hass, media_player.DOMAIN,
+                media_player.SERVICE_CLEAR_PLAYLIST),
         }
 
     @property
@@ -105,6 +113,14 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
     def media_pause(self):
         """Mock pause."""
         self._state = STATE_PAUSED
+
+    def select_source(self, source):
+        """Set the input source."""
+        self._state = source
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self._tracks = 0
 
 
 class TestMediaPlayer(unittest.TestCase):
@@ -497,6 +513,14 @@ class TestMediaPlayer(unittest.TestCase):
         ump.media_play_pause()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_play_pause']))
+
+        ump.select_source('dvd')
+        self.assertEqual(
+            1, len(self.mock_mp_2.service_calls['select_source']))
+
+        ump.clear_playlist()
+        self.assertEqual(
+            1, len(self.mock_mp_2.service_calls['clear_playlist']))
 
     def test_service_call_to_command(self):
         """Test service call to command."""

@@ -1,5 +1,5 @@
-Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/balloob/home-assistant|
-===========================================================================================================
+Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant| |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs|
+==============================================================================================================================================================================================
 
 Home Assistant is a home automation platform running on Python 3. The
 goal of Home Assistant is to be able to track and control all devices at
@@ -18,7 +18,7 @@ tutorials and documentation.
 
 |screenshot-states|
 
-Examples of devices it can interface it:
+Examples of devices Home Assistant can interface with:
 
 -  Monitoring connected devices to a wireless router:
    `OpenWrt <https://openwrt.org/>`__,
@@ -61,13 +61,13 @@ Examples of devices it can interface it:
 -  `See full list of supported
    devices <https://home-assistant.io/components/>`__
 
-Built home automation on top of your devices:
+Build home automation on top of your devices:
 
 -  Keep a precise history of every change to the state of your house
--  Turn on the lights when people get home after sun set
--  Turn on lights slowly during sun set to compensate for less light
+-  Turn on the lights when people get home after sunset
+-  Turn on lights slowly during sunset to compensate for less light
 -  Turn off all lights and devices when everybody leaves the house
--  Offers a `REST API <https://home-assistant.io/developers/api/>`__
+-  Offers a `REST API <https://home-assistant.io/developers/rest_api/>`__
    and can interface with MQTT for easy integration with other projects
    like `OwnTracks <http://owntracks.org/>`__
 -  Allow sending notifications using
@@ -75,24 +75,26 @@ Built home automation on top of your devices:
    (NMA) <http://www.notifymyandroid.com/>`__,
    `PushBullet <https://www.pushbullet.com/>`__,
    `PushOver <https://pushover.net/>`__, `Slack <https://slack.com/>`__,
-   `Telegram <https://telegram.org/>`__, and `Jabber
+   `Telegram <https://telegram.org/>`__, `Join <http://joaoapps.com/join/>`__, and `Jabber
    (XMPP) <http://xmpp.org>`__
 
-The system is built modular so support for other devices or actions can
+The system is built using a modular approach so support for other devices or actions can
 be implemented easily. See also the `section on
-architecture <https://home-assistant.io/developers/architecture.html>`__
+architecture <https://home-assistant.io/developers/architecture/>`__
 and the `section on creating your own
-components <https://home-assistant.io/developers/creating_components.html>`__.
+components <https://home-assistant.io/developers/creating_components/>`__.
 
 If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
 section <https://home-assistant.io/help/>`__ how to reach us.
 
-.. |Build Status| image:: https://travis-ci.org/balloob/home-assistant.svg?branch=master
-   :target: https://travis-ci.org/balloob/home-assistant
-.. |Coverage Status| image:: https://img.shields.io/coveralls/balloob/home-assistant.svg
-   :target: https://coveralls.io/r/balloob/home-assistant?branch=master
-.. |Join the chat at https://gitter.im/balloob/home-assistant| image:: https://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/balloob/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |screenshot-states| image:: https://raw.github.com/balloob/home-assistant/master/docs/screenshots.png
+.. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
+   :target: https://travis-ci.org/home-assistant/home-assistant
+.. |Coverage Status| image:: https://img.shields.io/coveralls/home-assistant/home-assistant.svg
+   :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
+.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://img.shields.io/badge/gitter-general-blue.svg
+   :target: https://gitter.im/home-assistant/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs| image:: https://img.shields.io/badge/gitter-development-yellowgreen.svg
+   :target: https://gitter.im/home-assistant/home-assistant/devs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/

@@ -1,12 +1,13 @@
 """The tests for Home Assistant frontend."""
 # pylint: disable=protected-access,too-many-public-methods
 import re
+import time
 import unittest
 
 import requests
 
 import homeassistant.bootstrap as bootstrap
-import homeassistant.components.http as http
+from homeassistant.components import frontend, http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -41,11 +42,13 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
     """Stop everything that was started."""
     hass.stop()
+    frontend.PANELS = {}
 
 
 class TestFrontend(unittest.TestCase):
@@ -71,17 +74,6 @@ class TestFrontend(unittest.TestCase):
         req = requests.head(_url(frontendjs.groups(0)[0]))
 
         self.assertEqual(200, req.status_code)
-
-    def test_auto_filling_in_api_password(self):
-        """Test for auto filling of API password."""
-        req = requests.get(
-            _url("?{}={}".format(http.DATA_API_PASSWORD, API_PASSWORD)))
-
-        self.assertEqual(200, req.status_code)
-
-        auth_text = re.search(r"auth='{}'".format(API_PASSWORD), req.text)
-
-        self.assertIsNotNone(auth_text)
 
     def test_404(self):
         """Test for HTTP 404 error."""

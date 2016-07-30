@@ -1,7 +1,6 @@
 """The tests the History component."""
 # pylint: disable=protected-access,too-many-public-methods
 from datetime import timedelta
-import os
 import unittest
 from unittest.mock import patch, sentinel
 
@@ -24,14 +23,15 @@ class TestComponentHistory(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-        db_path = self.hass.config.path(recorder.DB_FILE)
-        if os.path.isfile(db_path):
-            os.remove(db_path)
-
     def init_recorder(self):
         """Initialize the recorder."""
-        recorder.setup(self.hass, {})
+        db_uri = 'sqlite://'
+        with patch('homeassistant.core.Config.path', return_value=db_uri):
+            recorder.setup(self.hass, config={
+                "recorder": {
+                    "db_url": db_uri}})
         self.hass.start()
+        recorder._INSTANCE.block_till_db_ready()
         self.wait_recording_done()
 
     def wait_recording_done(self):

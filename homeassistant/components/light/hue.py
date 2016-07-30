@@ -32,6 +32,9 @@ PHUE_CONFIG_FILE = "phue.conf"
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
+# Track previously setup bridges
+_CONFIGURED_BRIDGES = {}
+
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
     """Attempt to detect host based on existing configuration."""
@@ -68,7 +71,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             return False
 
     # Only act if we are not already configuring this host
-    if host in _CONFIGURING:
+    if host in _CONFIGURING or \
+            socket.gethostbyname(host) in _CONFIGURED_BRIDGES:
         return
 
     setup_bridge(host, hass, add_devices_callback, filename, allow_unreachable)
@@ -125,7 +129,7 @@ def setup_bridge(host, hass, add_devices_callback, filename,
         new_lights = []
 
         api_name = api.get('config').get('name')
-        if api_name == 'RaspBee-GW':
+        if api_name in ('RaspBee-GW', 'deCONZ-GW'):
             bridge_type = 'deconz'
         else:
             bridge_type = 'hue'
@@ -142,6 +146,7 @@ def setup_bridge(host, hass, add_devices_callback, filename,
         if new_lights:
             add_devices_callback(new_lights)
 
+    _CONFIGURED_BRIDGES[socket.gethostbyname(host)] = True
     update_lights()
 
 
@@ -230,14 +235,16 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = kwargs[ATTR_TRANSITION] * 10
 
-        if ATTR_BRIGHTNESS in kwargs:
-            command['bri'] = kwargs[ATTR_BRIGHTNESS]
-
         if ATTR_XY_COLOR in kwargs:
             command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            command['xy'] = color_util.color_RGB_to_xy(
+            xyb = color_util.color_RGB_to_xy(
                 *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+            command['xy'] = xyb[0], xyb[1]
+            command['bri'] = xyb[2]
+
+        if ATTR_BRIGHTNESS in kwargs:
+            command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
             command['ct'] = kwargs[ATTR_COLOR_TEMP]

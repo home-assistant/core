@@ -12,6 +12,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Worldclock Sensor"
 ICON = 'mdi:clock'
+TIME_STR_FORMAT = "%H:%M"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -59,5 +60,5 @@ class WorldClockSensor(Entity):
 
     def update(self):
         """Get the time and updates the states."""
-        self._state = dt_util.datetime_to_time_str(
-            dt_util.now(time_zone=self._time_zone))
+        self._state = dt_util.now(time_zone=self._time_zone).strftime(
+            TIME_STR_FORMAT)

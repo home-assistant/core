@@ -19,6 +19,34 @@ class TestDemoMediaPlayer(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_source_select(self):
+        """Test the input source service."""
+
+        entity_id = 'media_player.lounge_room'
+
+        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        state = self.hass.states.get(entity_id)
+        assert 'dvd' == state.attributes.get('source')
+
+        mp.select_source(self.hass, None, entity_id)
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get(entity_id)
+        assert 'dvd' == state.attributes.get('source')
+
+        mp.select_source(self.hass, 'xbox', entity_id)
+        self.hass.pool.block_till_done()
+        state = self.hass.states.get(entity_id)
+        assert 'xbox' == state.attributes.get('source')
+
+    def test_clear_playlist(self):
+        """Test clear playlist."""
+        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert self.hass.states.is_state(entity_id, 'playing')
+
+        mp.clear_playlist(self.hass, entity_id)
+        self.hass.pool.block_till_done()
+        assert self.hass.states.is_state(entity_id, 'off')
+
     def test_volume_services(self):
         """Test the volume service."""
         assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})

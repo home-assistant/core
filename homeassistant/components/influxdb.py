@@ -7,7 +7,8 @@ https://home-assistant.io/components/influxdb/
 import logging
 
 import homeassistant.util as util
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNKNOWN
+from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNAVAILABLE,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers import validate_config
 
@@ -22,7 +23,7 @@ DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['influxdb==2.12.0']
+REQUIREMENTS = ['influxdb==3.0.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
@@ -32,6 +33,7 @@ CONF_PASSWORD = 'password'
 CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_BLACKLIST = 'blacklist'
+CONF_TAGS = 'tags'
 
 
 # pylint: disable=too-many-locals
@@ -55,6 +57,7 @@ def setup(hass, config):
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
     blacklist = conf.get(CONF_BLACKLIST, [])
+    tags = conf.get(CONF_TAGS, {})
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
@@ -70,8 +73,9 @@ def setup(hass, config):
     def influx_event_listener(event):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
-        if state is None or state.state in (STATE_UNKNOWN, '') \
-           or state.entity_id in blacklist:
+        if state is None or state.state in (
+                STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
+                state.entity_id in blacklist:
             return
 
         try:
@@ -96,6 +100,9 @@ def setup(hass, config):
                 }
             }
         ]
+
+        for tag in tags:
+            json_body[0]['tags'][tag] = tags[tag]
 
         try:
             influx.write_points(json_body)

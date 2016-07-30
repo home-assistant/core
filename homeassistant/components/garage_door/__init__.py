@@ -7,14 +7,17 @@ at https://home-assistant.io/components/garage_door/
 import logging
 import os
 
+import voluptuous as vol
+
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN, SERVICE_CLOSE, SERVICE_OPEN,
     ATTR_ENTITY_ID)
-from homeassistant.components import (group, wink)
+from homeassistant.components import group
 
 DOMAIN = 'garage_door'
 SCAN_INTERVAL = 30
@@ -24,10 +27,9 @@ ENTITY_ID_ALL_GARAGE_DOORS = group.ENTITY_ID_FORMAT.format('all_garage_doors')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-# Maps discovered services to their platforms
-DISCOVERY_PLATFORMS = {
-    wink.DISCOVER_GARAGE_DOORS: 'wink'
-}
+GARAGE_DOOR_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,8 +55,7 @@ def open_door(hass, entity_id=None):
 def setup(hass, config):
     """Track states and offer events for garage door."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DISCOVERY_PLATFORMS,
-        GROUP_NAME_ALL_GARAGE_DOORS)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_GARAGE_DOORS)
     component.setup(config)
 
     def handle_garage_door_service(service):
@@ -73,10 +74,11 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
     hass.services.register(DOMAIN, SERVICE_OPEN, handle_garage_door_service,
-                           descriptions.get(SERVICE_OPEN))
+                           descriptions.get(SERVICE_OPEN),
+                           schema=GARAGE_DOOR_SERVICE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_CLOSE, handle_garage_door_service,
-                           descriptions.get(SERVICE_CLOSE))
-
+                           descriptions.get(SERVICE_CLOSE),
+                           schema=GARAGE_DOOR_SERVICE_SCHEMA)
     return True
 
 

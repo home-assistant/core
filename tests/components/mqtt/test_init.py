@@ -4,6 +4,9 @@ import unittest
 from unittest import mock
 import socket
 
+import voluptuous as vol
+
+from homeassistant.bootstrap import _setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
@@ -48,9 +51,23 @@ class TestMQTT(unittest.TestCase):
         """Test for setup failure if connection to broker is missing."""
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
-            self.assertFalse(mqtt.setup(self.hass, {mqtt.DOMAIN: {
-                mqtt.CONF_BROKER: 'test-broker',
-            }}))
+            self.hass.config.components = []
+            assert not _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                }
+            })
+
+    def test_setup_protocol_validation(self):
+        """Test for setup failure if connection to broker is missing."""
+        with mock.patch('paho.mqtt.client.Client'):
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'test-broker',
+                    mqtt.CONF_PROTOCOL: 3.1,
+                }
+            })
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -90,31 +107,45 @@ class TestMQTT(unittest.TestCase):
     def test_service_call_with_payload_doesnt_render_template(self):
         """Test the service call with unrendered template.
 
-        If a 'payload' is provided then use that instead of 'payload_template'.
+        If both 'payload' and 'payload_template' are provided then fail.
         """
         payload = "not a template"
         payload_template = "a template"
-        # Call the service directly because the helper functions don't allow
-        # you to provide payload AND payload_template.
         self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
             mqtt.ATTR_TOPIC: "test/topic",
             mqtt.ATTR_PAYLOAD: payload,
             mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
         }, blocking=True)
-        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
-        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], payload)
+        self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
 
     def test_service_call_without_payload_or_payload_template(self):
         """Test the service call without payload or payload template.
 
-        If neither 'payload' or 'payload_template' is provided then fail.
+        Send empty message if neither 'payload' nor 'payload_template'
+        are provided.
         """
         # Call the service directly because the helper functions require you to
         # provide a payload.
         self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
             mqtt.ATTR_TOPIC: "test/topic"
         }, blocking=True)
-        self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "")
+
+    def test_service_call_with_ascii_qos_retain_flags(self):
+        """Test the service call with args that can be misinterpreted.
+
+        Empty payload message and ascii formatted qos and retain flags.
+        """
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: "",
+            mqtt.ATTR_QOS: '2',
+            mqtt.ATTR_RETAIN: 'no'
+        }, blocking=True)
+        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
+        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][2], 2)
+        self.assertFalse(mqtt.MQTT_CLIENT.publish.call_args[0][3])
 
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
@@ -197,12 +228,12 @@ class TestMQTTCallbacks(unittest.TestCase):
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
-            mqtt.setup(self.hass, {
+            self.hass.config.components = []
+            assert _setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
                 }
             })
-            self.hass.config.components.append(mqtt.DOMAIN)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -288,3 +319,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual({'test/topic': 1}, mqtt.MQTT_CLIENT.topics)
         self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
+
+    def test_invalid_mqtt_topics(self):
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')

@@ -6,10 +6,11 @@ https://home-assistant.io/components/switch.wink/
 """
 import logging
 
-from homeassistant.components.wink import WinkToggleDevice
+from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.helpers.entity import ToggleEntity
 
-REQUIREMENTS = ['python-wink==0.6.4']
+REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -31,3 +32,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(WinkToggleDevice(switch) for switch in
                 pywink.get_powerstrip_outlets())
     add_devices(WinkToggleDevice(switch) for switch in pywink.get_sirens())
+
+
+class WinkToggleDevice(WinkDevice, ToggleEntity):
+    """Represents a Wink toggle (switch) device."""
+
+    def __init__(self, wink):
+        """Initialize the Wink device."""
+        WinkDevice.__init__(self, wink)
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.wink.state()
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self.wink.set_state(True)
+
+    def turn_off(self):
+        """Turn the device off."""
+        self.wink.set_state(False)

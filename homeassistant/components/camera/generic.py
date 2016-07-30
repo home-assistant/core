@@ -43,13 +43,14 @@ class GenericCamera(Camera):
             try:
                 response = requests.get(
                     self._still_image_url,
-                    auth=HTTPBasicAuth(self._username, self._password))
+                    auth=HTTPBasicAuth(self._username, self._password),
+                    timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error('Error getting camera image: %s', error)
                 return None
         else:
             try:
-                response = requests.get(self._still_image_url)
+                response = requests.get(self._still_image_url, timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error('Error getting camera image: %s', error)
                 return None

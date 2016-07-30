@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.temper/
 """
 import logging
 
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +56,9 @@ class TemperSensor(Entity):
     def update(self):
         """Retrieve latest state."""
         try:
-            self.current_value = self.temper_device.get_temperature()
+            format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
+                          else 'celsius')
+            self.current_value = self.temper_device.get_temperature(format_str)
         except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')

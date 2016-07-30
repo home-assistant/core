@@ -7,11 +7,8 @@ at https://home-assistant.io/components/sensor.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.components.zwave import (
-    ATTR_NODE_ID, ATTR_VALUE_ID, COMMAND_CLASS_ALARM, COMMAND_CLASS_METER,
-    COMMAND_CLASS_SENSOR_MULTILEVEL, NETWORK,
-    TYPE_DECIMAL, ZWaveDeviceEntity)
-from homeassistant.const import (TEMP_CELCIUS, TEMP_FAHRENHEIT)
+from homeassistant.components import zwave
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 
@@ -37,11 +34,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #   platform: zwave
     #
     # `setup_platform` will be called without `discovery_info`.
-    if discovery_info is None or NETWORK is None:
+    if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = NETWORK.nodes[discovery_info[ATTR_NODE_ID]]
-    value = node.values[discovery_info[ATTR_VALUE_ID]]
+    node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
+    value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 
     value.set_change_verified(False)
 
@@ -62,18 +59,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 return
 
     # Generic Device mappings
-    if value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL:
+    if value.command_class == zwave.COMMAND_CLASS_SENSOR_MULTILEVEL:
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif (value.command_class == COMMAND_CLASS_METER and
-          value.type == TYPE_DECIMAL):
+    elif (value.command_class == zwave.COMMAND_CLASS_METER and
+          value.type == zwave.TYPE_DECIMAL):
         add_devices([ZWaveMultilevelSensor(value)])
 
-    elif value.command_class == COMMAND_CLASS_ALARM:
+    elif (value.command_class == zwave.COMMAND_CLASS_ALARM or
+          value.command_class == zwave.COMMAND_CLASS_SENSOR_ALARM):
         add_devices([ZWaveAlarmSensor(value)])
 
 
-class ZWaveSensor(ZWaveDeviceEntity, Entity):
+class ZWaveSensor(zwave.ZWaveDeviceEntity, Entity):
     """Representation of a Z-Wave sensor."""
 
     def __init__(self, sensor_value):
@@ -81,7 +79,7 @@ class ZWaveSensor(ZWaveDeviceEntity, Entity):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
 
-        ZWaveDeviceEntity.__init__(self, sensor_value, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, sensor_value, DOMAIN)
 
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -98,7 +96,8 @@ class ZWaveSensor(ZWaveDeviceEntity, Entity):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_ha_state()
 
 
@@ -123,7 +122,7 @@ class ZWaveMultilevelSensor(ZWaveSensor):
         unit = self._value.units
 
         if unit == 'C':
-            return TEMP_CELCIUS
+            return TEMP_CELSIUS
         elif unit == 'F':
             return TEMP_FAHRENHEIT
         else:

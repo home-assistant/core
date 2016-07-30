@@ -7,19 +7,15 @@ https://home-assistant.io/components/isy994/
 import logging
 from urllib.parse import urlparse
 
-from homeassistant import bootstrap
 from homeassistant.const import (
-    ATTR_DISCOVERED, ATTR_SERVICE, CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP, EVENT_PLATFORM_DISCOVERED)
-from homeassistant.helpers import validate_config
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.loader import get_component
 
 DOMAIN = "isy994"
-REQUIREMENTS = ['PyISY==1.0.5']
-DISCOVER_LIGHTS = "isy994.lights"
-DISCOVER_SWITCHES = "isy994.switches"
-DISCOVER_SENSORS = "isy994.sensors"
+REQUIREMENTS = ['PyISY==1.0.6']
+
 ISY = None
 SENSOR_STRING = 'Sensor'
 HIDDEN_STRING = '{HIDE ME}'
@@ -76,15 +72,9 @@ def setup(hass, config):
     # Listen for HA stop to disconnect.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
-    # Load components for the devices in the ISY controller that we support.
-    for comp_name, discovery in ((('sensor', DISCOVER_SENSORS),
-                                  ('light', DISCOVER_LIGHTS),
-                                  ('switch', DISCOVER_SWITCHES))):
-        component = get_component(comp_name)
-        bootstrap.setup_component(hass, component.DOMAIN, config)
-        hass.bus.fire(EVENT_PLATFORM_DISCOVERED,
-                      {ATTR_SERVICE: discovery,
-                       ATTR_DISCOVERED: {}})
+    # Load platforms for the devices in the ISY controller that we support.
+    for component in ('sensor', 'light', 'switch'):
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     ISY.auto_update = True
     return True

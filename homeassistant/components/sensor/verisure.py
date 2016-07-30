@@ -7,7 +7,7 @@ documentation at https://home-assistant.io/components/verisure/
 import logging
 
 from homeassistant.components.verisure import HUB as hub
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,9 +66,14 @@ class VerisureThermometer(Entity):
         return hub.climate_status[self._id].temperature[:-1]
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     def update(self):
         """Update the sensor."""
@@ -94,6 +99,11 @@ class VerisureHygrometer(Entity):
         """Return the state of the sensor."""
         # remove % character
         return hub.climate_status[self._id].humidity[:-1]
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
 
     @property
     def unit_of_measurement(self):
@@ -123,6 +133,11 @@ class VerisureMouseDetection(Entity):
     def state(self):
         """Return the state of the sensor."""
         return hub.mouse_status[self._id].count
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return hub.available
 
     @property
     def unit_of_measurement(self):

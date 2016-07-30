@@ -17,7 +17,7 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELCIUS,
+    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
@@ -128,7 +128,7 @@ class TestEvent(unittest.TestCase):
             'event_type': event_type,
             'data': data,
             'origin': 'LOCAL',
-            'time_fired': dt_util.datetime_to_str(now),
+            'time_fired': now,
         }
         self.assertEqual(expected, event.as_dict())
 
@@ -225,13 +225,14 @@ class TestState(unittest.TestCase):
 
     def test_repr(self):
         """Test state.repr."""
-        self.assertEqual("<state happy.happy=on @ 12:00:00 08-12-1984>",
+        self.assertEqual("<state happy.happy=on @ 1984-12-08T12:00:00+00:00>",
                          str(ha.State(
                              "happy.happy", "on",
                              last_changed=datetime(1984, 12, 8, 12, 0, 0))))
 
         self.assertEqual(
-            "<state happy.happy=on; brightness=144 @ 12:00:00 08-12-1984>",
+            "<state happy.happy=on; brightness=144 @ "
+            "1984-12-08T12:00:00+00:00>",
             str(ha.State("happy.happy", "on", {"brightness": 144},
                          datetime(1984, 12, 8, 12, 0, 0))))
 
@@ -333,6 +334,20 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(state.last_changed,
                          self.states.get('light.Bowl').last_changed)
 
+    def test_force_update(self):
+        """Test force update option."""
+        self.pool.add_worker()
+        events = []
+        self.bus.listen(EVENT_STATE_CHANGED, events.append)
+
+        self.states.set('light.bowl', 'on')
+        self.bus._pool.block_till_done()
+        self.assertEqual(0, len(events))
+
+        self.states.set('light.bowl', 'on', None, True)
+        self.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
 
 class TestServiceCall(unittest.TestCase):
     """Test ServiceCall class."""
@@ -355,7 +370,13 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.pool = ha.create_worker_pool(0)
         self.bus = ha.EventBus(self.pool)
-        self.services = ha.ServiceRegistry(self.bus, self.pool)
+
+        def add_job(*args, **kwargs):
+            """Forward calls to add_job on Home Assistant."""
+            # self works because we also have self.pool defined.
+            return ha.HomeAssistant.add_job(self, *args, **kwargs)
+
+        self.services = ha.ServiceRegistry(self.bus, add_job)
         self.services.register("test_domain", "test_service", lambda x: None)
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -447,8 +468,8 @@ class TestConfig(unittest.TestCase):
     def test_temperature_not_convert_if_no_preference(self):
         """No unit conversion to happen if no preference."""
         self.assertEqual(
-            (25, TEMP_CELCIUS),
-            self.config.temperature(25, TEMP_CELCIUS))
+            (25, TEMP_CELSIUS),
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
             (80, TEMP_FAHRENHEIT),
             self.config.temperature(80, TEMP_FAHRENHEIT))
@@ -457,8 +478,8 @@ class TestConfig(unittest.TestCase):
         """No unit conversion to happen if no preference."""
         self.config.temperature_unit = TEMP_FAHRENHEIT
         self.assertEqual(
-            ('25a', TEMP_CELCIUS),
-            self.config.temperature('25a', TEMP_CELCIUS))
+            ('25a', TEMP_CELSIUS),
+            self.config.temperature('25a', TEMP_CELSIUS))
 
     def test_temperature_not_convert_if_invalid_unit(self):
         """No unit conversion to happen if no preference."""
@@ -466,15 +487,15 @@ class TestConfig(unittest.TestCase):
             (25, 'Invalid unit'),
             self.config.temperature(25, 'Invalid unit'))
 
-    def test_temperature_to_convert_to_celcius(self):
+    def test_temperature_to_convert_to_celsius(self):
         """Test temperature conversion to celsius."""
-        self.config.temperature_unit = TEMP_CELCIUS
+        self.config.temperature_unit = TEMP_CELSIUS
 
         self.assertEqual(
-            (25, TEMP_CELCIUS),
-            self.config.temperature(25, TEMP_CELCIUS))
+            (25, TEMP_CELSIUS),
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
-            (26.7, TEMP_CELCIUS),
+            (26.7, TEMP_CELSIUS),
             self.config.temperature(80, TEMP_FAHRENHEIT))
 
     def test_temperature_to_convert_to_fahrenheit(self):
@@ -483,7 +504,7 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(
             (77, TEMP_FAHRENHEIT),
-            self.config.temperature(25, TEMP_CELCIUS))
+            self.config.temperature(25, TEMP_CELSIUS))
         self.assertEqual(
             (80, TEMP_FAHRENHEIT),
             self.config.temperature(80, TEMP_FAHRENHEIT))

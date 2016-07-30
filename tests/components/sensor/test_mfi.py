@@ -6,7 +6,7 @@ import requests
 
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.mfi as mfi
-from homeassistant.const import TEMP_CELCIUS
+from homeassistant.const import TEMP_CELSIUS
 
 from tests.common import get_test_home_assistant
 
@@ -139,7 +139,7 @@ class TestMfiSensor(unittest.TestCase):
     def test_uom_temp(self):
         """Test the UOM temperature."""
         self.port.tag = 'temperature'
-        self.assertEqual(TEMP_CELCIUS, self.sensor.unit_of_measurement)
+        self.assertEqual(TEMP_CELSIUS, self.sensor.unit_of_measurement)
 
     def test_uom_power(self):
         """Test the UOEM power."""

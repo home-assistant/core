@@ -22,7 +22,7 @@ def get_service(hass, config):
     """Get the GNTP notification service."""
     if config.get('app_icon') is None:
         icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",
-                                 "www_static", "favicon-192x192.png")
+                                 "www_static", "icons", "favicon-192x192.png")
         app_icon = open(icon_file, 'rb').read()
     else:
         app_icon = config.get('app_icon')
@@ -41,8 +41,9 @@ class GNTPNotificationService(BaseNotificationService):
     # pylint: disable=too-many-arguments
     def __init__(self, app_name, app_icon, hostname, password, port):
         """Initialize the service."""
-        from gntp import notifier
-        self.gntp = notifier.GrowlNotifier(
+        import gntp.notifier
+        import gntp.errors
+        self.gntp = gntp.notifier.GrowlNotifier(
             applicationName=app_name,
             notifications=["Notification"],
             applicationIcon=app_icon,
@@ -50,7 +51,11 @@ class GNTPNotificationService(BaseNotificationService):
             password=password,
             port=port
         )
-        self.gntp.register()
+        try:
+            self.gntp.register()
+        except gntp.errors.NetworkError:
+            _LOGGER.error('Unable to register with the GNTP host.')
+            return
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""

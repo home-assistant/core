@@ -6,40 +6,51 @@ https://home-assistant.io/components/lock.mqtt/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.components.mqtt import (
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['mqtt']
+
+CONF_PAYLOAD_LOCK = 'payload_lock'
+CONF_PAYLOAD_UNLOCK = 'payload_unlock'
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
-DEFAULT_QOS = 0
 DEFAULT_OPTIMISTIC = False
-DEFAULT_RETAIN = False
 
-DEPENDENCIES = ['mqtt']
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK):
+        cv.string,
+    vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK):
+        cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the MQTT lock."""
-    if config.get('command_topic') is None:
-        _LOGGER.error("Missing required variable: command_topic")
-        return False
-
     add_devices_callback([MqttLock(
         hass,
-        config.get('name', DEFAULT_NAME),
-        config.get('state_topic'),
-        config.get('command_topic'),
-        config.get('qos', DEFAULT_QOS),
-        config.get('retain', DEFAULT_RETAIN),
-        config.get('payload_lock', DEFAULT_PAYLOAD_LOCK),
-        config.get('payload_unlock', DEFAULT_PAYLOAD_UNLOCK),
-        config.get('optimistic', DEFAULT_OPTIMISTIC),
+        config[CONF_NAME],
+        config.get(CONF_STATE_TOPIC),
+        config[CONF_COMMAND_TOPIC],
+        config[CONF_QOS],
+        config[CONF_RETAIN],
+        config[CONF_PAYLOAD_LOCK],
+        config[CONF_PAYLOAD_UNLOCK],
+        config[CONF_OPTIMISTIC],
         config.get(CONF_VALUE_TEMPLATE))])
 
 
