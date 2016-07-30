@@ -6,13 +6,16 @@ import sys
 import threading
 from urllib.parse import urlparse
 
+from typing import Optional
+
 import pkg_resources
 
 _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def install_package(package, upgrade=True, target=None):
+def install_package(package: str, upgrade: bool=True,
+                    target: Optional[str]=None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -36,7 +39,7 @@ def install_package(package, upgrade=True, target=None):
             return False
 
 
-def check_package_exists(package, lib_dir):
+def check_package_exists(package: str, lib_dir: str) -> bool:
     """Check if a package is installed globally or in lib_dir.
 
     Returns True when the requirement is met.

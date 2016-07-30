@@ -6,8 +6,9 @@ https://home-assistant.io/components/media_player.sonos/
 """
 import datetime
 import logging
-import socket
 from os import path
+import socket
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
@@ -15,8 +16,10 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF)
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_OFF,
+    ATTR_ENTITY_ID)
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['SoCo==0.11.1']
 
@@ -43,16 +46,28 @@ SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
 SUPPORT_SOURCE_RADIO = 'Radio'
 
+SONOS_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
+
+# List of devices that have been registered
+DEVICES = []
+
 
 # pylint: disable=unused-argument, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
+    global DEVICES
 
     if discovery_info:
         player = soco.SoCo(discovery_info)
         if player.is_visible:
-            add_devices([SonosDevice(hass, player)])
+            device = SonosDevice(hass, player)
+            add_devices([device])
+            if not DEVICES:
+                register_services(hass)
+            DEVICES.append(device)
             return True
         return False
 
@@ -74,60 +89,72 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning('No Sonos speakers found.')
         return False
 
-    devices = [SonosDevice(hass, p) for p in players]
-    add_devices(devices)
+    DEVICES = [SonosDevice(hass, p) for p in players]
+    add_devices(DEVICES)
+    register_services(hass)
     _LOGGER.info('Added %s Sonos speakers', len(players))
+    return True
 
-    def _apply_service(service, service_func, *service_func_args):
-        """Internal func for applying a service."""
-        entity_id = service.data.get('entity_id')
 
-        if entity_id:
-            _devices = [device for device in devices
-                        if device.entity_id == entity_id]
-        else:
-            _devices = devices
-
-        for device in _devices:
-            service_func(device, *service_func_args)
-            device.update_ha_state(True)
-
-    def group_players_service(service):
-        """Group media players, use player as coordinator."""
-        _apply_service(service, SonosDevice.group_players)
-
-    def unjoin_service(service):
-        """Unjoin the player from a group."""
-        _apply_service(service, SonosDevice.unjoin)
-
-    def snapshot_service(service):
-        """Take a snapshot."""
-        _apply_service(service, SonosDevice.snapshot)
-
-    def restore_service(service):
-        """Restore a snapshot."""
-        _apply_service(service, SonosDevice.restore)
-
+def register_services(hass):
+    """Register all services for sonos devices."""
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
     hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
-                           group_players_service,
-                           descriptions.get(SERVICE_GROUP_PLAYERS))
+                           _group_players_service,
+                           descriptions.get(SERVICE_GROUP_PLAYERS),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_UNJOIN,
-                           unjoin_service,
-                           descriptions.get(SERVICE_UNJOIN))
+                           _unjoin_service,
+                           descriptions.get(SERVICE_UNJOIN),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
-                           snapshot_service,
-                           descriptions.get(SERVICE_SNAPSHOT))
+                           _snapshot_service,
+                           descriptions.get(SERVICE_SNAPSHOT),
+                           schema=SONOS_SCHEMA)
 
     hass.services.register(DOMAIN, SERVICE_RESTORE,
-                           restore_service,
-                           descriptions.get(SERVICE_RESTORE))
+                           _restore_service,
+                           descriptions.get(SERVICE_RESTORE),
+                           schema=SONOS_SCHEMA)
 
-    return True
+
+def _apply_service(service, service_func, *service_func_args):
+    """Internal func for applying a service."""
+    entity_ids = service.data.get('entity_id')
+
+    if entity_ids:
+        _devices = [device for device in DEVICES
+                    if device.entity_id in entity_ids]
+    else:
+        _devices = DEVICES
+
+    for device in _devices:
+        service_func(device, *service_func_args)
+        device.update_ha_state(True)
+
+
+def _group_players_service(service):
+    """Group media players, use player as coordinator."""
+    _apply_service(service, SonosDevice.group_players)
+
+
+def _unjoin_service(service):
+    """Unjoin the player from a group."""
+    _apply_service(service, SonosDevice.unjoin)
+
+
+def _snapshot_service(service):
+    """Take a snapshot."""
+    _apply_service(service, SonosDevice.snapshot)
+
+
+def _restore_service(service):
+    """Restore a snapshot."""
+    _apply_service(service, SonosDevice.restore)
 
 
 def only_if_coordinator(func):
