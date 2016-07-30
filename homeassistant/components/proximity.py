@@ -73,7 +73,7 @@ def setup_proximity_component(hass, config):
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
                                  DEFAULT_UNIT_OF_MEASUREMENT)
 
-    zone_id = 'zone.{}.'.format(proximity_zone)
+    zone_id = 'zone.{}'.format(proximity_zone)
     state = hass.states.get(zone_id)
     zone_friendly_name = (state.name).lower()
 
