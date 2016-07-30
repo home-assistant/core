@@ -67,28 +67,21 @@ def setup_proximity_component(hass, config):
     tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
 
     # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
+    proximity_zone = 'zone.' \
+        + config.get('zone', DEFAULT_PROXIMITY_ZONE).lstrip('proximity.')
 
     # Get the unit of measurement from configuration.yaml.
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
-                                           DEFAULT_UNIT_OF_MEASUREMENT)
-
-    entity_id = DOMAIN + '.' + proximity_zone
-    proximity_zone = 'zone.' + proximity_zone
+                                 DEFAULT_UNIT_OF_MEASUREMENT)
 
     state = hass.states.get(proximity_zone)
     zone_friendly_name = (state.name).lower()
 
-    # Set the default values.
-    dist_to_zone = 'not set'
-    dir_of_travel = 'not set'
-    nearest = 'not set'
-
-    proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
-                          dir_of_travel, nearest, ignored_zones,
-                          proximity_devices, tolerance, proximity_zone,
-                          unit_of_measure)
-    proximity.entity_id = entity_id
+    proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
+                          DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
+                          ignored_zones, proximity_devices, tolerance,
+                          proximity_zone, unit_of_measure)
+    proximity.entity_id = DOMAIN + '.' + proximity_zone.lstrip('zone.')
 
     proximity.update_ha_state()
 
@@ -97,6 +90,7 @@ def setup_proximity_component(hass, config):
                        proximity.check_proximity_state_change)
 
     return True
+
 
 def setup(hass, config):
     """Get the zones and offsets from configuration.yaml."""
