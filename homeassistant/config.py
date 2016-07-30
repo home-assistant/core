@@ -22,7 +22,7 @@ YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 
-DEFAULT_CONFIG = (
+DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
      'running'),
@@ -34,17 +34,39 @@ DEFAULT_CONFIG = (
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
-DEFAULT_COMPONENTS = {
-    'introduction:': 'Show links to resources in log and frontend',
-    'frontend:': 'Enables the frontend',
-    'updater:': 'Checks for available updates',
-    'discovery:': 'Discover some devices automatically',
-    'conversation:': 'Allows you to issue voice commands from the frontend',
-    'history:': 'Enables support for tracking state changes over time.',
-    'logbook:': 'View all events in a logbook',
-    'sun:': 'Track the sun',
-    'sensor:\n   platform: yr': 'Weather Prediction',
-}
+DEFAULT_CONFIG = """
+# Show links to resources in log and frontend
+introduction:
+
+# Enables the frontend
+frontend:
+
+http:
+  # Uncomment this to add a password (recommended!)
+  # api_password: PASSWORD
+
+# Checks for available updates
+updater:
+
+# Discover some devices automatically
+discovery:
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+conversation:
+
+# Enables support for tracking state changes over time.
+history:
+
+# View all events in a logbook
+logbook:
+
+# Track the sun
+sun:
+
+# Weather Prediction
+sensor:
+  platform: yr
+"""
 
 
 def _valid_customize(value):
@@ -104,7 +126,7 @@ def create_default_config(config_dir, detect_location=True):
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
 
-    info = {attr: default for attr, default, _, _ in DEFAULT_CONFIG}
+    info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
     location_info = detect_location and loc_util.detect_location_info()
 
@@ -112,7 +134,7 @@ def create_default_config(config_dir, detect_location=True):
         if location_info.use_fahrenheit:
             info[CONF_TEMPERATURE_UNIT] = 'F'
 
-        for attr, default, prop, _ in DEFAULT_CONFIG:
+        for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
                 continue
             info[attr] = getattr(location_info, prop) or default
@@ -127,18 +149,14 @@ def create_default_config(config_dir, detect_location=True):
         with open(config_path, 'w') as config_file:
             config_file.write("homeassistant:\n")
 
-            for attr, _, _, description in DEFAULT_CONFIG:
+            for attr, _, _, description in DEFAULT_CORE_CONFIG:
                 if info[attr] is None:
                     continue
                 elif description:
                     config_file.write("  # {}\n".format(description))
                 config_file.write("  {}: {}\n".format(attr, info[attr]))
 
-            config_file.write("\n")
-
-            for component, description in DEFAULT_COMPONENTS.items():
-                config_file.write("# {}\n".format(description))
-                config_file.write("{}\n\n".format(component))
+            config_file.write(DEFAULT_CONFIG)
 
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
