@@ -90,7 +90,7 @@ def setup(hass, config):
         for proximity_config in config[DOMAIN]:
             setup_proximity_device(hass, proximity_config)
     else:
-        setup_proximity_device(config[DOMAIN])
+        setup_proximity_device(hass, config[DOMAIN])
 
     return True
 
