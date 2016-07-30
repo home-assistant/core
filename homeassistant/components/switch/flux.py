@@ -85,6 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sunset_colortemp = config.get(CONF_SUNSET_CT)
     stop_colortemp = config.get(CONF_STOP_CT)
     brightness = config.get(CONF_BRIGHTNESS)
+    mode = config.get(CONF_MODE)
     flux = FluxSwitch(name, hass, False, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, mode)
