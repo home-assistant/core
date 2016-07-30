@@ -74,7 +74,7 @@ def setup_proximity_component(hass, config):
                                  DEFAULT_UNIT_OF_MEASUREMENT)
 
     zone_id = 'zone.{}.'.format(proximity_zone)
-    state = hass.states.get(zone)
+    state = hass.states.get(zone_id)
     zone_friendly_name = (state.name).lower()
 
     proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
