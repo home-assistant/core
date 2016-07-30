@@ -114,14 +114,14 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_miles_to_feet(self):
         """Test conversion from miles to feet."""
-        self.assertEqual(distance_util.miles_to_ft(0), 0)
-        self.assertEqual(distance_util.miles_to_ft(1), 5280)
-        self.assertEqual(distance_util.miles_to_ft(.5), 2640)
-        self.assertEqual(distance_util.miles_to_ft(-1), -5280)
+        self.assertEqual(distance_util.miles_to_feet(0), 0)
+        self.assertEqual(distance_util.miles_to_feet(1), 5280)
+        self.assertEqual(distance_util.miles_to_feet(.5), 2640)
+        self.assertEqual(distance_util.miles_to_feet(-1), -5280)
 
         exceptionThrown = False
         try:
-            distance_util.miles_to_ft('a')
+            distance_util.miles_to_feet('a')
         except TypeError:
             exceptionThrown = True
 
