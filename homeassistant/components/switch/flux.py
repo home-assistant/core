@@ -62,7 +62,7 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness):
                     transition=30)
 
 
-def set_lights_temp(hass, lights, kelvin, brightness, mode):
+def set_lights_temp(hass, lights, kelvin, mode):
     """Set color of array of lights."""
     if mode == 'mired':
         temp=1000000/kelvin
@@ -72,7 +72,6 @@ def set_lights_temp(hass, lights, kelvin, brightness, mode):
         if is_on(hass, light):
             turn_on(hass, light,
                     color_temp = int(temp),
-                    brightness=brightness,
                     transition=30)
 
 
@@ -168,9 +167,9 @@ class FluxSwitch(SwitchDevice):
                 temp = self._start_colortemp - temp_offset
             else:
                 temp = self._start_colortemp + temp_offset
-            brightness = self._brightness if self._brightness else b_val
             if self._mode == 'xy':
                 x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
+                brightness = self._brightness if self._brightness else b_val
                 set_lights_xy(self.hass, self._lights, x_val,
                               y_val, brightness)
                 _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, "
@@ -178,9 +177,9 @@ class FluxSwitch(SwitchDevice):
                              brightness, round(percentage_of_day_complete*100),
                              as_local(now))
             else:
-                set_lights_temp(self.hass, self._lights, temp, brightness, self._mode)
-                _LOGGER.info("Lights updated to temp:%s brightness:%s, %s%%"
-                             " of day cycle complete at %s", temp, brightness,
+                set_lights_temp(self.hass, self._lights, temp, self._mode)
+                _LOGGER.info("Lights updated to temp:%s, %s%%"
+                             " of day cycle complete at %s", temp,
                              round(percentage_of_day_complete*100),
                              as_local(now))
         else:
@@ -199,9 +198,9 @@ class FluxSwitch(SwitchDevice):
                 temp = self._sunset_colortemp - temp_offset
             else:
                 temp = self._sunset_colortemp + temp_offset
-            brightness = self._brightness if self._brightness else b_val
             if self._mode == 'xy':
                 x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
+                brightness = self._brightness if self._brightness else b_val
                 set_lights_xy(self.hass, self._lights, x_val,
                               y_val, brightness)
                 _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
@@ -209,9 +208,9 @@ class FluxSwitch(SwitchDevice):
                              brightness, round(percentage_of_night_complete*100),
                              as_local(now))
             else:
-                set_lights_temp(self.hass, self._lights, temp, brightness, self._mode)
-                _LOGGER.info("Lights updated to temp:%s brightness:%s, %s%%"
-                             " of night cycle complete at %s", temp, brightness,
+                set_lights_temp(self.hass, self._lights, temp, self._mode)
+                _LOGGER.info("Lights updated to temp:%s, %s%%"
+                             " of night cycle complete at %s", temp,
                              round(percentage_of_night_complete*100),
                              as_local(now))
     def find_start_time(self, now):
