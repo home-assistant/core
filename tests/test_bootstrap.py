@@ -161,7 +161,7 @@ class TestBootstrap:
     def test_component_not_double_initialized(self):
         """Test we do not setup a component twice."""
 
-        mock_setup = mock.MagicMock()
+        mock_setup = mock.MagicMock(return_value=True)
 
         loader.set_component('comp', MockModule('comp', setup=mock_setup))
 
@@ -302,3 +302,29 @@ class TestBootstrap:
                 'valid': True
             }
         })
+
+    def test_disable_component_if_invalid_return(self):
+        """Test disabling component if invalid return."""
+        loader.set_component(
+            'disabled_component',
+            MockModule('disabled_component', setup=lambda hass, config: None))
+
+        assert not bootstrap.setup_component(self.hass, 'disabled_component')
+        assert loader.get_component('disabled_component') is None
+        assert 'disabled_component' not in self.hass.config.components
+
+        loader.set_component(
+            'disabled_component',
+            MockModule('disabled_component', setup=lambda hass, config: False))
+
+        assert not bootstrap.setup_component(self.hass, 'disabled_component')
+        assert loader.get_component('disabled_component') is not None
+        assert 'disabled_component' not in self.hass.config.components
+
+        loader.set_component(
+            'disabled_component',
+            MockModule('disabled_component', setup=lambda hass, config: True))
+
+        assert bootstrap.setup_component(self.hass, 'disabled_component')
+        assert loader.get_component('disabled_component') is not None
+        assert 'disabled_component' in self.hass.config.components

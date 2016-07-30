@@ -244,6 +244,10 @@ class GoogleTravelTimeSensor(Entity):
             self.valid_api_connection = False
             return None
 
+        # Check if the entity has location attributes
+        if location.has_location(entity):
+            return self._get_location_from_attributes(entity)
+
         # Check if device is in a zone
         zone_entity = self._hass.states.get("zone.%s" % entity.state)
         if location.has_location(zone_entity):
@@ -256,10 +260,6 @@ class GoogleTravelTimeSensor(Entity):
         # If zone was not found in state then use the state as the location
         if entity_id.startswith("sensor."):
             return entity.state
-
-        # For everything else look for location attributes
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
 
         # When everything fails just return nothing
         return None

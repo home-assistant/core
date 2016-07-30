@@ -141,6 +141,10 @@ class NestThermostat(ThermostatDevice):
                 temperature = (self.target_temperature_low, temperature)
         self.device.target = temperature
 
+    def set_hvac_mode(self, hvac_mode):
+        """Set hvac mode."""
+        self.device.mode = hvac_mode
+
     def turn_away_mode_on(self):
         """Turn away on."""
         self.structure.away = True

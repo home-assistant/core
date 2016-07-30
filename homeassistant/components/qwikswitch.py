@@ -5,18 +5,29 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch/
 """
 import logging
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.discovery import load_platform
+import voluptuous as vol
 
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.switch import SwitchDevice
+
+DOMAIN = 'qwikswitch'
 REQUIREMENTS = ['https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip'
                 '#pyqwikswitch==0.4']
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'qwikswitch'
-QSUSB = None
+CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required('url', default='http://127.0.0.1:2020'): vol.Coerce(str),
+        vol.Optional('dimmer_adjust', default=1): CV_DIM_VALUE,
+        vol.Optional('button_events'): vol.Coerce(str)
+    })}, extra=vol.ALLOW_EXTRA)
+
+QSUSB = {}
 
 
 class QSToggleEntity(object):
@@ -42,6 +53,7 @@ class QSToggleEntity(object):
         self._value = qsitem[PQS_VALUE]
         self._qsusb = qsusb
         self._dim = qsitem[PQS_TYPE] == QSType.dimmer
+        QSUSB[self._id] = self
 
     @property
     def brightness(self):
@@ -87,51 +99,70 @@ class QSToggleEntity(object):
             self.update_value(0)
 
 
+class QSSwitch(QSToggleEntity, SwitchDevice):
+    """Switch based on a Qwikswitch relay module."""
+
+    pass
+
+
+class QSLight(QSToggleEntity, Light):
+    """Light based on a Qwikswitch relay/dimmer module."""
+
+    pass
+
+
 # pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the QSUSB component."""
     from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
-                              QS_TYPE, PQS_VALUE, PQS_TYPE, QSType)
+                              PQS_VALUE, PQS_TYPE, QSType)
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
     cmd_buttons = config[DOMAIN].get('button_events', ','.join(CMD_BUTTONS))
     cmd_buttons = cmd_buttons.split(',')
 
-    try:
-        url = config[DOMAIN].get('url', 'http://127.0.0.1:2020')
-        dimmer_adjust = float(config[DOMAIN].get('dimmer_adjust', '1'))
-        qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
+    url = config[DOMAIN]['url']
+    dimmer_adjust = config[DOMAIN]['dimmer_adjust']
 
-        # Ensure qsusb terminates threads correctly
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             lambda event: qsusb.stop())
-    except ValueError as val_err:
-        _LOGGER.error(str(val_err))
-        return False
+    qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
 
-    qsusb.ha_devices = qsusb.devices()
-    qsusb.ha_objects = {}
-
-    # Identify switches & remove ' Switch' postfix in name
-    for item in qsusb.ha_devices:
-        if item[PQS_TYPE] == QSType.relay and \
-           item[QS_NAME].lower().endswith(' switch'):
-            item[QS_TYPE] = 'switch'
-            item[QS_NAME] = item[QS_NAME][:-7]
-
-    global QSUSB
-    if QSUSB is None:
+    def _stop(event):
+        """Stop the listener queue and clean up."""
+        nonlocal qsusb
+        qsusb.stop()
+        qsusb = None
+        global QSUSB
         QSUSB = {}
-    QSUSB[id(qsusb)] = qsusb
+        _LOGGER.info("Waiting for long poll to QSUSB to time out")
 
-    # Load sub-components for qwikswitch
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _stop)
+
+    # Discover all devices in QSUSB
+    devices = qsusb.devices()
+    QSUSB['switch'] = []
+    QSUSB['light'] = []
+    for item in devices:
+        if item[PQS_TYPE] == QSType.relay and (item[QS_NAME].lower()
+                                               .endswith(' switch')):
+            item[QS_NAME] = item[QS_NAME][:-7]  # Remove ' switch' postfix
+            QSUSB['switch'].append(QSSwitch(item, qsusb))
+        elif item[PQS_TYPE] in [QSType.relay, QSType.dimmer]:
+            QSUSB['light'].append(QSLight(item, qsusb))
+        else:
+            _LOGGER.warning("Ignored unknown QSUSB device: %s", item)
+
+    # Load platforms
     for comp_name in ('switch', 'light'):
-        load_platform(hass, comp_name, 'qwikswitch',
-                      {'qsusb_id': id(qsusb)}, config)
+        if len(QSUSB[comp_name]) > 0:
+            load_platform(hass, comp_name, 'qwikswitch', {}, config)
 
     def qs_callback(item):
         """Typically a button press or update signal."""
+        if qsusb is None:  # Shutting down
+            _LOGGER.info("Done")
+            return
+
         # If button pressed, fire a hass event
         if item.get(QS_CMD, '') in cmd_buttons:
             hass.bus.fire('qwikswitch.button.' + item.get(QS_ID, '@no_id'))
@@ -142,9 +173,13 @@ def setup(hass, config):
         if qsreply is False:
             return
         for item in qsreply:
-            if item[QS_ID] in qsusb.ha_objects:
-                qsusb.ha_objects[item[QS_ID]].update_value(
+            if item[QS_ID] in QSUSB:
+                QSUSB[item[QS_ID]].update_value(
                     round(min(item[PQS_VALUE], 100) * 2.55))
 
-    qsusb.listen(callback=qs_callback, timeout=30)
+    def _start(event):
+        """Start listening."""
+        qsusb.listen(callback=qs_callback, timeout=30)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start)
+
     return True

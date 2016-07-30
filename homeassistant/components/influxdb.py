@@ -33,6 +33,7 @@ CONF_PASSWORD = 'password'
 CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_BLACKLIST = 'blacklist'
+CONF_TAGS = 'tags'
 
 
 # pylint: disable=too-many-locals
@@ -56,6 +57,7 @@ def setup(hass, config):
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
     blacklist = conf.get(CONF_BLACKLIST, [])
+    tags = conf.get(CONF_TAGS, {})
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
@@ -98,6 +100,9 @@ def setup(hass, config):
                 }
             }
         ]
+
+        for tag in tags:
+            json_body[0]['tags'][tag] = tags[tag]
 
         try:
             influx.write_points(json_body)

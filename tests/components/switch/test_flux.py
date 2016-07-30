@@ -18,7 +18,6 @@ class TestSwitchFlux(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        # self.hass.config.components = ['flux', 'sun', 'light']
 
     def tearDown(self):
         """Stop everything that was started."""

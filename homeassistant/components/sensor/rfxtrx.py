@@ -12,8 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME,
-    CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES)
+    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT,
+    CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES, ATTR_ENTITY_ID)
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                     break
         for _data_type in data_types:
             new_sensor = RfxtrxSensor(None, entity_info[ATTR_NAME],
-                                      _data_type)
+                                      _data_type, entity_info[ATTR_FIREEVENT])
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
@@ -65,7 +65,17 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             sensors = rfxtrx.RFX_DEVICES[device_id]
             for key in sensors:
-                sensors[key].event = event
+                sensor = sensors[key]
+                sensor.event = event
+                # Fire event
+                if sensors[key].should_fire_event:
+                    sensor.hass.bus.fire(
+                        "signal_received", {
+                            ATTR_ENTITY_ID:
+                                sensors[key].entity_id,
+                        }
+                    )
+
             return
 
         # Add entity if not exist and the automatic_add is True
@@ -94,10 +104,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class RfxtrxSensor(Entity):
     """Representation of a RFXtrx sensor."""
 
-    def __init__(self, event, name, data_type):
+    def __init__(self, event, name, data_type, should_fire_event=False):
         """Initialize the sensor."""
         self.event = event
         self._name = name
+        self.should_fire_event = should_fire_event
         if data_type not in DATA_TYPES:
             data_type = "Unknown"
         self.data_type = data_type

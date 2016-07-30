@@ -370,7 +370,13 @@ class TestServiceRegistry(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.pool = ha.create_worker_pool(0)
         self.bus = ha.EventBus(self.pool)
-        self.services = ha.ServiceRegistry(self.bus, self.pool)
+
+        def add_job(*args, **kwargs):
+            """Forward calls to add_job on Home Assistant."""
+            # self works because we also have self.pool defined.
+            return ha.HomeAssistant.add_job(self, *args, **kwargs)
+
+        self.services = ha.ServiceRegistry(self.bus, add_job)
         self.services.register("test_domain", "test_service", lambda x: None)
 
     def tearDown(self):  # pylint: disable=invalid-name

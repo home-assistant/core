@@ -1,10 +1,15 @@
 """Test discovery helpers."""
+import os
 
 from unittest.mock import patch
 
+from homeassistant import loader, bootstrap, config as config_util
 from homeassistant.helpers import discovery
 
-from tests.common import get_test_home_assistant
+from tests.common import (get_test_home_assistant, get_test_config_dir,
+                          MockModule, MockPlatform)
+
+VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
 
 class TestHelpersDiscovery:
@@ -17,6 +22,9 @@ class TestHelpersDiscovery:
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+
+        if os.path.isfile(VERSION_PATH):
+            os.remove(VERSION_PATH)
 
     @patch('homeassistant.bootstrap.setup_component')
     def test_listen(self, mock_setup_component):
@@ -69,6 +77,7 @@ class TestHelpersDiscovery:
 
         discovery.load_platform(self.hass, 'test_component', 'test_platform',
                                 'discovery info')
+        self.hass.pool.block_till_done()
         assert mock_setup_component.called
         assert mock_setup_component.call_args[0] == \
             (self.hass, 'test_component', None)
@@ -88,3 +97,42 @@ class TestHelpersDiscovery:
         self.hass.pool.block_till_done()
 
         assert len(calls) == 1
+
+    def test_circular_import(self):
+        """Test we don't break doing circular import."""
+        component_calls = []
+        platform_calls = []
+
+        def component_setup(hass, config):
+            """Setup mock component."""
+            discovery.load_platform(hass, 'switch', 'test_circular')
+            component_calls.append(1)
+            return True
+
+        def setup_platform(hass, config, add_devices_callback,
+                           discovery_info=None):
+            """Setup mock platform."""
+            platform_calls.append(1)
+
+        loader.set_component(
+            'test_component',
+            MockModule('test_component', setup=component_setup))
+
+        loader.set_component(
+            'switch.test_circular',
+            MockPlatform(setup_platform,
+                         dependencies=['test_component']))
+
+        bootstrap.from_config_dict({
+            'test_component': None,
+            'switch': [{
+                'platform': 'test_circular',
+            }],
+        }, self.hass)
+
+        self.hass.pool.block_till_done()
+
+        assert 'test_component' in self.hass.config.components
+        assert 'switch' in self.hass.config.components
+        assert len(component_calls) == 1
+        assert len(platform_calls) == 2

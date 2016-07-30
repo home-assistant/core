@@ -7,22 +7,22 @@
   "background_color": "#FFFFFF",
   "icons": [
     {
-     "src": "/static/favicon-192x192.png",
+     "src": "/static/icons/favicon-192x192.png",
      "sizes": "192x192",
      "type": "image/png"
     },
     {
-     "src": "/static/favicon-384x384.png",
+     "src": "/static/icons/favicon-384x384.png",
      "sizes": "384x384",
      "type": "image/png"
     },
     {
-     "src": "/static/favicon-512x512.png",
+     "src": "/static/icons/favicon-512x512.png",
      "sizes": "512x512",
      "type": "image/png"
     },
     {
-     "src": "/static/favicon-1024x1024.png",
+     "src": "/static/icons/favicon-1024x1024.png",
      "sizes": "1024x1024",
      "type": "image/png"
     }

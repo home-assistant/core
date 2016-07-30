@@ -18,7 +18,7 @@ _TEST_INSTANCE_PORT = SERVER_PORT
 
 def get_test_config_dir():
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "config")
+    return os.path.join(os.path.dirname(__file__), "testing_config")
 
 
 def get_test_home_assistant(num_threads=None):
