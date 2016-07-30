@@ -36,7 +36,7 @@ ATTR_NEAREST = 'nearest'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_proximity_component(hass, config):   # pylint: disable=too-many-locals,too-many-statements
+def setup_proximity_component(hass, config):
     """Set up individual proximity component."""
     ignored_zones = []
     if 'ignored_zones' in config:
