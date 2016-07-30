@@ -49,15 +49,15 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_proximity_component(hass, config):
     """Set up individual proximity component."""
-    ignored_zones = []
-    if 'ignored_zones' in config:
-        for variable in config['ignored_zones']:
-            ignored_zones.append(variable)
-
     # Get the devices from configuration.yaml.
     if 'devices' not in config:
         _LOGGER.error('devices not found in config')
         return False
+
+    ignored_zones = []
+    if 'ignored_zones' in config:
+        for variable in config['ignored_zones']:
+            ignored_zones.append(variable)
 
     proximity_devices = []
     for variable in config['devices']:
