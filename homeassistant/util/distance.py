@@ -7,68 +7,68 @@ _LOGGER = logging.getLogger(__name__)
 VALID_UNITS = ['km', 'm', 'ft', 'mi']
 
 
-def kilometers_to_miles(km):
+def kilometers_to_miles(kilometers):
     """Convert the given kilometers to miles."""
-    if not isinstance(km, Number):
-        raise TypeError(str(km) + ' is not of numeric type')
+    if not isinstance(kilometers, Number):
+        raise TypeError(str(kilometers) + ' is not of numeric type')
 
-    return km * 0.621371
+    return kilometers * 0.621371
 
 
-def miles_to_kilometers(mi):
+def miles_to_kilometers(miles):
     """Convert the given miles to kilometers."""
-    if not isinstance(mi, Number):
-        raise TypeError(str(mi) + ' is not of numeric type')
+    if not isinstance(miles, Number):
+        raise TypeError(str(miles) + ' is not of numeric type')
 
-    return mi * 1.60934
+    return miles * 1.60934
 
 
-def kilometers_to_meters(km):
+def kilometers_to_meters(kilometers):
     """Convert the given kilometers to meters."""
     if not isinstance(km, Number):
-        raise TypeError(str(km) + ' is not of numeric type')
+        raise TypeError(str(kilometers) + ' is not of numeric type')
 
-    return km * 1000
+    return kilometers * 1000
 
 
-def meters_to_kilometers(m):
+def meters_to_kilometers(meters):
     """Convert the given meters to kilometers."""
     if not isinstance(m, Number):
-        raise TypeError(str(m) + ' is not of numeric type')
+        raise TypeError(str(meters) + ' is not of numeric type')
 
-    return m * 0.001
+    return meters * 0.001
 
 
-def meters_to_feet(m):
+def meters_to_feet(meters):
     """Convert the given meters to feet."""
-    if not isinstance(m, Number):
-        raise TypeError(str(m) + ' is not of numeric type')
+    if not isinstance(meters, Number):
+        raise TypeError(str(meters) + ' is not of numeric type')
 
-    return m * 3.28084
+    return meters * 3.28084
 
 
-def feet_to_meters(ft):
+def feet_to_meters(feet):
     """Convert the given feet to meters."""
-    if not isinstance(ft, Number):
-        raise TypeError(str(ft) + ' is not of numeric type')
+    if not isinstance(feet, Number):
+        raise TypeError(str(feet) + ' is not of numeric type')
 
-    return ft * 0.3048
+    return feet * 0.3048
 
 
-def feet_to_miles(ft):
+def feet_to_miles(feet):
     """Convert the given feet to miles."""
-    if not isinstance(ft, Number):
-        raise TypeError(str(ft) + ' is not of numeric type')
+    if not isinstance(feet, Number):
+        raise TypeError(str(feet) + ' is not of numeric type')
 
-    return ft * 0.000189394
+    return feet * 0.000189394
 
 
-def miles_to_ft(mi):
+def miles_to_feet(miles):
     """Convert the given miles to feet."""
-    if not isinstance(mi, Number):
-        raise TypeError(str(mi) + ' is not of numeric type')
+    if not isinstance(miles, Number):
+        raise TypeError(str(miles) + ' is not of numeric type')
 
-    return mi * 5280
+    return miles * 5280
 
 
 def convert(value, unit_1, unit_2):
