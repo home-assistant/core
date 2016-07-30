@@ -211,7 +211,7 @@ class FluxSwitch(SwitchDevice):
                 _LOGGER.info("Lights updated to temp:%s, %s%%"
                             " of night cycle complete at %s", temp,
                             round(percentage_of_night_complete*100),
-as_local(now))
+                            as_local(now))
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
