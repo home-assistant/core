@@ -12,20 +12,23 @@ ENTITY_ID = 'media_player.kitchen'
 
 
 class socoDiscoverMock():
-    """Mock class for the soco.discover method"""
+    """Mock class for the soco.discover method."""
+
     def discover(interface_addr):
-        """Returns tuple of soco.SoCo objects representing found speakers"""
+        """Return tuple of soco.SoCo objects representing found speakers."""
         return {SoCoMock('192.0.2.1')}
 
 
 class SoCoMock():
-    """Mock class for the soco.SoCo object"""
+    """Mock class for the soco.SoCo object."""
+
     def __init__(self, ip):
+        """Initialize soco object."""
         self.ip_address = ip
         self.is_visible = True
 
     def get_speaker_info(self):
-        """Returns a dict with various data points about the speaker"""
+        """Return a dict with various data points about the speaker."""
         return {'serial_number': 'B8-E9-37-BO-OC-BA:2',
                 'software_version': '32.11-30071',
                 'uid': 'RINCON_B8E937BOOCBA02500',
@@ -35,13 +38,13 @@ class SoCoMock():
                 'hardware_version': '1.8.1.2-1'}
 
     def get_current_transport_info(self):
-        """Returns a dict with the current state of the speaker"""
+        """Return a dict with the current state of the speaker."""
         return {'current_transport_speed': '1',
                 'current_transport_state': 'STOPPED',
                 'current_transport_status': 'OK'}
 
     def get_current_track_info(self):
-        """Returns a dict with the current track information"""
+        """Return a dict with the current track information."""
         return {'album': '',
                 'uri': '',
                 'title': '',
@@ -53,15 +56,15 @@ class SoCoMock():
                 'metadata': ''}
 
     def is_coordinator(self):
-        """Returns true if coordinator"""
+        """Return true if coordinator."""
         return True
 
     def partymode(self):
-        """Causes the speaker to join all other speakers in the network"""
+        """Cause the speaker to join all other speakers in the network."""
         return
 
     def unjoin(self):
-        """Causes the speaker to separate itself from other speakers"""
+        """Cause the speaker to separate itself from other speakers."""
         return
 
 
