@@ -170,7 +170,7 @@ class FluxSwitch(SwitchDevice):
                 temp = self._start_colortemp + temp_offset
             brightness = self._brightness if self._brightness else b_val
             if self._mode == 'xy':
-                x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))00
+                x_val, y_val, b_val = color_RGB_to_xy(*temp_to_rgb(temp))
                 set_lights_xy(self.hass, self._lights, x_val,
                               y_val, brightness)
                 _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, "
