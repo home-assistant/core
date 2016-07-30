@@ -176,7 +176,7 @@ class FluxSwitch(SwitchDevice):
                              brightness, round(percentage_of_day_complete*100),
                              as_local(now))
             else:
-                set_lights_mired(self.hass, self._lights, temp, self._mode)
+                set_lights_temp(self.hass, self._lights, temp, self._mode)
                 _LOGGER.info("Lights updated to temp:%s, %s%%"
                             " of day cycle complete at %s", temp,
                             round(percentage_of_day_complete*100),
@@ -207,7 +207,7 @@ class FluxSwitch(SwitchDevice):
                              brightness, round(percentage_of_night_complete*100),
                              as_local(now))
             else:
-                set_lights_mired(self.hass, self._lights, temp, self._mode)
+                set_lights_temp(self.hass, self._lights, temp, self._mode)
                 _LOGGER.info("Lights updated to temp:%s, %s%%"
                             " of night cycle complete at %s", temp,
                             round(percentage_of_night_complete*100),
