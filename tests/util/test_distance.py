@@ -164,7 +164,8 @@ class TestDistanceUtil(unittest.TestCase):
         feet = 5000
         self.assertEqual(distance_util.convert(feet, 'ft', 'km'), 1.524)
         self.assertEqual(distance_util.convert(feet, 'ft', 'm'), 1524)
-        self.assertEqual(distance_util.convert(feet, 'ft', 'mi'), 0.9469700000000001)
+        self.assertEqual(distance_util.convert(feet, 'ft', 'mi'),
+                         0.9469700000000001)
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
