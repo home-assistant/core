@@ -36,29 +36,30 @@ ATTR_NEAREST = 'nearest'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_proximity_device(hass, proximity_config):   # pylint: disable=too-many-locals,too-many-statements
+def setup_proximity_component(hass, config):   # pylint: disable=too-many-locals,too-many-statements
+    """Set up individual proximity component."""
     ignored_zones = []
-    if 'ignored_zones' in proximity_config:
-        for variable in proximity_config['ignored_zones']:
+    if 'ignored_zones' in config:
+        for variable in config['ignored_zones']:
             ignored_zones.append(variable)
 
     # Get the devices from configuration.yaml.
-    if 'devices' not in proximity_config:
+    if 'devices' not in config:
         _LOGGER.error('devices not found in config')
         return False
 
     proximity_devices = []
-    for variable in proximity_config['devices']:
+    for variable in config['devices']:
         proximity_devices.append(variable)
 
     # Get the direction of travel tolerance from configuration.yaml.
-    tolerance = proximity_config.get('tolerance', DEFAULT_TOLERANCE)
+    tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
 
     # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = proximity_config.get('zone', DEFAULT_PROXIMITY_ZONE)
+    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
 
     # Get the unit of measurement from configuration.yaml.
-    unit_of_measure = proximity_config.get(ATTR_UNIT_OF_MEASUREMENT,
+    unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
                                            DEFAULT_UNIT_OF_MEASUREMENT)
 
     entity_id = DOMAIN + '.' + proximity_zone
