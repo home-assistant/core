@@ -89,32 +89,92 @@ def convert(value, unit_1, unit_2):
     result = None
 
     if unit_1 == 'mi':
-        if unit_2 == 'km':
-            result = miles_to_kilometers(value)
-        elif unit_2 == 'm':
-            result = kilometers_to_meters(miles_to_kilometers(value))
-        elif unit_2 == 'ft':
-            result = miles_to_feet(value)
+        result = __convert_from_miles(value, unit_2)
     elif unit_1 == 'ft':
-        if unit_2 == 'mi':
-            result = feet_to_miles(value)
-        elif unit_2 == 'km':
-            result = meters_to_kilometers(feet_to_meters(value))
-        elif unit_2 == 'm':
-            result = feet_to_meters(value)
+        result = __convert_from_feet(value, unit_2)
     elif unit_1 == 'km':
-        if unit_2 == 'mi':
-            result = kilometers_to_miles(value)
-        elif unit_2 == 'm':
-            result = kilometers_to_meters(value)
-        elif unit_2 == 'ft':
-            result = meters_to_feet(kilometers_to_meters(value))
+        result = __convert_from_kilometers(value, unit_2)
     elif unit_1 == 'm':
-        if unit_2 == 'km':
-            result = meters_to_kilometers(value)
-        elif unit_2 == 'ft':
-            result = meters_to_feet(value)
-        elif unit_2 == 'mi':
-            result = kilometers_to_miles(meters_to_kilometers(value))
+        result = __convert_from_meters(value, unit_2)
+
+    return result
+
+
+def __convert_from_kilometers(kilometers, to_unit):
+    """Convert kilometers to specified unit."""
+    if to_unit not in VALID_UNITS:
+        _LOGGER.error('Unknown unit of measure: ' + str(to_unit))
+        raise ValueError('Unknown unit of measure: ' + str(to_unit))
+
+    result = None
+
+    if to_unit == 'mi':
+        result = kilometers_to_miles(kilometers)
+    elif to_unit == 'm':
+        result = kilometers_to_meters(kilometers)
+    elif to_unit == 'ft':
+        result = meters_to_feet(kilometers_to_meters(kilometers))
+    elif to_unit == 'km':
+        result = kilometers
+
+    return result
+
+
+def __convert_from_meters(meters, to_unit):
+    """Convert meters to specified unit."""
+    if to_unit not in VALID_UNITS:
+        _LOGGER.error('Unknown unit of measure: ' + str(to_unit))
+        raise ValueError('Unknown unit of measure: ' + str(to_unit))
+
+    result = None
+
+    if to_unit == 'km':
+        result = meters_to_kilometers(meters)
+    elif to_unit == 'ft':
+        result = meters_to_feet(meters)
+    elif to_unit == 'mi':
+        result = kilometers_to_miles(meters_to_kilometers(meters))
+    elif to_unit == 'm':
+        result = meters
+
+    return result
+
+
+def __convert_from_miles(miles, to_unit):
+    """Convert miles to specified unit."""
+    if to_unit not in VALID_UNITS:
+        _LOGGER.error('Unknown unit of measure: ' + str(to_unit))
+        raise ValueError('Unknown unit of measure: ' + str(to_unit))
+
+    result = None
+
+    if to_unit == 'km':
+        result = miles_to_kilometers(miles)
+    elif to_unit == 'm':
+        result = kilometers_to_meters(miles_to_kilometers(miles))
+    elif to_unit == 'ft':
+        result = miles_to_feet(miles)
+    elif to_unit == 'mi':
+        result = miles
+
+    return result
+
+
+def __convert_from_feet(feet, to_unit):
+    """Convert feet to specified unit."""
+    if to_unit not in VALID_UNITS:
+        _LOGGER.error('Unknown unit of measure: ' + str(to_unit))
+        raise ValueError('Unknown unit of measure: ' + str(to_unit))
+
+    result = None
+
+    if to_unit == 'mi':
+        result = feet_to_miles(feet)
+    elif to_unit == 'km':
+        result = meters_to_kilometers(feet_to_meters(feet))
+    elif to_unit == 'm':
+        result = feet_to_meters(feet)
+    elif to_unit == 'ft':
+        result = feet
 
     return result
