@@ -73,14 +73,15 @@ def setup_proximity_component(hass, config):
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
                                  DEFAULT_UNIT_OF_MEASUREMENT)
 
-    state = hass.states.get(proximity_zone)
+    zone_id = 'zone.{}.'.format(proximity_zone)
+    state = hass.states.get(zone)
     zone_friendly_name = (state.name).lower()
 
     proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
                           ignored_zones, proximity_devices, tolerance,
-                          proximity_zone, unit_of_measure)
-    proximity.entity_id = DOMAIN + '.' + proximity_zone.lstrip('zone.')
+                          zone_id, unit_of_measure)
+    proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
     proximity.update_ha_state()
 
