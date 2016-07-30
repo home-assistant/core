@@ -19,6 +19,8 @@ DEPENDENCIES = ['zone', 'device_tracker']
 
 DOMAIN = 'proximity'
 
+NOT_SET = 'not set'
+
 # Default tolerance
 DEFAULT_TOLERANCE = 1
 
@@ -27,6 +29,15 @@ DEFAULT_PROXIMITY_ZONE = 'home'
 
 # Default unit of measure
 DEFAULT_UNIT_OF_MEASUREMENT = 'km'
+
+# Default distance to zone
+DEFAULT_DIST_TO_ZONE = NOT_SET
+
+# Default direction of travel
+DEFAULT_DIR_OF_TRAVEL = NOT_SET
+
+# Default nearest device
+DEFAULT_NEAREST = NOT_SET
 
 # Entity attributes
 ATTR_DIST_FROM = 'dist_to_zone'
