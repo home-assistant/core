@@ -67,8 +67,7 @@ def setup_proximity_component(hass, config):
     tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
 
     # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = 'zone.' \
-        + config.get('zone', DEFAULT_PROXIMITY_ZONE).lstrip('proximity.')
+    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
 
     # Get the unit of measurement from configuration.yaml.
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
