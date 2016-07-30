@@ -22,7 +22,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.kilometers_to_miles('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -37,7 +37,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.miles_to_kilometers('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -52,7 +52,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.kilometers_to_meters('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -67,7 +67,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.meters_to_kilometers('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -82,7 +82,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.meters_to_feet('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -97,7 +97,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.feet_to_meters('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -112,7 +112,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.feet_to_miles('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
@@ -127,7 +127,7 @@ class TestDistanceUtil(unittest.TestCase):
         try:
             distance_util.miles_to_ft('a')
         except TypeError:
-            exceptionThrown
+            exceptionThrown = True
 
         self.assertTrue(exceptionThrown)
 
