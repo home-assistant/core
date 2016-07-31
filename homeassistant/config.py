@@ -9,7 +9,9 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, TEMP_FAHRENHEIT,
-    TEMP_CELSIUS, __version__)
+    TEMP_CELSIUS, CONF_DISTANCE_UNIT, __version__)
+from homeassistant.util.distance import (
+    UNIT_LABELS, KILOMETERS_SYMBOL, MILES_SYMBOL)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
