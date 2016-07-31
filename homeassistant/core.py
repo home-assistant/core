@@ -17,7 +17,6 @@ from types import MappingProxyType
 from typing import Any, Callable
 import voluptuous as vol
 
-import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
@@ -28,11 +27,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, __version__)
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
+from homeassistant.helpers.unit_system import (
+    METRIC_SYSTEM,
+)
 
 DOMAIN = "homeassistant"
 
@@ -95,7 +96,7 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, self.add_job)
         self.states = StateMachine(self.bus)
-        self.config = Config()
+        self.config = Config()  # type: Config
         self.state = CoreState.not_running
 
     @property
@@ -715,9 +716,9 @@ class Config(object):
         self.latitude = None
         self.longitude = None
         self.elevation = None
-        self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
+        self.units = METRIC_SYSTEM
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False
@@ -731,28 +732,14 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = get_default_config_dir()
 
-    def distance(self, lat, lon):
-        """Calculate distance from Home Assistant in meters."""
-        return location.distance(self.latitude, self.longitude, lat, lon)
+    def distance(self: object, lat: float, lon: float) -> float:
+        """Calculate distance from Home Assistant."""
+        return self.units.length(
+            location.distance(self.latitude, self.longitude, lat, lon), 'm')
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
         return os.path.join(self.config_dir, *path)
-
-    def temperature(self, value, unit):
-        """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                self.temperature_unit and unit != self.temperature_unit):
-            return value, unit
-
-        try:
-            temp = float(value)
-        except ValueError:  # Could not convert value to float
-            return value, unit
-
-        return (
-            round(temp_helper.convert(temp, unit, self.temperature_unit), 1),
-            self.temperature_unit)
 
     def as_dict(self):
         """Create a dict representation of this dict."""
@@ -761,7 +748,7 @@ class Config(object):
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
-            'temperature_unit': self.temperature_unit,
+            'unit_system': self.units.as_dict(),
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
