@@ -114,7 +114,6 @@ ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
-TEMP_CELCIUS = "°C"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
