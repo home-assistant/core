@@ -11,9 +11,12 @@ import logging
 import queue
 import threading
 import time
-from datetime import timedelta
-
+from datetime import timedelta, datetime
 import voluptuous as vol
+
+from typing import Any, Union, Optional, List
+from homeassistant.helpers.typing import (ConfigType, QueryType,
+                                          HomeAssistantType)
 
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
@@ -44,15 +47,16 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-_INSTANCE = None
+_INSTANCE = None  # type: Any
 _LOGGER = logging.getLogger(__name__)
 
 # These classes will be populated during setup()
-# pylint: disable=invalid-name
-Session = None
+# pylint: disable=invalid-name,no-member
+Session = None  # pylint: disable=no-member
 
 
-def execute(q):
+def execute(q: QueryType) \
+        -> List[Any]:  # pylint: disable=invalid-sequence-index
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -68,11 +72,11 @@ def execute(q):
             except sqlalchemy.exc.SQLAlchemyError as e:
                 log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
     finally:
-        Session().close()
+        Session.close()
     return []
 
 
-def run_information(point_in_time=None):
+def run_information(point_in_time: Optional[datetime]=None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -91,7 +95,7 @@ def run_information(point_in_time=None):
         (recorder_runs.end > point_in_time)).first()
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Setup the recorder."""
     # pylint: disable=global-statement
     global _INSTANCE
@@ -112,30 +116,36 @@ def setup(hass, config):
     return True
 
 
-def query(model_name, *args):
+def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
+    _verify_instance()
+
     if isinstance(model_name, str):
-        return Session().query(get_model(model_name), *args)
-    return Session().query(model_name, *args)
+        return Session.query(get_model(model_name), *args)
+    return Session.query(model_name, *args)
 
 
-def get_model(model_name):
+def get_model(model_name: str) -> Any:
     """Get a model class."""
     from homeassistant.components.recorder import models
+    try:
+        return getattr(models, model_name)
+    except AttributeError:
+        _LOGGER.error("Invalid model name %s", model_name)
+        return None
 
-    return getattr(models, model_name)
 
-
-def log_error(e, retry_wait=0, rollback=True,
-              message="Error during query: %s"):
+def log_error(e: Exception, retry_wait: Optional[float]=0,
+              rollback: Optional[bool]=True,
+              message: Optional[str]="Error during query: %s") -> None:
     """Log about SQLAlchemy errors in a sane manner."""
     import sqlalchemy.exc
     if not isinstance(e, sqlalchemy.exc.OperationalError):
-        _LOGGER.exception(e)
+        _LOGGER.exception(str(e))
     else:
         _LOGGER.error(message, str(e))
     if rollback:
-        Session().rollback()
+        Session.rollback()
     if retry_wait:
         _LOGGER.info("Retrying in %s seconds", retry_wait)
         time.sleep(retry_wait)
@@ -145,19 +155,20 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, purge_days, uri):
+    def __init__(self, hass: HomeAssistantType, purge_days: int, uri: str) \
+            -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
         self.hass = hass
         self.purge_days = purge_days
-        self.queue = queue.Queue()
+        self.queue = queue.Queue()  # type: Any
         self.quit_object = object()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
-        self.engine = None
-        self._run = None
+        self.engine = None  # type: Any
+        self._run = None  # type: Any
 
         def start_recording(event):
             """Start recording."""
@@ -276,7 +287,7 @@ class Recorder(threading.Thread):
             run.end = self.recording_start
             _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                             run.run_id, run.start)
-            Session().add(run)
+            Session.add(run)
 
             _LOGGER.warning("Found unfinished sessions")
 
@@ -321,7 +332,7 @@ class Recorder(threading.Thread):
         if self._commit(_purge_events):
             _LOGGER.info("Purged events created before %s", purge_before)
 
-        Session().expire_all()
+        Session.expire_all()
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
@@ -346,7 +357,8 @@ class Recorder(threading.Thread):
         return False
 
 
-def _verify_instance():
+def _verify_instance() -> None:
     """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")
+    _INSTANCE.block_till_db_ready()
