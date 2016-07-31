@@ -21,7 +21,7 @@ import homeassistant.bootstrap as bootstrap
 import homeassistant.core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
-    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES,
+    URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
     URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
@@ -75,7 +75,7 @@ class API(object):
 
         return self.status == APIStatus.OK
 
-    def __call__(self, method, path, data=None):
+    def __call__(self, method, path, data=None, timeout=5):
         """Make a call to the Home Assistant API."""
         if data is not None:
             data = json.dumps(data, cls=JSONEncoder)
@@ -85,10 +85,11 @@ class API(object):
         try:
             if method == METHOD_GET:
                 return requests.get(
-                    url, params=data, timeout=5, headers=self._headers)
+                    url, params=data, timeout=timeout, headers=self._headers)
             else:
                 return requests.request(
-                    method, url, data=data, timeout=5, headers=self._headers)
+                    method, url, data=data, timeout=timeout,
+                    headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -510,12 +511,12 @@ def get_services(api):
         return {}
 
 
-def call_service(api, domain, service, service_data=None):
+def call_service(api, domain, service, service_data=None, timeout=5):
     """Call a service at the remote API."""
     try:
         req = api(METHOD_POST,
                   URL_API_SERVICES_SERVICE.format(domain, service),
-                  service_data)
+                  service_data, timeout=timeout)
 
         if req.status_code != 200:
             _LOGGER.error("Error calling service: %d - %s",
@@ -523,3 +524,17 @@ def call_service(api, domain, service, service_data=None):
 
     except HomeAssistantError:
         _LOGGER.exception("Error calling service")
+
+
+def get_config(api):
+    """Return configuration."""
+    try:
+        req = api(METHOD_GET, URL_API_CONFIG)
+
+        return req.json() if req.status_code == 200 else {}
+
+    except (HomeAssistantError, ValueError):
+        # ValueError if req.json() can't parse the JSON
+        _LOGGER.exception("Got unexpected configuration results")
+
+        return {}

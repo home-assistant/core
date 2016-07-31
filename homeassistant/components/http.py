@@ -216,9 +216,29 @@ def routing_map(hass):
             """Convert date to url value."""
             return value.isoformat()
 
+    class DateTimeValidator(BaseConverter):
+        """Validate datetimes in urls formatted per ISO 8601."""
+
+        regex = r'\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d' \
+            r'\.\d+([+-][0-2]\d:[0-5]\d|Z)'
+
+        def to_python(self, value):
+            """Validate and convert date."""
+            parsed = dt_util.parse_datetime(value)
+
+            if parsed is None:
+                raise ValidationError()
+
+            return parsed
+
+        def to_url(self, value):
+            """Convert date to url value."""
+            return value.isoformat()
+
     return Map(converters={
         'entity': EntityValidator,
         'date': DateValidator,
+        'datetime': DateTimeValidator,
     })
 
 
