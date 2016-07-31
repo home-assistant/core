@@ -53,7 +53,8 @@ class KodiDevice(MediaPlayerDevice):
         self._url = url
         self._server = jsonrpc_requests.Server(
             '{}/jsonrpc'.format(self._url),
-            auth=auth)
+            auth=auth,
+            timeout=5)
         self._turn_off_action = turn_off_action
         self._players = list()
         self._properties = None
