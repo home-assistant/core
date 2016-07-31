@@ -735,7 +735,6 @@ class Config(object):
 
     def distance(self, lat, lon):
         """Calculate distance from Home Assistant."""
-        print('DISTANCE UNIT: ' + str(self.distance_unit))
         return distance_util.convert(
             location.distance(self.latitude, self.longitude, lat, lon),
             'm',
