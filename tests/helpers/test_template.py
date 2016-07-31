@@ -17,6 +17,7 @@ class TestUtilTemplate(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup the tests."""
         self.hass = get_test_home_assistant()
+        self.hass.config.distance_unit = 'm'
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""

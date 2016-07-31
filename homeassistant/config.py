@@ -9,7 +9,9 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, TEMP_FAHRENHEIT,
-    TEMP_CELSIUS, __version__)
+    TEMP_CELSIUS, CONF_DISTANCE_UNIT, __version__)
+from homeassistant.util.distance import (
+    UNIT_LABELS, KILOMETERS_SYMBOL, MILES_SYMBOL)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +24,11 @@ YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 
+DISTANCE_DESCRIPTION = ''
+
+for symbol, name in UNIT_LABELS.items():
+    DISTANCE_DESCRIPTION += '{} for {},'.format(symbol, name)
+
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -31,6 +38,7 @@ DEFAULT_CORE_CONFIG = (
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
     (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
+    (CONF_DISTANCE_UNIT, KILOMETERS_SYMBOL, None, DISTANCE_DESCRIPTION[:-1]),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
@@ -89,6 +97,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_LONGITUDE: cv.longitude,
     CONF_ELEVATION: vol.Coerce(int),
     CONF_TEMPERATURE_UNIT: cv.temperature_unit,
+    vol.Optional(CONF_DISTANCE_UNIT): cv.distance_unit,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): _valid_customize,
@@ -133,6 +142,8 @@ def create_default_config(config_dir, detect_location=True):
     if location_info:
         if location_info.use_fahrenheit:
             info[CONF_TEMPERATURE_UNIT] = 'F'
+        if location_info.use_miles:
+            info[CONF_DISTANCE_UNIT] = MILES_SYMBOL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
@@ -219,19 +230,6 @@ def process_ha_core_config(hass, config):
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 
-    def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
-        if time_zone_str is None:
-            return
-
-        time_zone = date_util.get_time_zone(time_zone_str)
-
-        if time_zone:
-            hac.time_zone = time_zone
-            date_util.set_default_time_zone(time_zone)
-        else:
-            _LOGGER.error('Received invalid time zone %s', time_zone_str)
-
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
                       (CONF_NAME, 'location_name'),
@@ -240,23 +238,45 @@ def process_ha_core_config(hass, config):
             setattr(hac, attr, config[key])
 
     if CONF_TIME_ZONE in config:
-        set_time_zone(config.get(CONF_TIME_ZONE))
+        __set_time_zone(hac, config.get(CONF_TIME_ZONE))
 
     set_customize(config.get(CONF_CUSTOMIZE) or {})
 
     if CONF_TEMPERATURE_UNIT in config:
         hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
 
+    if CONF_DISTANCE_UNIT in config:
+        hac.distance_unit = config[CONF_DISTANCE_UNIT]
+
+    __auto_discover(hac)
+
+
+def __set_time_zone(hac, time_zone_str):
+    """Helper method to set time zone."""
+    if time_zone_str is None:
+        return
+
+    time_zone = date_util.get_time_zone(time_zone_str)
+
+    if time_zone:
+        hac.time_zone = time_zone
+        date_util.set_default_time_zone(time_zone)
+    else:
+        _LOGGER.error('Received invalid time zone %s', time_zone_str)
+
+
+def __auto_discover(hac):
+    """Perform auto discover if needed for any core config property."""
     # Shortcut if no auto-detection necessary
     if None not in (hac.latitude, hac.longitude, hac.temperature_unit,
-                    hac.time_zone, hac.elevation):
+                    hac.time_zone, hac.elevation, hac.distance_unit):
         return
 
     discovered = []
 
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.temperature_unit,
-                hac.time_zone):
+                hac.time_zone, hac.distance_unit):
         info = loc_util.detect_location_info()
 
         if info is None:
@@ -269,20 +289,14 @@ def process_ha_core_config(hass, config):
             discovered.append(('latitude', hac.latitude))
             discovered.append(('longitude', hac.longitude))
 
-        if hac.temperature_unit is None:
-            if info.use_fahrenheit:
-                hac.temperature_unit = TEMP_FAHRENHEIT
-                discovered.append(('temperature_unit', 'F'))
-            else:
-                hac.temperature_unit = TEMP_CELSIUS
-                discovered.append(('temperature_unit', 'C'))
+        __auto_discover_units(hac, info, discovered)
 
         if hac.location_name is None:
             hac.location_name = info.city
             discovered.append(('name', info.city))
 
         if hac.time_zone is None:
-            set_time_zone(info.time_zone)
+            __set_time_zone(hac, info.time_zone)
             discovered.append(('time_zone', info.time_zone))
 
     if hac.elevation is None and hac.latitude is not None and \
@@ -295,3 +309,22 @@ def process_ha_core_config(hass, config):
         _LOGGER.warning(
             'Incomplete core config. Auto detected %s',
             ', '.join('{}: {}'.format(key, val) for key, val in discovered))
+
+
+def __auto_discover_units(hac, info, discovered):
+    """Auto discover configuration units."""
+    if hac.temperature_unit is None:
+        if info.use_fahrenheit:
+            hac.temperature_unit = TEMP_FAHRENHEIT
+            discovered.append(('temperature_unit', 'F'))
+        else:
+            hac.temperature_unit = TEMP_CELSIUS
+            discovered.append(('temperature_unit', 'C'))
+
+    if hac.distance_unit is None:
+        if info.use_miles:
+            hac.distance_unit = MILES_SYMBOL
+            discovered.append(['distance_unit', MILES_SYMBOL])
+        else:
+            hac.distance_unit = KILOMETERS_SYMBOL
+            discovered.append(['distance_unit', KILOMETERS_SYMBOL])
