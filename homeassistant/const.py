@@ -117,6 +117,30 @@ ATTR_TEMPERATURE = "temperature"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
+
+# Length units
+LENGTH_CENTIMETERS = "cm"
+LENGTH_METERS = "m"
+LENGTH_KILOMETERS = "km"
+
+LENGTH_FEET = "ft"
+LENGTH_YARD = "yd"
+LENGTH_MILES = "mi"
+
+# Volume units
+VOLUME_LITERS = "L"
+VOLUME_MILLILITERS = "mL"
+
+VOLUME_GALLONS = "gal"
+VOLUME_FLUID_OUNCE = "fl. oz."
+
+# Mass units
+MASS_GRAMS = "g"
+MASS_KILOGRAMS = "kg"
+
+MASS_OUNCES = "oz"
+MASS_POUNDS = "lb"
+
 # Contains the information that is discovered
 ATTR_DISCOVERED = "discovered"
 
