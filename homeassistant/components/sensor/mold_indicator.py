@@ -109,7 +109,7 @@ class MoldIndicator(Entity):
 
         # convert to celsius if necessary
         if unit == TEMP_FAHRENHEIT:
-            return util.temperature.fahrenheit_to_celcius(temp)
+            return util.temperature.fahrenheit_to_celsius(temp)
         elif unit == TEMP_CELSIUS:
             return temp
         else:
@@ -260,9 +260,9 @@ class MoldIndicator(Entity):
         else:
             return {
                 ATTR_DEWPOINT:
-                    util.temperature.celcius_to_fahrenheit(
+                    util.temperature.celsius_to_fahrenheit(
                         self._dewpoint),
                 ATTR_CRITICAL_TEMP:
-                    util.temperature.celcius_to_fahrenheit(
+                    util.temperature.celsius_to_fahrenheit(
                         self._crit_temp),
             }
