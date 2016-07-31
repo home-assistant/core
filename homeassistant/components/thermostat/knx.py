@@ -43,7 +43,7 @@ class KNXThermostat(KNXMultiAddressDevice, ThermostatDevice):
                                        ["temperature", "setpoint"],
                                        ["mode"])
 
-        self._unit_of_measurement = TEMP_CELSIUS  # KNX always used celcius
+        self._unit_of_measurement = TEMP_CELSIUS  # KNX always used celsius
         self._away = False  # not yet supported
         self._is_fan_on = False  # not yet supported
 
