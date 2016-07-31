@@ -1,0 +1,15 @@
+lock:
+  description: Lock all or specified locks
+
+  fields:
+    entity_id:
+      description: Name(s) of lock(s) to lock
+      example: 'lock.front_door'
+
+unlock:
+  description: Unlock all or specified locks
+
+  fields:
+    entity_id:
+      description: Name(s) of lock(s) to unlock
+      example: 'lock.front_door'
