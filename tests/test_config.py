@@ -157,6 +157,37 @@ class TestConfig(unittest.TestCase):
         assert expected_values == ha_conf
         assert mock_print.called
 
+    @mock.patch('homeassistant.util.location.detect_location_info',
+                return_value=location_util.LocationInfo(
+                    '0.0.0.0', 'CA', 'Canada', 'CA', 'California',
+                    'San Diego', '92122', 'America/Los_Angeles', 32.8594,
+                    -117.2073, False, False))
+    @mock.patch('homeassistant.util.location.elevation', return_value=101)
+    @mock.patch('builtins.print')
+    def test_create_default_config_si_units(self, mock_detect,
+                                            mock_elev, mock_print):
+        """Test that detect location sets the correct config keys."""
+        config_util.ensure_config_exists(CONFIG_DIR)
+
+        config = config_util.load_yaml_config_file(YAML_PATH)
+
+        self.assertIn(DOMAIN, config)
+
+        ha_conf = config[DOMAIN]
+
+        expected_values = {
+            CONF_LATITUDE: 32.8594,
+            CONF_LONGITUDE: -117.2073,
+            CONF_ELEVATION: 101,
+            CONF_TEMPERATURE_UNIT: 'C',
+            CONF_NAME: 'Home',
+            CONF_TIME_ZONE: 'America/Los_Angeles',
+            CONF_DISTANCE_UNIT: distance_util.KILOMETERS_SYMBOL
+        }
+
+        assert expected_values == ha_conf
+        assert mock_print.called
+
     @mock.patch('builtins.print')
     def test_create_default_config_returns_none_if_write_error(self,
                                                                mock_print):
