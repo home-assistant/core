@@ -31,7 +31,7 @@ LocationInfo = collections.namedtuple(
     "LocationInfo",
     ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
      'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
-     'use_fahrenheit'])
+     'use_fahrenheit', 'use_miles'])
 
 
 def detect_location_info():
@@ -49,6 +49,9 @@ def detect_location_info():
     # territories of American Samoa and the U.S. Virgin Islands
     data['use_fahrenheit'] = data['country_code'] in (
         'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
+
+    data['use_miles'] = data['country_code'] in (
+        'US', 'LR', 'MM')
 
     return LocationInfo(**data)
 
