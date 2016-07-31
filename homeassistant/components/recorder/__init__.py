@@ -58,14 +58,17 @@ def execute(q):
     This method also retries a few times in the case of stale connections.
     """
     import sqlalchemy.exc
-    for _ in range(0, RETRIES):
-        try:
-            return [
-                row for row in
-                (row.to_native() for row in q)
-                if row is not None]
-        except sqlalchemy.exc.SQLAlchemyError as e:
-            log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+    try:
+        for _ in range(0, RETRIES):
+            try:
+                return [
+                    row for row in
+                    (row.to_native() for row in q)
+                    if row is not None]
+            except sqlalchemy.exc.SQLAlchemyError as e:
+                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+    finally:
+        Session().close()
     return []
 
 
