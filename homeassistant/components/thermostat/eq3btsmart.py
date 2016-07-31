@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.temperature import convert
+from homeassistant.util.temperature import convert
 
 REQUIREMENTS = ['bluepy_devices==0.2.0']
 

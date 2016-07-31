@@ -7,12 +7,14 @@ from types import MappingProxyType
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
-    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, TEMP_FAHRENHEIT,
-    TEMP_CELSIUS, __version__)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_UNIT_SYSTEM,
+    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
+    __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 from homeassistant.helpers.entity import valid_entity_id, set_customize
 from homeassistant.util import dt as date_util, location as loc_util
 
@@ -30,7 +32,9 @@ DEFAULT_CORE_CONFIG = (
      ' the sun rises and sets'),
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
-    (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
+    (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
+     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC,
+                                             CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
@@ -88,7 +92,8 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_LATITUDE: cv.latitude,
     CONF_LONGITUDE: cv.longitude,
     CONF_ELEVATION: vol.Coerce(int),
-    CONF_TEMPERATURE_UNIT: cv.temperature_unit,
+    vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+    CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): _valid_customize,
@@ -131,8 +136,10 @@ def create_default_config(config_dir, detect_location=True):
     location_info = detect_location and loc_util.detect_location_info()
 
     if location_info:
-        if location_info.use_fahrenheit:
-            info[CONF_TEMPERATURE_UNIT] = 'F'
+        if location_info.use_metric:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
+        else:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
@@ -244,18 +251,30 @@ def process_ha_core_config(hass, config):
 
     set_customize(config.get(CONF_CUSTOMIZE) or {})
 
-    if CONF_TEMPERATURE_UNIT in config:
-        hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
+    if CONF_UNIT_SYSTEM in config:
+        if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
+            hac.units = IMPERIAL_SYSTEM
+        else:
+            hac.units = METRIC_SYSTEM
+    elif CONF_TEMPERATURE_UNIT in config:
+        unit = config[CONF_TEMPERATURE_UNIT]
+        if unit == TEMP_CELSIUS:
+            hac.units = METRIC_SYSTEM
+        else:
+            hac.units = IMPERIAL_SYSTEM
+        _LOGGER.warning("Found deprecated temperature unit in core config, "
+                        "expected unit system. Replace 'temperature: %s' with "
+                        "'unit_system: %s'", unit, hac.units.name)
 
     # Shortcut if no auto-detection necessary
-    if None not in (hac.latitude, hac.longitude, hac.temperature_unit,
+    if None not in (hac.latitude, hac.longitude, hac.units,
                     hac.time_zone, hac.elevation):
         return
 
     discovered = []
 
     # If we miss some of the needed values, auto detect them
-    if None in (hac.latitude, hac.longitude, hac.temperature_unit,
+    if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
         info = loc_util.detect_location_info()
 
@@ -264,18 +283,13 @@ def process_ha_core_config(hass, config):
             return
 
         if hac.latitude is None and hac.longitude is None:
-            hac.latitude = info.latitude
-            hac.longitude = info.longitude
+            hac.latitude, hac.longitude = (info.latitude, info.longitude)
             discovered.append(('latitude', hac.latitude))
             discovered.append(('longitude', hac.longitude))
 
-        if hac.temperature_unit is None:
-            if info.use_fahrenheit:
-                hac.temperature_unit = TEMP_FAHRENHEIT
-                discovered.append(('temperature_unit', 'F'))
-            else:
-                hac.temperature_unit = TEMP_CELSIUS
-                discovered.append(('temperature_unit', 'C'))
+        if hac.units is None:
+            hac.units = METRIC_SYSTEM if info.use_metric else IMPERIAL_SYSTEM
+            discovered.append((CONF_UNIT_SYSTEM, hac.units.name))
 
         if hac.location_name is None:
             hac.location_name = info.city
