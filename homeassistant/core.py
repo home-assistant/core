@@ -21,6 +21,7 @@ import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
+import homeassistant.util.distance as distance_util
 from homeassistant.config import get_default_config_dir
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
@@ -716,6 +717,7 @@ class Config(object):
         self.longitude = None
         self.elevation = None
         self.temperature_unit = None
+        self.distance_unit = None
         self.location_name = None
         self.time_zone = None
 
@@ -732,8 +734,12 @@ class Config(object):
         self.config_dir = get_default_config_dir()
 
     def distance(self, lat, lon):
-        """Calculate distance from Home Assistant in meters."""
-        return location.distance(self.latitude, self.longitude, lat, lon)
+        """Calculate distance from Home Assistant."""
+        print('DISTANCE UNIT: ' + str(self.distance_unit))
+        return distance_util.convert(
+            location.distance(self.latitude, self.longitude, lat, lon),
+            'm',
+            self.distance_unit)
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
@@ -762,6 +768,7 @@ class Config(object):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'temperature_unit': self.temperature_unit,
+            'distance_unit': self.distance_unit,
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
