@@ -12,12 +12,12 @@ import queue
 import threading
 import time
 from datetime import timedelta, datetime
+from typing import Any, Union, Optional, List
+
 import voluptuous as vol
 
-from typing import Any, Union, Optional, List
 from homeassistant.helpers.typing import (ConfigType, QueryType,
                                           HomeAssistantType)
-
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
