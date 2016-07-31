@@ -24,6 +24,11 @@ YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 
+DISTANCE_DESCRIPTION = ''
+
+for symbol, name in UNIT_LABELS.items():
+    DISTANCE_DESCRIPTION += '{} for {},'.format(symbol, name)
+
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -33,6 +38,7 @@ DEFAULT_CORE_CONFIG = (
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
     (CONF_TEMPERATURE_UNIT, 'C', None, 'C for Celsius, F for Fahrenheit'),
+    (CONF_DISTANCE_UNIT, KILOMETERS_SYMBOL, None, DISTANCE_DESCRIPTION[:-1]),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
@@ -91,6 +97,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_LONGITUDE: cv.longitude,
     CONF_ELEVATION: vol.Coerce(int),
     CONF_TEMPERATURE_UNIT: cv.temperature_unit,
+    vol.Optional(CONF_DISTANCE_UNIT): cv.distance_unit,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): _valid_customize,
@@ -135,6 +142,8 @@ def create_default_config(config_dir, detect_location=True):
     if location_info:
         if location_info.use_fahrenheit:
             info[CONF_TEMPERATURE_UNIT] = 'F'
+        if location_info.use_miles:
+            info[CONF_DISTANCE_UNIT] = MILES_SYMBOL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
