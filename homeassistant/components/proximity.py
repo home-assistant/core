@@ -12,16 +12,29 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.location import distance
+from homeassistant.util.distance import convert
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 
 DEPENDENCIES = ['zone', 'device_tracker']
 
 DOMAIN = 'proximity'
+
+NOT_SET = 'not set'
 
 # Default tolerance
 DEFAULT_TOLERANCE = 1
 
 # Default zone
 DEFAULT_PROXIMITY_ZONE = 'home'
+
+# Default distance to zone
+DEFAULT_DIST_TO_ZONE = NOT_SET
+
+# Default direction of travel
+DEFAULT_DIR_OF_TRAVEL = NOT_SET
+
+# Default nearest device
+DEFAULT_NEAREST = NOT_SET
 
 # Entity attributes
 ATTR_DIST_FROM = 'dist_to_zone'
@@ -31,43 +44,41 @@ ATTR_NEAREST = 'nearest'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
-    """Get the zones and offsets from configuration.yaml."""
-    ignored_zones = []
-    if 'ignored_zones' in config[DOMAIN]:
-        for variable in config[DOMAIN]['ignored_zones']:
-            ignored_zones.append(variable)
-
+def setup_proximity_component(hass, config):
+    """Set up individual proximity component."""
     # Get the devices from configuration.yaml.
-    if 'devices' not in config[DOMAIN]:
+    if 'devices' not in config:
         _LOGGER.error('devices not found in config')
         return False
 
+    ignored_zones = []
+    if 'ignored_zones' in config:
+        for variable in config['ignored_zones']:
+            ignored_zones.append(variable)
+
     proximity_devices = []
-    for variable in config[DOMAIN]['devices']:
+    for variable in config['devices']:
         proximity_devices.append(variable)
 
     # Get the direction of travel tolerance from configuration.yaml.
-    tolerance = config[DOMAIN].get('tolerance', DEFAULT_TOLERANCE)
+    tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
 
     # Get the zone to monitor proximity to from configuration.yaml.
-    proximity_zone = config[DOMAIN].get('zone', DEFAULT_PROXIMITY_ZONE)
+    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
 
-    entity_id = DOMAIN + '.' + proximity_zone
-    proximity_zone = 'zone.' + proximity_zone
+    # Get the unit of measurement from configuration.yaml.
+    unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
+                                 hass.config.distance_unit)
 
-    state = hass.states.get(proximity_zone)
+    zone_id = 'zone.{}'.format(proximity_zone)
+    state = hass.states.get(zone_id)
     zone_friendly_name = (state.name).lower()
 
-    # Set the default values.
-    dist_to_zone = 'not set'
-    dir_of_travel = 'not set'
-    nearest = 'not set'
-
-    proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
-                          dir_of_travel, nearest, ignored_zones,
-                          proximity_devices, tolerance, proximity_zone)
-    proximity.entity_id = entity_id
+    proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
+                          DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
+                          ignored_zones, proximity_devices, tolerance,
+                          zone_id, unit_of_measure)
+    proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
     proximity.update_ha_state()
 
@@ -78,13 +89,26 @@ def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
     return True
 
 
+def setup(hass, config):
+    """Get the zones and offsets from configuration.yaml."""
+    result = True
+    if isinstance(config[DOMAIN], list):
+        for proximity_config in config[DOMAIN]:
+            if not setup_proximity_component(hass, proximity_config):
+                result = False
+    elif not setup_proximity_component(hass, config[DOMAIN]):
+        result = False
+
+    return result
+
+
 class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     """Representation of a Proximity."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, zone_friendly_name, dist_to, dir_of_travel,
                  nearest, ignored_zones, proximity_devices, tolerance,
-                 proximity_zone):
+                 proximity_zone, unit_of_measure):
         """Initialize the proximity."""
         self.hass = hass
         self.friendly_name = zone_friendly_name
@@ -95,6 +119,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
         self.proximity_devices = proximity_devices
         self.tolerance = tolerance
         self.proximity_zone = proximity_zone
+        self.unit_of_measure = unit_of_measure
 
     @property
     def name(self):
@@ -109,7 +134,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "km"
+        return self.unit_of_measure
 
     @property
     def state_attributes(self):
@@ -183,7 +208,8 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
                                     device_state.attributes['longitude'])
 
             # Add the device and distance to a dictionary.
-            distances_to_zone[device] = round(dist_to_zone / 1000, 1)
+            distances_to_zone[device] = round(
+                convert(dist_to_zone, 'm', self.unit_of_measure), 1)
 
         # Loop through each of the distances collected and work out the
         # closest.

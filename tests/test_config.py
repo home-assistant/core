@@ -13,8 +13,11 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    TEMP_FAHRENHEIT)
-from homeassistant.util import location as location_util, dt as dt_util
+    TEMP_FAHRENHEIT, CONF_DISTANCE_UNIT)
+from homeassistant.util import (
+    location as location_util,
+    dt as dt_util,
+    distance as distance_util)
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
@@ -127,7 +130,7 @@ class TestConfig(unittest.TestCase):
                 return_value=location_util.LocationInfo(
                     '0.0.0.0', 'US', 'United States', 'CA', 'California',
                     'San Diego', '92122', 'America/Los_Angeles', 32.8594,
-                    -117.2073, True))
+                    -117.2073, True, True))
     @mock.patch('homeassistant.util.location.elevation', return_value=101)
     @mock.patch('builtins.print')
     def test_create_default_config_detect_location(self, mock_detect,
@@ -147,7 +150,8 @@ class TestConfig(unittest.TestCase):
             CONF_ELEVATION: 101,
             CONF_TEMPERATURE_UNIT: 'F',
             CONF_NAME: 'Home',
-            CONF_TIME_ZONE: 'America/Los_Angeles'
+            CONF_TIME_ZONE: 'America/Los_Angeles',
+            CONF_DISTANCE_UNIT: distance_util.MILES_SYMBOL
         }
 
         assert expected_values == ha_conf
@@ -168,6 +172,7 @@ class TestConfig(unittest.TestCase):
     def test_core_config_schema(self):
         for value in (
             {'temperature_unit': 'K'},
+            {'distance_unit': 'pm'},
             {'time_zone': 'non-exist'},
             {'latitude': '91'},
             {'longitude': -181},
@@ -183,6 +188,7 @@ class TestConfig(unittest.TestCase):
             'latitude': '-23.45',
             'longitude': '123.45',
             'temperature_unit': 'c',
+            'distance_unit': 'km',
             'customize': {
                 'sensor.temperature': {
                     'hidden': True,
@@ -265,6 +271,7 @@ class TestConfig(unittest.TestCase):
             'elevation': 25,
             'name': 'Huis',
             'temperature_unit': 'F',
+            'distance_unit': 'ft',
             'time_zone': 'America/New_York',
         })
 
@@ -273,13 +280,14 @@ class TestConfig(unittest.TestCase):
         assert config.elevation == 25
         assert config.location_name == 'Huis'
         assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.distance_unit == distance_util.FEET_SYMBOL
         assert config.time_zone.zone == 'America/New_York'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
                 return_value=location_util.LocationInfo(
                     '0.0.0.0', 'US', 'United States', 'CA', 'California',
                     'San Diego', '92122', 'America/Los_Angeles', 32.8594,
-                    -117.2073, True))
+                    -117.2073, True, True))
     @mock.patch('homeassistant.util.location.elevation', return_value=101)
     def test_discovering_configuration(self, mock_detect, mock_elevation):
         """Test auto discovery for missing core configs."""
@@ -293,6 +301,7 @@ class TestConfig(unittest.TestCase):
         assert config.elevation == 101
         assert config.location_name == 'San Diego'
         assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.distance_unit == distance_util.MILES_SYMBOL
         assert config.time_zone.zone == 'America/Los_Angeles'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -312,4 +321,5 @@ class TestConfig(unittest.TestCase):
         assert config.elevation == blankConfig.elevation
         assert config.location_name == blankConfig.location_name
         assert config.temperature_unit == blankConfig.temperature_unit
+        assert config.distance_unit == blankConfig.distance_unit
         assert config.time_zone == blankConfig.time_zone

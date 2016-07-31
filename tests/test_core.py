@@ -515,6 +515,7 @@ class TestConfig(unittest.TestCase):
             'latitude': None,
             'longitude': None,
             'temperature_unit': None,
+            'distance_unit': None,
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
