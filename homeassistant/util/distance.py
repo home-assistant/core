@@ -25,7 +25,7 @@ UNIT_LABELS = {
 }
 
 
-def convert(value: float, unit_1: string, unit_2: string): -> float
+def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
     if not isinstance(value, Number):
         raise TypeError(str(value) + ' is not of numeric type')
@@ -61,27 +61,27 @@ def convert(value: float, unit_1: string, unit_2: string): -> float
     return result
 
 
-def __miles_to_meters(miles: float):
+def __miles_to_meters(miles: float) -> float:
     """Convert miles to meters."""
     return miles * 1609.344
 
 
-def __feet_to_meters(feet: float):
+def __feet_to_meters(feet: float) -> float:
     """Convert feet to meters."""
     return feet * 0.3048
 
 
-def __kilometers_to_meters(kilometers: float):
+def __kilometers_to_meters(kilometers: float) -> float:
     """Convert kilometers to meters."""
     return kilometers * 1000
 
 
-def __meters_to_miles(meters: float):
+def __meters_to_miles(meters: float) -> float:
     """Convert meters to miles."""
     return meters * 0.000621371
 
 
-def __meters_to_feet(meters: float):
+def __meters_to_feet(meters: float) -> float:
     """Convert meters to feet."""
     return meters * 3.28084
 
