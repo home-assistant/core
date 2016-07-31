@@ -13,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
+from homeassistant.util.distance import VALID_UNITS
 
 # pylint: disable=invalid-name
 
@@ -224,6 +225,15 @@ def temperature_unit(value):
     elif value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
+
+
+def distance_unit(value):
+    """Validate and transform distance unit."""
+    value = str(value).lower()
+    if value not in VALID_UNITS:
+        raise vol.Invalid('invalid distance unit, expected: {}'.format(
+            VALID_UNITS))
+    return value
 
 
 def template(value):
