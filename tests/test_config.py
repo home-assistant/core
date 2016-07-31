@@ -13,7 +13,7 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    TEMP_FAHRENHEIT, CONF_DISTANCE_UNIT)
+    TEMP_FAHRENHEIT, TEMP_CELSIUS, CONF_DISTANCE_UNIT)
 from homeassistant.util import (
     location as location_util,
     dt as dt_util,
@@ -321,7 +321,7 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == -117.2073
         assert config.elevation == 101
         assert config.location_name == 'San Diego'
-        assert config.temperature_unit == 'C'
+        assert config.temperature_unit == TEMP_CELSIUS
         assert config.distance_unit == distance_util.KILOMETERS
         assert config.time_zone.zone == 'America/Los_Angeles'
 
