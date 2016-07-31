@@ -27,7 +27,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 
-REQUIREMENTS = ['fuzzywuzzy==0.11.0']
+REQUIREMENTS = ['fuzzywuzzy==0.11.1']
 
 
 def setup(hass, config):
