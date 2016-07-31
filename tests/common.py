@@ -7,6 +7,7 @@ from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.util.dt as date_util
+from homeassistant.util.distance import KILOMETERS_SYMBOL
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
@@ -38,6 +39,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.distance_unit = KILOMETERS_SYMBOL
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
