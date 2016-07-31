@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather sensor."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
-    unit = hass.config.temperature_unit
+    unit = hass.config.units.temperature_unit
     woeid = config.get("woeid", None)
     forecast = config.get("forecast", 0)
 
