@@ -17,6 +17,13 @@ VALID_UNITS = [
     MILES_SYMBOL,
 ]
 
+UNIT_LABELS = {
+    KILOMETERS_SYMBOL: 'kilometers',
+    METERS_SYMBOL: 'meters',
+    FEET_SYMBOL: 'feet',
+    MILES_SYMBOL: 'miles',
+}
+
 
 def convert(value, unit_1, unit_2):
     """Convert one unit of measurement to another."""
