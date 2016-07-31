@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
 
-docker build -t home-assistant-test -f Dockerfile.test .
+docker build -t home-assistant-test -f virtualization/Docker/Dockerfile.test .
 docker run --rm -it home-assistant-test tox -e py34
