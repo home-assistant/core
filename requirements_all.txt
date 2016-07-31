@@ -332,7 +332,7 @@ python-mystrom==0.3.6
 python-nest==2.9.2
 
 # homeassistant.components.device_tracker.nmap_tracker
-python-nmap==0.6.0
+python-nmap==0.6.1
 
 # homeassistant.components.notify.pushover
 python-pushover==0.2
