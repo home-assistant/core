@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.unit_system import METRIC_SYSTEM
 from homeassistant.components import thermostat
 
 from tests.common import get_test_home_assistant
@@ -75,7 +76,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.temperature_unit = TEMP_CELSIUS
+        self.hass.config.units = METRIC_SYSTEM
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
             'name': 'test',

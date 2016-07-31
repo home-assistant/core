@@ -15,10 +15,10 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
 
 from tests.common import get_test_home_assistant
 
@@ -465,56 +465,12 @@ class TestConfig(unittest.TestCase):
             os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
             self.config.path("dir", "test.conf"))
 
-    def test_temperature_not_convert_if_no_preference(self):
-        """No unit conversion to happen if no preference."""
-        self.assertEqual(
-            (25, TEMP_CELSIUS),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (80, TEMP_FAHRENHEIT),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
-    def test_temperature_not_convert_if_invalid_value(self):
-        """No unit conversion to happen if no preference."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
-        self.assertEqual(
-            ('25a', TEMP_CELSIUS),
-            self.config.temperature('25a', TEMP_CELSIUS))
-
-    def test_temperature_not_convert_if_invalid_unit(self):
-        """No unit conversion to happen if no preference."""
-        self.assertEqual(
-            (25, 'Invalid unit'),
-            self.config.temperature(25, 'Invalid unit'))
-
-    def test_temperature_to_convert_to_celsius(self):
-        """Test temperature conversion to celsius."""
-        self.config.temperature_unit = TEMP_CELSIUS
-
-        self.assertEqual(
-            (25, TEMP_CELSIUS),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (26.7, TEMP_CELSIUS),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
-    def test_temperature_to_convert_to_fahrenheit(self):
-        """Test temperature conversion to fahrenheit."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
-
-        self.assertEqual(
-            (77, TEMP_FAHRENHEIT),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (80, TEMP_FAHRENHEIT),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
     def test_as_dict(self):
         """Test as dict."""
         expected = {
             'latitude': None,
             'longitude': None,
-            'temperature_unit': None,
+            CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
