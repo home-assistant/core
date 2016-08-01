@@ -9,7 +9,7 @@ from homeassistant.components.thermostat import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['proliphix==0.1.0']
+REQUIREMENTS = ['proliphix==0.2.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -72,7 +72,7 @@ class ProliphixThermostat(ThermostatDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._pdp.setback_heat
+        return self._pdp.setback
 
     @property
     def operation(self):
@@ -87,4 +87,4 @@ class ProliphixThermostat(ThermostatDevice):
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
-        self._pdp.setback_heat = temperature
+        self._pdp.setback = temperature
