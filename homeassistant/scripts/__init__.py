@@ -5,8 +5,15 @@ import os
 
 def run(args: str) -> int:
     """Run a script."""
-    scripts = [fil[:-3] for fil in os.listdir(os.path.dirname(__file__))
-               if fil.endswith('.py') and fil != '__init__.py']
+    scripts = []
+    path = os.path.dirname(__file__)
+    for fil in os.listdir(path):
+        if fil == '__pycache__':
+            continue
+        elif os.path.isdir(os.path.join(path, fil)):
+            scripts.append(fil)
+        elif fil != '__init__.py' and fil.endswith('.py'):
+            scripts.append(fil[:-3])
 
     if not args:
         print('Please specify a script to run.')
