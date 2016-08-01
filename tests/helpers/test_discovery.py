@@ -1,15 +1,10 @@
 """Test discovery helpers."""
-import os
-
 from unittest.mock import patch
 
-from homeassistant import loader, bootstrap, config as config_util
+from homeassistant import loader, bootstrap
 from homeassistant.helpers import discovery
 
-from tests.common import (get_test_home_assistant, get_test_config_dir,
-                          MockModule, MockPlatform)
-
-VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
+from tests.common import get_test_home_assistant, MockModule, MockPlatform
 
 
 class TestHelpersDiscovery:
@@ -17,14 +12,11 @@ class TestHelpersDiscovery:
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        self.hass = get_test_home_assistant(1)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-
-        if os.path.isfile(VERSION_PATH):
-            os.remove(VERSION_PATH)
 
     @patch('homeassistant.bootstrap.setup_component')
     def test_listen(self, mock_setup_component):
@@ -105,14 +97,15 @@ class TestHelpersDiscovery:
 
         def component_setup(hass, config):
             """Setup mock component."""
-            discovery.load_platform(hass, 'switch', 'test_circular')
+            discovery.load_platform(hass, 'switch', 'test_circular', 'disc',
+                                    config)
             component_calls.append(1)
             return True
 
         def setup_platform(hass, config, add_devices_callback,
                            discovery_info=None):
             """Setup mock platform."""
-            platform_calls.append(1)
+            platform_calls.append('disc' if discovery_info else 'component')
 
         loader.set_component(
             'test_component',
@@ -123,13 +116,12 @@ class TestHelpersDiscovery:
             MockPlatform(setup_platform,
                          dependencies=['test_component']))
 
-        bootstrap.from_config_dict({
+        bootstrap.setup_component(self.hass, 'test_component', {
             'test_component': None,
             'switch': [{
                 'platform': 'test_circular',
             }],
-        }, self.hass)
-
+        })
         self.hass.pool.block_till_done()
 
         assert 'test_component' in self.hass.config.components
