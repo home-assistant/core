@@ -4,7 +4,7 @@ pyyaml>=3.11,<4
 pytz>=2016.6.1
 pip>=7.0.0
 jinja2>=2.8
-voluptuous==0.9.1
+voluptuous==0.8.9
 typing>=3,<4
 sqlalchemy==1.0.14
 
@@ -47,7 +47,7 @@ blockchain==1.3.3
 boto3==1.3.1
 
 # homeassistant.components.http
-cherrypy==6.1.1
+cherrypy==7.1.0
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -81,7 +81,7 @@ fixerio==0.1.1
 freesms==0.1.0
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.11.0
+fuzzywuzzy==0.11.1
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
@@ -232,7 +232,7 @@ phue==0.8
 plexapi==1.1.0
 
 # homeassistant.components.thermostat.proliphix
-proliphix==0.1.0
+proliphix==0.2.0
 
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.0
@@ -332,7 +332,7 @@ python-mystrom==0.3.6
 python-nest==2.9.2
 
 # homeassistant.components.device_tracker.nmap_tracker
-python-nmap==0.6.0
+python-nmap==0.6.1
 
 # homeassistant.components.notify.pushover
 python-pushover==0.2
@@ -381,7 +381,7 @@ schiene==0.17
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==3.0.7
+sendgrid==3.1.10
 
 # homeassistant.components.notify.slack
 slacker==0.9.24

@@ -16,7 +16,7 @@ from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELCIUS)
+    TEMP_CELSIUS)
 
 DOMAIN = "hvac"
 
@@ -462,12 +462,12 @@ class HvacDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(19, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(19, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(30, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert(30, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def min_humidity(self):
@@ -487,7 +487,7 @@ class HvacDevice(Entity):
         value = convert(temp, self.unit_of_measurement,
                         self.hass.config.temperature_unit)
 
-        if self.hass.config.temperature_unit is TEMP_CELCIUS:
+        if self.hass.config.temperature_unit is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
