@@ -1,12 +1,15 @@
 """Unit system helper class and methods."""
 
 import logging
+from numbers import Number
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
     LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
     MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS, SYSTEM_METRIC,
     SYSTEM_IMPERIAL)
+from homeassistant.util import temperature as temperature_util
+from homeassistant.util import distance as distance_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,14 +66,13 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
     return unit in units
 
 
-class UnitSystem(dict):
+class UnitSystem(object):
     """A container for units of measure."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self: dict, name: str, temperature: str, length: str,
+    def __init__(self: object, name: str, temperature: str, length: str,
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""
-        super(UnitSystem, self).__init__()
         errors = \
             ', '.join(NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
                       for unit, unit_type in [
@@ -83,11 +85,58 @@ class UnitSystem(dict):
         if errors:
             raise ValueError(errors)
 
-        self['name'] = name
-        self['temperature'] = temperature
-        self['length'] = length
-        self['volume'] = volume
-        self['mass'] = mass
+        self.name = name
+        self._unit_types = {
+            TYPE_LENGTH: length,
+            TYPE_TEMPERATURE: temperature,
+            TYPE_VOLUME: volume,
+            TYPE_MASS: mass,
+        }
+
+    def temperature(self: object, temperature: float, from_unit: str) -> (
+            float, str):
+        """Convert the given temperature to this unit system."""
+        if not isinstance(temperature, Number):
+            return temperature, from_unit
+
+        print('CONVERTING TEMP {} {}'.format(str(temperature), from_unit))
+        to_unit = self._unit_types[TYPE_TEMPERATURE]  # type: str
+        return temperature_util.convert(temperature,
+                                        from_unit, to_unit)
+
+    def length(self: object, length: float, from_unit: str) -> float:
+        """Convert the given length to this unit system."""
+        if not isinstance(length, Number):
+            return length, from_unit
+
+        print('CONVERTING LENGTH {} {}'.format(str(length), from_unit))
+        to_unit = self._unit_types[TYPE_LENGTH]  # type: str
+        return distance_util.convert(length, from_unit,
+                                     to_unit)  # type: float
+
+    @property
+    def mass_unit(self: object) -> str:
+        """Get the mass unit of measurement."""
+        return self._unit_types[TYPE_MASS]
+
+    @property
+    def volume_unit(self: object) -> str:
+        """Get the volume unit of measurement."""
+        return self._unit_types[TYPE_VOLUME]
+
+    @property
+    def temperature_unit(self: object) -> str:
+        """Get the temperature unit of measurement."""
+        return self._unit_types[TYPE_TEMPERATURE]
+
+    @property
+    def length_unit(self: object) -> str:
+        """Get the length unit of measurement."""
+        return self._unit_types[TYPE_LENGTH]
+
+    def as_dict(self) -> dict:
+        """Convert the unit system to a dictionary."""
+        return self._unit_types
 
 
 METRIC_SYSTEM = UnitSystem(SYSTEM_METRIC, TEMP_CELSIUS, LENGTH_KILOMETERS,
