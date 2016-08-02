@@ -48,8 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     from pyowm import OWM
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
-    unit = hass.config.temperature_unit
+    SENSOR_TYPES['temperature'][1] = hass.config.unit_system['temperature']
     forecast = config.get('forecast')
     owm = OWM(config.get(CONF_API_KEY, None))
 
@@ -67,7 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(OpenWeatherMapSensor(data, variable, unit))
+                dev.append(OpenWeatherMapSensor(data, variable,
+                                                SENSOR_TYPES[variable][1]))
     except KeyError:
         pass
 
