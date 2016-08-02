@@ -745,8 +745,9 @@ class Config(object):
 
     def temperature(self, value, unit):
         """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                self.temperature_unit and unit != self.temperature_unit):
+        if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT) or \
+                not self.unit_system or \
+                unit == self.unit_system['temperature']:
             return value, unit
 
         try:
