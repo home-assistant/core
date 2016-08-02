@@ -13,6 +13,7 @@ class TestUnitSystem(unittest.TestCase):
     """Test the unit system helper."""
 
     def test_invalid_units(self):
+        """."""
         with self.assertRaises(ValueError):
             UnitSystem(SYSTEM_NAME, INVALID_UNIT, LENGTH_METERS, VOLUME_LITERS,
                        MASS_GRAMS)
