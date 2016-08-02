@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
-from homeassistant.helpers.unit_system import METRIC_SYSTEM
+from homeassistant.helpers.unit_system import (METRIC_SYSTEM, TYPE_TEMPERATURE)
 
 DOMAIN = "homeassistant"
 
@@ -747,7 +747,7 @@ class Config(object):
         """Convert temperature to user preferred unit if set."""
         if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT) or \
                 not self.unit_system or \
-                unit == self.unit_system['temperature']:
+                unit == self.unit_system[TYPE_TEMPERATURE]:
             return value, unit
 
         try:
@@ -758,9 +758,9 @@ class Config(object):
         return (
             round(
                 temp_helper.convert(
-                    temp, unit, self.unit_system['temperature']),
+                    temp, unit, self.unit_system[TYPE_TEMPERATURE]),
                 1),
-            self.unit_system['temperature'])
+            self.unit_system[TYPE_TEMPERATURE])
 
     def as_dict(self):
         """Create a dict representation of this dict."""

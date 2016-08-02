@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import convert
+from homeassistant.helpers.unit_system import TYPE_TEMPERATURE
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
@@ -147,7 +148,7 @@ def setup(hass, config):
 
         for thermostat in target_thermostats:
             thermostat.set_temperature(convert(
-                temperature, hass.config.unit_system['temperature'],
+                temperature, hass.config.unit_system[TYPE_TEMPERATURE],
                 thermostat.unit_of_measurement))
 
             thermostat.update_ha_state(True)
@@ -314,9 +315,9 @@ class ThermostatDevice(Entity):
             return None
 
         value = convert(temp, self.unit_of_measurement,
-                        self.hass.config.unit_system['temperature'])
+                        self.hass.config.unit_system[TYPE_TEMPERATURE])
 
-        if self.hass.config.unit_system['temperature'] is TEMP_CELSIUS:
+        if self.hass.config.unit_system[TYPE_TEMPERATURE] is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
