@@ -768,7 +768,7 @@ class Config(object):
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
-            'temperature_unit': self.temperature_unit,
+            'unit_system': self.unit_system,
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
