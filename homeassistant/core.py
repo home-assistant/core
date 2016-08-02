@@ -21,6 +21,7 @@ import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
+import homeassistant.util.distance as distance_util
 from homeassistant.config import get_default_config_dir
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
@@ -33,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
+from homeassistant.helpers.unit_system import METRIC_SYSTEM
 
 DOMAIN = "homeassistant"
 
