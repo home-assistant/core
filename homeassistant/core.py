@@ -720,7 +720,7 @@ class Config(object):
         self.elevation = None
         self.location_name = None
         self.time_zone = None
-        self.unit_system = METRIC_SYSTEM
+        self.units = METRIC_SYSTEM
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False
@@ -735,10 +735,9 @@ class Config(object):
         self.config_dir = get_default_config_dir()
 
     def distance(self, lat, lon):
-        """Calculate distance from Home Assistant in meters."""
-        return distance_util.convert(
-            location.distance(self.latitude, self.longitude, lat, lon), 'm',
-            self.unit_system[TYPE_LENGTH])
+        """Calculate distance from Home Assistant."""
+        return self.units.length(
+            location.distance(self.latitude, self.longitude, lat, lon), 'm')
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
@@ -770,7 +769,7 @@ class Config(object):
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
-            'unit_system': self.unit_system,
+            'unit_system': self.units.as_dict(),
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
