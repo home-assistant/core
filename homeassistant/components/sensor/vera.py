@@ -61,7 +61,7 @@ class VeraSensor(VeraDevice, Entity):
                 self._temperature_units = TEMP_CELSIUS
 
             if self.hass:
-                temp = self.hass.config.temperature(
+                temp = self.hass.config.units.temperature(
                     current_temp,
                     self._temperature_units)
 

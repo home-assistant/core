@@ -65,7 +65,7 @@ class MoldIndicator(Entity):
         self._indoor_humidity_sensor = indoor_humidity_sensor
         self._outdoor_temp_sensor = outdoor_temp_sensor
         self._calib_factor = calib_factor
-        self._is_metric = hass.config.unit_system['name']
+        self._is_metric = hass.config.units.name
 
         self._dewpoint = None
         self._indoor_temp = None

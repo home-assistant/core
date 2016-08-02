@@ -203,7 +203,7 @@ class Entity(object):
                                                   TEMP_FAHRENHEIT):
 
             state, attr[ATTR_UNIT_OF_MEASUREMENT] = \
-                self.hass.config.temperature(
+                self.hass.config.units.temperature(
                     state, attr[ATTR_UNIT_OF_MEASUREMENT])
             state = str(state)
 

@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         options = config.get(CONF_OPTIONS)
 
         if options.get('units') is None:
-            options['units'] = hass.config.unit_system['name']
+            options['units'] = hass.config.units.name
 
         travel_mode = config.get(CONF_TRAVEL_MODE)
         mode = options.get(CONF_MODE)

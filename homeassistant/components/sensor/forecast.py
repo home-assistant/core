@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.unit_system['name'] == SYSTEM_METRIC:
+    elif hass.config.units.name == SYSTEM_METRIC:
         units = 'si'
     else:
         units = 'us'

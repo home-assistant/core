@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
                                  CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.unit_system import TYPE_TEMPERATURE
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ["yahooweather==0.4"]
@@ -46,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather sensor."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
-    unit = hass.config.unit_system[TYPE_TEMPERATURE]
+    unit = hass.config.units.temperature_unit
     woeid = config.get("woeid", None)
     forecast = config.get("forecast", 0)
 

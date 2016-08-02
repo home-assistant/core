@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.const import (CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
                                  CONF_PLATFORM, CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.unit_system import TYPE_TEMPERATURE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -49,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     from pyowm import OWM
 
-    SENSOR_TYPES['temperature'][1] = hass.config.unit_system[TYPE_TEMPERATURE]
+    SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
     forecast = config.get('forecast')
     owm = OWM(config.get(CONF_API_KEY, None))
 

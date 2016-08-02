@@ -11,7 +11,6 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.unit_system import TYPE_LENGTH
 from homeassistant.util.location import distance
 from homeassistant.util.distance import convert
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
@@ -69,7 +68,7 @@ def setup_proximity_component(hass, config):
 
     # Get the unit of measurement from configuration.yaml.
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
-                                 hass.config.unit_system[TYPE_LENGTH])
+                                 hass.config.units.length_unit)
 
     zone_id = 'zone.{}'.format(proximity_zone)
     state = hass.states.get(zone_id)
