@@ -17,11 +17,9 @@ from types import MappingProxyType
 from typing import Any, Callable
 import voluptuous as vol
 
-import homeassistant.helpers.temperature as temp_helper
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
-import homeassistant.util.distance as distance_util
 from homeassistant.config import get_default_config_dir
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
@@ -29,13 +27,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, __version__)
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
-from homeassistant.helpers.unit_system import (METRIC_SYSTEM, TYPE_TEMPERATURE,
-                                               TYPE_LENGTH)
+from homeassistant.helpers.unit_system import (
+    METRIC_SYSTEM,
+)
 
 DOMAIN = "homeassistant"
 
