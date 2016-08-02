@@ -1,8 +1,8 @@
 """The tests for the demo thermostat."""
 import unittest
 
-from homeassistant.const import (
-    TEMP_CELSIUS,
+from homeassistant.helpers.unit_system import (
+    METRIC_SYSTEM,
 )
 from homeassistant.components import thermostat
 
@@ -18,7 +18,7 @@ class TestDemoThermostat(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.temperature_unit = TEMP_CELSIUS
+        self.hass.config.unit_system = METRIC_SYSTEM
         self.assertTrue(thermostat.setup(self.hass, {'thermostat': {
             'platform': 'demo',
         }}))
