@@ -10,10 +10,10 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_LENGTH = 'length'
-TYPE_MASS = 'mass'
-TYPE_VOLUME = 'volume'
-TYPE_TEMPERATURE = 'temperature'
+TYPE_LENGTH = 'length'  # type: str
+TYPE_MASS = 'mass'  # type: str
+TYPE_VOLUME = 'volume'  # type: str
+TYPE_TEMPERATURE = 'temperature'  # type: str
 
 LENGTH_UNITS = [
     LENGTH_MILES,
