@@ -756,8 +756,10 @@ class Config(object):
             return value, unit
 
         return (
-            round(temp_helper.convert(temp, unit, self.temperature_unit), 1),
-            self.temperature_unit)
+            round(
+                temp_helper.convert(temp, unit, self.unit_system['temperature']),
+                1),
+            self.unit_system['temperature'])
 
     def as_dict(self):
         """Create a dict representation of this dict."""
