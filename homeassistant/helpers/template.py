@@ -217,7 +217,7 @@ class LocationMethods(object):
             locations.append((latitude, longitude))
 
         if len(locations) == 1:
-            return self._hass.config.distance(*locations[0])
+            return self._hass.config.distance(*locations[0])[0]
 
         return loc_util.distance(*locations[0] + locations[1])
 
