@@ -735,7 +735,9 @@ class Config(object):
 
     def distance(self, lat, lon):
         """Calculate distance from Home Assistant in meters."""
-        return location.distance(self.latitude, self.longitude, lat, lon)
+        return distance_util.convert(
+            location.distance(self.latitude, self.longitude, lat, lon), 'm',
+            self.unit_system['length'])
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
