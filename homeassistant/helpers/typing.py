@@ -1,9 +1,15 @@
 """Typing Helpers for Home-Assistant."""
-
-from typing import NewType, Dict, Any
-import homeassistant.core
-
 # pylint: disable=invalid-name
+try:
+    from typing import NewType, Dict, Any
+except ImportError:
+    from typing import Dict, Any
+
+    def NewType(name: str, typ: Any) -> Any:
+        """Fake NewType, required for Python 3.5.1."""
+        return typ
+
+import homeassistant.core
 
 ConfigType = NewType('ConfigType', Dict[str, Any])
 HomeAssistantType = homeassistant.core.HomeAssistant
