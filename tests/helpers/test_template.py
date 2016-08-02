@@ -6,6 +6,7 @@ from unittest.mock import patch
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.helpers.unit_system import TYPE_LENGTH
 from homeassistant.const import LENGTH_METERS
 import homeassistant.util.dt as dt_util
 
@@ -258,7 +259,7 @@ class TestUtilTemplate(unittest.TestCase):
 
     def test_distance_function_with_1_state(self):
         """."""
-        self.hass.config.unit_system['length'] = LENGTH_METERS
+        self.hass.config.unit_system[TYPE_LENGTH] = LENGTH_METERS
         self.hass.states.set('test.object', 'happy', {
             'latitude': 32.87336,
             'longitude': -117.22943,
@@ -271,7 +272,7 @@ class TestUtilTemplate(unittest.TestCase):
 
     def test_distance_function_with_2_states(self):
         """."""
-        self.hass.config.unit_system['length'] = LENGTH_METERS
+        self.hass.config.unit_system[TYPE_LENGTH] = LENGTH_METERS
         self.hass.states.set('test.object', 'happy', {
             'latitude': 32.87336,
             'longitude': -117.22943,
@@ -291,7 +292,7 @@ class TestUtilTemplate(unittest.TestCase):
 
     def test_distance_function_with_1_coord(self):
         """."""
-        self.hass.config.unit_system['length'] = LENGTH_METERS
+        self.hass.config.unit_system[TYPE_LENGTH] = LENGTH_METERS
         self.assertEqual(
             '187',
             template.render(
@@ -299,7 +300,7 @@ class TestUtilTemplate(unittest.TestCase):
 
     def test_distance_function_with_2_coords(self):
         """."""
-        self.hass.config.unit_system['length'] = LENGTH_METERS
+        self.hass.config.unit_system[TYPE_LENGTH] = LENGTH_METERS
         self.assertEqual(
             '187',
             template.render(
@@ -309,7 +310,7 @@ class TestUtilTemplate(unittest.TestCase):
 
     def test_distance_function_with_1_state_1_coord(self):
         """."""
-        self.hass.config.unit_system['length'] = LENGTH_METERS
+        self.hass.config.unit_system[TYPE_LENGTH] = LENGTH_METERS
         self.hass.states.set('test.object_2', 'happy', {
             'latitude': self.hass.config.latitude,
             'longitude': self.hass.config.longitude,

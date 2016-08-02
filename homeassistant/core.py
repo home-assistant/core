@@ -34,7 +34,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
-from homeassistant.helpers.unit_system import (METRIC_SYSTEM, TYPE_TEMPERATURE)
+from homeassistant.helpers.unit_system import (METRIC_SYSTEM, TYPE_TEMPERATURE,
+                                               TYPE_LENGTH)
 
 DOMAIN = "homeassistant"
 
@@ -737,7 +738,7 @@ class Config(object):
         """Calculate distance from Home Assistant in meters."""
         return distance_util.convert(
             location.distance(self.latitude, self.longitude, lat, lon), 'm',
-            self.unit_system['length'])
+            self.unit_system[TYPE_LENGTH])
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
