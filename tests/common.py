@@ -38,7 +38,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
-    hass.config.unit_system = METRIC_SYSTEM
+    hass.config.units = METRIC_SYSTEM
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
