@@ -11,7 +11,7 @@ import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, TEMP_CELSIUS)
+    ATTR_DISCOVERED, SERVER_PORT)
 from homeassistant.components import sun, mqtt
 
 _TEST_INSTANCE_PORT = SERVER_PORT
