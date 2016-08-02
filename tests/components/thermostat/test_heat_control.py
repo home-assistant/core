@@ -76,7 +76,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.unit_system = METRIC_SYSTEM
+        self.hass.config.units = METRIC_SYSTEM
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
             'name': 'test',
