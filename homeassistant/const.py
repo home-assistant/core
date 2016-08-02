@@ -113,7 +113,7 @@ ATTR_ICON = "icon"
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 SYSTEM_METRIC = 'metric'  # type: str
-SYSTEM_IMPERIAL = 'imperial' # type: str
+SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
@@ -121,28 +121,28 @@ TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Length units
-LENGTH_CENTIMETERS = "cm"
-LENGTH_METERS = "m"
-LENGTH_KILOMETERS = "km"
+LENGTH_CENTIMETERS = "cm"  # type: str
+LENGTH_METERS = "m"  # type: str
+LENGTH_KILOMETERS = "km"  # type: str
 
-LENGTH_INCHES = "in"
-LENGTH_FEET = "ft"
-LENGTH_YARD = "yd"
-LENGTH_MILES = "mi"
+LENGTH_INCHES = "in"  # type: str
+LENGTH_FEET = "ft"  # type: str
+LENGTH_YARD = "yd"  # type: str
+LENGTH_MILES = "mi"  # type: str
 
 # Volume units
-VOLUME_LITERS = "L"
-VOLUME_MILLILITERS = "mL"
+VOLUME_LITERS = "L"  # type: str
+VOLUME_MILLILITERS = "mL"  # type: str
 
-VOLUME_GALLONS = "gal"
-VOLUME_FLUID_OUNCE = "fl. oz."
+VOLUME_GALLONS = "gal"  # type: str
+VOLUME_FLUID_OUNCE = "fl. oz."  # type: str
 
 # Mass units
-MASS_GRAMS = "g"
-MASS_KILOGRAMS = "kg"
+MASS_GRAMS = "g"  # type: str
+MASS_KILOGRAMS = "kg"  # type: str
 
-MASS_OUNCES = "oz"
-MASS_POUNDS = "lb"
+MASS_OUNCES = "oz"  # type: str
+MASS_POUNDS = "lb"  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = "discovered"
