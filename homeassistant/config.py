@@ -7,9 +7,9 @@ from types import MappingProxyType
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_TEMPERATURE_UNIT,
-    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, TEMP_FAHRENHEIT,
-    TEMP_CELSIUS, __version__)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_UNIT_SYSTEM,
+    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, SYSTEM_METRIC,
+    SYSTEM_IMPERIAL, __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
