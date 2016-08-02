@@ -8,11 +8,6 @@ from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_FEET,
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOMETERS_SYMBOL = 'km'
-METERS_SYMBOL = 'm'
-FEET_SYMBOL = 'ft'
-MILES_SYMBOL = 'mi'
-
 VALID_UNITS = [
     LENGTH_KILOMETERS,
     LENGTH_MILES,
