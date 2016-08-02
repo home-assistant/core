@@ -70,16 +70,20 @@ class UnitSystem(dict):
     def __init__(self: dict, name: str, temperature: str, length: str,
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""
-        if not is_valid_unit(unit, unit_type) for unit, unit_type in [
-            (temperature, TYPE_TEMPERATURE),
-            (length, TYPE_LENGTH),
-            (volume, TYPE_VOLUME),
-            (mass, TYPE_MASS)]:
-            raise ValueError(
-                NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type))
-
         self.name = name
         self.temperature = temperature
         self.length = length
         self.volume = volume
-        self.mass = mass
+        self.mass = mass        super(UnitSystem, self).__init__()
+        errors = \
+            ', '.join(NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
+                      for unit, unit_type in [
+                          (temperature, TYPE_TEMPERATURE),
+                          (length, TYPE_LENGTH),
+                          (volume, TYPE_VOLUME),
+                          (mass, TYPE_MASS), ]
+                      if not is_valid_unit(unit, unit_type))  # type: str
+
+        if errors:
+            raise ValueError(errors)
+
