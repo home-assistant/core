@@ -21,35 +21,35 @@ def convert(value, unit_1, unit_2):
     if not isinstance(value, Number):
         raise TypeError(str(value) + ' is not of numeric type')
 
-    if unit_1 == unit_2:
-        return value
-
-    if unit_1 not in VALID_UNITS:
-        _LOGGER.error('Unknown unit of measure: ' + str(unit_1))
-        raise ValueError('Unknown unit of measure: ' + str(unit_1))
-    elif unit_2 not in VALID_UNITS:
-        _LOGGER.error('Unknown unit of measure: ' + str(unit_2))
-        raise ValueError('Unknown unit of measure: ' + str(unit_2))
+    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
+        return value, unit_1
 
     meters = value
+    units = unit_1
 
     if unit_1 == LENGTH_MILES:
         meters = __miles_to_meters(value)
+        units = LENGTH_METERS
     elif unit_1 == LENGTH_FEET:
         meters = __feet_to_meters(value)
+        units = LENGTH_METERS
     elif unit_1 == LENGTH_KILOMETERS:
         meters = __kilometers_to_meters(value)
+        units = LENGTH_METERS
 
     result = meters
 
     if unit_2 == LENGTH_MILES:
         result = __meters_to_miles(meters)
+        units = LENGTH_MILES
     elif unit_2 == LENGTH_FEET:
         result = __meters_to_feet(meters)
+        units = LENGTH_FEET
     elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
+        units = LENGTH_KILOMETERS
 
-    return result
+    return result, units
 
 
 def __miles_to_meters(miles):
