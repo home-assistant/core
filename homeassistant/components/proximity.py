@@ -213,11 +213,11 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
         # Loop through each of the distances collected and work out the
         # closest.
-        closest_device = ''
-        dist_to_zone = 1000000
+        closest_device = None  # type: str
+        dist_to_zone = None  # type: float
 
         for device in distances_to_zone:
-            if distances_to_zone[device] < dist_to_zone:
+            if not dist_to_zone or distances_to_zone[device] < dist_to_zone:
                 closest_device = device
                 dist_to_zone = distances_to_zone[device]
 
