@@ -407,7 +407,7 @@ def setup(hass, config):
         NETWORK.controller.add_node()
 
     def add_node_secure(service):
-        """Switch into inclusion mode."""
+        """Switch into secure inclusion mode."""
         NETWORK.controller.add_node(True)
 
     def remove_node(service):
@@ -415,7 +415,7 @@ def setup(hass, config):
         NETWORK.controller.remove_node()
 
     def remove_node_secure(service):
-        """Switch into exclusion mode."""
+        """Switch into secure exclusion mode."""
         NETWORK.controller.remove_node(True)
 
     def heal_network(service):
