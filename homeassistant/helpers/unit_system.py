@@ -44,9 +44,10 @@ TEMPERATURE_UNITS = [
     TEMP_CELSIUS,
 ]
 
-NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'
+NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
-def is_valid_unit(unit, unit_type):
+
+def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
     if unit_type == TYPE_LENGTH:
         units = LENGTH_UNITS
