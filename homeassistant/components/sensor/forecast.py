@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.temperature_unit == TEMP_CELSIUS:
+    elif hass.config.unit_system['temperature'] == TEMP_CELSIUS:
         units = 'si'
     else:
         units = 'us'
