@@ -40,42 +40,68 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
 
     def __init__(self, value):
         """Initialize the zwave rollershutter."""
+        import libopenzwave
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self._lozwmgr = libopenzwave.PyManager()
+        self._lozwmgr.create()
         self._node = value.node
+        self._current_position = None
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
+            self.update_properties()
             self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
+
+    def update_properties(self):
+        """Callback on data change for the registered node/value pair."""
+        # Position value
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Level':
+                self._current_position = value.data
 
     @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
-        if self._value.data <= 5:
-            return 100
-        elif self._value.data >= 95:
-            return 0
-        else:
-            return 100 - self._value.data
+        if self._current_position is not None:
+            if self._current_position <= 5:
+                return 100
+            elif self._current_position >= 95:
+                return 0
+            else:
+                return 100 - self._current_position
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
-        self._node.set_dimmer(self._value.value_id, 100)
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Open':
+                self._lozwmgr.pressButton(value.value_id)
+                break
 
     def move_down(self, **kwargs):
         """Move the roller shutter down."""
-        self._node.set_dimmer(self._value.value_id, 0)
+        for value in self._node.get_values(
+                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Close':
+                self._lozwmgr.pressButton(value.value_id)
+                break
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
         for value in self._node.get_values(
-                class_id=COMMAND_CLASS_SWITCH_BINARY).values():
-            # Rollershutter will toggle between UP (True), DOWN (False).
-            # It also stops the shutter if the same value is sent while moving.
-            value.data = value.data
-            break
+                class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
+            if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Open':
+                self._lozwmgr.releaseButton(value.value_id)
+                break
