@@ -10,7 +10,7 @@ import socket
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 STATE_OFF, STATE_ON, TEMP_CELSIUS)
+                                 STATE_OFF, STATE_ON, SYSTEM_METRIC)
 from homeassistant.helpers import validate_config, discovery
 
 CONF_GATEWAYS = 'gateways'
@@ -53,7 +53,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals
     import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
-    is_metric = (hass.config.temperature_unit == TEMP_CELSIUS)
+    is_metric = (hass.config.unit_system['name'] == SYSTEM_METRIC)
     persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
 
     def setup_gateway(device, persistence_file, baud_rate, tcp_port):
