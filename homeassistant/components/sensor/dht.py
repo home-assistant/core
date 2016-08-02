@@ -34,7 +34,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import Adafruit_DHT
 
     SENSOR_TYPES['temperature'][1] = hass.config.unit_system['temperature']
-    unit = hass.config.temperature_unit
     available_sensors = {
         "DHT11": Adafruit_DHT.DHT11,
         "DHT22": Adafruit_DHT.DHT22,
@@ -59,7 +58,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(DHTSensor(data, variable, unit, name))
+                dev.append(
+                    DHTSensor(data, variable, SENSOR_TYPES[variable][1], name))
     except KeyError:
         pass
 
