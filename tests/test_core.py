@@ -15,10 +15,11 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    TEMP_FAHRENHEIT, CONF_UNIT_SYSTEM)
 
 from tests.common import get_test_home_assistant
 
@@ -467,7 +468,7 @@ class TestConfig(unittest.TestCase):
 
     def test_temperature_not_convert_if_invalid_value(self):
         """No unit conversion to happen if no preference."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
+        self.config.unit_system = IMPERIAL_SYSTEM
         self.assertEqual(
             ('25a', TEMP_CELSIUS),
             self.config.temperature('25a', TEMP_CELSIUS))
@@ -480,7 +481,7 @@ class TestConfig(unittest.TestCase):
 
     def test_temperature_to_convert_to_celsius(self):
         """Test temperature conversion to celsius."""
-        self.config.temperature_unit = TEMP_CELSIUS
+        self.config.unit_system = METRIC_SYSTEM
 
         self.assertEqual(
             (25, TEMP_CELSIUS),
@@ -491,7 +492,9 @@ class TestConfig(unittest.TestCase):
 
     def test_temperature_to_convert_to_fahrenheit(self):
         """Test temperature conversion to fahrenheit."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
+        self.config.unit_system = IMPERIAL_SYSTEM
+
+        print(str(self.config.unit_system))
 
         self.assertEqual(
             (77, TEMP_FAHRENHEIT),
@@ -505,7 +508,7 @@ class TestConfig(unittest.TestCase):
         expected = {
             'latitude': None,
             'longitude': None,
-            'temperature_unit': None,
+            CONF_UNIT_SYSTEM: METRIC_SYSTEM,
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
