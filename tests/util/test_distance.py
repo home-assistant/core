@@ -14,21 +14,26 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_convert_same_unit(self):
         """Test conversion from any unit to same unit."""
-        self.assertEqual(5, distance_util.convert(5, LENGTH_KILOMETERS,
-                                                  LENGTH_KILOMETERS))
-        self.assertEqual(2, distance_util.convert(2, LENGTH_METERS,
-                                                  LENGTH_METERS))
-        self.assertEqual(10,
+        self.assertEqual((5, LENGTH_KILOMETERS),
+                         distance_util.convert(5, LENGTH_KILOMETERS,
+                                               LENGTH_KILOMETERS))
+        self.assertEqual((2, LENGTH_METERS),
+                         distance_util.convert(2, LENGTH_METERS,
+                                               LENGTH_METERS))
+        self.assertEqual((10, LENGTH_MILES),
                          distance_util.convert(10, LENGTH_MILES, LENGTH_MILES))
-        self.assertEqual(9, distance_util.convert(9, LENGTH_FEET, LENGTH_FEET))
+        self.assertEqual((9, LENGTH_FEET),
+                         distance_util.convert(9, LENGTH_FEET, LENGTH_FEET))
 
     def test_convert_invalid_unit(self):
         """Test exception is thrown for invalid units."""
-        with self.assertRaises(ValueError):
-            distance_util.convert(5, INVALID_SYMBOL, VALID_SYMBOL)
+        self.assertEqual((5, INVALID_SYMBOL),
+                         distance_util.convert(5, INVALID_SYMBOL,
+                                               VALID_SYMBOL))
 
-        with self.assertRaises(ValueError):
-            distance_util.convert(5, VALID_SYMBOL, INVALID_SYMBOL)
+        self.assertEqual((5000, LENGTH_METERS),
+                         distance_util.convert(5, VALID_SYMBOL,
+                                               INVALID_SYMBOL))
 
     def test_convert_nonnumeric_value(self):
         """Test exception is thrown for nonnumeric type."""
@@ -40,41 +45,47 @@ class TestDistanceUtil(unittest.TestCase):
         miles = 5
         self.assertEqual(
             distance_util.convert(miles, LENGTH_MILES, LENGTH_KILOMETERS),
-            8.04672)
+            (8.04672, LENGTH_KILOMETERS))
         self.assertEqual(
-            distance_util.convert(miles, LENGTH_MILES, LENGTH_METERS), 8046.72)
+            distance_util.convert(miles, LENGTH_MILES, LENGTH_METERS),
+            (8046.72, LENGTH_METERS))
         self.assertEqual(
             distance_util.convert(miles, LENGTH_MILES, LENGTH_FEET),
-            26400.0008448)
+            (26400.0008448, LENGTH_FEET))
 
     def test_convert_from_feet(self):
         """Test conversion from feet to other units."""
         feet = 5000
         self.assertEqual(
-            distance_util.convert(feet, LENGTH_FEET, LENGTH_KILOMETERS), 1.524)
+            distance_util.convert(feet, LENGTH_FEET, LENGTH_KILOMETERS),
+            (1.524, LENGTH_KILOMETERS))
         self.assertEqual(
-            distance_util.convert(feet, LENGTH_FEET, LENGTH_METERS), 1524)
+            distance_util.convert(feet, LENGTH_FEET, LENGTH_METERS),
+            (1524, LENGTH_METERS))
         self.assertEqual(
             distance_util.convert(feet, LENGTH_FEET, LENGTH_MILES),
-            0.9469694040000001)
+            (0.9469694040000001, LENGTH_MILES))
 
     def test_convert_from_kilometers(self):
         """Test conversion from kilometers to other units."""
         km = 5
         self.assertEqual(
-            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_FEET), 16404.2)
+            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_FEET),
+            (16404.2, LENGTH_FEET))
         self.assertEqual(
-            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_METERS), 5000)
+            distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_METERS),
+            (5000, LENGTH_METERS))
         self.assertEqual(
             distance_util.convert(km, LENGTH_KILOMETERS, LENGTH_MILES),
-            3.106855)
+            (3.106855, LENGTH_MILES))
 
     def test_convert_from_meters(self):
         """Test conversion from meters to other units."""
         m = 5000
         self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_FEET),
-                         16404.2)
+                         (16404.2, LENGTH_FEET))
         self.assertEqual(
-            distance_util.convert(m, LENGTH_METERS, LENGTH_KILOMETERS), 5)
+            distance_util.convert(m, LENGTH_METERS, LENGTH_KILOMETERS),
+            (5, LENGTH_KILOMETERS))
         self.assertEqual(distance_util.convert(m, LENGTH_METERS, LENGTH_MILES),
-                         3.106855)
+                         (3.106855, LENGTH_MILES))
