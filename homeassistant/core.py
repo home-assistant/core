@@ -743,25 +743,6 @@ class Config(object):
         """Generate path to the file within the config dir."""
         return os.path.join(self.config_dir, *path)
 
-    def temperature(self, value, unit):
-        """Convert temperature to user preferred unit if set."""
-        if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT) or \
-                not self.unit_system or \
-                unit == self.unit_system[TYPE_TEMPERATURE]:
-            return value, unit
-
-        try:
-            temp = float(value)
-        except ValueError:  # Could not convert value to float
-            return value, unit
-
-        return (
-            round(
-                temp_helper.convert(
-                    temp, unit, self.unit_system[TYPE_TEMPERATURE]),
-                1),
-            self.unit_system[TYPE_TEMPERATURE])
-
     def as_dict(self):
         """Create a dict representation of this dict."""
         time_zone = self.time_zone or dt_util.UTC
