@@ -73,7 +73,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
+        dev.append(OpenWeatherMapSensor(data, 'forecast',
+                                        SENSOR_TYPES['temperature'][1]))
 
     add_devices(dev)
 
