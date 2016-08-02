@@ -53,7 +53,7 @@ def setup(hass, config):  # pylint: disable=too-many-locals
     import mysensors.mysensors as mysensors
 
     version = str(config[DOMAIN].get(CONF_VERSION, DEFAULT_VERSION))
-    is_metric = (hass.config.unit_system['name'] == SYSTEM_METRIC)
+    is_metric = (hass.config.units.name == SYSTEM_METRIC)
     persistence = config[DOMAIN].get(CONF_PERSISTENCE, True)
 
     def setup_gateway(device, persistence_file, baud_rate, tcp_port):
