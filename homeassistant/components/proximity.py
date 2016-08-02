@@ -27,9 +27,6 @@ DEFAULT_TOLERANCE = 1
 # Default zone
 DEFAULT_PROXIMITY_ZONE = 'home'
 
-# Default unit of measure
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
-
 # Default distance to zone
 DEFAULT_DIST_TO_ZONE = NOT_SET
 
@@ -71,7 +68,7 @@ def setup_proximity_component(hass, config):
 
     # Get the unit of measurement from configuration.yaml.
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
-                                 DEFAULT_UNIT_OF_MEASUREMENT)
+                                 hass.config.unit_system['length'])
 
     zone_id = 'zone.{}'.format(proximity_zone)
     state = hass.states.get(zone_id)
