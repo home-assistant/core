@@ -133,8 +133,8 @@ def create_default_config(config_dir, detect_location=True):
     location_info = detect_location and loc_util.detect_location_info()
 
     if location_info:
-        if location_info.use_fahrenheit:
-            info[CONF_TEMPERATURE_UNIT] = 'F'
+        info[CONF_UNIT_SYSTEM] = SYSTEM_METRIC \
+            if location_info.use_metric else SYSTEM_IMPERIAL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
