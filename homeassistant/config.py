@@ -90,7 +90,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_LATITUDE: cv.latitude,
     CONF_LONGITUDE: cv.longitude,
     CONF_ELEVATION: vol.Coerce(int),
-    CONF_TEMPERATURE_UNIT: cv.temperature_unit,
+    CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
                  default=MappingProxyType({})): _valid_customize,
