@@ -246,8 +246,10 @@ def process_ha_core_config(hass, config):
 
     set_customize(config.get(CONF_CUSTOMIZE) or {})
 
-    if CONF_TEMPERATURE_UNIT in config:
-        hac.temperature_unit = config[CONF_TEMPERATURE_UNIT]
+    if CONF_UNIT_SYSTEM in config:
+        hac.unit_system = IMPERIAL_SYSTEM \
+            if config[CONF_UNIT_SYSTEM] == SYSTEM_IMPERIAL \
+            else METRIC_SYSTEM
 
     # Shortcut if no auto-detection necessary
     if None not in (hac.latitude, hac.longitude, hac.temperature_unit,
