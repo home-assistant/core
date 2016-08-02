@@ -717,9 +717,9 @@ class Config(object):
         self.latitude = None
         self.longitude = None
         self.elevation = None
-        self.temperature_unit = None
         self.location_name = None
         self.time_zone = None
+        self.unit_system = METRIC_SYSTEM  # type: homeassistant.helpers.unit_system.UnitSystem
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False
