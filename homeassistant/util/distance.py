@@ -3,6 +3,9 @@
 import logging
 from numbers import Number
 
+from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_FEET,
+                                 LENGTH_METERS)
+
 _LOGGER = logging.getLogger(__name__)
 
 KILOMETERS_SYMBOL = 'km'
@@ -11,10 +14,10 @@ FEET_SYMBOL = 'ft'
 MILES_SYMBOL = 'mi'
 
 VALID_UNITS = [
-    KILOMETERS_SYMBOL,
-    METERS_SYMBOL,
-    FEET_SYMBOL,
-    MILES_SYMBOL,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_METERS,
 ]
 
 
@@ -35,20 +38,20 @@ def convert(value, unit_1, unit_2):
 
     meters = value
 
-    if unit_1 == MILES_SYMBOL:
+    if unit_1 == LENGTH_MILES:
         meters = __miles_to_meters(value)
-    elif unit_1 == FEET_SYMBOL:
+    elif unit_1 == LENGTH_FEET:
         meters = __feet_to_meters(value)
-    elif unit_1 == KILOMETERS_SYMBOL:
+    elif unit_1 == LENGTH_KILOMETERS:
         meters = __kilometers_to_meters(value)
 
     result = meters
 
-    if unit_2 == MILES_SYMBOL:
+    if unit_2 == LENGTH_MILES:
         result = __meters_to_miles(meters)
-    elif unit_2 == FEET_SYMBOL:
+    elif unit_2 == LENGTH_FEET:
         result = __meters_to_feet(meters)
-    elif unit_2 == KILOMETERS_SYMBOL:
+    elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
 
     return result
