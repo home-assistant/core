@@ -465,15 +465,6 @@ class TestConfig(unittest.TestCase):
             os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
             self.config.path("dir", "test.conf"))
 
-    def test_temperature_not_convert_if_no_preference(self):
-        """No unit conversion to happen if no preference."""
-        self.assertEqual(
-            (25, TEMP_CELSIUS),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (80, TEMP_FAHRENHEIT),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
     def test_temperature_not_convert_if_invalid_value(self):
         """No unit conversion to happen if no preference."""
         self.config.temperature_unit = TEMP_FAHRENHEIT
