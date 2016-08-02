@@ -97,7 +97,7 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, self.add_job)
         self.states = StateMachine(self.bus)
-        self.config = Config()
+        self.config = Config()  # type: Config
         self.state = CoreState.not_running
 
     @property
