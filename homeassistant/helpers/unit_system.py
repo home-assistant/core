@@ -90,3 +90,8 @@ class UnitSystem(dict):
         self['mass'] = mass
 
 
+METRIC_SYSTEM = UnitSystem(SYSTEM_METRIC, TEMP_CELSIUS, LENGTH_METERS,
+                           VOLUME_LITERS, MASS_GRAMS)
+
+IMPERIAL_SYSTEM = UnitSystem(SYSTEM_IMPERIAL, TEMP_FAHRENHEIT, LENGTH_FEET,
+                             VOLUME_GALLONS, MASS_POUNDS)
