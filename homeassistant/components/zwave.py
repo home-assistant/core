@@ -36,6 +36,8 @@ SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
+SERVICE_STOP_NETWORK = "stop_network"
+SERVICE_START_NETWORK = "start_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -419,11 +421,11 @@ def setup(hass, config):
         """Test the network by sending commands to all the nodes."""
         NETWORK.test()
 
-    def stop_zwave(event):
+    def stop_zwave(_service_or_event):
         """Stop Z-Wave."""
         NETWORK.stop()
 
-    def start_zwave(event):
+    def start_zwave(_service_or_event):
         """Startup Z-Wave."""
         NETWORK.start()
 
@@ -461,6 +463,8 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
+        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
 
     # Setup autoheal
     if autoheal:
