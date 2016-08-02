@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=import-error
     import Adafruit_DHT
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
+    SENSOR_TYPES['temperature'][1] = hass.config.unit_system['temperature']
     unit = hass.config.temperature_unit
     available_sensors = {
         "DHT11": Adafruit_DHT.DHT11,
