@@ -92,10 +92,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         options = config.get(CONF_OPTIONS)
 
         if options.get('units') is None:
-            if hass.config.temperature_unit is TEMP_CELSIUS:
-                options['units'] = 'metric'
-            elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
-                options['units'] = 'imperial'
+            options['units'] = hass.config.unit_system['name']
 
         travel_mode = config.get(CONF_TRAVEL_MODE)
         mode = options.get(CONF_MODE)
