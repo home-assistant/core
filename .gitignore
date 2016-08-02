@@ -92,3 +92,6 @@ ctags.tmp
 virtualization/vagrant/setup_done
 virtualization/vagrant/.vagrant
 virtualization/vagrant/config
+
+# Visual Studio Code
+.vscode
