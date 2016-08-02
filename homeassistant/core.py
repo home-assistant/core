@@ -34,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.helpers.entity import split_entity_id, valid_entity_id
-from homeassistant.helpers.unit_system import METRIC_SYSTEM
+from homeassistant.helpers.unit_system import (METRIC_SYSTEM, UnitSystem)
 
 DOMAIN = "homeassistant"
 
@@ -719,7 +719,7 @@ class Config(object):
         self.elevation = None
         self.location_name = None
         self.time_zone = None
-        self.unit_system = METRIC_SYSTEM  # type: homeassistant.helpers.unit_system.UnitSystem
+        self.unit_system = METRIC_SYSTEM  # type: UnitSystem
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False
@@ -757,7 +757,8 @@ class Config(object):
 
         return (
             round(
-                temp_helper.convert(temp, unit, self.unit_system['temperature']),
+                temp_helper.convert(
+                    temp, unit, self.unit_system['temperature']),
                 1),
             self.unit_system['temperature'])
 
