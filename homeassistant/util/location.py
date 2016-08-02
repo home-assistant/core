@@ -44,7 +44,7 @@ def detect_location_info():
     if data is None:
         return None
 
-    data['use_metric'] = data['country_code'] in (
+    data['use_metric'] = data['country_code'] not in (
         'US', 'MM', 'LR')
 
     return LocationInfo(**data)
