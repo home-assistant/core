@@ -13,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 from homeassistant.helpers.entity import valid_entity_id, set_customize
 from homeassistant.util import dt as date_util, location as loc_util
 
