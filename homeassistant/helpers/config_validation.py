@@ -226,6 +226,15 @@ def temperature_unit(value):
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
 
+def unit_system(value):
+    """Validate the unit system."""
+    value = str(value).lower()
+    if value not in [SYSTEM_METRIC, SYSTEM_IMPERIAL]:
+        raise vol.Invalid(
+            'invalid unit system (expected {} or {})'.format(SYSTEM_IMPERIAL,
+                                                             SYSTEM_METRIC))
+
+
 def template(value):
     """Validate a jinja2 template."""
     if value is None:
