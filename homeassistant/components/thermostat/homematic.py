@@ -7,7 +7,7 @@ https://home-assistant.io/components/thermostat.homematic/
 import logging
 import homeassistant.components.homematic as homematic
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.helpers.temperature import convert
+from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 DEPENDENCIES = ['homematic']
@@ -57,12 +57,12 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature - 4.5 means off."""
-        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)[0]
 
     @property
     def max_temp(self):
         """Return the maximum temperature - 30.5 means on."""
-        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
+        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)[0]
 
     def _check_hm_to_ha_object(self):
         """Check if possible to use the Homematic object as this HA type."""
