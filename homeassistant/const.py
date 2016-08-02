@@ -46,7 +46,7 @@ CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_STATE = 'state'
-CONF_TEMPERATURE_UNIT = 'temperature_unit'
+CONF_UNIT_SYSTEM = 'unit_system'
 CONF_TIME_ZONE = 'time_zone'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
@@ -112,17 +112,20 @@ ATTR_ICON = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
+SYSTEM_METRIC = 'metric'  # type: str
+SYSTEM_IMPERIAL = 'imperial' # type: str
+
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
-
 
 # Length units
 LENGTH_CENTIMETERS = "cm"
 LENGTH_METERS = "m"
 LENGTH_KILOMETERS = "km"
 
+LENGTH_INCHES = "in"
 LENGTH_FEET = "ft"
 LENGTH_YARD = "yd"
 LENGTH_MILES = "mi"
