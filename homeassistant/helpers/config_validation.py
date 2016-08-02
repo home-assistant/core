@@ -227,12 +227,13 @@ def temperature_unit(value):
 
 
 def unit_system(value):
-    """Validate the unit system."""
+    """Validate and transform the unit system."""
     value = str(value).lower()
     if value not in [SYSTEM_METRIC, SYSTEM_IMPERIAL]:
         raise vol.Invalid(
             'invalid unit system (expected {} or {})'.format(SYSTEM_IMPERIAL,
                                                              SYSTEM_METRIC))
+    return value
 
 
 def template(value):
