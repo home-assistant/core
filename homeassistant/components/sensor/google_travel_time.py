@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
+    CONF_API_KEY, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
 
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
