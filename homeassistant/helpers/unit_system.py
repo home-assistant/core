@@ -1,3 +1,5 @@
+"""Unit system helper class and methods."""
+
 import logging
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
