@@ -6,7 +6,7 @@ from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_METERS, LENGTH_FEET,
                                  LENGTH_MILES)
 
 INVALID_SYMBOL = 'bob'
-VALID_SYMBOL = KILOMETERS
+VALID_SYMBOL = LENGTH_KILOMETERS
 
 
 class TestDistanceUtil(unittest.TestCase):
