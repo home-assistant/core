@@ -6,6 +6,7 @@ from unittest import mock
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
@@ -37,7 +38,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
-    hass.config.temperature_unit = TEMP_CELSIUS
+    hass.config.unit_system = METRIC_SYSTEM
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
