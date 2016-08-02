@@ -485,9 +485,9 @@ class HvacDevice(Entity):
             return None
 
         value = convert(temp, self.unit_of_measurement,
-                        self.hass.config.temperature_unit)
+                        self.hass.config.unit_system['temperature'])
 
-        if self.hass.config.temperature_unit is TEMP_CELSIUS:
+        if self.hass.config.unit_system['temperature'] is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
