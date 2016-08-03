@@ -1,5 +1,10 @@
 """Temperature util functions."""
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+    TEMPERATURE
+)
 
 
 def fahrenheit_to_celsius(fahrenheit: float) -> float:
@@ -14,11 +19,12 @@ def celsius_to_fahrenheit(celsius: float) -> float:
 
 def convert(temperature: float, from_unit: str, to_unit: str) -> (float, str):
     """Convert a temperature from one unit to another."""
-    if from_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT] or \
-        to_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT] or \
-            to_unit == from_unit:
-        # If no need or unknown conversion, return temperature
-        return temperature, from_unit
+    if from_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(from_unit),
+                                                             str(TEMPERATURE)))
+    if to_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(from_unit),
+                                                             str(TEMPERATURE)))
 
     if from_unit == TEMP_CELSIUS:
         return celsius_to_fahrenheit(temperature)

@@ -3,8 +3,14 @@
 import logging
 from numbers import Number
 
-from homeassistant.const import (LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_FEET,
-                                 LENGTH_METERS)
+from homeassistant.const import (
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_METERS,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+    LENGTH,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,6 +24,13 @@ VALID_UNITS = [
 
 def convert(value, unit_1, unit_2):
     """Convert one unit of measurement to another."""
+    if unit_1 not in VALID_UNITS:
+        raise ValueError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(unit_1), str(LENGTH)))
+    if unit_2 not in VALID_UNITS:
+        raise ValueError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(unit_2), str(LENGTH)))
+
     if not isinstance(value, Number):
         raise TypeError(str(value) + ' is not of numeric type')
 
