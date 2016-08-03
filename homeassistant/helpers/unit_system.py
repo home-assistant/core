@@ -13,11 +13,6 @@ from homeassistant.util import distance as distance_util
 
 _LOGGER = logging.getLogger(__name__)
 
-TYPE_LENGTH = 'length'  # type: str
-TYPE_MASS = 'mass'  # type: str
-TYPE_VOLUME = 'volume'  # type: str
-TYPE_TEMPERATURE = 'temperature'  # type: str
-
 LENGTH_UNITS = [
     LENGTH_MILES,
     LENGTH_YARD,

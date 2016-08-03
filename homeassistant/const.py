@@ -270,3 +270,10 @@ CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
 
 # The exit code to send to request a restart
 RESTART_EXIT_CODE = 100
+
+UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
+
+LENGTH = 'length'  # type: str
+MASS = 'mass'  # type: str
+VOLUE = 'volume'  # type: str
+TEMPERATURE = 'temperature'  # type: str
