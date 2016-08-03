@@ -68,15 +68,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Setup a configured EmbyServer
         host, token = config.popitem()
         token = token['token']
-    # Via discovery
-    elif discovery_info is not None:
-        # Parse discovery data
-        host = urlparse(discovery_info[1]).netloc
-        _LOGGER.info('Discovered EMBY server: %s', host)
-
-        if host in _CONFIGURING:
-            return
-        token = None
     else:
         return
 
@@ -167,14 +158,6 @@ def request_configuration(host, hass, add_devices_callback):
     def emby_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
         setup_embyserver(host, data.get('token'), hass, add_devices_callback)
-
-    _CONFIGURING[host] = configurator.request_config(
-        hass, 'Emby Server', emby_configuration_callback,
-        description=('Enter the API Token'),
-        description_image='/static/images/config_plex_mediaserver.png',
-        submit_caption='Confirm',
-        fields=[{'id': 'token', 'name': 'api-token', 'type': ''}]
-    )
 
 
 class EmbyRemote:
