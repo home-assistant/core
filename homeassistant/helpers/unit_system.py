@@ -6,8 +6,10 @@ from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
     LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
-    MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS, CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL)
+    MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS,
+    CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL, LENGTH, MASS, VOLUME, TEMPERATURE,
+    UNIT_NOT_RECOGNIZED_TEMPLATE)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
 
@@ -45,13 +47,13 @@ TEMPERATURE_UNITS = [
 
 def is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
-    if unit_type == TYPE_LENGTH:
+    if unit_type == LENGTH:
         units = LENGTH_UNITS
-    elif unit_type == TYPE_TEMPERATURE:
+    elif unit_type == TEMPERATURE:
         units = TEMPERATURE_UNITS
-    elif unit_type == TYPE_MASS:
+    elif unit_type == MASS:
         units = MASS_UNITS
-    elif unit_type == TYPE_VOLUME:
+    elif unit_type == VOLUME:
         units = VOLUME_UNITS
     else:
         return False
@@ -67,12 +69,12 @@ class UnitSystem(object):
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""
         errors = \
-            ', '.join(NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
+            ', '.join(UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
                       for unit, unit_type in [
-                          (temperature, TYPE_TEMPERATURE),
-                          (length, TYPE_LENGTH),
-                          (volume, TYPE_VOLUME),
-                          (mass, TYPE_MASS), ]
+                          (temperature, TEMPERATURE),
+                          (length, LENGTH),
+                          (volume, VOLUME),
+                          (mass, MASS), ]
                       if not is_valid_unit(unit, unit_type))  # type: str
 
         if errors:
@@ -108,10 +110,10 @@ class UnitSystem(object):
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
         return {
-            TYPE_LENGTH: self.length_unit,
-            TYPE_MASS: self.mass_unit,
-            TYPE_TEMPERATURE: self.temperature_unit,
-            TYPE_VOLUME: self.volume_unit
+            LENGTH: self.length_unit,
+            MASS: self.mass_unit,
+            TEMPERATURE: self.temperature_unit,
+            VOLUME: self.volume_unit
         }
 
 

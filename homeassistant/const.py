@@ -275,5 +275,5 @@ UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
 
 LENGTH = 'length'  # type: str
 MASS = 'mass'  # type: str
-VOLUE = 'volume'  # type: str
+VOLUME = 'volume'  # type: str
 TEMPERATURE = 'temperature'  # type: str
