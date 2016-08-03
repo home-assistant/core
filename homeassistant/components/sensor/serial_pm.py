@@ -49,7 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     SCAN_INTERVAL = timedelta(minutes=config.get(CONF_SCAN_INTERVAL))
-    _LOGGER.info(SCAN_INTERVAL)
 
     dev = []
 
