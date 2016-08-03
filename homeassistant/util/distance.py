@@ -22,7 +22,7 @@ VALID_UNITS = [
 ]
 
 
-def convert(value, unit_1, unit_2):
+def convert(value: float, unit_1: str, unit_2:str) -> float:
     """Convert one unit of measurement to another."""
     if unit_1 not in VALID_UNITS:
         raise ValueError(
@@ -65,31 +65,31 @@ def convert(value, unit_1, unit_2):
     return result, units
 
 
-def __miles_to_meters(miles):
+def __miles_to_meters(miles: float) -> float:
     """Convert miles to meters."""
     return miles * 1609.344
 
 
-def __feet_to_meters(feet):
+def __feet_to_meters(feet: float) -> float:
     """Convert feet to meters."""
     return feet * 0.3048
 
 
-def __kilometers_to_meters(kilometers):
+def __kilometers_to_meters(kilometers: float) -> float:
     """Convert kilometers to meters."""
     return kilometers * 1000
 
 
-def __meters_to_miles(meters):
+def __meters_to_miles(meters: float) -> float:
     """Convert meters to miles."""
     return meters * 0.000621371
 
 
-def __meters_to_feet(meters):
+def __meters_to_feet(meters: float) -> float:
     """Convert meters to feet."""
     return meters * 3.28084
 
 
-def __meters_to_kilometers(meters):
+def __meters_to_kilometers(meters: float) -> float:
     """Convert meters to kilometers."""
     return meters * 0.001
