@@ -17,7 +17,7 @@ def celsius_to_fahrenheit(celsius: float) -> float:
     return celsius * 1.8 + 32.0
 
 
-def convert(temperature: float, from_unit: str, to_unit: str) -> (float, str):
+def convert(temperature: float, from_unit: str, to_unit: str) -> float:
     """Convert a temperature from one unit to another."""
     if from_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(from_unit),
@@ -26,7 +26,9 @@ def convert(temperature: float, from_unit: str, to_unit: str) -> (float, str):
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(from_unit),
                                                              str(TEMPERATURE)))
 
-    if from_unit == TEMP_CELSIUS:
+    if from_unit == to_unit:
+        return temperature
+    elif from_unit == TEMP_CELSIUS:
         return celsius_to_fahrenheit(temperature)
     else:
         return round(fahrenheit_to_celsius(temperature), 1)

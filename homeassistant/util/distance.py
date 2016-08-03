@@ -35,34 +35,27 @@ def convert(value: float, unit_1: str, unit_2:str) -> float:
         raise TypeError(str(value) + ' is not of numeric type')
 
     if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
-        return value, unit_1
+        return value
 
     meters = value
-    units = unit_1
 
     if unit_1 == LENGTH_MILES:
         meters = __miles_to_meters(value)
-        units = LENGTH_METERS
     elif unit_1 == LENGTH_FEET:
         meters = __feet_to_meters(value)
-        units = LENGTH_METERS
     elif unit_1 == LENGTH_KILOMETERS:
         meters = __kilometers_to_meters(value)
-        units = LENGTH_METERS
 
     result = meters
 
     if unit_2 == LENGTH_MILES:
         result = __meters_to_miles(meters)
-        units = LENGTH_MILES
     elif unit_2 == LENGTH_FEET:
         result = __meters_to_feet(meters)
-        units = LENGTH_FEET
     elif unit_2 == LENGTH_KILOMETERS:
         result = __meters_to_kilometers(meters)
-        units = LENGTH_KILOMETERS
 
-    return result, units
+    return result
 
 
 def __miles_to_meters(miles: float) -> float:
