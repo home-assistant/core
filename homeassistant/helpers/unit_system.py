@@ -86,12 +86,10 @@ class UnitSystem(object):
             raise ValueError(errors)
 
         self.name = name
-        self._unit_types = {
-            TYPE_LENGTH: length,
-            TYPE_TEMPERATURE: temperature,
-            TYPE_VOLUME: volume,
-            TYPE_MASS: mass,
-        }
+        self.temperature_unit = temperature
+        self.length_unit = length
+        self.mass_unit = mass
+        self.volume_unit = volume
 
     def temperature(self: object, temperature: float, from_unit: str) -> (
             float, str):
@@ -114,29 +112,14 @@ class UnitSystem(object):
         return distance_util.convert(length, from_unit,
                                      to_unit)  # type: float
 
-    @property
-    def mass_unit(self: object) -> str:
-        """Get the mass unit of measurement."""
-        return self._unit_types[TYPE_MASS]
-
-    @property
-    def volume_unit(self: object) -> str:
-        """Get the volume unit of measurement."""
-        return self._unit_types[TYPE_VOLUME]
-
-    @property
-    def temperature_unit(self: object) -> str:
-        """Get the temperature unit of measurement."""
-        return self._unit_types[TYPE_TEMPERATURE]
-
-    @property
-    def length_unit(self: object) -> str:
-        """Get the length unit of measurement."""
-        return self._unit_types[TYPE_LENGTH]
-
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
-        return self._unit_types
+        return {
+            TYPE_LENGTH: self.length_unit,
+            TYPE_MASS: self.mass_unit,
+            TYPE_TEMPERATURE: self.temperature_unit,
+            TYPE_VOLUME: self.volume_unit
+        }
 
 
 METRIC_SYSTEM = UnitSystem(SYSTEM_METRIC, TEMP_CELSIUS, LENGTH_KILOMETERS,
