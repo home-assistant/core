@@ -25,11 +25,10 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'serial_pm',
     vol.Optional(CONF_NAME, default=""): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.positive_int,
+    vol.Optional(CONF_SCAN_INTERVAL, default=5):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_SERIAL_DEVICE): cv.string,
     vol.Required(CONF_BRAND): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1))
 })
 
 
@@ -41,8 +40,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
                                   pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)])
     except KeyError:
-        _LOGGER.error("Brand %s not supported", config.get(CONF_BRAND))
-        _LOGGER.error(" supported brands: %s", pm.SUPPORTED_SENSORS)
+        _LOGGER.error("Brand %s not supported\n supported brands: %s",
+                      config.get(CONF_BRAND), pm.SUPPORTED_SENSORS.keys())
+        return
+    except OSError as err:
+        _LOGGER.error("Could not open serial connection to %s (%s)",
+                      config.get(CONF_SERIAL_DEVICE), err)
+        return
+
+    SCAN_INTERVAL = timedelta(minutes=config.get(CONF_SCAN_INTERVAL))
+    _LOGGER.info(SCAN_INTERVAL)
 
     dev = []
 
