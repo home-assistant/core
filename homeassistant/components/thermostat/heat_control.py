@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 from homeassistant.components import switch
 from homeassistant.components.thermostat import (
-    STATE_HEAT, STATE_IDLE, ThermostatDevice)
+    STATE_HEAT, STATE_COOL, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.event import track_state_change
@@ -27,6 +27,7 @@ CONF_SENSOR = 'target_sensor'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
+CONF_AC_MODE = 'ac_mode'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_AC_MODE): vol.Coerce(bool),
 })
 
 
@@ -49,9 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     min_temp = config.get(CONF_MIN_TEMP)
     max_temp = config.get(CONF_MAX_TEMP)
     target_temp = config.get(CONF_TARGET_TEMP)
+    ac_mode = config.get(CONF_AC_MODE)
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
-                             min_temp, max_temp, target_temp)])
+                             min_temp, max_temp, target_temp, ac_mode)])
 
 
 # pylint: disable=too-many-instance-attributes, abstract-method
@@ -60,11 +63,12 @@ class HeatControl(ThermostatDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
-                 min_temp, max_temp, target_temp):
+                 min_temp, max_temp, target_temp, ac_mode):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
+        self.ac_mode = ac_mode
 
         self._active = False
         self._cur_temp = None
@@ -102,7 +106,12 @@ class HeatControl(ThermostatDevice):
     @property
     def operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return STATE_HEAT if self._active and self._is_heating else STATE_IDLE
+        if self.ac_mode:
+            cooling = self._active and self._is_device_active
+            return STATE_COOL if cooling else STATE_IDLE
+        else:
+            heating = self._active and self._is_device_active
+            return STATE_HEAT if heating else STATE_IDLE
 
     @property
     def target_temperature(self):
@@ -178,17 +187,27 @@ class HeatControl(ThermostatDevice):
         if not self._active:
             return
 
-        too_cold = self._target_temp - self._cur_temp > TOL_TEMP
-        is_heating = self._is_heating
+        if self.ac_mode:
+            too_hot = self._cur_temp - self._target_temp > TOL_TEMP
+            is_cooling = self._is_device_active
+            if too_hot and not is_cooling:
+                _LOGGER.info('Turning on AC %s', self.heater_entity_id)
+                switch.turn_on(self.hass, self.heater_entity_id)
+            elif not too_hot and is_cooling:
+                _LOGGER.info('Turning off AC %s', self.heater_entity_id)
+                switch.turn_off(self.hass, self.heater_entity_id)
+        else:
+            too_cold = self._target_temp - self._cur_temp > TOL_TEMP
+            is_heating = self._is_device_active
 
-        if too_cold and not is_heating:
-            _LOGGER.info('Turning on heater %s', self.heater_entity_id)
-            switch.turn_on(self.hass, self.heater_entity_id)
-        elif not too_cold and is_heating:
-            _LOGGER.info('Turning off heater %s', self.heater_entity_id)
-            switch.turn_off(self.hass, self.heater_entity_id)
+            if too_cold and not is_heating:
+                _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                switch.turn_on(self.hass, self.heater_entity_id)
+            elif not too_cold and is_heating:
+                _LOGGER.info('Turning off heater %s', self.heater_entity_id)
+                switch.turn_off(self.hass, self.heater_entity_id)
 
     @property
-    def _is_heating(self):
-        """If the heater is currently heating."""
+    def _is_device_active(self):
+        """If the toggleable device is currently active."""
         return switch.is_on(self.hass, self.heater_entity_id)
