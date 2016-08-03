@@ -1,11 +1,42 @@
 """The tests for the Demo Media player platform."""
 import unittest
 from unittest.mock import patch
+from homeassistant import bootstrap
 import homeassistant.components.media_player as mp
+import homeassistant.components.http as http
 
-from tests.common import get_test_home_assistant
+import requests
+import requests_mock
+import time
+
+from tests.common import get_test_home_assistant, get_test_instance_port
+
+SERVER_PORT = get_test_instance_port()
+HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(SERVER_PORT)
+
+hass = None
 
 entity_id = 'media_player.walkman'
+
+
+def setUpModule():   # pylint: disable=invalid-name
+    """Initalize a Home Assistant server."""
+    global hass
+
+    hass = get_test_home_assistant()
+    bootstrap.setup_component(hass, http.DOMAIN, {
+        http.DOMAIN: {
+            http.CONF_SERVER_PORT: SERVER_PORT
+        },
+    })
+
+    hass.start()
+    time.sleep(0.05)
+
+
+def tearDownModule():   # pylint: disable=invalid-name
+    """Stop the Home Assistant server."""
+    hass.stop()
 
 
 class TestDemoMediaPlayer(unittest.TestCase):
@@ -13,11 +44,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+        self.hass = hass
 
     def test_source_select(self):
         """Test the input source service."""
@@ -174,6 +201,19 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert 1 == state.attributes.get('media_episode')
         assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
                      state.attributes.get('supported_media_commands'))
+
+    @requests_mock.Mocker(real_http=True)
+    def test_media_image_proxy(self, m):
+        """Test the media server image proxy server ."""
+        fake_picture_data = 'test.test'
+        m.get('https://graph.facebook.com/v2.5/107771475912710/'
+              'picture?type=large', text=fake_picture_data)
+        assert mp.setup(self.hass, {'media_player': {'platform': 'demo'}})
+        assert self.hass.states.is_state(entity_id, 'playing')
+        state = self.hass.states.get(entity_id)
+        req = requests.get(HTTP_BASE_URL +
+                           state.attributes.get('entity_picture'))
+        assert req.text == fake_picture_data
 
     @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
            'media_seek')
