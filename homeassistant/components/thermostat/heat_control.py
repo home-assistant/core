@@ -8,12 +8,14 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import condition
 import homeassistant.util as util
 from homeassistant.components import switch
 from homeassistant.components.thermostat import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ThermostatDevice)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    STATE_ON, STATE_OFF)
 from homeassistant.helpers.event import track_state_change
 
 DEPENDENCIES = ['switch', 'sensor']
@@ -28,6 +30,7 @@ CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
 CONF_AC_MODE = 'ac_mode'
+CONF_MIN_DUR = 'min_cycle_duration'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +43,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_AC_MODE): vol.Coerce(bool),
+    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -52,9 +56,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     max_temp = config.get(CONF_MAX_TEMP)
     target_temp = config.get(CONF_TARGET_TEMP)
     ac_mode = config.get(CONF_AC_MODE)
+    min_cycle_duration = config.get(CONF_MIN_DUR)
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
-                             min_temp, max_temp, target_temp, ac_mode)])
+                             min_temp, max_temp, target_temp, ac_mode,
+                             min_cycle_duration)])
 
 
 # pylint: disable=too-many-instance-attributes, abstract-method
@@ -63,12 +69,13 @@ class HeatControl(ThermostatDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
-                 min_temp, max_temp, target_temp, ac_mode):
+                 min_temp, max_temp, target_temp, ac_mode, min_cycle_duration):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
         self.ac_mode = ac_mode
+        self.min_cycle_duration = min_cycle_duration
 
         self._active = False
         self._cur_temp = None
@@ -186,6 +193,17 @@ class HeatControl(ThermostatDevice):
 
         if not self._active:
             return
+
+        if self.min_cycle_duration:
+            if self._is_device_active:
+                current_state = STATE_ON
+            else:
+                current_state = STATE_OFF
+            long_enough = condition.state(self.hass, self.heater_entity_id,
+                                          current_state,
+                                          self.min_cycle_duration)
+            if not long_enough:
+                return
 
         if self.ac_mode:
             too_hot = self._cur_temp - self._target_temp > TOL_TEMP
