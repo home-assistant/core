@@ -20,7 +20,7 @@ def convert(temperature: float, from_unit: str, to_unit: str) -> (float, str):
         # If no need or unknown conversion, return temperature
         return temperature, from_unit
 
-    return (
-        celsius_to_fahrenheit(
-            temperature) if from_unit == TEMP_CELSIUS else round(
-                fahrenheit_to_celsius(temperature), 1), to_unit)
+    if from_unit == TEMP_CELSIUS:
+        return celsius_to_fahrenheit(temperature)
+    else:
+        return round(fahrenheit_to_celsius(temperature), 1)
