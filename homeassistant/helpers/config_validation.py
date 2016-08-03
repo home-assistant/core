@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, SYSTEM_IMPERIAL, SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -229,10 +229,10 @@ def temperature_unit(value):
 def unit_system(value):
     """Validate and transform the unit system."""
     value = str(value).lower()
-    if value not in [SYSTEM_METRIC, SYSTEM_IMPERIAL]:
+    if value not in [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]:
         raise vol.Invalid(
-            'invalid unit system (expected {} or {})'.format(SYSTEM_IMPERIAL,
-                                                             SYSTEM_METRIC))
+            'invalid unit system (expected {} or {})'.format(CONF_UNIT_SYSTEM_IMPERIAL,
+                                                             CONF_UNIT_SYSTEM_METRIC))
     return value
 
 

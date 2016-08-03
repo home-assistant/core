@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_UNIT_SYSTEM,
-    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, SYSTEM_METRIC,
-    SYSTEM_IMPERIAL, __version__)
+    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL, __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -31,8 +31,8 @@ DEFAULT_CORE_CONFIG = (
      ' the sun rises and sets'),
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
-    (CONF_UNIT_SYSTEM, SYSTEM_METRIC, None,
-     '{} for Metric, {} for Imperial'.format(SYSTEM_METRIC, SYSTEM_IMPERIAL)),
+    (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
+     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
@@ -133,8 +133,8 @@ def create_default_config(config_dir, detect_location=True):
     location_info = detect_location and loc_util.detect_location_info()
 
     if location_info:
-        info[CONF_UNIT_SYSTEM] = SYSTEM_METRIC \
-            if location_info.use_metric else SYSTEM_IMPERIAL
+        info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC \
+            if location_info.use_metric else CONF_UNIT_SYSTEM_IMPERIAL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
@@ -248,7 +248,7 @@ def process_ha_core_config(hass, config):
 
     if CONF_UNIT_SYSTEM in config:
         hac.units = IMPERIAL_SYSTEM \
-            if config[CONF_UNIT_SYSTEM] == SYSTEM_IMPERIAL \
+            if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL \
             else METRIC_SYSTEM
 
     # Shortcut if no auto-detection necessary

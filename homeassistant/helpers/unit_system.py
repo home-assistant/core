@@ -6,8 +6,8 @@ from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_CENTIMETERS, LENGTH_METERS,
     LENGTH_KILOMETERS, LENGTH_INCHES, LENGTH_FEET, LENGTH_YARD, LENGTH_MILES,
     VOLUME_LITERS, VOLUME_MILLILITERS, VOLUME_GALLONS, VOLUME_FLUID_OUNCE,
-    MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS, SYSTEM_METRIC,
-    SYSTEM_IMPERIAL)
+    MASS_GRAMS, MASS_KILOGRAMS, MASS_OUNCES, MASS_POUNDS, CONF_UNIT_SYSTEM_METRIC,
+    CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.util import temperature as temperature_util
 from homeassistant.util import distance as distance_util
 
@@ -93,7 +93,7 @@ class UnitSystem(object):
 
     @property
     def is_metric(self: object) -> bool:
-        return self.name == SYSTEM_METRIC
+        return self.name == CONF_UNIT_SYSTEM_METRIC
 
     def temperature(self: object, temperature: float, from_unit: str) -> (
             float, str):
@@ -101,20 +101,16 @@ class UnitSystem(object):
         if not isinstance(temperature, Number):
             return temperature, from_unit
 
-        print('CONVERTING TEMP {} {}'.format(str(temperature), from_unit))
-        to_unit = self._unit_types[TYPE_TEMPERATURE]  # type: str
         return temperature_util.convert(temperature,
-                                        from_unit, to_unit)
+                                        from_unit, self.temperature_unit)
 
     def length(self: object, length: float, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             return length, from_unit
 
-        print('CONVERTING LENGTH {} {}'.format(str(length), from_unit))
-        to_unit = self._unit_types[TYPE_LENGTH]  # type: str
         return distance_util.convert(length, from_unit,
-                                     to_unit)  # type: float
+                                     self.length_unit)  # type: float
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""
@@ -126,8 +122,8 @@ class UnitSystem(object):
         }
 
 
-METRIC_SYSTEM = UnitSystem(SYSTEM_METRIC, TEMP_CELSIUS, LENGTH_KILOMETERS,
+METRIC_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_METRIC, TEMP_CELSIUS, LENGTH_KILOMETERS,
                            VOLUME_LITERS, MASS_GRAMS)
 
-IMPERIAL_SYSTEM = UnitSystem(SYSTEM_IMPERIAL, TEMP_FAHRENHEIT, LENGTH_MILES,
+IMPERIAL_SYSTEM = UnitSystem(CONF_UNIT_SYSTEM_IMPERIAL, TEMP_FAHRENHEIT, LENGTH_MILES,
                              VOLUME_GALLONS, MASS_POUNDS)

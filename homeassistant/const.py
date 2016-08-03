@@ -112,8 +112,8 @@ ATTR_ICON = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
-SYSTEM_METRIC = 'metric'  # type: str
-SYSTEM_IMPERIAL = 'imperial'  # type: str
+CONF_UNIT_SYSTEM_METRIC = 'metric'  # type: str
+CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"

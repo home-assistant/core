@@ -13,7 +13,7 @@ import homeassistant.config as config_util
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    SYSTEM_METRIC, SYSTEM_IMPERIAL)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.helpers.entity import Entity
 
@@ -145,7 +145,7 @@ class TestConfig(unittest.TestCase):
             CONF_LATITUDE: 32.8594,
             CONF_LONGITUDE: -117.2073,
             CONF_ELEVATION: 101,
-            CONF_UNIT_SYSTEM: SYSTEM_METRIC,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             CONF_NAME: 'Home',
             CONF_TIME_ZONE: 'America/Los_Angeles'
         }
@@ -182,7 +182,7 @@ class TestConfig(unittest.TestCase):
             'name': 'Test name',
             'latitude': '-23.45',
             'longitude': '123.45',
-            CONF_UNIT_SYSTEM: SYSTEM_METRIC,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             'customize': {
                 'sensor.temperature': {
                     'hidden': True,
@@ -264,7 +264,7 @@ class TestConfig(unittest.TestCase):
             'longitude': 50,
             'elevation': 25,
             'name': 'Huis',
-            CONF_UNIT_SYSTEM: SYSTEM_IMPERIAL,
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             'time_zone': 'America/New_York',
         })
 
@@ -272,7 +272,7 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == 50
         assert config.elevation == 25
         assert config.location_name == 'Huis'
-        assert config.units.name == SYSTEM_IMPERIAL
+        assert config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
         assert config.time_zone.zone == 'America/New_York'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -292,7 +292,7 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == -117.2073
         assert config.elevation == 101
         assert config.location_name == 'San Diego'
-        assert config.units.name == SYSTEM_METRIC
+        assert config.units.name == CONF_UNIT_SYSTEM_METRIC
         assert config.time_zone.zone == 'America/Los_Angeles'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
