@@ -91,6 +91,10 @@ class UnitSystem(object):
         self.mass_unit = mass
         self.volume_unit = volume
 
+    @property
+    def is_metric(self: object) -> bool:
+        return self.name == SYSTEM_METRIC
+
     def temperature(self: object, temperature: float, from_unit: str) -> (
             float, str):
         """Convert the given temperature to this unit system."""
