@@ -5,10 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
 """
 import logging
-import os
 import socket
 
-from urllib.parse import quote
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
@@ -72,6 +70,8 @@ class MpdDevice(MediaPlayerDevice):
 
     # MPD confuses pylint
     # pylint: disable=no-member, too-many-public-methods, abstract-method
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
     def __init__(self, server, port, location, password, baseurl, covername):
         """Initialize the MPD device."""
         import mpd
@@ -145,8 +145,10 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
+        from os.path import dirname
+        from urllib.parse import quote
         if self.baseurl is not None:
-            albumdir = quote(os.path.dirname(self.currentsong.get('file')))
+            albumdir = quote(dirname(self.currentsong.get('file')))
             coverurl = '{}{}/{}'.format(self.baseurl, albumdir, self.covername)
             return coverurl
         else:
