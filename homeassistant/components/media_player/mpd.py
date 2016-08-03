@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.mpd/
 """
 import logging
+import os
 import socket
 
+from urllib.parse import quote
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
@@ -29,6 +31,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get('port', 6600)
     location = config.get('location', 'MPD')
     password = config.get('password', None)
+    baseurl = config.get('baseurl', None)
+    covername = config.get('covername', 'cover.jpg')
 
     import mpd
 
@@ -59,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             raise
 
-    add_devices([MpdDevice(daemon, port, location, password)])
+    add_devices([MpdDevice(daemon, port, location, password, baseurl, covername)])
 
 
 class MpdDevice(MediaPlayerDevice):
@@ -67,7 +71,7 @@ class MpdDevice(MediaPlayerDevice):
 
     # MPD confuses pylint
     # pylint: disable=no-member, too-many-public-methods, abstract-method
-    def __init__(self, server, port, location, password):
+    def __init__(self, server, port, location, password, baseurl, covername):
         """Initialize the MPD device."""
         import mpd
 
@@ -77,6 +81,8 @@ class MpdDevice(MediaPlayerDevice):
         self.password = password
         self.status = None
         self.currentsong = None
+        self.baseurl = baseurl
+        self.covername = covername
 
         self.client = mpd.MPDClient()
         self.client.timeout = 10
@@ -134,6 +140,16 @@ class MpdDevice(MediaPlayerDevice):
         """Duration of current playing media in seconds."""
         # Time does not exist for streams
         return self.currentsong.get('time')
+
+    @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        if self.baseurl is not None:
+            albumdir = quote(os.path.dirname(self.currentsong.get('file')))
+            coverurl = '{}{}/{}'.format(self.baseurl, albumdir, self.covername)
+            return coverurl
+        else:
+            pass
 
     @property
     def media_title(self):
