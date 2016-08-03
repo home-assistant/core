@@ -63,7 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             raise
 
-    add_devices([MpdDevice(daemon, port, location, password, baseurl, covername)])
+    add_devices([MpdDevice(daemon, port, location, password,
+                           baseurl, covername)])
 
 
 class MpdDevice(MediaPlayerDevice):
