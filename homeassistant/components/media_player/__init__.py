@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player/
 """
 import logging
 import os
+import requests
 
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
@@ -25,9 +27,12 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'media_player'
+DEPENDENCIES = ['http']
 SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -286,6 +291,8 @@ def setup(hass, config):
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
+    hass.wsgi.register_view(MediaPlayerImageView(hass, component.entities))
+
     component.setup(config)
 
     descriptions = load_yaml_config_file(
@@ -397,6 +404,11 @@ class MediaPlayerDevice(Entity):
     def state(self):
         """State of the player."""
         return STATE_UNKNOWN
+
+    @property
+    def access_token(self):
+        """Access token for this media player."""
+        return str(id(self))
 
     @property
     def volume_level(self):
@@ -633,7 +645,8 @@ class MediaPlayerDevice(Entity):
     @property
     def entity_picture(self):
         """Return image of the media playing."""
-        return None if self.state == STATE_OFF else self.media_image_url
+        return None if self.state == STATE_OFF else \
+            ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
 
     @property
     def state_attributes(self):
@@ -649,3 +662,35 @@ class MediaPlayerDevice(Entity):
             }
 
         return state_attr
+
+
+class MediaPlayerImageView(HomeAssistantView):
+    """Media player view to serve an image."""
+
+    url = "/api/media_player_proxy/<entity(domain=media_player):entity_id>"
+    name = "api:media_player:image"
+
+    def __init__(self, hass, entities):
+        """Initialize a media player view."""
+        super().__init__(hass)
+        self.entities = entities
+
+    def get(self, request, entity_id):
+        """Start a get request."""
+        player = self.entities.get(entity_id)
+
+        if player is None:
+            return self.Response(status=404)
+
+        authenticated = (request.authenticated or
+                         request.args.get('token') == player.access_token)
+
+        if not authenticated:
+            return self.Response(status=401)
+
+        response = requests.get(player.media_image_url)
+
+        if response is None:
+            return self.Response(status=500)
+
+        return self.Response(response)
