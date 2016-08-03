@@ -123,3 +123,8 @@ class TestUnitSystem(unittest.TestCase):
         self.assertEqual(TEMP_CELSIUS, METRIC_SYSTEM.temperature_unit)
         self.assertEqual(MASS_GRAMS, METRIC_SYSTEM.mass_unit)
         self.assertEqual(VOLUME_LITERS, METRIC_SYSTEM.volume_unit)
+
+    def test_is_metric(self):
+        """Test the is metric flag."""
+        self.assertTrue(METRIC_SYSTEM.is_metric)
+        self.assertFalse(IMPERIAL_SYSTEM.is_metric)
