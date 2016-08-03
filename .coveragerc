@@ -24,6 +24,8 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/foursquare.py
+
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
