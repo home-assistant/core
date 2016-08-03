@@ -238,7 +238,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for resource in config.get("monitored_resources",
                                    FITBIT_DEFAULT_RESOURCE_LIST):
             dev.append(FitbitSensor(authd_client, config_path, resource,
-                                    hass.config.units.name == CONF_UNIT_SYSTEM_METRIC))
+                                    hass.config.units.is_metric))
         add_devices(dev)
 
     else:

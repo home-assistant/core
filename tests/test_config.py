@@ -293,6 +293,7 @@ class TestConfig(unittest.TestCase):
         assert config.elevation == 101
         assert config.location_name == 'San Diego'
         assert config.units.name == CONF_UNIT_SYSTEM_METRIC
+        assert config.units.is_metric
         assert config.time_zone.zone == 'America/Los_Angeles'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
