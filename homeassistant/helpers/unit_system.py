@@ -94,7 +94,8 @@ class UnitSystem(object):
             float, str):
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
-            return temperature, from_unit
+            raise TypeError(
+                '{} is not a numeric value.'.format(str(temperature)))
 
         return temperature_util.convert(temperature,
                                         from_unit, self.temperature_unit)
@@ -102,7 +103,7 @@ class UnitSystem(object):
     def length(self: object, length: float, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
-            return length, from_unit
+            raise TypeError('{} is not a numeric value.'.format(str(length)))
 
         return distance_util.convert(length, from_unit,
                                      self.length_unit)  # type: float

@@ -5,10 +5,6 @@ from homeassistant.helpers.unit_system import (
     UnitSystem,
     METRIC_SYSTEM,
     IMPERIAL_SYSTEM,
-    TYPE_LENGTH,
-    TYPE_TEMPERATURE,
-    TYPE_MASS,
-    TYPE_VOLUME,
 )
 from homeassistant.const import (
     LENGTH_METERS,
@@ -16,6 +12,10 @@ from homeassistant.const import (
     MASS_GRAMS,
     VOLUME_LITERS,
     TEMP_CELSIUS,
+    LENGTH,
+    MASS,
+    TEMPERATURE,
+    VOLUME
 )
 
 SYSTEM_NAME = 'TEST'
@@ -45,18 +45,18 @@ class TestUnitSystem(unittest.TestCase):
 
     def test_invalid_value(self):
         """Test no conversion happens if value is non-numeric."""
-        self.assertEqual(('25a', LENGTH_KILOMETERS),
-                         METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS))
-        self.assertEqual(('50K', TEMP_CELSIUS),
-                         METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS))
+        with self.assertRaises(TypeError):
+             METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
+        with self.assertRaises(TypeError):
+             METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS))
 
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""
         expected = {
-            TYPE_LENGTH: LENGTH_KILOMETERS,
-            TYPE_TEMPERATURE: TEMP_CELSIUS,
-            TYPE_VOLUME: VOLUME_LITERS,
-            TYPE_MASS: MASS_GRAMS
+            LENGTH: LENGTH_KILOMETERS,
+            TEMPERATURE: TEMP_CELSIUS,
+            VOLUME: VOLUME_LITERS,
+            MASS: MASS_GRAMS
         }
 
         self.assertEqual(expected, METRIC_SYSTEM.as_dict())
