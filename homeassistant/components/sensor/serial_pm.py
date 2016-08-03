@@ -36,6 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available PM sensors."""
     from pmsensor import serial_data_collector as pm
 
+    global SCAN_INTERVAL
+
     try:
         coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
                                   pm.SUPPORTED_SENSORS[config.get(CONF_BRAND)])
