@@ -27,13 +27,13 @@ class TestDistanceUtil(unittest.TestCase):
 
     def test_convert_invalid_unit(self):
         """Test exception is thrown for invalid units."""
-        self.assertEqual((5, INVALID_SYMBOL),
-                         distance_util.convert(5, INVALID_SYMBOL,
-                                               VALID_SYMBOL))
+        with self.assertRaises(ValueError):
+            distance_util.convert(5, INVALID_SYMBOL,
+                                  VALID_SYMBOL)
 
-        self.assertEqual((5000, LENGTH_METERS),
-                         distance_util.convert(5, VALID_SYMBOL,
-                                               INVALID_SYMBOL))
+        with self.assertRaises(ValueError):
+            distance_util.convert(5, VALID_SYMBOL,
+                                  INVALID_SYMBOL)
 
     def test_convert_nonnumeric_value(self):
         """Test exception is thrown for nonnumeric type."""

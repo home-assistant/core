@@ -48,7 +48,7 @@ class TestUnitSystem(unittest.TestCase):
         with self.assertRaises(TypeError):
              METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
         with self.assertRaises(TypeError):
-             METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS))
+             METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
 
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""
@@ -70,7 +70,8 @@ class TestUnitSystem(unittest.TestCase):
 
     def test_temperature_unknown_unit(self):
         """Test no conversion happens if unknown unit."""
-        self.assertEqual((5, 'K'), METRIC_SYSTEM.temperature(5, 'K'))
+        with self.assertRaises(ValueError):
+            METRIC_SYSTEM.temperature(5, 'K')
 
     def test_temperature_to_metric(self):
         """Test temperature conversion to metric system."""
@@ -92,7 +93,8 @@ class TestUnitSystem(unittest.TestCase):
 
     def test_length_unknown_unit(self):
         """Test length conversion with unknown from unit."""
-        self.assertEqual((5, 'fr'), METRIC_SYSTEM.length(5, 'fr'))
+        with self.assertRaises(ValueError):
+            METRIC_SYSTEM.length(5, 'fr')
 
     def test_length_to_metric(self):
         """Test length conversion to metric system."""
