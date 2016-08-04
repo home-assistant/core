@@ -24,6 +24,7 @@ def convert(temperature: float, from_unit: str, to_unit: str) -> float:
                                                              str(TEMPERATURE)))
     if to_unit not in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
         raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(from_unit),
+        raise ValueError(UNIT_NOT_RECOGNIZED_TEMPLATE.format(str(to_unit),
                                                              str(TEMPERATURE)))
 
     if from_unit == to_unit:
