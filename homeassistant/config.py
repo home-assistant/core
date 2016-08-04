@@ -136,8 +136,10 @@ def create_default_config(config_dir, detect_location=True):
     location_info = detect_location and loc_util.detect_location_info()
 
     if location_info:
-        info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC \
-            if location_info.use_metric else CONF_UNIT_SYSTEM_IMPERIAL
+        if location_info.use_metric:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
+        else:
+            info[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
 
         for attr, default, prop, _ in DEFAULT_CORE_CONFIG:
             if prop is None:
