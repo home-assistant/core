@@ -57,12 +57,12 @@ class HMThermostat(homematic.HMDevice, ThermostatDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature - 4.5 means off."""
-        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)[0]
+        return convert(4.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature - 30.5 means on."""
-        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)[0]
+        return convert(30.5, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _check_hm_to_ha_object(self):
         """Check if possible to use the Homematic object as this HA type."""
