@@ -149,7 +149,7 @@ def setup(hass, config):
         for thermostat in target_thermostats:
             thermostat.set_temperature(convert(
                 temperature, hass.config.units.temperature_unit,
-                thermostat.unit_of_measurement)[0])
+                thermostat.unit_of_measurement))
 
             thermostat.update_ha_state(True)
 
@@ -302,12 +302,12 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(7, TEMP_CELSIUS, self.unit_of_measurement)[0]
+        return convert(7, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(35, TEMP_CELSIUS, self.unit_of_measurement)[0]
+        return convert(35, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
@@ -323,4 +323,4 @@ class ThermostatDevice(Entity):
             # Users of fahrenheit generally expect integer units.
             decimal_count = 0
 
-        return round(value[0], decimal_count)
+        return round(value, decimal_count)

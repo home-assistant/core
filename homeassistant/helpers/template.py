@@ -217,10 +217,10 @@ class LocationMethods(object):
             locations.append((latitude, longitude))
 
         if len(locations) == 1:
-            return self._hass.config.distance(*locations[0])[0]
+            return self._hass.config.distance(*locations[0])
 
         return self._hass.config.units.length(
-            loc_util.distance(*locations[0] + locations[1]), 'm')[0]
+            loc_util.distance(*locations[0] + locations[1]), 'm')
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""

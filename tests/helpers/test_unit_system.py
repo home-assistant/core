@@ -64,7 +64,7 @@ class TestUnitSystem(unittest.TestCase):
     def test_temperature_same_unit(self):
         """Test no conversion happens if to unit is same as from unit."""
         self.assertEqual(
-            (5, METRIC_SYSTEM.temperature_unit),
+            5,
             METRIC_SYSTEM.temperature(5,
                                       METRIC_SYSTEM.temperature_unit))
 
@@ -75,19 +75,19 @@ class TestUnitSystem(unittest.TestCase):
     def test_temperature_to_metric(self):
         """Test temperature conversion to metric system."""
         self.assertEqual(
-            (25, METRIC_SYSTEM.temperature_unit),
+            25,
             METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit))
         self.assertEqual(
-            (26.7, TEMP_CELSIUS),
+            26.7,
             METRIC_SYSTEM.temperature(80, IMPERIAL_SYSTEM.temperature_unit))
 
     def test_temperature_to_imperial(self):
         """Test temperature conversion to imperial system."""
         self.assertEqual(
-            (77, IMPERIAL_SYSTEM.temperature_unit),
+            77,
             IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit))
         self.assertEqual(
-            (77, IMPERIAL_SYSTEM.temperature_unit),
+            77,
             IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit))
 
     def test_length_unknown_unit(self):
@@ -97,23 +97,23 @@ class TestUnitSystem(unittest.TestCase):
     def test_length_to_metric(self):
         """Test length conversion to metric system."""
         self.assertEqual(
-            (100, METRIC_SYSTEM.length_unit),
+            100,
             METRIC_SYSTEM.length(100, METRIC_SYSTEM.length_unit)
         )
         self.assertEqual(
-            (8.04672, METRIC_SYSTEM.length_unit),
+            8.04672,
             METRIC_SYSTEM.length(5, IMPERIAL_SYSTEM.length_unit)
         )
 
     def test_length_to_imperial(self):
         """Test length conversion to imperial system."""
         self.assertEqual(
-            (100, IMPERIAL_SYSTEM.length_unit),
+            100,
             IMPERIAL_SYSTEM.length(100,
                                    IMPERIAL_SYSTEM.length_unit)
         )
         self.assertEqual(
-            (3.106855, IMPERIAL_SYSTEM.length_unit),
+            3.106855,
             IMPERIAL_SYSTEM.length(5, METRIC_SYSTEM.length_unit)
         )
 

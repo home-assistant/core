@@ -463,14 +463,12 @@ class HvacDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(19, TEMP_CELSIUS, self.unit_of_measurement)[
-            0]
+        return convert_temperature(19, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(30, TEMP_CELSIUS, self.unit_of_measurement)[
-            0]
+        return convert_temperature(30, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def min_humidity(self):
@@ -488,7 +486,7 @@ class HvacDevice(Entity):
             return temp
 
         value = convert_temperature(temp, self.unit_of_measurement,
-                                    self.hass.config.units.temperature_unit)[0]
+                                    self.hass.config.units.temperature_unit)
 
         if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
             decimal_count = 1
