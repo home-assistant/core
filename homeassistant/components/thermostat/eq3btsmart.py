@@ -77,13 +77,13 @@ class EQ3BTSmartThermostat(ThermostatDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return convert(self._thermostat.min_temp, TEMP_CELSIUS,
-                       self.unit_of_measurement)[0]
+                       self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return convert(self._thermostat.max_temp, TEMP_CELSIUS,
-                       self.unit_of_measurement)[0]
+                       self.unit_of_measurement)
 
     def update(self):
         """Update the data from the thermostat."""
