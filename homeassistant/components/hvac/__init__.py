@@ -207,7 +207,7 @@ def setup(hass, config):
         for hvac in target_hvacs:
             hvac.set_temperature(convert_temperature(
                 temperature, hass.config.units.temperature_unit,
-                hvac.unit_of_measurement)[0])
+                hvac.unit_of_measurement))
 
             if hvac.should_poll:
                 hvac.update_ha_state(True)
