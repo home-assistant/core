@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL, __version__)
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
+    __version__)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
@@ -91,6 +92,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_LATITUDE: cv.latitude,
     CONF_LONGITUDE: cv.longitude,
     CONF_ELEVATION: vol.Coerce(int),
+    vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
@@ -252,6 +254,15 @@ def process_ha_core_config(hass, config):
             hac.units = IMPERIAL_SYSTEM
         else:
             hac.units = METRIC_SYSTEM
+    elif CONF_TEMPERATURE_UNIT in config:
+        unit = config[CONF_TEMPERATURE_UNIT]
+        if unit == TEMP_CELSIUS:
+            hac.units = METRIC_SYSTEM
+        else:
+            hac.units = IMPERIAL_SYSTEM
+        _LOGGER.warning("Found deprecated temperature unit in core config, "
+                        "expected unit system. Replace 'temperature: %s' with "
+                        "'unit_system: %s'", unit, hac.units.name)
 
     # Shortcut if no auto-detection necessary
     if None not in (hac.latitude, hac.longitude, hac.units,
