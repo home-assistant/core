@@ -71,7 +71,7 @@ class HeatControl(ThermostatDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
-        self._unit = None
+        self._unit = hass.config.units.temperature_unit
 
         track_state_change(hass, sensor_entity_id, self._sensor_changed)
 
