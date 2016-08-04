@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
+DEFAULT_POST_TRIGGER_STATE = STATE_ALARM_DISARMED
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -29,6 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get('code'),
         config.get('pending_time', DEFAULT_PENDING_TIME),
         config.get('trigger_time', DEFAULT_TRIGGER_TIME),
+        config.get('post_trigger_state', DEFAULT_POST_TRIGGER_STATE),
         )])
 
 
@@ -40,10 +42,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
-    triggered for 'trigger_time', after that we return to disarmed.
+    triggered for 'trigger_time', after that we return to 'post_trigger_state'.
     """
 
-    def __init__(self, hass, name, code, pending_time, trigger_time):
+    def __init__(self, hass, name, code, pending_time, trigger_time, post_trigger_state):
         """Initalize the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -51,6 +53,8 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._code = str(code) if code else None
         self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
+        self._post_trigger_state = post_trigger_state
+        self._trigger_state = self._state
         self._state_ts = None
 
     @property
@@ -77,7 +81,14 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 return STATE_ALARM_PENDING
             elif (self._state_ts + self._pending_time +
                   self._trigger_time) < dt_util.utcnow():
-                return STATE_ALARM_DISARMED
+                if self._post_trigger_state not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+                                                    STATE_ALARM_ARMED_AWAY, 'last'):
+                    _LOGGER.error('Unknown post-trigger state: %s', self._post_trigger_state)
+                    return STATE_ALARM_DISARMED
+                elif (self._post_trigger_state == 'last'):
+                    return self._trigger_state
+                else:
+                    return self._post_trigger_state
 
         return self._state
 
@@ -125,6 +136,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
+        self._trigger_state = self._state
         self._state = STATE_ALARM_TRIGGERED
         self._state_ts = dt_util.utcnow()
         self.update_ha_state()
