@@ -201,11 +201,12 @@ class Entity(object):
             attr.pop(ATTR_HIDDEN)
 
         # Convert temperature if we detect one
-        if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (
-                TEMP_CELSIUS, TEMP_FAHRENHEIT) and isinstance(state, Number):
-            state = self.hass.config.units.temperature(state, attr[
-                ATTR_UNIT_OF_MEASUREMENT])
-            state = str(state)
+        try:
+            state = str(self.hass.config.units.temperature(float(state), attr[
+                ATTR_UNIT_OF_MEASUREMENT]))
+        except ValueError:
+            # Could not convert state to float
+            pass
 
         return self.hass.states.set(
             self.entity_id, state, attr, self.force_update)
