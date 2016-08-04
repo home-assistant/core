@@ -2,8 +2,6 @@
 import logging
 import re
 
-from numbers import Number
-
 from typing import Any, Optional, List, Dict
 
 from homeassistant.const import (
