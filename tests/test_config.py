@@ -276,7 +276,7 @@ class TestConfig(unittest.TestCase):
         assert config.time_zone.zone == 'America/New_York'
 
     def test_loading_configuration_temperature_unit(self):
-        """Test loading core config onto hass object."""
+        """Test backward compatibility when loading core config."""
         config = Config()
         hass = mock.Mock(config=config)
 
