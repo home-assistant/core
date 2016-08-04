@@ -283,8 +283,7 @@ def process_ha_core_config(hass, config):
             return
 
         if hac.latitude is None and hac.longitude is None:
-            hac.latitude = info.latitude
-            hac.longitude = info.longitude
+            hac.latitude, hac.longitude = (info.latitude, info.longitude)
             discovered.append(('latitude', hac.latitude))
             discovered.append(('longitude', hac.longitude))
 
