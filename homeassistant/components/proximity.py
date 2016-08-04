@@ -209,7 +209,7 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
             # Add the device and distance to a dictionary.
             distances_to_zone[device] = round(
-                convert(dist_to_zone, 'm', self.unit_of_measure)[0], 1)
+                convert(dist_to_zone, 'm', self.unit_of_measure), 1)
 
         # Loop through each of the distances collected and work out the
         # closest.
