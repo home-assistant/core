@@ -76,7 +76,7 @@ class FoursquarePushReceiver(HomeAssistantView):
     """Handle pushes from the Foursquare API."""
 
     requires_auth = False
-    url = "/foursquare"
+    url = "/api/foursquare"
     name = "foursquare"
 
     def __init__(self, hass, push_secret):
@@ -92,9 +92,8 @@ class FoursquarePushReceiver(HomeAssistantView):
             _LOGGER.error("Received Foursquare push with invalid"
                           "push secret! Data: %s", raw_data)
             return
-        parsed_payload = {}
-        for key, val in raw_data.items():
-            if key == "secret":
-                continue
-            parsed_payload[key] = json.loads(val)
+        parsed_payload = {
+            key: json.loads(val) for key, val in raw_data.items()
+            if key != "secret"
+        }
         self.hass.bus.fire(EVENT_PUSH, parsed_payload)

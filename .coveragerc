@@ -24,8 +24,6 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
-    homeassistant/components/foursquare.py
-
     homeassistant/components/insteon_hub.py
     homeassistant/components/*/insteon_hub.py
 
@@ -128,6 +126,7 @@ omit =
     homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
     homeassistant/components/hdmi_cec.py
+    homeassistant/components/foursquare.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
