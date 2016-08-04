@@ -51,9 +51,6 @@ zwave:
   remove_node:
     description: Remove a node from the zwave network. Refer to OZW.log for details.
 
-  remove_node_secure:
-    description: Remove a node from the zwave network with secure communications. Node must support this, and network key must be set. Refer to OZW.log for details.
-
   test_network:
     description: This will send test to nodes in the zwave network. This will greatly slow down the zwave network while it is being processed. Refer to OZW.log for details.
 
