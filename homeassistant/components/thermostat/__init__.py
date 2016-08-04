@@ -147,9 +147,13 @@ def setup(hass, config):
         temperature = service.data[ATTR_TEMPERATURE]
 
         for thermostat in target_thermostats:
-            thermostat.set_temperature(convert(
-                temperature, hass.config.units.temperature_unit,
-                thermostat.unit_of_measurement))
+            if thermostat.unit_of_measurement is not None:
+                converted_temperature = convert(
+                    temperature, hass.config.units.temperature_unit,
+                    thermostat.unit_of_measurement)
+            else:
+                converted_temperature = temperature
+            thermostat.set_temperature(converted_temperature)
 
             thermostat.update_ha_state(True)
 
