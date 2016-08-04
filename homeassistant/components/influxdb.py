@@ -33,6 +33,7 @@ CONF_PASSWORD = 'password'
 CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_BLACKLIST = 'blacklist'
+CONF_WHITELIST = 'whitelist'
 CONF_TAGS = 'tags'
 
 
@@ -57,6 +58,7 @@ def setup(hass, config):
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
     blacklist = conf.get(CONF_BLACKLIST, [])
+    whitelist = conf.get(CONF_WHITELIST, [])
     tags = conf.get(CONF_TAGS, {})
 
     try:
@@ -79,6 +81,9 @@ def setup(hass, config):
             return
 
         try:
+            if len(whitelist) > 0 and state.entity_id not in whitelist:
+                return
+
             _state = state_helper.state_as_number(state)
         except ValueError:
             _state = state.state
