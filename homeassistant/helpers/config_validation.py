@@ -226,15 +226,8 @@ def temperature_unit(value):
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
 
-def unit_system(value):
-    """Validate and transform the unit system."""
-    value = str(value).lower()
-    if value not in [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]:
-        raise vol.Invalid(
-            'invalid unit system (expected {} or {})'.format(
-                CONF_UNIT_SYSTEM_IMPERIAL,
-                CONF_UNIT_SYSTEM_METRIC))
-    return value
+unit_system = vol.All(vol.Lower, vol.Any(CONF_UNIT_SYSTEM_METRIC,
+                                         CONF_UNIT_SYSTEM_IMPERIAL))
 
 
 def template(value):
