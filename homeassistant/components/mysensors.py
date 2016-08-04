@@ -10,7 +10,7 @@ import socket
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
                                  EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 STATE_OFF, STATE_ON, CONF_UNIT_SYSTEM_METRIC)
+                                 STATE_OFF, STATE_ON)
 from homeassistant.helpers import validate_config, discovery
 
 CONF_GATEWAYS = 'gateways'

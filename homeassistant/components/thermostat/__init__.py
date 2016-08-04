@@ -306,14 +306,18 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(7, TEMP_CELSIUS,
-                       self.unit_of_measurement or self.hass.config.units.temperature_unit)
+        unit = self.unit_of_measurement
+        if not unit:
+            unit = self.hass.config.units.temperature_unit
+        return convert(7, TEMP_CELSIUS, unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(35, TEMP_CELSIUS,
-                       self.unit_of_measurement or self.hass.config.units.temperature_unit)
+        unit = self.unit_of_measurement
+        if not unit:
+            unit = self.hass.config.units.temperature_unit
+        return convert(35, TEMP_CELSIUS, unit)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
@@ -321,9 +325,9 @@ class ThermostatDevice(Entity):
             return temp
 
         if self.unit_of_measurement:
-            value = self.hass.config.units.temperature(temp,
-                                                       self.unit_of_measurement
-                                                       )
+            value = \
+                self.hass.config.units.temperature(
+                    temp, self.unit_of_measurement)
         else:
             value = temp
 

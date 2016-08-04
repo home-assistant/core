@@ -732,7 +732,7 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = get_default_config_dir()
 
-    def distance(self:object, lat:float, lon:float) -> float:
+    def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant."""
         return self.units.length(
             location.distance(self.latitude, self.longitude, lat, lon), 'm')

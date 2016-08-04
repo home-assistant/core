@@ -88,6 +88,7 @@ class UnitSystem(object):
 
     @property
     def is_metric(self: object) -> bool:
+        """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
     def temperature(self: object, temperature: float, from_unit: str) -> (

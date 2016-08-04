@@ -10,7 +10,6 @@ import logging
 import datetime
 import time
 
-from homeassistant.const import CONF_UNIT_SYSTEM_METRIC
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component

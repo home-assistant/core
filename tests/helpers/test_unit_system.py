@@ -46,9 +46,9 @@ class TestUnitSystem(unittest.TestCase):
     def test_invalid_value(self):
         """Test no conversion happens if value is non-numeric."""
         with self.assertRaises(TypeError):
-             METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
+            METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
         with self.assertRaises(TypeError):
-             METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
+            METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
 
     def test_as_dict(self):
         """Test that the as_dict() method returns the expected dictionary."""

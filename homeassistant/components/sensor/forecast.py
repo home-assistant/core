@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_UNIT_SYSTEM_METRIC
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

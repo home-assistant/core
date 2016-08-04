@@ -231,8 +231,9 @@ def unit_system(value):
     value = str(value).lower()
     if value not in [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]:
         raise vol.Invalid(
-            'invalid unit system (expected {} or {})'.format(CONF_UNIT_SYSTEM_IMPERIAL,
-                                                             CONF_UNIT_SYSTEM_METRIC))
+            'invalid unit system (expected {} or {})'.format(
+                CONF_UNIT_SYSTEM_IMPERIAL,
+                CONF_UNIT_SYSTEM_METRIC))
     return value
 
 

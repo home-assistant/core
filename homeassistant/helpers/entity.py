@@ -202,7 +202,7 @@ class Entity(object):
 
         # Convert temperature if we detect one
         if attr.get(ATTR_UNIT_OF_MEASUREMENT) in (
-        TEMP_CELSIUS, TEMP_FAHRENHEIT) and isinstance(state, Number):
+                TEMP_CELSIUS, TEMP_FAHRENHEIT) and isinstance(state, Number):
             state = self.hass.config.units.temperature(state, attr[
                 ATTR_UNIT_OF_MEASUREMENT])
             state = str(state)

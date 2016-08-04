@@ -32,7 +32,8 @@ DEFAULT_CORE_CONFIG = (
     (CONF_LONGITUDE, 0, 'longitude', None),
     (CONF_ELEVATION, 0, None, 'Impacts weather/sunrise data'),
     (CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_METRIC, None,
-     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)),
+     '{} for Metric, {} for Imperial'.format(CONF_UNIT_SYSTEM_METRIC,
+                                             CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
 )
