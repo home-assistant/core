@@ -326,12 +326,8 @@ class ThermostatDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
 
-        if self.unit_of_measurement:
-            value = \
-                self.hass.config.units.temperature(
-                    temp, self.unit_of_measurement)
-        else:
-            value = temp
+        value = self.hass.config.units.temperature(temp,
+                                                   self.unit_of_measurement)
 
         if self.hass.config.units.is_metric:
             decimal_count = 1
