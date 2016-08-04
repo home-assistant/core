@@ -43,10 +43,10 @@ class TestDemoThermostat(unittest.TestCase):
 
     def test_set_target_temp_bad_attr(self):
         """Test setting the target temperature without required attribute."""
-        self.assertEqual('21', self.hass.states.get(ENTITY_NEST).state)
+        self.assertEqual('21.0', self.hass.states.get(ENTITY_NEST).state)
         thermostat.set_temperature(self.hass, None, ENTITY_NEST)
         self.hass.pool.block_till_done()
-        self.assertEqual('21', self.hass.states.get(ENTITY_NEST).state)
+        self.assertEqual('21.0', self.hass.states.get(ENTITY_NEST).state)
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
