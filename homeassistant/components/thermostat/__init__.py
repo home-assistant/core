@@ -331,7 +331,7 @@ class ThermostatDevice(Entity):
         else:
             value = temp
 
-        if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
+        if self.hass.config.units.is_metric:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.
