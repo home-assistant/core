@@ -247,10 +247,10 @@ def process_ha_core_config(hass, config):
 
     set_customize(config.get(CONF_CUSTOMIZE) or {})
 
-    if CONF_UNIT_SYSTEM in config:
-        hac.units = IMPERIAL_SYSTEM \
-            if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL \
-            else METRIC_SYSTEM
+    if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
+        hac.units = IMPERIAL_SYSTEM
+    else:
+        hac.units = METRIC_SYSTEM
 
     # Shortcut if no auto-detection necessary
     if None not in (hac.latitude, hac.longitude, hac.units,
