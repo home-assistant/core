@@ -1,6 +1,5 @@
 """Typing Helpers for Home-Assistant."""
 from sys import version_info
-from datetime import date, datetime
 from typing import Dict, Any
 
 # NOTE: NewType added to typing in 3.5.2 in June, 2016; Since 3.5.2 includes
@@ -23,8 +22,6 @@ if False:
 # pylint: disable=invalid-name
 if NEWTYPE_TEST:
     ConfigType = NewType('ConfigType', Dict[str, Any])
-    Date = NewType('Date', date)
-    DateTime = NewType('DateTime', datetime)
     HomeAssistantType = NewType('HomeAssistantType', 'HomeAssistant')
 
     # Custom type for recorder Queries
@@ -34,8 +31,6 @@ if NEWTYPE_TEST:
 # pylint: disable=invalid-name
 else:
     ConfigType = Dict[str, Any]
-    Date = date
-    DateTime = datetime
     HomeAssistantType = 'HomeAssistant'
 
     # Custom type for recorder Queries
