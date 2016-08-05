@@ -7,7 +7,7 @@ https://home-assistant.io/components/thermostat.homematic/
 import logging
 import homeassistant.components.homematic as homematic
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.helpers.temperature import convert
+from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 DEPENDENCIES = ['homematic']

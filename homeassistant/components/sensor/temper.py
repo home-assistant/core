@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Temper sensors."""
     from temperusb.temper import TemperHandler
 
-    temp_unit = hass.config.temperature_unit
+    temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
     temper_devices = TemperHandler().get_devices()
     add_devices_callback([TemperSensor(dev, temp_unit, name + '_' + str(idx))
