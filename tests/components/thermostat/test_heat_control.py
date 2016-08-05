@@ -124,19 +124,29 @@ class TestThermostatHeatControl(unittest.TestCase):
 
     def test_sensor_bad_unit(self):
         """Test sensor that have bad unit."""
+        state = self.hass.states.get(ENTITY)
+        temp = state.attributes.get('current_temperature')
+        unit = state.attributes.get('unit_of_measurement')
+
         self._setup_sensor(22.0, unit='bad_unit')
         self.hass.pool.block_till_done()
+
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(None, state.attributes.get('unit_of_measurement'))
-        self.assertEqual(None, state.attributes.get('current_temperature'))
+        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
+        self.assertEqual(temp, state.attributes.get('current_temperature'))
 
     def test_sensor_bad_value(self):
         """Test sensor that have None as state."""
+        state = self.hass.states.get(ENTITY)
+        temp = state.attributes.get('current_temperature')
+        unit = state.attributes.get('unit_of_measurement')
+
         self._setup_sensor(None)
         self.hass.pool.block_till_done()
+
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(None, state.attributes.get('unit_of_measurement'))
-        self.assertEqual(None, state.attributes.get('current_temperature'))
+        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
+        self.assertEqual(temp, state.attributes.get('current_temperature'))
 
     def test_set_target_temp_heater_on(self):
         """Test if target temperature turn heater on."""
