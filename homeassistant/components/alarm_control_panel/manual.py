@@ -40,7 +40,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
-    triggered for 'trigger_time', after that we return to disarmed.
+    triggered for 'trigger_time', after that we return to the previous state.
     """
 
     def __init__(self, hass, name, code, pending_time, trigger_time):
@@ -51,6 +51,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._code = str(code) if code else None
         self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
+        self._pre_trigger_state = self._state
         self._state_ts = None
 
     @property
@@ -77,7 +78,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 return STATE_ALARM_PENDING
             elif (self._state_ts + self._pending_time +
                   self._trigger_time) < dt_util.utcnow():
-                return STATE_ALARM_DISARMED
+                return self._pre_trigger_state
 
         return self._state
 
@@ -125,6 +126,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command. No code needed."""
+        self._pre_trigger_state = self._state
         self._state = STATE_ALARM_TRIGGERED
         self._state_ts = dt_util.utcnow()
         self.update_ha_state()
