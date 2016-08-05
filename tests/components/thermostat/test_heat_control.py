@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.unit_system import METRIC_SYSTEM
 from homeassistant.components import thermostat
 
 from tests.common import get_test_home_assistant
@@ -75,7 +76,7 @@ class TestThermostatHeatControl(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.temperature_unit = TEMP_CELSIUS
+        self.hass.config.units = METRIC_SYSTEM
         thermostat.setup(self.hass, {'thermostat': {
             'platform': 'heat_control',
             'name': 'test',
@@ -123,19 +124,29 @@ class TestThermostatHeatControl(unittest.TestCase):
 
     def test_sensor_bad_unit(self):
         """Test sensor that have bad unit."""
+        state = self.hass.states.get(ENTITY)
+        temp = state.attributes.get('current_temperature')
+        unit = state.attributes.get('unit_of_measurement')
+
         self._setup_sensor(22.0, unit='bad_unit')
         self.hass.pool.block_till_done()
+
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(None, state.attributes.get('unit_of_measurement'))
-        self.assertEqual(None, state.attributes.get('current_temperature'))
+        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
+        self.assertEqual(temp, state.attributes.get('current_temperature'))
 
     def test_sensor_bad_value(self):
         """Test sensor that have None as state."""
+        state = self.hass.states.get(ENTITY)
+        temp = state.attributes.get('current_temperature')
+        unit = state.attributes.get('unit_of_measurement')
+
         self._setup_sensor(None)
         self.hass.pool.block_till_done()
+
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(None, state.attributes.get('unit_of_measurement'))
-        self.assertEqual(None, state.attributes.get('current_temperature'))
+        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
+        self.assertEqual(temp, state.attributes.get('current_temperature'))
 
     def test_set_target_temp_heater_on(self):
         """Test if target temperature turn heater on."""

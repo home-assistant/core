@@ -10,6 +10,7 @@ from datetime import timedelta
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
@@ -32,8 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=import-error
     import Adafruit_DHT
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
-    unit = hass.config.temperature_unit
+    SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
     available_sensors = {
         "DHT11": Adafruit_DHT.DHT11,
         "DHT22": Adafruit_DHT.DHT22,
@@ -58,7 +58,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(DHTSensor(data, variable, unit, name))
+                dev.append(
+                    DHTSensor(data, variable, SENSOR_TYPES[variable][1], name))
     except KeyError:
         pass
 
@@ -103,7 +104,8 @@ class DHTSensor(Entity):
         if self.type == 'temperature':
             self._state = round(data['temperature'], 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
-                self._state = round(data['temperature'] * 1.8 + 32, 1)
+                self._state = round(celsius_to_fahrenheit(data['temperature']),
+                                    1)
         elif self.type == 'humidity':
             self._state = round(data['humidity'], 1)
 

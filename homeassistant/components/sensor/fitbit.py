@@ -10,7 +10,6 @@ import logging
 import datetime
 import time
 
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
@@ -238,8 +237,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for resource in config.get("monitored_resources",
                                    FITBIT_DEFAULT_RESOURCE_LIST):
             dev.append(FitbitSensor(authd_client, config_path, resource,
-                                    hass.config.temperature_unit ==
-                                    TEMP_CELSIUS))
+                                    hass.config.units.is_metric))
         add_devices(dev)
 
     else:
