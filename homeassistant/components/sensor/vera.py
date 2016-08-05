@@ -51,7 +51,8 @@ class VeraSensor(VeraDevice, Entity):
     def update(self):
         """Update the state."""
         if self.vera_device.category == "Temperature Sensor":
-            current_temp = self.vera_device.temperature
+            self.current_value = self.vera_device.temperature
+
             vera_temp_units = (
                 self.vera_device.vera_controller.temperature_units)
 
@@ -60,14 +61,6 @@ class VeraSensor(VeraDevice, Entity):
             else:
                 self._temperature_units = TEMP_CELSIUS
 
-            if self.hass:
-                temp = self.hass.config.units.temperature(
-                    current_temp,
-                    self._temperature_units)
-
-                current_temp = temp
-
-            self.current_value = current_temp
         elif self.vera_device.category == "Light Sensor":
             self.current_value = self.vera_device.light
         elif self.vera_device.category == "Humidity Sensor":

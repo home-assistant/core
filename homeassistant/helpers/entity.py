@@ -202,9 +202,9 @@ class Entity(object):
         try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             if unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-                state = \
-                    str(self.hass.config.units.temperature(float(state),
-                                                           unit_of_measure))
+                units = self.hass.config.units
+                state = str(units.temperature(float(state), unit_of_measure))
+                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
         except ValueError:
             # Could not convert state to float
             pass

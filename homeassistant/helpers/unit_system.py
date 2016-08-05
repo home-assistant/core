@@ -91,8 +91,7 @@ class UnitSystem(object):
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
-    def temperature(self: object, temperature: float, from_unit: str) -> (
-            float, str):
+    def temperature(self: object, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(
