@@ -147,14 +147,11 @@ def setup(hass, config):
         temperature = service.data[ATTR_TEMPERATURE]
 
         for thermostat in target_thermostats:
-            if thermostat.unit_of_measurement is not None:
-                converted_temperature = convert(
-                    temperature, hass.config.units.temperature_unit,
-                    thermostat.unit_of_measurement)
-            else:
-                converted_temperature = temperature
-            thermostat.set_temperature(converted_temperature)
+            converted_temperature = convert(
+                temperature, hass.config.units.temperature_unit,
+                thermostat.unit_of_measurement)
 
+            thermostat.set_temperature(converted_temperature)
             thermostat.update_ha_state(True)
 
     hass.services.register(
@@ -306,20 +303,12 @@ class ThermostatDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        try:
-            unit = self.unit_of_measurement
-            return convert(7, TEMP_CELSIUS, unit)
-        except ValueError:
-            return STATE_UNKNOWN
+        return convert(7, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        try:
-            unit = self.unit_of_measurement
-            return convert(35, TEMP_CELSIUS, unit)
-        except ValueError:
-            return STATE_UNKNOWN
+        return convert(35, TEMP_CELSIUS, self.unit_of_measurement)
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
