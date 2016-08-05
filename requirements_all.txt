@@ -88,6 +88,9 @@ gntp==1.0.3
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
+# homeassistant.components.camera.ffmpeg
+ha-ffmpeg==0.4
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
 
