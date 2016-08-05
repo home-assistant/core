@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 # NOTE: NewType added to typing in 3.5.2 in June, 2016; Since 3.5.2 includes
 #       security fixes everyone on 3.5 should upgrade "soon"
-NEWTYPE_TEST = version_info >= (3, 5, 2) or version_info == (3, 4)
+NEWTYPE_TEST = version_info >= (3, 5, 2) or version_info[:2] == (3, 4)
 if NEWTYPE_TEST:
     from typing import NewType
 
