@@ -27,9 +27,6 @@ DEFAULT_TOLERANCE = 1
 # Default zone
 DEFAULT_PROXIMITY_ZONE = 'home'
 
-# Default unit of measure
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
-
 # Default distance to zone
 DEFAULT_DIST_TO_ZONE = NOT_SET
 
@@ -71,7 +68,7 @@ def setup_proximity_component(hass, config):
 
     # Get the unit of measurement from configuration.yaml.
     unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
-                                 DEFAULT_UNIT_OF_MEASUREMENT)
+                                 hass.config.units.length_unit)
 
     zone_id = 'zone.{}'.format(proximity_zone)
     state = hass.states.get(zone_id)
@@ -216,11 +213,11 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
         # Loop through each of the distances collected and work out the
         # closest.
-        closest_device = ''
-        dist_to_zone = 1000000
+        closest_device = None  # type: str
+        dist_to_zone = None  # type: float
 
         for device in distances_to_zone:
-            if distances_to_zone[device] < dist_to_zone:
+            if not dist_to_zone or distances_to_zone[device] < dist_to_zone:
                 closest_device = device
                 dist_to_zone = distances_to_zone[device]
 
