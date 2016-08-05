@@ -34,7 +34,6 @@ NETWORK_READY_WAIT_SECS = 30
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
-SERVICE_REMOVE_NODE_SECURE = "remove_node_secure"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
@@ -414,10 +413,6 @@ def setup(hass, config):
         """Switch into exclusion mode."""
         NETWORK.controller.remove_node()
 
-    def remove_node_secure(service):
-        """Switch into secure exclusion mode."""
-        NETWORK.controller.remove_node(True)
-
     def heal_network(service):
         """Heal the network."""
         _LOGGER.info("ZWave heal running.")
@@ -471,8 +466,6 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
                                add_node_secure)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
-        hass.services.register(DOMAIN, SERVICE_REMOVE_NODE_SECURE,
-                               remove_node_secure)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
