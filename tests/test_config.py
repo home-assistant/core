@@ -11,9 +11,9 @@ from voluptuous import MultipleInvalid
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_TEMPERATURE_UNIT, CONF_NAME,
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    TEMP_FAHRENHEIT)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.helpers.entity import Entity
 
@@ -145,7 +145,7 @@ class TestConfig(unittest.TestCase):
             CONF_LATITUDE: 32.8594,
             CONF_LONGITUDE: -117.2073,
             CONF_ELEVATION: 101,
-            CONF_TEMPERATURE_UNIT: 'F',
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             CONF_NAME: 'Home',
             CONF_TIME_ZONE: 'America/Los_Angeles'
         }
@@ -167,7 +167,7 @@ class TestConfig(unittest.TestCase):
 
     def test_core_config_schema(self):
         for value in (
-            {'temperature_unit': 'K'},
+            {CONF_UNIT_SYSTEM: 'K'},
             {'time_zone': 'non-exist'},
             {'latitude': '91'},
             {'longitude': -181},
@@ -182,7 +182,7 @@ class TestConfig(unittest.TestCase):
             'name': 'Test name',
             'latitude': '-23.45',
             'longitude': '123.45',
-            'temperature_unit': 'c',
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
             'customize': {
                 'sensor.temperature': {
                     'hidden': True,
@@ -264,7 +264,7 @@ class TestConfig(unittest.TestCase):
             'longitude': 50,
             'elevation': 25,
             'name': 'Huis',
-            'temperature_unit': 'F',
+            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             'time_zone': 'America/New_York',
         })
 
@@ -272,7 +272,28 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == 50
         assert config.elevation == 25
         assert config.location_name == 'Huis'
-        assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
+        assert config.time_zone.zone == 'America/New_York'
+
+    def test_loading_configuration_temperature_unit(self):
+        """Test backward compatibility when loading core config."""
+        config = Config()
+        hass = mock.Mock(config=config)
+
+        config_util.process_ha_core_config(hass, {
+            'latitude': 60,
+            'longitude': 50,
+            'elevation': 25,
+            'name': 'Huis',
+            CONF_TEMPERATURE_UNIT: 'C',
+            'time_zone': 'America/New_York',
+        })
+
+        assert config.latitude == 60
+        assert config.longitude == 50
+        assert config.elevation == 25
+        assert config.location_name == 'Huis'
+        assert config.units.name == CONF_UNIT_SYSTEM_METRIC
         assert config.time_zone.zone == 'America/New_York'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -292,7 +313,8 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == -117.2073
         assert config.elevation == 101
         assert config.location_name == 'San Diego'
-        assert config.temperature_unit == TEMP_FAHRENHEIT
+        assert config.units.name == CONF_UNIT_SYSTEM_METRIC
+        assert config.units.is_metric
         assert config.time_zone.zone == 'America/Los_Angeles'
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -311,5 +333,5 @@ class TestConfig(unittest.TestCase):
         assert config.longitude == blankConfig.longitude
         assert config.elevation == blankConfig.elevation
         assert config.location_name == blankConfig.location_name
-        assert config.temperature_unit == blankConfig.temperature_unit
+        assert config.units == blankConfig.units
         assert config.time_zone == blankConfig.time_zone
