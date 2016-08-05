@@ -40,7 +40,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
-    triggered for 'trigger_time', after that we return to 'post_trigger_state'.
+    triggered for 'trigger_time', after that we return to the previous state.
     """
 
     def __init__(self, hass, name, code, pending_time, trigger_time):
