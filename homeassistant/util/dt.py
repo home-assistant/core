@@ -4,6 +4,7 @@ import re
 
 # pylint: disable=unused-import
 from typing import Any, Union, Optional, Tuple  # NOQA
+from homeassistant.helpers.typing import Date, DateTime
 
 import pytz
 
@@ -40,17 +41,17 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
         return None
 
 
-def utcnow() -> dt.datetime:
+def utcnow() -> DateTime:
     """Get now in UTC time."""
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo=None) -> dt.datetime:
+def now(time_zone: dt.tzinfo=None) -> DateTime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
-def as_utc(dattim: dt.datetime) -> dt.datetime:
+def as_utc(dattim: DateTime) -> DateTime:
     """Return a datetime as UTC time.
 
     Assumes datetime without tzinfo to be in the DEFAULT_TIME_ZONE.
@@ -74,7 +75,7 @@ def as_timestamp(dt_value):
     return parsed_dt.timestamp()
 
 
-def as_local(dattim: dt.datetime) -> dt.datetime:
+def as_local(dattim: DateTime) -> DateTime:
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
@@ -84,13 +85,13 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     return dattim.astimezone(DEFAULT_TIME_ZONE)
 
 
-def utc_from_timestamp(timestamp: float) -> dt.datetime:
+def utc_from_timestamp(timestamp: float) -> DateTime:
     """Return a UTC time from a timestamp."""
     return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
 
 
 def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+                       Union[Date, DateTime]=None) -> DateTime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         dt_or_d = now().date()
@@ -103,7 +104,7 @@ def start_of_local_day(dt_or_d:
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
-def parse_datetime(dt_str: str) -> dt.datetime:
+def parse_datetime(dt_str: str) -> DateTime:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
@@ -134,7 +135,7 @@ def parse_datetime(dt_str: str) -> dt.datetime:
     return dt.datetime(**kws)
 
 
-def parse_date(dt_str: str) -> dt.date:
+def parse_date(dt_str: str) -> Date:
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
@@ -161,7 +162,7 @@ def parse_time(time_str):
 
 
 # Found in this gist: https://gist.github.com/zhangsen/1199964
-def get_age(date: dt.datetime) -> str:
+def get_age(date: DateTime) -> str:
     # pylint: disable=too-many-return-statements
     """
     Take a datetime and return its "age" as a string.
