@@ -4,10 +4,10 @@ import threading
 from itertools import islice
 
 from typing import Optional, Sequence
-# pylint: disable=ungrouped-imports
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 import voluptuous as vol
+
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 import homeassistant.util.dt as date_util
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION

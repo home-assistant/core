@@ -7,12 +7,12 @@ import sys
 from collections import defaultdict
 from threading import RLock
 
-# pylint: disable=ungrouped-imports
 from types import ModuleType
 from typing import Any, Optional, Dict
-from homeassistant.helpers.typing import HomeAssistantType
 
 import voluptuous as vol
+
+from homeassistant.helpers.typing import HomeAssistantType
 
 import homeassistant.components as core_components
 from homeassistant.components import group, persistent_notification

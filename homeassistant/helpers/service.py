@@ -2,11 +2,12 @@
 import functools
 import logging
 
-# pylint: disable=unused-import,ungrouped-imports
+# pylint: disable=unused-import
 from typing import Optional  # NOQA
-from homeassistant.helpers.typing import HomeAssistantType  # NOQA
 
 import voluptuous as vol
+
+from homeassistant.helpers.typing import HomeAssistantType  # NOQA
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import TemplateError
