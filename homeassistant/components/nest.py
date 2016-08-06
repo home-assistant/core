@@ -37,7 +37,8 @@ def devices():
                 for device in structure.devices:
                     yield (structure, device)
             else:
-                _LOGGER.info("Ignoring structure %s, not in %s", structure.name, STRUCTURES_TO_INCLUDE)
+                _LOGGER.info("Ignoring structure %s, not in %s",
+                             structure.name, STRUCTURES_TO_INCLUDE)
     except socket.error:
         _LOGGER.error("Connection error logging into the nest web service.")
 
@@ -50,7 +51,8 @@ def protect_devices():
                 for device in structure.protectdevices:
                     yield(structure, device)
             else:
-                _LOGGER.info("Ignoring structure %s, not in %s", structure.name, STRUCTURES_TO_INCLUDE)
+                _LOGGER.info("Ignoring structure %s, not in %s",
+                             structure.name, STRUCTURES_TO_INCLUDE)
     except socket.error:
         _LOGGER.error("Connection error logging into the nest web service.")
 
@@ -69,7 +71,7 @@ def setup(hass, config):
 
     NEST = nest.Nest(username, password)
 
-    if not CONF_STRUCTURE in conf:
+    if CONF_STRUCTURE not in conf:
         STRUCTURES_TO_INCLUDE = []
         for structure in NEST.structures:
             STRUCTURES_TO_INCLUDE.append(structure.name)
