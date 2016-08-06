@@ -8,6 +8,7 @@ from tests.common import get_test_home_assistant
 
 class MockSMTP(smtp.MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
+
     def connection_is_valid(self):
         """Pretend connection is always valid for testing."""
         return True

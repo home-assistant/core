@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_IMAGES = 'images'  # optional embedded image file attachments
 
+
 def get_service(hass, config):
     """Get the mail notification service."""
     if not validate_config({DOMAIN: config},
@@ -76,7 +77,7 @@ class MailNotificationService(BaseNotificationService):
         server = None
         try:
             self.connect()
-        except (smtplib.socket.gaierror):
+        except smtplib.socket.gaierror:
             _LOGGER.exception(
                 "SMTP server not found (%s:%s). "
                 "Please check the IP address or hostname of your SMTP server.",
@@ -140,6 +141,7 @@ def _build_text_msg(message):
     """Build plaintext email."""
     _LOGGER.debug('Building plain text email.')
     return MIMEText(message)
+
 
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
