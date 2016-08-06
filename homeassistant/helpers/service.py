@@ -2,6 +2,10 @@
 import functools
 import logging
 
+# pylint: disable=unused-import,ungrouped-imports
+from typing import Optional  # NOQA
+from homeassistant.helpers.typing import HomeAssistantType  # NOQA
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -10,7 +14,7 @@ from homeassistant.helpers import template
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-HASS = None
+HASS = None  # type: Optional[HomeAssistantType]
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
