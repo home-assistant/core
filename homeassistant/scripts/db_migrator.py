@@ -4,6 +4,10 @@ import argparse
 import os.path
 import sqlite3
 import sys
+
+from datetime import datetime
+from typing import Optional
+
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
@@ -16,7 +20,7 @@ import homeassistant.config as config_util
 import homeassistant.util.dt as dt_util
 
 
-def ts_to_dt(timestamp):
+def ts_to_dt(timestamp: Optional[float]) -> Optional[datetime]:
     """Turn a datetime into an integer for in the DB."""
     if timestamp is None:
         return None
@@ -26,8 +30,8 @@ def ts_to_dt(timestamp):
 # Based on code at
 # http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 # pylint: disable=too-many-arguments
-def print_progress(iteration, total, prefix='', suffix='', decimals=2,
-                   bar_length=68):
+def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
+                   decimals: int=2, bar_length: int=68) -> None:
     """Print progress bar.
 
     Call in a loop to create terminal progress bar
@@ -49,7 +53,7 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=2,
         print("\n")
 
 
-def run(args):
+def run(args) -> int:
     """The actual script body."""
     # pylint: disable=too-many-locals,invalid-name,too-many-statements
     parser = argparse.ArgumentParser(
@@ -75,7 +79,7 @@ def run(args):
 
     args = parser.parse_args()
 
-    config_dir = os.path.join(os.getcwd(), args.config)
+    config_dir = os.path.join(os.getcwd(), args.config)  # type: str
 
     # Test if configuration directory exists
     if not os.path.isdir(config_dir):
