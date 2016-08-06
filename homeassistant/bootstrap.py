@@ -7,8 +7,10 @@ import sys
 from collections import defaultdict
 from threading import RLock
 
+# pylint: disable=ungrouped-imports
 from types import ModuleType
 from typing import Any, Optional, Dict
+from homeassistant.helpers.typing import HomeAssistantType
 
 import voluptuous as vol
 
@@ -216,7 +218,7 @@ def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant]=None,
+                     hass: Optional[HomeAssistantType]=None,
                      config_dir: Optional[str]=None,
                      enable_log: bool=True,
                      verbose: bool=False,

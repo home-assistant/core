@@ -93,7 +93,7 @@ def numeric_state(hass, entity, below=None, above=None, value_template=None,
         try:
             value = render(hass, value_template, variables)
         except TemplateError as ex:
-            _LOGGER.error(ex)
+            _LOGGER.error("Template error: %s", ex)
             return False
 
     try:

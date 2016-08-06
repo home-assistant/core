@@ -14,8 +14,8 @@ import threading
 import time
 from types import MappingProxyType
 
-from typing import Any, Callable
 # pylint: disable=unused-import,ungrouped-imports
+from typing import Optional, Any, Callable  # NOQA
 from homeassistant.helpers.typing import UnitSystemType  # NOQA
 
 import voluptuous as vol
