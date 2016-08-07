@@ -47,17 +47,17 @@ def setup(hass, config):
 
     # Start / stop pilight-daemon connection with HA start/stop
     def start_pilight_client(_):
-        '''Called once when home assistanz starts.'''
+        """Called once when home assistanz starts."""
         pilight_client.start()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_pilight_client)
 
     def stop_pilight_client(_):
-        '''Called once when home assistanz stops.'''
+        """Called once when home assistanz stops."""
         pilight_client.stop()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
     def send_code(call):
-        '''Send RF code to the pilight-daemon.'''
+        """Send RF code to the pilight-daemon."""
         message_data = call.data
 
         if "protocol" not in message_data:
@@ -84,7 +84,7 @@ def setup(hass, config):
     whitelist = config[DOMAIN].get('whitelist', False)
 
     def handle_received_code(data):
-        '''Called when RF codes are received.'''
+        """Called when RF codes are received."""
         # Unravel dict of dicts to make event_data cut in automation rule
         # possible
         data = dict(
