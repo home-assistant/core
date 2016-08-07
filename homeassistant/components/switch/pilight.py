@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         _LOGGER.error('A connection has not been made to the pilight-daemon')
         return False
 
-    """Find and return switches controlled by pilight"""
+    # Find and return switches controlled by pilight
     switches = config.get('switches', {})
     devices = []
 
