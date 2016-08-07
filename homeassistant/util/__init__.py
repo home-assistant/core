@@ -12,21 +12,24 @@ import string
 from functools import wraps
 from types import MappingProxyType
 
-from typing import Any, Sequence
+from typing import Any, Optional, TypeVar, Callable, Sequence
 
 from .dt import as_local, utcnow
+
+T = TypeVar('T')
+U = TypeVar('U')
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
-def sanitize_filename(filename):
+def sanitize_filename(filename: str) -> str:
     r"""Sanitize a filename by removing .. / and \\."""
     return RE_SANITIZE_FILENAME.sub("", filename)
 
 
-def sanitize_path(path):
+def sanitize_path(path: str) -> str:
     """Sanitize a path by removing ~ and .."""
     return RE_SANITIZE_PATH.sub("", path)
 
@@ -50,7 +53,8 @@ def repr_helper(inp: Any) -> str:
         return str(inp)
 
 
-def convert(value, to_type, default=None):
+def convert(value: T, to_type: Callable[[T], U],
+            default: Optional[U]=None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
