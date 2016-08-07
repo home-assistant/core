@@ -71,10 +71,20 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_NAME, send_code)
         
     # Publish received codes on the HA event bus
+    whitelist = config[DOMAIN].get('whitelist', False)  # A whitelist of codes to be published in the event bus
     def handle_received_code(data):
         data = dict({'protocol': data['protocol'], 'uuid': data['uuid']}, **data['message'])  # Unravel dict of dicts to make event_data cut in automation rule possible
-        _LOGGER.info(data)
-        hass.bus.fire(EVENT, data)
+        
+        accepted = True
+        
+        if whitelist:                
+            for key in whitelist:
+                if not data[key] in whitelist[key]:  # True if some data values are not in the whitlist values for the acctual key
+                    accepted = False
+                    break
+
+        if accepted:
+            hass.bus.fire(EVENT, data)
     pilight_client.set_callback(handle_received_code)
     
     global CONNECTED
