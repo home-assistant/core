@@ -19,11 +19,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 REQUIREMENTS = ['pilight']
 
 DOMAIN = "pilight"
-_LOGGER = logging.getLogger(__name__)
-ICON = 'mdi:remote'
 EVENT = 'pilight_received'
 SERVICE_NAME = 'send'
-TIMEOUT = 1
 
 CONNECTED = False
 
@@ -50,20 +47,22 @@ def setup(hass, config):
 
     # Start / stop pilight-daemon connection with HA start/stop
     def start_pilight_client(_):
+        '''Called once when home assistanz starts.'''
         pilight_client.start()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_pilight_client)
 
     def stop_pilight_client(_):
+        '''Called once when home assistanz stops.'''
         pilight_client.stop()
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
-    # Send RF code to the pilight-daemon
     def send_code(call):
+        '''Send RF code to the pilight-daemon.'''
         message_data = call.data
 
         if "protocol" not in message_data:
             _LOGGER.error(
-                'Pilight data to send does not contain a protocol info.'
+                'Pilight data to send does not contain a protocol info: %s.'
                 ' Check the pilight-send doku!',
                 str(call.data))
             return
@@ -85,6 +84,7 @@ def setup(hass, config):
     whitelist = config[DOMAIN].get('whitelist', False)
 
     def handle_received_code(data):
+        '''Called when RF codes are received.'''
         # Unravel dict of dicts to make event_data cut in automation rule
         # possible
         data = dict(
