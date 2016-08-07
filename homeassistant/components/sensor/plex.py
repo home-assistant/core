@@ -62,7 +62,7 @@ class PlexSensor(Entity):
             from plexapi.myplex import MyPlexAccount
             user = MyPlexAccount.signin(plex_user, plex_password)
             server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.getResource(server).connect()
+            self._server = user.resource(server).connect()
         else:
             from plexapi.server import PlexServer
             self._server = PlexServer(plex_url)
