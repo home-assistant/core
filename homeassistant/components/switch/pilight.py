@@ -42,7 +42,8 @@ class PilightSwitch(SwitchDevice):
     """Representation of a pilight switch."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, code_on, code_off, code_on_receive, code_off_receive):
+    def __init__(self, hass, name, code_on, code_off,
+                 code_on_receive, code_off_receive):
         """Initialize the switch."""
         self._hass = hass
         self._name = name
@@ -51,7 +52,7 @@ class PilightSwitch(SwitchDevice):
         self._code_off = code_off
         self._code_on_receive = code_on_receive
         self._code_off_receive = code_off_receive
-        
+
         if self._code_on_receive or self._code_off_receive:
             hass.bus.listen(pilight.EVENT, self._set_state)
 
@@ -59,7 +60,7 @@ class PilightSwitch(SwitchDevice):
     def name(self):
         """Get the name of the switch"""
         return self._name
-    
+
     @property
     def should_poll(self):
         """No polling needed, state can be set when correct code is received"""
@@ -69,38 +70,53 @@ class PilightSwitch(SwitchDevice):
     def is_on(self):
         """Return true if switch is on"""
         return self._state
-    
+
     def _set_state(self, call):
-        ''' Check if received code by the pilight-daemon matches the receive on/off codes of this switch.
+        ''' Check if received code by the pilight-daemon matches the
+        receive on / off codes of this switch.
         If it does change the switch state accordingly.
         '''
 
-        if self._code_on_receive:  # Check if a on code is defined to turn this switch on
-            if isinstance(self._code_on_receive, list):  # Several on codes are defined
+        # Check if a on code is defined to turn this switch on
+        if self._code_on_receive:
+            # Several on codes are defined
+            if isinstance(self._code_on_receive, list):
                 for on_code in self._code_on_receive:
-                    if on_code.items() <= call.data.items():  # True if on_code is contained in received code dict, not all items have to match
+                    # True if on_code is contained in received code dict, not
+                    # all items have to match
+                    if on_code.items() <= call.data.items():
                         self.turn_on()
-                        break  # Call turn on only once, even when more than one on code is received
+                        # Call turn on only once, even when more than one on
+                        # code is received
+                        break
             elif self._code_on_receive.items() <= call.data.items():
                 self.turn_on()
-            
-        if self._code_off_receive:  # Check if a off code is defined to turn this switch off
-            if isinstance(self._code_off_receive, list):  # Several off codes are defined
+
+        # Check if a off code is defined to turn this switch off
+        if self._code_off_receive:
+            # Several off codes are defined
+            if isinstance(self._code_off_receive, list):
                 for off_code in self._code_off_receive:
-                    if off_code.items() <= call.data.items():  # True if off_code is contained in received code dict, not all items have to match
+                    # True if off_code is contained in received code dict, not
+                    # all items have to match
+                    if off_code.items() <= call.data.items():
                         self.turn_off()
-                        break  # Call turn off only once, even when more than one off code is received
+                        # Call turn off only once, even when more than one off
+                        # code is received
+                        break
             elif self._code_off_receive.items() <= call.data.items():
                 self.turn_off()
 
     def turn_on(self):
-        """Turn the switch on by calling the pilight send service with the on code"""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME, self._code_on, blocking=True)
+        """Turn the switch on by calling pilight.send service with on code"""
+        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                 self._code_on, blocking=True)
         self._state = True
         self.update_ha_state()
 
     def turn_off(self):
-        """Turn the switch on by calling the pilight send service with the off code"""
-        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME, self._code_off, blocking=True)
+        """Turn the switch on by calling pilight.send service with off code"""
+        self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
+                                 self._code_off, blocking=True)
         self._state = False
         self.update_ha_state()
