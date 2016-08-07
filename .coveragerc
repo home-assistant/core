@@ -88,6 +88,9 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/pilight.py
+    homeassistant/components/*/pilight.py
+
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
@@ -232,6 +235,7 @@ omit =
     homeassistant/components/switch/mystrom.py
     homeassistant/components/switch/netio.py
     homeassistant/components/switch/orvibo.py
+    homeassistant/components/switch/pilight.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
