@@ -18,9 +18,11 @@ REQUIREMENTS = ['pilight']
 DOMAIN = "pilight"
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
-EVENT_DATA_RECEIVED = 'pilight_received'
-SERVICE_SEND_DATA = 'send'
+EVENT = 'pilight_received'
+SERVICE_NAME = 'send'
 TIMEOUT = 1
+
+CONNECTED = False
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,18 +61,23 @@ def setup(hass, config):
             return
         
         # Patch data because of bug: https://github.com/pilight/pilight/issues/296
+        message_data = message_data.copy()
         message_data["protocol"] = [message_data["protocol"]]  # Protocol has to be in a list otherwise segfault
         
         try:
             pilight_client.send_code(message_data)
         except IOError:
             _LOGGER.error('Pilight send failed for %s', str(message_data))
-    hass.services.register(DOMAIN, SERVICE_SEND_DATA, send_code)
+    hass.services.register(DOMAIN, SERVICE_NAME, send_code)
         
-    # Publish received commands on the HA event bus
-    def handle_received_commands(data):
+    # Publish received codes on the HA event bus
+    def handle_received_code(data):
         data = dict({'protocol': data['protocol'], 'uuid': data['uuid']}, **data['message'])  # Unravel dict of dicts to make event_data cut in automation rule possible
-        hass.bus.fire(EVENT_DATA_RECEIVED, data)
-    pilight_client.set_callback(handle_received_commands)
+        _LOGGER.info(data)
+        hass.bus.fire(EVENT, data)
+    pilight_client.set_callback(handle_received_code)
+    
+    global CONNECTED
+    CONNECTED = True
 
     return True
