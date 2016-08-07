@@ -242,14 +242,12 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use, singleton-comparison
     def _convert_na_to_none(self, value):
         """Convert PlexAPI _NA() instances to None."""
         # PlexAPI will return a "__NA__" object which can be compared to
         # None, but isn't actually None - this converts it to a real None
         # type so that lower layers don't think it's a URL and choke on it
-
-        # pylint: disable=singleton-comparison
         if value == None:
             return None
         else:
