@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==1.1.0']
+REQUIREMENTS = ['plexapi==2.0.2']
 
 CONF_SERVER = 'server'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
@@ -60,7 +60,7 @@ class PlexSensor(Entity):
 
         if plex_user and plex_password:
             from plexapi.myplex import MyPlexUser
-            user = MyPlexUser.signin(plex_user, plex_password)
+            user = MyPlexAccount.signin(plex_user, plex_password)
             server = plex_server if plex_server else user.resources()[0].name
             self._server = user.getResource(server).connect()
         else:
