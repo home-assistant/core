@@ -5,11 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.particulate_matter/
 """
 import logging
-from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.util import Throttle
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -20,13 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_DEVICE = "serial_device"
 CONF_BRAND = "brand"
-SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'serial_pm',
     vol.Optional(CONF_NAME, default=""): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=5):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_SERIAL_DEVICE): cv.string,
     vol.Required(CONF_BRAND): cv.string,
 })
@@ -35,8 +30,6 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available PM sensors."""
     from pmsensor import serial_data_collector as pm
-
-    global SCAN_INTERVAL
 
     try:
         coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
@@ -49,8 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not open serial connection to %s (%s)",
                       config.get(CONF_SERIAL_DEVICE), err)
         return
-
-    SCAN_INTERVAL = timedelta(minutes=config.get(CONF_SCAN_INTERVAL))
 
     dev = []
 
@@ -89,7 +80,6 @@ class ParticulateMatterSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return "µg/m³"
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Read from sensor and update the state."""
         _LOGGER.debug("Reading data from PM sensor")
