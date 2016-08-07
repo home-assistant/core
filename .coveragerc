@@ -206,6 +206,7 @@ omit =
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/openexchangerates.py
+    homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
