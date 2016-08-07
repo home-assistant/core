@@ -32,10 +32,13 @@ DEFAULT_CONF_AUTOHEAL = True
 NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"
+SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
+SERVICE_STOP_NETWORK = "stop_network"
+SERVICE_START_NETWORK = "start_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -51,6 +54,7 @@ COMMAND_CLASS_SWITCH_MULTILEVEL = 38
 COMMAND_CLASS_DOOR_LOCK = 98
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 67
 COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
+COMMAND_CLASS_BARRIER_OPERATOR = 102
 COMMAND_CLASS_BATTERY = 128
 COMMAND_CLASS_SENSOR_ALARM = 156
 
@@ -173,7 +177,8 @@ DISCOVERY_COMPONENTS = [
      [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
      [SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON,
       SPECIFIC_DEVICE_CLASS_SECURE_DOOR],
-     [COMMAND_CLASS_SWITCH_BINARY],
+     [COMMAND_CLASS_SWITCH_BINARY,
+      COMMAND_CLASS_BARRIER_OPERATOR],
      TYPE_BOOL,
      GENRE_USER)
 ]
@@ -400,6 +405,10 @@ def setup(hass, config):
         """Switch into inclusion mode."""
         NETWORK.controller.add_node()
 
+    def add_node_secure(service):
+        """Switch into secure inclusion mode."""
+        NETWORK.controller.add_node(True)
+
     def remove_node(service):
         """Switch into exclusion mode."""
         NETWORK.controller.remove_node()
@@ -417,11 +426,11 @@ def setup(hass, config):
         """Test the network by sending commands to all the nodes."""
         NETWORK.test()
 
-    def stop_zwave(event):
+    def stop_zwave(_service_or_event):
         """Stop Z-Wave."""
         NETWORK.stop()
 
-    def start_zwave(event):
+    def start_zwave(_service_or_event):
         """Startup Z-Wave."""
         NETWORK.start()
 
@@ -452,13 +461,16 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # Register add / remove node services for Z-Wave sticks without
-        # hardware inclusion button
+        # Register node services for Z-Wave network
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
+                               add_node_secure)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
+        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
 
     # Setup autoheal
     if autoheal:

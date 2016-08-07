@@ -79,7 +79,7 @@ class TestLocationUtil(TestCase):
         assert info.time_zone == 'America/Los_Angeles'
         assert info.latitude == 32.8594
         assert info.longitude == -117.2073
-        assert info.use_fahrenheit
+        assert not info.use_metric
 
     @requests_mock.Mocker()
     @patch('homeassistant.util.location._get_freegeoip', return_value=None)
@@ -101,7 +101,7 @@ class TestLocationUtil(TestCase):
         assert info.time_zone == 'America/Los_Angeles'
         assert info.latitude == 32.8594
         assert info.longitude == -117.2073
-        assert info.use_fahrenheit
+        assert not info.use_metric
 
     @patch('homeassistant.util.location.elevation', return_value=0)
     @patch('homeassistant.util.location._get_freegeoip', return_value=None)

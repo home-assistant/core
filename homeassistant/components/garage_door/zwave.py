@@ -13,7 +13,7 @@ from homeassistant.components import zwave
 from homeassistant.components.garage_door import GarageDoorDevice
 
 COMMAND_CLASS_SWITCH_BINARY = 0x25  # 37
-
+COMMAND_CLASS_BARRIER_OPERATOR = 0x66  # 102
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -25,7 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.ATTR_VALUE_ID]]
 
-    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY:
+    if value.command_class != zwave.COMMAND_CLASS_SWITCH_BINARY and \
+       value.command_class != zwave.COMMAND_CLASS_BARRIER_OPERATOR:
         return
     if value.type != zwave.TYPE_BOOL:
         return
@@ -62,8 +63,8 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, GarageDoorDevice):
 
     def close_door(self):
         """Close the garage door."""
-        self._value.node.set_switch(self._value.value_id, False)
+        self._value.data = False
 
     def open_door(self):
         """Open the garage door."""
-        self._value.node.set_switch(self._value.value_id, True)
+        self._value.data = True
