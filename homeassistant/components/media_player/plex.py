@@ -256,7 +256,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def _active_media_plexapi_type(self):
-        """Get the active media type required by PlexAPI commands"""
+        """Get the active media type required by PlexAPI commands."""
         if self.media_content_type is MEDIA_TYPE_MUSIC:
             return 'music'
         else:
