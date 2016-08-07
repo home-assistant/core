@@ -1,5 +1,6 @@
 """
 Component to create an interface to a Pilight daemon (https://pilight.org/).
+
 Pilight can be used to send and receive signals from a radio frequency
 module (RF receiver).
 
@@ -30,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
+    """Setup pilight component."""
     from pilight import pilight
 
     if not validate_config(config,

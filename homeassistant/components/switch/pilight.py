@@ -58,25 +58,25 @@ class PilightSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Get the name of the switch"""
+        """Get the name of the switch."""
         return self._name
 
     @property
     def should_poll(self):
-        """No polling needed, state can be set when correct code is received"""
+        """No polling needed, state set when correct code is received."""
         return False
 
     @property
     def is_on(self):
-        """Return true if switch is on"""
+        """Return true if switch is on."""
         return self._state
 
     def _set_state(self, call):
-        ''' Check if received code by the pilight-daemon matches the
-        receive on / off codes of this switch.
-        If it does change the switch state accordingly.
-        '''
+        """Check if received code by the pilight-daemon.
 
+        If the code matches the receive on / off codes of this switch
+        the switch state is changed accordingly.
+        """
         # Check if a on code is defined to turn this switch on
         if self._code_on_receive:
             # Several on codes are defined
@@ -108,14 +108,14 @@ class PilightSwitch(SwitchDevice):
                 self.turn_off()
 
     def turn_on(self):
-        """Turn the switch on by calling pilight.send service with on code"""
+        """Turn the switch on by calling pilight.send service with on code."""
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_on, blocking=True)
         self._state = True
         self.update_ha_state()
 
     def turn_off(self):
-        """Turn the switch on by calling pilight.send service with off code"""
+        """Turn the switch on by calling pilight.send service with off code."""
         self._hass.services.call(pilight.DOMAIN, pilight.SERVICE_NAME,
                                  self._code_off, blocking=True)
         self._state = False
