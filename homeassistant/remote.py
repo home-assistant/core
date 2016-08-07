@@ -15,6 +15,8 @@ import time
 import threading
 import urllib.parse
 
+from typing import Optional
+
 import requests
 
 import homeassistant.bootstrap as bootstrap
@@ -42,7 +44,7 @@ class APIStatus(enum.Enum):
     CANNOT_CONNECT = "cannot_connect"
     UNKNOWN = "unknown"
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the state."""
         return self.value
 
@@ -51,7 +53,8 @@ class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
     # pylint: disable=too-few-public-methods
-    def __init__(self, host, api_password=None, port=None, use_ssl=False):
+    def __init__(self, host: str, api_password: Optional[str]=None,
+                 port: Optional[int]=None, use_ssl: bool=False) -> None:
         """Initalize the API."""
         self.host = host
         self.port = port or SERVER_PORT
@@ -68,7 +71,7 @@ class API(object):
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate=False):
+    def validate_api(self, force_validate: bool=False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)
@@ -100,7 +103,7 @@ class API(object):
             _LOGGER.exception(error)
             raise HomeAssistantError(error)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation of the API."""
         return "API({}, {}, {})".format(
             self.host, self.api_password, self.port)

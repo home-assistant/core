@@ -12,6 +12,8 @@ from typing import Any, Optional, Dict
 
 import voluptuous as vol
 
+from homeassistant.helpers.typing import HomeAssistantType
+
 import homeassistant.components as core_components
 from homeassistant.components import group, persistent_notification
 import homeassistant.config as conf_util
@@ -216,7 +218,7 @@ def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
 # pylint: disable=too-many-branches, too-many-statements, too-many-arguments
 def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant]=None,
+                     hass: Optional[HomeAssistantType]=None,
                      config_dir: Optional[str]=None,
                      enable_log: bool=True,
                      verbose: bool=False,

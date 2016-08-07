@@ -14,8 +14,12 @@ import threading
 import time
 from types import MappingProxyType
 
-from typing import Any, Callable
+# pylint: disable=unused-import
+from typing import Optional, Any, Callable  # NOQA
+
 import voluptuous as vol
+
+from homeassistant.helpers.typing import UnitSystemType  # NOQA
 
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
@@ -713,15 +717,15 @@ class Config(object):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """Initialize a new config object."""
-        self.latitude = None
-        self.longitude = None
-        self.elevation = None
-        self.location_name = None
-        self.time_zone = None
-        self.units = METRIC_SYSTEM
+        self.latitude = None  # type: Optional[float]
+        self.longitude = None  # type: Optional[float]
+        self.elevation = None  # type: Optional[int]
+        self.location_name = None  # type: Optional[str]
+        self.time_zone = None  # type: Optional[str]
+        self.units = METRIC_SYSTEM  # type: UnitSystemType
 
         # If True, pip install is skipped for requirements on startup
-        self.skip_pip = False
+        self.skip_pip = False  # type: bool
 
         # List of loaded components
         self.components = []
