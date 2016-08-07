@@ -12,9 +12,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 
-# pylint: disable=using-constant-test,unused-import
-if False:
-    from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.helpers.typing import HomeAssistantType
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
@@ -27,7 +25,7 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
-                       hass: 'Optional[HomeAssistant]'=None) -> str:
+                       hass: Optional[HomeAssistantType]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
@@ -153,7 +151,7 @@ class Entity(object):
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    hass = None  # type: Optional[HomeAssistant]
+    hass = None  # type: Optional[HomeAssistantType]
 
     def update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
