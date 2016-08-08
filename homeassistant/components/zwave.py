@@ -338,20 +338,20 @@ def setup(hass, config):
                           component, node.node_id)
             if node.generic not in generic_device_class and \
                None not in generic_device_class:
-                _LOGGER.debug("node.generic %s not None and in \
-                              generic_device_class %s",
+                _LOGGER.debug("node.generic %s not None and in "
+                              "generic_device_class %s",
                               node.generic, generic_device_class)
                 continue
             if node.specific not in specific_device_class and \
                None not in specific_device_class:
-                _LOGGER.debug("node.specific %s is not None and in \
-                              specific_device_class %s", node.specific,
+                _LOGGER.debug("node.specific %s is not None and in "
+                              "specific_device_class %s", node.specific,
                               specific_device_class)
                 continue
             if value.command_class not in command_class and \
                None not in command_class:
-                _LOGGER.debug("value.command_class %s is not None \
-                              and in command_class %s",
+                _LOGGER.debug("value.command_class %s is not None "
+                              "and in command_class %s",
                               value.command_class, command_class)
                 continue
             if value_type != value.type and value_type is not None:
@@ -364,10 +364,10 @@ def setup(hass, config):
                 continue
 
             # Configure node
-            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, \
-                          Specific_command_class=%s, \
-                          Command_class=%s, Value type=%s, \
-                          Genre=%s", node.node_id,
+            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
+                          "Specific_command_class=%s, "
+                          "Command_class=%s, Value type=%s, "
+                          "Genre=%s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre)
