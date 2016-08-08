@@ -11,7 +11,7 @@ from pprint import pprint
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_LOCATION,
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID,
     CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
@@ -34,6 +34,7 @@ NETWORK_READY_WAIT_SECS = 30
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
@@ -42,6 +43,10 @@ SERVICE_START_NETWORK = "start_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
+EVENT_NETWORK_READY = "zwave.network_ready"
+EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_START = "zwave.network_start"
+EVENT_NETWORK_STOP = "zwave.network_stop"
 
 COMMAND_CLASS_WHATEVER = None
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
@@ -311,7 +316,9 @@ def setup(hass, config):
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
                                     ZWaveNetwork.SIGNAL_VALUE_ADDED,
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
-                                    ZWaveNetwork.SIGNAL_NODE_EVENT):
+                                    ZWaveNetwork.SIGNAL_NODE_EVENT,
+                                    ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -394,24 +401,49 @@ def setup(hass, config):
             ATTR_BASIC_LEVEL: value
         })
 
+    def network_ready():
+        """Called when all awake nodes have been queried."""
+        _LOGGER.info("Zwave network is ready for use. All awake nodes"
+                     " have been queried. Sleeping nodes will be"
+                     " queried when they awake.")
+        hass.bus.fire(EVENT_NETWORK_READY)
+
+    def network_complete():
+        """Called when all nodes on network have been queried."""
+        _LOGGER.info("Zwave network is complete. All nodes on the network"
+                     " have been queried")
+        hass.bus.fire(EVENT_NETWORK_COMPLETE)
+
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
     dispatcher.connect(
         node_event_activated, ZWaveNetwork.SIGNAL_NODE_EVENT, weak=False)
+    dispatcher.connect(
+        network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
+        _LOGGER.info("Zwave add_node have been initialized.")
         NETWORK.controller.add_node()
 
     def add_node_secure(service):
         """Switch into secure inclusion mode."""
+        _LOGGER.info("Zwave add_node_secure have been initialized.")
         NETWORK.controller.add_node(True)
 
     def remove_node(service):
         """Switch into exclusion mode."""
+        _LOGGER.info("Zwave remove_node have been initialized.")
         NETWORK.controller.remove_node()
+
+    def cancel_command(service):
+        """Cancel a running controller command."""
+        _LOGGER.info("Cancel running ZWave command.")
+        NETWORK.controller.cancel_command()
 
     def heal_network(service):
         """Heal the network."""
@@ -420,19 +452,25 @@ def setup(hass, config):
 
     def soft_reset(service):
         """Soft reset the controller."""
+        _LOGGER.info("Zwave soft_reset have been initialized.")
         NETWORK.controller.soft_reset()
 
     def test_network(service):
         """Test the network by sending commands to all the nodes."""
+        _LOGGER.info("Zwave test_network have been initialized.")
         NETWORK.test()
 
     def stop_zwave(_service_or_event):
-        """Stop Z-Wave."""
+        """Stop Z-Wave network."""
+        _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
+        hass.bus.fire(EVENT_NETWORK_STOP)
 
     def start_zwave(_service_or_event):
-        """Startup Z-Wave."""
+        """Startup Z-Wave network."""
+        _LOGGER.info("Starting ZWave network.")
         NETWORK.start()
+        hass.bus.fire(EVENT_NETWORK_START)
 
         # Need to be in STATE_AWAKED before talking to nodes.
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
@@ -466,6 +504,7 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
                                add_node_secure)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_CANCEL_COMMAND, cancel_command)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
