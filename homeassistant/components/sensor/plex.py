@@ -56,7 +56,7 @@ class PlexSensor(Entity):
         """Initialize the sensor."""
         from plexapi.utils import NA
 
-        self._na = NA
+        self._na_type = NA
         self._name = name
         self._state = 0
         self._now_playing = []
@@ -97,10 +97,10 @@ class PlexSensor(Entity):
         """Update method for plex sensor."""
         sessions = self._server.sessions()
         now_playing = []
-        for s in sessions:
-            user = s.user.title if s.user is not self._na else ""
-            title = s.title if s.title is not self._na else ""
-            year = s.year if s.year is not self._na else ""
+        for sess in sessions:
+            user = sess.user.title if sess.user is not self._na_type else ""
+            title = sess.title if sess.title is not self._na_type else ""
+            year = sess.year if sess.year is not self._na_type else ""
             now_playing.append((user, "{0} ({1})".format(title, year)))
         self._state = len(sessions)
         self._now_playing = now_playing

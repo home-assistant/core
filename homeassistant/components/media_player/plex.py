@@ -197,7 +197,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         from plexapi.utils import NA
 
-        self.na = NA
+        self.na_type = NA
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
@@ -251,7 +251,7 @@ class PlexClient(MediaPlayerDevice):
         # PlexAPI will return a "__NA__" object which can be compared to
         # None, but isn't actually None - this converts it to a real None
         # type so that lower layers don't think it's a URL and choke on it
-        if value is self.na:
+        if value is self.na_type:
             return None
         else:
             return value
@@ -295,7 +295,7 @@ class PlexClient(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.session is not None:
             thumb_url = self._convert_na_to_none(self.session.thumbUrl)
-            if str(self.na) in thumb_url:
+            if str(self.na_type) in thumb_url:
                 # Audio tracks build their thumb urls internally before passing
                 # back a URL with the PlexAPI _NA type already converted to a
                 # string and embedded into a malformed URL
