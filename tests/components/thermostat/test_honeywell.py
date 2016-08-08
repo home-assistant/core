@@ -277,7 +277,7 @@ class TestHoneywellRound(unittest.TestCase):
         self.round1.set_temperature(25)
         self.device.set_temperature.assert_called_once_with('House', 25)
 
-    def test_set_hvac_mode(self):
+    def test_set_hvac_mode(self: unittest.TestCase) -> None:
         """Test setting the system operation."""
         self.round1.set_hvac_mode('cool')
         self.assertEqual('cool', self.round1.operation)
@@ -337,7 +337,7 @@ class TestHoneywellUS(unittest.TestCase):
         self.assertEqual(74, self.device.setpoint_cool)
         self.assertEqual(74, self.honeywell.target_temperature)
 
-    def test_set_hvac_mode(self):
+    def test_set_hvac_mode(self: unittest.TestCase) -> None:
         """Test setting the HVAC mode."""
         self.honeywell.set_hvac_mode('cool')
         self.assertEqual('cool', self.honeywell.operation)
