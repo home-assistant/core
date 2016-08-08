@@ -50,7 +50,3 @@ class TestNotifySmtp(unittest.TestCase):
         msg = self.mailer.send_message('Test msg',
                                        data={'images': ['test.jpg']})
         self.assertTrue('Content-Type: multipart/related' in msg)
-
-
-if __name__ == '__main__':
-    unittest.main()

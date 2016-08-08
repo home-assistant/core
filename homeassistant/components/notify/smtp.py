@@ -76,7 +76,7 @@ class MailNotificationService(BaseNotificationService):
         """Check for valid config, verify connectivity."""
         server = None
         try:
-            self.connect()
+            server = self.connect()
         except smtplib.socket.gaierror:
             _LOGGER.exception(
                 "SMTP server not found (%s:%s). "
