@@ -277,6 +277,16 @@ class TestHoneywellRound(unittest.TestCase):
         self.round1.set_temperature(25)
         self.device.set_temperature.assert_called_once_with('House', 25)
 
+    def test_set_hvac_mode(self):
+        """Test setting the system operation."""
+        self.round1.set_hvac_mode('cool')
+        self.assertEqual('cool', self.round1.operation)
+        self.assertEqual('cool', self.device.system_mode)
+
+        self.round1.set_hvac_mode('heat')
+        self.assertEqual('heat', self.round1.operation)
+        self.assertEqual('heat', self.device.system_mode)
+
 
 class TestHoneywellUS(unittest.TestCase):
     """A test class for Honeywell US thermostats."""

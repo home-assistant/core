@@ -137,9 +137,18 @@ class RoundThermostat(ThermostatDevice):
         self.device.set_temperature(self._name, temperature)
 
     @property
+    def operation(self):
+        """Get the current operation of the system."""
+        return self.device.system_mode
+
+    @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self._away
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set the HVAC mode for the thermostat."""
+        self.device.system_mode = hvac_mode
 
     def turn_away_mode_on(self):
         """Turn away on.
