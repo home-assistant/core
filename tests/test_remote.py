@@ -20,7 +20,7 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-broken_api = remote.API('127.0.0.1', BROKEN_PORT)
+broken_api = remote.API('127.0.0.1', "bladiebla")
 hass, slave, master_api = None, None, None
 
 
