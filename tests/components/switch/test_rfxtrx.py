@@ -40,7 +40,7 @@ class TestSwitchRfxtrx(unittest.TestCase):
             'switch': {'platform': 'rfxtrx',
                        'automatic_add': True,
                        'devices':
-                           {'710000141010170': {
+                           {710000141010170: {
                                'name': 'Test',
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))

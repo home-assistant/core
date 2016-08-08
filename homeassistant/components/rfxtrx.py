@@ -66,6 +66,7 @@ def _valid_device(value, device_type):
             key = device.get('packetid')
             device.pop('packetid')
 
+        key = str(key)
         if not len(key) % 2 == 0:
             key = '0' + key
 
