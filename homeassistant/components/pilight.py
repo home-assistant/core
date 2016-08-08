@@ -11,18 +11,27 @@ RF commands can also be send with a pilight.send service call.
 import logging
 import socket
 
+import voluptuous as vol
+
 from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import ensure_list
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-REQUIREMENTS = ['pilight']
+REQUIREMENTS = ['pilight==0.0.2']
 
 DOMAIN = "pilight"
 EVENT = 'pilight_received'
 SERVICE_NAME = 'send'
 
-CONNECTED = False
+ATTR_PROTOCOL = 'protocol'
+
+# The pilight code schema depends on the protocol
+# Thus only require to have the protocol information
+RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): cv.string},
+                            extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +43,7 @@ def setup(hass, config):
     if not validate_config(config,
                            {DOMAIN: [CONF_HOST, CONF_PORT]},
                            _LOGGER):
-        return None
+        return False
 
     try:
         pilight_client = pilight.Client(host=config[DOMAIN][CONF_HOST],
@@ -43,17 +52,19 @@ def setup(hass, config):
         _LOGGER.error(
             "Unable to connect to %s on port %s: %s",
             config[CONF_HOST], config[CONF_PORT], err)
-        return None
+        return False
 
     # Start / stop pilight-daemon connection with HA start/stop
     def start_pilight_client(_):
-        """Called once when home assistanz starts."""
+        """Called once when home assistant starts."""
         pilight_client.start()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_pilight_client)
 
     def stop_pilight_client(_):
-        """Called once when home assistanz stops."""
+        """Called once when home assistant stops."""
         pilight_client.stop()
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
     def send_code(call):
@@ -63,21 +74,22 @@ def setup(hass, config):
         if "protocol" not in message_data:
             _LOGGER.error(
                 'Pilight data to send does not contain a protocol info: %s.'
-                ' Check the pilight-send doku!',
+                ' Check the pilight-send documentation!',
                 str(call.data))
             return
 
         # Patch data because of bug:
         # https://github.com/pilight/pilight/issues/296
-        message_data = message_data.copy()
-        # Protocol has to be in a list otherwise segfault
-        message_data["protocol"] = [message_data["protocol"]]
+        # Protocol has to be in a list otherwise segfault in pilight-daemon
+        message_data["protocol"] = ensure_list(message_data["protocol"])
 
         try:
             pilight_client.send_code(message_data)
         except IOError:
             _LOGGER.error('Pilight send failed for %s', str(message_data))
-    hass.services.register(DOMAIN, SERVICE_NAME, send_code)
+
+    hass.services.register(DOMAIN, SERVICE_NAME,
+                           send_code, schema=RF_CODE_SCHEMA)
 
     # Publish received codes on the HA event bus
     # A whitelist of codes to be published in the event bus
@@ -92,21 +104,13 @@ def setup(hass, config):
              'uuid': data['uuid']},
             **data['message'])
 
-        accepted = True
-
-        if whitelist:
-            for key in whitelist:
-                # True if some data values are not in the whitlist values for
-                # the acctual key
-                if not data[key] in whitelist[key]:
-                    accepted = False
-                    break
-
-        if accepted:
+        # No whitelist defined, put data on event bus
+        if not whitelist:
             hass.bus.fire(EVENT, data)
-    pilight_client.set_callback(handle_received_code)
+        # Check if data matches the defined whitelist
+        elif all(data[key] in whitelist[key] for key in whitelist):
+            hass.bus.fire(EVENT, data)
 
-    global CONNECTED
-    CONNECTED = True
+    pilight_client.set_callback(handle_received_code)
 
     return True
