@@ -123,10 +123,10 @@ omit =
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/feedreader.py
-    homeassistant/components/garage_door/wink.py
-    homeassistant/components/garage_door/rpi_gpio.py
-    homeassistant/components/hdmi_cec.py
     homeassistant/components/foursquare.py
+    homeassistant/components/garage_door/rpi_gpio.py
+    homeassistant/components/garage_door/wink.py
+    homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
@@ -205,8 +205,8 @@ omit =
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/onewire.py
-    homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/openexchangerates.py
+    homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
