@@ -260,5 +260,5 @@ class HoneywellUSThermostat(ThermostatDevice):
         pass
 
     def set_hvac_mode(self, hvac_mode):
-        """Set the system mode (Cool, Heat, etc.)"""
+        """Set the system mode (Cool, Heat, etc)."""
         self._device.system_mode = hvac_mode
