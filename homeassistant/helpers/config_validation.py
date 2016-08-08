@@ -9,7 +9,8 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    CONF_INVERT)
 from homeassistant.helpers.entity import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
@@ -302,7 +303,11 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
-NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
+BASE_CONDITION_SCHEMA = vol.Schema({
+    vol.Optional(CONF_INVERT, default=False): bool
+})
+
+NUMERIC_STATE_CONDITION_SCHEMA = vol.All(BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'numeric_state',
     vol.Required(CONF_ENTITY_ID): entity_id,
     CONF_BELOW: vol.Coerce(float),
@@ -310,7 +315,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_VALUE_TEMPLATE): template,
 }), has_at_least_one_key(CONF_BELOW, CONF_ABOVE))
 
-STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
+STATE_CONDITION_SCHEMA = vol.All(BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'state',
     vol.Required(CONF_ENTITY_ID): entity_id,
     vol.Required('state'): str,
@@ -320,7 +325,7 @@ STATE_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Optional('from'): str,
 }), key_dependency('for', 'state'))
 
-SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
+SUN_CONDITION_SCHEMA = vol.All(BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'sun',
     vol.Optional('before'): sun_event,
     vol.Optional('before_offset'): time_period,
@@ -328,19 +333,19 @@ SUN_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Optional('after_offset'): time_period,
 }), has_at_least_one_key('before', 'after'))
 
-TEMPLATE_CONDITION_SCHEMA = vol.Schema({
+TEMPLATE_CONDITION_SCHEMA = BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'template',
     vol.Required(CONF_VALUE_TEMPLATE): template,
 })
 
-TIME_CONDITION_SCHEMA = vol.All(vol.Schema({
+TIME_CONDITION_SCHEMA = vol.All(BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'time',
     'before': time,
     'after': time,
     'weekday': weekdays,
 }), has_at_least_one_key('before', 'after', 'weekday'))
 
-ZONE_CONDITION_SCHEMA = vol.Schema({
+ZONE_CONDITION_SCHEMA = BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'zone',
     vol.Required(CONF_ENTITY_ID): entity_id,
     'zone': entity_id,
@@ -349,7 +354,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema({
     vol.Optional('event'): vol.Any('enter', 'leave'),
 })
 
-AND_CONDITION_SCHEMA = vol.Schema({
+AND_CONDITION_SCHEMA = BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'and',
     vol.Required('conditions'): vol.All(
         ensure_list,
@@ -358,7 +363,7 @@ AND_CONDITION_SCHEMA = vol.Schema({
     )
 })
 
-OR_CONDITION_SCHEMA = vol.Schema({
+OR_CONDITION_SCHEMA = BASE_CONDITION_SCHEMA.extend({
     vol.Required(CONF_CONDITION): 'or',
     vol.Required('conditions'): vol.All(
         ensure_list,
@@ -375,7 +380,7 @@ CONDITION_SCHEMA = vol.Any(
     TIME_CONDITION_SCHEMA,
     ZONE_CONDITION_SCHEMA,
     AND_CONDITION_SCHEMA,
-    OR_CONDITION_SCHEMA,
+    OR_CONDITION_SCHEMA
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema({

@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, CONF_INVERT)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import render
@@ -31,7 +31,13 @@ def from_config(config, config_validation=True):
         raise HomeAssistantError('Invalid condition "{}" specified {}'.format(
             config.get(CONF_CONDITION), config))
 
-    return factory(config, config_validation)
+    invert = config.get(CONF_INVERT) or False
+    def if_invert_condtion(hass, variables=None):
+        """Test if condition/if not condition."""
+        if_condition = factory(config, config_validation)
+        return invert ^ if_condition(hass, variables)
+
+    return if_invert_condtion
 
 
 def and_from_config(config, config_validation=True):
