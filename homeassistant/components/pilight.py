@@ -13,7 +13,6 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.helpers import validate_config
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import ensure_list
 from homeassistant.const import EVENT_HOMEASSISTANT_START
@@ -26,10 +25,19 @@ DOMAIN = "pilight"
 EVENT = 'pilight_received'
 SERVICE_NAME = 'send'
 
-ATTR_PROTOCOL = 'protocol'
+CONF_WHITELIST = 'whitelist'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST, default='127.0.0.1'): cv.string,
+        vol.Required(CONF_PORT, default=5000): int,
+        vol.Optional(CONF_WHITELIST): dict
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 # The pilight code schema depends on the protocol
 # Thus only require to have the protocol information
+ATTR_PROTOCOL = 'protocol'
 RF_CODE_SCHEMA = vol.Schema({vol.Required(ATTR_PROTOCOL): cv.string},
                             extra=vol.ALLOW_EXTRA)
 
@@ -39,11 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """Setup pilight component."""
     from pilight import pilight
-
-    if not validate_config(config,
-                           {DOMAIN: [CONF_HOST, CONF_PORT]},
-                           _LOGGER):
-        return False
 
     try:
         pilight_client = pilight.Client(host=config[DOMAIN][CONF_HOST],
@@ -70,13 +73,6 @@ def setup(hass, config):
     def send_code(call):
         """Send RF code to the pilight-daemon."""
         message_data = call.data
-
-        if "protocol" not in message_data:
-            _LOGGER.error(
-                'Pilight data to send does not contain a protocol info: %s.'
-                ' Check the pilight-send documentation!',
-                str(call.data))
-            return
 
         # Patch data because of bug:
         # https://github.com/pilight/pilight/issues/296
