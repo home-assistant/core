@@ -688,7 +688,11 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return self.Response(status=401)
 
-        response = requests.get(player.media_image_url)
+        image_url = player.media_image_url
+        if image_url:
+            response = requests.get(image_url)
+        else:
+            response = None
 
         if response is None:
             return self.Response(status=500)
