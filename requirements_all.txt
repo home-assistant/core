@@ -234,7 +234,7 @@ plexapi==1.1.0
 pmsensor==0.2
 
 # homeassistant.components.thermostat.proliphix
-proliphix==0.2.0
+proliphix==0.3.1
 
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.0
