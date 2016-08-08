@@ -23,9 +23,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Setup iframe frontend panels."""
-    for url_name, info in config[DOMAIN].items():
+    for url_path, info in config[DOMAIN].items():
         register_built_in_panel(
             hass, 'iframe', info.get(CONF_TITLE), info.get(CONF_ICON),
-            url_name, {'url': info[CONF_URL]})
+            url_path, {'url': info[CONF_URL]})
 
     return True

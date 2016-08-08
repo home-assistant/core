@@ -63,7 +63,7 @@ class TestPanelIframe(unittest.TestCase):
             'icon': 'mdi:network-wireless',
             'title': 'Router',
             'url': '/frontend/panels/iframe-md5md5.html',
-            'url_name': 'router'
+            'url_path': 'router'
         }
 
         assert frontend.PANELS['weather'] == {
@@ -72,5 +72,5 @@ class TestPanelIframe(unittest.TestCase):
             'icon': 'mdi:weather',
             'title': 'Weather',
             'url': '/frontend/panels/iframe-md5md5.html',
-            'url_name': 'weather',
+            'url_path': 'weather',
         }
