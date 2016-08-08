@@ -219,6 +219,11 @@ class HoneywellUSThermostat(ThermostatDevice):
         else:
             return self._device.setpoint_heat
 
+    @property
+    def operation(self):
+        """Return current operation ie. heat, cool, idle."""
+        return self._device.system_mode
+
     def set_temperature(self, temperature):
         """Set target temperature."""
         import somecomfort
@@ -244,3 +249,7 @@ class HoneywellUSThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """Turn away off."""
         pass
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set the system mode (Cool, Heat, etc.)"""
+        self._device.system_mode = hvac_mode

@@ -327,6 +327,16 @@ class TestHoneywellUS(unittest.TestCase):
         self.assertEqual(74, self.device.setpoint_cool)
         self.assertEqual(74, self.honeywell.target_temperature)
 
+    def test_set_hvac_mode(self):
+        """Test setting the HVAC mode."""
+        self.honeywell.set_hvac_mode('cool')
+        self.assertEqual('cool', self.honeywell.operation)
+        self.assertEqual('cool', self.device.system_mode)
+
+        self.honeywell.set_hvac_mode('heat')
+        self.assertEqual('heat', self.honeywell.operation)
+        self.assertEqual('heat', self.device.system_mode)
+
     def test_set_temp_fail(self):
         """Test if setting the temperature fails."""
         self.device.setpoint_heat = mock.MagicMock(
