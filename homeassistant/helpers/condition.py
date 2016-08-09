@@ -32,6 +32,7 @@ def from_config(config, config_validation=True):
             config.get(CONF_CONDITION), config))
 
     invert = config.get(CONF_INVERT) or False
+    
     def if_invert_condtion(hass, variables=None):
         """Test if condition/if not condition."""
         if_condition = factory(config, config_validation)
