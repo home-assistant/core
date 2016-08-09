@@ -386,7 +386,7 @@ class TestServiceRegistry(unittest.TestCase):
             return ha.HomeAssistant.add_job(self, *args, **kwargs)
 
         self.services = ha.ServiceRegistry(self.bus, add_job)
-        self.services.register("test_domain", "test_service", lambda x: None)
+        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
@@ -396,7 +396,7 @@ class TestServiceRegistry(unittest.TestCase):
     def test_has_service(self):
         """Test has_service method."""
         self.assertTrue(
-            self.services.has_service("test_domain", "test_service"))
+            self.services.has_service("tesT_domaiN", "tesT_servicE"))
         self.assertFalse(
             self.services.has_service("test_domain", "non_existing"))
         self.assertFalse(
@@ -418,7 +418,7 @@ class TestServiceRegistry(unittest.TestCase):
                                lambda x: calls.append(1))
 
         self.assertTrue(
-            self.services.call('test_domain', 'register_calls', blocking=True))
+            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.assertEqual(1, len(calls))
 
     def test_call_with_blocking_not_done_in_time(self):
