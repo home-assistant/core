@@ -1,7 +1,7 @@
 """The tests for the demo thermostat."""
 import unittest
 
-from homeassistant.helpers.unit_system import (
+from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
 )
 from homeassistant.components import thermostat

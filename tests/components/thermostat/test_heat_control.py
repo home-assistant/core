@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import thermostat
 
 from tests.common import get_test_home_assistant
