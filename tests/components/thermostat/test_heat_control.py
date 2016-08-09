@@ -1,5 +1,8 @@
 """The tests for the heat control thermostat."""
+import datetime
 import unittest
+from unittest import mock
+
 
 from homeassistant.bootstrap import _setup_component
 from homeassistant.const import (
@@ -288,6 +291,187 @@ class TestThermostatHeatControlACMode(unittest.TestCase):
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
         self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
+        """Setup the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp, {
+            ATTR_UNIT_OF_MEASUREMENT: unit
+        })
+
+    def _setup_switch(self, is_on):
+        """Setup the test switch."""
+        self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+        self.calls = []
+
+        def log_call(call):
+            """Log service calls."""
+            self.calls.append(call)
+
+        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
+        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+
+
+class TestThermostatHeatControlACModeMinCycle(unittest.TestCase):
+    """Test the Heat Control thermostat."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.temperature_unit = TEMP_CELSIUS
+        thermostat.setup(self.hass, {'thermostat': {
+            'platform': 'heat_control',
+            'name': 'test',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'ac_mode': True,
+            'min_cycle_duration': datetime.timedelta(minutes=10)
+        }})
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    def test_temp_change_ac_trigger_on_not_long_enough(self):
+        """Test if temperature change turn ac on."""
+        self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 25)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(30)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_ac_trigger_on_long_enough(self):
+        """Test if temperature change turn ac on."""
+        fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11,
+                                         tzinfo=datetime.timezone.utc)
+        with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
+                        return_value=fake_changed):
+            self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 25)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(30)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_temp_change_ac_trigger_off_not_long_enough(self):
+        """Test if temperature change turn ac on."""
+        self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(25)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_ac_trigger_off_long_enough(self):
+        """Test if temperature change turn ac on."""
+        fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11,
+                                         tzinfo=datetime.timezone.utc)
+        with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
+                        return_value=fake_changed):
+            self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(25)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
+        """Setup the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp, {
+            ATTR_UNIT_OF_MEASUREMENT: unit
+        })
+
+    def _setup_switch(self, is_on):
+        """Setup the test switch."""
+        self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+        self.calls = []
+
+        def log_call(call):
+            """Log service calls."""
+            self.calls.append(call)
+
+        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
+        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+
+
+class TestThermostatHeatControlMinCycle(unittest.TestCase):
+    """Test the Heat Control thermostat."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.temperature_unit = TEMP_CELSIUS
+        thermostat.setup(self.hass, {'thermostat': {
+            'platform': 'heat_control',
+            'name': 'test',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'min_cycle_duration': datetime.timedelta(minutes=10)
+        }})
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    def test_temp_change_heater_trigger_off_not_long_enough(self):
+        """Test if temp change doesn't turn heater off because of time."""
+        self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 25)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(30)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_trigger_on_not_long_enough(self):
+        """Test if temp change doesn't turn heater on because of time."""
+        self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(25)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_temp_change_heater_trigger_on_long_enough(self):
+        """Test if temperature change turn heater on after min cycle."""
+        fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11,
+                                         tzinfo=datetime.timezone.utc)
+        with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
+                        return_value=fake_changed):
+            self._setup_switch(False)
+        thermostat.set_temperature(self.hass, 30)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(25)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_temp_change_heater_trigger_off_long_enough(self):
+        """Test if temperature change turn heater off after min cycle."""
+        fake_changed = datetime.datetime(1918, 11, 11, 11, 11, 11,
+                                         tzinfo=datetime.timezone.utc)
+        with mock.patch('homeassistant.helpers.condition.dt_util.utcnow',
+                        return_value=fake_changed):
+            self._setup_switch(True)
+        thermostat.set_temperature(self.hass, 25)
+        self.hass.pool.block_till_done()
+        self._setup_sensor(30)
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
