@@ -196,6 +196,6 @@ class IndexView(HomeAssistantView):
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url)
+            panel_url=panel_url, panels=PANELS)
 
         return self.Response(resp, mimetype='text/html')

@@ -473,15 +473,15 @@ class HomeAssistantView(object):
                                  self.hass.wsgi.api_password):
             authenticated = True
 
-        if authenticated:
-            _LOGGER.info('Successful login/request from %s',
-                         request.remote_addr)
-        elif self.requires_auth and not authenticated:
+        if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid'
                             'password from %s', request.remote_addr)
             raise Unauthorized()
 
         request.authenticated = authenticated
+
+        _LOGGER.info('Serving %s to %s (auth: %s)',
+                     request.path, request.remote_addr, authenticated)
 
         result = handler(request, **values)
 
