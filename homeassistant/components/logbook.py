@@ -194,6 +194,11 @@ def humanify(events):
                    event != last_sensor_event[to_state.entity_id]:
                     continue
 
+                # Don't show continuous sensor value changes in the logbook
+                if domain == 'sensor' and \
+                   to_state.attributes.get('unit_of_measurement'):
+                    continue
+
                 yield Entry(
                     event.time_fired,
                     name=to_state.name,
