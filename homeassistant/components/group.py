@@ -14,8 +14,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
-from homeassistant.helpers.entity import (
-    Entity, generate_entity_id, split_entity_id)
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.event import track_state_change
 import homeassistant.helpers.config_validation as cv
 
@@ -101,7 +100,7 @@ def expand_entity_ids(hass, entity_ids):
 
         try:
             # If entity_id points at a group, expand it
-            domain, _ = split_entity_id(entity_id)
+            domain, _ = ha.split_entity_id(entity_id)
 
             if domain == DOMAIN:
                 found_ids.extend(

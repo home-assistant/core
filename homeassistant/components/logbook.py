@@ -18,10 +18,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON)
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.core import State
+from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.helpers import template
-from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
