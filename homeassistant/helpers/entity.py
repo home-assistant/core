@@ -1,6 +1,5 @@
 """An abstract class for entities."""
 import logging
-import re
 
 from typing import Any, Optional, List, Dict
 
@@ -18,9 +17,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 _OVERWRITE = {}  # type: Dict[str, Any]
 
 _LOGGER = logging.getLogger(__name__)
-
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
@@ -43,16 +39,6 @@ def set_customize(customize: Dict[str, Any]) -> None:
     global _OVERWRITE
 
     _OVERWRITE = {key.lower(): val for key, val in customize.items()}
-
-
-def split_entity_id(entity_id: str) -> List[str]:
-    """Split a state entity_id into domain, object_id."""
-    return entity_id.split(".", 1)
-
-
-def valid_entity_id(entity_id: str) -> bool:
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class Entity(object):

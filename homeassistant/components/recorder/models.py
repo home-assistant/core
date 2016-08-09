@@ -9,9 +9,8 @@ from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
-from homeassistant.core import Event, EventOrigin, State
+from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.remote import JSONEncoder
-from homeassistant.helpers.entity import split_entity_id
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
