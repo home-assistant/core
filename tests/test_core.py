@@ -25,6 +25,15 @@ from tests.common import get_test_home_assistant
 PST = pytz.timezone('America/Los_Angeles')
 
 
+class TestMethods(unittest.TestCase):
+    """Test the Home Assistant helper methods."""
+
+    def test_split_entity_id(self):
+        """Test split_entity_id."""
+        self.assertEqual(['domain', 'object_id'],
+                         ha.split_entity_id('domain.object_id'))
+
+
 class TestHomeAssistant(unittest.TestCase):
     """Test the Home Assistant core classes."""
 
@@ -442,28 +451,19 @@ class TestConfig(unittest.TestCase):
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.config = ha.Config()
-
-    def test_config_dir_set_correct(self):
-        """Test config dir set correct."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(os.path.join(data_dir, ".homeassistant"),
-                         self.config.config_dir)
+        self.assertIsNone(self.config.config_dir)
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(os.path.join(data_dir, ".homeassistant", "test.conf"),
+        self.config.config_dir = '/tmp/ha-config'
+        self.assertEqual("/tmp/ha-config/test.conf",
                          self.config.path("test.conf"))
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(
-            os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
-            self.config.path("dir", "test.conf"))
+        self.config.config_dir = '/tmp/ha-config'
+        self.assertEqual("/tmp/ha-config/dir/test.conf",
+                         self.config.path("dir", "test.conf"))
 
     def test_as_dict(self):
         """Test as dict."""
