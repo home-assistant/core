@@ -2,18 +2,17 @@
 import logging
 import threading
 from itertools import islice
-
 from typing import Optional, Sequence
 
 import voluptuous as vol
 
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
-import homeassistant.util.dt as date_util
+from homeassistant.core import HomeAssistant
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
+from homeassistant.helpers import (
+    service, condition, template, config_validation as cv)
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition, template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+import homeassistant.util.dt as date_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +25,7 @@ CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 
-def call_from_config(hass: HomeAssistantType, config: ConfigType,
+def call_from_config(hass: HomeAssistant, config: ConfigType,
                      variables: Optional[Sequence]=None) -> None:
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
@@ -36,7 +35,7 @@ class Script():
     """Representation of a script."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass: HomeAssistantType, sequence, name: str=None,
+    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass

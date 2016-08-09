@@ -1,7 +1,7 @@
 """Test the unit system helper."""
 import unittest
 
-from homeassistant.helpers.unit_system import (
+from homeassistant.util.unit_system import (
     UnitSystem,
     METRIC_SYSTEM,
     IMPERIAL_SYSTEM,

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
-from homeassistant.helpers.unit_system import UnitSystem
+from homeassistant.util.unit_system import UnitSystem
 from homeassistant.const import (
     LENGTH_METERS,
     TEMP_CELSIUS,

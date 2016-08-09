@@ -29,11 +29,10 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
-from homeassistant.helpers.typing import UnitSystemType  # NOQA
-from homeassistant.helpers.unit_system import METRIC_SYSTEM
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
+from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 DOMAIN = "homeassistant"
 
@@ -731,7 +730,7 @@ class Config(object):
         self.elevation = None  # type: Optional[int]
         self.location_name = None  # type: Optional[str]
         self.time_zone = None  # type: Optional[str]
-        self.units = METRIC_SYSTEM  # type: UnitSystemType
+        self.units = METRIC_SYSTEM  # type: UnitSystem
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip = False  # type: bool
