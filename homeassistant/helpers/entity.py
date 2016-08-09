@@ -8,10 +8,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-
-from homeassistant.helpers.typing import HomeAssistantType
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
@@ -21,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistantType]=None) -> str:
+                       hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
@@ -137,7 +136,7 @@ class Entity(object):
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    hass = None  # type: Optional[HomeAssistantType]
+    hass = None  # type: Optional[HomeAssistant]
 
     def update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.

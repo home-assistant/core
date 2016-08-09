@@ -3,11 +3,11 @@ import functools
 
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
-from homeassistant.helpers.typing import HomeAssistantType  # NOQA
 
+from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.helpers import event
 
-HASS = None  # type: Optional[HomeAssistantType]
+HASS = None  # type: Optional[HomeAssistant]
 
 
 def track_state_change(entity_ids, from_state=None, to_state=None):
