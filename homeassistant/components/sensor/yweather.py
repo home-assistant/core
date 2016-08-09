@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.4"]
+REQUIREMENTS = ["yahooweather==0.5"]
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],

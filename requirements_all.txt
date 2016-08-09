@@ -88,6 +88,9 @@ gntp==1.0.3
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
+# homeassistant.components.camera.ffmpeg
+ha-ffmpeg==0.4
+
 # homeassistant.components.mqtt.server
 hbmqtt==0.7.1
 
@@ -101,7 +104,7 @@ hikvision==0.4
 # http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
 
 # homeassistant.components.light.flux_led
-https://github.com/Danielhiversen/flux_led/archive/0.3.zip#flux_led==0.3
+https://github.com/Danielhiversen/flux_led/archive/0.6.zip#flux_led==0.6
 
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.1.1.zip#pyW215==0.1.1
@@ -228,10 +231,13 @@ phue==0.8
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==1.1.0
+plexapi==2.0.2
+
+# homeassistant.components.sensor.serial_pm
+pmsensor==0.2
 
 # homeassistant.components.thermostat.proliphix
-proliphix==0.2.0
+proliphix==0.3.1
 
 # homeassistant.components.sensor.systemmonitor
 psutil==4.3.0
@@ -452,7 +458,7 @@ xbee-helper==0.0.7
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
-yahooweather==0.4
+yahooweather==0.5
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6

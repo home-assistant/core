@@ -9,18 +9,17 @@ import enum
 import functools as ft
 import logging
 import os
+import re
 import signal
 import threading
 import time
 from types import MappingProxyType
 
-from typing import Any, Callable
+# pylint: disable=unused-import
+from typing import Optional, Any, Callable, List  # NOQA
+
 import voluptuous as vol
 
-import homeassistant.util as util
-import homeassistant.util.dt as dt_util
-import homeassistant.util.location as location
-from homeassistant.config import get_default_config_dir
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
@@ -30,10 +29,10 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
-from homeassistant.helpers.entity import split_entity_id, valid_entity_id
-from homeassistant.helpers.unit_system import (
-    METRIC_SYSTEM,
-)
+import homeassistant.util as util
+import homeassistant.util.dt as dt_util
+import homeassistant.util.location as location
+from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 DOMAIN = "homeassistant"
 
@@ -48,7 +47,20 @@ SERVICE_CALL_LIMIT = 10  # seconds
 # will be added for each component that polls devices.
 MIN_WORKER_THREAD = 2
 
+# Pattern for validating entity IDs (format: <domain>.<entity>)
+ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def split_entity_id(entity_id: str) -> List[str]:
+    """Split a state entity_id into domain, object_id."""
+    return entity_id.split(".", 1)
+
+
+def valid_entity_id(entity_id: str) -> bool:
+    """Test if an entity ID is a valid format."""
+    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class CoreState(enum.Enum):
@@ -713,15 +725,15 @@ class Config(object):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """Initialize a new config object."""
-        self.latitude = None
-        self.longitude = None
-        self.elevation = None
-        self.location_name = None
-        self.time_zone = None
-        self.units = METRIC_SYSTEM
+        self.latitude = None  # type: Optional[float]
+        self.longitude = None  # type: Optional[float]
+        self.elevation = None  # type: Optional[int]
+        self.location_name = None  # type: Optional[str]
+        self.time_zone = None  # type: Optional[str]
+        self.units = METRIC_SYSTEM  # type: UnitSystem
 
         # If True, pip install is skipped for requirements on startup
-        self.skip_pip = False
+        self.skip_pip = False  # type: bool
 
         # List of loaded components
         self.components = []
@@ -730,7 +742,7 @@ class Config(object):
         self.api = None
 
         # Directory that holds the configuration
-        self.config_dir = get_default_config_dir()
+        self.config_dir = None
 
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant."""
@@ -739,6 +751,8 @@ class Config(object):
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
+        if self.config_dir is None:
+            raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
     def as_dict(self):

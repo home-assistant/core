@@ -9,7 +9,7 @@ from homeassistant.components.thermostat import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT)
 
-REQUIREMENTS = ['proliphix==0.2.0']
+REQUIREMENTS = ['proliphix==0.3.1']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

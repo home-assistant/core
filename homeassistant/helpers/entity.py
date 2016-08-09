@@ -1,6 +1,5 @@
 """An abstract class for entities."""
 import logging
-import re
 
 from typing import Any, Optional, List, Dict
 
@@ -9,25 +8,19 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-
-# pylint: disable=using-constant-test,unused-import
-if False:
-    from homeassistant.core import HomeAssistant  # NOQA
 
 # Entity attributes that we will overwrite
 _OVERWRITE = {}  # type: Dict[str, Any]
 
 _LOGGER = logging.getLogger(__name__)
 
-# Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
                        current_ids: Optional[List[str]]=None,
-                       hass: 'Optional[HomeAssistant]'=None) -> str:
+                       hass: Optional[HomeAssistant]=None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     name = (name or DEVICE_DEFAULT_NAME).lower()
     if current_ids is None:
@@ -45,16 +38,6 @@ def set_customize(customize: Dict[str, Any]) -> None:
     global _OVERWRITE
 
     _OVERWRITE = {key.lower(): val for key, val in customize.items()}
-
-
-def split_entity_id(entity_id: str) -> List[str]:
-    """Split a state entity_id into domain, object_id."""
-    return entity_id.split(".", 1)
-
-
-def valid_entity_id(entity_id: str) -> bool:
-    """Test if an entity ID is a valid format."""
-    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class Entity(object):

@@ -1,3 +1,44 @@
+foursquare:
+  checkin:
+    description: Check a user into a Foursquare venue
+
+    fields:
+      venueId:
+        description: The Foursquare venue where the user is checking in. [Required]
+        example: IHR8THISVNU
+
+      eventId:
+        description: The event the user is checking in to. [Optional]
+        example: UHR8THISVNT
+
+      shout:
+        description: A message about your check-in. The maximum length of this field is 140 characters. [Optional]
+        example: There are crayons! Crayons!
+
+      mentions:
+        description: Mentions in your check-in. This parameter is a semicolon-delimited list of mentions. A single mention is of the form "start,end,userid", where start is the index of the first character in the shout representing the mention, end is the index of the first character in the shout after the mention, and userid is the userid of the user being mentioned. If userid is prefixed with "fbu-", this indicates a Facebook userid that is being mention. Character indices in shouts are 0-based. [Optional]
+        example: 5,10,HZXXY3Y;15,20,GZYYZ3Z;25,30,fbu-GZXY13Y
+
+      broadcast:
+        description: "Who to broadcast this check-in to. Accepts a comma-delimited list of values: private (off the grid) or public (share with friends), facebook share on facebook, twitter share on twitter, followers share with followers (celebrity mode users only), If no valid value is found, the default is public. [Optional]"
+        example: public,twitter
+
+      ll:
+        description: Latitude and longitude of the user's location. Only specify this field if you have a GPS or other device reported location for the user at the time of check-in. [Optional]
+        example: 33.7,44.2
+
+      llAcc:
+        description: Accuracy of the user's latitude and longitude, in meters. [Optional]
+        example: 1
+
+      alt:
+        description: Altitude of the user's location, in meters. [Optional]
+        example: 0
+
+      altAcc:
+        description: Vertical accuracy of the user's location, in meters.
+        example: 1
+
 persistent_notification:
   create:
     description: Show a notification in the frontend
@@ -33,27 +74,29 @@ homematic:
         example: PRESS_LONG
 
 zwave:
-  start_network:
-    description: Start the zwave network. This might take a while, depending on how big your zwave network is.
-
-  stop_network:
-    description: Stop the zwave network, all updates into HASS will stop.
-
-  heal_network:
-    description: Start a zwave network heal. This might take a while and will slow down the zwave network greatly while it is being processed. Refer to OZW.log for details.
-
   add_node:
     description: Add a new node to the zwave network. Refer to OZW.log for details.
 
   add_node_secure:
     description: Add a new node to the zwave network with secure communications. Node must support this, and network key must be set. Refer to OZW.log for details.
 
+  cancel_command:
+    description: Cancel a running zwave controller command. Use this to exit add_node, if you wasn't going to use it but activated it.
+
+  heal_network:
+    description: Start a zwave network heal. This might take a while and will slow down the zwave network greatly while it is being processed. Refer to OZW.log for details.
+
   remove_node:
     description: Remove a node from the zwave network. Refer to OZW.log for details.
 
-  test_network:
-    description: This will send test to nodes in the zwave network. This will greatly slow down the zwave network while it is being processed. Refer to OZW.log for details.
+  start_network:
+    description: Start the zwave network. This might take a while, depending on how big your zwave network is.
+
+  stop_network:
+    description: Stop the zwave network, all updates into HASS will stop.
 
   soft_reset:
     description: This will reset the controller without removing its data. Use carefully because not all controllers support this. Refer to controllers manual.
 
+  test_network:
+    description: This will send test to nodes in the zwave network. This will greatly slow down the zwave network while it is being processed. Refer to OZW.log for details.

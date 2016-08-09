@@ -4,6 +4,9 @@ import os
 import shutil
 from types import MappingProxyType
 
+# pylint: disable=unused-import
+from typing import Any, Tuple  # NOQA
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -11,12 +14,13 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__)
+from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
-from homeassistant.helpers.entity import valid_entity_id, set_customize
+from homeassistant.helpers.entity import set_customize
 from homeassistant.util import dt as date_util, location as loc_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +41,7 @@ DEFAULT_CORE_CONFIG = (
                                              CONF_UNIT_SYSTEM_IMPERIAL)),
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
-)
+)  # type: Tuple[Tuple[str, Any, Any, str], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
 introduction:

@@ -1,6 +1,8 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
 
+from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
+
 import jinja2
 import voluptuous as vol
 
@@ -11,7 +13,7 @@ from homeassistant.const import (
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
     CONF_INVERT)
-from homeassistant.helpers.entity import valid_entity_id
+from homeassistant.core import valid_entity_id
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify
 
@@ -29,12 +31,15 @@ longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 
+# typing typevar
+T = TypeVar('T')
+
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys):
+def has_at_least_one_key(*keys: str) -> Callable:
     """Validator that at least one key exists."""
-    def validate(obj):
+    def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
             raise vol.Invalid('expected dictionary')
@@ -47,7 +52,7 @@ def has_at_least_one_key(*keys):
     return validate
 
 
-def boolean(value):
+def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
         value = value.lower()
@@ -64,12 +69,12 @@ def isfile(value):
     return vol.IsFile('not a file')(value)
 
 
-def ensure_list(value):
+def ensure_list(value: Union[T, Sequence[T]]) -> List[T]:
     """Wrap value in list if it is not one."""
     return value if isinstance(value, list) else [value]
 
 
-def entity_id(value):
+def entity_id(value: Any) -> str:
     """Validate Entity ID."""
     value = string(value).lower()
     if valid_entity_id(value):
@@ -77,7 +82,7 @@ def entity_id(value):
     raise vol.Invalid('Entity ID {} is an invalid entity id'.format(value))
 
 
-def entity_ids(value):
+def entity_ids(value: Union[str, Sequence]) -> List[str]:
     """Validate Entity IDs."""
     if value is None:
         raise vol.Invalid('Entity IDs can not be None')
@@ -110,7 +115,7 @@ time_period_dict = vol.All(
     lambda value: timedelta(**value))
 
 
-def time_period_str(value):
+def time_period_str(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
@@ -183,7 +188,7 @@ def platform_validator(domain):
     return validator
 
 
-def positive_timedelta(value):
+def positive_timedelta(value: timedelta) -> timedelta:
     """Validate timedelta is positive."""
     if value < timedelta(0):
         raise vol.Invalid('Time period should be positive')
@@ -210,14 +215,14 @@ def slug(value):
     raise vol.Invalid('invalid slug {} (try {})'.format(value, slg))
 
 
-def string(value):
+def string(value: Any) -> str:
     """Coerce value to string, except for None."""
     if value is not None:
         return str(value)
     raise vol.Invalid('string value is None')
 
 
-def temperature_unit(value):
+def temperature_unit(value) -> str:
     """Validate and transform temperature unit."""
     value = str(value).upper()
     if value == 'C':
