@@ -123,6 +123,7 @@ omit =
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/feedreader.py
+    homeassistant/components/foursquare.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
     homeassistant/components/hdmi_cec.py
