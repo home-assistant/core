@@ -20,7 +20,7 @@ from homeassistant.const import (
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
-from homeassistant.helpers.entity import split_entity_id
+from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 

@@ -14,11 +14,12 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__)
+from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
-from homeassistant.helpers.entity import valid_entity_id, set_customize
+from homeassistant.helpers.entity import set_customize
 from homeassistant.util import dt as date_util, location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
