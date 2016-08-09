@@ -3,8 +3,9 @@ from datetime import timedelta
 import logging
 import sys
 
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
+from homeassistant.core import HomeAssistant
 from homeassistant.components import (
     zone as zone_cmp, sun as sun_cmp)
 from homeassistant.const import (
@@ -42,7 +43,7 @@ def and_from_config(config: ConfigType, config_validation: bool=True):
         config = cv.AND_CONDITION_SCHEMA(config)
     checks = [from_config(entry) for entry in config['conditions']]
 
-    def if_and_condition(hass: HomeAssistantType,
+    def if_and_condition(hass: HomeAssistant,
                          variables=None) -> bool:
         """Test and condition."""
         for check in checks:
@@ -64,7 +65,7 @@ def or_from_config(config: ConfigType, config_validation: bool=True):
         config = cv.OR_CONDITION_SCHEMA(config)
     checks = [from_config(entry) for entry in config['conditions']]
 
-    def if_or_condition(hass: HomeAssistantType,
+    def if_or_condition(hass: HomeAssistant,
                         variables=None) -> bool:
         """Test and condition."""
         for check in checks:
@@ -80,7 +81,7 @@ def or_from_config(config: ConfigType, config_validation: bool=True):
 
 
 # pylint: disable=too-many-arguments
-def numeric_state(hass: HomeAssistantType, entity, below=None, above=None,
+def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
                   value_template=None, variables=None):
     """Test a numeric state condition."""
     if isinstance(entity, str):

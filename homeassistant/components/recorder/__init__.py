@@ -16,13 +16,13 @@ from typing import Any, Union, Optional, List
 
 import voluptuous as vol
 
-from homeassistant.helpers.typing import (ConfigType, QueryType,
-                                          HomeAssistantType)
-import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, QueryType
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "recorder"
 
@@ -95,7 +95,7 @@ def run_information(point_in_time: Optional[datetime]=None):
         (recorder_runs.end > point_in_time)).first()
 
 
-def setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup the recorder."""
     # pylint: disable=global-statement
     global _INSTANCE
@@ -155,7 +155,7 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass: HomeAssistantType, purge_days: int, uri: str) \
+    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str) \
             -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)

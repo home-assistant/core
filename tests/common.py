@@ -6,7 +6,7 @@ from unittest import mock
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
