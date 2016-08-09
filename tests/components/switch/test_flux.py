@@ -482,7 +482,7 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
 
     def test_flux_with_mired(self):
-        """Test the flux switch´s mode mired"""
+        """Test the flux switch´s mode mired."""
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
@@ -524,7 +524,7 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
 
     def test_flux_with_kelvin(self):
-        """Test the flux switch´s mode kelvin"""
+        """Test the flux switch´s mode kelvin."""
         platform = loader.get_component('light.test')
         platform.init()
         self.assertTrue(
