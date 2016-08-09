@@ -30,6 +30,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                                                      add_callback_devices)
 
 
+# pylint: disable=abstract-method
 class HMRollershutter(homematic.HMDevice, RollershutterDevice):
     """Represents a Homematic Rollershutter in Home Assistant."""
 
