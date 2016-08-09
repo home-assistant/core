@@ -30,8 +30,8 @@ CONF_WHITELIST = 'whitelist'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST, default='127.0.0.1'): cv.string,
-        vol.Required(CONF_PORT, default=5000): int,
-        vol.Optional(CONF_WHITELIST): dict
+        vol.Required(CONF_PORT, default=5000): vol.Coerce(int),
+        vol.Optional(CONF_WHITELIST): {cv.string: [cv.string]}
     }),
 }, extra=vol.ALLOW_EXTRA)
 
