@@ -48,7 +48,7 @@ class OhmconnectSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._data["active"] == "True":
+        if self._data.get("active") == "True":
             return "Active"
         else:
             return "Inactive"
@@ -56,7 +56,7 @@ class OhmconnectSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"Address": self._data["address"], "ID": self._ohmid}
+        return {"Address": self._data.get("address"), "ID": self._ohmid}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
