@@ -1,14 +1,13 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
+import time
 import unittest
-import threading
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
-from homeassistant.const import (HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED,
-                                 EVENT_HOMEASSISTANT_START)
+from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -47,15 +46,8 @@ def setUpModule():   # pylint: disable=invalid-name
 
     bootstrap.setup_component(hass, 'api')
 
-    def block_start(hass_obj):
-        """Block until HA started."""
-        started = threading.Event()
-        hass_obj.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                                 lambda _: started.set())
-        hass_obj.start()
-        started.wait()
-
-    block_start(hass)
+    hass.start()
+    time.sleep(0.05)
 
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
@@ -67,7 +59,7 @@ def setUpModule():   # pylint: disable=invalid-name
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SLAVE_PORT}})
 
-    block_start(slave)
+    slave.start()
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -267,6 +259,7 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
         hass.pool.block_till_done()
+        slave.pool.block_till_done()
 
         self.assertIn('remote.master_remove', slave.states.entity_ids())
 
