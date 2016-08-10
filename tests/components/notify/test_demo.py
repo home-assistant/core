@@ -45,3 +45,17 @@ class TestNotifyDemo(unittest.TestCase):
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE], 'temperature')
         self.assertEqual(last_event.data[notify.ATTR_MESSAGE], '10')
+
+    def test_method_forwards_correct_data(self):
+        """Test that all data from the service gets forwarded to service."""
+        notify.send_message(self.hass, 'my message', 'my title',
+                            {'hello': 'world'})
+        self.hass.pool.block_till_done()
+        self.assertTrue(len(self.events) == 1)
+        data = self.events[0].data
+        assert {
+            'message': 'my message',
+            'target': None,
+            'title': 'my title',
+            'data': {'hello': 'world'}
+        } == data
