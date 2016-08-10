@@ -88,6 +88,9 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/pilight.py
+    homeassistant/components/*/pilight.py
+
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
