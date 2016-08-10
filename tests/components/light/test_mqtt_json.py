@@ -272,6 +272,19 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("ON", message_json["state"])
 
+        # Transition back off
+        light.turn_off(self.hass, 'light.test', transition=10)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('test_light_rgb/set',
+                         self.mock_publish.mock_calls[-1][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+        # Get the sent message
+        message_json = json.loads(self.mock_publish.mock_calls[-1][1][1])
+        self.assertEqual(10, message_json["transition"])
+        self.assertEqual("OFF", message_json["state"])
+
     def test_invalid_color_and_brightness_values(self):
         """Test that invalid color/brightness values are ignored."""
         self.hass.config.components = ['mqtt']
