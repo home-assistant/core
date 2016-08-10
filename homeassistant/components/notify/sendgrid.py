@@ -10,7 +10,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE, DOMAIN, BaseNotificationService)
 from homeassistant.helpers import validate_config
 
-REQUIREMENTS = ['sendgrid==3.0.7']
+REQUIREMENTS = ['sendgrid==3.1.10']
 _LOGGER = logging.getLogger(__name__)
 
 

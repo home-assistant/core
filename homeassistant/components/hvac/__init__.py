@@ -6,17 +6,18 @@ https://home-assistant.io/components/hvac/
 """
 import logging
 import os
+from numbers import Number
 
 from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.config import load_yaml_config_file
 import homeassistant.util as util
+from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
-    TEMP_CELCIUS)
+    TEMP_CELSIUS)
 
 DOMAIN = "hvac"
 
@@ -204,8 +205,8 @@ def setup(hass, config):
             return
 
         for hvac in target_hvacs:
-            hvac.set_temperature(convert(
-                temperature, hass.config.temperature_unit,
+            hvac.set_temperature(convert_temperature(
+                temperature, hass.config.units.temperature_unit,
                 hvac.unit_of_measurement))
 
             if hvac.should_poll:
@@ -462,12 +463,12 @@ class HvacDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(19, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert_temperature(19, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(30, TEMP_CELCIUS, self.unit_of_measurement)
+        return convert_temperature(30, TEMP_CELSIUS, self.unit_of_measurement)
 
     @property
     def min_humidity(self):
@@ -481,13 +482,13 @@ class HvacDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if temp is None:
-            return None
+        if temp is None or not isinstance(temp, Number):
+            return temp
 
-        value = convert(temp, self.unit_of_measurement,
-                        self.hass.config.temperature_unit)
+        value = convert_temperature(temp, self.unit_of_measurement,
+                                    self.hass.config.units.temperature_unit)
 
-        if self.hass.config.temperature_unit is TEMP_CELCIUS:
+        if self.hass.config.units.temperature_unit is TEMP_CELSIUS:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.

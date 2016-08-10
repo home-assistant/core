@@ -7,8 +7,8 @@ https://home-assistant.io/components/thermostat.eq3btsmart/
 import logging
 
 from homeassistant.components.thermostat import ThermostatDevice
-from homeassistant.const import TEMP_CELCIUS
-from homeassistant.helpers.temperature import convert
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.util.temperature import convert
 
 REQUIREMENTS = ['bluepy_devices==0.2.0']
 
@@ -51,7 +51,7 @@ class EQ3BTSmartThermostat(ThermostatDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement that is used."""
-        return TEMP_CELCIUS
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -76,13 +76,13 @@ class EQ3BTSmartThermostat(ThermostatDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert(self._thermostat.min_temp, TEMP_CELCIUS,
+        return convert(self._thermostat.min_temp, TEMP_CELSIUS,
                        self.unit_of_measurement)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert(self._thermostat.max_temp, TEMP_CELCIUS,
+        return convert(self._thermostat.max_temp, TEMP_CELSIUS,
                        self.unit_of_measurement)
 
     def update(self):

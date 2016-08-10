@@ -1,88 +1,88 @@
 """Distance util functions."""
 
 import logging
+from numbers import Number
+
+from homeassistant.const import (
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_METERS,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
+    LENGTH,
+)
 
 _LOGGER = logging.getLogger(__name__)
-VALID_UNITS = ['km', 'm', 'ft', 'mi']
+
+VALID_UNITS = [
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_FEET,
+    LENGTH_METERS,
+]
 
 
-def kilometers_to_miles(km):
-    """Convert the given kilometers to miles."""
-    return km * 0.621371
-
-
-def miles_to_kilometers(mi):
-    """Convert the given miles to kilometers."""
-    return mi * 1.60934
-
-
-def kilometers_to_meters(km):
-    """Convert the given kilometers to meters."""
-    return km * 1000
-
-
-def meters_to_kilometers(m):
-    """Convert the given meters to kilometers."""
-    return m * 0.001
-
-
-def meters_to_feet(m):
-    """Convert the given meters to feet."""
-    return m * 3.28084
-
-
-def feet_to_meters(ft):
-    """Convert the given feet to meters."""
-    return ft * 0.3048
-
-
-def feet_to_miles(ft):
-    """Convert the given feet to miles."""
-    return ft * 0.000189394
-
-
-def miles_to_ft(mi):
-    """Convert the given miles to feet."""
-    return mi * 5280
-
-
-def convert(value, unit_1, unit_2):
+def convert(value: float, unit_1: str, unit_2: str) -> float:
     """Convert one unit of measurement to another."""
-    if unit_1 == unit_2:
+    if unit_1 not in VALID_UNITS:
+        raise ValueError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_1, LENGTH))
+    if unit_2 not in VALID_UNITS:
+        raise ValueError(
+            UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit_2, LENGTH))
+
+    if not isinstance(value, Number):
+        raise TypeError('{} is not of numeric type'.format(value))
+
+    if unit_1 == unit_2 or unit_1 not in VALID_UNITS:
         return value
 
-    if unit_1 not in VALID_UNITS:
-        _LOGGER.error('Unknown unit of measure: ' + unit_1)
-    elif unit_2 not in VALID_UNITS:
-        _LOGGER.error('Unknown unit of measure: ' + unit_2)
+    meters = value
 
-    if unit_1 == 'mi':
-        if unit_2 == 'km':
-            return miles_to_kilometers(value)
-        elif unit_2 == 'm':
-            return kilometers_to_meters(miles_to_kilometers(value))
-        elif unit_2 == 'ft':
-            return miles_to_ft(value)
-    elif unit_1 == 'ft':
-        if unit_2 == 'mi':
-            return feet_to_miles(value)
-        elif unit_2 == 'km':
-            return miles_to_kilometers(feet_to_meters(value))
-        elif unit_2 == 'm':
-            return feet_to_meters(value)
-    elif unit_1 == 'km':
-        if unit_2 == 'mi':
-            return kilometers_to_miles(value)
-        elif unit_2 == 'm':
-            return kilometers_to_meters(value)
-        elif unit_2 == 'ft':
-            return kilometers_to_meters(meters_to_feet(value))
-    elif unit_1 == 'm':
-        if unit_2 == 'km':
-            return meters_to_kilometers(value)
-        elif unit_2 == 'ft':
-            return meters_to_feet(value)
-        elif unit_2 == 'mi':
-            return kilometers_to_miles(meters_to_kilometers(value))
+    if unit_1 == LENGTH_MILES:
+        meters = __miles_to_meters(value)
+    elif unit_1 == LENGTH_FEET:
+        meters = __feet_to_meters(value)
+    elif unit_1 == LENGTH_KILOMETERS:
+        meters = __kilometers_to_meters(value)
 
-    return None
+    result = meters
+
+    if unit_2 == LENGTH_MILES:
+        result = __meters_to_miles(meters)
+    elif unit_2 == LENGTH_FEET:
+        result = __meters_to_feet(meters)
+    elif unit_2 == LENGTH_KILOMETERS:
+        result = __meters_to_kilometers(meters)
+
+    return result
+
+
+def __miles_to_meters(miles: float) -> float:
+    """Convert miles to meters."""
+    return miles * 1609.344
+
+
+def __feet_to_meters(feet: float) -> float:
+    """Convert feet to meters."""
+    return feet * 0.3048
+
+
+def __kilometers_to_meters(kilometers: float) -> float:
+    """Convert kilometers to meters."""
+    return kilometers * 1000
+
+
+def __meters_to_miles(meters: float) -> float:
+    """Convert meters to miles."""
+    return meters * 0.000621371
+
+
+def __meters_to_feet(meters: float) -> float:
+    """Convert meters to feet."""
+    return meters * 3.28084
+
+
+def __meters_to_kilometers(meters: float) -> float:
+    """Convert meters to kilometers."""
+    return meters * 0.001

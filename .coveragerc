@@ -88,6 +88,9 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/pilight.py
+    homeassistant/components/*/pilight.py
+
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
@@ -100,6 +103,7 @@ omit =
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
@@ -123,6 +127,7 @@ omit =
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/feedreader.py
+    homeassistant/components/foursquare.py
     homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
     homeassistant/components/hdmi_cec.py
@@ -203,9 +208,11 @@ omit =
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/neurio_energy.py
     homeassistant/components/sensor/nzbget.py
+    homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/openexchangerates.py
+    homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py

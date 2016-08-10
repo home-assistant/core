@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_API_KEY, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
+    CONF_API_KEY, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
 
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -92,10 +91,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         options = config.get(CONF_OPTIONS)
 
         if options.get('units') is None:
-            if hass.config.temperature_unit is TEMP_CELSIUS:
-                options['units'] = 'metric'
-            elif hass.config.temperature_unit is TEMP_FAHRENHEIT:
-                options['units'] = 'imperial'
+            options['units'] = hass.config.units.name
 
         travel_mode = config.get(CONF_TRAVEL_MODE)
         mode = options.get(CONF_MODE)

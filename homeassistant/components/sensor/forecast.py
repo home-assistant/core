@@ -15,7 +15,7 @@ from homeassistant.components.sun import (
     ENTITY_ID as SUN_ID
 )
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.temperature_unit == TEMP_CELSIUS:
+    elif hass.config.units.is_metric:
         units = 'si'
     else:
         units = 'us'

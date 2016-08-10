@@ -20,8 +20,8 @@ _REGISTERED_COMPONENTS = set()
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_built_in_panel(hass, component_name, title=None, icon=None,
-                            url_name=None, config=None):
+def register_built_in_panel(hass, component_name, sidebar_title=None,
+                            sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
     # pylint: disable=too-many-arguments
     path = 'panels/ha-panel-{}.html'.format(component_name)
@@ -33,30 +33,31 @@ def register_built_in_panel(hass, component_name, title=None, icon=None,
         url = None  # use default url generate mechanism
 
     register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
-                   FINGERPRINTS[path], title, icon, url_name, url, config)
+                   FINGERPRINTS[path], sidebar_title, sidebar_icon, url_path,
+                   url, config)
 
 
-def register_panel(hass, component_name, path, md5=None, title=None, icon=None,
-                   url_name=None, url=None, config=None):
+def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
+                   sidebar_icon=None, url_path=None, url=None, config=None):
     """Register a panel for the frontend.
 
     component_name: name of the web component
     path: path to the HTML of the web component
     md5: the md5 hash of the web component (for versioning, optional)
-    title: title to show in the sidebar (optional)
-    icon: icon to show next to title in sidebar (optional)
-    url_name: name to use in the url (defaults to component_name)
+    sidebar_title: title to show in the sidebar (optional)
+    sidebar_icon: icon to show next to title in sidebar (optional)
+    url_path: name to use in the url (defaults to component_name)
     url: for the web component (for dev environment, optional)
     config: config to be passed into the web component
 
     Warning: this API will probably change. Use at own risk.
     """
     # pylint: disable=too-many-arguments
-    if url_name is None:
-        url_name = component_name
+    if url_path is None:
+        url_path = component_name
 
-    if url_name in PANELS:
-        _LOGGER.warning('Overwriting component %s', url_name)
+    if url_path in PANELS:
+        _LOGGER.warning('Overwriting component %s', url_path)
     if not os.path.isfile(path):
         _LOGGER.error('Panel %s component does not exist: %s',
                       component_name, path)
@@ -67,14 +68,14 @@ def register_panel(hass, component_name, path, md5=None, title=None, icon=None,
             md5 = hashlib.md5(fil.read().encode('utf-8')).hexdigest()
 
     data = {
-        'url_name': url_name,
+        'url_path': url_path,
         'component_name': component_name,
     }
 
-    if title:
-        data['title'] = title
-    if icon:
-        data['icon'] = icon
+    if sidebar_title:
+        data['title'] = sidebar_title
+    if sidebar_icon:
+        data['icon'] = sidebar_icon
     if config is not None:
         data['config'] = config
 
@@ -90,7 +91,7 @@ def register_panel(hass, component_name, path, md5=None, title=None, icon=None,
         fprinted_url = URL_PANEL_COMPONENT_FP.format(component_name, md5)
         data['url'] = fprinted_url
 
-    PANELS[url_name] = data
+    PANELS[url_path] = data
 
 
 def setup(hass, config):
@@ -195,6 +196,6 @@ class IndexView(HomeAssistantView):
         resp = template.render(
             core_url=core_url, ui_url=ui_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
-            panel_url=panel_url)
+            panel_url=panel_url, panels=PANELS)
 
         return self.Response(resp, mimetype='text/html')

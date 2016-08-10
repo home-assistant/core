@@ -10,7 +10,8 @@ import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_instance_port, get_test_home_assistant
+from tests.common import (
+    get_test_instance_port, get_test_home_assistant, get_test_config_dir)
 
 API_PASSWORD = "test1234"
 MASTER_PORT = get_test_instance_port()
@@ -20,7 +21,7 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-broken_api = remote.API('127.0.0.1', BROKEN_PORT)
+broken_api = remote.API('127.0.0.1', "bladiebla")
 hass, slave, master_api = None, None, None
 
 
@@ -52,6 +53,7 @@ def setUpModule():   # pylint: disable=invalid-name
 
     # Start slave
     slave = remote.HomeAssistant(master_api)
+    slave.config.config_dir = get_test_config_dir()
     bootstrap.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,

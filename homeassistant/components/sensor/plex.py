@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==1.1.0']
+REQUIREMENTS = ['plexapi==2.0.2']
 
 CONF_SERVER = 'server'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
@@ -54,15 +54,18 @@ class PlexSensor(Entity):
     # pylint: disable=too-many-arguments
     def __init__(self, name, plex_url, plex_user, plex_password, plex_server):
         """Initialize the sensor."""
+        from plexapi.utils import NA
+
+        self._na_type = NA
         self._name = name
         self._state = 0
         self._now_playing = []
 
         if plex_user and plex_password:
-            from plexapi.myplex import MyPlexUser
-            user = MyPlexUser.signin(plex_user, plex_password)
+            from plexapi.myplex import MyPlexAccount
+            user = MyPlexAccount.signin(plex_user, plex_password)
             server = plex_server if plex_server else user.resources()[0].name
-            self._server = user.getResource(server).connect()
+            self._server = user.resource(server).connect()
         else:
             from plexapi.server import PlexServer
             self._server = PlexServer(plex_url)
@@ -93,7 +96,11 @@ class PlexSensor(Entity):
     def update(self):
         """Update method for plex sensor."""
         sessions = self._server.sessions()
-        now_playing = [(s.user.title, "{0} ({1})".format(s.title, s.year))
-                       for s in sessions]
+        now_playing = []
+        for sess in sessions:
+            user = sess.user.title if sess.user is not self._na_type else ""
+            title = sess.title if sess.title is not self._na_type else ""
+            year = sess.year if sess.year is not self._na_type else ""
+            now_playing.append((user, "{0} ({1})".format(title, year)))
         self._state = len(sessions)
         self._now_playing = now_playing

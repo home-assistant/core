@@ -47,6 +47,7 @@ CONF_PORT = 'port'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_STATE = 'state'
 CONF_TEMPERATURE_UNIT = 'temperature_unit'
+CONF_UNIT_SYSTEM = 'unit_system'
 CONF_TIME_ZONE = 'time_zone'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
@@ -115,11 +116,37 @@ ATTR_ICON = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
+CONF_UNIT_SYSTEM_METRIC = 'metric'  # type: str
+CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
+
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
-TEMP_CELCIUS = "°C"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
+
+# Length units
+LENGTH_CENTIMETERS = "cm"  # type: str
+LENGTH_METERS = "m"  # type: str
+LENGTH_KILOMETERS = "km"  # type: str
+
+LENGTH_INCHES = "in"  # type: str
+LENGTH_FEET = "ft"  # type: str
+LENGTH_YARD = "yd"  # type: str
+LENGTH_MILES = "mi"  # type: str
+
+# Volume units
+VOLUME_LITERS = "L"  # type: str
+VOLUME_MILLILITERS = "mL"  # type: str
+
+VOLUME_GALLONS = "gal"  # type: str
+VOLUME_FLUID_OUNCE = "fl. oz."  # type: str
+
+# Mass units
+MASS_GRAMS = "g"  # type: str
+MASS_KILOGRAMS = "kg"  # type: str
+
+MASS_OUNCES = "oz"  # type: str
+MASS_POUNDS = "lb"  # type: str
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = "discovered"
@@ -249,3 +276,10 @@ CONTENT_TYPE_TEXT_PLAIN = 'text/plain'
 
 # The exit code to send to request a restart
 RESTART_EXIT_CODE = 100
+
+UNIT_NOT_RECOGNIZED_TEMPLATE = '{} is not a recognized {} unit.'  # type: str
+
+LENGTH = 'length'  # type: str
+MASS = 'mass'  # type: str
+VOLUME = 'volume'  # type: str
+TEMPERATURE = 'temperature'  # type: str

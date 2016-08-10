@@ -28,6 +28,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback([MjpegCamera(config)])
 
 
+def extract_image_from_mjpeg(stream):
+    """Take in a mjpeg stream object, return the jpg from it."""
+    data = b''
+    for chunk in stream:
+        data += chunk
+        jpg_start = data.find(b'\xff\xd8')
+        jpg_end = data.find(b'\xff\xd9')
+        if jpg_start != -1 and jpg_end != -1:
+            jpg = data[jpg_start:jpg_end + 2]
+            return jpg
+
+
 # pylint: disable=too-many-instance-attributes
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
@@ -52,19 +64,8 @@ class MjpegCamera(Camera):
 
     def camera_image(self):
         """Return a still image response from the camera."""
-        def process_response(response):
-            """Take in a response object, return the jpg from it."""
-            data = b''
-            for chunk in response.iter_content(1024):
-                data += chunk
-                jpg_start = data.find(b'\xff\xd8')
-                jpg_end = data.find(b'\xff\xd9')
-                if jpg_start != -1 and jpg_end != -1:
-                    jpg = data[jpg_start:jpg_end + 2]
-                    return jpg
-
         with closing(self.camera_stream()) as response:
-            return process_response(response)
+            return extract_image_from_mjpeg(response.iter_content(1024))
 
     def mjpeg_stream(self, response):
         """Generate an HTTP MJPEG stream from the camera."""

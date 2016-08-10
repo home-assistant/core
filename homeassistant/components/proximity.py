@@ -19,14 +19,22 @@ DEPENDENCIES = ['zone', 'device_tracker']
 
 DOMAIN = 'proximity'
 
+NOT_SET = 'not set'
+
 # Default tolerance
 DEFAULT_TOLERANCE = 1
 
 # Default zone
 DEFAULT_PROXIMITY_ZONE = 'home'
 
-# Default unit of measure
-DEFAULT_UNIT_OF_MEASUREMENT = 'km'
+# Default distance to zone
+DEFAULT_DIST_TO_ZONE = NOT_SET
+
+# Default direction of travel
+DEFAULT_DIR_OF_TRAVEL = NOT_SET
+
+# Default nearest device
+DEFAULT_NEAREST = NOT_SET
 
 # Entity attributes
 ATTR_DIST_FROM = 'dist_to_zone'
@@ -36,56 +44,62 @@ ATTR_NEAREST = 'nearest'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):  # pylint: disable=too-many-locals,too-many-statements
-    """Get the zones and offsets from configuration.yaml."""
-    for prox in config[DOMAIN]:
-        ignored_zones = []
-        if 'ignored_zones' in prox:
-            for variable in prox['ignored_zones']:
-                ignored_zones.append(variable)
+def setup_proximity_component(hass, config):
+    """Set up individual proximity component."""
+    # Get the devices from configuration.yaml.
+    if 'devices' not in config:
+        _LOGGER.error('devices not found in config')
+        return False
 
-        # Get the devices from configuration.yaml.
-        if 'devices' not in prox:
-            _LOGGER.error('devices not found in config')
-            return False
+    ignored_zones = []
+    if 'ignored_zones' in config:
+        for variable in config['ignored_zones']:
+            ignored_zones.append(variable)
 
-        proximity_devices = []
-        for variable in prox['devices']:
-            proximity_devices.append(variable)
+    proximity_devices = []
+    for variable in config['devices']:
+        proximity_devices.append(variable)
 
-        # Get the direction of travel tolerance from configuration.yaml.
-        tolerance = prox.get('tolerance', DEFAULT_TOLERANCE)
+    # Get the direction of travel tolerance from configuration.yaml.
+    tolerance = config.get('tolerance', DEFAULT_TOLERANCE)
 
-        # Get the zone to monitor proximity to from configuration.yaml.
-        proximity_zone = prox.get('zone', DEFAULT_PROXIMITY_ZONE)
+    # Get the zone to monitor proximity to from configuration.yaml.
+    proximity_zone = config.get('zone', DEFAULT_PROXIMITY_ZONE)
 
-        # Get the unit of measurement from configuration.yaml.
-        unit_of_measure = prox.get(ATTR_UNIT_OF_MEASUREMENT, DEFAULT_UNIT_OF_MEASUREMENT)
+    # Get the unit of measurement from configuration.yaml.
+    unit_of_measure = config.get(ATTR_UNIT_OF_MEASUREMENT,
+                                 hass.config.units.length_unit)
 
-        entity_id = DOMAIN + '.' + proximity_zone
-        proximity_zone = 'zone.' + proximity_zone
+    zone_id = 'zone.{}'.format(proximity_zone)
+    state = hass.states.get(zone_id)
+    zone_friendly_name = (state.name).lower()
 
-        state = hass.states.get(proximity_zone)
-        zone_friendly_name = (state.name).lower()
+    proximity = Proximity(hass, zone_friendly_name, DEFAULT_DIST_TO_ZONE,
+                          DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
+                          ignored_zones, proximity_devices, tolerance,
+                          zone_id, unit_of_measure)
+    proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
-        # Set the default values.
-        dist_to_zone = 'not set'
-        dir_of_travel = 'not set'
-        nearest = 'not set'
+    proximity.update_ha_state()
 
-        proximity = Proximity(hass, zone_friendly_name, dist_to_zone,
-                              dir_of_travel, nearest, ignored_zones,
-                              proximity_devices, tolerance, proximity_zone,
-                              unit_of_measure)
-        proximity.entity_id = entity_id
-
-        proximity.update_ha_state()
-
-        # Main command to monitor proximity of devices.
-        track_state_change(hass, proximity_devices,
-                           proximity.check_proximity_state_change)
+    # Main command to monitor proximity of devices.
+    track_state_change(hass, proximity_devices,
+                       proximity.check_proximity_state_change)
 
     return True
+
+
+def setup(hass, config):
+    """Get the zones and offsets from configuration.yaml."""
+    result = True
+    if isinstance(config[DOMAIN], list):
+        for proximity_config in config[DOMAIN]:
+            if not setup_proximity_component(hass, proximity_config):
+                result = False
+    elif not setup_proximity_component(hass, config[DOMAIN]):
+        result = False
+
+    return result
 
 
 class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
@@ -199,11 +213,11 @@ class Proximity(Entity):  # pylint: disable=too-many-instance-attributes
 
         # Loop through each of the distances collected and work out the
         # closest.
-        closest_device = ''
-        dist_to_zone = 1000000
+        closest_device = None  # type: str
+        dist_to_zone = None  # type: float
 
         for device in distances_to_zone:
-            if distances_to_zone[device] < dist_to_zone:
+            if not dist_to_zone or distances_to_zone[device] < dist_to_zone:
                 closest_device = device
                 dist_to_zone = distances_to_zone[device]
 
