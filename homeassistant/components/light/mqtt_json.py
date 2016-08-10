@@ -124,12 +124,16 @@ class MqttJson(Light):
                     self._rgb = [red, green, blue]
                 except KeyError:
                     pass
+                except ValueError:
+                    _LOGGER.warning("Invalid color value received.")
 
             if self._brightness is not None:
                 try:
                     self._brightness = int(values["brightness"])
                 except KeyError:
                     pass
+                except ValueError:
+                    _LOGGER.warning("Invalid brightness value received.")
 
             self.update_ha_state()
 
@@ -193,7 +197,7 @@ class MqttJson(Light):
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
         if ATTR_TRANSITION in kwargs:
-            message["transition"] = int(kwargs[ATTR_TRANSITION])
+            message["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_BRIGHTNESS in kwargs:
             message["brightness"] = int(kwargs[ATTR_BRIGHTNESS])
@@ -218,7 +222,7 @@ class MqttJson(Light):
         message = {"state": "OFF"}
 
         if ATTR_TRANSITION in kwargs:
-            message["transition"] = int(kwargs[ATTR_TRANSITION])
+            message["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.publish(self._hass, self._topic["command_topic"],
                      json.dumps(message), self._qos, self._retain)

@@ -201,3 +201,73 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual((75, 75, 75), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
+
+    def test_flash_short_and_long(self):
+        """Test for flash length being sent when included."""
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'flash_time_short': 5,
+                'flash_time_long': 15,
+                'qos': 0
+            }
+        })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', flash="short")
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('test_light_rgb/set',
+                         self.mock_publish.mock_calls[-1][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+        # Get the sent message
+        message_json = json.loads(self.mock_publish.mock_calls[-1][1][1])
+        self.assertEqual(5, message_json["flash"])
+        self.assertEqual("ON", message_json["state"])
+
+        light.turn_on(self.hass, 'light.test', flash="long")
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('test_light_rgb/set',
+                         self.mock_publish.mock_calls[-1][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+        # Get the sent message
+        message_json = json.loads(self.mock_publish.mock_calls[-1][1][1])
+        self.assertEqual(15, message_json["flash"])
+        self.assertEqual("ON", message_json["state"])
+
+    def test_transition(self):
+        """Test for transition time being sent when included."""
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'qos': 0
+            }
+        })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+        light.turn_on(self.hass, 'light.test', transition=10)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual('test_light_rgb/set',
+                         self.mock_publish.mock_calls[-1][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+        # Get the sent message
+        message_json = json.loads(self.mock_publish.mock_calls[-1][1][1])
+        self.assertEqual(10, message_json["transition"])
+        self.assertEqual("ON", message_json["state"])
