@@ -239,6 +239,8 @@ def template(value):
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid('template value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('template value should be a string')
 
     value = str(value)
     try:
