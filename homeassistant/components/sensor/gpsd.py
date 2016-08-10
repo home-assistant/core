@@ -1,28 +1,22 @@
 """
 Support for GPSD.
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/gpsd/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.gpsd/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
+                                 CONF_HOST, CONF_PORT, CONF_PLATFORM,
+                                 CONF_NAME)
 
 REQUIREMENTS = ['gps3==0.33.2']
 
-DOMAIN = "gpsd"
-ENTITY_ID = "{}.gps".format(DOMAIN)
-
-CONF_HOST = 'host'
-CONF_PORT = 'port'
+DEFAULT_NAME = 'GPS'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 2947
 
@@ -32,21 +26,21 @@ ATTR_SPEED = 'speed'
 ATTR_CLIMB = 'climb'
 ATTR_MODE = 'mode'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'gpsd',
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup(hass, config):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the GPSD component."""
-    conf = config[DOMAIN]
-    host = util.convert(conf.get(CONF_HOST), str, DEFAULT_HOST)
-    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
+    name = config.get(CONF_NAME, DEFAULT_NAME)
+    host = config.get(CONF_HOST, DEFAULT_HOST)
+    port = config.get(CONF_PORT, DEFAULT_PORT)
 
     # Will hopefully be possible with the next gps3 update
     # https://github.com/wadda/gps3/issues/11
@@ -65,25 +59,21 @@ def setup(hass, config):
         sock.shutdown(2)
         _LOGGER.debug('Connection to GPSD possible')
     except socket.error:
-        _LOGGER.warning('Not able to connect to GPSD')
+        _LOGGER.error('Not able to connect to GPSD')
         return False
 
-    gpsd = Gpsd(hass, host, port)
-    gpsd.point_in_time_listener(dt_util.utcnow())
-
-    return True
+    add_devices([GpsdSensor(hass, name, host, port)])
 
 
-class Gpsd(Entity):
+class GpsdSensor(Entity):
     """Representation of a GPS receiver available via GPSD."""
 
-    entity_id = ENTITY_ID
-
-    def __init__(self, hass, host, port):
-        """Initialize the GPSD."""
+    def __init__(self, hass, name, host, port):
+        """Initialize the GPSD sensor."""
         from gps3.agps3threaded import AGPS3mechanism
 
         self.hass = hass
+        self._name = name
         self._host = host
         self._port = port
 
@@ -94,7 +84,7 @@ class Gpsd(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "GPS"
+        return self._name
 
     # pylint: disable=no-member
     @property
@@ -109,7 +99,7 @@ class Gpsd(Entity):
 
     @property
     def state_attributes(self):
-        """Return the state attributes of GPS."""
+        """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
             ATTR_LONGITUDE: self.agps_thread.data_stream.lon,
@@ -119,12 +109,3 @@ class Gpsd(Entity):
             ATTR_CLIMB: self.agps_thread.data_stream.climb,
             ATTR_MODE: self.agps_thread.data_stream.mode,
         }
-
-    def point_in_time_listener(self, now):
-        """Called when the state needs an update."""
-        self.update_ha_state()
-
-        # Schedule next update at next_change+10 second
-        track_point_in_utc_time(
-            self.hass, self.point_in_time_listener,
-            now + timedelta(seconds=10))
