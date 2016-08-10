@@ -232,7 +232,7 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            _mount_local_lib_path(config_dir)
+            mount_local_lib_path(config_dir)
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -300,7 +300,7 @@ def from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    _mount_local_lib_path(config_dir)
+    mount_local_lib_path(config_dir)
 
     enable_logging(hass, verbose, log_rotate_days)
 
@@ -371,11 +371,6 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
         loader.prepare(hass)
 
 
-def _mount_local_lib_path(config_dir: str) -> None:
-    """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'deps'))
-
-
 def _log_exception(ex, domain, config):
     """Generate log exception for config validation."""
     message = 'Invalid config for [{}]: '.format(domain)
@@ -391,3 +386,11 @@ def _log_exception(ex, domain, config):
                                          config.__line__ or '?')
 
     _LOGGER.error(message)
+
+
+def mount_local_lib_path(config_dir: str) -> str:
+    """Add local library to Python Path."""
+    deps_dir = os.path.join(config_dir, 'deps')
+    if deps_dir not in sys.path:
+        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    return deps_dir
