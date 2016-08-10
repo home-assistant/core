@@ -197,6 +197,7 @@ omit =
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
+    homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/forecast.py
