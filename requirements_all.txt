@@ -229,6 +229,9 @@ pexpect==4.0.1
 # homeassistant.components.light.hue
 phue==0.8
 
+# homeassistant.components.pilight
+pilight==0.0.2
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==2.0.2
