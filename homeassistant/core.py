@@ -19,6 +19,7 @@ from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
@@ -571,7 +572,8 @@ class Service(object):
             self.func(call)
         except vol.MultipleInvalid as ex:
             _LOGGER.error('Invalid service data for %s.%s: %s',
-                          call.domain, call.service, ex)
+                          call.domain, call.service,
+                          humanize_error(call.data, ex))
 
 
 # pylint: disable=too-few-public-methods
