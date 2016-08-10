@@ -1,134 +1,172 @@
 """Script to ensure a configuration file exists."""
 import argparse
 import os
-import glob
-# from typing import Optional, Dict
+import re
+from glob import glob
+import logging
+from typing import List
+import pprint
 from unittest.mock import patch
-import importlib
+from textwrap import fill
+from collections import OrderedDict
 
 import homeassistant.bootstrap as bootstrap
 import homeassistant.config as config_util
-import homeassistant.util.yaml as yaml_util
+# import homeassistant.util.yaml as yaml_util
 import homeassistant.loader as loader
+import homeassistant.util.yaml as yaml
 
-REQUIREMENTS = ['yamllint>1,<2']
+REQUIREMENTS = ['colorlog>2.1<3', 'colorama<=1']
+SHOW_FILES = True
+SHOW_SECRETS = True
+SHOW_FULL_CONFIG = True
+_LOGGER = logging.getLogger(__name__)
 
 
-def run(args):
+# pylint: disable=too-many-locals,too-many-branches
+def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
+    # Color support
+    from colorama import init, Fore, Style
+    init()
+
+    def color(*args, c=Style.BRIGHT):  # pylint: disable=invalid-name
+        """Color helper."""
+        return c + ' '.join(args) + Style.RESET_ALL
+
     parser = argparse.ArgumentParser(
-        description=("Ensure a Home Assistant config exists, "
-                     "creates one if necessary."))
+        description=("Check Home Assistant configuration."))
     parser.add_argument(
         '-c', '--config',
-        metavar='path_to_config_dir',
+        # metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
-        '--lint', default=False,
-        help="Execute Yamllint")
+        '--script', choices=['check_config'])
     parser.add_argument(
-        '--script',
-        choices=['check_config'])
+        '--verbose', default=False)
 
-    args = parser.parse_args(args)
+    args = parser.parse_args()
 
     config_dir = os.path.join(os.getcwd(), args.config)
-    # Test if configuration directory exists
-    if not os.path.isdir(config_dir):
-        print('Config directory does not exist:', config_dir)
+    config_path = os.path.join(config_dir, 'configuration.yaml')
+    if not os.path.isfile(config_path):
+        print('Config does not exist:', config_path)
         return 1
 
-    yaml_files = ['-c', os.path.splitext(__file__)[0] + '.yaml']
-    yaml_files.extend(glob.glob(os.path.join(config_dir, '*.yaml')))
-    # Python 3.5 gets a recursive, but not in 3.4
-    yaml_files.extend(glob.glob(os.path.join(config_dir, '*/*.yaml')))
+    print(color("Testing configuration at", config_dir))
 
-    if args.lint:
-        _yaml_ordereddict(False)  # Does not like Ordereddicts
-        import yamllint.cli
-        yamllint.cli.run(yaml_files)
+    res = check(config_path)
 
-    # Normal loading
-    config_path = config_util.ensure_config_exists(config_dir)
-    print("Normal setup", config_path)
-    _yaml_ordereddict(True)
+    if SHOW_FILES:  # Show Files
+        print(color('yaml files'), '(used /',
+              color('not used', c=Fore.RED)+')')
+        # Python 3.5 gets a recursive, but not in 3.4
+        for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
+                          glob(os.path.join(config_dir, '*/*.yaml'))):
+            the_color = '' if yfn in res['yaml_files'] else Fore.RED
+            print(color('-', yfn, c=the_color))
 
-    component_list = []
+    # pylint: disable=too-many-nested-blocks
+    if SHOW_FULL_CONFIG:
+        re_keys = re.compile(r"'([^']+)':")
 
-    # @patch("homeassistant.bootstrap._setup_component", return_value=True)
-    # @patch("component.setup", return_value=True)
+        def indent(item, indent0, indent1):
+            """Return indented text."""
+            return re_keys.sub(color(r'\1')+':',
+                               fill(pprint.pformat(item),
+                                    initial_indent=indent0,
+                                    subsequent_indent=indent1))
 
-    patchers = []
+        def printlist(obj, level=0, pref=''):
+            """Printlist."""
+            indent1 = level * ' '
+            indent0 = pref.rjust(level)
+            if isinstance(obj, list):
+                for ob0 in obj:
+                    printlist(ob0, level+2, '- ')
+            # elif isinstance(obj, dict):
+            #    for key0, val0 in obj.items():
+            #        printlist(val0, indent00 + key0 + ':' , indent1)
+            else:
+                print(indent(obj, indent0, indent1))
 
-    def cc_loader_get_component(comp_name):
-        """A custom homeassistant.loader.get_component function.
-
-        Follows similar logic to homeassistant.loader.get_component() to load
-        the module and then fakes the setup(hass, config) method.
-
-        potential_paths is required for the patching and not exposed in any
-        way by the original method
-        """
-        potential_paths = ['custom_components.{}'.format(comp_name),
-                           'homeassistant.components.{}'.format(comp_name)]
-        for path in potential_paths:
-            root_comp = path.rsplit(".", 1)[0] if '.' in comp_name else path
-            if root_comp not in loader.AVAILABLE_COMPONENTS:
+        components = deep_convert_dict(res['components'])
+        for name, config in components:
+            if config is None:
                 continue
-            try:
-                module = importlib.import_module(path)
-                if module.__spec__.origin == 'namespace':
-                    continue
-
-                # Patch it and return
-                def fake_setup(hass, config):
-                    """Fake setup, only record the component name."""
-                    # pylint: disable=cell-var-from-loop
-                    print('fake_setup:', path)
-                    component_list.append(path)
-                    # print('fake_setup:', path, str(config)[:80])
-                    return True
-
-                if hasattr(module, 'setup'):
-                    patcher = patch(path + '.setup', side_effect=fake_setup)
-                    patcher.start()
-                    patchers.append(patcher)
-
-                return module
-            except ImportError:
-                pass
-        return False
-
-    @patch("homeassistant.loader.get_component",
-           side_effect=cc_loader_get_component)
-    def load_all_the_config(*mocks):
-        """Load the configs with appropriate patching."""
-        print('mock start')
-        bootstrap.from_config_file(config_path)
-        print('Load complete')
-
-        for mock in reversed(mocks):
-            print(len(mock.call_args_list))
-
-    load_all_the_config()
+            print(color(name + ':'))
+            printlist(config, 2, '')
 
     return 0
 
 
-def _yaml_ordereddict(enable):
-    """Control patching of yaml for OrderedDicts."""
-    import yaml
-    from yaml import constructor
-    # pylint: disable=protected-access
-    yaml.SafeLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-        yaml_util._ordered_dict if enable else
-        constructor.SafeConstructor.construct_yaml_map)
+def check(config_path):
+    """Perform a check by mocking hass load functions."""
+    # List of components/platforms
+    components = []
+    yaml_files = {}
+    secrets = {}
+
+    original_get_component = loader.get_component
+    original_load_yaml = yaml.load_yaml
+
+    def mock_load_yaml(filename):
+        """Mock hass.util.load_yaml to save config files."""
+        yaml_files[filename] = True
+        return original_load_yaml(filename)
+
+    def mock_get_component(comp_name):
+        """Mock hass.loader.get_component to replace setup & setup_platform."""
+        def mock_setup(*kwargs):
+            """Mock setup, only record the component name & config."""
+            # pylint: disable=cell-var-from-loop
+            components.append((comp_name, kwargs[1].get(comp_name)))
+            return True
+
+        module = original_get_component(comp_name)
+        # Test if platform/component. Also: '.' in comp_name = platform
+        if hasattr(module, 'setup'):
+            module.setup = mock_setup
+        if hasattr(module, 'setup_platform'):
+            module.setup_platform = mock_setup
+
+        module.setup_platform = mock_setup
+        return module
+
+    @patch("homeassistant.util.yaml.load_yaml",
+           side_effect=mock_load_yaml)
+    @patch("homeassistant.loader.get_component",
+           side_effect=mock_get_component)
+    def load_all_the_config(*mocks):
+        """Load the configs with appropriate patching."""
+        # Remove black & white logger, will be replace by hass logger
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+        # Ensure we skip pip for speed
+        bootstrap.from_config_file(config_path, skip_pip=True)
+
+        _LOGGER.info('Load complete')
+
+        for mock, func in zip(reversed(mocks), ['load_yaml', 'get_component']):
+            if len(mock.call_args_list) == 0:
+                _LOGGER.warning('Function %s never called', func)
+
+    load_all_the_config()
+
+    return {'yaml_files': yaml_files,
+            'secrets': secrets,
+            'components': components}
 
 
-# def test_setup_component(hass: core.HomeAssistant, domain: str,
-#                          config: Optional[Dict]=None) -> bool:
-#
-#    print("setup domain:", domain)
-#    return True
+def deep_convert_dict(layer):
+    """Convert an ordereddict to dict."""
+    to_ret = layer
+    if isinstance(layer, OrderedDict):
+        to_ret = dict(layer)
+    try:
+        for key, value in to_ret.items():
+            to_ret[key] = deep_convert_dict(value)
+    except AttributeError:
+        pass
+    return to_ret
