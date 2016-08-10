@@ -6,18 +6,12 @@ import sqlite3
 import sys
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-try:
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-except ImportError:
-    print('Fatal Error: SQLAlchemy is missing. Install it with '
-          '"pip3 install SQLAlchemy" before running this script')
-    sys.exit(1)
-from homeassistant.components.recorder import models
 import homeassistant.config as config_util
 import homeassistant.util.dt as dt_util
+# pylint: disable=unused-import
+from homeassistant.components.recorder import REQUIREMENTS  # NOQA
 
 
 def ts_to_dt(timestamp: Optional[float]) -> Optional[datetime]:
@@ -53,9 +47,13 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
         print("\n")
 
 
-def run(args) -> int:
+def run(script_args: List) -> int:
     """The actual script body."""
     # pylint: disable=too-many-locals,invalid-name,too-many-statements
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from homeassistant.components.recorder import models
+
     parser = argparse.ArgumentParser(
         description="Migrate legacy DB to SQLAlchemy format.")
     parser.add_argument(
@@ -120,7 +118,7 @@ def run(args) -> int:
 
     c = conn.cursor()
     n = 0
-    for row in c.execute("SELECT * FROM recorder_runs"):
+    for row in c.execute("SELECT * FROM recorder_runs"):  # type: ignore
         n += 1
         session.add(models.RecorderRuns(
             start=ts_to_dt(row[1]),
@@ -145,7 +143,7 @@ def run(args) -> int:
 
     c = conn.cursor()
     n = 0
-    for row in c.execute("SELECT * FROM events"):
+    for row in c.execute("SELECT * FROM events"):  # type: ignore
         n += 1
         o = models.Events(
             event_type=row[1],
@@ -173,7 +171,7 @@ def run(args) -> int:
 
     c = conn.cursor()
     n = 0
-    for row in c.execute("SELECT * FROM states"):
+    for row in c.execute("SELECT * FROM states"):  # type: ignore
         n += 1
         session.add(models.States(
             entity_id=row[1],

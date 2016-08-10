@@ -2,6 +2,8 @@
 import argparse
 import importlib
 import os
+import sys
+import logging
 from typing import List
 
 from homeassistant.config import get_default_config_dir
@@ -35,6 +37,8 @@ def run(args: List) -> int:
 
     config_dir = extract_config_dir()
     deps_dir = mount_local_lib_path(config_dir)
+
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     for req in getattr(script, 'REQUIREMENTS', []):
         if not install_package(req, target=deps_dir):
             print('Aborting scipt, could not install dependency', req)
