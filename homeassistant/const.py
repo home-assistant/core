@@ -183,6 +183,21 @@ ATTR_GPS_ACCURACY = 'gps_accuracy'
 # If state is assumed
 ATTR_ASSUMED_STATE = 'assumed_state'
 
+# A device manufacturer
+ATTR_DEVICE_MANUFACTURER = 'device_manufacturer'
+
+# A device model
+ATTR_DEVICE_MODEL = 'device_model'
+
+# A device description
+ATTR_DEVICE_DESCRIPTION = 'device_description'
+
+# A device serial number or other globally unique identifier
+ATTR_DEVICE_SERIAL_NUMBER = 'device_serial_number'
+
+# A device version
+ATTR_DEVICE_VERSION = 'device_version'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
 SERVICE_HOMEASSISTANT_RESTART = "restart"
