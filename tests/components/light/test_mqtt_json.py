@@ -108,9 +108,9 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         # Turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',
-                          '{"state":"ON",'
-                          + '"color":{"r":255,"g":255,"b":255},'
-                          + '"brightness":255}'
+                          '{"state":"ON",' +
+                          '"color":{"r":255,"g":255,"b":255},' +
+                          '"brightness":255}'
                           )
         self.hass.pool.block_till_done()
 
@@ -127,8 +127,8 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
-                          '{"state":"ON",'
-                          + '"brightness":100}'
+                          '{"state":"ON",' +
+                          '"brightness":100}'
                           )
         self.hass.pool.block_till_done()
 
@@ -138,8 +138,8 @@ class TestLightMQTTJSON(unittest.TestCase):
                          light_state.attributes['brightness'])
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
-                          '{"state":"ON",'
-                          + '"color":{"r":125,"g":125,"b":125}}'
+                          '{"state":"ON",' +
+                          '"color":{"r":125,"g":125,"b":125}}'
                           )
         self.hass.pool.block_till_done()
 
