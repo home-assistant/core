@@ -271,3 +271,61 @@ class TestLightMQTTJSON(unittest.TestCase):
         message_json = json.loads(self.mock_publish.mock_calls[-1][1][1])
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("ON", message_json["state"])
+
+    def test_invalid_color_and_brightness_values(self):
+        """Test that invalid color/brightness values are ignored."""
+        self.hass.config.components = ['mqtt']
+        assert _setup_component(self.hass, light.DOMAIN, {
+            light.DOMAIN: {
+                'platform': 'mqtt_json',
+                'name': 'test',
+                'state_topic': 'test_light_rgb',
+                'command_topic': 'test_light_rgb/set',
+                'brightness': True,
+                'rgb': True,
+                'qos': '0'
+            }
+        })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('rgb_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        # Turn on the light
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",' +
+                          '"color":{"r":255,"g":255,"b":255},' +
+                          '"brightness": 255}'
+                          )
+        self.hass.pool.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual(255, state.attributes.get('brightness'))
+
+        # Bad color values
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",' +
+                          '"color":{"r":"bad","g":"val","b":"test"}}'
+                          )
+        self.hass.pool.block_till_done()
+
+        # Color should not have changed
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+
+        # Bad brightness values
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",' +
+                          '"brightness": "badValue"}'
+                          )
+        self.hass.pool.block_till_done()
+
+        # Brightness should not have changed
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(255, state.attributes.get('brightness'))
