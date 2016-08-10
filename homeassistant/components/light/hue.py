@@ -15,13 +15,17 @@ from urllib.parse import urlparse
 import homeassistant.util as util
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, Light)
-from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP,
+    EFFECT_RANDOM, FLASH_LONG, FLASH_SHORT, Light)
+from homeassistant.const import (CONF_FILENAME, CONF_HOST,
+                                 DEVICE_DEFAULT_NAME, ATTR_DEVICE_MANUFACTURER,
+                                 ATTR_DEVICE_MODEL, ATTR_DEVICE_DESCRIPTION,
+                                 ATTR_DEVICE_SERIAL_NUMBER,
+                                 ATTR_DEVICE_VERSION)
 from homeassistant.loader import get_component
 
-REQUIREMENTS = ['phue==0.8']
+REQUIREMENTS = ["phue==0.8"]
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -217,6 +221,22 @@ class HueLight(Light):
     def color_temp(self):
         """Return the CT color value."""
         return self.info['state'].get('ct')
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+        return {
+            ATTR_DEVICE_MANUFACTURER: self.info['manufacturername'],
+            ATTR_DEVICE_MODEL: self.info['modelid'],
+            ATTR_DEVICE_DESCRIPTION: self.info['type'],
+            ATTR_DEVICE_SERIAL_NUMBER: self.info['uniqueid'],
+            ATTR_DEVICE_VERSION: self.info['swversion']
+        }
+
+    @property
+    def available(self):
+        """Return true if device is available."""
+        return self.info['state']['reachable']
 
     @property
     def is_on(self):
