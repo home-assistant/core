@@ -44,16 +44,19 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def send_message(hass, message, title=None):
+def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
-    data = {
+    info = {
         ATTR_MESSAGE: message
     }
 
     if title is not None:
-        data[ATTR_TITLE] = title
+        info[ATTR_TITLE] = title
 
-    hass.services.call(DOMAIN, SERVICE_NOTIFY, data)
+    if data is not None:
+        info[ATTR_DATA] = data
+
+    hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
 
 
 def setup(hass, config):
