@@ -592,8 +592,3 @@ class ZWaveDeviceEntity:
             attrs[ATTR_DEVICE_VERSION] = version
 
         return attrs
-
-    @property
-    def available(self):
-        """Return true if device is available."""
-        return self._value.node.is_ready
