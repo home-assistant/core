@@ -131,4 +131,7 @@ class SnmpData(object):
                           errindex and restable[-1][int(errindex) - 1] or '?')
         else:
             for resrow in restable:
-                self.value = resrow[-1]
+                try:
+                    self.value = float(resrow[-1])
+                except (ValueError, TypeError):
+                    self.value = resrow[-1]
