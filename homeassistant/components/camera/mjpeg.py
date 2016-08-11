@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def extract_image_from_mjpeg(stream):
-    """Take in a mjpeg stream object, return the jpg from it."""
+    """Take in a MJPEG stream object, return the jpg from it."""
     data = b''
     for chunk in stream:
         data += chunk

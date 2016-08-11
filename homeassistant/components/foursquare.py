@@ -40,7 +40,7 @@ DEPENDENCIES = ["http"]
 
 
 def setup(hass, config):
-    """Setup the notify services."""
+    """Setup the Foursquare component."""
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), "services.yaml"))
 
