@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add MQTT JSON Light."""
+    """Setup a MQTT JSON Light."""
     add_devices_callback([MqttJson(
         hass,
         config[CONF_NAME],
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class MqttJson(Light):
-    """MQTT JSON light."""
+    """Representation of a MQTT JSON light."""
 
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, hass, name, topic, qos, retain,

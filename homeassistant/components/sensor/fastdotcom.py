@@ -24,7 +24,7 @@ CONF_DAY = 'day'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Speedtest sensor."""
+    """Setup the Fast.com sensor."""
     data = SpeedtestData(hass, config)
     sensor = SpeedtestSensor(data)
     add_devices([sensor])
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 # pylint: disable=too-few-public-methods
 class SpeedtestSensor(Entity):
-    """Implementation of a speedtest.net sensor."""
+    """Implementation of a FAst.com sensor."""
 
     def __init__(self, speedtest_data):
         """Initialize the sensor."""

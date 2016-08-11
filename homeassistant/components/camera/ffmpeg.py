@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 class FFmpegCamera(Camera):
-    """An implementation of an IP camera that is reachable over a URL."""
+    """An implementation of an FFmpeg camera."""
 
     def __init__(self, config):
         """Initialize a FFmpeg camera."""
