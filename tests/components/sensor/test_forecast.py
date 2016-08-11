@@ -13,7 +13,7 @@ from homeassistant import core as ha
 from tests.common import load_fixture
 
 
-class TestForecastSetup(unittest.TestCase):
+class TestForecast(unittest.TestCase):
     """Test the forecast.io platform."""
 
     def setUp(self):
@@ -59,3 +59,10 @@ class TestForecastSetup(unittest.TestCase):
         forecast.setup_platform(self.hass, self.config, MagicMock())
         self.assertTrue(mock_get_forecast.called)
         self.assertEqual(mock_get_forecast.call_count, 1)
+
+    def test_weather_icons(self):
+        """Test weather icons for frontend display."""
+        icon_entity = forecast.ForeCastSensor(MagicMock(), "icon")
+        for state, icon in forecast.ICONS.items():
+            icon_entity._state = state
+            self.assertEqual(icon_entity.entity_picture, icon)

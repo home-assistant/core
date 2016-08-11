@@ -46,6 +46,19 @@ SENSOR_TYPES = {
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
 }
 
+ICONS = {
+    'clear-day': 'mdi:weather-sunny',
+    'clear-night': 'mdi:weather-night',
+    'rain': 'mdi:weather-rainy',
+    'snow': 'mdi:weather-snowy',
+    'sleet': 'mid:weather-snowy-rainy',
+    'wind': 'mdi:weather-windy',
+    'fog': 'mdi:weather-fog',
+    'cloudy': 'mdi:weather-cloudy',
+    'partly-cloudy-day': 'mdi:weather-partlycloudy',
+    'partly-cloudy-night': 'mdi:weather-cloudy',  # Needs night variant
+}
+
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
@@ -113,6 +126,13 @@ class ForeCastSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        if self.type == 'icon' and self._state in ICONS:
+            return ICONS[self._state]
+        return None
 
     @property
     def unit_of_measurement(self):
