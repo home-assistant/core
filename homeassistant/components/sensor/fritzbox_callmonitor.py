@@ -4,7 +4,6 @@ A sensor to monitor incoming and outgoing phone calls on a Fritz!Box router.
 To activate the call monitor on your Fritz!Box, dial #96*5* from any phone
 connected to it.
 """
-
 import logging
 import socket
 import threading
@@ -43,11 +42,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return True
 
 
+# pylint: disable=too-few-public-methods
 class FritzBoxCallSensor(Entity):
-    """Implementation of a Fritz!Box call monitor"""
+    """Implementation of a Fritz!Box call monitor."""
 
     def __init__(self, name):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         self._state = VALUE_DEFAULT
         self._attributes = {}
         self._name = name
@@ -81,6 +81,7 @@ class FritzBoxCallSensor(Entity):
         return self._attributes
 
 
+# pylint: disable=too-few-public-methods
 class FritzBoxCallMonitor(object):
     """Event listener to monitor calls on the Fritz!Box."""
 
@@ -103,7 +104,7 @@ class FritzBoxCallMonitor(object):
                           self.host, self.port, err)
 
     def _listen(self):
-        """listen to incoming or outgoing calls."""
+        """Listen to incoming or outgoing calls."""
         buf = ""
         while True:
             data = self.sock.recv(2048)
