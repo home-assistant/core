@@ -24,6 +24,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
+CONF_MASTER_SWITCH = 'master_switch'
 
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
@@ -42,6 +43,7 @@ _SINGLE_GROUP_CONFIG = vol.Schema(vol.All(_conf_preprocess, {
     CONF_VIEW: bool,
     CONF_NAME: str,
     CONF_ICON: cv.icon,
+    CONF_MASTER_SWITCH: bool,
 }))
 
 
@@ -147,9 +149,10 @@ def setup(hass, config):
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
+        master_switch = conf.get(CONF_MASTER_SWITCH)
 
         Group(hass, name, entity_ids, icon=icon, view=view,
-              object_id=object_id)
+              master_switch=master_switch, object_id=object_id)
 
     return True
 
@@ -159,7 +162,7 @@ class Group(Entity):
 
     # pylint: disable=too-many-instance-attributes, too-many-arguments
     def __init__(self, hass, name, entity_ids=None, user_defined=True,
-                 icon=None, view=False, object_id=None):
+                 icon=None, view=False, master_switch=True, object_id=None):
         """Initialize a group."""
         self.hass = hass
         self._name = name
@@ -168,6 +171,7 @@ class Group(Entity):
         self._user_defined = user_defined
         self._icon = icon
         self._view = view
+        self._master_switch = master_switch
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
         self.tracking = []
@@ -282,6 +286,11 @@ class Group(Entity):
             gr_state = self._state
             gr_on = self.group_on
             gr_off = self.group_off
+
+            # User has opted out of group state
+            if not self._master_switch:
+                self.group_on, self.group_off = None, None
+                return
 
             # We have not determined type of group yet
             if gr_on is None:
