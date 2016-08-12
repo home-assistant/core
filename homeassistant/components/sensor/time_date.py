@@ -5,12 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.time_date/
 """
 import logging
-
 from datetime import timedelta
+
+import voluptuous as vol
+
+from homeassistant.const import CONF_PLATFORM
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+TIME_STR_FORMAT = "%H:%M"
+CONF_DISPLAY_OPTIONS = 'display_options'
+
 OPTION_TYPES = {
     'time': 'Time',
     'date': 'Date',
@@ -20,7 +25,13 @@ OPTION_TYPES = {
     'time_utc': 'Time (UTC)',
 }
 
-TIME_STR_FORMAT = "%H:%M"
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'time_date',
+    vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
+        [vol.In(OPTION_TYPES.keys())],
+})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     dev = []
-    for variable in config['display_options']:
+    for variable in config[CONF_DISPLAY_OPTIONS]:
         if variable not in OPTION_TYPES:
             _LOGGER.error('Option type: "%s" does not exist', variable)
         else:
