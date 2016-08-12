@@ -131,7 +131,11 @@ def setup(hass, config):
         # Log RFXCOM event
         if not event.device.id_string:
             return
-        _LOGGER.info("Receive RFXCOM event from %s", event.device)
+        _LOGGER.info("Receive RFXCOM event from "
+                     "(Device_id: %s Class: %s Sub: %s)",
+                     slugify(event.device.id_string.lower()),
+                     event.device.__class__.__name__,
+                     event.device.subtype)
 
         # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
@@ -237,7 +241,7 @@ def apply_received_command(event):
         return
 
     _LOGGER.debug(
-        "EntityID: %s device_update. Command: %s",
+        "Device_id: %s device_update. Command: %s",
         device_id,
         event.values['Command']
     )
