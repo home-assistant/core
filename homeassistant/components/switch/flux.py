@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update lights."""
         flux.flux_update()
 
-    hass.services.register(DOMAIN, 'flux_update', update)
+    hass.services.register(DOMAIN, name + '_update', update)
 
 
 # pylint: disable=too-many-instance-attributes
