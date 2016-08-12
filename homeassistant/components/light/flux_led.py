@@ -112,14 +112,15 @@ class FluxLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
+        if not self.is_on:
+            self._bulb.turnOn()
+
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if rgb:
             self._bulb.setRgb(*tuple(rgb))
         elif brightness:
             self._bulb.setWarmWhite255(brightness)
-        else:
-            self._bulb.turnOn()
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
