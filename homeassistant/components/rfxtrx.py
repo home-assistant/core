@@ -218,13 +218,14 @@ def get_new_device(event, config, device):
     if not config[ATTR_AUTOMATIC_ADD]:
         return
 
+    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     _LOGGER.info(
-        "Automatic add %s rfxtrx device (Class: %s Sub: %s)",
+        "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
         device_id,
         event.device.__class__.__name__,
-        event.device.subtype
+        event.device.subtype,
+        pkt_id
     )
-    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
