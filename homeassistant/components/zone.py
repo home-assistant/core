@@ -27,7 +27,10 @@ ATTR_PASSIVE = 'passive'
 DEFAULT_PASSIVE = False
 
 ICON_HOME = 'mdi:home'
+ICON_IMPORT = 'mdi:import'
 
+entities = set()
+_LOGGER = logging.getLogger(__name__)
 
 def active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude."""
@@ -70,7 +73,6 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 def setup(hass, config):
     """Setup zone."""
-    entities = set()
 
     for key in extract_domain_configs(config, DOMAIN):
         entries = config[key]
@@ -90,7 +92,7 @@ def setup(hass, config):
                     'Each zone needs a latitude and longitude.')
                 continue
 
-            zone = Zone(hass, name, latitude, longitude, radius, icon, passive)
+            zone = Zone(hass, name, latitude, longitude, radius, icon, passive, False)
             zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
                                                 entities)
             zone.update_ha_state()
@@ -98,18 +100,30 @@ def setup(hass, config):
 
     if ENTITY_ID_HOME not in entities:
         zone = Zone(hass, hass.config.location_name, hass.config.latitude,
-                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False)
+                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 
     return True
 
+# Add a zone to the existing set
+def add_zone(hass, name, latitude, longitude, radius):
+    _LOGGER.info("Adding new zone %s", name)
+    if name not in entities:
+        zone = Zone(hass, name, latitude, longitude, radius, ICON_IMPORT,
+                    False, True)
+        zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
+                            entities)
+        zone.update_ha_state()
+        entities.add(zone.entity_id)
+    else:
+        _LOGGER.info("Zone already exists")
 
 class Zone(Entity):
     """Representation of a Zone."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, latitude, longitude, radius, icon, passive):
+    def __init__(self, hass, name, latitude, longitude, radius, icon, passive, imported):
         """Initialize the zone."""
         self.hass = hass
         self._name = name
@@ -118,6 +132,7 @@ class Zone(Entity):
         self._radius = radius
         self._icon = icon
         self._passive = passive
+        self._imported = imported
 
     @property
     def name(self):
