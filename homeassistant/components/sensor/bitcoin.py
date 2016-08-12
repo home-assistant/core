@@ -7,11 +7,15 @@ https://home-assistant.io/components/sensor.bitcoin/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
+from homeassistant.const import CONF_PLATFORM
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blockchain==1.3.3']
-_LOGGER = logging.getLogger(__name__)
+
 OPTION_TYPES = {
     'exchangerate': ['Exchange rate (1 BTC)', None],
     'trade_volume_btc': ['Trade volume', 'BTC'],
@@ -36,16 +40,27 @@ OPTION_TYPES = {
     'market_price_usd': ['Market price', 'USD']
 }
 ICON = 'mdi:currency-btc'
+CONF_CURRENCY = 'currency'
+CONF_DISPLAY_OPTIONS = 'display_options'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'bitcoin',
+    vol.Optional(CONF_CURRENCY, default='USD'): cv.string,
+    vol.Required(CONF_DISPLAY_OPTIONS, default=[]):
+        [vol.In(OPTION_TYPES.keys())],
+})
+
+_LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Bitcoin sensors."""
     from blockchain import exchangerates
 
-    currency = config.get('currency', 'USD')
+    currency = config.get(CONF_CURRENCY)
 
     if currency not in exchangerates.get_ticker():
         _LOGGER.error('Currency "%s" is not available. Using "USD"', currency)
@@ -53,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = BitcoinData()
     dev = []
-    for variable in config['display_options']:
+    for variable in config[CONF_DISPLAY_OPTIONS]:
         if variable not in OPTION_TYPES:
             _LOGGER.error('Option type: "%s" does not exist', variable)
         else:
