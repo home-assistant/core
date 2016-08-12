@@ -4,8 +4,15 @@ Support for the Twitch stream status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.twitch/
 """
-from homeassistant.helpers.entity import Entity
+import logging
 
+import voluptuous as vol
+
+from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_PLATFORM
+import homeassistant.helpers.config_validation as cv
+
+CONF_CHANNELS = 'channels'
 STATE_STREAMING = 'streaming'
 STATE_OFFLINE = 'offline'
 ATTR_GAME = 'game'
@@ -14,6 +21,13 @@ ICON = 'mdi:twitch'
 
 REQUIREMENTS = ['python-twitch==1.3.0']
 DOMAIN = 'twitch'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'twitch',
+    vol.Required(CONF_CHANNELS, default=[]): cv.string,
+})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
