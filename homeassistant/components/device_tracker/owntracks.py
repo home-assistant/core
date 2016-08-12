@@ -12,6 +12,7 @@ from collections import defaultdict
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
 from homeassistant.util import convert, slugify
+from homeassistant.components import zone
 
 DEPENDENCIES = ['mqtt']
 
@@ -22,17 +23,19 @@ BEACON_DEV_ID = 'beacon'
 
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
+WAYPOINT_TOPIC = 'owntracks/{}/+/waypoint'
 
 _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-
+CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
+    waypoint_import_user = config.get(CONF_WAYPOINT_IMPORT_USER)
 
     def validate_payload(payload, data_type):
         """Validate OwnTracks payload."""
@@ -47,17 +50,18 @@ def setup_scanner(hass, config, see):
                           'because of missing or malformatted data: %s',
                           data_type, data)
             return None
-        if max_gps_accuracy is not None and \
-                convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
-            _LOGGER.debug('Skipping %s update because expected GPS '
-                          'accuracy %s is not met: %s',
-                          data_type, max_gps_accuracy, data)
-            return None
-        if convert(data.get('acc'), float, 1.0) == 0.0:
-            _LOGGER.debug('Skipping %s update because GPS accuracy'
-                          'is zero',
-                          data_type)
-            return None
+        if data_type != 'waypoints':
+            if max_gps_accuracy is not None and \
+                    convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
+                _LOGGER.debug('Skipping %s update because expected GPS '
+                              'accuracy %s is not met: %s',
+                              data_type, max_gps_accuracy, data)
+                return None
+            if convert(data.get('acc'), float, 1.0) == 0.0:
+                _LOGGER.debug('Skipping %s update because GPS accuracy'
+                              'is zero',
+                              data_type)
+                return None
 
         return data
 
@@ -105,9 +109,9 @@ def setup_scanner(hass, config, see):
 
         def enter_event():
             """Execute enter event."""
-            zone = hass.states.get("zone.{}".format(location))
+            _zone = hass.states.get("zone.{}".format(location))
             with LOCK:
-                if zone is None and data.get('t') == 'b':
+                if _zone is None and data.get('t') == 'b':
                     # Not a HA zone, and a beacon so assume mobile
                     beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                     if location not in beacons:
@@ -119,7 +123,7 @@ def setup_scanner(hass, config, see):
                     if location not in regions:
                         regions.append(location)
                     _LOGGER.info("Enter region %s", location)
-                    _set_gps_from_zone(kwargs, location, zone)
+                    _set_gps_from_zone(kwargs, location, _zone)
 
                 see(**kwargs)
                 see_beacons(dev_id, kwargs)
@@ -134,8 +138,8 @@ def setup_scanner(hass, config, see):
 
                 if new_region:
                     # Exit to previous region
-                    zone = hass.states.get("zone.{}".format(new_region))
-                    _set_gps_from_zone(kwargs, new_region, zone)
+                    _zone = hass.states.get("zone.{}".format(new_region))
+                    _set_gps_from_zone(kwargs, new_region, _zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
                     see_beacons(dev_id, kwargs)
@@ -167,6 +171,23 @@ def setup_scanner(hass, config, see):
                 data['event'])
             return
 
+    def owntracks_waypoint_update(topic, payload, qos):
+        """List of waypoints published by a user."""
+        # Docs on available data:
+        # http://owntracks.org/booklet/tech/json/#_typewaypoints
+        data = validate_payload(payload, 'waypoints')
+        if not data:
+            return
+
+        wayps = data['waypoints']
+        _LOGGER.info("Got %d waypoints from %s", len(wayps), topic)
+        for wayp in wayps:
+            name = wayp['desc']
+            lat = wayp['lat']
+            lon = wayp['lon']
+            rad = wayp['rad']
+            zone.add_zone(hass, name, lat, lon, rad)
+
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
@@ -179,6 +200,10 @@ def setup_scanner(hass, config, see):
 
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
+
+    if waypoint_import_user is not None:
+        mqtt.subscribe(hass, WAYPOINT_TOPIC.format(waypoint_import_user),
+                        owntracks_waypoint_update, 1)
 
     return True
 
@@ -200,12 +225,12 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-def _set_gps_from_zone(kwargs, location, zone):
+def _set_gps_from_zone(kwargs, location, _zone):
     """Set the see parameters from the zone parameters."""
-    if zone is not None:
+    if _zone is not None:
         kwargs['gps'] = (
-            zone.attributes['latitude'],
-            zone.attributes['longitude'])
-        kwargs['gps_accuracy'] = zone.attributes['radius']
+            _zone.attributes['latitude'],
+            _zone.attributes['longitude'])
+        kwargs['gps_accuracy'] = _zone.attributes['radius']
         kwargs['location_name'] = location
     return kwargs
