@@ -19,11 +19,10 @@ REQUIREMENTS = ['gattlib']
 
 BLE_PREFIX = 'BLE_'
 
-
 def setup_scanner(hass, config, see):
     """Setup the BLE Scanner."""
 
-    def see_device(address,name):
+    def see_device(address, name):
         """Mark a device as seen."""
         see(mac=BLE_PREFIX + address, host_name=name)
 
@@ -34,7 +33,7 @@ def setup_scanner(hass, config, see):
         _LOGGER.debug("Discovering BLE devices")
         service = DiscoveryService()
         devices = service.discover(10)
-        _LOGGER.debug("Bluetooth LE devices discovered = %s",devices)
+        _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
 
         return devices
 
@@ -56,7 +55,7 @@ def setup_scanner(hass, config, see):
     # if track new devices is true discover new devices
     # on every scan.
     track_new = util.convert(config.get(CONF_TRACK_NEW), bool,
-                              len(devs_to_track) == 0)
+                             len(devs_to_track) == 0)
     if not devs_to_track and not track_new:
         _LOGGER.warning("No BLE devices to track!")
         return False
@@ -74,15 +73,15 @@ def setup_scanner(hass, config, see):
                 # Could not lookup device name
                 continue
             see_device(mac, devs[mac])
-            
+
         if track_new:
             for address in devs:
                 if address not in devs_to_track and \
                   address not in devs_donot_track:
                     devs_to_track.append(address)
-                    _LOGGER.info("Discovered BLE device %s",address)
-                    see_device(address,devs[address])
-            
+                    _LOGGER.info("Discovered BLE device %s", address)
+                    see_device(address, devs[address])
+
         track_point_in_utc_time(hass, update_ble,
                                 now + timedelta(seconds=interval))
 
