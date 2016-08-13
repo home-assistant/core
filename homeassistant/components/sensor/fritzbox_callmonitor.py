@@ -21,6 +21,7 @@ VALUE_RING = 'ringing'
 VALUE_CALL = 'dialing'
 VALUE_CONNECT = 'talking'
 VALUE_DISCONNECT = 'idle'
+INTERVAL_RECONNECT = 60
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -94,9 +95,10 @@ class FritzBoxCallMonitor(object):
     def connect(self):
         """Connect to the Fritz!Box."""
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(10)
         try:
             self.sock.connect((self.host, self.port))
-            threading.Thread(target=self._listen).start()
+            threading.Thread(target=self._listen, daemon=True).start()
         except socket.error as err:
             self.sock = None
             _LOGGER.error("Cannot connect to %s on port %s: %s",
@@ -104,16 +106,25 @@ class FritzBoxCallMonitor(object):
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
-        buf = ""
         while True:
-            data = self.sock.recv(2048)
-            buf += str(data, "utf-8")
+            try:
+                response = self.sock.recv(2048)
+            except socket.timeout:
+                # if no response after 10 seconds, just recv again
+                continue
+            response = str(response, "utf-8")
 
-            while buf.find("\n") != -1:
-                line, buf = buf.split("\n", 1)
+            if not response:
+                # if the response is empty, the connection has been lost.
+                # try to reconnect
+                self.sock = None
+                while self.sock is None:
+                    self.connect()
+                    time.sleep(INTERVAL_RECONNECT)
+            else:
+                line = response.split("\n", 1)[0]
                 self._parse(line)
-
-            time.sleep(1)
+                time.sleep(1)
         return
 
     def _parse(self, line):
