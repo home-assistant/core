@@ -12,6 +12,8 @@ from homeassistant.components.notify import (ATTR_TARGET,
                                              BaseNotificationService)
 from homeassistant.components.http import HomeAssistantView
 
+from homeassistant.components.frontend import add_manifest_json_key
+
 REQUIREMENTS = ['https://github.com/web-push-libs/pywebpush/archive/'
                 'e743dc92558fc62178d255c0018920d74fa778ed.zip#'
                 'pywebpush==0.5.0']
@@ -76,10 +78,11 @@ def get_service(hass, config):
     REGISTRATIONS = config_from_file(hass.config.path(REGISTRATIONS_FILE))
 
     hass.wsgi.register_view(HTML5PushRegistrationView(hass))
-    if config.get('api_key') is None or config.get('sender_id') is None:
-        _LOGGER.error("You must provide both an api_key and sender_id!")
-        return False
-    return HTML5NotificationService(config.get('api_key'))
+
+    if config.get('gcm_sender_id') is not None:
+        add_manifest_json_key('gcm_sender_id', config.get('gcm_sender_id'))
+
+    return HTML5NotificationService(config.get('gcm_api_key', None))
 
 
 # pylint: disable=too-few-public-methods
@@ -87,9 +90,9 @@ class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, api_key):
+    def __init__(self, gcm_key):
         """Initialize the service."""
-        self._api_key = api_key
+        self._gcm_key = gcm_key
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -114,4 +117,4 @@ class HTML5NotificationService(BaseNotificationService):
                               " target!", target)
                 return
             WebPusher(REGISTRATIONS[target]).send(json.dumps(payload),
-                                                  gcm_key=self._api_key)
+                                                  gcm_key=self._gcm_key)
