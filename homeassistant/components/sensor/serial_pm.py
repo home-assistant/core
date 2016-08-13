@@ -21,7 +21,6 @@ CONF_SERIAL_DEVICE = "serial_device"
 CONF_BRAND = "brand"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): 'serial_pm',
     vol.Optional(CONF_NAME, default=""): cv.string,
     vol.Required(CONF_SERIAL_DEVICE): cv.string,
     vol.Required(CONF_BRAND): cv.string,
