@@ -1,8 +1,8 @@
 """
-Chrome Push Messaging notification service.
+HTML5 Push Messaging notification service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.chrome/
+https://home-assistant.io/components/notify.html5/
 """
 import os
 import logging
@@ -20,7 +20,7 @@ DEPENDENCIES = ["http"]
 
 _LOGGER = logging.getLogger(__name__)
 
-REGISTRATIONS_FILE = "chrome_registrations.conf"
+REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
 REGISTRATIONS = None
 
@@ -50,42 +50,45 @@ def config_from_file(filename, config=None):
             return {}
 
 
-class RegisterChromeView(HomeAssistantView):
-    """Accepts push registrations from Chrome."""
+class HTML5PushRegistrationView(HomeAssistantView):
+    """Accepts push registrations from a browser."""
 
-    url = "/api/chrome/register"
-    name = "api:chrome/register"
+    url = "/api/notify.html5"
+    name = "api:notify.html5"
 
     def __init__(self, hass):
-        """Init RegisterChromeView."""
+        """Init HTML5PushRegistrationView."""
         super().__init__(hass)
 
     def post(self, request):
-        """Accept the POST request for push registrations from Chrome."""
+        """Accept the POST request for push registrations from a browser."""
         REGISTRATIONS[request.json['name']] = request.json['subscription']
         if not config_from_file(self.hass.config.path(REGISTRATIONS_FILE),
                                 REGISTRATIONS):
             _LOGGER.error("failed to save config file")
         return self.json({"status": "ok"})
 
+
 def get_service(hass, config):
-    """Get the Chrome push notification service."""
+    """Get the HTML5 push notification service."""
     global REGISTRATIONS
 
     REGISTRATIONS = config_from_file(hass.config.path(REGISTRATIONS_FILE))
 
-    hass.wsgi.register_view(RegisterChromeView(hass))
-    return ChromeNotificationService(hass, config.get('api_key'))
+    hass.wsgi.register_view(HTML5PushRegistrationView(hass))
+    if config.get('api_key') is None or config.get('sender_id') is None:
+        _LOGGER.error("You must provide both an api_key and sender_id!")
+        return False
+    return HTML5NotificationService(config.get('api_key'))
 
 
 # pylint: disable=too-few-public-methods
-class ChromeNotificationService(BaseNotificationService):
-    """Implement the notification service for Chrome."""
+class HTML5NotificationService(BaseNotificationService):
+    """Implement the notification service for HTML5."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, hass, api_key):
+    def __init__(self, api_key):
         """Initialize the service."""
-        self.hass = hass
         self._api_key = api_key
 
     def send_message(self, message="", **kwargs):
@@ -106,8 +109,9 @@ class ChromeNotificationService(BaseNotificationService):
             targets = [targets]
 
         for target in targets:
-            if not REGISTRATIONS[target]:
-                _LOGGER.error("%s is not a valid Chrome target!", target)
+            if REGISTRATIONS.get(target) is None:
+                _LOGGER.error("%s is not a valid HTML5 push notification"
+                              " target!", target)
                 return
             WebPusher(REGISTRATIONS[target]).send(json.dumps(payload),
                                                   gcm_key=self._api_key)
