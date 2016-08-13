@@ -15,17 +15,17 @@ URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
 PANELS = {}
 MANIFEST_JSON = {
-  "background_color": "#FFFFFF",
-  "description": "Open-source home automation platform running on Python 3.",
-  "dir": "ltr",
-  "display": "standalone",
-  "icons": []
-  "lang": "en-US",
-  "name": "Home Assistant",
-  "orientation": "any",
-  "short_name": "Assistant",
-  "start_url": "/",
-  "theme_color": "#03A9F4"
+    "background_color": "#FFFFFF",
+    "description": "Open-source home automation platform running on Python 3.",
+    "dir": "ltr",
+    "display": "standalone",
+    "icons": [],
+    "lang": "en-US",
+    "name": "Home Assistant",
+    "orientation": "any",
+    "short_name": "Assistant",
+    "start_url": "/",
+    "theme_color": "#03A9F4"
 }
 
 # To keep track we don't register a component twice (gives a warning)
@@ -106,9 +106,11 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 
     PANELS[url_path] = data
 
+
 def add_manifest_json_key(key, val):
-    """Add a keyval to the manifest.json"""
+    """Add a keyval to the manifest.json."""
     MANIFEST_JSON[key] = val
+
 
 def setup(hass, config):
     """Setup serving the frontend."""
@@ -145,9 +147,9 @@ def setup(hass, config):
 
     for size in (192, 384, 512, 1024):
         MANIFEST_JSON['icons'].append({
-           "src": "/static/icons/favicon-{}x{}.png".format(size, size),
-           "sizes": "{}x{}".format(size, size),
-           "type": "image/png"
+            "src": "/static/icons/favicon-{}x{}.png".format(size, size),
+            "sizes": "{}x{}".format(size, size),
+            "type": "image/png"
         })
 
     return True
@@ -223,6 +225,7 @@ class IndexView(HomeAssistantView):
             panel_url=panel_url, panels=PANELS)
 
         return self.Response(resp, mimetype='text/html')
+
 
 class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
