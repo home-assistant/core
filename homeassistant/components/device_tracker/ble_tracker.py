@@ -24,7 +24,6 @@ def setup_scanner(hass, config, see):
 
     def see_device(address, name):
         """Mark a device as seen."""
-        
         see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"))
 
     def discover_ble_devices():
