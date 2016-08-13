@@ -97,6 +97,7 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
 def setup(hass, config):
     """Setup serving the frontend."""
     hass.wsgi.register_view(BootstrapView)
+    hass.wsgi.register_view(PushJavascriptView)
 
     if hass.wsgi.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
@@ -199,3 +200,15 @@ class IndexView(HomeAssistantView):
             panel_url=panel_url, panels=PANELS)
 
         return self.Response(resp, mimetype='text/html')
+
+class PushJavascriptView(HomeAssistantView):
+    """Placeholder view for apps that require JS for push notifications."""
+
+    requires_auth = False
+    url = "/push.js"
+    name = "pushjs"
+
+    def get(self, request):
+        """Return empty javascript."""
+        return self.Response('console.log("No push")',
+                             mimetype='text/javascript')
