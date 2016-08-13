@@ -41,8 +41,8 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: SERVER_PORT,
-         http.CONF_CORS_ORIGINS: CORS_ORIGINS}})
+                       http.CONF_SERVER_PORT: SERVER_PORT,
+                       http.CONF_CORS_ORIGINS: CORS_ORIGINS}})
 
     bootstrap.setup_component(hass, 'api')
 
@@ -166,7 +166,7 @@ class TestHttp:
             'Access-Control-Request-Headers': 'x-ha-access'
         }
         req = requests.options(_url(const.URL_API),
-                           headers=headers)
+                               headers=headers)
 
         allow_origin = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN
         allow_headers = const.HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS
