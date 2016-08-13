@@ -10,7 +10,6 @@ from datetime import timedelta
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
