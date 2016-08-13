@@ -8,17 +8,19 @@ import logging
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_UNKNOWN,
+                                 CONF_PLATFORM, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_NAME = 'Glances'
+DEFAULT_HOST = 'localhost'
+_RESOURCE = 'api/2/all'
+DEFAULT_PORT = '61208'
 
-_RESOURCE = '/api/2/all'
-CONF_HOST = 'host'
-CONF_PORT = '61208'
-CONF_RESOURCES = 'resources'
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
     'disk_use': ['Disk Use', 'GiB'],
@@ -36,7 +38,16 @@ SENSOR_TYPES = {
     'process_sleeping': ['Sleeping', None]
 }
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'glances',
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Required(CONF_RESOURCES, default=[]): [vol.In(SENSOR_TYPES)],
+})
+
 _LOGGER = logging.getLogger(__name__)
+
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -44,25 +55,17 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Glances sensor."""
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    port = config.get('port', CONF_PORT)
-    url = 'http://{}:{}{}'.format(host, port, _RESOURCE)
+    port = config.get(CONF_PORT)
+    url = 'http://{}:{}/{}'.format(host, port, _RESOURCE)
     var_conf = config.get(CONF_RESOURCES)
-
-    if None in (host, var_conf):
-        _LOGGER.error('Not all required config keys present: %s',
-                      ', '.join((CONF_HOST, CONF_RESOURCES)))
-        return False
 
     try:
         response = requests.get(url, timeout=10)
         if not response.ok:
             _LOGGER.error('Response status is "%s"', response.status_code)
             return False
-    except requests.exceptions.MissingSchema:
-        _LOGGER.error("Missing resource or schema in configuration. "
-                      "Please check the details in the configuration file")
-        return False
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to resource/endpoint: %s", url)
         return False
@@ -74,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if resource not in SENSOR_TYPES:
             _LOGGER.error('Sensor type: "%s" does not exist', resource)
         else:
-            dev.append(GlancesSensor(rest, config.get('name'), resource))
+            dev.append(GlancesSensor(rest, name, resource))
 
     add_devices(dev)
 

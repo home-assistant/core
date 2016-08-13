@@ -6,27 +6,38 @@ https://home-assistant.io/components/sensor.cpuspeed/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.const import (CONF_NAME, CONF_PLATFORM)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['py-cpuinfo==0.2.3']
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "CPU speed"
+DEFAULT_NAME = 'CPU speed'
 ATTR_VENDOR = 'Vendor ID'
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
 ICON = 'mdi:pulse'
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'cpuspeed',
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+_LOGGER = logging.getLogger(__name__)
+
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the CPU speed sensor."""
-    add_devices([CpuSpeedSensor(config.get('name', DEFAULT_NAME))])
+    name = config.get(CONF_NAME)
+
+    add_devices([CpuSpeedSensor(name)])
 
 
 class CpuSpeedSensor(Entity):
-    """Representation a CPU sensor."""
+    """Representation of a CPU sensor."""
 
     def __init__(self, name):
         """Initialize the sensor."""
