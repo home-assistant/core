@@ -68,28 +68,6 @@ class RegisterChromeView(HomeAssistantView):
             _LOGGER.error("failed to save config file")
         return self.json({"status": "ok"})
 
-
-class ChromePushJavascriptView(HomeAssistantView):
-    """Serves a small bit of Javascript that displays notifications."""
-
-    requires_auth = False
-    url = "/push.js"
-    name = "pushjs"
-
-    def __init__(self, hass):
-        """Init ChromePushJavascriptView."""
-        super().__init__(hass)
-
-    def get(self, request):
-        """Handle the GET request for the Javascript."""
-        javascript = ('self.addEventListener("install",function(a){'
-                      'self.skipWaiting()}),self.addEventListener("push",'
-                      'function(a){a.data&&(data=a.data.json(),a.waitUntil('
-                      'self.registration.showNotification(data.title,data'
-                      ')))});')
-        return self.Response(javascript, mimetype='text/javascript')
-
-
 def get_service(hass, config):
     """Get the Chrome push notification service."""
     global REGISTRATIONS
@@ -97,7 +75,6 @@ def get_service(hass, config):
     REGISTRATIONS = config_from_file(hass.config.path(REGISTRATIONS_FILE))
 
     hass.wsgi.register_view(RegisterChromeView(hass))
-    hass.wsgi.register_view(ChromePushJavascriptView(hass))
     return ChromeNotificationService(hass, config.get('api_key'))
 
 
