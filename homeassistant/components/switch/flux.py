@@ -151,7 +151,7 @@ class FluxSwitch(SwitchDevice):
         self.update_ha_state()
 
     # pylint: disable=too-many-locals
-    def flux_update(self, service=None):
+    def flux_update(self):
         """Update all the lights using flux."""
         now = dt_now()
         sunset = next_setting(self.hass, SUN).replace(day=now.day,
