@@ -41,9 +41,12 @@ def _get_mac_address(ip_address):
 
     pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
     pid_component = pid.communicate()[0]
-    mac = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
-                    pid_component).groups()[0]
-    return mac
+    match = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
+                    pid_component)
+    if match is not None:
+        return match.groups()[0]
+    else:
+        return None
 
 
 def _config_from_file(filename, config=None):
