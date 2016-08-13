@@ -12,8 +12,9 @@ from pprint import pprint
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID,
-    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    ATTR_DEVICE_MANUFACTURER, ATTR_DEVICE_MODEL, ATTR_DEVICE_DESCRIPTION,
+    ATTR_DEVICE_VERSION)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 
@@ -570,5 +571,25 @@ class ZWaveDeviceEntity:
 
         if location:
             attrs[ATTR_LOCATION] = location
+
+        manufacturer_name = self._value.node.manufacturer_name
+
+        if manufacturer_name:
+            attrs[ATTR_DEVICE_MANUFACTURER] = manufacturer_name
+
+        product_name = self._value.node.product_name
+
+        if product_name:
+            attrs[ATTR_DEVICE_MODEL] = product_name
+
+        device_type = self._value.node.type
+
+        if device_type:
+            attrs[ATTR_DEVICE_DESCRIPTION] = device_type
+
+        version = self._value.node.version
+
+        if version:
+            attrs[ATTR_DEVICE_VERSION] = version
 
         return attrs
