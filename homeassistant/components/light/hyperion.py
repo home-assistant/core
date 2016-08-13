@@ -72,6 +72,11 @@ class Hyperion(Light):
         """Get the remote's active color."""
         response = self.json_request({"command": "serverinfo"})
         if response:
+            # workaround for outdated Hyperion
+            if "activeLedColor" not in response["info"]:
+                self._rgb_color = self._default_color
+                return
+
             if response["info"]["activeLedColor"] == []:
                 self._rgb_color = [0, 0, 0]
             else:

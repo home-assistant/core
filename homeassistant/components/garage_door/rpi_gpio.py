@@ -72,7 +72,7 @@ class RPiGPIOGarageDoor(GarageDoorDevice):
 
     def update(self):
         """Update the state of the garage door."""
-        self._state = rpi_gpio.read_input(self._state_pin) is True
+        self._state = rpi_gpio.read_input(self._state_pin)
 
     @property
     def is_closed(self):

@@ -3,6 +3,9 @@ from datetime import timedelta
 import logging
 import sys
 
+from homeassistant.helpers.typing import ConfigType
+
+from homeassistant.core import HomeAssistant
 from homeassistant.components import (
     zone as zone_cmp, sun as sun_cmp)
 from homeassistant.const import (
@@ -21,7 +24,7 @@ FROM_CONFIG_FORMAT = '{}_from_config'
 _LOGGER = logging.getLogger(__name__)
 
 
-def from_config(config, config_validation=True):
+def from_config(config: ConfigType, config_validation: bool=True):
     """Turn a condition configuration into a method."""
     factory = getattr(
         sys.modules[__name__],
@@ -34,13 +37,14 @@ def from_config(config, config_validation=True):
     return factory(config, config_validation)
 
 
-def and_from_config(config, config_validation=True):
+def and_from_config(config: ConfigType, config_validation: bool=True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
     checks = [from_config(entry) for entry in config['conditions']]
 
-    def if_and_condition(hass, variables=None):
+    def if_and_condition(hass: HomeAssistant,
+                         variables=None) -> bool:
         """Test and condition."""
         for check in checks:
             try:
@@ -55,13 +59,14 @@ def and_from_config(config, config_validation=True):
     return if_and_condition
 
 
-def or_from_config(config, config_validation=True):
+def or_from_config(config: ConfigType, config_validation: bool=True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
     checks = [from_config(entry) for entry in config['conditions']]
 
-    def if_or_condition(hass, variables=None):
+    def if_or_condition(hass: HomeAssistant,
+                        variables=None) -> bool:
         """Test and condition."""
         for check in checks:
             try:
@@ -76,8 +81,8 @@ def or_from_config(config, config_validation=True):
 
 
 # pylint: disable=too-many-arguments
-def numeric_state(hass, entity, below=None, above=None, value_template=None,
-                  variables=None):
+def numeric_state(hass: HomeAssistant, entity, below=None, above=None,
+                  value_template=None, variables=None):
     """Test a numeric state condition."""
     if isinstance(entity, str):
         entity = hass.states.get(entity)
@@ -93,7 +98,7 @@ def numeric_state(hass, entity, below=None, above=None, value_template=None,
         try:
             value = render(hass, value_template, variables)
         except TemplateError as ex:
-            _LOGGER.error(ex)
+            _LOGGER.error("Template error: %s", ex)
             return False
 
     try:

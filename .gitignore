@@ -7,7 +7,9 @@ config/custom_components/*
 !config/custom_components/example.py
 !config/custom_components/hello_world.py
 !config/custom_components/mqtt_example.py
-!config/custom_components/react_panel
+!config/panels
+config/panels/*
+!config/panels/react.html
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
@@ -52,7 +54,8 @@ develop-eggs
 lib
 lib64
 
-# Installer logs
+# Logs
+*.log
 pip-log.txt
 
 # Unit test / coverage reports
@@ -91,3 +94,6 @@ ctags.tmp
 virtualization/vagrant/setup_done
 virtualization/vagrant/.vagrant
 virtualization/vagrant/config
+
+# Visual Studio Code
+.vscode

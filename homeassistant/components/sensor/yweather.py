@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.4"]
+REQUIREMENTS = ["yahooweather==0.6"]
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yahoo! weather sensor."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
-    unit = hass.config.temperature_unit
+    unit = hass.config.units.temperature_unit
     woeid = config.get("woeid", None)
     forecast = config.get("forecast", 0)
 

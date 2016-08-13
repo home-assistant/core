@@ -37,6 +37,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
+        self._changed_by = None
 
     @property
     def name(self):
@@ -58,6 +59,11 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """The code format as regex."""
         return '^\\d{%s}$' % self._digits
 
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return self._changed_by
+
     def update(self):
         """Update alarm status."""
         hub.update_alarms()
@@ -72,6 +78,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             _LOGGER.error(
                 'Unknown alarm state %s',
                 hub.alarm_status[self._id].status)
+        self._changed_by = hub.alarm_status[self._id].name
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

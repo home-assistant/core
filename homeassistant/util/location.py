@@ -31,7 +31,7 @@ LocationInfo = collections.namedtuple(
     "LocationInfo",
     ['ip', 'country_code', 'country_name', 'region_code', 'region_name',
      'city', 'zip_code', 'time_zone', 'latitude', 'longitude',
-     'use_fahrenheit'])
+     'use_metric'])
 
 
 def detect_location_info():
@@ -44,11 +44,8 @@ def detect_location_info():
     if data is None:
         return None
 
-    # From Wikipedia: Fahrenheit is used in the Bahamas, Belize,
-    # the Cayman Islands, Palau, and the United States and associated
-    # territories of American Samoa and the U.S. Virgin Islands
-    data['use_fahrenheit'] = data['country_code'] in (
-        'BS', 'BZ', 'KY', 'PW', 'US', 'AS', 'VI')
+    data['use_metric'] = data['country_code'] not in (
+        'US', 'MM', 'LR')
 
     return LocationInfo(**data)
 

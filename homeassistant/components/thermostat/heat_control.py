@@ -8,12 +8,11 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 from homeassistant.components import switch
 from homeassistant.components.thermostat import (
-    STATE_HEAT, STATE_IDLE, ThermostatDevice)
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    STATE_HEAT, STATE_COOL, STATE_IDLE, ThermostatDevice)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF
+from homeassistant.helpers import condition
 from homeassistant.helpers.event import track_state_change
 
 DEPENDENCIES = ['switch', 'sensor']
@@ -27,6 +26,8 @@ CONF_SENSOR = 'target_sensor'
 CONF_MIN_TEMP = 'min_temp'
 CONF_MAX_TEMP = 'max_temp'
 CONF_TARGET_TEMP = 'target_temp'
+CONF_AC_MODE = 'ac_mode'
+CONF_MIN_DUR = 'min_cycle_duration'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_AC_MODE): vol.Coerce(bool),
+    vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 
@@ -49,9 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     min_temp = config.get(CONF_MIN_TEMP)
     max_temp = config.get(CONF_MAX_TEMP)
     target_temp = config.get(CONF_TARGET_TEMP)
+    ac_mode = config.get(CONF_AC_MODE)
+    min_cycle_duration = config.get(CONF_MIN_DUR)
 
     add_devices([HeatControl(hass, name, heater_entity_id, sensor_entity_id,
-                             min_temp, max_temp, target_temp)])
+                             min_temp, max_temp, target_temp, ac_mode,
+                             min_cycle_duration)])
 
 
 # pylint: disable=too-many-instance-attributes, abstract-method
@@ -60,18 +66,20 @@ class HeatControl(ThermostatDevice):
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
-                 min_temp, max_temp, target_temp):
+                 min_temp, max_temp, target_temp, ac_mode, min_cycle_duration):
         """Initialize the thermostat."""
         self.hass = hass
         self._name = name
         self.heater_entity_id = heater_entity_id
+        self.ac_mode = ac_mode
+        self.min_cycle_duration = min_cycle_duration
 
         self._active = False
         self._cur_temp = None
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
-        self._unit = None
+        self._unit = hass.config.units.temperature_unit
 
         track_state_change(hass, sensor_entity_id, self._sensor_changed)
 
@@ -102,7 +110,12 @@ class HeatControl(ThermostatDevice):
     @property
     def operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return STATE_HEAT if self._active and self._is_heating else STATE_IDLE
+        if self.ac_mode:
+            cooling = self._active and self._is_device_active
+            return STATE_COOL if cooling else STATE_IDLE
+        else:
+            heating = self._active and self._is_device_active
+            return STATE_HEAT if heating else STATE_IDLE
 
     @property
     def target_temperature(self):
@@ -148,24 +161,11 @@ class HeatControl(ThermostatDevice):
         """Update thermostat with latest state from sensor."""
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if unit not in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-            self._cur_temp = None
-            self._unit = None
-            _LOGGER.error('Sensor has unsupported unit: %s (allowed: %s, %s)',
-                          unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-            return
-
-        temp = util.convert(state.state, float)
-
-        if temp is None:
-            self._cur_temp = None
-            self._unit = None
-            _LOGGER.error('Unable to parse sensor temperature: %s',
-                          state.state)
-            return
-
-        self._cur_temp = temp
-        self._unit = unit
+        try:
+            self._cur_temp = self.hass.config.units.temperature(
+                float(state.state), unit)
+        except ValueError as ex:
+            _LOGGER.error('Unable to update from sensor: %s', ex)
 
     def _control_heating(self):
         """Check if we need to turn heating on or off."""
@@ -178,17 +178,38 @@ class HeatControl(ThermostatDevice):
         if not self._active:
             return
 
-        too_cold = self._target_temp - self._cur_temp > TOL_TEMP
-        is_heating = self._is_heating
+        if self.min_cycle_duration:
+            if self._is_device_active:
+                current_state = STATE_ON
+            else:
+                current_state = STATE_OFF
+            long_enough = condition.state(self.hass, self.heater_entity_id,
+                                          current_state,
+                                          self.min_cycle_duration)
+            if not long_enough:
+                return
 
-        if too_cold and not is_heating:
-            _LOGGER.info('Turning on heater %s', self.heater_entity_id)
-            switch.turn_on(self.hass, self.heater_entity_id)
-        elif not too_cold and is_heating:
-            _LOGGER.info('Turning off heater %s', self.heater_entity_id)
-            switch.turn_off(self.hass, self.heater_entity_id)
+        if self.ac_mode:
+            too_hot = self._cur_temp - self._target_temp > TOL_TEMP
+            is_cooling = self._is_device_active
+            if too_hot and not is_cooling:
+                _LOGGER.info('Turning on AC %s', self.heater_entity_id)
+                switch.turn_on(self.hass, self.heater_entity_id)
+            elif not too_hot and is_cooling:
+                _LOGGER.info('Turning off AC %s', self.heater_entity_id)
+                switch.turn_off(self.hass, self.heater_entity_id)
+        else:
+            too_cold = self._target_temp - self._cur_temp > TOL_TEMP
+            is_heating = self._is_device_active
+
+            if too_cold and not is_heating:
+                _LOGGER.info('Turning on heater %s', self.heater_entity_id)
+                switch.turn_on(self.hass, self.heater_entity_id)
+            elif not too_cold and is_heating:
+                _LOGGER.info('Turning off heater %s', self.heater_entity_id)
+                switch.turn_off(self.hass, self.heater_entity_id)
 
     @property
-    def _is_heating(self):
-        """If the heater is currently heating."""
+    def _is_device_active(self):
+        """If the toggleable device is currently active."""
         return switch.is_on(self.hass, self.heater_entity_id)

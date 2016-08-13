@@ -11,8 +11,7 @@ def install_osx():
     with os.popen('whoami') as inp:
         user = inp.read().strip()
 
-    cwd = os.path.dirname(__file__)
-    template_path = os.path.join(cwd, 'startup', 'launchd.plist')
+    template_path = os.path.join(os.path.dirname(__file__), 'launchd.plist')
 
     with open(template_path, 'r', encoding='utf-8') as inp:
         plist = inp.read()

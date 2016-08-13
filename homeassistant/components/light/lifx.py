@@ -4,8 +4,6 @@ Support for the LIFX platform that implements lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
-# pylint: disable=missing-docstring
-
 import colorsys
 import logging
 
@@ -16,7 +14,6 @@ from homeassistant.helpers.event import track_time_change
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['liffylights==0.9.4']
-DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
 CONF_BROADCAST = "broadcast"  # broadcast address configuration item
@@ -94,11 +91,11 @@ class LIFX():
 
     # pylint: disable=unused-argument
     def poll(self, now):
-        """Initialize the light."""
+        """Polling for the light."""
         self.probe()
 
     def probe(self, address=None):
-        """Initialize the light."""
+        """Probe the light."""
         self._liffylights.probe(address)
 
 
