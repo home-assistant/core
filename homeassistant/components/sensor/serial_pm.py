@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.serial_pm/
 import logging
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -21,7 +21,6 @@ CONF_SERIAL_DEVICE = "serial_device"
 CONF_BRAND = "brand"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): 'serial_pm',
     vol.Optional(CONF_NAME, default=""): cv.string,
     vol.Required(CONF_SERIAL_DEVICE): cv.string,
     vol.Required(CONF_BRAND): cv.string,
