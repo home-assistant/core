@@ -2,7 +2,7 @@
 Support for particulate matter sensors connected to a serial port.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.particulate_matter/
+https://home-assistant.io/components/sensor.serial_pm/
 """
 import logging
 import voluptuous as vol

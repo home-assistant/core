@@ -19,6 +19,7 @@ from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
@@ -571,7 +572,8 @@ class Service(object):
             self.func(call)
         except vol.MultipleInvalid as ex:
             _LOGGER.error('Invalid service data for %s.%s: %s',
-                          call.domain, call.service, ex)
+                          call.domain, call.service,
+                          humanize_error(call.data, ex))
 
 
 # pylint: disable=too-few-public-methods
@@ -582,8 +584,8 @@ class ServiceCall(object):
 
     def __init__(self, domain, service, data=None, call_id=None):
         """Initialize a service call."""
-        self.domain = domain
-        self.service = service
+        self.domain = domain.lower()
+        self.service = service.lower()
         self.data = data or {}
         self.call_id = call_id
 
@@ -618,7 +620,7 @@ class ServiceRegistry(object):
 
     def has_service(self, domain, service):
         """Test if specified service exists."""
-        return service in self._services.get(domain, [])
+        return service.lower() in self._services.get(domain.lower(), [])
 
     # pylint: disable=too-many-arguments
     def register(self, domain, service, service_func, description=None,
@@ -631,6 +633,8 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
         """
+        domain = domain.lower()
+        service = service.lower()
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
                               description.get('fields', {}), schema)
@@ -664,8 +668,8 @@ class ServiceRegistry(object):
         call_id = self._generate_unique_id()
 
         event_data = {
-            ATTR_DOMAIN: domain,
-            ATTR_SERVICE: service,
+            ATTR_DOMAIN: domain.lower(),
+            ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
             ATTR_SERVICE_CALL_ID: call_id,
         }
@@ -691,11 +695,14 @@ class ServiceRegistry(object):
     def _event_to_service_call(self, event):
         """Callback for SERVICE_CALLED events from the event bus."""
         service_data = event.data.get(ATTR_SERVICE_DATA)
-        domain = event.data.get(ATTR_DOMAIN)
-        service = event.data.get(ATTR_SERVICE)
+        domain = event.data.get(ATTR_DOMAIN).lower()
+        service = event.data.get(ATTR_SERVICE).lower()
         call_id = event.data.get(ATTR_SERVICE_CALL_ID)
 
         if not self.has_service(domain, service):
+            if event.origin == EventOrigin.local:
+                _LOGGER.warning('Unable to find service %s/%s',
+                                domain, service)
             return
 
         service_handler = self._services[domain][service]

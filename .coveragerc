@@ -88,6 +88,9 @@ omit =
     homeassistant/components/homematic.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/pilight.py
+    homeassistant/components/*/pilight.py
+
     homeassistant/components/knx.py
     homeassistant/components/switch/knx.py
     homeassistant/components/binary_sensor/knx.py
@@ -194,6 +197,7 @@ omit =
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/efergy.py
     homeassistant/components/sensor/eliqonline.py
+    homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/forecast.py

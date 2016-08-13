@@ -61,7 +61,7 @@ class States(Base):   # type: ignore
     __tablename__ = 'states'
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
-    entity_id = Column(String(64))
+    entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'))

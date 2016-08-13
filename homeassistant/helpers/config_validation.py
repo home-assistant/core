@@ -152,23 +152,6 @@ def time_period_str(value: str) -> timedelta:
 time_period = vol.Any(time_period_str, timedelta, time_period_dict)
 
 
-def log_exception(logger, ex, domain, config):
-    """Generate log exception for config validation."""
-    message = 'Invalid config for [{}]: '.format(domain)
-    if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join('%s' % m for m in ex.path))
-    else:
-        message += str(ex)
-
-    if hasattr(config, '__line__'):
-        message += " (See {}:{})".format(config.__config_file__,
-                                         config.__line__ or '?')
-
-    logger.error(message)
-
-
 def match_all(value):
     """Validator that matches all values."""
     return value
@@ -239,6 +222,8 @@ def template(value):
     """Validate a jinja2 template."""
     if value is None:
         raise vol.Invalid('template value is None')
+    if isinstance(value, (list, dict)):
+        raise vol.Invalid('template value should be a string')
 
     value = str(value)
     try:

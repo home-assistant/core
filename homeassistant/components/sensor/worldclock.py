@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WorldClockSensor(Entity):
-    """Represenatation of a Worldclock sensor."""
+    """Representation of a Worldclock sensor."""
 
     def __init__(self, time_zone, name):
         """Initialize the sensor."""

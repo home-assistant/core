@@ -150,6 +150,9 @@ https://github.com/kellerza/pyqwikswitch/archive/v0.4.zip#pyqwikswitch==0.4
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
+# homeassistant.components.sensor.fastdotcom
+https://github.com/nkgilley/fast.com/archive/master.zip#fastdotcom==0.0.1
+
 # homeassistant.components.ecobee
 https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
 
@@ -229,6 +232,9 @@ pexpect==4.0.1
 # homeassistant.components.light.hue
 phue==0.8
 
+# homeassistant.components.pilight
+pilight==0.0.2
+
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
 plexapi==2.0.2
@@ -262,7 +268,7 @@ pushetta==1.0.15
 py-cpuinfo==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.9.0
+pyRFXtrx==0.10.1
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -458,7 +464,7 @@ xbee-helper==0.0.7
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
-yahooweather==0.5
+yahooweather==0.6
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
