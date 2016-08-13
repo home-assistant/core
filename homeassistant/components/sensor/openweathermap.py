@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev)
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class OpenWeatherMapSensor(Entity):
     """Implementation of an OpenWeatherMap sensor."""
 
@@ -91,6 +91,7 @@ class OpenWeatherMapSensor(Entity):
         self.temp_unit = temp_unit
         self.type = sensor_type
         self._state = None
+        self._weather_code = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
 
@@ -103,6 +104,78 @@ class OpenWeatherMapSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        # pylint: disable=too-many-return-statements, too-many-branches
+        if self.type != 'weather' or self._weather_code is None:
+            return None
+
+        # See: http://openweathermap.org/weather-conditions
+
+        # Group 2xx: Thunderstorm
+        if 200 <= self._weather_code < 300:
+            if self._weather_code in (200, 201, 202, 230, 231, 232):
+                return 'mdi:weather-lightning-rainy'
+            else:
+                return 'mdi:weather-lightning'
+
+        # Group 3xx: Drizzle
+        if 300 <= self._weather_code < 400:
+            return 'mdi:weather-rainy'
+
+        # Group 5xx: Rain
+        if 500 <= self._weather_code < 600:
+            if self._weather_code in (502, 503, 504):
+                return 'mdi:weather-pouring'
+            elif self._weather_code == 511:
+                return 'mdi:weather-snowy-rainy'
+            else:
+                return 'mdi:weather-rainy'
+
+        # Group 6xx: Snow
+        if 600 <= self._weather_code < 700:
+            if self._weather_code in (611, 612, 615, 616, 620, 621, 622):
+                return 'mdi:weather-snowy-rainy'
+            else:
+                return 'mdi:weather-snowy'
+
+        # Group 7xx: Atmosphere
+        if 700 <= self._weather_code < 800:
+            if self._weather_code in (701, 711, 721, 741):
+                return 'mdi:weather-fog'
+            elif self._weather_code == 771:
+                return 'mdi:weather-windy'
+
+        # Group 800: Clear
+        if self._weather_code == 800:
+            return 'mdi:weather-sunny'
+
+        # Group 80x: Clouds
+        if 801 <= self._weather_code < 810:
+            if self._weather_code in (801, 802):
+                return 'mdi:weather-partlycloudy'
+            else:
+                return 'mdi:weather-cloudy'
+
+        # Group 90x: Extreme
+        if 900 <= self._weather_code < 910:
+            if self._weather_code == 905:
+                return 'mdi:weather-windy'
+            elif self._weather_code == 906:
+                return 'mdi:weather-hail'
+
+        # Group 9xx: Additional
+        if 910 <= self._weather_code < 1000:
+            if self._weather_code in (951, 952, 953):
+                return 'mdi:weather-sunny'
+            elif self._weather_code in (954, 955, 956, 957, 958, 959):
+                return 'mdi:weather-windy'
+            elif self._weather_code in (960, 961):
+                return 'mdi:weather-lightning'
+
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -118,6 +191,7 @@ class OpenWeatherMapSensor(Entity):
 
         if self.type == 'weather':
             self._state = data.get_detailed_status()
+            self._weather_code = data.get_weather_code()
         elif self.type == 'temperature':
             if self.temp_unit == TEMP_CELSIUS:
                 self._state = round(data.get_temperature('celsius')['temp'],
