@@ -20,12 +20,12 @@ from homeassistant.const import (
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
     HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
-from homeassistant.helpers.entity import split_entity_id
+from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "http"
-REQUIREMENTS = ("cherrypy==6.1.1", "static3==0.7.0", "Werkzeug==0.11.10")
+REQUIREMENTS = ("cherrypy==7.1.0", "static3==0.7.0", "Werkzeug==0.11.10")
 
 CONF_API_PASSWORD = "api_password"
 CONF_SERVER_HOST = "server_host"
@@ -453,6 +453,10 @@ class HomeAssistantView(object):
         """Handle request to url."""
         from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 
+        if request.method == "OPTIONS":
+            # For CORS preflight requests.
+            return self.options(request)
+
         try:
             handler = getattr(self, request.method.lower())
         except AttributeError:
@@ -473,15 +477,15 @@ class HomeAssistantView(object):
                                  self.hass.wsgi.api_password):
             authenticated = True
 
-        if authenticated:
-            _LOGGER.info('Successful login/request from %s',
-                         request.remote_addr)
-        elif self.requires_auth and not authenticated:
+        if self.requires_auth and not authenticated:
             _LOGGER.warning('Login attempt or request with an invalid'
                             'password from %s', request.remote_addr)
             raise Unauthorized()
 
         request.authenticated = authenticated
+
+        _LOGGER.info('Serving %s to %s (auth: %s)',
+                     request.path, request.remote_addr, authenticated)
 
         result = handler(request, **values)
 

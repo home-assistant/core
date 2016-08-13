@@ -6,6 +6,7 @@ https://home-assistant.io/components/thermostat/
 """
 import logging
 import os
+from numbers import Number
 
 import voluptuous as vol
 
@@ -13,9 +14,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.temperature import convert
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.temperature import convert
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELSIUS)
@@ -146,10 +147,11 @@ def setup(hass, config):
         temperature = service.data[ATTR_TEMPERATURE]
 
         for thermostat in target_thermostats:
-            thermostat.set_temperature(convert(
-                temperature, hass.config.temperature_unit,
-                thermostat.unit_of_measurement))
+            converted_temperature = convert(
+                temperature, hass.config.units.temperature_unit,
+                thermostat.unit_of_measurement)
 
+            thermostat.set_temperature(converted_temperature)
             thermostat.update_ha_state(True)
 
     hass.services.register(
@@ -310,13 +312,13 @@ class ThermostatDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if temp is None:
-            return None
+        if temp is None or not isinstance(temp, Number):
+            return temp
 
-        value = convert(temp, self.unit_of_measurement,
-                        self.hass.config.temperature_unit)
+        value = self.hass.config.units.temperature(temp,
+                                                   self.unit_of_measurement)
 
-        if self.hass.config.temperature_unit is TEMP_CELSIUS:
+        if self.hass.config.units.is_metric:
             decimal_count = 1
         else:
             # Users of fahrenheit generally expect integer units.

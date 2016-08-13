@@ -37,11 +37,6 @@ class TestHelpersEntity(unittest.TestCase):
         state = self.hass.states.get(self.entity.entity_id)
         self.assertTrue(state.attributes.get(ATTR_HIDDEN))
 
-    def test_split_entity_id(self):
-        """Test split_entity_id."""
-        self.assertEqual(['domain', 'object_id'],
-                         entity.split_entity_id('domain.object_id'))
-
     def test_generate_entity_id_requires_hass_or_ids(self):
         """Ensure we require at least hass or current ids."""
         fmt = 'test.{}'

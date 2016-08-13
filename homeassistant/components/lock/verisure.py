@@ -35,6 +35,7 @@ class VerisureDoorlock(LockDevice):
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = int(hub.config.get('code_digits', '4'))
+        self._changed_by = None
 
     @property
     def name(self):
@@ -50,6 +51,11 @@ class VerisureDoorlock(LockDevice):
     def available(self):
         """Return True if entity is available."""
         return hub.available
+
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return self._changed_by
 
     @property
     def code_format(self):
@@ -68,6 +74,7 @@ class VerisureDoorlock(LockDevice):
             _LOGGER.error(
                 'Unknown lock state %s',
                 hub.lock_status[self._id].status)
+        self._changed_by = hub.lock_status[self._id].name
 
     @property
     def is_locked(self):

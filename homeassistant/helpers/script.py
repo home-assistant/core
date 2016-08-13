@@ -2,14 +2,17 @@
 import logging
 import threading
 from itertools import islice
+from typing import Optional, Sequence
 
 import voluptuous as vol
 
-import homeassistant.util.dt as date_util
+from homeassistant.core import HomeAssistant
 from homeassistant.const import EVENT_TIME_CHANGED, CONF_CONDITION
+from homeassistant.helpers import (
+    service, condition, template, config_validation as cv)
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers import service, condition, template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+import homeassistant.util.dt as date_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +25,8 @@ CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
 
 
-def call_from_config(hass, config, variables=None):
+def call_from_config(hass: HomeAssistant, config: ConfigType,
+                     variables: Optional[Sequence]=None) -> None:
     """Call a script based on a config entry."""
     Script(hass, config).run(variables)
 
@@ -31,7 +35,8 @@ class Script():
     """Representation of a script."""
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, hass, sequence, name=None, change_listener=None):
+    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
+                 change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
         self.sequence = cv.SCRIPT_SCHEMA(sequence)
@@ -45,11 +50,11 @@ class Script():
         self._delay_listener = None
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         """Return true if script is on."""
         return self._cur != -1
 
-    def run(self, variables=None):
+    def run(self, variables: Optional[Sequence]=None) -> None:
         """Run script."""
         with self._lock:
             if self._cur == -1:
@@ -101,7 +106,7 @@ class Script():
             if self._change_listener:
                 self._change_listener()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop running script."""
         with self._lock:
             if self._cur == -1:

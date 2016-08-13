@@ -9,11 +9,12 @@ import logging
 import socket
 import voluptuous as vol
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+                                            Light)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.3.zip'
-                '#flux_led==0.3']
+REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.6.zip'
+                '#flux_led==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "flux_led"
@@ -37,7 +38,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     light_ips = []
     for ipaddr, device_config in config["devices"].items():
         device = {}
-        device['id'] = device_config[ATTR_NAME]
+        device['name'] = device_config[ATTR_NAME]
         device['ipaddr'] = ipaddr
         light = FluxLight(device)
         if light.is_valid:
@@ -50,11 +51,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     # Find the bulbs on the LAN
     scanner = flux_led.BulbScanner()
-    scanner.scan(timeout=20)
+    scanner.scan(timeout=10)
     for device in scanner.getBulbInfo():
-        light = FluxLight(device)
         ipaddr = device['ipaddr']
-        if light.is_valid and ipaddr not in light_ips:
+        if ipaddr in light_ips:
+            continue
+        device['name'] = device['id'] + " " + ipaddr
+        light = FluxLight(device)
+        if light.is_valid:
             lights.append(light)
             light_ips.append(ipaddr)
 
@@ -69,7 +73,7 @@ class FluxLight(Light):
         """Initialize the light."""
         import flux_led
 
-        self._name = device['id']
+        self._name = device['name']
         self._ipaddr = device['ipaddr']
         self.is_valid = True
         self._bulb = None
@@ -96,9 +100,27 @@ class FluxLight(Light):
         """Return true if device is on."""
         return self._bulb.isOn()
 
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self._bulb.getWarmWhite255()
+
+    @property
+    def rgb_color(self):
+        """Return the color property."""
+        return self._bulb.getRgb()
+
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        self._bulb.turnOn()
+        if not self.is_on:
+            self._bulb.turnOn()
+
+        rgb = kwargs.get(ATTR_RGB_COLOR)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        if rgb:
+            self._bulb.setRgb(*tuple(rgb))
+        elif brightness:
+            self._bulb.setWarmWhite255(brightness)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

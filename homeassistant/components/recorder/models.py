@@ -9,9 +9,8 @@ from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
-from homeassistant.core import Event, EventOrigin, State
+from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.remote import JSONEncoder
-from homeassistant.helpers.entity import split_entity_id
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -62,7 +61,7 @@ class States(Base):   # type: ignore
     __tablename__ = 'states'
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
-    entity_id = Column(String(64))
+    entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'))

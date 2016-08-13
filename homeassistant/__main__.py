@@ -274,7 +274,7 @@ def try_to_restart() -> None:
     # thread left (which is us). Nothing we really do with it, but it might be
     # useful when debugging shutdown/restart issues.
     try:
-        nthreads = sum(thread.isAlive() and not thread.isDaemon()
+        nthreads = sum(thread.is_alive() and not thread.daemon
                        for thread in threading.enumerate())
         if nthreads > 1:
             sys.stderr.write(

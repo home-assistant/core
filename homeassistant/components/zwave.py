@@ -11,7 +11,7 @@ from pprint import pprint
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_LOCATION,
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID,
     CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
@@ -32,13 +32,21 @@ DEFAULT_CONF_AUTOHEAL = True
 NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"
+SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
+SERVICE_STOP_NETWORK = "stop_network"
+SERVICE_START_NETWORK = "start_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
+EVENT_NETWORK_READY = "zwave.network_ready"
+EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_START = "zwave.network_start"
+EVENT_NETWORK_STOP = "zwave.network_stop"
 
 COMMAND_CLASS_WHATEVER = None
 COMMAND_CLASS_SENSOR_MULTILEVEL = 49
@@ -51,16 +59,17 @@ COMMAND_CLASS_SWITCH_MULTILEVEL = 38
 COMMAND_CLASS_DOOR_LOCK = 98
 COMMAND_CLASS_THERMOSTAT_SETPOINT = 67
 COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
+COMMAND_CLASS_BARRIER_OPERATOR = 102
 COMMAND_CLASS_BATTERY = 128
 COMMAND_CLASS_SENSOR_ALARM = 156
 
 GENERIC_COMMAND_CLASS_WHATEVER = None
 GENERIC_COMMAND_CLASS_REMOTE_CONTROLLER = 1
 GENERIC_COMMAND_CLASS_NOTIFICATION = 7
-GENERIC_COMMAND_CLASS_REMOTE_SWITCH = 12
 GENERIC_COMMAND_CLASS_REPEATER_SLAVE = 15
-GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
 GENERIC_COMMAND_CLASS_BINARY_SWITCH = 16
+GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
+GENERIC_COMMAND_CLASS_REMOTE_SWITCH = 18
 GENERIC_COMMAND_CLASS_WALL_CONTROLLER = 24
 GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 64
 GENERIC_COMMAND_CLASS_BINARY_SENSOR = 32
@@ -104,7 +113,8 @@ DISCOVERY_COMPONENTS = [
      TYPE_WHATEVER,
      GENRE_USER),
     ('light',
-     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
+     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
+      GENERIC_COMMAND_CLASS_REMOTE_SWITCH],
      [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
       SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE,
       SPECIFIC_DEVICE_CLASS_NOT_USED],
@@ -173,7 +183,8 @@ DISCOVERY_COMPONENTS = [
      [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
      [SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON,
       SPECIFIC_DEVICE_CLASS_SECURE_DOOR],
-     [COMMAND_CLASS_SWITCH_BINARY],
+     [COMMAND_CLASS_SWITCH_BINARY,
+      COMMAND_CLASS_BARRIER_OPERATOR],
      TYPE_BOOL,
      GENRE_USER)
 ]
@@ -306,7 +317,9 @@ def setup(hass, config):
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
                                     ZWaveNetwork.SIGNAL_VALUE_ADDED,
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
-                                    ZWaveNetwork.SIGNAL_NODE_EVENT):
+                                    ZWaveNetwork.SIGNAL_NODE_EVENT,
+                                    ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -326,20 +339,20 @@ def setup(hass, config):
                           component, node.node_id)
             if node.generic not in generic_device_class and \
                None not in generic_device_class:
-                _LOGGER.debug("node.generic %s not None and in \
-                              generic_device_class %s",
+                _LOGGER.debug("node.generic %s not None and in "
+                              "generic_device_class %s",
                               node.generic, generic_device_class)
                 continue
             if node.specific not in specific_device_class and \
                None not in specific_device_class:
-                _LOGGER.debug("node.specific %s is not None and in \
-                              specific_device_class %s", node.specific,
+                _LOGGER.debug("node.specific %s is not None and in "
+                              "specific_device_class %s", node.specific,
                               specific_device_class)
                 continue
             if value.command_class not in command_class and \
                None not in command_class:
-                _LOGGER.debug("value.command_class %s is not None \
-                              and in command_class %s",
+                _LOGGER.debug("value.command_class %s is not None "
+                              "and in command_class %s",
                               value.command_class, command_class)
                 continue
             if value_type != value.type and value_type is not None:
@@ -352,10 +365,10 @@ def setup(hass, config):
                 continue
 
             # Configure node
-            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, \
-                          Specific_command_class=%s, \
-                          Command_class=%s, Value type=%s, \
-                          Genre=%s", node.node_id,
+            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
+                          "Specific_command_class=%s, "
+                          "Command_class=%s, Value type=%s, "
+                          "Genre=%s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre)
@@ -389,20 +402,49 @@ def setup(hass, config):
             ATTR_BASIC_LEVEL: value
         })
 
+    def network_ready():
+        """Called when all awake nodes have been queried."""
+        _LOGGER.info("Zwave network is ready for use. All awake nodes"
+                     " have been queried. Sleeping nodes will be"
+                     " queried when they awake.")
+        hass.bus.fire(EVENT_NETWORK_READY)
+
+    def network_complete():
+        """Called when all nodes on network have been queried."""
+        _LOGGER.info("Zwave network is complete. All nodes on the network"
+                     " have been queried")
+        hass.bus.fire(EVENT_NETWORK_COMPLETE)
+
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
     dispatcher.connect(
         node_event_activated, ZWaveNetwork.SIGNAL_NODE_EVENT, weak=False)
+    dispatcher.connect(
+        network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
+        _LOGGER.info("Zwave add_node have been initialized.")
         NETWORK.controller.add_node()
+
+    def add_node_secure(service):
+        """Switch into secure inclusion mode."""
+        _LOGGER.info("Zwave add_node_secure have been initialized.")
+        NETWORK.controller.add_node(True)
 
     def remove_node(service):
         """Switch into exclusion mode."""
+        _LOGGER.info("Zwave remove_node have been initialized.")
         NETWORK.controller.remove_node()
+
+    def cancel_command(service):
+        """Cancel a running controller command."""
+        _LOGGER.info("Cancel running ZWave command.")
+        NETWORK.controller.cancel_command()
 
     def heal_network(service):
         """Heal the network."""
@@ -411,19 +453,25 @@ def setup(hass, config):
 
     def soft_reset(service):
         """Soft reset the controller."""
+        _LOGGER.info("Zwave soft_reset have been initialized.")
         NETWORK.controller.soft_reset()
 
     def test_network(service):
         """Test the network by sending commands to all the nodes."""
+        _LOGGER.info("Zwave test_network have been initialized.")
         NETWORK.test()
 
-    def stop_zwave(event):
-        """Stop Z-Wave."""
+    def stop_zwave(_service_or_event):
+        """Stop Z-Wave network."""
+        _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
+        hass.bus.fire(EVENT_NETWORK_STOP)
 
-    def start_zwave(event):
-        """Startup Z-Wave."""
+    def start_zwave(_service_or_event):
+        """Startup Z-Wave network."""
+        _LOGGER.info("Starting ZWave network.")
         NETWORK.start()
+        hass.bus.fire(EVENT_NETWORK_START)
 
         # Need to be in STATE_AWAKED before talking to nodes.
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
@@ -452,13 +500,17 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # Register add / remove node services for Z-Wave sticks without
-        # hardware inclusion button
+        # Register node services for Z-Wave network
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
+                               add_node_secure)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_CANCEL_COMMAND, cancel_command)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
+        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
 
     # Setup autoheal
     if autoheal:

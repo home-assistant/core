@@ -15,14 +15,23 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
 
 from tests.common import get_test_home_assistant
 
 PST = pytz.timezone('America/Los_Angeles')
+
+
+class TestMethods(unittest.TestCase):
+    """Test the Home Assistant helper methods."""
+
+    def test_split_entity_id(self):
+        """Test split_entity_id."""
+        self.assertEqual(['domain', 'object_id'],
+                         ha.split_entity_id('domain.object_id'))
 
 
 class TestHomeAssistant(unittest.TestCase):
@@ -377,7 +386,7 @@ class TestServiceRegistry(unittest.TestCase):
             return ha.HomeAssistant.add_job(self, *args, **kwargs)
 
         self.services = ha.ServiceRegistry(self.bus, add_job)
-        self.services.register("test_domain", "test_service", lambda x: None)
+        self.services.register("Test_Domain", "TEST_SERVICE", lambda x: None)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
@@ -387,7 +396,7 @@ class TestServiceRegistry(unittest.TestCase):
     def test_has_service(self):
         """Test has_service method."""
         self.assertTrue(
-            self.services.has_service("test_domain", "test_service"))
+            self.services.has_service("tesT_domaiN", "tesT_servicE"))
         self.assertFalse(
             self.services.has_service("test_domain", "non_existing"))
         self.assertFalse(
@@ -409,7 +418,7 @@ class TestServiceRegistry(unittest.TestCase):
                                lambda x: calls.append(1))
 
         self.assertTrue(
-            self.services.call('test_domain', 'register_calls', blocking=True))
+            self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.assertEqual(1, len(calls))
 
     def test_call_with_blocking_not_done_in_time(self):
@@ -442,79 +451,26 @@ class TestConfig(unittest.TestCase):
     def setUp(self):     # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.config = ha.Config()
-
-    def test_config_dir_set_correct(self):
-        """Test config dir set correct."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(os.path.join(data_dir, ".homeassistant"),
-                         self.config.config_dir)
+        self.assertIsNone(self.config.config_dir)
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(os.path.join(data_dir, ".homeassistant", "test.conf"),
+        self.config.config_dir = '/tmp/ha-config'
+        self.assertEqual("/tmp/ha-config/test.conf",
                          self.config.path("test.conf"))
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        data_dir = os.getenv('APPDATA') if os.name == "nt" \
-            else os.path.expanduser('~')
-        self.assertEqual(
-            os.path.join(data_dir, ".homeassistant", "dir", "test.conf"),
-            self.config.path("dir", "test.conf"))
-
-    def test_temperature_not_convert_if_no_preference(self):
-        """No unit conversion to happen if no preference."""
-        self.assertEqual(
-            (25, TEMP_CELSIUS),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (80, TEMP_FAHRENHEIT),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
-    def test_temperature_not_convert_if_invalid_value(self):
-        """No unit conversion to happen if no preference."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
-        self.assertEqual(
-            ('25a', TEMP_CELSIUS),
-            self.config.temperature('25a', TEMP_CELSIUS))
-
-    def test_temperature_not_convert_if_invalid_unit(self):
-        """No unit conversion to happen if no preference."""
-        self.assertEqual(
-            (25, 'Invalid unit'),
-            self.config.temperature(25, 'Invalid unit'))
-
-    def test_temperature_to_convert_to_celsius(self):
-        """Test temperature conversion to celsius."""
-        self.config.temperature_unit = TEMP_CELSIUS
-
-        self.assertEqual(
-            (25, TEMP_CELSIUS),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (26.7, TEMP_CELSIUS),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
-
-    def test_temperature_to_convert_to_fahrenheit(self):
-        """Test temperature conversion to fahrenheit."""
-        self.config.temperature_unit = TEMP_FAHRENHEIT
-
-        self.assertEqual(
-            (77, TEMP_FAHRENHEIT),
-            self.config.temperature(25, TEMP_CELSIUS))
-        self.assertEqual(
-            (80, TEMP_FAHRENHEIT),
-            self.config.temperature(80, TEMP_FAHRENHEIT))
+        self.config.config_dir = '/tmp/ha-config'
+        self.assertEqual("/tmp/ha-config/dir/test.conf",
+                         self.config.path("dir", "test.conf"))
 
     def test_as_dict(self):
         """Test as dict."""
         expected = {
             'latitude': None,
             'longitude': None,
-            'temperature_unit': None,
+            CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
             'location_name': None,
             'time_zone': 'UTC',
             'components': [],
