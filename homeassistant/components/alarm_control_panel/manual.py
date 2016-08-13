@@ -7,28 +7,46 @@ https://home-assistant.io/components/alarm_control_panel.manual/
 import datetime
 import logging
 
+import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, CONF_PLATFORM, CONF_NAME,
+    CONF_CODE, CONF_PENDING_TIME, CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_ALARM_NAME = 'HA Alarm'
 DEFAULT_PENDING_TIME = 60
 DEFAULT_TRIGGER_TIME = 120
+DEFAULT_DISARM_AFTER_TRIGGER = False
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'manual',
+    vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+    vol.Optional(CONF_CODE): cv.string,
+    vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_DISARM_AFTER_TRIGGER,
+                 default=DEFAULT_DISARM_AFTER_TRIGGER): cv.boolean,
+})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the manual alarm platform."""
     add_devices([ManualAlarm(
         hass,
-        config.get('name', DEFAULT_ALARM_NAME),
-        config.get('code'),
-        config.get('pending_time', DEFAULT_PENDING_TIME),
-        config.get('trigger_time', DEFAULT_TRIGGER_TIME),
+        config[CONF_NAME],
+        config.get(CONF_CODE),
+        config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
+        config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
+        config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER)
         )])
 
 
@@ -40,10 +58,12 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
-    triggered for 'trigger_time', after that we return to the previous state.
+    triggered for 'trigger_time', after that we return to the previous state
+    or disarm if `disarm_after_trigger` is true.
     """
 
-    def __init__(self, hass, name, code, pending_time, trigger_time):
+    def __init__(self, hass, name, code, pending_time,
+                 trigger_time, disarm_after_trigger):
         """Initalize the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
@@ -51,6 +71,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         self._code = str(code) if code else None
         self._pending_time = datetime.timedelta(seconds=pending_time)
         self._trigger_time = datetime.timedelta(seconds=trigger_time)
+        self._disarm_after_trigger = disarm_after_trigger
         self._pre_trigger_state = self._state
         self._state_ts = None
 
@@ -78,7 +99,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
                 return STATE_ALARM_PENDING
             elif (self._state_ts + self._pending_time +
                   self._trigger_time) < dt_util.utcnow():
-                return self._pre_trigger_state
+                if self._disarm_after_trigger:
+                    return STATE_ALARM_DISARMED
+                else:
+                    return self._pre_trigger_state
 
         return self._state
 
