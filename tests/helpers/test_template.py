@@ -6,6 +6,13 @@ from unittest.mock import patch
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.util.unit_system import UnitSystem
+from homeassistant.const import (
+    LENGTH_METERS,
+    TEMP_CELSIUS,
+    MASS_GRAMS,
+    VOLUME_LITERS,
+)
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant
@@ -17,6 +24,9 @@ class TestUtilTemplate(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup the tests."""
         self.hass = get_test_home_assistant()
+        self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
+                                            LENGTH_METERS, VOLUME_LITERS,
+                                            MASS_GRAMS)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down stuff we started."""
