@@ -42,7 +42,7 @@ def _get_mac_address(ip_address):
     pid = Popen(["arp", "-n", ip_address], stdout=PIPE)
     pid_component = pid.communicate()[0]
     match = re.search(r"(([a-f\d]{1,2}\:){5}[a-f\d]{1,2})".encode('UTF-8'),
-                    pid_component)
+                      pid_component)
     if match is not None:
         return match.groups()[0]
     else:
