@@ -18,10 +18,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON)
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.core import State
+from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 from homeassistant.helpers import template
-from homeassistant.helpers.entity import split_entity_id
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
@@ -194,6 +192,11 @@ def humanify(events):
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
                    event != last_sensor_event[to_state.entity_id]:
+                    continue
+
+                # Don't show continuous sensor value changes in the logbook
+                if domain == 'sensor' and \
+                   to_state.attributes.get('unit_of_measurement'):
                     continue
 
                 yield Entry(

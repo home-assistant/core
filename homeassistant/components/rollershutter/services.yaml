@@ -1,0 +1,23 @@
+move_up:
+  description: Move up all or specified roller shutter
+
+  fields:
+    entity_id:
+      description: Name(s) of roller shutter(s) to move up
+      example: 'rollershutter.living_room'
+
+move_down:
+  description: Move down all or specified roller shutter
+
+  fields:
+    entity_id:
+      description: Name(s) of roller shutter(s) to move down
+      example: 'rollershutter.living_room'
+
+stop:
+  description: Stop all or specified roller shutter
+
+  fields:
+    entity_id:
+      description: Name(s) of roller shutter(s) to stop
+      example: 'rollershutter.living_room'

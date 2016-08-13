@@ -8,7 +8,7 @@ from typing import Any, Union, Optional, Tuple  # NOQA
 import pytz
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: pytz.UTC
+UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -93,11 +93,10 @@ def start_of_local_day(dt_or_d:
                        Union[dt.date, dt.datetime]=None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
-        dt_or_d = now().date()
+        date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
-        dt_or_d = dt_or_d.date()
-
-    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(dt_or_d, dt.time()))
+        date = dt_or_d.date()
+    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(date, dt.time()))
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -118,6 +117,8 @@ def parse_datetime(dt_str: str) -> dt.datetime:
     if kws['microsecond']:
         kws['microsecond'] = kws['microsecond'].ljust(6, '0')
     tzinfo_str = kws.pop('tzinfo')
+
+    tzinfo = None  # type: Optional[dt.tzinfo]
     if tzinfo_str == 'Z':
         tzinfo = UTC
     elif tzinfo_str is not None:

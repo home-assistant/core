@@ -253,7 +253,7 @@ def test_template():
     schema = vol.Schema(cv.template)
 
     for value in (
-        None, '{{ partial_print }', '{% if True %}Hello'
+        None, '{{ partial_print }', '{% if True %}Hello', {'dict': 'isbad'}
     ):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)

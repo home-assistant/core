@@ -9,30 +9,31 @@ import enum
 import functools as ft
 import logging
 import os
+import re
 import signal
 import threading
 import time
 from types import MappingProxyType
 
-from typing import Any, Callable
-import voluptuous as vol
+# pylint: disable=unused-import
+from typing import Optional, Any, Callable, List  # NOQA
 
-import homeassistant.helpers.temperature as temp_helper
-import homeassistant.util as util
-import homeassistant.util.dt as dt_util
-import homeassistant.util.location as location
-from homeassistant.config import get_default_config_dir
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
+
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, __version__)
+    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
-from homeassistant.helpers.entity import split_entity_id, valid_entity_id
+import homeassistant.util as util
+import homeassistant.util.dt as dt_util
+import homeassistant.util.location as location
+from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 DOMAIN = "homeassistant"
 
@@ -47,7 +48,20 @@ SERVICE_CALL_LIMIT = 10  # seconds
 # will be added for each component that polls devices.
 MIN_WORKER_THREAD = 2
 
+# Pattern for validating entity IDs (format: <domain>.<entity>)
+ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def split_entity_id(entity_id: str) -> List[str]:
+    """Split a state entity_id into domain, object_id."""
+    return entity_id.split(".", 1)
+
+
+def valid_entity_id(entity_id: str) -> bool:
+    """Test if an entity ID is a valid format."""
+    return ENTITY_ID_PATTERN.match(entity_id) is not None
 
 
 class CoreState(enum.Enum):
@@ -95,7 +109,7 @@ class HomeAssistant(object):
         self.bus = EventBus(pool)
         self.services = ServiceRegistry(self.bus, self.add_job)
         self.states = StateMachine(self.bus)
-        self.config = Config()
+        self.config = Config()  # type: Config
         self.state = CoreState.not_running
 
     @property
@@ -558,7 +572,8 @@ class Service(object):
             self.func(call)
         except vol.MultipleInvalid as ex:
             _LOGGER.error('Invalid service data for %s.%s: %s',
-                          call.domain, call.service, ex)
+                          call.domain, call.service,
+                          humanize_error(call.data, ex))
 
 
 # pylint: disable=too-few-public-methods
@@ -569,8 +584,8 @@ class ServiceCall(object):
 
     def __init__(self, domain, service, data=None, call_id=None):
         """Initialize a service call."""
-        self.domain = domain
-        self.service = service
+        self.domain = domain.lower()
+        self.service = service.lower()
         self.data = data or {}
         self.call_id = call_id
 
@@ -605,7 +620,7 @@ class ServiceRegistry(object):
 
     def has_service(self, domain, service):
         """Test if specified service exists."""
-        return service in self._services.get(domain, [])
+        return service.lower() in self._services.get(domain.lower(), [])
 
     # pylint: disable=too-many-arguments
     def register(self, domain, service, service_func, description=None,
@@ -618,6 +633,8 @@ class ServiceRegistry(object):
 
         Schema is called to coerce and validate the service data.
         """
+        domain = domain.lower()
+        service = service.lower()
         description = description or {}
         service_obj = Service(service_func, description.get('description'),
                               description.get('fields', {}), schema)
@@ -651,8 +668,8 @@ class ServiceRegistry(object):
         call_id = self._generate_unique_id()
 
         event_data = {
-            ATTR_DOMAIN: domain,
-            ATTR_SERVICE: service,
+            ATTR_DOMAIN: domain.lower(),
+            ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
             ATTR_SERVICE_CALL_ID: call_id,
         }
@@ -678,11 +695,14 @@ class ServiceRegistry(object):
     def _event_to_service_call(self, event):
         """Callback for SERVICE_CALLED events from the event bus."""
         service_data = event.data.get(ATTR_SERVICE_DATA)
-        domain = event.data.get(ATTR_DOMAIN)
-        service = event.data.get(ATTR_SERVICE)
+        domain = event.data.get(ATTR_DOMAIN).lower()
+        service = event.data.get(ATTR_SERVICE).lower()
         call_id = event.data.get(ATTR_SERVICE_CALL_ID)
 
         if not self.has_service(domain, service):
+            if event.origin == EventOrigin.local:
+                _LOGGER.warning('Unable to find service %s/%s',
+                                domain, service)
             return
 
         service_handler = self._services[domain][service]
@@ -712,15 +732,15 @@ class Config(object):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
         """Initialize a new config object."""
-        self.latitude = None
-        self.longitude = None
-        self.elevation = None
-        self.temperature_unit = None
-        self.location_name = None
-        self.time_zone = None
+        self.latitude = None  # type: Optional[float]
+        self.longitude = None  # type: Optional[float]
+        self.elevation = None  # type: Optional[int]
+        self.location_name = None  # type: Optional[str]
+        self.time_zone = None  # type: Optional[str]
+        self.units = METRIC_SYSTEM  # type: UnitSystem
 
         # If True, pip install is skipped for requirements on startup
-        self.skip_pip = False
+        self.skip_pip = False  # type: bool
 
         # List of loaded components
         self.components = []
@@ -729,30 +749,18 @@ class Config(object):
         self.api = None
 
         # Directory that holds the configuration
-        self.config_dir = get_default_config_dir()
+        self.config_dir = None
 
-    def distance(self, lat, lon):
-        """Calculate distance from Home Assistant in meters."""
-        return location.distance(self.latitude, self.longitude, lat, lon)
+    def distance(self: object, lat: float, lon: float) -> float:
+        """Calculate distance from Home Assistant."""
+        return self.units.length(
+            location.distance(self.latitude, self.longitude, lat, lon), 'm')
 
     def path(self, *path):
         """Generate path to the file within the config dir."""
+        if self.config_dir is None:
+            raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
-
-    def temperature(self, value, unit):
-        """Convert temperature to user preferred unit if set."""
-        if not (unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT) and
-                self.temperature_unit and unit != self.temperature_unit):
-            return value, unit
-
-        try:
-            temp = float(value)
-        except ValueError:  # Could not convert value to float
-            return value, unit
-
-        return (
-            round(temp_helper.convert(temp, unit, self.temperature_unit), 1),
-            self.temperature_unit)
 
     def as_dict(self):
         """Create a dict representation of this dict."""
@@ -761,7 +769,7 @@ class Config(object):
         return {
             'latitude': self.latitude,
             'longitude': self.longitude,
-            'temperature_unit': self.temperature_unit,
+            'unit_system': self.units.as_dict(),
             'location_name': self.location_name,
             'time_zone': time_zone.zone,
             'components': self.components,
