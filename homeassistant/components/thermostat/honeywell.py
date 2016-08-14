@@ -139,10 +139,7 @@ class RoundThermostat(ThermostatDevice):
     @property
     def operation(self: ThermostatDevice) -> str:
         """Get the current operation of the system."""
-        if hasattr(self.device, 'system_mode'):
-            return self.device.system_mode
-        else:
-            return None
+        return getattr(self.device, 'system_mode', None)
 
     @property
     def is_away_mode_on(self):
@@ -235,10 +232,7 @@ class HoneywellUSThermostat(ThermostatDevice):
     @property
     def operation(self: ThermostatDevice) -> str:
         """Return current operation ie. heat, cool, idle."""
-        if hasattr(self._device, 'system_mode'):
-            return self._device.system_mode
-        else:
-            return None
+        return getattr(self._device, 'system_mode', None)
 
     def set_temperature(self, temperature):
         """Set target temperature."""
