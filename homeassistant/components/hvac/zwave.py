@@ -120,8 +120,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
         # Current Temp
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
-            self._current_temperature = int(value.data)
-            self._unit = value.units
+            if value.label == 'Temperature':
+                self._current_temperature = int(value.data)
+                self._unit = value.units
         # Fan Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
