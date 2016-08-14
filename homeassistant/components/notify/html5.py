@@ -70,7 +70,7 @@ def get_service(hass, config):
 
 
 def _load_config(filename):
-    """Load configuration"""
+    """Load configuration."""
     if not os.path.isfile(filename):
         return {}
 
