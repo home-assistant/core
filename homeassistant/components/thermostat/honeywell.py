@@ -142,7 +142,7 @@ class RoundThermostat(ThermostatDevice):
         if hasattr(self.device, 'system_mode'):
             return self.device.system_mode
         else:
-            return 'undefined'
+            return None
 
     @property
     def is_away_mode_on(self):
@@ -238,7 +238,7 @@ class HoneywellUSThermostat(ThermostatDevice):
         if hasattr(self._device, 'system_mode'):
             return self._device.system_mode
         else:
-            return 'undefined'
+            return None
 
     def set_temperature(self, temperature):
         """Set target temperature."""
