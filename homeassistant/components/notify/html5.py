@@ -12,10 +12,11 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
-    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, CONF_PLATFORM)
+    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
-    ATTR_TARGET, BaseNotificationService, PLATFORM_SCHEMA)
+    ATTR_TARGET, ATTR_DATA, ATTR_TITLE, BaseNotificationService,
+    PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
@@ -91,8 +92,8 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, "w") as fdesc:
-            fdesc.write(json.dumps(config, indent=4))
-    except IOError as error:
+            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+    except (IOError, TypeError) as error:
         _LOGGER.error("Saving config file failed: %s", error)
         return False
     return True
@@ -124,7 +125,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations[name] = data
 
         if not _save_config(self.json_path, self.registrations):
-            return self.json_message(humanize_error(request.json, ex),
+            return self.json_message('Error saving registration.',
                                      HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message("Push notification subscriber registered.")
@@ -143,10 +144,16 @@ class HTML5NotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         from pywebpush import WebPusher
-        payload = {"body": message}
-        payload.update(dict((k, v) for k, v in kwargs.items() if v))
-        if kwargs.get('icon') is None:
-            payload['icon'] = '/static/icons/favicon-192x192.png'
+
+        payload = {
+            'title': message,
+            'icon': '/static/icons/favicon-192x192.png',
+        }
+
+        data = kwargs.get(ATTR_DATA)
+
+        if data:
+            payload.update(data)
 
         targets = kwargs.get(ATTR_TARGET)
 
