@@ -1,10 +1,10 @@
 """YAML utility functions."""
+import glob
 import logging
 import os
 from collections import OrderedDict
 from typing import Union, List, Dict
 
-import glob
 import yaml
 try:
     import keyring
