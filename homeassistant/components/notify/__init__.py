@@ -13,9 +13,9 @@ import voluptuous as vol
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_per_platform, template
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.util import slugify
 
 DOMAIN = "notify"
 
@@ -33,6 +33,11 @@ ATTR_MESSAGE = "message"
 ATTR_DATA = 'data'
 
 SERVICE_NOTIFY = "notify"
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+}, extra=vol.ALLOW_EXTRA)
 
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
@@ -95,8 +100,8 @@ def setup(hass, config):
                                         data=data)
 
         service_call_handler = partial(notify_message, notify_service)
-        service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
-        hass.services.register(DOMAIN, service_notify, service_call_handler,
+        service_name = slugify(p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        hass.services.register(DOMAIN, service_name, service_call_handler,
                                descriptions.get(SERVICE_NOTIFY),
                                schema=NOTIFY_SERVICE_SCHEMA)
         success = True
