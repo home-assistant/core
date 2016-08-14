@@ -8,12 +8,15 @@ import logging
 
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPDigestAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
 
 _LOGGER = logging.getLogger(__name__)
 
+BASIC_AUTHENTICATION = 'basic'
+DIGEST_AUTHENTICATION = 'digest'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -33,6 +36,7 @@ class GenericCamera(Camera):
         """Initialize a generic camera."""
         super().__init__()
         self._name = device_info.get('name', 'Generic Camera')
+        self._authentication = device_info.get('authentication', BASIC_AUTHENTICATION)
         self._username = device_info.get('username')
         self._password = device_info.get('password')
         self._still_image_url = device_info['still_image_url']
@@ -40,10 +44,14 @@ class GenericCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         if self._username and self._password:
+            if self._authentication == DIGEST_AUTHENTICATION:
+                auth = HTTPDigestAuth(self._username, self._password)
+            else:
+                auth = HTTPBasicAuth(self._username, self._password)
             try:
                 response = requests.get(
                     self._still_image_url,
-                    auth=HTTPBasicAuth(self._username, self._password),
+                    auth=auth,
                     timeout=10)
             except requests.exceptions.RequestException as error:
                 _LOGGER.error('Error getting camera image: %s', error)
