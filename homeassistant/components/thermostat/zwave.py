@@ -91,8 +91,7 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         # current Temp
         for _, value in self._node.get_values_for_command_class(
                 COMMAND_CLASS_SENSOR_MULTILEVEL).items():
-            if value.command_class == COMMAND_CLASS_SENSOR_MULTILEVEL and \
-               value.label == 'Temperature':
+            if value.label == 'Temperature':
                 self._current_temperature = int(value.data)
                 self._unit = value.units
 
