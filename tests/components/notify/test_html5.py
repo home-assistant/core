@@ -1,3 +1,4 @@
+"""Test HTML5 notify platform."""
 import json
 import tempfile
 from unittest.mock import patch, MagicMock
@@ -9,6 +10,8 @@ from homeassistant.components.notify import html5
 
 
 class TestHtml5Notify(object):
+    """Tests for HTML5 notify platform."""
+
     def test_get_service_with_no_json(self):
         """Test empty json file."""
         hass = MagicMock()
