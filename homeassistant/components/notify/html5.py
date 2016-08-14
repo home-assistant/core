@@ -15,7 +15,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, ATTR_TITLE, BaseNotificationService,
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService,
     PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
