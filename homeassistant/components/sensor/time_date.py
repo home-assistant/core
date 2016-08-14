@@ -9,9 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 TIME_STR_FORMAT = "%H:%M"
 CONF_DISPLAY_OPTIONS = 'display_options'
@@ -25,10 +26,9 @@ OPTION_TYPES = {
     'time_utc': 'Time (UTC)',
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'time_date',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
-        [vol.In(OPTION_TYPES.keys())],
+        vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
 })
 
 _LOGGER = logging.getLogger(__name__)

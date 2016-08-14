@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, CONF_NAME, CONF_TIME_ZONE)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, CONF_TIME_ZONE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -17,9 +18,8 @@ DEFAULT_NAME = "Worldclock Sensor"
 ICON = 'mdi:clock'
 TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'worldclock',
-    vol.Required(CONF_TIME_ZONE): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TIME_ZONE): cv.time_zone,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
