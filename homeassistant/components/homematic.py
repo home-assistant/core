@@ -28,7 +28,7 @@ DISCOVER_LIGHTS = 'homematic.light'
 DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_ROLLERSHUTTER = 'homematic.rollershutter'
-DISCOVER_THERMOSTATS = 'homematic.thermostat'
+DISCOVER_THERMOSTATS = 'homematic.climate'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -202,7 +202,7 @@ def system_callback_handler(hass, config, src, *args):
                     ('rollershutter', DISCOVER_ROLLERSHUTTER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('thermostat', DISCOVER_THERMOSTATS)):
+                    ('climate', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(discovery_type, key_dict)
 

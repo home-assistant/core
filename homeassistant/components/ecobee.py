@@ -69,7 +69,7 @@ def setup_ecobee(hass, network, config):
 
     hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
 
-    discovery.load_platform(hass, 'thermostat', DOMAIN,
+    discovery.load_platform(hass, 'climate', DOMAIN,
                             {'hold_temp': hold_temp}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
