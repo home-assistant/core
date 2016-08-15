@@ -29,6 +29,9 @@ LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 
+VALIDATE_LOCATION = 'location'
+VALIDATE_TRANSITION = 'transition'
+
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
@@ -47,6 +50,8 @@ def setup_scanner(hass, config, see):
                           'because of missing or malformatted data: %s',
                           data_type, data)
             return None
+        if data_type == VALIDATE_TRANSITION:
+            return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
             _LOGGER.debug('Skipping %s update because expected GPS '
@@ -65,7 +70,7 @@ def setup_scanner(hass, config, see):
         """MQTT message received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
-        data = validate_payload(payload, 'location')
+        data = validate_payload(payload, VALIDATE_LOCATION)
         if not data:
             return
 
@@ -86,7 +91,7 @@ def setup_scanner(hass, config, see):
         """MQTT event (geofences) received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
-        data = validate_payload(payload, 'transition')
+        data = validate_payload(payload, VALIDATE_TRANSITION)
         if not data:
             return
 
@@ -143,14 +148,19 @@ def setup_scanner(hass, config, see):
                 else:
                     _LOGGER.info("Exit to GPS")
                     # Check for GPS accuracy
-                    if not ('acc' in data and
-                            max_gps_accuracy is not None and
-                            data['acc'] > max_gps_accuracy):
+                    valid_gps = True
+                    if 'acc' in data:
+                        if data['acc'] == 0.0:
+                            valid_gps = False
+                            _LOGGER.info("Zero GPS reported")
+                        if (max_gps_accuracy is not None and
+                                data['acc'] > max_gps_accuracy):
+                            valid_gps = False
+                            _LOGGER.info("Inaccurate GPS reported")
 
+                    if valid_gps:
                         see(**kwargs)
                         see_beacons(dev_id, kwargs)
-                    else:
-                        _LOGGER.info("Inaccurate GPS reported")
 
                 beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                 if location in beacons:
