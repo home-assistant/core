@@ -142,6 +142,7 @@ class HTML5NotificationService(BaseNotificationService):
         self.registrations = registrations
 
     def get_targets(self):
+        """Return a dictionary of registered targets."""
         return self.registrations
 
     def send_message(self, message="", **kwargs):
