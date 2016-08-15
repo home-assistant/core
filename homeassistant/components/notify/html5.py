@@ -164,12 +164,12 @@ class HTML5PushCallbackView(HomeAssistantView):
                 return self.json_message(msg, HTTP_UNAUTHORIZED)
             else:
                 event_name = "{}.{}".format(NOTIFY_CALLBACK_EVENT,
-                                            request.json['event'])
+                                            request.json['type'])
                 event_payload = {"targets": tags[tag]['targets']}
                 event_payload.update(request.json)
                 self.hass.bus.fire(event_name, event_payload)
                 return self.json({"status": "ok",
-                                  "event": request.json['event']})
+                                  "event": request.json['type']})
         else:
             msg = "{} is not a valid tag!".format(request.json['tag'])
             return self.json_message(msg, HTTP_UNAUTHORIZED)
