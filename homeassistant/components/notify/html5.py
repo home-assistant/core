@@ -170,4 +170,4 @@ class HTML5NotificationService(BaseNotificationService):
                 continue
 
             WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='0')
+                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
