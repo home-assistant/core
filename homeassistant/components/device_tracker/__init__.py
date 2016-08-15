@@ -280,7 +280,11 @@ class Device(Entity):
         self.config_name = name
 
         # Configured picture
-        self.config_picture = picture
+        if picture is not None and "@" in picture:
+            self.config_picture = get_gravatar_for_email(picture)
+        else:
+            self.config_picture = picture
+
         self.away_hide = away_hide
 
     @property
@@ -425,3 +429,10 @@ def update_config(path, dev_id, device):
                            (CONF_AWAY_HIDE,
                             'yes' if device.away_hide else 'no')):
             out.write('  {}: {}\n'.format(key, '' if value is None else value))
+
+
+def get_gravatar_for_email(email):
+    """Return an 80px Gravatar for the given email address."""
+    import hashlib
+    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
+    return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
