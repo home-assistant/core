@@ -336,6 +336,9 @@ pysnmp==4.3.2
 # homeassistant.components.sensor.forecast
 python-forecastio==1.3.4
 
+# homeassistant.components.sensor.hp_ilo
+python-hpilo==3.8
+
 # homeassistant.components.lirc
 # python-lirc==1.2.1
 
