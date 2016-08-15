@@ -319,6 +319,7 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assertFalse(owntracks.REGIONS_ENTERED[USER])
 
     def test_event_entry_exit_zero_accuracy(self):
+        """Test entry/exit events with accuracy zero."""
         self.send_message(EVENT_TOPIC, REGION_ENTER_ZERO_MESSAGE)
 
         # Enter uses the zone's gps co-ords
