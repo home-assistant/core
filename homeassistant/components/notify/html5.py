@@ -210,8 +210,8 @@ class HTML5NotificationService(BaseNotificationService):
             payload.update(data)
             payload['data'] = data
 
-        if (payload['data'].get('url') is None and \
-            payload['data'].get('actions') is None):
+        if payload['data'].get('url') is None and \
+           payload['data'].get('actions') is None:
             payload['data']['url'] = '/'
 
         targets = kwargs.get(ATTR_TARGET)
