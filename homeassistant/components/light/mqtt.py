@@ -11,7 +11,8 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR,
+    Light)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -108,6 +109,11 @@ class MqttLight(Light):
                                        topic["brightness_state_topic"] is None)
         self._brightness_scale = brightness_scale
         self._state = False
+        self._supported_features = 0
+        self._supported_features |= (
+            topic['rgb_state_topic'] is not None and SUPPORT_RGB_COLOR)
+        self._supported_features |= (
+            topic['brightness_state_topic'] is not None and SUPPORT_BRIGHTNESS)
 
         templates = {key: ((lambda value: value) if tpl is None else
                            partial(render_with_possible_json_value, hass, tpl))
@@ -187,6 +193,11 @@ class MqttLight(Light):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self._supported_features
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

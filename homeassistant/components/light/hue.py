@@ -17,7 +17,9 @@ import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, Light)
+    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    SUPPORT_XY_COLOR, Light)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
 from homeassistant.loader import get_component
 
@@ -26,6 +28,10 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = "phue.conf"
+
+SUPPORT_HUE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
+               SUPPORT_FLASH | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION |
+               SUPPORT_XY_COLOR)
 
 
 # Map ip to request id for configuring
@@ -227,6 +233,11 @@ class HueLight(Light):
             return self.info['state']['on']
         else:
             return self.info['state']['reachable'] and self.info['state']['on']
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_HUE
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""

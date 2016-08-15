@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.switch import SwitchDevice
 
 DOMAIN = 'qwikswitch'
@@ -28,6 +29,8 @@ CONFIG_SCHEMA = vol.Schema({
     })}, extra=vol.ALLOW_EXTRA)
 
 QSUSB = {}
+
+SUPPORT_QWIKSWITCH = SUPPORT_BRIGHTNESS
 
 
 class QSToggleEntity(object):
@@ -108,7 +111,10 @@ class QSSwitch(QSToggleEntity, SwitchDevice):
 class QSLight(QSToggleEntity, Light):
     """Light based on a Qwikswitch relay/dimmer module."""
 
-    pass
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_QWIKSWITCH
 
 
 # pylint: disable=too-many-locals
