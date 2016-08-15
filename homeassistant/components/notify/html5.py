@@ -16,7 +16,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService,
+    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
     PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
@@ -131,7 +131,6 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         return self.json_message("Push notification subscriber registered.")
 
-
 # pylint: disable=too-few-public-methods
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
@@ -147,7 +146,8 @@ class HTML5NotificationService(BaseNotificationService):
         from pywebpush import WebPusher
 
         payload = {
-            'title': message,
+            'body': message,
+            'title': kwargs.get(ATTR_TITLE),
             'icon': '/static/icons/favicon-192x192.png',
             'timestamp': int(time.time()*1000) # Javascript ms since epoch
         }
