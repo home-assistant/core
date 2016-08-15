@@ -7,6 +7,7 @@ https://home-assistant.io/components/notify.html5/
 import os
 import logging
 import json
+import time
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -148,6 +149,7 @@ class HTML5NotificationService(BaseNotificationService):
         payload = {
             'title': message,
             'icon': '/static/icons/favicon-192x192.png',
+            'timestamp': int(time.time()*1000) # Javascript ms since epoch
         }
 
         data = kwargs.get(ATTR_DATA)
