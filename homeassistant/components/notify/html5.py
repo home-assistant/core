@@ -195,6 +195,7 @@ class HTML5NotificationService(BaseNotificationService):
 
         payload = {
             'body': message,
+            'data': {},
             'icon': '/static/icons/favicon-192x192.png',
             'tag': tag,
             'timestamp': (timestamp*1000), # Javascript ms since epoch
@@ -205,6 +206,10 @@ class HTML5NotificationService(BaseNotificationService):
 
         if data:
             payload.update(data)
+            payload['data'] = data
+
+        if payload['data'].get('url') is None:
+            payload['data']['url'] = '/'
 
         targets = kwargs.get(ATTR_TARGET)
 
