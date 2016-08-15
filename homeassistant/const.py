@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.26.1"
+__version__ = "0.26.2"
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
