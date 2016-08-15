@@ -189,8 +189,8 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 180)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.431, 0.38])
 
     # pylint: disable=invalid-name
     def test_flux_after_sunset_before_stop(self):
@@ -233,8 +233,8 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 153)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
 
     # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise(self):
@@ -323,8 +323,8 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 154)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.494, 0.397])
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_colortemps(self):
@@ -369,8 +369,8 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 248)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.335, 0.345])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 167)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.461, 0.389])
 
     # pylint: disable=invalid-name
     def test_flux_with_custom_brightness(self):
@@ -415,7 +415,7 @@ class TestSwitchFlux(unittest.TestCase):
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 255)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
 
     def test_flux_with_multiple_lights(self):
         """Test the flux switch with multiple light entities."""
@@ -472,14 +472,14 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
         call = turn_on_calls[-2]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
         call = turn_on_calls[-3]
-        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
-        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
+        self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 171)
+        self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.452, 0.386])
 
     def test_flux_with_mired(self):
         """Test the flux switch´s mode mired."""
@@ -521,7 +521,7 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 526)
+        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 269)
 
     def test_flux_with_kelvin(self):
         """Test the flux switch´s mode kelvin."""
@@ -563,4 +563,4 @@ class TestSwitchFlux(unittest.TestCase):
                     fire_time_changed(self.hass, test_time)
                     self.hass.pool.block_till_done()
         call = turn_on_calls[-1]
-        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 1900)
+        self.assertEqual(call.data[light.ATTR_COLOR_TEMP], 3708)
