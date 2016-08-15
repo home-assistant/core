@@ -139,6 +139,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         return self.json_message("Push notification subscriber registered.")
 
+
 class HTML5PushCallbackView(HomeAssistantView):
     """Accepts push registrations from a browser."""
 
@@ -155,16 +156,16 @@ class HTML5PushCallbackView(HomeAssistantView):
         """Accept the POST request for push registrations event callback."""
         if request.json.get('tag') is None:
             return self.json_message("No tag provided!", HTTP_UNAUTHORIZED)
-        self.tags = _load_config(self.tags_path)
+        tags = _load_config(self.tags_path)
         tag = request.json['tag']
-        if tag in self.tags.keys():
-            if self.tags[tag]['timestamp'] - int(time.time()) > 86400:
+        if tag in tags.keys():
+            if tags[tag]['timestamp'] - int(time.time()) > 86400:
                 msg = "{} is an expired tag!".format(tag)
                 return self.json_message(msg, HTTP_UNAUTHORIZED)
             else:
                 event_name = "{}.{}".format(NOTIFY_CALLBACK_EVENT,
                                             request.json['event'])
-                event_payload = {"targets": self.tags[tag]['targets']}
+                event_payload = {"targets": tags[tag]['targets']}
                 event_payload.update(request.json)
                 self.hass.bus.fire(event_name, event_payload)
                 return self.json({"status": "ok",
@@ -172,6 +173,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         else:
             msg = "{} is not a valid tag!".format(request.json['tag'])
             return self.json_message(msg, HTTP_UNAUTHORIZED)
+
 
 # pylint: disable=too-few-public-methods
 class HTML5NotificationService(BaseNotificationService):
@@ -198,7 +200,7 @@ class HTML5NotificationService(BaseNotificationService):
             'data': {},
             'icon': '/static/icons/favicon-192x192.png',
             'tag': tag,
-            'timestamp': (timestamp*1000), # Javascript ms since epoch
+            'timestamp': (timestamp*1000),  # Javascript ms since epoch
             'title': kwargs.get(ATTR_TITLE)
         }
 
