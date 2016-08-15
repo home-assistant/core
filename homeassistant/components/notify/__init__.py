@@ -64,6 +64,7 @@ def send_message(hass, message, title=None, data=None):
     hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the notify services."""
     success = False
@@ -94,7 +95,7 @@ def setup(hass, config):
 
             title = template.render(
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
-            if targets[call.service] is not None:
+            if targets.get(call.service) is not None:
                 target = targets[call.service]['target']
             else:
                 target = call.data.get(ATTR_TARGET)
@@ -109,7 +110,7 @@ def setup(hass, config):
         platform_name_slug = slugify(platform_name)
 
         if hasattr(notify_service, 'get_targets'):
-            for name, target in notify_service.get_targets().items():
+            for name in notify_service.get_targets().keys():
                 target_name = slugify("{}_{}".format(platform_name_slug,
                                                      name))
                 targets[target_name] = {"platform": platform_name,
@@ -124,6 +125,18 @@ def setup(hass, config):
                                descriptions.get(SERVICE_NOTIFY),
                                schema=NOTIFY_SERVICE_SCHEMA)
         success = True
+
+    def notify_group(group, call):
+        """Notify a group of targets."""
+        for target in group:
+            hass.services.call(DOMAIN, target, call.data)
+
+    for group_name, group in config.get('notifygroups').items():
+        group_name_slug = "group_{}".format(slugify(group_name))
+        hass.services.register(DOMAIN, group_name_slug,
+                               partial(notify_group, group),
+                               descriptions.get(SERVICE_NOTIFY),
+                               schema=NOTIFY_SERVICE_SCHEMA)
 
     return success
 
