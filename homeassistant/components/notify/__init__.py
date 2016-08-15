@@ -71,6 +71,8 @@ def setup(hass, config):
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
+    targets = {}
+
     for platform, p_config in config_per_platform(config, DOMAIN):
         notify_implementation = bootstrap.prepare_setup_platform(
             hass, config, DOMAIN, platform)
@@ -92,7 +94,10 @@ def setup(hass, config):
 
             title = template.render(
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
-            target = call.data.get(ATTR_TARGET)
+            if targets[call.service] is not None:
+                target = targets[call.service]['target']
+            else:
+                target = call.data.get(ATTR_TARGET)
             message = template.render(hass, message)
             data = call.data.get(ATTR_DATA)
 
@@ -100,8 +105,22 @@ def setup(hass, config):
                                         data=data)
 
         service_call_handler = partial(notify_message, notify_service)
-        service_name = slugify(p_config.get(CONF_NAME) or SERVICE_NOTIFY)
-        hass.services.register(DOMAIN, service_name, service_call_handler,
+        platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        platform_name_slug = slugify(platform_name)
+
+        if hasattr(notify_service, 'get_targets'):
+            for name, target in notify_service.get_targets().items():
+                target_name = slugify("{}_{}".format(platform_name_slug,
+                                                     name))
+                targets[target_name] = {"platform": platform_name,
+                                        "target": name}
+                hass.services.register(DOMAIN, target_name,
+                                       service_call_handler,
+                                       descriptions.get(SERVICE_NOTIFY),
+                                       schema=NOTIFY_SERVICE_SCHEMA)
+
+        hass.services.register(DOMAIN, platform_name_slug,
+                               service_call_handler,
                                descriptions.get(SERVICE_NOTIFY),
                                schema=NOTIFY_SERVICE_SCHEMA)
         success = True

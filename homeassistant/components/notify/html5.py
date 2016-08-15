@@ -141,6 +141,9 @@ class HTML5NotificationService(BaseNotificationService):
         self._gcm_key = gcm_key
         self.registrations = registrations
 
+    def get_targets(self):
+        return self.registrations
+
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         from pywebpush import WebPusher
