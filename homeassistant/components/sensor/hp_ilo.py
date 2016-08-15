@@ -27,6 +27,7 @@ SENSOR_TYPES = {
     'server_name': ['Server Name', 'get_server_name'],
     'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
     'server_host_data': ['Server Host Data', 'get_host_data'],
+    'server_oa_info': ['Server Onboard Administrator Info', 'get_oa_info'],
     'server_power_status': ['Server Power state', 'get_host_power_status'],
     'server_power_readings': ['Server Power readings', 'get_power_readings'],
     'server_power_on_time': ['Server Power On time',
