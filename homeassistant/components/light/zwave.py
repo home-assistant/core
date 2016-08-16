@@ -10,7 +10,8 @@ import logging
 # pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, DOMAIN, Light
+    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
+    SUPPORT_RGB_COLOR, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
@@ -40,6 +41,8 @@ DEVICE_MAPPINGS = {
 TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
 TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
 TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
+
+SUPPORT_ZWAVE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -136,6 +139,11 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_ZWAVE
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
