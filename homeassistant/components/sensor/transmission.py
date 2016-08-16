@@ -9,9 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_PLATFORM, CONF_NAME, CONF_PORT,
-                                 CONF_MONITORED_VARIABLES)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
+    CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -27,15 +28,14 @@ SENSOR_TYPES = {
     'upload_speed': ['Up Speed', 'MB/s']
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'transmission',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
-        [vol.In(SENSOR_TYPES.keys())],
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,10 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        if variable not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable)
-        else:
-            dev.append(TransmissionSensor(variable, transmission_api, name))
+        dev.append(TransmissionSensor(variable, transmission_api, name))
 
     add_devices(dev)
 

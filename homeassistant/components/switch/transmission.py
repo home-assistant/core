@@ -6,48 +6,56 @@ https://home-assistant.io/components/switch.transmission/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_OFF, STATE_ON)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME, STATE_OFF,
+    STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['transmissionrpc==0.11']
+
+DEFAULT_NAME = 'Transmission Turtle Mode'
+DEFAULT_PORT = 9091
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
+})
 
 _LOGGING = logging.getLogger(__name__)
-REQUIREMENTS = ['transmissionrpc==0.11']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the transmission sensor."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Transmission switch."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
 
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    username = config.get(CONF_USERNAME, None)
-    password = config.get(CONF_PASSWORD, None)
-    port = config.get('port', 9091)
-
-    name = config.get("name", "Transmission Turtle Mode")
-    if not host:
-        _LOGGING.error('Missing config variable %s', CONF_HOST)
-        return False
-
-    # import logging
-    # logging.getLogger('transmissionrpc').setLevel(logging.DEBUG)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    port = config.get(CONF_PORT)
 
     transmission_api = transmissionrpc.Client(
         host, port=port, user=username, password=password)
     try:
         transmission_api.session_stats()
     except TransmissionError:
-        _LOGGING.exception("Connection to Transmission API failed.")
+        _LOGGING.exception("Connection to Transmission API failed")
         return False
 
-    add_devices_callback([
-        TransmissionSwitch(transmission_api, name)
-    ])
+    add_devices([TransmissionSwitch(transmission_api, name)])
 
 
 class TransmissionSwitch(ToggleEntity):
-    """Representation of a Transmission sensor."""
+    """Representation of a Transmission switch."""
 
     def __init__(self, transmission_client, name):
         """Initialize the Transmission switch."""
@@ -77,18 +85,15 @@ class TransmissionSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGING.info("Turning on Turtle Mode")
-        self.transmission_client.set_session(
-            alt_speed_enabled=True)
+        _LOGGING.debug("Turning Turtle Mode of Transmission on")
+        self.transmission_client.set_session(alt_speed_enabled=True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGING.info("Turning off Turtle Mode ")
-        self.transmission_client.set_session(
-            alt_speed_enabled=False)
+        _LOGGING.debug("Turning Turtle Mode of Transmission off")
+        self.transmission_client.set_session(alt_speed_enabled=False)
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
-        active = self.transmission_client.get_session(
-        ).alt_speed_enabled
+        active = self.transmission_client.get_session().alt_speed_enabled
         self._state = STATE_ON if active else STATE_OFF

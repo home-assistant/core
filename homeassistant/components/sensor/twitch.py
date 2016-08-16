@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 
 CONF_CHANNELS = 'channels'
@@ -20,11 +20,10 @@ ATTR_TITLE = 'title'
 ICON = 'mdi:twitch'
 
 REQUIREMENTS = ['python-twitch==1.3.0']
-DOMAIN = 'twitch'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'twitch',
-    vol.Required(CONF_CHANNELS, default=[]): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_CHANNELS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,8 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Twitch platform."""
-    add_devices(
-        [TwitchSensor(channel) for channel in config.get('channels', [])])
+    channels = config.get(CONF_CHANNELS, [])
+
+    add_devices([TwitchSensor(channel) for channel in channels])
 
 
 class TwitchSensor(Entity):

@@ -10,26 +10,28 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE, CONF_NAME, CONF_PLATFORM,
-                                 CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-                                 CONF_UNIT_OF_MEASUREMENT)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['dweepy==0.2.0']
 
+CONF_DEVICE = 'device'
 DEFAULT_NAME = 'Dweet.io Sensor'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'dweet',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
+    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+
 })
+
+_LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
