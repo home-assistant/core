@@ -113,8 +113,7 @@ def setup(hass, config):
             for name in notify_service.get_targets().keys():
                 target_name = slugify("{}_{}".format(platform_name_slug,
                                                      name))
-                targets[target_name] = {"platform": platform_name,
-                                        "target": name}
+                targets[target_name] = {"target": name}
                 hass.services.register(DOMAIN, target_name,
                                        service_call_handler,
                                        descriptions.get(SERVICE_NOTIFY),

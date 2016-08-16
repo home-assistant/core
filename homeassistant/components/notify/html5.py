@@ -141,7 +141,8 @@ class HTML5NotificationService(BaseNotificationService):
         self._gcm_key = gcm_key
         self.registrations = registrations
 
-    def get_targets(self):
+    @property
+    def targets(self):
         """Return a dictionary of registered targets."""
         return self.registrations
 
