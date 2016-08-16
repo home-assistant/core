@@ -65,7 +65,7 @@ class TestHtml5Notify(object):
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
 
-        assert payload['title'] == 'Hello'
+        assert payload['body'] == 'Hello'
         assert payload['icon'] == 'beer.png'
 
     def test_registering_new_device_view(self):
