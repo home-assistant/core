@@ -6,31 +6,32 @@ https://home-assistant.io/components/sensor.worldclock/
 """
 import logging
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, CONF_TIME_ZONE)
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Worldclock Sensor"
 ICON = 'mdi:clock'
 TIME_STR_FORMAT = "%H:%M"
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TIME_ZONE): cv.time_zone,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Worldclock sensor."""
-    try:
-        time_zone = dt_util.get_time_zone(config.get('time_zone'))
-    except AttributeError:
-        _LOGGER.error("time_zone in platform configuration is missing.")
-        return False
+    name = config.get(CONF_NAME)
+    time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    if time_zone is None:
-        _LOGGER.error("Timezone '%s' is not valid.", config.get('time_zone'))
-        return False
-
-    add_devices([WorldClockSensor(
-        time_zone,
-        config.get('name', DEFAULT_NAME)
-    )])
+    add_devices([WorldClockSensor(time_zone, name)])
 
 
 class WorldClockSensor(Entity):
