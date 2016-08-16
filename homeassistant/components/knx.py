@@ -10,7 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "knx"
-REQUIREMENTS = ['knxip>=0.3.3']
+REQUIREMENTS = ['knxip==0.3.3']
 
 EVENT_KNX_FRAME_RECEIVED = "knx_frame_received"
 
