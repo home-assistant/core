@@ -10,12 +10,12 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 TIME_STR_FORMAT = "%H:%M"
-CONF_DISPLAY_OPTIONS = 'display_options'
 
 OPTION_TYPES = {
     'time': 'Time',
@@ -40,14 +40,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Timezone is not set in Home Assistant config")
         return False
 
-    dev = []
+    devices = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
-        if variable not in OPTION_TYPES:
-            _LOGGER.error('Option type: "%s" does not exist', variable)
-        else:
-            dev.append(TimeDateSensor(variable))
+        devices.append(TimeDateSensor(variable))
 
-    add_devices(dev)
+    add_devices(devices)
 
 
 # pylint: disable=too-few-public-methods

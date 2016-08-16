@@ -31,10 +31,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    if time_zone is None:
-        _LOGGER.error("Timezone '%s' is not valid", config.get(CONF_TIME_ZONE))
-        return False
-
     add_devices([WorldClockSensor(time_zone, name)])
 
 
