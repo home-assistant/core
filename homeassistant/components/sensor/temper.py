@@ -38,7 +38,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     temper_devices = TemperHandler().get_devices()
     add_devices_callback([TemperSensor(dev,
                                        temp_unit,
-                                       name if name != DEVICE_DEFAULT_NAME else name + '_' + str(idx), scale, offset)
+                                       name if name != DEVICE_DEFAULT_NAME
+                                       else name + '_' + str(idx),
+                                       scale,
+                                       offset)
                           for idx, dev in enumerate(temper_devices)])
 
 
@@ -74,7 +77,8 @@ class TemperSensor(Entity):
         try:
             format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
                           else 'celsius')
-            self.current_value = self.scale * self.temper_device.get_temperature(format_str) + self.offset
+            sensor_value = self.temper_device.get_temperature(format_str)
+            self.current_value = self.scale * sensor_value + self.offset
         except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')
