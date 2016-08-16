@@ -267,8 +267,9 @@ def process_ha_core_config(hass, config):
         else:
             hac.units = IMPERIAL_SYSTEM
         _LOGGER.warning("Found deprecated temperature unit in core config, "
-                        "expected unit system. Replace 'temperature: %s' with "
-                        "'unit_system: %s'", unit, hac.units.name)
+                        "expected unit system. Replace '%s: %s' with "
+                        "'%s: %s'", CONF_TEMPERATURE_UNIT, unit,
+                        CONF_UNIT_SYSTEM, hac.units.name)
 
     # Shortcut if no auto-detection necessary
     if None not in (hac.latitude, hac.longitude, hac.units,
