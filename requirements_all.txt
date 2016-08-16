@@ -473,7 +473,7 @@ xbee-helper==0.0.7
 xmltodict==0.10.2
 
 # homeassistant.components.sensor.yweather
-yahooweather==0.6
+yahooweather==0.7
 
 # homeassistant.components.zeroconf
 zeroconf==0.17.6
