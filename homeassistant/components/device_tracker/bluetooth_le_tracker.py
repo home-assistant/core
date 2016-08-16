@@ -18,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['gattlib==0.20150805']
 
 BLE_PREFIX = 'BLE_'
+MIN_SEEN_NEW = 5
 
 
 def setup_scanner(hass, config, see):
@@ -25,8 +26,25 @@ def setup_scanner(hass, config, see):
     # pylint: disable=import-error
     from gattlib import DiscoveryService
 
-    def see_device(address, name):
+    new_devices = {}
+
+    def see_device(address, name, new_device=False):
         """Mark a device as seen."""
+        if new_device:
+            if address in new_devices:
+                _LOGGER.debug("Seen %s %s times", address,
+                              new_devices[address])
+                new_devices[address] += 1
+                if new_devices[address] >= MIN_SEEN_NEW:
+                    _LOGGER.debug("Adding %s to tracked devices", address)
+                    devs_to_track.append(address)
+                else:
+                    return
+            else:
+                _LOGGER.debug("Seen %s for the first time", address)
+                new_devices[address] = 1
+                return
+
         see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"))
 
     def discover_ble_devices():
@@ -79,9 +97,8 @@ def setup_scanner(hass, config, see):
             for address in devs:
                 if address not in devs_to_track and \
                   address not in devs_donot_track:
-                    devs_to_track.append(address)
                     _LOGGER.info("Discovered Bluetooth LE device %s", address)
-                    see_device(address, devs[address])
+                    see_device(address, devs[address], new_device=True)
 
         track_point_in_utc_time(hass, update_ble,
                                 now + timedelta(seconds=interval))
