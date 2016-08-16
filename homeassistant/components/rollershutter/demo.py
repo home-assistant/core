@@ -60,6 +60,14 @@ class DemoRollershutter(RollershutterDevice):
         self._listen()
         self._moving_up = False
 
+    def move_position(self, position, **kwargs):
+        """Move the roller shutter to a specific position."""
+        if self._position == position:
+            return
+
+        self._listen()
+        self._moving_up = position < self._position
+
     def stop(self, **kwargs):
         """Stop the roller shutter."""
         if self._listener is not None:
