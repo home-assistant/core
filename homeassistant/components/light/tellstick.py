@@ -7,12 +7,15 @@ https://home-assistant.io/components/light.tellstick/
 import voluptuous as vol
 
 from homeassistant.components import tellstick
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.tellstick import (DEFAULT_SIGNAL_REPETITIONS,
                                                 ATTR_DISCOVER_DEVICES,
                                                 ATTR_DISCOVER_CONFIG)
 
 PLATFORM_SCHEMA = vol.Schema({vol.Required("platform"): tellstick.DOMAIN})
+
+SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 
 # pylint: disable=unused-argument
@@ -50,6 +53,11 @@ class TellstickLight(tellstick.TellstickDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_TELLSTICK
 
     def set_tellstick_state(self, last_command_sent, last_data_sent):
         """Update the internal representation of the switch."""

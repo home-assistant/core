@@ -8,11 +8,14 @@ import json
 import logging
 import socket
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
+from homeassistant.components.light import (ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+                                            Light)
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = []
+
+SUPPORT_HYPERION = SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -52,6 +55,11 @@ class Hyperion(Light):
     def is_on(self):
         """Return true if not black."""
         return self._rgb_color != [0, 0, 0]
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_HYPERION
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
