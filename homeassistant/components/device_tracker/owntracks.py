@@ -54,14 +54,14 @@ def setup_scanner(hass, config, see):
             return data
         if max_gps_accuracy is not None and \
                 convert(data.get('acc'), float, 0.0) > max_gps_accuracy:
-            _LOGGER.debug('Skipping %s update because expected GPS '
-                          'accuracy %s is not met: %s',
-                          data_type, max_gps_accuracy, data)
+            _LOGGER.warning('Ignoring %s update because expected GPS '
+                            'accuracy %s is not met: %s',
+                            data_type, max_gps_accuracy, payload)
             return None
         if convert(data.get('acc'), float, 1.0) == 0.0:
-            _LOGGER.debug('Skipping %s update because GPS accuracy'
-                          'is zero',
-                          data_type)
+            _LOGGER.warning('Ignoring %s update because GPS accuracy'
+                            'is zero: %s',
+                            data_type, payload)
             return None
 
         return data
@@ -152,17 +152,20 @@ def setup_scanner(hass, config, see):
                     if 'acc' in data:
                         if data['acc'] == 0.0:
                             valid_gps = False
-                            _LOGGER.info("Zero GPS reported")
+                            _LOGGER.warning(
+                                'Ignoring GPS in region exit because accuracy'
+                                'is zero: %s',
+                                payload)
                         if (max_gps_accuracy is not None and
                                 data['acc'] > max_gps_accuracy):
                             valid_gps = False
-                            _LOGGER.info("Inaccurate GPS reported")
-
+                            _LOGGER.warning(
+                                'Ignoring GPS in region exit because expected '
+                                'GPS accuracy %s is not met: %s',
+                                max_gps_accuracy, payload)
                     if valid_gps:
                         see(**kwargs)
                         see_beacons(dev_id, kwargs)
-                    else:
-                        _LOGGER.info("Inaccurate GPS reported")
 
                 beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                 if location in beacons:
