@@ -97,6 +97,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
+    def move_position(self, position, **kwargs):
+        """Move the roller shutter to a specific position."""
+        self._node.set_dimmer(self._value.value_id, 100 - position)
+
     def stop(self, **kwargs):
         """Stop the roller shutter."""
         for value in self._node.get_values(
