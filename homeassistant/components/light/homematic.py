@@ -5,13 +5,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.homematic/
 """
 import logging
-from homeassistant.components.light import (ATTR_BRIGHTNESS, Light)
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import STATE_UNKNOWN
 import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
+
+SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
@@ -45,6 +48,11 @@ class HMLight(homematic.HMDevice, Light):
             return self._hm_get_state() > 0
         except TypeError:
             return False
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_HOMEMATIC
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

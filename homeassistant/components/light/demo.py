@@ -7,7 +7,8 @@ https://home-assistant.io/components/demo/
 import random
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 
 LIGHT_COLORS = [
     [237, 224, 33],
@@ -15,6 +16,8 @@ LIGHT_COLORS = [
 ]
 
 LIGHT_TEMPS = [240, 380]
+
+SUPPORT_DEMO = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -67,6 +70,11 @@ class DemoLight(Light):
     def is_on(self):
         """Return true if light is on."""
         return self._state
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_DEMO
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

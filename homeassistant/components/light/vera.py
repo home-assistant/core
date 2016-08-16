@@ -6,7 +6,8 @@ https://home-assistant.io/components/light.vera/
 """
 import logging
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import (
     STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
@@ -15,6 +16,8 @@ from homeassistant.components.vera import (
 DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 
 # pylint: disable=unused-argument
@@ -37,6 +40,11 @@ class VeraLight(VeraDevice, Light):
         """Return the brightness of the light."""
         if self.vera_device.is_dimmable:
             return self.vera_device.get_brightness()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_VERA
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
