@@ -221,6 +221,7 @@ SERVICE_CLOSE = "close"
 
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
+SERVICE_MOVE_POSITION = 'move_position'
 SERVICE_STOP = 'stop'
 
 # #### API / REMOTE ####
