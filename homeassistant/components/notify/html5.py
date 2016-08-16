@@ -48,8 +48,6 @@ REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
 })
 
-NOTIFY_CALLBACK_EVENT = "html5_notification"
-
 
 def get_service(hass, config):
     """Get the HTML5 push notification service."""
