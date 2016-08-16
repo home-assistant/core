@@ -10,8 +10,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_PLATFORM,
-                                 CONF_PAYLOAD)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -25,26 +25,25 @@ CONF_QUOTE = 'quote'
 DEFAULT_NAME = 'Exchange Rate Sensor'
 DEFAULT_BASE = 'USD'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'openexchangerates',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
     vol.Required(CONF_QUOTE): cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 # Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=100)
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Openexchangerates sensor."""
+    """Setup the Open Exchange Rates sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
     base = config.get(CONF_BASE)
     quote = config.get(CONF_QUOTE)
-
     payload = config.get(CONF_PAYLOAD)
+
     rest = OpenexchangeratesData(_RESOURCE, api_key, base, quote, payload)
     response = requests.get(_RESOURCE, params={'base': base,
                                                'app_id': api_key},
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OpenexchangeratesSensor(Entity):
-    """Representation of an Openexchangerates sensor."""
+    """Representation of an Open Exchange Rates sensor."""
 
     def __init__(self, rest, name, quote):
         """Initialize the sensor."""

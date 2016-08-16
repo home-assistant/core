@@ -9,7 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -39,15 +40,14 @@ OPTION_TYPES = {
     'miners_revenue_btc': ['Miners revenue', 'BTC'],
     'market_price_usd': ['Market price', 'USD']
 }
+
 ICON = 'mdi:currency-btc'
 CONF_CURRENCY = 'currency'
-CONF_DISPLAY_OPTIONS = 'display_options'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'bitcoin',
-    vol.Optional(CONF_CURRENCY, default='USD'): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DISPLAY_OPTIONS, default=[]):
-        [vol.In(OPTION_TYPES.keys())],
+        [vol.In(OPTION_TYPES)],
+    vol.Optional(CONF_CURRENCY, default='USD'): cv.string,
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,10 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = BitcoinData()
     dev = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
-        if variable not in OPTION_TYPES:
-            _LOGGER.error('Option type: "%s" does not exist', variable)
-        else:
-            dev.append(BitcoinSensor(data, variable, currency))
+        dev.append(BitcoinSensor(data, variable, currency))
 
     add_devices(dev)
 
