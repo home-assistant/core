@@ -33,27 +33,28 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
-    scale = config.get(CONF_SCALE, 1)
-    offset = config.get(CONF_OFFSET, 0)
+    scaling = {
+        "scale": config.get(CONF_SCALE, 1),
+        "offset": config.get(CONF_OFFSET, 0)
+    }
     temper_devices = TemperHandler().get_devices()
     add_devices_callback([TemperSensor(dev,
                                        temp_unit,
                                        name if name != DEVICE_DEFAULT_NAME
                                        else name + '_' + str(idx),
-                                       scale,
-                                       offset)
+                                       scaling)
                           for idx, dev in enumerate(temper_devices)])
 
 
 class TemperSensor(Entity):
     """Representation of a Temper temperature sensor."""
 
-    def __init__(self, temper_device, temp_unit, name, scale, offset):
+    def __init__(self, temper_device, temp_unit, name, scaling):
         """Initialize the sensor."""
         self.temper_device = temper_device
         self.temp_unit = temp_unit
-        self.scale = scale
-        self.offset = offset
+        self.scale = scaling["scale"]
+        self.offset = scaling["offset"]
         self.current_value = None
         self._name = name
 
