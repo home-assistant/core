@@ -19,9 +19,9 @@ CONF_ENTITIES = "entities"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "group",
-    vol.Optional(CONF_NAME): vol.Coerce(str),
+    vol.Required(CONF_NAME): vol.Coerce(str),
     vol.Required(CONF_ENTITIES): vol.All(cv.ensure_list, [{
-        vol.Optional(CONF_ENTITY_ID): vol.Any(cv.string, None),
+        vol.Required(CONF_ENTITY_ID): vol.Any(cv.string, None),
         vol.Optional(ATTR_DATA): dict,
     }])
 })
