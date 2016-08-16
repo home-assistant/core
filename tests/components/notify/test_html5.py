@@ -80,7 +80,7 @@ class TestHtml5Notify(object):
             assert service is not None
 
             # assert hass.called
-            assert len(hass.mock_calls) == 4
+            assert len(hass.mock_calls) == 2
 
             view = hass.mock_calls[1][1][0]
             assert view.json_path == fp.name
@@ -116,7 +116,7 @@ class TestHtml5Notify(object):
             assert service is not None
 
             # assert hass.called
-            assert len(hass.mock_calls) == 4
+            assert len(hass.mock_calls) == 2
 
             view = hass.mock_calls[1][1][0]
 
