@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.temper/
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
@@ -15,6 +16,15 @@ REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
                 '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
                 '#temperusb==1.2.3']
 
+CONF_SCALE = 'scale'
+CONF_OFFSET = 'offset'
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required('platform'): 'temper',
+    vol.Optional(CONF_NAME): vol.Coerce(str),
+    vol.Optional(CONF_SCALE): vol.Coerce(float),
+    vol.Optional(CONF_OFFSET): vol.Coerce(float)
+})
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -23,18 +33,24 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+    scale = config.get(CONF_SCALE, 1)
+    offset = config.get(CONF_OFFSET, 0)
     temper_devices = TemperHandler().get_devices()
-    add_devices_callback([TemperSensor(dev, temp_unit, name + '_' + str(idx))
+    add_devices_callback([TemperSensor(dev,
+                                       temp_unit,
+                                       name if name != DEVICE_DEFAULT_NAME else name + '_' + str(idx), scale, offset)
                           for idx, dev in enumerate(temper_devices)])
 
 
 class TemperSensor(Entity):
     """Representation of a Temper temperature sensor."""
 
-    def __init__(self, temper_device, temp_unit, name):
+    def __init__(self, temper_device, temp_unit, name, scale, offset):
         """Initialize the sensor."""
         self.temper_device = temper_device
         self.temp_unit = temp_unit
+        self.scale = scale
+        self.offset = offset
         self.current_value = None
         self._name = name
 
@@ -58,7 +74,7 @@ class TemperSensor(Entity):
         try:
             format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
                           else 'celsius')
-            self.current_value = self.temper_device.get_temperature(format_str)
+            self.current_value = self.scale * self.temper_device.get_temperature(format_str) + self.offset
         except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')
