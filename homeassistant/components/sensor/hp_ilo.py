@@ -1,5 +1,5 @@
 """
-Support for information from HP ILO sensors
+Support for information from HP ILO sensors.
 
 This allows monitoring of HP server information
 """
