@@ -63,7 +63,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), 0, True, dev_id,
-            'AB:CD:EF:GH:IJ', 'Test name', 'http://test.picture', True)
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(device_tracker.setup(self.hass, {}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
