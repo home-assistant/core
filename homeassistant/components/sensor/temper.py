@@ -26,6 +26,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_OFFSET): vol.Coerce(float)
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Temper sensors."""
