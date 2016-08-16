@@ -18,7 +18,6 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.util import slugify
 
 DOMAIN = "notify"
-GROUP_DOMAIN = "notifygroup"
 
 # Title of notification
 ATTR_TITLE = "title"
@@ -126,18 +125,6 @@ def setup(hass, config):
                                descriptions.get(SERVICE_NOTIFY),
                                schema=NOTIFY_SERVICE_SCHEMA)
         success = True
-
-    def notify_group(group, call):
-        """Notify a group of targets."""
-        for target in group:
-            hass.services.call(DOMAIN, target, call.data)
-
-    if config.get('notifygroups') is not None:
-        for group_name, group in config.get('notifygroups').items():
-            hass.services.register(GROUP_DOMAIN, slugify(group_name),
-                                   partial(notify_group, group),
-                                   descriptions.get(SERVICE_NOTIFY),
-                                   schema=NOTIFY_SERVICE_SCHEMA)
 
     return success
 
