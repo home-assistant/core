@@ -172,6 +172,7 @@ omit =
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/free_mobile.py
+    homeassistant/components/notify/group.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/joaoapps_join.py
