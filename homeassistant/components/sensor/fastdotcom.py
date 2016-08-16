@@ -78,6 +78,8 @@ class SpeedtestSensor(Entity):
                     ).order_by(states.state_id.desc()).limit(1))
             except TypeError:
                 return
+            except RuntimeError:
+                return
             if not last_state:
                 return
             self._state = last_state[0].state
