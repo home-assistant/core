@@ -197,7 +197,7 @@ insteon_hub==0.4.5
 jsonrpc-requests==0.3
 
 # homeassistant.components.knx
-knxip==0.3.2
+knxip==0.3.3
 
 # homeassistant.components.light.lifx
 liffylights==0.9.4
