@@ -43,9 +43,8 @@ class GroupNotifyPlatform(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
-        cleaned_kwargs = dict((k, v) for k, v in kwargs.items() if v)
-        payload = dict({ATTR_MESSAGE: message})
-        payload.update(cleaned_kwargs)
+        payload = {ATTR_MESSAGE: message}
+        payload.update({key: val for key, val in kwargs.items() if val})
 
         for entity in self.entities:
             sending_payload = payload.copy()
