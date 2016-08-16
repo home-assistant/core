@@ -95,6 +95,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert config[0].dev_id == 'dev1'
         assert config[0].track
 
+    def test_gravatar(self):
+        """Test the Gravatar generation."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
+
+    def test_gravatar_and_picture(self):
+        """Test that Gravatar overrides picture."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
+
     def test_discovery(self):
         """Test discovery."""
         scanner = get_component('device_tracker.test').SCANNER
