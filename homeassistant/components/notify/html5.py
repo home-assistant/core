@@ -7,6 +7,7 @@ https://home-assistant.io/components/notify.html5/
 import os
 import logging
 import json
+import time
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -15,7 +16,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService,
+    ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
     PLATFORM_SCHEMA)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
@@ -145,15 +146,26 @@ class HTML5NotificationService(BaseNotificationService):
         """Send a message to a user."""
         from pywebpush import WebPusher
 
+        timestamp = int(time.time())
+
         payload = {
-            'title': message,
+            'body': message,
+            'data': {},
             'icon': '/static/icons/favicon-192x192.png',
+            'timestamp': (timestamp*1000),  # Javascript ms since epoch
+            'title': kwargs.get(ATTR_TITLE)
         }
 
         data = kwargs.get(ATTR_DATA)
 
         if data:
             payload.update(data)
+
+        if data.get('url') is not None:
+            payload['data']['url'] = data.get('url')
+        elif (payload['data'].get('url') is None and
+              payload.get('actions') is None):
+            payload['data']['url'] = '/'
 
         targets = kwargs.get(ATTR_TARGET)
 
@@ -170,4 +182,4 @@ class HTML5NotificationService(BaseNotificationService):
                 continue
 
             WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='0')
+                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
