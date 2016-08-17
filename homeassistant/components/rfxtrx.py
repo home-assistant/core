@@ -131,7 +131,11 @@ def setup(hass, config):
         # Log RFXCOM event
         if not event.device.id_string:
             return
-        _LOGGER.info("Receive RFXCOM event from %s", event.device)
+        _LOGGER.info("Receive RFXCOM event from "
+                     "(Device_id: %s Class: %s Sub: %s)",
+                     slugify(event.device.id_string.lower()),
+                     event.device.__class__.__name__,
+                     event.device.subtype)
 
         # Callback to HA registered components.
         for subscriber in RECEIVED_EVT_SUBSCRIBERS:
@@ -214,13 +218,14 @@ def get_new_device(event, config, device):
     if not config[ATTR_AUTOMATIC_ADD]:
         return
 
+    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     _LOGGER.info(
-        "Automatic add %s rfxtrx device (Class: %s Sub: %s)",
+        "Automatic add %s rfxtrx device (Class: %s Sub: %s Packet_id: %s)",
         device_id,
         event.device.__class__.__name__,
-        event.device.subtype
+        event.device.subtype,
+        pkt_id
     )
-    pkt_id = "".join("{0:02x}".format(x) for x in event.data)
     datas = {ATTR_STATE: False, ATTR_FIREEVENT: False}
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
@@ -237,7 +242,7 @@ def apply_received_command(event):
         return
 
     _LOGGER.debug(
-        "EntityID: %s device_update. Command: %s",
+        "Device_id: %s device_update. Command: %s",
         device_id,
         event.values['Command']
     )

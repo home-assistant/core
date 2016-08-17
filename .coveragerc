@@ -4,6 +4,7 @@ source = homeassistant
 omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
+    homeassistant/helpers/typing.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
@@ -128,8 +129,8 @@ omit =
     homeassistant/components/downloader.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
-    homeassistant/components/garage_door/wink.py
     homeassistant/components/garage_door/rpi_gpio.py
+    homeassistant/components/garage_door/wink.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
     homeassistant/components/joaoapps_join.py
@@ -201,9 +202,12 @@ omit =
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/forecast.py
+    homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
+    homeassistant/components/sensor/gpsd.py
     homeassistant/components/sensor/gtfs.py
+    homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
@@ -211,12 +215,12 @@ omit =
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
-    homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/openexchangerates.py
-    homeassistant/components/sensor/serial_pm.py
+    homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/rest.py
     homeassistant/components/sensor/sabnzbd.py
+    homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/steam_online.py

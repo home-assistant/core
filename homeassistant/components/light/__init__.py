@@ -30,6 +30,16 @@ ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
+# Bitfield of features supported by the light entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
+SUPPORT_BRIGHTNESS = 1
+SUPPORT_COLOR_TEMP = 2
+SUPPORT_EFFECT = 4
+SUPPORT_FLASH = 8
+SUPPORT_RGB_COLOR = 16
+SUPPORT_TRANSITION = 32
+SUPPORT_XY_COLOR = 64
+
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
 
@@ -63,6 +73,7 @@ PROP_TO_ATTR = {
     'color_temp': ATTR_COLOR_TEMP,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
+    'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
 # Service call validation schemas
@@ -279,7 +290,7 @@ class Light(ToggleEntity):
         if self.is_on:
             for prop, attr in PROP_TO_ATTR.items():
                 value = getattr(self, prop)
-                if value:
+                if value is not None:
                     data[attr] = value
 
             if ATTR_RGB_COLOR not in data and ATTR_XY_COLOR in data and \
@@ -287,5 +298,12 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
+        else:
+            data[ATTR_SUPPORTED_FEATURES] = self.supported_features
 
         return data
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0

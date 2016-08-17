@@ -5,7 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
 from homeassistant.components.insteon_hub import INSTEON
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
+
+SUPPORT_INSTEON_HUB = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -54,6 +57,11 @@ class InsteonToggleDevice(Light):
     def is_on(self):
         """Return the boolean response if the node is on."""
         return self._value != 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_INSTEON_HUB
 
     def turn_on(self, **kwargs):
         """Turn device on."""

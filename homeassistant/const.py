@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = "0.26.0.dev0"
+__version__ = "0.27.0.dev0"
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
@@ -25,8 +25,11 @@ CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
+CONF_CODE = 'code'
 CONF_CONDITION = 'condition'
 CONF_CUSTOMIZE = 'customize'
+CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
+CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_ELEVATION = 'elevation'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
@@ -38,17 +41,21 @@ CONF_ICON = 'icon'
 CONF_LATITUDE = 'latitude'
 CONF_LONGITUDE = 'longitude'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
+CONF_MONITORED_VARIABLES = 'monitored_variables'
 CONF_NAME = 'name'
 CONF_OFFSET = 'offset'
 CONF_OPTIMISTIC = 'optimistic'
 CONF_PASSWORD = 'password'
+CONF_PAYLOAD = 'payload'
+CONF_PENDING_TIME = 'pending_time'
 CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_STATE = 'state'
 CONF_TEMPERATURE_UNIT = 'temperature_unit'
-CONF_UNIT_SYSTEM = 'unit_system'
 CONF_TIME_ZONE = 'time_zone'
+CONF_TRIGGER_TIME = 'trigger_time'
+CONF_UNIT_SYSTEM = 'unit_system'
 CONF_USERNAME = 'username'
 CONF_VALUE_TEMPLATE = 'value_template'
 CONF_WEEKDAY = 'weekday'
@@ -216,6 +223,7 @@ SERVICE_CLOSE = "close"
 
 SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
+SERVICE_MOVE_POSITION = 'move_position'
 SERVICE_STOP = 'stop'
 
 # #### API / REMOTE ####
@@ -263,7 +271,8 @@ HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin"
 HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers"
 
 ALLOWED_CORS_HEADERS = [HTTP_HEADER_ORIGIN, HTTP_HEADER_ACCEPT,
-                        HTTP_HEADER_X_REQUESTED_WITH, HTTP_HEADER_CONTENT_TYPE]
+                        HTTP_HEADER_X_REQUESTED_WITH, HTTP_HEADER_CONTENT_TYPE,
+                        HTTP_HEADER_HA_AUTH]
 
 CONTENT_TYPE_JSON = "application/json"
 CONTENT_TYPE_MULTIPART = 'multipart/x-mixed-replace; boundary={}'

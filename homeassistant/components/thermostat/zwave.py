@@ -51,6 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
                 _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
                 return
+    if not (value.node.get_values_for_command_class(
+            COMMAND_CLASS_SENSOR_MULTILEVEL) and
+            value.node.get_values_for_command_class(
+                COMMAND_CLASS_THERMOSTAT_SETPOINT)):
+        return
 
     add_devices([ZWaveThermostat(value)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
@@ -91,8 +96,9 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         # current Temp
         for _, value in self._node.get_values_for_command_class(
                 COMMAND_CLASS_SENSOR_MULTILEVEL).items():
-            self._current_temperature = int(value.data)
-            self._unit = value.units
+            if value.label == 'Temperature':
+                self._current_temperature = int(value.data)
+                self._unit = value.units
 
         # operation state
         for _, value in self._node.get_values(

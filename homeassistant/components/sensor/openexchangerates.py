@@ -6,47 +6,57 @@ https://home-assistant.io/components/sensor.openexchangerates/
 """
 from datetime import timedelta
 import logging
+
 import requests
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_PAYLOAD)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.const import CONF_API_KEY
 
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
 _LOGGER = logging.getLogger(__name__)
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=100)
+
 CONF_BASE = 'base'
 CONF_QUOTE = 'quote'
-CONF_NAME = 'name'
+
 DEFAULT_NAME = 'Exchange Rate Sensor'
+DEFAULT_BASE = 'USD'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_QUOTE): cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+# Return cached results if last scan was less then this time ago.
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Openexchangerates sensor."""
-    payload = config.get('payload', None)
-    rest = OpenexchangeratesData(
-        _RESOURCE,
-        config.get(CONF_API_KEY),
-        config.get(CONF_BASE, 'USD'),
-        config.get(CONF_QUOTE),
-        payload
-    )
-    response = requests.get(_RESOURCE, params={'base': config.get(CONF_BASE,
-                                                                  'USD'),
-                                               'app_id':
-                                               config.get(CONF_API_KEY)},
+    """Setup the Open Exchange Rates sensor."""
+    name = config.get(CONF_NAME)
+    api_key = config.get(CONF_API_KEY)
+    base = config.get(CONF_BASE)
+    quote = config.get(CONF_QUOTE)
+    payload = config.get(CONF_PAYLOAD)
+
+    rest = OpenexchangeratesData(_RESOURCE, api_key, base, quote, payload)
+    response = requests.get(_RESOURCE, params={'base': base,
+                                               'app_id': api_key},
                             timeout=10)
     if response.status_code != 200:
-        _LOGGER.error("Check your OpenExchangeRates API")
+        _LOGGER.error("Check your OpenExchangeRates API key")
         return False
     rest.update()
-    add_devices([OpenexchangeratesSensor(rest, config.get(CONF_NAME,
-                                                          DEFAULT_NAME),
-                                         config.get(CONF_QUOTE))])
+    add_devices([OpenexchangeratesSensor(rest, name, quote)])
 
 
 class OpenexchangeratesSensor(Entity):
-    """Representation of an Openexchangerates sensor."""
+    """Representation of an Open Exchange Rates sensor."""
 
     def __init__(self, rest, name, quote):
         """Initialize the sensor."""
@@ -100,6 +110,6 @@ class OpenexchangeratesData(object):
                                   timeout=10)
             self.data = result.json()['rates']
         except requests.exceptions.HTTPError:
-            _LOGGER.error("Check Openexchangerates API Key")
+            _LOGGER.error("Check the Openexchangerates API Key")
             self.data = None
             return False

@@ -37,6 +37,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(rollershutters)
 
 
+# pylint: disable=abstract-method
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class SCSGateRollerShutter(RollershutterDevice):
     """Representation of SCSGate rollershutter."""
