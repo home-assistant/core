@@ -106,8 +106,7 @@ data_template:
         self.assertIsNotNone(self.hass.services.has_service("notify", service))
 
     def test_messages_to_targets_route(self):
-        """Test that a message to a target routes to the platform with
-        the target attribute correctly filled."""
+        """Test message routing to specific target services."""
         self.hass.bus.listen_once("notify", self.record_calls)
 
         self.hass.services.call("notify", "demo_test_target",
