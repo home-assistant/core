@@ -106,10 +106,10 @@ def setup(hass, config):
                                         data=data)
 
         service_call_handler = partial(notify_message, notify_service)
-        platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
-        platform_name_slug = slugify(platform_name)
 
         if hasattr(notify_service, 'targets'):
+            platform_name = (p_config.get(CONF_NAME) or platform)
+            platform_name_slug = slugify(platform_name)
             for name in notify_service.targets.keys():
                 target_name = slugify("{}_{}".format(platform_name_slug,
                                                      name))
@@ -118,6 +118,9 @@ def setup(hass, config):
                                        service_call_handler,
                                        descriptions.get(SERVICE_NOTIFY),
                                        schema=NOTIFY_SERVICE_SCHEMA)
+
+        platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        platform_name_slug = slugify(platform_name)
 
         hass.services.register(DOMAIN, platform_name_slug,
                                service_call_handler,
