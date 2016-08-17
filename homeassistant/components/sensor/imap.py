@@ -28,8 +28,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_USER): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SERVER): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
