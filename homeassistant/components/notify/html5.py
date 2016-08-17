@@ -157,6 +157,7 @@ class HTML5NotificationService(BaseNotificationService):
             'body': message,
             'data': {},
             'icon': '/static/icons/favicon-192x192.png',
+            'badge': '/static/images/notification-badge.png',
             'timestamp': (timestamp*1000),  # Javascript ms since epoch
             'title': kwargs.get(ATTR_TITLE)
         }
