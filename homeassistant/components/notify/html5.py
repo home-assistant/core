@@ -280,8 +280,6 @@ class HTML5NotificationService(BaseNotificationService):
                   payload.get('actions') is None):
                 payload['data']['url'] = '/'
 
-        print("final payload", payload)
-
         targets = kwargs.get(ATTR_TARGET)
 
         if not targets:
