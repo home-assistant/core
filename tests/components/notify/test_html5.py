@@ -43,7 +43,7 @@ class TestHtml5Notify(object):
             'device': {
                 'browser': 'chrome',
                 'subscription': {
-                    'endpoint': 'endpoint',
+                    'endpoint': 'https://google.com',
                     'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
                 },
             }
@@ -63,7 +63,8 @@ class TestHtml5Notify(object):
         assert len(mock_wp.mock_calls) == 2
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == {'endpoint': 'endpoint',
+        assert mock_wp.mock_calls[0][1][0] == {'endpoint':
+                                               'https://google.com',
                                                'keys': {'auth': 'auth',
                                                         'p256dh': 'p256dh'}}
 
@@ -93,7 +94,9 @@ class TestHtml5Notify(object):
 
             builder = EnvironBuilder(method='POST', data=json.dumps({
                 'browser': 'chrome',
-                'subscription': 'sub info',
+                'subscription': {'endpoint': 'https://google.com',
+                                 'keys': {'auth': 'auth',
+                                          'p256dh': 'p256dh'}},
             }))
             Request = request_class()
             resp = view.post(Request(builder.get_environ()))
@@ -101,7 +104,9 @@ class TestHtml5Notify(object):
             expected = {
                 'unnamed device': {
                     'browser': 'chrome',
-                    'subscription': 'sub info',
+                    'subscription': {'endpoint': 'https://google.com',
+                                     'keys': {'auth': 'auth',
+                                              'p256dh': 'p256dh'}},
                 },
             }
 
@@ -142,7 +147,9 @@ class TestHtml5Notify(object):
 
             builder = EnvironBuilder(method='POST', data=json.dumps({
                 'browser': 'chrome',
-                'subscription': 'sub info',
+                'subscription': {'endpoint': 'https://google.com',
+                                 'keys': {'auth': 'auth',
+                                          'p256dh': 'p256dh'}},
             }))
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
@@ -183,7 +190,7 @@ class TestHtml5Notify(object):
             'device': {
                 'browser': 'chrome',
                 'subscription': {
-                    'endpoint': 'endpoint',
+                    'endpoint': 'https://google.com',
                     'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
                 },
             }
@@ -206,7 +213,8 @@ class TestHtml5Notify(object):
             assert len(mock_wp.mock_calls) == 2
 
             # WebPusher constructor
-            assert mock_wp.mock_calls[0][1][0] == {'endpoint': 'endpoint',
+            assert mock_wp.mock_calls[0][1][0] == {'endpoint':
+                                                   'https://google.com',
                                                    'keys': {'auth': 'auth',
                                                             'p256dh':
                                                             'p256dh'}}

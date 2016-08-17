@@ -76,7 +76,7 @@ SUBSCRIPTION_SCHEMA = vol.All(dict,
                                   }))
 
 REGISTER_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
+    vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
 })
 
