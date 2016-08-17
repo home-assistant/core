@@ -42,14 +42,15 @@ SENSOR_TYPES = {
     'visibility_mi': ['Visibility (miles)', 'mi'],
     'visibility_km': ['Visibility (km)', 'km'],
     'precip_today_in': ['Precipation Today', 'in'],
-    'precip_today_metric': ['Precipation Today', 'mm'],
-    'precip_today_string': ['Precipation today', None],
+    'precip_today_metric': ['Precipitation Today', 'mm'],
+    'precip_today_string': ['Precipitation today', None],
     'solarradiation': ['Solar Radiation', None]
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wundeground sensor.
+    
     payload = config.get('payload', None)
     rest = WUndergroundData(_RESOURCE,
                             config.get(CONF_PWS_ID),
