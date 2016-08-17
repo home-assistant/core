@@ -1,12 +1,10 @@
-"""Support for Wunderground weather service.
+"""Support for Wunderground weather service."""
 from datetime import timedelta
 import logging
 import requests
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-from homeassistant.const import CONF_API_KEY
-from homeassistant.const import TEMP_FAHRENHEIT
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS)
 
 CONF_PWS_ID = 'pws_id'
 _URLCONST = '/conditions/q/pws:'
@@ -49,7 +47,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wunderground sensor.
+    """Setup the Wunderground sensor."""
     payload = config.get('payload', None)
     rest = WUndergroundData(_RESOURCE,
                             config.get(CONF_PWS_ID),
