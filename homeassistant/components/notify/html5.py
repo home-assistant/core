@@ -224,6 +224,9 @@ class HTML5PushCallbackView(HomeAssistantView):
         if request.json.get('action') is not None:
             event_payload['action'] = request.json.get('action')
 
+        if request.json.get('data') is not None:
+            event_payload['data'] = request.json.get('data')
+
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     event_payload['type'])
         self.hass.bus.fire(event_name, event_payload)
