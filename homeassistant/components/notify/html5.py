@@ -13,8 +13,8 @@ import datetime
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import (
-    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED)
+from homeassistant.const import (HTTP_BAD_REQUEST,
+                                 HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
@@ -160,39 +160,28 @@ class HTML5PushCallbackView(HomeAssistantView):
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
-    def json_error(self, code, description):
-        """Return a JSON formatted forbidden error."""
-        return self.json({'code': code, 'description': description},
-                         status_code=HTTP_UNAUTHORIZED)
-
     # pylint: disable=too-many-return-statements
     def check_authorization_header(self, request):
         """Check the authorization header."""
         import jwt
         auth = request.headers.get('Authorization', None)
         if not auth:
-            return self.json_error('authorization_header_missing',
-                                   'Authorization header is expected')
+            return self.json_message('Authorization header is expected')
 
         parts = auth.split()
 
         if parts[0].lower() != 'bearer':
-            return self.json_error('invalid_header',
-                                   'Authorization header must '
-                                   'start with Bearer')
-        elif len(parts) == 1:
-            return self.json_error('invalid_header',
-                                   'Token not found')
-        elif len(parts) > 2:
-            return self.json_error('invalid_header',
-                                   'Authorization header must be Bearer token')
+            return self.json_message('Authorization header must '
+                                     'start with Bearer')
+        elif len(parts != 2):
+            return self.json_message('Authorization header must '
+                                     'be Bearer token')
 
         token = parts[1]
         try:
             self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_error('invalid_token',
-                                   'token is invalid')
+            return self.json_message('token is invalid')
         return True
 
     def post(self, request):
