@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "group",
     vol.Required(CONF_NAME): vol.Coerce(str),
     vol.Required(CONF_SERVICES): vol.All(cv.ensure_list, [{
-        vol.Required(ATTR_SERVICE): vol.Any(cv.slug),
+        vol.Required(ATTR_SERVICE): cv.slug,
         vol.Optional(ATTR_DATA): dict,
     }])
 })
