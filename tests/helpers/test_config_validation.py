@@ -1,3 +1,4 @@
+"""Test validation helpers."""
 from datetime import timedelta
 
 import pytest
@@ -44,6 +45,18 @@ def test_longitude():
             schema(value)
 
     for value in ('-179', 179, '12.34'):
+        schema(value)
+
+
+def test_port():
+    """Test port validation."""
+    schema = vol.Schema(cv.port)
+
+    for value in ('invalid', None, -1, 0, 65536, '-1', '0', '65536', '1.01A'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (1, '1', 65535, '65535', '8080'):
         schema(value)
 
 

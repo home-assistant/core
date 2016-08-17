@@ -29,6 +29,8 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
+port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535),
+               msg='invalid port')
 
 # typing typevar
 T = TypeVar('T')
