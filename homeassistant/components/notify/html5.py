@@ -142,6 +142,11 @@ class HTML5NotificationService(BaseNotificationService):
         self._gcm_key = gcm_key
         self.registrations = registrations
 
+    @property
+    def targets(self):
+        """Return a dictionary of registered targets."""
+        return self.registrations.keys()
+
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         from pywebpush import WebPusher
