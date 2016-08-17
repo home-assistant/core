@@ -258,7 +258,7 @@ class Device(Entity):
     _state = STATE_NOT_HOME
 
     def __init__(self, hass, consider_home, home_range, track, dev_id, mac,
-                 name=None, picture=None, away_hide=False):
+                 name=None, picture=None, gravatar=None, away_hide=False):
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -280,7 +280,11 @@ class Device(Entity):
         self.config_name = name
 
         # Configured picture
-        self.config_picture = picture
+        if gravatar is not None:
+            self.config_picture = get_gravatar_for_email(gravatar)
+        else:
+            self.config_picture = picture
+
         self.away_hide = away_hide
 
     @property
@@ -382,6 +386,7 @@ def load_config(path, hass, consider_home, home_range):
             Device(hass, consider_home, home_range, device.get('track', False),
                    str(dev_id).lower(), str(device.get('mac')).upper(),
                    device.get('name'), device.get('picture'),
+                   device.get('gravatar'),
                    device.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
             for dev_id, device in load_yaml_config_file(path).items()]
     except HomeAssistantError:
@@ -425,3 +430,10 @@ def update_config(path, dev_id, device):
                            (CONF_AWAY_HIDE,
                             'yes' if device.away_hide else 'no')):
             out.write('  {}: {}\n'.format(key, '' if value is None else value))
+
+
+def get_gravatar_for_email(email):
+    """Return an 80px Gravatar for the given email address."""
+    import hashlib
+    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
+    return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
