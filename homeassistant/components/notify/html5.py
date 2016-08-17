@@ -59,6 +59,7 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
                                      'requireInteraction', 'tag', 'timestamp',
                                      'vibrate')
 
+
 def get_service(hass, config):
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
@@ -249,6 +250,7 @@ class HTML5NotificationService(BaseNotificationService):
         """Return a dictionary of registered targets."""
         return self.registrations.keys()
 
+    # pylint: disable=too-many-locals
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import jwt
@@ -281,7 +283,7 @@ class HTML5NotificationService(BaseNotificationService):
             payload['data'] = data
 
         if (payload['data'].get('url') is None and
-              payload.get('actions') is None):
+                payload.get('actions') is None):
             payload['data']['url'] = '/'
 
         targets = kwargs.get(ATTR_TARGET)
