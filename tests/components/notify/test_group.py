@@ -27,9 +27,9 @@ class TestNotifyGroup(unittest.TestCase):
             }
         }))
 
-        self.service = group.get_service(self.hass, {'entities': [
-            {'entity_id': 'demo1'},
-            {'entity_id': 'demo2',
+        self.service = group.get_service(self.hass, {'services': [
+            {'service': 'demo1'},
+            {'service': 'demo2',
              'data': {'target': 'unnamed device',
                       'data': {'test': 'message'}}}]})
 
