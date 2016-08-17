@@ -10,6 +10,7 @@ import logging
 from functools import partial
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN,
                                  CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
@@ -97,25 +98,21 @@ CONF_RESOLVENAMES = 'resolvenames'
 CONF_DELAY = 'delay'
 
 PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_LOCAL_IP): vol.Coerce(str),
-    vol.Optional(CONF_LOCAL_PORT, default=8943):
-        vol.All(vol.Coerce(int),
-                vol.Range(min=1, max=65535)),
-    vol.Required(CONF_REMOTE_IP): vol.Coerce(str),
-    vol.Optional(CONF_REMOTE_PORT, default=2001):
-        vol.All(vol.Coerce(int),
-                vol.Range(min=1, max=65535)),
+    vol.Required(CONF_LOCAL_IP): cv.string,
+    vol.Optional(CONF_LOCAL_PORT, default=8943): cv.port,
+    vol.Required(CONF_REMOTE_IP): cv.string,
+    vol.Optional(CONF_REMOTE_PORT, default=2001): cv.port,
     vol.Optional(CONF_RESOLVENAMES, default=False):
         vol.In(CONF_RESOLVENAMES_OPTIONS),
-    vol.Optional(CONF_USERNAME, default="Admin"): vol.Coerce(str),
-    vol.Optional(CONF_PASSWORD, default=""): vol.Coerce(str),
-    vol.Optional(CONF_DELAY, default=0.5): vol.Coerce(float)
+    vol.Optional(CONF_USERNAME, default="Admin"): cv.string,
+    vol.Optional(CONF_PASSWORD, default=""): cv.string,
+    vol.Optional(CONF_DELAY, default=0.5): cv.string,
 })
 
 SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
-    vol.Required(ATTR_ADDRESS): vol.Coerce(str),
+    vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-    vol.Required(ATTR_PARAM): vol.Coerce(str)
+    vol.Required(ATTR_PARAM): cv.string,
 })
 
 
