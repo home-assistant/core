@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.6"]
+REQUIREMENTS = ["yahooweather==0.7"]
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
@@ -139,6 +139,9 @@ class YahooWeatherSensor(Entity):
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
         self._data.update()
+        if not self._data.yahoo.RawData:
+            _LOGGER.info("Don't receive weather data from yahoo!")
+            return
 
         # default code for weather image
         self._code = self._data.yahoo.Now["code"]
