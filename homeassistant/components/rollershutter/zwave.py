@@ -104,7 +104,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Inc':
+               and value.label == 'Dec':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -113,7 +113,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Dec':
+               and value.label == 'Inc':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
