@@ -166,22 +166,23 @@ class HTML5PushCallbackView(HomeAssistantView):
         import jwt
         auth = request.headers.get('Authorization', None)
         if not auth:
-            return self.json_message('Authorization header is expected')
+            return self.json_message('Authorization header is expected',
+                                     status_code=401)
 
         parts = auth.split()
 
         if parts[0].lower() != 'bearer':
             return self.json_message('Authorization header must '
-                                     'start with Bearer')
-        elif len(parts != 2):
+                                     'start with Bearer', status_code=401)
+        elif len(parts) != 2:
             return self.json_message('Authorization header must '
-                                     'be Bearer token')
+                                     'be Bearer token', status_code=401)
 
         token = parts[1]
         try:
             self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message('token is invalid')
+            return self.json_message('token is invalid', status_code=401)
         return True
 
     def post(self, request):
