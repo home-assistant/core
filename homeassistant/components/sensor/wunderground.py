@@ -124,7 +124,7 @@ class WUndergroundData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from wunderground"""
+        """Get the latest data from wunderground."""
         try:
             result = requests.get(self._resource + self._api_key +
                                   '/conditions/q/pws:' + self._pws_id +
