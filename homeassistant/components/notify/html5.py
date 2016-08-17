@@ -144,7 +144,7 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        return self.registrations
+        return self.registrations.keys()
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
