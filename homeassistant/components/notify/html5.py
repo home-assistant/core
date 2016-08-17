@@ -15,7 +15,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
-                                 URL_ROOT)
+                                 HTTP_UNAUTHORIZED, URL_ROOT)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
@@ -232,22 +232,25 @@ class HTML5PushCallbackView(HomeAssistantView):
         auth = request.headers.get('Authorization', None)
         if not auth:
             return self.json_message('Authorization header is expected',
-                                     status_code=401)
+                                     status_code=HTTP_UNAUTHORIZED)
 
         parts = auth.split()
 
         if parts[0].lower() != 'bearer':
             return self.json_message('Authorization header must '
-                                     'start with Bearer', status_code=401)
+                                     'start with Bearer',
+                                     status_code=HTTP_UNAUTHORIZED)
         elif len(parts) != 2:
             return self.json_message('Authorization header must '
-                                     'be Bearer token', status_code=401)
+                                     'be Bearer token',
+                                     status_code=HTTP_UNAUTHORIZED)
 
         token = parts[1]
         try:
             payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
-            return self.json_message('token is invalid', status_code=401)
+            return self.json_message('token is invalid',
+                                     status_code=HTTP_UNAUTHORIZED)
         return payload
 
     def post(self, request):
