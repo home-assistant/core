@@ -159,7 +159,7 @@ class HTML5PushCallbackView(HomeAssistantView):
                 continue
             # pylint: disable=broad-except
             except Exception as jwt_decode_error:
-                return jwt_decode_error
+                raise
             else:
                 if payload == {}:
                     return False
