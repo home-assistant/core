@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update lights."""
         flux.flux_update()
 
-    hass.services.register(DOMAIN, 'flux_update', update)
+    hass.services.register(DOMAIN, name + '_update', update)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -151,8 +151,10 @@ class FluxSwitch(SwitchDevice):
         self.update_ha_state()
 
     # pylint: disable=too-many-locals
-    def flux_update(self, now=dt_now()):
+    def flux_update(self, now=None):
         """Update all the lights using flux."""
+        if now is None:
+            now = dt_now()
         sunset = next_setting(self.hass, SUN).replace(day=now.day,
                                                       month=now.month,
                                                       year=now.year)
