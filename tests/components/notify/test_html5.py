@@ -147,14 +147,12 @@ class TestHtml5Notify(object):
 
             builder = EnvironBuilder(method='POST', data=json.dumps({
                 'browser': 'chrome',
-                'subscription': {'endpoint': 'https://google.com',
-                                 'keys': {'auth': 'auth',
-                                          'p256dh': 'p256dh'}},
+                'subscription': 'sub info',
             }))
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
                 resp = view.post(Request(builder.get_environ()))
-            assert resp.status_code == 500, resp.response
+            assert resp.status_code == 400, resp.response
 
     def test_callback_view_no_jwt(self):
         """Test that the notification callback view works without JWT."""
