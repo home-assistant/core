@@ -8,21 +8,20 @@ import collections
 import logging
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, CONF_NAME,
-                                 CONF_ENTITY_ID)
+from homeassistant.const import (CONF_PLATFORM, CONF_NAME, ATTR_SERVICE)
 from homeassistant.components.notify import (DOMAIN, ATTR_MESSAGE, ATTR_DATA,
                                              BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTITIES = "entities"
+CONF_SERVICES = "services"
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "group",
     vol.Required(CONF_NAME): vol.Coerce(str),
-    vol.Required(CONF_ENTITIES): vol.All(cv.ensure_list, [{
-        vol.Required(CONF_ENTITY_ID): vol.Any(cv.string, None),
+    vol.Required(CONF_SERVICES): vol.All(cv.ensure_list, [{
+        vol.Required(ATTR_SERVICE): vol.Any(cv.string, None),
         vol.Optional(ATTR_DATA): dict,
     }])
 })
@@ -41,7 +40,7 @@ def update(input_dict, update_source):
 
 def get_service(hass, config):
     """Get the Group notification service."""
-    return GroupNotifyPlatform(hass, config.get(CONF_ENTITIES))
+    return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
 
 # pylint: disable=too-few-public-methods
@@ -62,5 +61,5 @@ class GroupNotifyPlatform(BaseNotificationService):
             sending_payload = payload.copy()
             if entity.get(ATTR_DATA) is not None:
                 update(sending_payload, entity.get(ATTR_DATA))
-            self.hass.services.call(DOMAIN, entity.get(CONF_ENTITY_ID),
+            self.hass.services.call(DOMAIN, entity.get(ATTR_SERVICE),
                                     sending_payload)
