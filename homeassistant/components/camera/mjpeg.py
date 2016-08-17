@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 BASIC_AUTHENTICATION = 'basic'
 DIGEST_AUTHENTICATION = 'digest'
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup a MJPEG IP Camera."""
