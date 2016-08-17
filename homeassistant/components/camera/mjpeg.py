@@ -8,7 +8,7 @@ import logging
 from contextlib import closing
 
 import requests
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
@@ -16,6 +16,9 @@ from homeassistant.helpers import validate_config
 CONTENT_TYPE_HEADER = 'Content-Type'
 
 _LOGGER = logging.getLogger(__name__)
+
+BASIC_AUTHENTICATION = 'basic'
+DIGEST_AUTHENTICATION = 'digest'
 
 
 # pylint: disable=unused-argument
@@ -48,6 +51,8 @@ class MjpegCamera(Camera):
         """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get('name', 'Mjpeg Camera')
+        self._authentication = device_info.get('authentication',
+                                               BASIC_AUTHENTICATION)
         self._username = device_info.get('username')
         self._password = device_info.get('password')
         self._mjpeg_url = device_info['mjpeg_url']
@@ -55,9 +60,12 @@ class MjpegCamera(Camera):
     def camera_stream(self):
         """Return a MJPEG stream image response directly from the camera."""
         if self._username and self._password:
+            if self._authentication == DIGEST_AUTHENTICATION:
+                auth = HTTPDigestAuth(self._username, self._password)
+            else:
+                auth = HTTPBasicAuth(self._username, self._password)
             return requests.get(self._mjpeg_url,
-                                auth=HTTPBasicAuth(self._username,
-                                                   self._password),
+                                auth=auth,
                                 stream=True, timeout=10)
         else:
             return requests.get(self._mjpeg_url, stream=True, timeout=10)

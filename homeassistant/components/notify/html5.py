@@ -255,6 +255,7 @@ class HTML5NotificationService(BaseNotificationService):
         tag = str(uuid.uuid4())
 
         payload = {
+            'badge': '/static/images/notification-badge.png',
             'body': message,
             'data': {},
             'icon': '/static/icons/favicon-192x192.png',
