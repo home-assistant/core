@@ -1,4 +1,4 @@
-"""Support for Wunderground weather service."""
+"""Support for Wunderground weather service.
 from datetime import timedelta
 import logging
 import requests
@@ -90,15 +90,15 @@ class WUndergroundSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        self.weather = self.rest.data
-        return self.weather[str(self._condition)]
+        value = self.rest.data
+        return value[str(self._condition)]
 
     @property
     def entity_picture(self):
         """Return the entity picture."""
-        self.weather = self.rest.data
+        value = self.rest.data
         if self._condition == 'weather':
-            return self.weather['icon_url']
+            return value['icon_url']
 
     @property
     def unit_of_measurement(self):
@@ -114,7 +114,7 @@ class WUndergroundSensor(Entity):
 
 
 class WUndergroundData(object):
-    """Get data from Wunderground."""
+    """Get data from Wundeground."""
 
     def __init__(self, resource, pws_id, api_key, data):
         """Initialize the data object."""
@@ -129,7 +129,7 @@ class WUndergroundData(object):
         """Get the latest data from wunderground"""
         try:
             result = requests.get(self._resource + self._api_key +
-                                  '/conditions/q/pws:' + self._pws_id + 
+                                  '/conditions/q/pws:' + self._pws_id +
                                   '.json', timeout=10)
             if "error" in result.json():
                 raise ValueError(result.json()["response"]["error"]
