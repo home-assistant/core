@@ -85,7 +85,7 @@ CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
     vol.Required(ATTR_TYPE): vol.In(['received', 'clicked', 'closed']),
     vol.Required(ATTR_TARGET): cv.string,
     vol.Optional(ATTR_ACTION): cv.string,
-    vol.Optional(ATTR_DATA): cv.match_all,
+    vol.Optional(ATTR_DATA): dict,
 })
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
