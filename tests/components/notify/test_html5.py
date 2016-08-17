@@ -164,7 +164,6 @@ class TestHtml5Notify(object):
             assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[2][1][0]
-            assert view.json_path == fp.name
 
             builder = EnvironBuilder(method='POST', data=json.dumps({
                 'type': 'push',
@@ -219,7 +218,7 @@ class TestHtml5Notify(object):
             assert push_payload['icon'] == 'beer.png'
 
             view = hass.mock_calls[2][1][0]
-            assert view.json_path == fp.name
+            view.registrations = data
 
             bearer_token = "Bearer {}".format(push_payload['data']['jwt'])
 

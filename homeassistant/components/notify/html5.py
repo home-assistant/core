@@ -63,7 +63,7 @@ def get_service(hass, config):
 
     hass.wsgi.register_view(
         HTML5PushRegistrationView(hass, registrations, json_path))
-    hass.wsgi.register_view(HTML5PushCallbackView(hass, json_path))
+    hass.wsgi.register_view(HTML5PushCallbackView(hass, registrations))
 
     gcm_api_key = config.get('gcm_api_key')
     gcm_sender_id = config.get('gcm_sender_id')
@@ -143,16 +143,15 @@ class HTML5PushCallbackView(HomeAssistantView):
     url = '/api/notify.html5/callback'
     name = 'api:notify.html5/callback'
 
-    def __init__(self, hass, json_path):
+    def __init__(self, hass, registrations):
         """Init HTML5PushCallbackView."""
         super().__init__(hass)
-        self.json_path = json_path
+        self.registrations = registrations
 
     def decode_jwt(self, token):
         """Find the registration that signed this JWT and return it."""
         import jwt
-        registrations = _load_config(self.json_path)
-        for reg in registrations.values():
+        for reg in self.registrations.values():
             auth_key = reg['subscription']['keys']['auth']
             try:
                 payload = jwt.decode(token, auth_key)
