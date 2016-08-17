@@ -151,6 +151,23 @@ class HTML5PushCallbackView(HomeAssistantView):
     def decode_jwt(self, token):
         """Find the registration that signed this JWT and return it."""
         import jwt
+
+        # 1.  Check claims w/o verifying to see if a target is in there.
+        # 2.  If target in claims, attempt to verify against the given name.
+        # 2a. If decode is successful, return the payload.
+        # 3.  If no target, loop through all registrations & attempt decode.
+        # 3a. If a registration successfully decodes, return the payload.
+        # 4.  Unable to decode the JWT, return False.
+
+        target_check = jwt.decode(token, verify=False)
+        if target_check['target'] in self.registrations.keys():
+            possible_target = self.registrations[target_check['target']]
+            key = possible_target['subscription']['keys']['auth']
+            try:
+                return jwt.decode(token, key)
+            except jwt.exceptions.DecodeError:
+                pass
+
         for reg in self.registrations.values():
             try:
                 return jwt.decode(token, reg['subscription']['keys']['auth'])
@@ -180,16 +197,23 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         token = parts[1]
         try:
-            self.decode_jwt(token)
+            payload = self.decode_jwt(token)
         except jwt.exceptions.InvalidTokenError:
             return self.json_message('token is invalid', status_code=401)
-        return True
+        return payload
 
     def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
-        if auth_check is not True:
+        if type(auth_check) is not dict:
             return auth_check
+
+        event_payload = {
+          'action': request.json.get('action', None),
+          'type': request.json['type'],
+          'target': auth_check['target'],
+        }
+
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     request.json['type'])
         self.hass.bus.fire(event_name, request.json)
@@ -255,7 +279,8 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
                        datetime.timedelta(days=7))
             jwt_secret = info[ATTR_SUBSCRIPTION]['keys']['auth']
-            jwt_claims = {'exp': jwt_exp, 'nbf': timestamp, 'iat': timestamp}
+            jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
+                          'iat': timestamp, 'target': target}
             payload['data']['jwt'] = jwt.encode(jwt_claims,
                                                 jwt_secret).decode('utf-8')
 
