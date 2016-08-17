@@ -8,8 +8,7 @@ import logging
 from contextlib import closing
 
 import requests
-from requests.auth import HTTPBasicAuth
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.camera import DOMAIN, Camera
 from homeassistant.helpers import validate_config
