@@ -4,6 +4,7 @@ Group platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.group/
 """
+import collections
 import logging
 import voluptuous as vol
 
@@ -25,6 +26,17 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.Optional(ATTR_DATA): dict,
     }])
 })
+
+
+def update(input_dict, update_source):
+    """Deep update a dictionary."""
+    for key, val in update_source.items():
+        if isinstance(val, collections.Mapping):
+            recurse = update(input_dict.get(key, {}), val)
+            input_dict[key] = recurse
+        else:
+            input_dict[key] = update_source[key]
+    return input_dict
 
 
 def get_service(hass, config):
@@ -49,6 +61,6 @@ class GroupNotifyPlatform(BaseNotificationService):
         for entity in self.entities:
             sending_payload = payload.copy()
             if entity.get(ATTR_DATA) is not None:
-                sending_payload.update(entity.get(ATTR_DATA))
+                update(sending_payload, entity.get(ATTR_DATA))
             self.hass.services.call(DOMAIN, entity.get(CONF_ENTITY_ID),
                                     sending_payload)
