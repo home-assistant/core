@@ -14,8 +14,8 @@ import uuid
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import (HTTP_BAD_REQUEST,
-                                 HTTP_INTERNAL_SERVER_ERROR)
+from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
+                                 URL_ROOT)
 from homeassistant.util import ensure_unique_string
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_DATA, BaseNotificationService,
@@ -50,6 +50,18 @@ ATTR_KEYS = 'keys'
 ATTR_AUTH = 'auth'
 ATTR_P256DH = 'p256dh'
 
+ATTR_TAG = 'tag'
+ATTR_ACTION = 'action'
+ATTR_ACTIONS = 'actions'
+ATTR_TYPE = 'type'
+ATTR_URL = 'url'
+
+ATTR_JWT = 'jwt'
+
+# The number of days after the moment a notification is sent that a JWT
+# is valid.
+JWT_VALID_DAYS = 7
+
 KEYS_SCHEMA = vol.All(dict,
                       vol.Schema({
                           vol.Required(ATTR_AUTH): cv.string,
@@ -58,6 +70,7 @@ KEYS_SCHEMA = vol.All(dict,
 
 SUBSCRIPTION_SCHEMA = vol.All(dict,
                               vol.Schema({
+                                  # pylint: disable=no-value-for-parameter
                                   vol.Required(ATTR_ENDPOINT): vol.Url(),
                                   vol.Required(ATTR_KEYS): KEYS_SCHEMA
                                   }))
@@ -65,6 +78,14 @@ SUBSCRIPTION_SCHEMA = vol.All(dict,
 REGISTER_SCHEMA = vol.Schema({
     vol.Optional(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
+})
+
+CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
+    vol.Required(ATTR_TAG): cv.string,
+    vol.Required(ATTR_TYPE): vol.In(['received', 'clicked', 'closed']),
+    vol.Required(ATTR_TARGET): cv.string,
+    vol.Optional(ATTR_ACTION): cv.string,
+    vol.Optional(ATTR_DATA): cv.match_all,
 })
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
@@ -90,11 +111,12 @@ def get_service(hass, config):
         HTML5PushRegistrationView(hass, registrations, json_path))
     hass.wsgi.register_view(HTML5PushCallbackView(hass, registrations))
 
-    gcm_api_key = config.get('gcm_api_key')
-    gcm_sender_id = config.get('gcm_sender_id')
+    gcm_api_key = config.get(ATTR_GCM_API_KEY)
+    gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
     if gcm_sender_id is not None:
-        add_manifest_json_key('gcm_sender_id', config.get('gcm_sender_id'))
+        add_manifest_json_key(ATTR_GCM_SENDER_ID,
+                              config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(gcm_api_key, registrations)
 
@@ -185,9 +207,9 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 4.  Unable to decode the JWT, return False.
 
         target_check = jwt.decode(token, verify=False)
-        if target_check['target'] in self.registrations.keys():
-            possible_target = self.registrations[target_check['target']]
-            key = possible_target['subscription']['keys']['auth']
+        if target_check[ATTR_TARGET] in self.registrations.keys():
+            possible_target = self.registrations[target_check[ATTR_TARGET]]
+            key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
                 return jwt.decode(token, key)
             except jwt.exceptions.DecodeError:
@@ -195,7 +217,8 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         for reg in self.registrations.values():
             try:
-                return jwt.decode(token, reg['subscription']['keys']['auth'])
+                key = reg[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
+                return jwt.decode(token, key)
             except jwt.exceptions.DecodeError:
                 continue
         return False
@@ -234,22 +257,28 @@ class HTML5PushCallbackView(HomeAssistantView):
             return auth_check
 
         event_payload = {
-            'tag': request.json.get('tag', None),
-            'type': request.json['type'],
-            'target': auth_check['target'],
+            ATTR_TAG: request.json.get(ATTR_TAG),
+            ATTR_TYPE: request.json[ATTR_TYPE],
+            ATTR_TARGET: auth_check[ATTR_TARGET],
         }
 
-        if request.json.get('action') is not None:
-            event_payload['action'] = request.json.get('action')
+        if request.json.get(ATTR_ACTION) is not None:
+            event_payload[ATTR_ACTION] = request.json.get(ATTR_ACTION)
 
-        if request.json.get('data') is not None:
-            event_payload['data'] = request.json.get('data')
+        if request.json.get(ATTR_DATA) is not None:
+            event_payload[ATTR_DATA] = request.json.get(ATTR_DATA)
+
+        try:
+            CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
+        except vol.Invalid as ex:
+            _LOGGER.warning('Callback event payload is not valid! %s',
+                            humanize_error(event_payload, ex))
 
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
-                                    event_payload['type'])
+                                    event_payload[ATTR_TYPE])
         self.hass.bus.fire(event_name, event_payload)
         return self.json({'status': 'ok',
-                          'event': event_payload['type']})
+                          'event': event_payload[ATTR_TYPE]})
 
 
 # pylint: disable=too-few-public-methods
@@ -279,11 +308,11 @@ class HTML5NotificationService(BaseNotificationService):
         payload = {
             'badge': '/static/images/notification-badge.png',
             'body': message,
-            'data': {},
+            ATTR_DATA: {},
             'icon': '/static/icons/favicon-192x192.png',
-            'tag': tag,
+            ATTR_TAG: tag,
             'timestamp': (timestamp*1000),  # Javascript ms since epoch
-            'title': kwargs.get(ATTR_TITLE)
+            ATTR_TITLE: kwargs.get(ATTR_TITLE)
         }
 
         data = kwargs.get(ATTR_DATA)
@@ -297,11 +326,11 @@ class HTML5NotificationService(BaseNotificationService):
                     payload[key] = val
                     del data[key]
 
-            payload['data'] = data
+            payload[ATTR_DATA] = data
 
-        if (payload['data'].get('url') is None and
-                payload.get('actions') is None):
-            payload['data']['url'] = '/'
+        if (payload[ATTR_DATA].get(ATTR_URL) is None and
+                payload.get(ATTR_ACTIONS) is None):
+            payload[ATTR_DATA][ATTR_URL] = URL_ROOT
 
         targets = kwargs.get(ATTR_TARGET)
 
@@ -318,13 +347,13 @@ class HTML5NotificationService(BaseNotificationService):
                 continue
 
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
-                       datetime.timedelta(days=7))
-            jwt_secret = info[ATTR_SUBSCRIPTION]['keys']['auth']
+                       datetime.timedelta(days=JWT_VALID_DAYS))
+            jwt_secret = info[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
-                          'iat': timestamp, 'target': target,
-                          'tag': payload['tag']}
-            payload['data']['jwt'] = jwt.encode(jwt_claims,
-                                                jwt_secret).decode('utf-8')
+                          'iat': timestamp, ATTR_TARGET: target,
+                          ATTR_TAG: payload[ATTR_TAG]}
+            jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
+            payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
             WebPusher(info[ATTR_SUBSCRIPTION]).send(
                 json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
