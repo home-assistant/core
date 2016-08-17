@@ -22,6 +22,7 @@ class TestNotifyDemo(unittest.TestCase):
             }
         }))
         self.events = []
+        self.calls = []
 
         def record_event(event):
             """Record event to send notification."""
@@ -32,6 +33,10 @@ class TestNotifyDemo(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """"Stop down everything that was started."""
         self.hass.stop()
+
+    def record_calls(self, *args):
+        """Helper for recording calls."""
+        self.calls.append(args)
 
     def test_sending_none_message(self):
         """Test send with None as message."""
@@ -93,3 +98,29 @@ data_template:
                     'sound':
                     'US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav'}}
         } == self.events[0].data
+
+    def test_targets_are_services(self):
+        """Test that all targets are exposed as individual services."""
+        self.assertIsNotNone(self.hass.services.has_service("notify", "demo"))
+        service = "demo_test_target"
+        self.assertIsNotNone(self.hass.services.has_service("notify", service))
+
+    def test_messages_to_targets_route(self):
+        """Test message routing to specific target services."""
+        self.hass.bus.listen_once("notify", self.record_calls)
+
+        self.hass.services.call("notify", "demo_test_target",
+                                {'message': 'my message',
+                                 'title': 'my title',
+                                 'data': {'hello': 'world'}})
+
+        self.hass.pool.block_till_done()
+
+        data = self.calls[0][0].data
+
+        assert {
+            'message': 'my message',
+            'target': 'test target',
+            'title': 'my title',
+            'data': {'hello': 'world'}
+        } == data

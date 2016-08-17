@@ -22,6 +22,11 @@ class DemoNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.hass = hass
 
+    @property
+    def targets(self):
+        """Return a dictionary of registered targets."""
+        return ["test target"]
+
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         kwargs['message'] = message
