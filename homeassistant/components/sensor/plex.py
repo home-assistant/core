@@ -28,9 +28,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_NAME, default='Plex'): cv.string,
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
-    vol.Optional(CONF_PORT, default=32400): vol.All(vol.Coerce(int),
-                                                    vol.Range(min=1,
-                                                              max=65535))
+    vol.Optional(CONF_PORT, default=32400): cv.port,
 })
 
 
