@@ -114,7 +114,7 @@ class WUndergroundSensor(Entity):
 
 
 class WUndergroundData(object):
-    """Get data from Wundeground."""
+    """Get data from Wunderground."""
 
     def __init__(self, resource, pws_id, api_key, data):
         """Initialize the data object."""
@@ -129,8 +129,8 @@ class WUndergroundData(object):
         """Get the latest data from wunderground"""
         try:
             result = requests.get(self._resource + self._api_key +
-                                  '/conditions/q/pws:' + self._pws_id + '.json',
-                                  timeout=10)
+                                  '/conditions/q/pws:' + self._pws_id + 
+                                  '.json', timeout=10)
             if "error" in result.json():
                 raise ValueError(result.json()["response"]["error"]
                                  ["description"])
