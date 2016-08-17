@@ -1,4 +1,4 @@
-"""The tests for the notify group platform."""
+"""The tests for the notify.group platform."""
 import unittest
 
 import homeassistant.components.notify as notify
@@ -8,7 +8,7 @@ from tests.common import get_test_home_assistant
 
 
 class TestNotifyGroup(unittest.TestCase):
-    """Test the group notify platform."""
+    """Test the notify.group platform."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
@@ -56,7 +56,7 @@ class TestNotifyGroup(unittest.TestCase):
         self.assertEqual(last_event.data[notify.ATTR_MESSAGE], 'Hello')
 
     def test_send_message_with_data(self):
-        """Test sending a message to a notify group."""
+        """Test sending a message with to a notify group."""
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
@@ -68,7 +68,7 @@ class TestNotifyGroup(unittest.TestCase):
         self.assertEqual(last_event.data[notify.ATTR_DATA], notify_data)
 
     def test_entity_data_passes_through(self):
-        """Test sending a message to a notify group."""
+        """Test sending a message with data to merge to a notify group."""
         notify_data = {'hello': 'world'}
         self.service.send_message('Hello', title='Test notification',
                                   data=notify_data)
