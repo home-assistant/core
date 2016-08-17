@@ -152,19 +152,11 @@ class HTML5PushCallbackView(HomeAssistantView):
         """Find the registration that signed this JWT and return it."""
         import jwt
         for reg in self.registrations.values():
-            auth_key = reg['subscription']['keys']['auth']
             try:
-                payload = jwt.decode(token, auth_key)
+                return jwt.decode(token, reg['subscription']['keys']['auth'])
             except jwt.exceptions.DecodeError:
                 continue
-            # pylint: disable=broad-except
-            except Exception as jwt_decode_error:
-                raise
-            else:
-                if payload == {}:
-                    return False
-                else:
-                    return payload
+        return False
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
@@ -198,9 +190,9 @@ class HTML5PushCallbackView(HomeAssistantView):
         token = parts[1]
         try:
             self.decode_jwt(token)
-        except jwt.exceptions.ExpiredSignature:
-            return self.json_error('token_expired',
-                                   'token is expired')
+        except jwt.exceptions.InvalidTokenError:
+            return self.json_error('invalid_token',
+                                   'token is invalid')
         return True
 
     def post(self, request):
