@@ -49,8 +49,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wundeground sensor.
-    
+    """Setup the Wunderground sensor.
     payload = config.get('payload', None)
     rest = WUndergroundData(_RESOURCE,
                             config.get(CONF_PWS_ID),
