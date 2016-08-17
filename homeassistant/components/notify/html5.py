@@ -52,6 +52,12 @@ REGISTER_SCHEMA = vol.Schema({
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
+# badge and timestamp are Chrome specific (not in official spec)
+
+HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
+                                     'icon', 'lang', 'renotify',
+                                     'requireInteraction', 'tag', 'timestamp',
+                                     'vibrate')
 
 def get_service(hass, config):
     """Get the HTML5 push notification service."""
@@ -260,13 +266,21 @@ class HTML5NotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
 
         if data:
-            payload.update(data)
+            # Pick out fields that should go into the notification directly vs
+            # into the notification data dictionary.
 
-            if data.get('url') is not None:
-                payload['data']['url'] = data.get('url')
-            elif (payload['data'].get('url') is None and
+            for key, val in data.copy().items():
+                if key in HTML5_SHOWNOTIFICATION_PARAMETERS:
+                    payload[key] = val
+                    del data[key]
+
+            payload['data'] = data
+
+            if (payload['data'].get('url') is None and
                   payload.get('actions') is None):
                 payload['data']['url'] = '/'
+
+        print("final payload", payload)
 
         targets = kwargs.get(ATTR_TARGET)
 
