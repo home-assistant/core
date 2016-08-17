@@ -96,7 +96,7 @@ def setup(hass, config):
             title = template.render(
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
             if targets.get(call.service) is not None:
-                target = targets[call.service]['target']
+                target = targets[call.service]
             else:
                 target = call.data.get(ATTR_TARGET)
             message = template.render(hass, message)
@@ -113,7 +113,7 @@ def setup(hass, config):
             for name in notify_service.targets.keys():
                 target_name = slugify("{}_{}".format(platform_name_slug,
                                                      name))
-                targets[target_name] = {"target": name}
+                targets[target_name] = name
                 hass.services.register(DOMAIN, target_name,
                                        service_call_handler,
                                        descriptions.get(SERVICE_NOTIFY),
