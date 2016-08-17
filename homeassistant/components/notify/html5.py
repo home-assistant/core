@@ -9,6 +9,7 @@ import logging
 import json
 import time
 import datetime
+import uuid
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -205,20 +206,23 @@ class HTML5PushCallbackView(HomeAssistantView):
     def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
-        if type(auth_check) is not dict:
+        if not isinstance(auth_check, dict):
             return auth_check
 
         event_payload = {
-          'action': request.json.get('action', None),
-          'type': request.json['type'],
-          'target': auth_check['target'],
+            'tag': request.json.get('tag', None),
+            'type': request.json['type'],
+            'target': auth_check['target'],
         }
 
+        if request.json.get('action') is not None:
+            event_payload['action'] = request.json.get('action')
+
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
-                                    request.json['type'])
-        self.hass.bus.fire(event_name, request.json)
+                                    event_payload['type'])
+        self.hass.bus.fire(event_name, event_payload)
         return self.json({'status': 'ok',
-                          'event': request.json['type']})
+                          'event': event_payload['type']})
 
 
 # pylint: disable=too-few-public-methods
@@ -242,11 +246,13 @@ class HTML5NotificationService(BaseNotificationService):
         from pywebpush import WebPusher
 
         timestamp = int(time.time())
+        tag = str(uuid.uuid4())
 
         payload = {
             'body': message,
             'data': {},
             'icon': '/static/icons/favicon-192x192.png',
+            'tag': tag,
             'timestamp': (timestamp*1000),  # Javascript ms since epoch
             'title': kwargs.get(ATTR_TITLE)
         }
@@ -280,7 +286,8 @@ class HTML5NotificationService(BaseNotificationService):
                        datetime.timedelta(days=7))
             jwt_secret = info[ATTR_SUBSCRIPTION]['keys']['auth']
             jwt_claims = {'exp': jwt_exp, 'nbf': timestamp,
-                          'iat': timestamp, 'target': target}
+                          'iat': timestamp, 'target': target,
+                          'tag': payload['tag']}
             payload['data']['jwt'] = jwt.encode(jwt_claims,
                                                 jwt_secret).decode('utf-8')
 
