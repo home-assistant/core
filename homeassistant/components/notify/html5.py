@@ -45,8 +45,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_SUBSCRIPTION = 'subscription'
 ATTR_BROWSER = 'browser'
 
+ATTR_ENDPOINT = 'endpoint'
+ATTR_KEYS = 'keys'
+ATTR_AUTH = 'auth'
+ATTR_P256DH = 'p256dh'
+
+KEYS_SCHEMA = vol.All(dict,
+                      vol.Schema({
+                          vol.Required(ATTR_AUTH): cv.string,
+                          vol.Required(ATTR_P256DH): cv.string
+                          }))
+
+SUBSCRIPTION_SCHEMA = vol.All(dict,
+                              vol.Schema({
+                                  vol.Required(ATTR_ENDPOINT): vol.Url(),
+                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA
+                                  }))
+
 REGISTER_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SUBSCRIPTION): cv.match_all,
+    vol.Optional(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
     vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
 })
 
