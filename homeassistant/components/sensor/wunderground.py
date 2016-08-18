@@ -2,9 +2,15 @@
 from datetime import timedelta
 import logging
 import requests
+
+import voluptuous as vol
+
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.config_validation import ensure_list
 from homeassistant.util import Throttle
-from homeassistant.const import (CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
+                                 CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
+                                 STATE_UNKNOWN)
 
 CONF_PWS_ID = 'pws_id'
 _URLCONST = '/conditions/q/pws:'
