@@ -138,7 +138,7 @@ class WUndergroundData(object):
     def _build_url(self):
         url = _RESOURCE.format(self._api_key)
         if self._pws_id:
-            url = url + 'pws:' + self._pws_id
+            url = url + 'pws:{}'.format(self._pws_id)
         else:
             url = url + '{},{}'.format(self._latitude, self._longitude)
 
