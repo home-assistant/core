@@ -1,4 +1,4 @@
-"""The tests for the forecast.io platform."""
+"""The tests for the WUnderground platform."""
 import unittest
 
 from homeassistant.components.sensor import wunderground
@@ -28,17 +28,20 @@ ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
 
 
 def mocked_requests_get(*args, **kwargs):
+    """Mock requests.get invocations."""
+
     class MockResponse:
+        """Class to represent a mocked response."""
         def __init__(self, json_data, status_code):
+            """Initialize the mock response class."""
             self.json_data = json_data
             self.status_code = status_code
 
         def json(self):
+            """Return the json of the response."""
             return self.json_data
 
     if str(args[0]).startswith('http://api.wunderground.com/api/foo/'):
-        # Return valid response
-        print('VALID RESPONSE')
         return MockResponse({
             "response": {
                 "version": "0.1",
@@ -60,8 +63,6 @@ def mocked_requests_get(*args, **kwargs):
             }
         }, 200)
     else:
-        # Return invalid api key
-        print('INVALID RESPONSE')
         return MockResponse({
                 "response": {
                     "version": "0.1",
@@ -77,7 +78,7 @@ def mocked_requests_get(*args, **kwargs):
 
 
 class TestWundergroundSetup(unittest.TestCase):
-    """Test the wunderground platform."""
+    """Test the WUnderground platform."""
 
     DEVICES = []
 
@@ -98,12 +99,10 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_setup(self, req_mock):
-        """Test that the component is loaded if passed in PSW Id."""
-        print('1')
+        """Test that the component is loaded if passed in PWS Id."""
         self.assertTrue(
             wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
                                         self.add_devices, None))
-        print('2')
         self.assertTrue(
             wunderground.setup_platform(self.hass, VALID_CONFIG,
                                         self.add_devices,
@@ -123,9 +122,9 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
+        """Test the WUnderground sensor class and methods."""
         wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
                                     None)
-        print(str(self.DEVICES))
         for device in self.DEVICES:
             self.assertTrue(str(device.name).startswith('PWS_'))
             if device.name == 'PWS_weather':
