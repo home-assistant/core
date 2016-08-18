@@ -44,6 +44,16 @@ SENSOR_TYPES = {
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar'],
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
+    'apparent_temperature_max': ['Daily High Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'apparent_temperature_min': ['Daily Low Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'temperature_max': ['Daily High Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'temperature_min': ['Daily Low Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'precip_intensity_max': ['Daily Max Precip Intensity',
+                             'mm', 'in', 'mm', 'mm', 'mm'],
 }
 
 # Return cached results if last scan was less then this time ago.
@@ -152,16 +162,26 @@ class ForeCastSensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
-        elif self.type == 'daily_summary':
+        elif self.type in ['daily_summary',
+                           'temperature_min', 'temperature_max',
+                           'apparent_temperature_min',
+                           'apparent_temperature_max',
+                           'precip_intensity_max']:
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
-            self._state = getattr(daily, 'summary', '')
+            if self.type == 'daily_summary':
+                self._state = getattr(daily, 'summary', '')
+            else:
+                if hasattr(daily, 'data'):
+                    self._state = self.get_state(daily.data[0])
+                else:
+                    self._state = 0
         else:
             self.forecast_data.update_currently()
             currently = self.forecast_data.data_currently
-            self._state = self.get_currently_state(currently)
+            self._state = self.get_state(currently)
 
-    def get_currently_state(self, data):
+    def get_state(self, data):
         """
         Helper function that returns a new state based on the type.
 
@@ -175,6 +195,9 @@ class ForeCastSensor(Entity):
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
         elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                            'temperature_min', 'temperature_max',
+                            'apparent_temperature_min',
+                            'apparent_temperature_max',
                             'pressure', 'ozone']):
             return round(state, 1)
         return state
