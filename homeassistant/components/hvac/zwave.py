@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   discovery_info, zwave.NETWORK)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, abstract-method
 class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
     """Represents a HeatControl hvac."""
 
@@ -98,9 +98,10 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_properties()
-            self.update_ha_state(True)
+            self.update_ha_state()
             _LOGGER.debug("Value changed on network %s", value)
 
     def update_properties(self):
@@ -119,8 +120,9 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
         # Current Temp
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SENSOR_MULTILEVEL).values():
-            self._current_temperature = int(value.data)
-            self._unit = value.units
+            if value.label == 'Temperature':
+                self._current_temperature = int(value.data)
+                self._unit = value.units
         # Fan Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
@@ -135,7 +137,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
                     self._current_swing_mode = value.data
-                    self._swing_list = [0, 1]
+                    self._swing_list = list(value.data_items)
                     _LOGGER.debug("self._swing_list=%s", self._swing_list)
 
     @property
@@ -211,6 +213,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 value.data = int(round(temperature, 0))
             else:
                 value.data = int(temperature)
+            break
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -218,6 +221,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 class_id=COMMAND_CLASS_THERMOSTAT_FAN_MODE).values():
             if value.command_class == 68 and value.index == 0:
                 value.data = bytes(fan, 'utf-8')
+                break
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -225,6 +229,7 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
             if value.command_class == 64 and value.index == 0:
                 value.data = bytes(operation_mode, 'utf-8')
+                break
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
@@ -232,4 +237,5 @@ class ZWaveHvac(ZWaveDeviceEntity, HvacDevice):
             for value in self._node.get_values(
                     class_id=COMMAND_CLASS_CONFIGURATION).values():
                 if value.command_class == 112 and value.index == 33:
-                    value.data = int(swing_mode)
+                    value.data = bytes(swing_mode, 'utf-8')
+                    break

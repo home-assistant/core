@@ -13,9 +13,9 @@ import voluptuous as vol
 import homeassistant.bootstrap as bootstrap
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_per_platform, template
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.util import slugify
 
 DOMAIN = "notify"
 
@@ -34,34 +34,45 @@ ATTR_DATA = 'data'
 
 SERVICE_NOTIFY = "notify"
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+}, extra=vol.ALLOW_EXTRA)
+
 NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
-    vol.Optional(ATTR_DATA): dict,      # nobody seems to be using this (yet)
+    vol.Optional(ATTR_DATA): dict,
 })
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def send_message(hass, message, title=None):
+def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
-    data = {
+    info = {
         ATTR_MESSAGE: message
     }
 
     if title is not None:
-        data[ATTR_TITLE] = title
+        info[ATTR_TITLE] = title
 
-    hass.services.call(DOMAIN, SERVICE_NOTIFY, data)
+    if data is not None:
+        info[ATTR_DATA] = data
+
+    hass.services.call(DOMAIN, SERVICE_NOTIFY, info)
 
 
+# pylint: disable=too-many-locals
 def setup(hass, config):
     """Setup the notify services."""
     success = False
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    targets = {}
 
     for platform, p_config in config_per_platform(config, DOMAIN):
         notify_implementation = bootstrap.prepare_setup_platform(
@@ -84,7 +95,10 @@ def setup(hass, config):
 
             title = template.render(
                 hass, call.data.get(ATTR_TITLE, ATTR_TITLE_DEFAULT))
-            target = call.data.get(ATTR_TARGET)
+            if targets.get(call.service) is not None:
+                target = targets[call.service]
+            else:
+                target = call.data.get(ATTR_TARGET)
             message = template.render(hass, message)
             data = call.data.get(ATTR_DATA)
 
@@ -92,8 +106,22 @@ def setup(hass, config):
                                         data=data)
 
         service_call_handler = partial(notify_message, notify_service)
-        service_notify = p_config.get(CONF_NAME, SERVICE_NOTIFY)
-        hass.services.register(DOMAIN, service_notify, service_call_handler,
+
+        if hasattr(notify_service, 'targets'):
+            platform_name = (p_config.get(CONF_NAME) or platform)
+            for target in notify_service.targets:
+                target_name = slugify("{}_{}".format(platform_name, target))
+                targets[target_name] = target
+                hass.services.register(DOMAIN, target_name,
+                                       service_call_handler,
+                                       descriptions.get(SERVICE_NOTIFY),
+                                       schema=NOTIFY_SERVICE_SCHEMA)
+
+        platform_name = (p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        platform_name_slug = slugify(platform_name)
+
+        hass.services.register(DOMAIN, platform_name_slug,
+                               service_call_handler,
                                descriptions.get(SERVICE_NOTIFY),
                                schema=NOTIFY_SERVICE_SCHEMA)
         success = True

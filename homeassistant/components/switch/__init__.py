@@ -108,7 +108,7 @@ def setup(hass, config):
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
+    # pylint: disable=no-self-use, abstract-method
     @property
     def current_power_mwh(self):
         """Return the current power usage in mWh."""

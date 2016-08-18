@@ -15,6 +15,7 @@ from homeassistant.util import convert, dt as dt_util, location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
+DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def render_with_possible_json_value(hass, template, value,
@@ -218,7 +219,8 @@ class LocationMethods(object):
         if len(locations) == 1:
             return self._hass.config.distance(*locations[0])
 
-        return loc_util.distance(*locations[0] + locations[1])
+        return self._hass.config.units.length(
+            loc_util.distance(*locations[0] + locations[1]), 'm')
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
@@ -248,6 +250,25 @@ def multiply(value, amount):
         return value
 
 
+def timestamp_local(value):
+    """Filter to convert given timestamp to local date/time."""
+    try:
+        return dt_util.as_local(
+            dt_util.utc_from_timestamp(value)).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
+def timestamp_utc(value):
+    """Filter to convert gibrn timestamp to UTC date/time."""
+    try:
+        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+    except (ValueError, TypeError):
+        # If timestamp can't be converted
+        return value
+
+
 def forgiving_float(value):
     """Try to convert value to a float."""
     try:
@@ -266,3 +287,5 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
+ENV.filters['timestamp_local'] = timestamp_local
+ENV.filters['timestamp_utc'] = timestamp_utc

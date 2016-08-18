@@ -1,0 +1,16 @@
+{
+  "as": "AS20001 Time Warner Cable Internet LLC",
+  "city": "San Diego",
+  "country": "United States",
+  "countryCode": "US",
+  "isp": "Time Warner Cable",
+  "lat": 32.8594,
+  "lon": -117.2073,
+  "org": "Time Warner Cable",
+  "query": "1.2.3.4",
+  "region": "CA",
+  "regionName": "California",
+  "status": "success",
+  "timezone": "America\/Los_Angeles",
+  "zip": "92122"
+}

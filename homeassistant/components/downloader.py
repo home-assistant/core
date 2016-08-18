@@ -24,7 +24,8 @@ ATTR_URL = "url"
 ATTR_SUBDIR = "subdir"
 
 SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_URL): vol.Url,
+    # pylint: disable=no-value-for-parameter
+    vol.Required(ATTR_URL): vol.Url(),
     vol.Optional(ATTR_SUBDIR): cv.string,
 })
 

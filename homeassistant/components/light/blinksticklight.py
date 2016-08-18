@@ -6,12 +6,16 @@ https://home-assistant.io/components/light.blinksticklight/
 """
 import logging
 
-from homeassistant.components.light import ATTR_RGB_COLOR, Light
+from homeassistant.components.light import (ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+                                            Light)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 REQUIREMENTS = ["blinkstick==1.1.7"]
+
+
+SUPPORT_BLINKSTICK = SUPPORT_RGB_COLOR
 
 
 # pylint: disable=unused-argument
@@ -53,6 +57,11 @@ class BlinkStickLight(Light):
     def is_on(self):
         """Check whether any of the LEDs colors are non-zero."""
         return sum(self._rgb_color) > 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BLINKSTICK
 
     def update(self):
         """Read back the device state."""

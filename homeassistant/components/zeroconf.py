@@ -11,7 +11,7 @@ import socket
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
 
-REQUIREMENTS = ["zeroconf==0.17.5"]
+REQUIREMENTS = ["zeroconf==0.17.6"]
 
 DEPENDENCIES = ["api"]
 

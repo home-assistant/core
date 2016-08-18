@@ -18,10 +18,72 @@ class TestProximity:
                 'longitude': 1.1,
                 'radius': 10
             })
+        self.hass.states.set(
+            'zone.work', 'zoning',
+            {
+                'name': 'work',
+                'latitude': 2.3,
+                'longitude': 1.3,
+                'radius': 10
+            })
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def test_proximities(self):
+        """Test a list of proximities."""
+        assert proximity.setup(self.hass, {
+            'proximity': [{
+                'zone': 'home',
+                'ignored_zones': {
+                    'work'
+                },
+                'devices': {
+                    'device_tracker.test1',
+                    'device_tracker.test2'
+                },
+                'tolerance': '1'
+            }, {
+                'zone': 'work',
+                'devices': {
+                    'device_tracker.test1'
+                },
+                'tolerance': '1'
+            }]
+        })
+
+        proximities = ['home', 'work']
+
+        for prox in proximities:
+            state = self.hass.states.get('proximity.' + prox)
+            assert state.state == 'not set'
+            assert state.attributes.get('nearest') == 'not set'
+            assert state.attributes.get('dir_of_travel') == 'not set'
+
+            self.hass.states.set('proximity.' + prox, '0')
+            self.hass.pool.block_till_done()
+            state = self.hass.states.get('proximity.' + prox)
+            assert state.state == '0'
+
+    def test_proximities_missing_devices(self):
+        """Test a list of proximities with one missing devices."""
+        assert not proximity.setup(self.hass, {
+            'proximity': [{
+                'zone': 'home',
+                'ignored_zones': {
+                    'work'
+                },
+                'devices': {
+                    'device_tracker.test1',
+                    'device_tracker.test2'
+                },
+                'tolerance': '1'
+            }, {
+                'zone': 'work',
+                'tolerance': '1'
+            }]
+        })
 
     def test_proximity(self):
         """Test the proximity."""

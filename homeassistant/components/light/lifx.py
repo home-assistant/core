@@ -4,19 +4,18 @@ Support for the LIFX platform that implements lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
-# pylint: disable=missing-docstring
-
 import colorsys
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['liffylights==0.9.4']
-DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
 CONF_BROADCAST = "broadcast"  # broadcast address configuration item
@@ -26,6 +25,9 @@ TEMP_MIN = 2500               # lifx minimum temperature
 TEMP_MAX = 9000               # lifx maximum temperature
 TEMP_MIN_HASS = 154           # home assistant minimum temperature
 TEMP_MAX_HASS = 500           # home assistant maximum temperature
+
+SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
+                SUPPORT_TRANSITION)
 
 
 class LIFX():
@@ -94,11 +96,11 @@ class LIFX():
 
     # pylint: disable=unused-argument
     def poll(self, now):
-        """Initialize the light."""
+        """Polling for the light."""
         self.probe()
 
     def probe(self, address=None):
-        """Initialize the light."""
+        """Probe the light."""
         self._liffylights.probe(address)
 
 
@@ -187,6 +189,11 @@ class LIFXLight(Light):
         """Return true if device is on."""
         _LOGGER.debug("is_on: %d", self._power)
         return self._power != 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_LIFX
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

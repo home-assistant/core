@@ -1,12 +1,12 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access,too-many-public-methods
-# from contextlib import closing
+from contextlib import closing
 import json
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
-import eventlet
 import requests
 
 from homeassistant import bootstrap, const
@@ -48,10 +48,7 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-
-    # To start HTTP
-    # TODO fix this
-    eventlet.sleep(0.05)
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -135,6 +132,27 @@ class TestAPI(unittest.TestCase):
             headers=HA_HEADERS)
 
         self.assertEqual(400, req.status_code)
+
+    # pylint: disable=invalid-name
+    def test_api_state_change_push(self):
+        """Test if we can push a change the state of an entity."""
+        hass.states.set("test.test", "not_to_be_set")
+
+        events = []
+        hass.bus.listen(const.EVENT_STATE_CHANGED, events.append)
+
+        requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
+                      data=json.dumps({"state": "not_to_be_set"}),
+                      headers=HA_HEADERS)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(0, len(events))
+
+        requests.post(_url(const.URL_API_STATES_ENTITY.format("test.test")),
+                      data=json.dumps({"state": "not_to_be_set",
+                                       "force_update": True}),
+                      headers=HA_HEADERS)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
 
     # pylint: disable=invalid-name
     def test_api_fire_event_with_no_data(self):
@@ -225,7 +243,7 @@ class TestAPI(unittest.TestCase):
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""
-        test_content = 'Test String'
+        test_content = 'Test String°'
         with tempfile.NamedTemporaryFile() as log:
             log.write(test_content.encode('utf-8'))
             log.flush()
@@ -366,25 +384,23 @@ class TestAPI(unittest.TestCase):
             headers=HA_HEADERS)
         self.assertEqual(422, req.status_code)
 
-        # TODO disabled because eventlet cannot validate
-        # a connection to itself, need a second instance
-        # # Setup a real one
-        # req = requests.post(
-        #     _url(const.URL_API_EVENT_FORWARD),
-        #     data=json.dumps({
-        #         'api_password': API_PASSWORD,
-        #         'host': '127.0.0.1',
-        #         'port': SERVER_PORT
-        #         }),
-        #     headers=HA_HEADERS)
-        # self.assertEqual(200, req.status_code)
+        # Setup a real one
+        req = requests.post(
+            _url(const.URL_API_EVENT_FORWARD),
+            data=json.dumps({
+                'api_password': API_PASSWORD,
+                'host': '127.0.0.1',
+                'port': SERVER_PORT
+                }),
+            headers=HA_HEADERS)
+        self.assertEqual(200, req.status_code)
 
-        # # Delete it again..
-        # req = requests.delete(
-        #     _url(const.URL_API_EVENT_FORWARD),
-        #     data=json.dumps({}),
-        #     headers=HA_HEADERS)
-        # self.assertEqual(400, req.status_code)
+        # Delete it again..
+        req = requests.delete(
+            _url(const.URL_API_EVENT_FORWARD),
+            data=json.dumps({}),
+            headers=HA_HEADERS)
+        self.assertEqual(400, req.status_code)
 
         req = requests.delete(
             _url(const.URL_API_EVENT_FORWARD),
@@ -404,57 +420,58 @@ class TestAPI(unittest.TestCase):
             headers=HA_HEADERS)
         self.assertEqual(200, req.status_code)
 
-    # def test_stream(self):
-    #     """Test the stream."""
-    #     listen_count = self._listen_count()
-    #     with closing(requests.get(_url(const.URL_API_STREAM), timeout=3,
-    #                               stream=True, headers=HA_HEADERS)) as req:
+    def test_stream(self):
+        """Test the stream."""
+        listen_count = self._listen_count()
+        with closing(requests.get(_url(const.URL_API_STREAM), timeout=3,
+                                  stream=True, headers=HA_HEADERS)) as req:
+            stream = req.iter_content(1)
+            self.assertEqual(listen_count + 1, self._listen_count())
 
-    #         self.assertEqual(listen_count + 1, self._listen_count())
+            hass.bus.fire('test_event')
 
-    #         hass.bus.fire('test_event')
+            data = self._stream_next_event(stream)
 
-    #         data = self._stream_next_event(req)
+            self.assertEqual('test_event', data['event_type'])
 
-    #         self.assertEqual('test_event', data['event_type'])
+    def test_stream_with_restricted(self):
+        """Test the stream with restrictions."""
+        listen_count = self._listen_count()
+        url = _url('{}?restrict=test_event1,test_event3'.format(
+            const.URL_API_STREAM))
+        with closing(requests.get(url, stream=True, timeout=3,
+                                  headers=HA_HEADERS)) as req:
+            stream = req.iter_content(1)
+            self.assertEqual(listen_count + 1, self._listen_count())
 
-    # def test_stream_with_restricted(self):
-    #     """Test the stream with restrictions."""
-    #     listen_count = self._listen_count()
-    #     url = _url('{}?restrict=test_event1,test_event3'.format(
-    #         const.URL_API_STREAM))
-    #     with closing(requests.get(url, stream=True, timeout=3,
-    #                               headers=HA_HEADERS)) as req:
-    #         self.assertEqual(listen_count + 1, self._listen_count())
+            hass.bus.fire('test_event1')
+            data = self._stream_next_event(stream)
+            self.assertEqual('test_event1', data['event_type'])
 
-    #         hass.bus.fire('test_event1')
-    #         data = self._stream_next_event(req)
-    #         self.assertEqual('test_event1', data['event_type'])
+            hass.bus.fire('test_event2')
+            hass.bus.fire('test_event3')
 
-    #         hass.bus.fire('test_event2')
-    #         hass.bus.fire('test_event3')
+            data = self._stream_next_event(stream)
+            self.assertEqual('test_event3', data['event_type'])
 
-    #         data = self._stream_next_event(req)
-    #         self.assertEqual('test_event3', data['event_type'])
+    def _stream_next_event(self, stream):
+        """Read the stream for next event while ignoring ping."""
+        while True:
+            data = b''
+            last_new_line = False
+            for dat in stream:
+                if dat == b'\n' and last_new_line:
+                    break
+                data += dat
+                last_new_line = dat == b'\n'
 
-    # def _stream_next_event(self, stream):
-    #     """Read the stream for next event while ignoring ping."""
-    #     while True:
-    #         data = b''
-    #         last_new_line = False
-    #         for dat in stream.iter_content(1):
-    #             if dat == b'\n' and last_new_line:
-    #                 break
-    #             data += dat
-    #             last_new_line = dat == b'\n'
+            conv = data.decode('utf-8').strip()[6:]
 
-    #         conv = data.decode('utf-8').strip()[6:]
+            if conv != 'ping':
+                break
 
-    #         if conv != 'ping':
-    #             break
+        return json.loads(conv)
 
-    #     return json.loads(conv)
-
-    # def _listen_count(self):
-    #     """Return number of event listeners."""
-    #     return sum(hass.bus.listeners.values())
+    def _listen_count(self):
+        """Return number of event listeners."""
+        return sum(hass.bus.listeners.values())

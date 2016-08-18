@@ -163,6 +163,11 @@ class LgTVDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_LGTV
 
+    @property
+    def media_image_url(self):
+        """URL for obtaining a screen capture."""
+        return self._client.url + 'data?target=screen_image'
+
     def turn_off(self):
         """Turn off media player."""
         self.send_command(1)

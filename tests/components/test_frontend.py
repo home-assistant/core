@@ -1,13 +1,13 @@
 """The tests for Home Assistant frontend."""
 # pylint: disable=protected-access,too-many-public-methods
 import re
+import time
 import unittest
 
-import eventlet
 import requests
 
 import homeassistant.bootstrap as bootstrap
-import homeassistant.components.http as http
+from homeassistant.components import frontend, http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -42,15 +42,13 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(hass, 'frontend')
 
     hass.start()
-
-    # Give eventlet time to start
-    # TODO fix this
-    eventlet.sleep(0.05)
+    time.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
     """Stop everything that was started."""
     hass.stop()
+    frontend.PANELS = {}
 
 
 class TestFrontend(unittest.TestCase):

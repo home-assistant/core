@@ -23,7 +23,7 @@ DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = False
 
-REQUIREMENTS = ['influxdb==2.12.0']
+REQUIREMENTS = ['influxdb==3.0.0']
 
 CONF_HOST = 'host'
 CONF_PORT = 'port'
@@ -33,6 +33,8 @@ CONF_PASSWORD = 'password'
 CONF_SSL = 'ssl'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_BLACKLIST = 'blacklist'
+CONF_WHITELIST = 'whitelist'
+CONF_TAGS = 'tags'
 
 
 # pylint: disable=too-many-locals
@@ -56,6 +58,8 @@ def setup(hass, config):
     verify_ssl = util.convert(conf.get(CONF_VERIFY_SSL), bool,
                               DEFAULT_VERIFY_SSL)
     blacklist = conf.get(CONF_BLACKLIST, [])
+    whitelist = conf.get(CONF_WHITELIST, [])
+    tags = conf.get(CONF_TAGS, {})
 
     try:
         influx = InfluxDBClient(host=host, port=port, username=username,
@@ -77,6 +81,9 @@ def setup(hass, config):
             return
 
         try:
+            if len(whitelist) > 0 and state.entity_id not in whitelist:
+                return
+
             _state = state_helper.state_as_number(state)
         except ValueError:
             _state = state.state
@@ -98,6 +105,9 @@ def setup(hass, config):
                 }
             }
         ]
+
+        for tag in tags:
+            json_body[0]['tags'][tag] = tags[tag]
 
         try:
             influx.write_points(json_body)

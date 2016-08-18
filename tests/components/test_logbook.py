@@ -85,6 +85,18 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
 
+    def test_filter_continuous_sensor_values(self):
+        """Test remove continuous sensor events from logbook."""
+        entity_id = 'sensor.bla'
+        pointA = dt_util.utcnow()
+        attributes = {'unit_of_measurement': 'foo'}
+        eventA = self.create_state_changed_event(
+            pointA, entity_id, 10, attributes)
+
+        entries = list(logbook.humanify((eventA,)))
+
+        self.assertEqual(0, len(entries))
+
     def test_entry_to_dict(self):
         """Test conversion of entry to dict."""
         entry = logbook.Entry(
@@ -148,11 +160,12 @@ class TestComponentLogbook(unittest.TestCase):
         if entity_id:
             self.assertEqual(entity_id, entry.entity_id)
 
-    def create_state_changed_event(self, event_time_fired, entity_id, state):
+    def create_state_changed_event(self, event_time_fired, entity_id, state,
+                                   attributes=None):
         """Create state changed event."""
         # Logbook only cares about state change events that
         # contain an old state but will not actually act on it.
-        state = ha.State(entity_id, state).as_dict()
+        state = ha.State(entity_id, state, attributes).as_dict()
 
         return ha.Event(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,

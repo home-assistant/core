@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.3.1']
+REQUIREMENTS = ['pyowm==2.3.2']
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'weather': ['Condition', None],
@@ -48,8 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     from pyowm import OWM
 
-    SENSOR_TYPES['temperature'][1] = hass.config.temperature_unit
-    unit = hass.config.temperature_unit
+    SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
     forecast = config.get('forecast')
     owm = OWM(config.get(CONF_API_KEY, None))
 
@@ -67,13 +66,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if variable not in SENSOR_TYPES:
                 _LOGGER.error('Sensor type: "%s" does not exist', variable)
             else:
-                dev.append(OpenWeatherMapSensor(data, variable, unit))
+                dev.append(OpenWeatherMapSensor(data, variable,
+                                                SENSOR_TYPES[variable][1]))
     except KeyError:
         pass
 
     if forecast:
         SENSOR_TYPES['forecast'] = ['Forecast', None]
-        dev.append(OpenWeatherMapSensor(data, 'forecast', unit))
+        dev.append(OpenWeatherMapSensor(data, 'forecast',
+                                        SENSOR_TYPES['temperature'][1]))
 
     add_devices(dev)
 
@@ -127,9 +128,9 @@ class OpenWeatherMapSensor(Entity):
             else:
                 self._state = round(data.get_temperature()['temp'], 1)
         elif self.type == 'wind_speed':
-            self._state = data.get_wind()['speed']
+            self._state = round(data.get_wind()['speed'], 1)
         elif self.type == 'humidity':
-            self._state = data.get_humidity()
+            self._state = round(data.get_humidity(), 1)
         elif self.type == 'pressure':
             self._state = round(data.get_pressure()['press'], 0)
         elif self.type == 'clouds':

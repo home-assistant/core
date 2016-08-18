@@ -89,7 +89,7 @@ class WelcomeData(object):
         """Return all module available on the API as a list."""
         self.update()
         if not self.home:
-            for home in self.welcomedata.cameras.keys():
+            for home in self.welcomedata.cameras:
                 for camera in self.welcomedata.cameras[home].values():
                     self.camera_names.append(camera['name'])
         else:

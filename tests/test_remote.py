@@ -1,17 +1,17 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access,too-many-public-methods
+import time
 import unittest
-
-import eventlet
 
 import homeassistant.core as ha
 import homeassistant.bootstrap as bootstrap
 import homeassistant.remote as remote
 import homeassistant.components.http as http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_instance_port, get_test_home_assistant
+from tests.common import (
+    get_test_instance_port, get_test_home_assistant, get_test_config_dir)
 
 API_PASSWORD = "test1234"
 MASTER_PORT = get_test_instance_port()
@@ -21,7 +21,7 @@ HTTP_BASE_URL = "http://127.0.0.1:{}".format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-broken_api = remote.API('127.0.0.1', BROKEN_PORT)
+broken_api = remote.API('127.0.0.1', "bladiebla")
 hass, slave, master_api = None, None, None
 
 
@@ -42,30 +42,24 @@ def setUpModule():   # pylint: disable=invalid-name
     bootstrap.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: MASTER_PORT}})
+                       http.CONF_SERVER_PORT: MASTER_PORT}})
 
     bootstrap.setup_component(hass, 'api')
 
     hass.start()
-
-    # Give eventlet time to start
-    # TODO fix this
-    eventlet.sleep(0.05)
+    time.sleep(0.05)
 
     master_api = remote.API("127.0.0.1", API_PASSWORD, MASTER_PORT)
 
     # Start slave
     slave = remote.HomeAssistant(master_api)
+    slave.config.config_dir = get_test_config_dir()
     bootstrap.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: SLAVE_PORT}})
+                       http.CONF_SERVER_PORT: SLAVE_PORT}})
 
     slave.start()
-
-    # Give eventlet time to start
-    # TODO fix this
-    eventlet.sleep(0.05)
 
 
 def tearDownModule():   # pylint: disable=invalid-name
@@ -115,7 +109,7 @@ class TestRemoteMethods(unittest.TestCase):
             """Helper method that will verify our event got called."""
             test_value.append(1)
 
-        hass.bus.listen_once("test.event_no_data", listener)
+        hass.bus.listen("test.event_no_data", listener)
         remote.fire_event(master_api, "test.event_no_data")
         hass.pool.block_till_done()
         self.assertEqual(1, len(test_value))
@@ -154,6 +148,21 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual('set_test', state.state)
 
         self.assertFalse(remote.set_state(broken_api, 'test.test', 'set_test'))
+
+    def test_set_state_with_push(self):
+        """Test Python API set_state with push option."""
+        events = []
+        hass.bus.listen(EVENT_STATE_CHANGED, events.append)
+
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        remote.set_state(master_api, 'test.test', 'set_test_2')
+        hass.bus._pool.block_till_done()
+        self.assertEqual(1, len(events))
+
+        remote.set_state(
+            master_api, 'test.test', 'set_test_2', force_update=True)
+        hass.bus._pool.block_till_done()
+        self.assertEqual(2, len(events))
 
     def test_is_state(self):
         """Test Python API is_state."""
@@ -242,7 +251,6 @@ class TestRemoteClasses(unittest.TestCase):
         slave.pool.block_till_done()
         # Wait till master gives updated state
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertEqual("remote.statemachine test",
                          slave.states.get("remote.test").state)
@@ -251,13 +259,13 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from master."""
         hass.states.set("remote.master_remove", "remove me!")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
+        slave.pool.block_till_done()
 
         self.assertIn('remote.master_remove', slave.states.entity_ids())
 
         hass.states.remove("remote.master_remove")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
+        slave.pool.block_till_done()
 
         self.assertNotIn('remote.master_remove', slave.states.entity_ids())
 
@@ -265,32 +273,32 @@ class TestRemoteClasses(unittest.TestCase):
         """Remove statemachine from slave."""
         hass.states.set("remote.slave_remove", "remove me!")
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertIn('remote.slave_remove', slave.states.entity_ids())
 
         self.assertTrue(slave.states.remove("remote.slave_remove"))
         slave.pool.block_till_done()
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
         self.assertNotIn('remote.slave_remove', slave.states.entity_ids())
 
     def test_eventbus_fire(self):
         """Test if events fired from the eventbus get fired."""
-        test_value = []
+        hass_call = []
+        slave_call = []
 
-        def listener(event):
-            """Helper method that will verify our event got called."""
-            test_value.append(1)
-
-        slave.bus.listen_once("test.event_no_data", listener)
+        hass.bus.listen("test.event_no_data", lambda _: hass_call.append(1))
+        slave.bus.listen("test.event_no_data", lambda _: slave_call.append(1))
         slave.bus.fire("test.event_no_data")
 
         # Wait till slave tells master
         slave.pool.block_till_done()
         # Wait till master gives updated event
         hass.pool.block_till_done()
-        eventlet.sleep(0.01)
 
-        self.assertEqual(1, len(test_value))
+        self.assertEqual(1, len(hass_call))
+        self.assertEqual(1, len(slave_call))
+
+    def test_get_config(self):
+        """Test the return of the configuration."""
+        self.assertEqual(hass.config.as_dict(), remote.get_config(master_api))

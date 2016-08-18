@@ -1,4 +1,9 @@
-"""Support for ThinkingCleaner."""
+"""
+Support for ThinkingCleaner.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.thinkingcleaner/
+"""
 import logging
 from datetime import timedelta
 
@@ -63,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for device in devices:
-        for type_name in SENSOR_TYPES.keys():
+        for type_name in SENSOR_TYPES:
             dev.append(ThinkingCleanerSensor(device, type_name,
                                              update_devices))
 

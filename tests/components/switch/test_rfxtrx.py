@@ -34,6 +34,17 @@ class TestSwitchRfxtrx(unittest.TestCase):
                                rfxtrx_core.ATTR_FIREEVENT: True}
                             }}}))
 
+    def test_valid_config_int_device_id(self):
+        """Test configuration."""
+        self.assertTrue(_setup_component(self.hass, 'switch', {
+            'switch': {'platform': 'rfxtrx',
+                       'automatic_add': True,
+                       'devices':
+                           {710000141010170: {
+                               'name': 'Test',
+                               rfxtrx_core.ATTR_FIREEVENT: True}
+                            }}}))
+
     def test_invalid_config1(self):
         self.assertFalse(_setup_component(self.hass, 'switch', {
             'switch': {'platform': 'rfxtrx',
@@ -142,6 +153,17 @@ class TestSwitchRfxtrx(unittest.TestCase):
         self.assertTrue(entity.is_on)
         entity.turn_off()
         self.assertFalse(entity.is_on)
+
+        entity_id = rfxtrx_core.RFX_DEVICES['213c7f216'].entity_id
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('Test', entity_hass.name)
+        self.assertEqual('off', entity_hass.state)
+        entity.turn_on()
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('on', entity_hass.state)
+        entity.turn_off()
+        entity_hass = self.hass.states.get(entity_id)
+        self.assertEqual('off', entity_hass.state)
 
     def test_several_switches(self):
         """Test with 3 switches."""

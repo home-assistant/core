@@ -1,27 +1,29 @@
-"""Test the initialization."""
-import betamax
+"""Setup some common test helper things."""
+import functools
+import logging
 
 from homeassistant import util
 from homeassistant.util import location
 
-with betamax.Betamax.configure() as config:
-    config.cassette_library_dir = 'tests/cassettes'
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
-# Automatically called during different setups. Too often forgotten
-# so mocked by default.
-location.detect_location_info = lambda: location.LocationInfo(
-    ip='1.1.1.1',
-    country_code='US',
-    country_name='United States',
-    region_code='CA',
-    region_name='California',
-    city='San Diego',
-    zip_code='92122',
-    time_zone='America/Los_Angeles',
-    latitude='2.0',
-    longitude='1.0',
-    use_fahrenheit=True,
-)
 
-location.elevation = lambda latitude, longitude: 0
+def test_real(func):
+    """Force a function to require a keyword _test_real to be passed in."""
+    @functools.wraps(func)
+    def guard_func(*args, **kwargs):
+        real = kwargs.pop('_test_real', None)
+
+        if not real:
+            raise Exception('Forgot to mock or pass "_test_real=True" to %s',
+                            func.__name__)
+
+        return func(*args, **kwargs)
+
+    return guard_func
+
+# Guard a few functions that would make network connections
+location.detect_location_info = test_real(location.detect_location_info)
+location.elevation = test_real(location.elevation)
 util.get_local_ip = lambda: '127.0.0.1'

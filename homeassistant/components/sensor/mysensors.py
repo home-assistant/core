@@ -15,7 +15,7 @@ DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for sensors."""
+    """Setup the MySensors platform for sensors."""
     # Only act if loaded via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if discovery_info is None:
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
-    """Represent the value of a MySensors Sensor child node."""
+    """Representation of a MySensors Sensor child node."""
 
     @property
     def state(self):

@@ -25,9 +25,13 @@ class TestComponentHistory(unittest.TestCase):
 
     def init_recorder(self):
         """Initialize the recorder."""
-        with patch('homeassistant.core.Config.path', return_value=':memory:'):
-            recorder.setup(self.hass, {})
+        db_uri = 'sqlite://'
+        with patch('homeassistant.core.Config.path', return_value=db_uri):
+            recorder.setup(self.hass, config={
+                "recorder": {
+                    "db_url": db_uri}})
         self.hass.start()
+        recorder._INSTANCE.block_till_db_ready()
         self.wait_recording_done()
 
     def wait_recording_done(self):

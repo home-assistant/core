@@ -13,11 +13,11 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
-    'pytz>=2016.4',
+    'pytz>=2016.6.1',
     'pip>=7.0.0',
     'jinja2>=2.8',
-    'voluptuous==0.8.9',
-    'eventlet==0.19.0',
+    'voluptuous==0.9.2',
+    'typing>=3,<4',
 ]
 
 setup(
@@ -26,8 +26,8 @@ setup(
     license='MIT License',
     url='https://home-assistant.io/',
     download_url=DOWNLOAD_URL,
-    author='Paulus Schoutsen',
-    author_email='paulus@paulusschoutsen.nl',
+    author='Home Assistant',
+    author_email='hello@home-assistant.io',
     description='Open-source home automation platform running on Python 3.',
     packages=PACKAGES,
     include_package_data=True,

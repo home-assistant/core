@@ -11,7 +11,7 @@ from pprint import pprint
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_LOCATION,
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID,
     CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
@@ -32,23 +32,64 @@ DEFAULT_CONF_AUTOHEAL = True
 NETWORK_READY_WAIT_SECS = 30
 
 SERVICE_ADD_NODE = "add_node"
+SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_HEAL_NETWORK = "heal_network"
 SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
+SERVICE_STOP_NETWORK = "stop_network"
+SERVICE_START_NETWORK = "start_network"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
+EVENT_NODE_EVENT = "zwave.node_event"
+EVENT_NETWORK_READY = "zwave.network_ready"
+EVENT_NETWORK_COMPLETE = "zwave.network_complete"
+EVENT_NETWORK_START = "zwave.network_start"
+EVENT_NETWORK_STOP = "zwave.network_stop"
 
-COMMAND_CLASS_SWITCH_MULTILEVEL = 38
-COMMAND_CLASS_DOOR_LOCK = 98
+COMMAND_CLASS_WHATEVER = None
+COMMAND_CLASS_SENSOR_MULTILEVEL = 49
+COMMAND_CLASS_COLOR = 51
+COMMAND_CLASS_METER = 50
+COMMAND_CLASS_ALARM = 113
 COMMAND_CLASS_SWITCH_BINARY = 37
 COMMAND_CLASS_SENSOR_BINARY = 48
-COMMAND_CLASS_SENSOR_MULTILEVEL = 49
-COMMAND_CLASS_METER = 50
+COMMAND_CLASS_SWITCH_MULTILEVEL = 38
+COMMAND_CLASS_DOOR_LOCK = 98
+COMMAND_CLASS_THERMOSTAT_SETPOINT = 67
+COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68
+COMMAND_CLASS_BARRIER_OPERATOR = 102
 COMMAND_CLASS_BATTERY = 128
-COMMAND_CLASS_ALARM = 113  # 0x71
-COMMAND_CLASS_THERMOSTAT_SETPOINT = 67  # 0x43
-COMMAND_CLASS_THERMOSTAT_FAN_MODE = 68  # 0x44
+COMMAND_CLASS_SENSOR_ALARM = 156
+
+GENERIC_COMMAND_CLASS_WHATEVER = None
+GENERIC_COMMAND_CLASS_REMOTE_CONTROLLER = 1
+GENERIC_COMMAND_CLASS_NOTIFICATION = 7
+GENERIC_COMMAND_CLASS_REPEATER_SLAVE = 15
+GENERIC_COMMAND_CLASS_BINARY_SWITCH = 16
+GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH = 17
+GENERIC_COMMAND_CLASS_REMOTE_SWITCH = 18
+GENERIC_COMMAND_CLASS_WALL_CONTROLLER = 24
+GENERIC_COMMAND_CLASS_ENTRY_CONTROL = 64
+GENERIC_COMMAND_CLASS_BINARY_SENSOR = 32
+GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR = 33
+GENERIC_COMMAND_CLASS_METER = 49
+GENERIC_COMMAND_CLASS_ALARM_SENSOR = 161
+GENERIC_COMMAND_CLASS_THERMOSTAT = 8
+
+SPECIFIC_DEVICE_CLASS_WHATEVER = None
+SPECIFIC_DEVICE_CLASS_NOT_USED = 0
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH = 1
+SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK = 2
+SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR = 3
+SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK = 3
+SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE = 4
+SPECIFIC_DEVICE_CLASS_SECURE_DOOR = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A = 5
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B = 6
+SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON = 7
+SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C = 7
 
 GENRE_WHATEVER = None
 GENRE_USER = "User"
@@ -60,45 +101,101 @@ TYPE_DECIMAL = "Decimal"
 
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
-# value type).
+# value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
     ('sensor',
+     [GENERIC_COMMAND_CLASS_WHATEVER],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_MULTILEVEL,
       COMMAND_CLASS_METER,
-      COMMAND_CLASS_ALARM],
+      COMMAND_CLASS_ALARM,
+      COMMAND_CLASS_SENSOR_ALARM],
      TYPE_WHATEVER,
      GENRE_USER),
     ('light',
+     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
+      GENERIC_COMMAND_CLASS_REMOTE_SWITCH],
+     [SPECIFIC_DEVICE_CLASS_MULTILEVEL_POWER_SWITCH,
+      SPECIFIC_DEVICE_CLASS_MULTILEVEL_SCENE,
+      SPECIFIC_DEVICE_CLASS_NOT_USED],
      [COMMAND_CLASS_SWITCH_MULTILEVEL],
      TYPE_BYTE,
      GENRE_USER),
     ('switch',
+     [GENERIC_COMMAND_CLASS_ALARM_SENSOR,
+      GENERIC_COMMAND_CLASS_BINARY_SENSOR,
+      GENERIC_COMMAND_CLASS_BINARY_SWITCH,
+      GENERIC_COMMAND_CLASS_ENTRY_CONTROL,
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR,
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
+      GENERIC_COMMAND_CLASS_NOTIFICATION,
+      GENERIC_COMMAND_CLASS_REMOTE_CONTROLLER,
+      GENERIC_COMMAND_CLASS_REMOTE_SWITCH,
+      GENERIC_COMMAND_CLASS_REPEATER_SLAVE,
+      GENERIC_COMMAND_CLASS_THERMOSTAT,
+      GENERIC_COMMAND_CLASS_WALL_CONTROLLER],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SWITCH_BINARY],
      TYPE_BOOL,
      GENRE_USER),
     ('binary_sensor',
+     [GENERIC_COMMAND_CLASS_ALARM_SENSOR,
+      GENERIC_COMMAND_CLASS_BINARY_SENSOR,
+      GENERIC_COMMAND_CLASS_BINARY_SWITCH,
+      GENERIC_COMMAND_CLASS_METER,
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SENSOR,
+      GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH,
+      GENERIC_COMMAND_CLASS_NOTIFICATION,
+      GENERIC_COMMAND_CLASS_THERMOSTAT],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_SENSOR_BINARY],
      TYPE_BOOL,
      GENRE_USER),
     ('thermostat',
+     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_THERMOSTAT_SETPOINT],
      TYPE_WHATEVER,
      GENRE_WHATEVER),
     ('hvac',
+     [GENERIC_COMMAND_CLASS_THERMOSTAT],
+     [SPECIFIC_DEVICE_CLASS_WHATEVER],
      [COMMAND_CLASS_THERMOSTAT_FAN_MODE],
      TYPE_WHATEVER,
      GENRE_WHATEVER),
     ('lock',
+     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
+     [SPECIFIC_DEVICE_CLASS_ADVANCED_DOOR_LOCK,
+      SPECIFIC_DEVICE_CLASS_SECURE_KEYPAD_DOOR_LOCK],
      [COMMAND_CLASS_DOOR_LOCK],
      TYPE_BOOL,
      GENRE_USER),
+    ('rollershutter',
+     [GENERIC_COMMAND_CLASS_MULTILEVEL_SWITCH],
+     [SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_A,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_B,
+      SPECIFIC_DEVICE_CLASS_MOTOR_CONTROL_CLASS_C,
+      SPECIFIC_DEVICE_CLASS_MULTIPOSITION_MOTOR],
+     [COMMAND_CLASS_WHATEVER],
+     TYPE_WHATEVER,
+     GENRE_USER),
+    ('garage_door',
+     [GENERIC_COMMAND_CLASS_ENTRY_CONTROL],
+     [SPECIFIC_DEVICE_CLASS_SECURE_BARRIER_ADD_ON,
+      SPECIFIC_DEVICE_CLASS_SECURE_DOOR],
+     [COMMAND_CLASS_SWITCH_BINARY,
+      COMMAND_CLASS_BARRIER_OPERATOR],
+     TYPE_BOOL,
+     GENRE_USER)
 ]
 
 
 ATTR_NODE_ID = "node_id"
 ATTR_VALUE_ID = "value_id"
+ATTR_OBJECT_ID = "object_id"
 
 ATTR_SCENE_ID = "scene_id"
+ATTR_BASIC_LEVEL = "basic_level"
 
 NETWORK = None
 
@@ -121,6 +218,14 @@ def _node_name(node):
 def _value_name(value):
     """Return the name of the value."""
     return "{} {}".format(_node_name(value.node), value.label)
+
+
+def _node_object_id(node):
+    """Return the object_id of the node."""
+    node_object_id = "{}_{}".format(slugify(_node_name(node)),
+                                    node.node_id)
+
+    return node_object_id
 
 
 def _object_id(value):
@@ -210,7 +315,11 @@ def setup(hass, config):
             print("")
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
-                                    ZWaveNetwork.SIGNAL_VALUE_ADDED):
+                                    ZWaveNetwork.SIGNAL_VALUE_ADDED,
+                                    ZWaveNetwork.SIGNAL_SCENE_EVENT,
+                                    ZWaveNetwork.SIGNAL_NODE_EVENT,
+                                    ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -220,18 +329,49 @@ def setup(hass, config):
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
         for (component,
-             command_ids,
+             generic_device_class,
+             specific_device_class,
+             command_class,
              value_type,
              value_genre) in DISCOVERY_COMPONENTS:
 
-            if value.command_class not in command_ids:
+            _LOGGER.debug("Component=%s Node_id=%s query start",
+                          component, node.node_id)
+            if node.generic not in generic_device_class and \
+               None not in generic_device_class:
+                _LOGGER.debug("node.generic %s not None and in "
+                              "generic_device_class %s",
+                              node.generic, generic_device_class)
                 continue
-            if value_type is not None and value_type != value.type:
+            if node.specific not in specific_device_class and \
+               None not in specific_device_class:
+                _LOGGER.debug("node.specific %s is not None and in "
+                              "specific_device_class %s", node.specific,
+                              specific_device_class)
                 continue
-            if value_genre is not None and value_genre != value.genre:
+            if value.command_class not in command_class and \
+               None not in command_class:
+                _LOGGER.debug("value.command_class %s is not None "
+                              "and in command_class %s",
+                              value.command_class, command_class)
+                continue
+            if value_type != value.type and value_type is not None:
+                _LOGGER.debug("value.type %s != value_type %s",
+                              value.type, value_type)
+                continue
+            if value_genre != value.genre and value_genre is not None:
+                _LOGGER.debug("value.genre %s != value_genre %s",
+                              value.genre, value_genre)
                 continue
 
             # Configure node
+            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
+                          "Specific_command_class=%s, "
+                          "Command_class=%s, Value type=%s, "
+                          "Genre=%s", node.node_id,
+                          node.generic, node.specific,
+                          value.command_class, value.type,
+                          value.genre)
             name = "{}.{}".format(component, _object_id(value))
 
             node_config = customize.get(name, {})
@@ -249,26 +389,62 @@ def setup(hass, config):
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
-        name = _node_name(node)
-        object_id = "{}_{}".format(slugify(name), node.node_id)
-
         hass.bus.fire(EVENT_SCENE_ACTIVATED, {
-            ATTR_ENTITY_ID: object_id,
+            ATTR_ENTITY_ID: _node_object_id(node),
+            ATTR_OBJECT_ID: _node_object_id(node),
             ATTR_SCENE_ID: scene_id
         })
+
+    def node_event_activated(node, value):
+        """Called when a nodeevent is activated on any node in the network."""
+        hass.bus.fire(EVENT_NODE_EVENT, {
+            ATTR_OBJECT_ID: _node_object_id(node),
+            ATTR_BASIC_LEVEL: value
+        })
+
+    def network_ready():
+        """Called when all awake nodes have been queried."""
+        _LOGGER.info("Zwave network is ready for use. All awake nodes"
+                     " have been queried. Sleeping nodes will be"
+                     " queried when they awake.")
+        hass.bus.fire(EVENT_NETWORK_READY)
+
+    def network_complete():
+        """Called when all nodes on network have been queried."""
+        _LOGGER.info("Zwave network is complete. All nodes on the network"
+                     " have been queried")
+        hass.bus.fire(EVENT_NETWORK_COMPLETE)
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
+    dispatcher.connect(
+        node_event_activated, ZWaveNetwork.SIGNAL_NODE_EVENT, weak=False)
+    dispatcher.connect(
+        network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
-        NETWORK.controller.begin_command_add_device()
+        _LOGGER.info("Zwave add_node have been initialized.")
+        NETWORK.controller.add_node()
+
+    def add_node_secure(service):
+        """Switch into secure inclusion mode."""
+        _LOGGER.info("Zwave add_node_secure have been initialized.")
+        NETWORK.controller.add_node(True)
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        NETWORK.controller.begin_command_remove_device()
+        _LOGGER.info("Zwave remove_node have been initialized.")
+        NETWORK.controller.remove_node()
+
+    def cancel_command(service):
+        """Cancel a running controller command."""
+        _LOGGER.info("Cancel running ZWave command.")
+        NETWORK.controller.cancel_command()
 
     def heal_network(service):
         """Heal the network."""
@@ -277,19 +453,25 @@ def setup(hass, config):
 
     def soft_reset(service):
         """Soft reset the controller."""
+        _LOGGER.info("Zwave soft_reset have been initialized.")
         NETWORK.controller.soft_reset()
 
     def test_network(service):
         """Test the network by sending commands to all the nodes."""
+        _LOGGER.info("Zwave test_network have been initialized.")
         NETWORK.test()
 
-    def stop_zwave(event):
-        """Stop Z-Wave."""
+    def stop_zwave(_service_or_event):
+        """Stop Z-Wave network."""
+        _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
+        hass.bus.fire(EVENT_NETWORK_STOP)
 
-    def start_zwave(event):
-        """Startup Z-Wave."""
+    def start_zwave(_service_or_event):
+        """Startup Z-Wave network."""
+        _LOGGER.info("Starting ZWave network.")
         NETWORK.start()
+        hass.bus.fire(EVENT_NETWORK_START)
 
         # Need to be in STATE_AWAKED before talking to nodes.
         # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
@@ -318,13 +500,17 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
 
-        # Register add / remove node services for Z-Wave sticks without
-        # hardware inclusion button
+        # Register node services for Z-Wave network
         hass.services.register(DOMAIN, SERVICE_ADD_NODE, add_node)
+        hass.services.register(DOMAIN, SERVICE_ADD_NODE_SECURE,
+                               add_node_secure)
         hass.services.register(DOMAIN, SERVICE_REMOVE_NODE, remove_node)
+        hass.services.register(DOMAIN, SERVICE_CANCEL_COMMAND, cancel_command)
         hass.services.register(DOMAIN, SERVICE_HEAL_NETWORK, heal_network)
         hass.services.register(DOMAIN, SERVICE_SOFT_RESET, soft_reset)
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
+        hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
+        hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
 
     # Setup autoheal
     if autoheal:

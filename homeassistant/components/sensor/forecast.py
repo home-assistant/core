@@ -10,7 +10,7 @@ from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_API_KEY, TEMP_CELSIUS
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -44,7 +44,18 @@ SENSOR_TYPES = {
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar'],
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
+    'apparent_temperature_max': ['Daily High Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'apparent_temperature_min': ['Daily Low Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'temperature_max': ['Daily High Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'temperature_min': ['Daily Low Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'precip_intensity_max': ['Daily Max Precip Intensity',
+                             'mm', 'in', 'mm', 'mm', 'mm'],
 }
+DEFAULT_NAME = "Forecast.io"
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -62,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if 'units' in config:
         units = config['units']
-    elif hass.config.temperature_unit == TEMP_CELSIUS:
+    elif hass.config.units.is_metric:
         units = 'si'
     else:
         units = 'us'
@@ -78,11 +89,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         return False
 
+    name = config.get('name', DEFAULT_NAME)
+
     # Initialize and add all of the sensors.
     sensors = []
     for variable in config['monitored_conditions']:
         if variable in SENSOR_TYPES:
-            sensors.append(ForeCastSensor(forecast_data, variable))
+            sensors.append(ForeCastSensor(forecast_data, variable, name))
         else:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
 
@@ -93,9 +106,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
 
-    def __init__(self, forecast_data, sensor_type):
+    def __init__(self, forecast_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = 'Weather'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
@@ -152,16 +165,26 @@ class ForeCastSensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
-        elif self.type == 'daily_summary':
+        elif self.type in ['daily_summary',
+                           'temperature_min', 'temperature_max',
+                           'apparent_temperature_min',
+                           'apparent_temperature_max',
+                           'precip_intensity_max']:
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
-            self._state = getattr(daily, 'summary', '')
+            if self.type == 'daily_summary':
+                self._state = getattr(daily, 'summary', '')
+            else:
+                if hasattr(daily, 'data'):
+                    self._state = self.get_state(daily.data[0])
+                else:
+                    self._state = 0
         else:
             self.forecast_data.update_currently()
             currently = self.forecast_data.data_currently
-            self._state = self.get_currently_state(currently)
+            self._state = self.get_state(currently)
 
-    def get_currently_state(self, data):
+    def get_state(self, data):
         """
         Helper function that returns a new state based on the type.
 
@@ -175,6 +198,9 @@ class ForeCastSensor(Entity):
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
         elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                            'temperature_min', 'temperature_max',
+                            'apparent_temperature_min',
+                            'apparent_temperature_max',
                             'pressure', 'ozone']):
             return round(state, 1)
         return state

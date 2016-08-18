@@ -34,7 +34,7 @@ SERVICE_SELECT_VALUE = 'select_value'
 
 SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): vol.Coerce(int),
+    vol.Required(ATTR_VALUE): vol.Coerce(float),
 })
 
 
@@ -152,7 +152,7 @@ class InputSlider(Entity):
 
     def select_value(self, value):
         """Select new value."""
-        num_value = int(value)
+        num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
             _LOGGER.warning('Invalid value: %s (range %s - %s)',
                             num_value, self._minimum, self._maximum)

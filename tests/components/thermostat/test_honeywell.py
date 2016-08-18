@@ -277,6 +277,16 @@ class TestHoneywellRound(unittest.TestCase):
         self.round1.set_temperature(25)
         self.device.set_temperature.assert_called_once_with('House', 25)
 
+    def test_set_hvac_mode(self: unittest.TestCase) -> None:
+        """Test setting the system operation."""
+        self.round1.set_hvac_mode('cool')
+        self.assertEqual('cool', self.round1.operation)
+        self.assertEqual('cool', self.device.system_mode)
+
+        self.round1.set_hvac_mode('heat')
+        self.assertEqual('heat', self.round1.operation)
+        self.assertEqual('heat', self.device.system_mode)
+
 
 class TestHoneywellUS(unittest.TestCase):
     """A test class for Honeywell US thermostats."""
@@ -326,6 +336,16 @@ class TestHoneywellUS(unittest.TestCase):
         self.honeywell.set_temperature(74)
         self.assertEqual(74, self.device.setpoint_cool)
         self.assertEqual(74, self.honeywell.target_temperature)
+
+    def test_set_hvac_mode(self: unittest.TestCase) -> None:
+        """Test setting the HVAC mode."""
+        self.honeywell.set_hvac_mode('cool')
+        self.assertEqual('cool', self.honeywell.operation)
+        self.assertEqual('cool', self.device.system_mode)
+
+        self.honeywell.set_hvac_mode('heat')
+        self.assertEqual('heat', self.honeywell.operation)
+        self.assertEqual('heat', self.device.system_mode)
 
     def test_set_temp_fail(self):
         """Test if setting the temperature fails."""

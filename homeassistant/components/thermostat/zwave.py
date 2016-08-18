@@ -51,6 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_IGNORE:
                 _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat, ignoring")
                 return
+    if not (value.node.get_values_for_command_class(
+            COMMAND_CLASS_SENSOR_MULTILEVEL) and
+            value.node.get_values_for_command_class(
+                COMMAND_CLASS_THERMOSTAT_SETPOINT)):
+        return
 
     add_devices([ZWaveThermostat(value)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
@@ -58,6 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
+# pylint: disable=abstract-method
 class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
     """Represents a HeatControl thermostat."""
 
@@ -80,7 +86,8 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.node == value.node:
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
             self.update_properties()
             self.update_ha_state()
 
@@ -89,8 +96,9 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
         # current Temp
         for _, value in self._node.get_values_for_command_class(
                 COMMAND_CLASS_SENSOR_MULTILEVEL).items():
-            self._current_temperature = int(value.data)
-            self._unit = value.units
+            if value.label == 'Temperature':
+                self._current_temperature = int(value.data)
+                self._unit = value.units
 
         # operation state
         for _, value in self._node.get_values(
@@ -156,3 +164,4 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
                 COMMAND_CLASS_THERMOSTAT_SETPOINT).items():
             if int(value.data) != 0 and value.index == self._index:
                 value.data = temperature
+                break

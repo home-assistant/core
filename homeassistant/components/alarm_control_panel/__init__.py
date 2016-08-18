@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'alarm_control_panel'
 SCAN_INTERVAL = 30
+ATTR_CHANGED_BY = 'changed_by'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -124,6 +125,11 @@ class AlarmControlPanel(Entity):
         """Regex for code format or None if no code is required."""
         return None
 
+    @property
+    def changed_by(self):
+        """Last change triggered by."""
+        return None
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         raise NotImplementedError()
@@ -145,5 +151,6 @@ class AlarmControlPanel(Entity):
         """Return the state attributes."""
         state_attr = {
             ATTR_CODE_FORMAT: self.code_format,
+            ATTR_CHANGED_BY: self.changed_by
         }
         return state_attr

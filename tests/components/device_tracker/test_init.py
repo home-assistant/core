@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime, timedelta
 import os
+import tempfile
 
 from homeassistant.loader import get_component
 import homeassistant.util.dt as dt_util
@@ -45,12 +46,25 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
 
+    def test_reading_broken_yaml_config(self):  # pylint: disable=no-self-use
+        """Test when known devices contains invalid data."""
+        with tempfile.NamedTemporaryFile() as fpt:
+            # file is empty
+            assert device_tracker.load_config(fpt.name, None, False, 0) == []
+
+            fpt.write('100'.encode('utf-8'))
+            fpt.flush()
+
+            # file contains a non-dict format
+            assert device_tracker.load_config(fpt.name, None, False, 0) == []
+
     def test_reading_yaml_config(self):
         """Test the rendering of the YAML configuration."""
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), 0, True, dev_id,
-            'AB:CD:EF:GH:IJ', 'Test name', 'http://test.picture', True)
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(device_tracker.setup(self.hass, {}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
@@ -66,6 +80,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         """Test with no YAML file."""
         self.assertTrue(device_tracker.setup(self.hass, {}))
 
+    # pylint: disable=invalid-name
     def test_adding_unknown_device_to_config(self):
         """Test the adding of unknown devices to configuration file."""
         scanner = get_component('device_tracker.test').SCANNER
@@ -79,6 +94,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert len(config) == 1
         assert config[0].dev_id == 'dev1'
         assert config[0].track
+
+    def test_gravatar(self):
+        """Test the Gravatar generation."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
+
+    def test_gravatar_and_picture(self):
+        """Test that Gravatar overrides picture."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
 
     def test_discovery(self):
         """Test discovery."""
@@ -156,7 +192,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
         self.assertTrue(self.hass.states.get(entity_id)
-                            .attributes.get(ATTR_HIDDEN))
+                        .attributes.get(ATTR_HIDDEN))
 
     def test_group_all_devices(self):
         """Test grouping of devices."""
@@ -197,6 +233,20 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         mock_see.assert_called_once_with(
             mac=mac, dev_id=dev_id, host_name=host_name,
             location_name=location_name, gps=gps)
+
+    @patch('homeassistant.components.device_tracker.DeviceTracker.see')
+    def test_see_service_unicode_dev_id(self, mock_see):
+        """Test the see service with a unicode dev_id and NO MAC."""
+        self.assertTrue(device_tracker.setup(self.hass, {}))
+        params = {
+            'dev_id': chr(233),  # e' acute accent from icloud
+            'host_name': 'example.com',
+            'location_name': 'Work',
+            'gps': [.3, .8]
+        }
+        device_tracker.see(self.hass, **params)
+        self.hass.pool.block_till_done()
+        mock_see.assert_called_once_with(**params)
 
     def test_not_write_duplicate_yaml_keys(self):
         """Test that the device tracker will not generate invalid YAML."""

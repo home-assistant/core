@@ -4,7 +4,6 @@ Use serial protocol of acer projector to obtain state of the projector.
 This component allows to control almost all projectors from acer using
 their RS232 serial communication protocol.
 """
-
 import logging
 import re
 
@@ -28,7 +27,7 @@ CMD_DICT = {LAMP: '* 0 Lamp ?\r',
             STATE_OFF: '* 0 IR 002\r'}
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pyserial<=3.0']
+REQUIREMENTS = ['pyserial<=3.1']
 
 ICON = 'mdi:projector'
 
@@ -61,7 +60,8 @@ class AcerSwitch(SwitchDevice):
                                  write_timeout=write_timeout, **kwargs)
         self._serial_port = serial_port
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = False
+        self._available = False
         self._attributes = {
             LAMP_HOURS: STATE_UNKNOWN,
             INPUT_SOURCE: STATE_UNKNOWN,
@@ -101,13 +101,18 @@ class AcerSwitch(SwitchDevice):
         return STATE_UNKNOWN
 
     @property
+    def available(self):
+        """Return if projector is available."""
+        return self._available
+
+    @property
     def name(self):
         """Return name of the projector."""
         return self._name
 
     @property
-    def state(self):
-        """Return the current state of the projector."""
+    def is_on(self):
+        """Return if the projector is turned on."""
         return self._state
 
     @property
@@ -120,13 +125,15 @@ class AcerSwitch(SwitchDevice):
         msg = CMD_DICT[LAMP]
         awns = self._write_read_format(msg)
         if awns == 'Lamp 1':
-            self._state = STATE_ON
+            self._state = True
+            self._available = True
         elif awns == 'Lamp 0':
-            self._state = STATE_OFF
+            self._state = False
+            self._available = True
         else:
-            self._state = STATE_UNKNOWN
+            self._available = False
 
-        for key in self._attributes.keys():
+        for key in self._attributes:
             msg = CMD_DICT.get(key, None)
             if msg:
                 awns = self._write_read_format(msg)

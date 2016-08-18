@@ -7,12 +7,21 @@ https://home-assistant.io/components/sensor.sabnzbd/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
                 '#python-sabnzbd==0.1']
+
+DEFAULT_NAME = 'SABnzbd'
+DEFAULT_PORT = 8080
 
 SENSOR_TYPES = {
     'current_status': ['Status', None],
@@ -23,8 +32,20 @@ SENSOR_TYPES = {
     'disk_free': ['Disk Free', 'GB'],
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+})
+
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
+
+# Return cached results if last scan was less then this time ago.
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 
 # pylint: disable=unused-argument
@@ -32,36 +53,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SABnzbd sensors."""
     from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
-    api_key = config.get("api_key")
-    base_url = config.get("base_url")
-    name = config.get("name", "SABnzbd")
-    if not base_url:
-        _LOGGER.error('Missing config variable base_url')
-        return False
-    if not api_key:
-        _LOGGER.error('Missing config variable api_key')
-        return False
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    name = config.get(CONF_NAME)
+    api_key = config.get(CONF_API_KEY)
+    monitored_types = config.get(CONF_MONITORED_VARIABLES)
+    base_url = "http://{}:{}/".format(host, port)
 
     sab_api = SabnzbdApi(base_url, api_key)
 
     try:
         sab_api.check_available()
     except SabnzbdApiException:
-        _LOGGER.exception("Connection to SABnzbd API failed.")
+        _LOGGER.exception("Connection to SABnzbd API failed")
         return False
 
     # pylint: disable=global-statement
     global _THROTTLED_REFRESH
-    _THROTTLED_REFRESH = Throttle(timedelta(seconds=1))(sab_api.refresh_queue)
+    _THROTTLED_REFRESH = Throttle(
+        MIN_TIME_BETWEEN_UPDATES)(sab_api.refresh_queue)
 
-    dev = []
-    for variable in config['monitored_variables']:
-        if variable['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', variable['type'])
-        else:
-            dev.append(SabnzbdSensor(variable['type'], sab_api, name))
+    devices = []
+    for variable in monitored_types:
+        devices.append(SabnzbdSensor(variable, sab_api, name))
 
-    add_devices(dev)
+    add_devices(devices)
 
 
 class SabnzbdSensor(Entity):
@@ -79,7 +95,7 @@ class SabnzbdSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.client_name + ' ' + self._name
+        return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -91,6 +107,7 @@ class SabnzbdSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    # pylint: disable=no-self-use
     def refresh_sabnzbd_data(self):
         """Call the throttled SABnzbd refresh method."""
         if _THROTTLED_REFRESH is not None:
@@ -98,13 +115,12 @@ class SabnzbdSensor(Entity):
             try:
                 _THROTTLED_REFRESH()
             except SabnzbdApiException:
-                _LOGGER.exception(
-                    self.name + "  Connection to SABnzbd API failed."
-                )
+                _LOGGER.exception("Connection to SABnzbd API failed")
 
     def update(self):
         """Get the latest data and updates the states."""
         self.refresh_sabnzbd_data()
+
         if self.sabnzb_client.queue:
             if self.type == 'current_status':
                 self._state = self.sabnzb_client.queue.get('status')

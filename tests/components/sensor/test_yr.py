@@ -1,39 +1,40 @@
 """The tests for the Yr sensor platform."""
 from datetime import datetime
+from unittest import TestCase
 from unittest.mock import patch
 
-import pytest
+import requests_mock
 
 from homeassistant.bootstrap import _setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, load_fixture
 
 
-@pytest.mark.usefixtures('betamax_session')
-class TestSensorYr:
+class TestSensorYr(TestCase):
     """Test the Yr sensor."""
 
-    def setup_method(self, method):
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.latitude = 32.87336
         self.hass.config.longitude = 117.22743
 
-    def teardown_method(self, method):
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_default_setup(self, betamax_session):
+    @requests_mock.Mocker()
+    def test_default_setup(self, m):
         """Test the default setup."""
+        m.get('http://api.yr.no/weatherapi/locationforecast/1.9/',
+              text=load_fixture('yr.no.json'))
         now = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.sensor.yr.requests.Session',
-                   return_value=betamax_session):
-            with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
-                       return_value=now):
-                    assert _setup_component(self.hass, 'sensor', {
-                                    'sensor': {'platform': 'yr',
-                                               'elevation': 0}})
+        with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+                   return_value=now):
+                assert _setup_component(self.hass, 'sensor', {
+                                'sensor': {'platform': 'yr',
+                                           'elevation': 0}})
 
         state = self.hass.states.get('sensor.yr_symbol')
 
@@ -41,23 +42,24 @@ class TestSensorYr:
         assert state.state.isnumeric()
         assert state.attributes.get('unit_of_measurement') is None
 
-    def test_custom_setup(self, betamax_session):
+    @requests_mock.Mocker()
+    def test_custom_setup(self, m):
         """Test a custom setup."""
+        m.get('http://api.yr.no/weatherapi/locationforecast/1.9/',
+              text=load_fixture('yr.no.json'))
         now = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.components.sensor.yr.requests.Session',
-                   return_value=betamax_session):
-            with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
-                       return_value=now):
-                assert _setup_component(self.hass, 'sensor', {
-                                        'sensor': {'platform': 'yr',
-                                                   'elevation': 0,
-                                                   'monitored_conditions': [
-                                                       'pressure',
-                                                       'windDirection',
-                                                       'humidity',
-                                                       'fog',
-                                                       'windSpeed']}})
+        with patch('homeassistant.components.sensor.yr.dt_util.utcnow',
+                   return_value=now):
+            assert _setup_component(self.hass, 'sensor', {
+                                    'sensor': {'platform': 'yr',
+                                               'elevation': 0,
+                                               'monitored_conditions': [
+                                                   'pressure',
+                                                   'windDirection',
+                                                   'humidity',
+                                                   'fog',
+                                                   'windSpeed']}})
 
         state = self.hass.states.get('sensor.yr_pressure')
         assert 'hPa' == state.attributes.get('unit_of_measurement')

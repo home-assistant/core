@@ -5,32 +5,24 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
 import logging
-import re
 from datetime import timedelta
 from itertools import groupby
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, sun
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON)
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.core import State
-from homeassistant.helpers.entity import split_entity_id
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import (EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+                                 STATE_NOT_HOME, STATE_OFF, STATE_ON)
+from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
+from homeassistant.helpers import template
 
 DOMAIN = "logbook"
-DEPENDENCIES = ['recorder', 'http']
-
-URL_LOGBOOK = re.compile(r'/api/logbook(?:/(?P<date>\d{4}-\d{1,2}-\d{1,2})|)')
-
-QUERY_EVENTS_BETWEEN = """
-    SELECT * FROM events WHERE time_fired > ? AND time_fired < ?
-"""
+DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +71,9 @@ def setup(hass, config):
 
     hass.wsgi.register_view(LogbookView)
 
+    register_built_in_panel(hass, 'logbook', 'Logbook',
+                            'mdi:format-list-bulleted-type')
+
     hass.services.register(DOMAIN, 'log', log_message,
                            schema=LOG_MESSAGE_SCHEMA)
     return True
@@ -89,20 +84,18 @@ class LogbookView(HomeAssistantView):
 
     url = '/api/logbook'
     name = 'api:logbook'
-    extra_urls = ['/api/logbook/<date:date>']
+    extra_urls = ['/api/logbook/<datetime:datetime>']
 
-    def get(self, request, date=None):
+    def get(self, request, datetime=None):
         """Retrieve logbook entries."""
-        if date:
-            start_day = dt_util.start_of_local_day(date)
-        else:
-            start_day = dt_util.start_of_local_day()
-
+        start_day = dt_util.as_utc(datetime or dt_util.start_of_local_day())
         end_day = start_day + timedelta(days=1)
 
-        events = recorder.query_events(
-            QUERY_EVENTS_BETWEEN,
-            (dt_util.as_utc(start_day), dt_util.as_utc(end_day)))
+        events = recorder.get_model('Events')
+        query = recorder.query('Events').filter(
+            (events.time_fired > start_day) &
+            (events.time_fired < end_day))
+        events = recorder.execute(query)
 
         return self.json(humanify(events))
 
@@ -199,6 +192,11 @@ def humanify(events):
                 # Skip all but the last sensor state
                 if domain == 'sensor' and \
                    event != last_sensor_event[to_state.entity_id]:
+                    continue
+
+                # Don't show continuous sensor value changes in the logbook
+                if domain == 'sensor' and \
+                   to_state.attributes.get('unit_of_measurement'):
                     continue
 
                 yield Entry(

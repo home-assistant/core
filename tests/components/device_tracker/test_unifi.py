@@ -24,7 +24,7 @@ class TestUnifiScanner(unittest.TestCase):
         result = unifi.get_scanner(None, config)
         self.assertEqual(unifi.UnifiScanner.return_value, result)
         mock_ctrl.assert_called_once_with('localhost', 'foo', 'password',
-                                          8443, 'v4')
+                                          8443, 'v4', 'default')
         mock_scanner.assert_called_once_with(mock_ctrl.return_value)
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')
@@ -37,12 +37,13 @@ class TestUnifiScanner(unittest.TestCase):
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
                 'port': 123,
+                'site_id': 'abcdef01',
             }
         }
         result = unifi.get_scanner(None, config)
         self.assertEqual(unifi.UnifiScanner.return_value, result)
         mock_ctrl.assert_called_once_with('myhost', 'foo', 'password',
-                                          123, 'v4')
+                                          123, 'v4', 'abcdef01')
         mock_scanner.assert_called_once_with(mock_ctrl.return_value)
 
     @mock.patch('homeassistant.components.device_tracker.unifi.UnifiScanner')

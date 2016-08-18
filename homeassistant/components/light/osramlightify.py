@@ -1,19 +1,9 @@
 """
 Support for Osram Lightify.
 
-Uses: https://github.com/aneumeier/python-lightify for the Osram light
-interface.
-
-In order to use the platform just add the following to the configuration.yaml:
-
-light:
-  platform: osramlightify
-  host: <hostname_or_ip>
-
-Todo:
-Add support for Non RGBW lights.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.osramlightify/
 """
-
 import logging
 import socket
 from datetime import timedelta
@@ -25,7 +15,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
-    ATTR_TRANSITION
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_RGB_COLOR,
+    SUPPORT_TRANSITION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,9 +32,12 @@ TEMP_MAX_HASS = 500           # home assistant maximum temperature
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
+SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
+                         SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Find and return lights."""
+    """Setup Osram Lightify lights."""
     import lightify
     host = config.get(CONF_HOST)
     if host:
@@ -85,7 +82,7 @@ def setup_bridge(bridge, add_devices_callback):
 
 
 class OsramLightifyLight(Light):
-    """Defines an Osram Lightify Light."""
+    """Representation of an Osram Lightify Light."""
 
     def __init__(self, light_id, light, update_lights):
         """Initialize the light."""
@@ -123,6 +120,11 @@ class OsramLightifyLight(Light):
         _LOGGER.debug("is_on light state for light: %s is: %s",
                       self._light.name(), self._light.on())
         return self._light.on()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OSRAMLIGHTIFY
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

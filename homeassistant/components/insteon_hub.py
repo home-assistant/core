@@ -39,7 +39,6 @@ def setup(hass, config):
         _LOGGER.error("Could not connect to Insteon service.")
         return
 
-    for component in 'light':
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
     return True

@@ -21,10 +21,10 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
-# interval in minutes to exclude devices from a scan while they are home
+# Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 
-REQUIREMENTS = ['python-nmap==0.6.0']
+REQUIREMENTS = ['python-nmap==0.6.1']
 
 
 def get_scanner(hass, config):

@@ -4,11 +4,11 @@ Support for EnOcean light sources.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.enocean/
 """
-
 import logging
 import math
 
-from homeassistant.components.light import Light, ATTR_BRIGHTNESS
+from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS)
 from homeassistant.const import CONF_NAME
 from homeassistant.components import enocean
 
@@ -19,6 +19,8 @@ DEPENDENCIES = ["enocean"]
 
 CONF_ID = "id"
 CONF_SENDER_ID = "sender_id"
+
+SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -62,6 +64,11 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         """If light is on."""
         return self._on_state
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_ENOCEAN
+
     def turn_on(self, **kwargs):
         """Turn the light source on or sets a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -86,7 +93,7 @@ class EnOceanLight(enocean.EnOceanDevice, Light):
         self._on_state = False
 
     def value_changed(self, val):
-        """Update the internal state of this device in HA."""
+        """Update the internal state of this device."""
         self._brightness = math.floor(val / 100.0 * 256.0)
         self._on_state = bool(val != 0)
         self.update_ha_state()

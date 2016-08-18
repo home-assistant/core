@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player/
 """
 import logging
 import os
+import requests
 
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     STATE_OFF, STATE_UNKNOWN, STATE_PLAYING, STATE_IDLE,
@@ -25,12 +27,16 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'media_player'
+DEPENDENCIES = ['http']
 SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}'
+
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
+SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -75,6 +81,7 @@ SUPPORT_PLAY_MEDIA = 512
 SUPPORT_VOLUME_STEP = 1024
 SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
+SUPPORT_CLEAR_PLAYLIST = 8192
 
 # simple services that only take entity_id(s) as optional argument
 SERVICE_TO_METHOD = {
@@ -89,7 +96,8 @@ SERVICE_TO_METHOD = {
     SERVICE_MEDIA_STOP: 'media_stop',
     SERVICE_MEDIA_NEXT_TRACK: 'media_next_track',
     SERVICE_MEDIA_PREVIOUS_TRACK: 'media_previous_track',
-    SERVICE_SELECT_SOURCE: 'select_source'
+    SERVICE_SELECT_SOURCE: 'select_source',
+    SERVICE_CLEAR_PLAYLIST: 'clear_playlist'
 }
 
 ATTR_TO_PROPERTY = [
@@ -272,10 +280,18 @@ def select_source(hass, source, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SELECT_SOURCE, data)
 
 
+def clear_playlist(hass, entity_id=None):
+    """Send the media player the command for clear playlist."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
+
+
 def setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+
+    hass.wsgi.register_view(MediaPlayerImageView(hass, component.entities))
 
     component.setup(config)
 
@@ -388,6 +404,11 @@ class MediaPlayerDevice(Entity):
     def state(self):
         """State of the player."""
         return STATE_UNKNOWN
+
+    @property
+    def access_token(self):
+        """Access token for this media player."""
+        return str(id(self))
 
     @property
     def volume_level(self):
@@ -542,6 +563,10 @@ class MediaPlayerDevice(Entity):
         """Select input source."""
         raise NotImplementedError()
 
+    def clear_playlist(self):
+        """Clear players playlist."""
+        raise NotImplementedError()
+
     # No need to overwrite these.
     @property
     def support_pause(self):
@@ -588,6 +613,11 @@ class MediaPlayerDevice(Entity):
         """Boolean if select source command supported."""
         return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
 
+    @property
+    def support_clear_playlist(self):
+        """Boolean if clear playlist command supported."""
+        return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
+
     def toggle(self):
         """Toggle the power on the media player."""
         if self.state in [STATE_OFF, STATE_IDLE]:
@@ -615,7 +645,8 @@ class MediaPlayerDevice(Entity):
     @property
     def entity_picture(self):
         """Return image of the media playing."""
-        return None if self.state == STATE_OFF else self.media_image_url
+        return None if self.state == STATE_OFF else \
+            ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
 
     @property
     def state_attributes(self):
@@ -631,3 +662,39 @@ class MediaPlayerDevice(Entity):
             }
 
         return state_attr
+
+
+class MediaPlayerImageView(HomeAssistantView):
+    """Media player view to serve an image."""
+
+    url = "/api/media_player_proxy/<entity(domain=media_player):entity_id>"
+    name = "api:media_player:image"
+
+    def __init__(self, hass, entities):
+        """Initialize a media player view."""
+        super().__init__(hass)
+        self.entities = entities
+
+    def get(self, request, entity_id):
+        """Start a get request."""
+        player = self.entities.get(entity_id)
+
+        if player is None:
+            return self.Response(status=404)
+
+        authenticated = (request.authenticated or
+                         request.args.get('token') == player.access_token)
+
+        if not authenticated:
+            return self.Response(status=401)
+
+        image_url = player.media_image_url
+        if image_url:
+            response = requests.get(image_url)
+        else:
+            response = None
+
+        if response is None:
+            return self.Response(status=500)
+
+        return self.Response(response)

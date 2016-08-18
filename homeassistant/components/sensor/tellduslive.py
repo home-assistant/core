@@ -25,6 +25,7 @@ SENSOR_TYPE_WINDDIRECTION = "wdir"
 SENSOR_TYPE_WINDAVERAGE = "wavg"
 SENSOR_TYPE_WINDGUST = "wgust"
 SENSOR_TYPE_WATT = "watt"
+SENSOR_TYPE_LUMINANCE = "lum"
 
 SENSOR_TYPES = {
     SENSOR_TYPE_TEMP: ['Temperature', TEMP_CELSIUS, "mdi:thermometer"],
@@ -35,6 +36,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', ""],
     SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', ""],
     SENSOR_TYPE_WATT: ['Watt', 'W', ""],
+    SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', ""],
 }
 
 
@@ -94,6 +96,11 @@ class TelldusLiveSensor(Entity):
         return round(float(self._sensor_value), 1)
 
     @property
+    def _value_as_luminance(self):
+        """Return the value as luminance."""
+        return round(float(self._sensor_value), 1)
+
+    @property
     def _value_as_humidity(self):
         """Return the value as humidity."""
         return int(round(float(self._sensor_value)))
@@ -116,6 +123,8 @@ class TelldusLiveSensor(Entity):
             return self._value_as_temperature
         elif self._sensor_type == SENSOR_TYPE_HUMIDITY:
             return self._value_as_humidity
+        elif self._sensor_type == SENSOR_TYPE_LUMINANCE:
+            return self._value_as_luminance
 
     @property
     def device_state_attributes(self):

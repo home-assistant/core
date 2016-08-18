@@ -226,7 +226,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
            '._setup_platform')
-    def test_setup_does_discovery(self, mock_setup):
+    @patch('homeassistant.bootstrap.setup_component', return_value=True)
+    def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 

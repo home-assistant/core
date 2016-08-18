@@ -1,48 +1,65 @@
 """
-Support for monitoring NZBGet nzb client.
+Support for monitoring NZBGet NZB client.
 
-Uses NZBGet's JSON-RPC API to query for monitored variables.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.nzbget/
 """
 import logging
 from datetime import timedelta
-import requests
 
+import requests
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
+    CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = []
+DEFAULT_NAME = 'NZBGet'
+DEFAULT_PORT = 6789
+
 SENSOR_TYPES = {
-    "ArticleCacheMB": ("Article Cache", "MB"),
-    "AverageDownloadRate": ("Average Speed", "MB/s"),
-    "DownloadRate": ("Speed", "MB/s"),
-    "DownloadPaused": ("Download Paused", None),
-    "FreeDiskSpaceMB": ("Disk Free", "MB"),
-    "PostPaused": ("Post Processing Paused", None),
-    "RemainingSizeMB": ("Queue Size", "MB"),
+    'article_cache': ['ArticleCacheMB', 'Article Cache', 'MB'],
+    'average_download_rate': ['AverageDownloadRate', 'Average Speed', 'MB/s'],
+    'download_paused': ['DownloadPaused', 'Download Paused', None],
+    'download_rate': ['DownloadRate', 'Speed', 'MB/s'],
+    'download_size': ['DownloadedSizeMB', 'Size', 'MB'],
+    'free_disk_space': ['FreeDiskSpaceMB', 'Disk Free', 'MB'],
+    'post_paused': ['PostPaused', 'Post Processing Paused', None],
+    'remaining_size': ['RemainingSizeMB', 'Queue Size', 'MB'],
+    'uptime': ['UpTimeSec', 'Uptime', 'min'],
 }
-DEFAULT_TYPES = [
-    "DownloadRate",
-    "DownloadPaused",
-    "RemainingSizeMB",
-]
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_MONITORED_VARIABLES, default=['download_rate']):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
+# Return cached results if last scan was less then this time ago.
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-# pylint: disable=unused-argument
+
+# pylint: disable=unused-argument, too-many-locals
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up nzbget sensors."""
-    base_url = config.get("base_url")
-    name = config.get("name", "NZBGet")
-    username = config.get("username")
-    password = config.get("password")
-    monitored_types = config.get("monitored_variables", DEFAULT_TYPES)
+    """Setup the NZBGet sensors."""
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    name = config.get(CONF_NAME)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    monitored_types = config.get(CONF_MONITORED_VARIABLES)
 
-    if not base_url:
-        _LOGGER.error("Missing base_url config for NzbGet")
-        return False
-
-    url = "{}/jsonrpc".format(base_url)
+    url = "http://{}:{}/jsonrpc".format(host, port)
 
     try:
         nzbgetapi = NZBGetAPI(api_url=url,
@@ -51,78 +68,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         nzbgetapi.update()
     except (requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError) as conn_err:
-        _LOGGER.error("Error setting up NZBGet API: %r", conn_err)
+        _LOGGER.error("Error setting up NZBGet API: %s", conn_err)
         return False
 
     devices = []
     for ng_type in monitored_types:
-        if ng_type in SENSOR_TYPES:
-            new_sensor = NZBGetSensor(api=nzbgetapi,
-                                      sensor_type=ng_type,
-                                      client_name=name)
-            devices.append(new_sensor)
-        else:
-            _LOGGER.error("Unknown nzbget sensor type: %s", ng_type)
+        new_sensor = NZBGetSensor(api=nzbgetapi,
+                                  sensor_type=SENSOR_TYPES.get(ng_type),
+                                  client_name=name)
+        devices.append(new_sensor)
+
     add_devices(devices)
 
 
-class NZBGetAPI(object):
-    """Simple json-rpc wrapper for nzbget's api."""
-
-    def __init__(self, api_url, username=None, password=None):
-        """Initialize NZBGet API and set headers needed later."""
-        self.api_url = api_url
-        self.status = None
-        self.headers = {'content-type': 'application/json'}
-        if username is not None and password is not None:
-            self.auth = (username, password)
-        else:
-            self.auth = None
-        # set the intial state
-        self.update()
-
-    def post(self, method, params=None):
-        """Send a post request, and return the response as a dict."""
-        payload = {"method": method}
-        if params:
-            payload['params'] = params
-        try:
-            response = requests.post(self.api_url,
-                                     json=payload,
-                                     auth=self.auth,
-                                     headers=self.headers,
-                                     timeout=30)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update nzbget status from %s.  Error: %s",
-                          self.api_url, conn_exc)
-            raise
-
-    @Throttle(timedelta(seconds=5))
-    def update(self):
-        """Update cached response."""
-        try:
-            self.status = self.post('status')['result']
-        except requests.exceptions.ConnectionError:
-            # failed to update status - exception already logged in self.post
-            raise
-
-
 class NZBGetSensor(Entity):
-    """Represents an NZBGet sensor."""
+    """Representation of a NZBGet sensor."""
 
     def __init__(self, api, sensor_type, client_name):
         """Initialize a new NZBGet sensor."""
-        self._name = client_name + ' ' + SENSOR_TYPES[sensor_type][0]
-        self.type = sensor_type
+        self._name = '{} {}'.format(client_name, sensor_type[1])
+        self.type = sensor_type[0]
         self.client_name = client_name
         self.api = api
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        # Set initial state
+        self._unit_of_measurement = sensor_type[2]
         self.update()
-        _LOGGER.debug("created nzbget sensor %r", self)
+        _LOGGER.debug("Created NZBGet sensor: %s", self.type)
 
     @property
     def name(self):
@@ -144,21 +115,68 @@ class NZBGetSensor(Entity):
         try:
             self.api.update()
         except requests.exceptions.ConnectionError:
-            # Error calling the api, already logged in api.update()
+            # Error calling the API, already logged in api.update()
             return
 
         if self.api.status is None:
-            _LOGGER.debug("update of %s requested, but no status is available",
+            _LOGGER.debug("Update of %s requested, but no status is available",
                           self._name)
             return
 
         value = self.api.status.get(self.type)
         if value is None:
-            _LOGGER.warning("unable to locate value for %s", self.type)
+            _LOGGER.warning("Unable to locate value for %s", self.type)
             return
 
         if "DownloadRate" in self.type and value > 0:
             # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 1024 / 1024, 2)
+            self._state = round(value / 2**20, 2)
+        elif "UpTimeSec" in self.type and value > 0:
+            # Convert uptime from seconds to minutes
+            self._state = round(value / 60, 2)
         else:
             self._state = value
+
+
+class NZBGetAPI(object):
+    """Simple JSON-RPC wrapper for NZBGet's API."""
+
+    def __init__(self, api_url, username=None, password=None):
+        """Initialize NZBGet API and set headers needed later."""
+        self.api_url = api_url
+        self.status = None
+        self.headers = {'content-type': CONTENT_TYPE_JSON}
+
+        if username is not None and password is not None:
+            self.auth = (username, password)
+        else:
+            self.auth = None
+        self.update()
+
+    def post(self, method, params=None):
+        """Send a POST request and return the response as a dict."""
+        payload = {"method": method}
+
+        if params:
+            payload['params'] = params
+        try:
+            response = requests.post(self.api_url,
+                                     json=payload,
+                                     auth=self.auth,
+                                     headers=self.headers,
+                                     timeout=5)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.ConnectionError as conn_exc:
+            _LOGGER.error("Failed to update NZBGet status from %s. Error: %s",
+                          self.api_url, conn_exc)
+            raise
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Update cached response."""
+        try:
+            self.status = self.post('status')['result']
+        except requests.exceptions.ConnectionError:
+            # failed to update status - exception already logged in self.post
+            raise

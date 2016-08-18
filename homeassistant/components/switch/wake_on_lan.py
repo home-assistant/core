@@ -52,7 +52,7 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """True if switch is on."""
+        """Return true if switch is on."""
         return self._state
 
     @property
@@ -64,6 +64,10 @@ class WOLSwitch(SwitchDevice):
         """Turn the device on."""
         self._wol.send_magic_packet(self._mac_address)
         self.update_ha_state()
+
+    def turn_off(self):
+        """Do nothing."""
+        pass
 
     def update(self):
         """Check if device is on and update the state."""

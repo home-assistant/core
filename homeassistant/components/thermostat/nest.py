@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for structure, device in nest.devices()])
 
 
+# pylint: disable=abstract-method
 class NestThermostat(ThermostatDevice):
     """Representation of a Nest thermostat."""
 
@@ -139,6 +140,10 @@ class NestThermostat(ThermostatDevice):
             elif self.target_temperature == self.target_temperature_high:
                 temperature = (self.target_temperature_low, temperature)
         self.device.target = temperature
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set hvac mode."""
+        self.device.mode = hvac_mode
 
     def turn_away_mode_on(self):
         """Turn away on."""

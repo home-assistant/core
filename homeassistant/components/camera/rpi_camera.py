@@ -1,5 +1,9 @@
-"""Camera platform that has a Raspberry Pi camera."""
+"""
+Camera platform that has a Raspberry Pi camera.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.rpi_camera/
+"""
 import os
 import subprocess
 import logging
@@ -43,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RaspberryCamera(Camera):
-    """Raspberry Pi camera."""
+    """Representation of a Raspberry Pi camera."""
 
     def __init__(self, device_info):
         """Initialize Raspberry Pi camera component."""

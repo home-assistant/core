@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_TOGGLE, STATE_ON, CONF_ALIAS)
-from homeassistant.helpers.entity import ToggleEntity, split_entity_id
+from homeassistant.core import split_entity_id
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 import homeassistant.helpers.config_validation as cv
 

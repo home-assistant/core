@@ -419,8 +419,9 @@ definitions:
         description: Longitude of Home Assistant server
       location_name:
         type: string
-      temperature_unit:
+      unit_system:
         type: string
+        description: The system for measurement units
       time_zone:
         type: string
       version:

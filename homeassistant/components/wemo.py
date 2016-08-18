@@ -10,7 +10,7 @@ from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.3']
+REQUIREMENTS = ['pywemo==0.4.5']
 
 DOMAIN = 'wemo'
 

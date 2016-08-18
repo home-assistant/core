@@ -49,7 +49,6 @@ def _setup_round(username, password, config, add_devices):
 
 
 # config will be used later
-# pylint: disable=unused-argument
 def _setup_us(username, password, config, add_devices):
     """Setup user."""
     import somecomfort
@@ -74,7 +73,6 @@ def _setup_us(username, password, config, add_devices):
     return True
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the honeywel thermostat."""
     username = config.get(CONF_USERNAME)
@@ -98,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RoundThermostat(ThermostatDevice):
     """Representation of a Honeywell Round Connected thermostat."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, abstract-method
     def __init__(self, device, zone_id, master, away_temp):
         """Initialize the thermostat."""
         self.device = device
@@ -139,9 +137,19 @@ class RoundThermostat(ThermostatDevice):
         self.device.set_temperature(self._name, temperature)
 
     @property
+    def operation(self: ThermostatDevice) -> str:
+        """Get the current operation of the system."""
+        return getattr(self.device, 'system_mode', None)
+
+    @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self._away
+
+    def set_hvac_mode(self: ThermostatDevice, hvac_mode: str) -> None:
+        """Set the HVAC mode for the thermostat."""
+        if hasattr(self.device, 'system_mode'):
+            self.device.system_mode = hvac_mode
 
     def turn_away_mode_on(self):
         """Turn away on.
@@ -182,6 +190,7 @@ class RoundThermostat(ThermostatDevice):
             self._is_dhw = False
 
 
+# pylint: disable=abstract-method
 class HoneywellUSThermostat(ThermostatDevice):
     """Representation of a Honeywell US Thermostat."""
 
@@ -220,6 +229,11 @@ class HoneywellUSThermostat(ThermostatDevice):
         else:
             return self._device.setpoint_heat
 
+    @property
+    def operation(self: ThermostatDevice) -> str:
+        """Return current operation ie. heat, cool, idle."""
+        return getattr(self._device, 'system_mode', None)
+
     def set_temperature(self, temperature):
         """Set target temperature."""
         import somecomfort
@@ -245,3 +259,8 @@ class HoneywellUSThermostat(ThermostatDevice):
     def turn_away_mode_off(self):
         """Turn away off."""
         pass
+
+    def set_hvac_mode(self: ThermostatDevice, hvac_mode: str) -> None:
+        """Set the system mode (Cool, Heat, etc)."""
+        if hasattr(self._device, 'system_mode'):
+            self._device.system_mode = hvac_mode

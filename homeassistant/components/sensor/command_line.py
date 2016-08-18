@@ -95,7 +95,10 @@ class CommandSensorData(object):
         _LOGGER.info('Running command: %s', self.command)
 
         try:
-            return_value = subprocess.check_output(self.command, shell=True)
+            return_value = subprocess.check_output(self.command, shell=True,
+                                                   timeout=15)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
             _LOGGER.error('Command failed: %s', self.command)
+        except subprocess.TimeoutExpired:
+            _LOGGER.error('Timeout for command: %s', self.command)

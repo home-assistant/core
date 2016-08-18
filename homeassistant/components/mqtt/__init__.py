@@ -29,7 +29,7 @@ MQTT_CLIENT = None
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
-REQUIREMENTS = ['paho-mqtt==1.1']
+REQUIREMENTS = ['paho-mqtt==1.2']
 
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'

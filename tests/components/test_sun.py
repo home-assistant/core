@@ -96,7 +96,7 @@ class TestSun(unittest.TestCase):
 
         june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.helpers.condition.dt_util.now',
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
                    return_value=june):
             assert sun.setup(self.hass, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
