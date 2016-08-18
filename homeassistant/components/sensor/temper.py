@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     temper_devices = TemperHandler().get_devices()
     add_devices_callback([TemperSensor(dev,
                                        temp_unit,
-                                       name if name != DEVICE_DEFAULT_NAME
+                                       name if idx == 0
                                        else name + '_' + str(idx),
                                        scaling)
                           for idx, dev in enumerate(temper_devices)])
