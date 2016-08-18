@@ -202,26 +202,19 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 1.  Check claims w/o verifying to see if a target is in there.
         # 2.  If target in claims, attempt to verify against the given name.
         # 2a. If decode is successful, return the payload.
-        # 3.  If no target, loop through all registrations & attempt decode.
-        # 3a. If a registration successfully decodes, return the payload.
-        # 4.  Unable to decode the JWT, return False.
+        # 2b. If decode is unsuccessful, return a 401.
 
         target_check = jwt.decode(token, verify=False)
-        if target_check[ATTR_TARGET] in self.registrations.keys():
+        if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
                 return jwt.decode(token, key)
             except jwt.exceptions.DecodeError:
                 pass
-
-        for reg in self.registrations.values():
-            try:
-                key = reg[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
-                return jwt.decode(token, key)
-            except jwt.exceptions.DecodeError:
-                continue
-        return False
+        else:
+            return self.json_message('No target found in JWT',
+                                     status_code=HTTP_UNAUTHORIZED)
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
