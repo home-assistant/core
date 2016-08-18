@@ -64,6 +64,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wunderground sensor."""
     rest = WUndergroundData(_RESOURCE,
                             config.get(CONF_PWS_ID),
+    if not PLATFORM_SCHEMA(config):
+        return False
+
                             config.get(CONF_API_KEY),
                             payload)
     sensors = []
