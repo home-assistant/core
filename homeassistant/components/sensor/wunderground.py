@@ -74,14 +74,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(WUndergroundSensor(rest, variable))
         else:
             _LOGGER.error('Wunderground sensor: "%s" does not exist', variable)
-    response = requests.get(_RESOURCE + config.get(CONF_API_KEY) +
-                            _URLCONST + config.get(CONF_PWS_ID) +
-                            '.json', timeout=10)
-    if "error" in response.json()["response"]:
-        _LOGGER.error("Check your Wunderground API")
-        return False
-    else:
-        add_devices(sensors)
 
     try:
         rest.update()
