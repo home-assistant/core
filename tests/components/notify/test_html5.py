@@ -42,7 +42,10 @@ class TestHtml5Notify(object):
         data = {
             'device': {
                 'browser': 'chrome',
-                'subscription': 'hello world',
+                'subscription': {
+                    'endpoint': 'https://google.com',
+                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+                },
             }
         }
 
@@ -60,7 +63,10 @@ class TestHtml5Notify(object):
         assert len(mock_wp.mock_calls) == 2
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == 'hello world'
+        assert mock_wp.mock_calls[0][1][0] == {'endpoint':
+                                               'https://google.com',
+                                               'keys': {'auth': 'auth',
+                                                        'p256dh': 'p256dh'}}
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -80,7 +86,7 @@ class TestHtml5Notify(object):
             assert service is not None
 
             # assert hass.called
-            assert len(hass.mock_calls) == 2
+            assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
             assert view.json_path == fp.name
@@ -88,7 +94,9 @@ class TestHtml5Notify(object):
 
             builder = EnvironBuilder(method='POST', data=json.dumps({
                 'browser': 'chrome',
-                'subscription': 'sub info',
+                'subscription': {'endpoint': 'https://google.com',
+                                 'keys': {'auth': 'auth',
+                                          'p256dh': 'p256dh'}},
             }))
             Request = request_class()
             resp = view.post(Request(builder.get_environ()))
@@ -96,7 +104,9 @@ class TestHtml5Notify(object):
             expected = {
                 'unnamed device': {
                     'browser': 'chrome',
-                    'subscription': 'sub info',
+                    'subscription': {'endpoint': 'https://google.com',
+                                     'keys': {'auth': 'auth',
+                                              'p256dh': 'p256dh'}},
                 },
             }
 
@@ -116,7 +126,7 @@ class TestHtml5Notify(object):
             assert service is not None
 
             # assert hass.called
-            assert len(hass.mock_calls) == 2
+            assert len(hass.mock_calls) == 3
 
             view = hass.mock_calls[1][1][0]
 
@@ -142,4 +152,89 @@ class TestHtml5Notify(object):
             with patch('homeassistant.components.notify.html5._save_config',
                        return_value=False):
                 resp = view.post(Request(builder.get_environ()))
-            assert resp.status_code == 500, resp.response
+            assert resp.status_code == 400, resp.response
+
+    def test_callback_view_no_jwt(self):
+        """Test that the notification callback view works without JWT."""
+        hass = MagicMock()
+
+        with tempfile.NamedTemporaryFile() as fp:
+            hass.config.path.return_value = fp.name
+            fp.close()
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[2][1][0]
+
+            builder = EnvironBuilder(method='POST', data=json.dumps({
+                'type': 'push',
+                'tag': '3bc28d69-0921-41f1-ac6a-7a627ba0aa72'
+            }))
+            Request = request_class()
+            resp = view.post(Request(builder.get_environ()))
+
+            assert resp.status_code == 401, resp.response
+
+    @patch('pywebpush.WebPusher')
+    def test_callback_view_with_jwt(self, mock_wp):
+        """Test that the notification callback view works with JWT."""
+        hass = MagicMock()
+
+        data = {
+            'device': {
+                'browser': 'chrome',
+                'subscription': {
+                    'endpoint': 'https://google.com',
+                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+                },
+            }
+        }
+
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(json.dumps(data).encode('utf-8'))
+            fp.flush()
+            hass.config.path.return_value = fp.name
+            service = html5.get_service(hass, {'gcm_sender_id': '100'})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            service.send_message('Hello', target=['device'],
+                                 data={'icon': 'beer.png'})
+
+            assert len(mock_wp.mock_calls) == 2
+
+            # WebPusher constructor
+            assert mock_wp.mock_calls[0][1][0] == {'endpoint':
+                                                   'https://google.com',
+                                                   'keys': {'auth': 'auth',
+                                                            'p256dh':
+                                                            'p256dh'}}
+
+            # Call to send
+            push_payload = json.loads(mock_wp.mock_calls[1][1][0])
+
+            assert push_payload['body'] == 'Hello'
+            assert push_payload['icon'] == 'beer.png'
+
+            view = hass.mock_calls[2][1][0]
+            view.registrations = data
+
+            bearer_token = "Bearer {}".format(push_payload['data']['jwt'])
+
+            builder = EnvironBuilder(method='POST', data=json.dumps({
+                'type': 'push',
+            }), headers={'Authorization': bearer_token})
+            Request = request_class()
+            resp = view.post(Request(builder.get_environ()))
+
+            assert resp.status_code == 200, resp.response
+            returned = resp.response[0].decode('utf-8')
+            expected = '{"event": "push", "status": "ok"}'
+            assert json.loads(returned) == json.loads(expected)
