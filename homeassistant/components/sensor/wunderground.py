@@ -111,9 +111,8 @@ class WUndergroundSensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture."""
-        value = self.rest.data
         if self._condition == 'weather':
-            return value['icon_url']
+            return self.rest.data['icon_url']
 
     @property
     def unit_of_measurement(self):
