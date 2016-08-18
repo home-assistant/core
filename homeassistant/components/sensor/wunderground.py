@@ -133,7 +133,6 @@ class WUndergroundData(object):
         self._api_key = api_key
         self._pws_id = pws_id
         self.data = None
-        self.unit_system = None
 
     def _build_url(self):
         print(self._api_key)
