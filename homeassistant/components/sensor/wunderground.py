@@ -66,10 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                             config.get(CONF_PWS_ID, None))
     sensors = []
     for variable in config['monitored_conditions']:
-        if variable in SENSOR_TYPES:
-            sensors.append(WUndergroundSensor(rest, variable))
-        else:
-            _LOGGER.error('Wunderground sensor: "%s" does not exist', variable)
+        sensors.append(WUndergroundSensor(rest, variable))
 
     try:
         rest.update()
