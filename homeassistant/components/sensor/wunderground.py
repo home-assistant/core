@@ -103,8 +103,10 @@ class WUndergroundSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = self.rest.data
-        return value[str(self._condition)]
+        if self.rest.data and self._condition in self.rest.data:
+            return self.rest.data[self._condition]
+        else:
+            return STATE_UNKNOWN
 
     @property
     def entity_picture(self):
