@@ -36,31 +36,36 @@ def request_configuration(hass, config, websocket, add_devices_callback):
     def gpmdp_configuration_callback(callback_data):
         """The actions to do when our configuration callback is called."""
         while True:
-            msg = json.loads(websocket.recv())
-            if msg['channel'] == 'connect':
-                if msg['payload'] == "CODE_REQUIRED":
-                    websocket.send('{"namespace": "connect",'
-                                   '"method": "connect",'
-                                   '"arguments": ["Home Assistant",'
-                                   ' "' + callback_data.get('pin') + '"]}')
-                    tmpmsg = json.loads(websocket.recv())
-                    if tmpmsg['channel'] == 'time':
-                        _LOGGER.error('Error setting up GPMDP. Please pause'
-                                      'the desktop player and try again.')
-                        break
-                    code = tmpmsg['payload']
-                    if code == 'CODE_REQUIRED':
-                        continue
-                    setup_gpmdp(hass, config, code,
-                                add_devices_callback)
-                    config_from_file(hass.config.path(GPMDP_CONFIG_FILE),
-                                     {"CODE": code})
-                    websocket.send('{"namespace": "connect",'
-                                   '"method": "connect",'
-                                   '"arguments": ["Home Assistant",'
-                                   ' "' + code + '"]}')
-                    websocket.close()
-                    break
+            from websocket import _exceptions
+            try:
+                msg = json.loads(websocket.recv())
+            except _exceptions.WebSocketConnectionClosedException:
+                continue
+            if msg['channel'] != 'connect':
+                continue
+            if msg['payload'] != "CODE_REQUIRED":
+                continue
+            websocket.send('{"namespace": "connect",'
+                           '"method": "connect",'
+                           '"arguments": ["Home Assistant",'
+                           ' "' + callback_data.get('pin') + '"]}')
+            tmpmsg = json.loads(websocket.recv())
+            if tmpmsg['channel'] == 'time':
+                _LOGGER.error('Error setting up GPMDP. Please pause'
+                              'the desktop player and try again.')
+                break
+            code = tmpmsg['payload']
+            if code == 'CODE_REQUIRED':
+                continue
+            setup_gpmdp(hass, config, code,
+                        add_devices_callback)
+            _save_config(hass.config.path(GPMDP_CONFIG_FILE),
+                         {"CODE": code})
+            websocket.send('{"namespace": "connect",'
+                           '"method": "connect",'
+                           '"arguments": ["Home Assistant",'
+                           ' "' + code + '"]}')
+            websocket.close()
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
         hass, "GPM Desktop Player", gpmdp_configuration_callback,
@@ -77,8 +82,9 @@ def setup_gpmdp(hass, config, code, add_devices_callback):
     from websocket import create_connection
     name = config.get("name", "GPM Desktop Player")
     address = config.get("address")
+    url = "ws://" + address + ":5672"
     if not code:
-        websocket = create_connection(("ws://" + address + ":5672"), timeout=1)
+        websocket = create_connection((url), timeout=1)
         websocket.send('{"namespace": "connect", "method": "connect",'
                        '"arguments": ["Home Assistant"]}')
         request_configuration(hass, config, websocket, add_devices_callback)
@@ -88,41 +94,42 @@ def setup_gpmdp(hass, config, code, add_devices_callback):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    if address is None:
-        _LOGGER.error("Missing address in config")
-        return False
-
-    add_devices_callback([GPMDP(name, address, code, create_connection)])
+    add_devices_callback([GPMDP(name, url, code, create_connection)])
 
 
-def config_from_file(filename, config=None):
-    """Small configuration file management function."""
-    if config:
-        # We're writing configuration
-        try:
-            with open(filename, 'w') as fdesc:
-                fdesc.write(json.dumps(config))
-        except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
-            return False
-        return True
-    else:
-        # We're reading config
-        if os.path.isfile(filename):
-            try:
-                with open(filename, 'r') as fdesc:
-                    return json.loads(fdesc.read())
-            except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
-                # This won't work yet
-                return False
-        else:
+def _load_config(filename):
+    """Load configuration."""
+    if not os.path.isfile(filename):
+        return {}
+
+    try:
+        with open(filename, "r") as fdesc:
+            inp = fdesc.read()
+
+        # In case empty file
+        if not inp:
             return {}
+
+        return json.loads(inp)
+    except (IOError, ValueError) as error:
+        _LOGGER.error("Reading config file %s failed: %s", filename, error)
+        return None
+
+
+def _save_config(filename, config):
+    """Save configuration."""
+    try:
+        with open(filename, "w") as fdesc:
+            fdesc.write(json.dumps(config, indent=4, sort_keys=True))
+    except (IOError, TypeError) as error:
+        _LOGGER.error("Saving config file failed: %s", error)
+        return False
+    return True
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the GPMDP platform."""
-    codeconfig = config_from_file(hass.config.path(GPMDP_CONFIG_FILE))
+    codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
     if len(codeconfig):
         code = codeconfig.get("CODE")
     elif discovery_info is not None:
@@ -139,10 +146,10 @@ class GPMDP(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, address, code, create_connection):
+    def __init__(self, name, url, code, create_connection):
         """Initialize the media player."""
         self._connection = create_connection
-        self._address = address
+        self._url = url
         self._authorization_code = code
         self._name = name
         self._status = STATE_OFF
@@ -156,11 +163,12 @@ class GPMDP(MediaPlayerDevice):
         """Check if the websocket is setup and connected."""
         if self._ws is None:
             try:
-                self._ws = self._connection(("ws://" + self._address +
-                                             ":5672"), timeout=1)
-                self._ws.send('{"namespace": "connect", "method": "connect",'
-                              '"arguments": ["Home Assistant",'
-                              ' "' + self._authorization_code + '"]}')
+                self._ws = self._connection((self._url), timeout=1)
+                msg = json.dumps({'namespace': 'connect',
+                                  'method': 'connect',
+                                  'arguments': ['Home Assistant',
+                                                self._authorization_code]})
+                self._ws.send(msg)
             except (socket.timeout, ConnectionRefusedError,
                     ConnectionResetError):
                 self._ws = None
