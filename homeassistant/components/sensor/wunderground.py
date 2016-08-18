@@ -1,4 +1,9 @@
-"""Support for Wunderground weather service."""
+"""
+Support for WUnderground weather service.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.wunderground/
+"""
 from datetime import timedelta
 import logging
 import requests
@@ -6,8 +11,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import ensure_list
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
                                  CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
                                  STATE_UNKNOWN)
@@ -50,26 +56,23 @@ SENSOR_TYPES = {
     'solarradiation': ['Solar Radiation', None]
 }
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): "wunderground",
-    vol.Required(CONF_API_KEY): vol.Coerce(str),
-    CONF_PWS_ID: vol.Coerce(str),
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_PWS_ID): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS,
-                 default=[]): vol.All(ensure_list, [vol.In(SENSOR_TYPES)]),
+                 default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wunderground sensor."""
+    """Setup the WUnderground sensor."""
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
                             config.get(CONF_PWS_ID, None))
     sensors = []
-    for variable in config['monitored_conditions']:
-        if variable in SENSOR_TYPES:
-            sensors.append(WUndergroundSensor(rest, variable))
-        else:
-            _LOGGER.error('Wunderground sensor: "%s" does not exist', variable)
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        sensors.append(WUndergroundSensor(rest, variable))
 
     try:
         rest.update()
@@ -83,13 +86,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WUndergroundSensor(Entity):
-    """Implementing the Wunderground sensor."""
+    """Implementing the WUnderground sensor."""
 
     def __init__(self, rest, condition):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
-        self._unit_of_measurement = None
 
     @property
     def name(self):
@@ -123,7 +125,7 @@ class WUndergroundSensor(Entity):
 
 
 class WUndergroundData(object):
-    """Get data from Wundeground."""
+    """Get data from WUnderground."""
 
     def __init__(self, hass, api_key, pws_id=None):
         """Initialize the data object."""
@@ -137,7 +139,7 @@ class WUndergroundData(object):
     def _build_url(self):
         url = _RESOURCE.format(self._api_key)
         if self._pws_id:
-            url = url + 'pws:' + self._pws_id
+            url = url + 'pws:{}'.format(self._pws_id)
         else:
             url = url + '{},{}'.format(self._latitude, self._longitude)
 
@@ -145,7 +147,7 @@ class WUndergroundData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from wunderground."""
+        """Get the latest data from WUnderground."""
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             if "error" in result['response']:
@@ -154,6 +156,6 @@ class WUndergroundData(object):
             else:
                 self.data = result["current_observation"]
         except ValueError as err:
-            _LOGGER.error("Check Wunderground API %s", err.args)
+            _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
             raise
