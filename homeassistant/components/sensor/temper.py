@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.temper/
 import logging
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
@@ -19,11 +20,10 @@ REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
 CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required('platform'): 'temper',
-    vol.Optional(CONF_NAME): vol.Coerce(str),
-    vol.Optional(CONF_SCALE): vol.Coerce(float),
-    vol.Optional(CONF_OFFSET): vol.Coerce(float)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
+    vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+    vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float)
 })
 
 
@@ -33,10 +33,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     from temperusb.temper import TemperHandler
 
     temp_unit = hass.config.units.temperature_unit
-    name = config.get(CONF_NAME, DEVICE_DEFAULT_NAME)
+    name = config.get(CONF_NAME)
     scaling = {
-        "scale": config.get(CONF_SCALE, 1),
-        "offset": config.get(CONF_OFFSET, 0)
+        "scale": config.get(CONF_SCALE),
+        "offset": config.get(CONF_OFFSET)
     }
     temper_devices = TemperHandler().get_devices()
     add_devices_callback([TemperSensor(dev,
