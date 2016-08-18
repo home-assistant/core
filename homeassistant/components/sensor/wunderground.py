@@ -13,7 +13,8 @@ from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
                                  STATE_UNKNOWN)
 
 CONF_PWS_ID = 'pws_id'
-_URLCONST = '/conditions/q/pws:'
+
+_URL_QUERY = '/conditions/q/'
 _RESOURCE = 'http://api.wunderground.com/api/'
 _LOGGER = logging.getLogger(__name__)
 
