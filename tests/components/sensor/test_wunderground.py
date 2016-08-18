@@ -1,4 +1,4 @@
-"""The tests for the forecast.io platform."""
+"""The tests for the WUnderground platform."""
 import unittest
 
 from homeassistant.components.sensor import wunderground
@@ -78,7 +78,7 @@ def mocked_requests_get(*args, **kwargs):
 
 
 class TestWundergroundSetup(unittest.TestCase):
-    """Test the wunderground platform."""
+    """Test the WUnderground platform."""
 
     DEVICES = []
 
@@ -99,7 +99,7 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_setup(self, req_mock):
-        """Test that the component is loaded if passed in PSW Id."""
+        """Test that the component is loaded if passed in PWS Id."""
         self.assertTrue(
             wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
                                         self.add_devices, None))
@@ -122,7 +122,7 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
-        """Test the wunderground sensor class and methods."""
+        """Test the WUnderground sensor class and methods."""
         wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
                                     None)
         for device in self.DEVICES:
