@@ -96,7 +96,7 @@ class PlexSensor(Entity):
         sessions = self._server.sessions()
         now_playing = []
         for sess in sessions:
-            user = sess.user.title if sess.user is not self._na_type else ""
+            user = sess.username if sess.username is not self._na_type else ""
             title = sess.title if sess.title is not self._na_type else ""
             year = sess.year if sess.year is not self._na_type else ""
             now_playing.append((user, "{0} ({1})".format(title, year)))
