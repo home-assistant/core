@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
@@ -23,10 +23,9 @@ ICON = 'mdi:train'
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'deutsche_bahn',
-    vol.Required(CONF_START): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_START): cv.string,
 })
 
 # Return cached results if last scan was less then this time ago.
@@ -47,7 +46,7 @@ class DeutscheBahnSensor(Entity):
 
     def __init__(self, start, goal):
         """Initialize the sensor."""
-        self._name = start + ' to ' + goal
+        self._name = '{} to {}'.format(start, goal)
         self.data = SchieneData(start, goal)
         self.update()
 
