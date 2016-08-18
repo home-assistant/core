@@ -51,6 +51,13 @@ SENSOR_TYPES = {
     'solarradiation': ['Solar Radiation', None]
 }
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): "wunderground",
+    vol.Required(CONF_API_KEY): vol.Coerce(str),
+    CONF_PWS_ID: vol.Coerce(str),
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]): ensure_list,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wunderground sensor."""
