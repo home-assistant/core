@@ -82,7 +82,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     else:
         add_devices(sensors)
+
+    try:
         rest.update()
+    except ValueError as err:
+        _LOGGER.error("Received error from WUnderground: %s", err)
+        return False
+
+    add_devices(sensors)
+
+    return True
 
 
 class WUndergroundSensor(Entity):
