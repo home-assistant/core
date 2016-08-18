@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                             config.get(CONF_API_KEY),
                             config.get(CONF_PWS_ID, None))
     sensors = []
-    for variable in config['monitored_conditions']:
+    for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
 
     try:
