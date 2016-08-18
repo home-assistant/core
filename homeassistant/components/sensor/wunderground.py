@@ -1,5 +1,5 @@
 """
-Support for Weather Underground weather service.
+Support for WUnderground weather service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.wunderground/
@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wunderground sensor."""
+    """Setup the WUnderground sensor."""
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
                             config.get(CONF_PWS_ID, None))
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class WUndergroundSensor(Entity):
-    """Implementing the Wunderground sensor."""
+    """Implementing the WUnderground sensor."""
 
     def __init__(self, rest, condition):
         """Initialize the sensor."""
@@ -124,7 +124,7 @@ class WUndergroundSensor(Entity):
 
 
 class WUndergroundData(object):
-    """Get data from Wundeground."""
+    """Get data from WUnderground."""
 
     def __init__(self, hass, api_key, pws_id=None):
         """Initialize the data object."""
@@ -146,7 +146,7 @@ class WUndergroundData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from wunderground."""
+        """Get the latest data from WUnderground."""
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             if "error" in result['response']:
@@ -155,6 +155,6 @@ class WUndergroundData(object):
             else:
                 self.data = result["current_observation"]
         except ValueError as err:
-            _LOGGER.error("Check Wunderground API %s", err.args)
+            _LOGGER.error("Check WUnderground API %s", err.args)
             self.data = None
             raise
