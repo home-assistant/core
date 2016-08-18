@@ -61,7 +61,6 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wunderground sensor."""
-
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
                             config.get(CONF_PWS_ID, None))
