@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (ensure_list, string)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
                                  CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
@@ -57,10 +57,10 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "wunderground",
-    vol.Required(CONF_API_KEY): string,
-    vol.Optional(CONF_PWS_ID): string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_PWS_ID): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS,
-                 default=[]): vol.All(ensure_list, [vol.In(SENSOR_TYPES)]),
+                 default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
