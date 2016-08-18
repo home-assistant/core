@@ -212,9 +212,9 @@ class HTML5PushCallbackView(HomeAssistantView):
                 return jwt.decode(token, key)
             except jwt.exceptions.DecodeError:
                 pass
-        else:
-            return self.json_message('No target found in JWT',
-                                     status_code=HTTP_UNAUTHORIZED)
+
+        return self.json_message('No target found in JWT',
+                                 status_code=HTTP_UNAUTHORIZED)
 
     # The following is based on code from Auth0
     # https://auth0.com/docs/quickstart/backend/python
