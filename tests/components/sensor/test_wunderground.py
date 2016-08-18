@@ -28,12 +28,17 @@ ICON_URL = 'http://icons.wxug.com/i/c/k/clear.gif'
 
 
 def mocked_requests_get(*args, **kwargs):
+    """Mock requests.get invocations."""
+
     class MockResponse:
+        """Class to represent a mocked response."""
         def __init__(self, json_data, status_code):
+            """Initialize the mock response class."""
             self.json_data = json_data
             self.status_code = status_code
 
         def json(self):
+            """Return the json of the response."""
             return self.json_data
 
     if str(args[0]).startswith('http://api.wunderground.com/api/foo/'):
@@ -123,6 +128,7 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
+        """Test the wundergroun sensor class and methods."""
         wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
                                     None)
         print(str(self.DEVICES))
