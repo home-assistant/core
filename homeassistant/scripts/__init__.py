@@ -49,7 +49,7 @@ def run(args: List) -> int:
 
 def extract_config_dir(args=None) -> str:
     """Extract the config dir from the arguments or get the default."""
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-c', '--config', default=None)
     args = parser.parse_known_args(args)[0]
     return (os.path.join(os.getcwd(), args.config) if args.config
