@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         transmission_api.session_stats()
     except TransmissionError:
-        _LOGGING.exception("Connection to Transmission API failed")
+        _LOGGING.error("Connection to Transmission API failed")
         return False
 
     add_devices([TransmissionSwitch(transmission_api, name)])

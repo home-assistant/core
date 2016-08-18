@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
-    CONF_MONITORED_VARIABLES)
+    CONF_MONITORED_VARIABLES, STATE_UNKNOWN, STATE_IDLE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -90,7 +90,7 @@ class TransmissionSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self.client_name + ' ' + self._name
+        return '{} {}'.format(self.client_name, self._name)
 
     @property
     def state(self):
@@ -102,6 +102,7 @@ class TransmissionSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    # pylint: disable=no-self-use
     def refresh_transmission_data(self):
         """Call the throttled Transmission refresh method."""
         from transmissionrpc.error import TransmissionError
@@ -110,13 +111,12 @@ class TransmissionSensor(Entity):
             try:
                 _THROTTLED_REFRESH()
             except TransmissionError:
-                _LOGGER.exception(
-                    self.name + "  Connection to Transmission API failed."
-                )
+                _LOGGER.error("Connection to Transmission API failed")
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""
         self.refresh_transmission_data()
+
         if self.type == 'current_status':
             if self.transmission_client.session:
                 upload = self.transmission_client.session.uploadSpeed
@@ -128,9 +128,9 @@ class TransmissionSensor(Entity):
                 elif upload == 0 and download > 0:
                     self._state = 'Downloading'
                 else:
-                    self._state = 'Idle'
+                    self._state = STATE_IDLE
             else:
-                self._state = 'Unknown'
+                self._state = STATE_UNKNOWN
 
         if self.transmission_client.session:
             if self.type == 'download_speed':

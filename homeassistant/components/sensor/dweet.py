@@ -28,7 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-
 })
 
 _LOGGER = logging.getLogger(__name__)
