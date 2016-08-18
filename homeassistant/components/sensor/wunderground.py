@@ -122,7 +122,6 @@ class WUndergroundSensor(Entity):
     def update(self):
         """Update current conditions."""
         self.rest.update()
-        self._state = self.rest.data
 
 # pylint: disable=too-few-public-methods
 
