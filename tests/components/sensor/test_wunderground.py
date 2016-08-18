@@ -122,7 +122,7 @@ class TestWundergroundSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_sensor(self, req_mock):
-        """Test the wundergroun sensor class and methods."""
+        """Test the wunderground sensor class and methods."""
         wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
                                     None)
         for device in self.DEVICES:
