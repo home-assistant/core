@@ -94,7 +94,6 @@ class WUndergroundSensor(Entity):
         self.rest = rest
         self._condition = condition
         self._unit_of_measurement = None
-        self.update()
 
     @property
     def name(self):
