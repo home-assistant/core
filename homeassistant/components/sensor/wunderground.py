@@ -127,11 +127,13 @@ class WUndergroundSensor(Entity):
 class WUndergroundData(object):
     """Get data from Wundeground."""
 
-    def __init__(self, resource, pws_id, api_key, data):
+    def __init__(self, hass, api_key, pws_id=None):
         """Initialize the data object."""
-        self._resource = resource
+        self._hass = hass
         self._api_key = api_key
         self._pws_id = pws_id
+        self._latitude = hass.config.latitude
+        self._longitude = hass.config.longitude
         self.data = None
 
     def _build_url(self):
