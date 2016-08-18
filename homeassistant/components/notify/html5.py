@@ -272,7 +272,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             event_payload[ATTR_DATA] = request.json.get(ATTR_DATA)
 
         try:
-            CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
+            event_payload = CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
         except vol.Invalid as ex:
             _LOGGER.warning('Callback event payload is not valid! %s',
                             humanize_error(event_payload, ex))
