@@ -1,4 +1,9 @@
-"""Support for Wunderground weather service."""
+"""
+Support for Weather Underground weather service.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.wunderground/
+"""
 from datetime import timedelta
 import logging
 import requests
