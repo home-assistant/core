@@ -163,3 +163,4 @@ class WUndergroundData(object):
         except ValueError as err:
             _LOGGER.error("Check Wunderground API %s", err.args)
             self.data = None
+            raise
