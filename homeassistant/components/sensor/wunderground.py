@@ -13,9 +13,7 @@ from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
                                  STATE_UNKNOWN)
 
 CONF_PWS_ID = 'pws_id'
-
-_URL_QUERY = '/conditions/q/'
-_RESOURCE = 'http://api.wunderground.com/api/'
+_RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
 _LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago.
@@ -56,14 +54,13 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): "wunderground",
     vol.Required(CONF_API_KEY): vol.Coerce(str),
     CONF_PWS_ID: vol.Coerce(str),
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]): ensure_list,
+    vol.Required(CONF_MONITORED_CONDITIONS,
+                 default=[]): vol.All(ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wunderground sensor."""
-    if not PLATFORM_SCHEMA(config):
-        return False
 
     rest = WUndergroundData(hass,
                             config.get(CONF_API_KEY),
@@ -139,8 +136,7 @@ class WUndergroundData(object):
         self.data = None
 
     def _build_url(self):
-        print(self._api_key)
-        url = _RESOURCE + self._api_key + _URL_QUERY
+        url = _RESOURCE.format(self._api_key)
         if self._pws_id:
             url = url + 'pws:' + self._pws_id
         else:
