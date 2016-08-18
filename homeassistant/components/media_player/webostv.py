@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
     MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+    CONF_HOST, CONF_CUSTOMIZE, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
+    STATE_UNKNOWN)
 from homeassistant.loader import get_component
 
 _CONFIGURING = {}
@@ -32,6 +33,16 @@ SUPPORT_WEBOSTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+
+WEBOS_APP_LIVETV = 'com.webos.app.livetv'
+WEBOS_APP_YOUTUBE = 'youtube.leanback.v4'
+WEBOS_APP_MAKO = 'makotv'
+
+WEBOS_APPS_SHORT = {
+    'livetv': WEBOS_APP_LIVETV,
+    'youtube': WEBOS_APP_YOUTUBE,
+    'makotv': WEBOS_APP_MAKO
+}
 
 
 # pylint: disable=unused-argument
@@ -50,10 +61,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    setup_tv(host, hass, add_devices)
+    customize = config.get(CONF_CUSTOMIZE, {})
+    setup_tv(host, customize, hass, add_devices)
 
 
-def setup_tv(host, hass, add_devices):
+def setup_tv(host, customize, hass, add_devices):
     """Setup a phue bridge based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -75,7 +87,7 @@ def setup_tv(host, hass, add_devices):
         else:
             # Not registered, request configuration.
             _LOGGER.warning('LG WebOS TV at %s needs to be paired.', host)
-            request_configuration(host, hass, add_devices)
+            request_configuration(host, customize, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -84,10 +96,10 @@ def setup_tv(host, hass, add_devices):
         configurator = get_component('configurator')
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host)])
+    add_devices([LgWebOSDevice(host, customize)])
 
 
-def request_configuration(host, hass, add_devices):
+def request_configuration(host, customize, hass, add_devices):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -100,7 +112,7 @@ def request_configuration(host, hass, add_devices):
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, hass, add_devices)
+        setup_tv(host, customize, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, 'LG WebOS TV', lgtv_configuration_callback,
@@ -116,10 +128,11 @@ class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
     # pylint: disable=too-many-public-methods
-    def __init__(self, host):
+    def __init__(self, host, customize):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         self._client = WebOsClient(host)
+        self._customize = customize
 
         self._name = 'LG WebOS TV Remote'
         # Assume that the TV is not muted
@@ -130,7 +143,6 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._current_source = None
         self._current_source_id = None
         self._source_list = None
-        self._source_label_list = None
         self._state = STATE_UNKNOWN
         self._app_list = None
 
@@ -144,19 +156,30 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._muted = self._client.get_muted()
             self._volume = self._client.get_volume()
             self._current_source_id = self._client.get_input()
-
             self._source_list = {}
-            self._source_label_list = []
             self._app_list = {}
+
+            custom_sources = []
+            for source in self._customize.get('sources', []):
+                app_id = WEBOS_APPS_SHORT.get(source, None)
+                if app_id:
+                    custom_sources.append(app_id)
+                else:
+                    custom_sources.append(source)
+
             for app in self._client.get_apps():
                 self._app_list[app['id']] = app
+                if app['id'] == self._current_source_id:
+                    self._current_source = app['title']
+                    self._source_list[app['title']] = app
+                if app['id'] in custom_sources:
+                    self._source_list[app['title']] = app
 
             for source in self._client.get_inputs():
-                self._source_list[source['label']] = source
-                self._app_list[source['appId']] = source
-                self._source_label_list.append(source['label'])
-                if source['appId'] == self._current_source_id:
-                    self._current_source = source['label']
+                if not source['connected']:
+                    continue
+                app = self._app_list[source['appId']]
+                self._source_list[app['title']] = app
 
         except OSError:
             self._state = STATE_OFF
@@ -189,7 +212,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_label_list
+        return sorted(self._source_list.keys())
 
     @property
     def media_content_type(self):
@@ -199,7 +222,9 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._app_list[self._current_source_id]['icon']
+        if self._current_source_id in self._app_list:
+            return self._app_list[self._current_source_id]['largeIcon']
+        return None
 
     @property
     def supported_media_commands(self):
@@ -238,9 +263,9 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self._current_source_id = self._source_list[source]['appId']
-        self._current_source = self._source_list[source]['label']
-        self._client.set_input(self._source_list[source]['id'])
+        self._current_source_id = self._source_list[source]['id']
+        self._current_source = self._source_list[source]['title']
+        self._client.launch_app(self._source_list[source]['id'])
 
     def media_play(self):
         """Send play command."""
