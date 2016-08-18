@@ -99,7 +99,7 @@ class WUndergroundSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "PWS_" + str(self._condition)
+        return "PWS_" + self._condition
 
     @property
     def state(self):
