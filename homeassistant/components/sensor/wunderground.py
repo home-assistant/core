@@ -153,9 +153,11 @@ class WUndergroundData(object):
         """Get the latest data from wunderground."""
         try:
             result = requests.get(self._build_url(), timeout=10).json()
+            if "error" in result['response']:
+                raise ValueError(result['response']["error"]
                                  ["description"])
             else:
-                self.data = result.json()["current_observation"]
+                self.data = result["current_observation"]
         except ValueError as err:
             _LOGGER.error("Check Wunderground API %s", err.args)
             self.data = None
