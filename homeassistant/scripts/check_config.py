@@ -1,50 +1,79 @@
 """Script to ensure a configuration file exists."""
 import argparse
 import os
-import re
 from glob import glob
 import logging
-from typing import List
-import pprint
+from typing import List, Dict, Sequence
 from unittest.mock import patch
-from textwrap import fill
-from collections import OrderedDict
+from platform import system
 
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.bootstrap as bootstrap
 import homeassistant.config as config_util
-# import homeassistant.util.yaml as yaml_util
 import homeassistant.loader as loader
 import homeassistant.util.yaml as yaml
 
-REQUIREMENTS = ['colorlog>2.1<3', 'colorama<=1']
-SHOW_FILES = True
-SHOW_SECRETS = True
-SHOW_FULL_CONFIG = True
+REQUIREMENTS = ('colorlog>2.1<3',)
+if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
+    REQUIREMENTS += ('colorama<=1',)
+
 _LOGGER = logging.getLogger(__name__)
+# pylint: disable=protected-access
+MOCKS = {
+    'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
+    'get': ("homeassistant.loader.get_component", loader.get_component),
+    'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
+    'except': ("homeassistant.bootstrap._log_exception",
+               bootstrap._log_exception)
+}
+SILENCE = (
+    'homeassistant.core._LOGGER.info',
+    'homeassistant.loader._LOGGER.info',
+    'homeassistant.bootstrap._LOGGER.info',
+    'homeassistant.bootstrap._LOGGER.warning',
+    'homeassistant.util.yaml._LOGGER.debug',
+)
+PATCHES = {}
+
+C_HEAD = 'bold'
 
 
-# pylint: disable=too-many-locals,too-many-branches
+def color(the_color, *args, reset=None):
+    """Color helper."""
+    from colorlog.escape_codes import escape_codes, parse_colors
+    try:
+        if len(args) == 0:
+            assert reset is None, "You cannot reset if nothing being printed"
+            return parse_colors(the_color)
+        return parse_colors(the_color) + ' '.join(args) + \
+            escape_codes[reset or 'reset']
+    except KeyError as k:
+        raise ValueError("Invalid color {} in {}".format(str(k), the_color))
+
+
+# pylint: disable=too-many-locals, too-many-branches
 def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
-    # Color support
-    from colorama import init, Fore, Style
-    init()
-
-    def color(*args, c=Style.BRIGHT):  # pylint: disable=invalid-name
-        """Color helper."""
-        return c + ' '.join(args) + Style.RESET_ALL
-
     parser = argparse.ArgumentParser(
         description=("Check Home Assistant configuration."))
     parser.add_argument(
+        '--script', choices=['check_config'])
+    parser.add_argument(
         '-c', '--config',
-        # metavar='path_to_config_dir',
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
-        '--script', choices=['check_config'])
+        '-i', '--info',
+        default=None,
+        help="Show a portion of the config")
     parser.add_argument(
-        '--verbose', default=False)
+        '-f', '--files',
+        action='store_true',
+        help="Show used configuration files")
+    parser.add_argument(
+        '-s', '--secrets',
+        action='store_true',
+        help="Show secret information")
 
     args = parser.parse_args()
 
@@ -54,119 +83,166 @@ def run(script_args: List) -> int:
         print('Config does not exist:', config_path)
         return 1
 
-    print(color("Testing configuration at", config_dir))
+    print(color('bold', "Testing configuration at", config_dir))
+
+    domain_info = []
+    if args.info:
+        domain_info = args.info.split(',')
 
     res = check(config_path)
 
-    if SHOW_FILES:  # Show Files
-        print(color('yaml files'), '(used /',
-              color('not used', c=Fore.RED)+')')
+    if args.files:
+        print(color(C_HEAD, 'yaml files'), '(used /',
+              color('red', 'not used')+')')
         # Python 3.5 gets a recursive, but not in 3.4
         for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
                           glob(os.path.join(config_dir, '*/*.yaml'))):
-            the_color = '' if yfn in res['yaml_files'] else Fore.RED
-            print(color('-', yfn, c=the_color))
+            the_color = '' if yfn in res['yaml_files'] else 'red'
+            print(color(the_color, '-', yfn))
 
-    # pylint: disable=too-many-nested-blocks
-    if SHOW_FULL_CONFIG:
-        re_keys = re.compile(r"'([^']+)':")
+    if len(res['except']) > 0:
+        for domain, config in res['except'].items():
+            domain_info.append(domain)
+            print(color('bold_white', 'Failed config'))
+            print(color('red'), domain + ':')
+            dump_dict(config, reset='red', indent_count=2)
+            print(color('reset'))
 
-        def indent(item, indent0, indent1):
-            """Return indented text."""
-            return re_keys.sub(color(r'\1')+':',
-                               fill(pprint.pformat(item),
-                                    initial_indent=indent0,
-                                    subsequent_indent=indent1))
+    if domain_info:
+        if 'all' in domain_info:
+            for domain, config in res['components']:
+                print(color(C_HEAD, domain + ':'))
+                dump_dict(config, indent_count=2)
+        else:
+            for domain in domain_info:
+                print(color(C_HEAD, domain + ':'))
+                dump_dict(res['components'].get(domain, None), indent_count=2)
 
-        def printlist(obj, level=0, pref=''):
-            """Printlist."""
-            indent1 = level * ' '
-            indent0 = pref.rjust(level)
-            if isinstance(obj, list):
-                for ob0 in obj:
-                    printlist(ob0, level+2, '- ')
-            # elif isinstance(obj, dict):
-            #    for key0, val0 in obj.items():
-            #        printlist(val0, indent00 + key0 + ':' , indent1)
-            else:
-                print(indent(obj, indent0, indent1))
+    if args.secrets:
+        flatsecret = {}
 
-        components = deep_convert_dict(res['components'])
-        for name, config in components:
-            if config is None:
-                continue
-            print(color(name + ':'))
-            printlist(config, 2, '')
+        for sfn, sdict in res['secret_cache'].items():
+            sss = []
+            for skey, sval in sdict.items():
+                if skey in flatsecret:
+                    _LOGGER.error('Duplicated secrets in files %s and %s',
+                                  flatsecret[skey], sfn)
+                flatsecret[skey] = sfn
+                sss.append(color('green', skey) if skey in res['secrets']
+                           else skey)
+            print(color(C_HEAD, 'Secrets from', sfn + ':'), ', '.join(sss))
+
+        print(color(C_HEAD, 'Used Secrets:'))
+        for skey, sval in res['secrets'].items():
+            print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
+                                                .get(skey, 'keyring') + ']'))
 
     return 0
 
 
 def check(config_path):
     """Perform a check by mocking hass load functions."""
-    # List of components/platforms
-    components = []
-    yaml_files = {}
-    secrets = {}
+    res = {
+        'yaml_files': {},  # yaml_files loaded
+        'secrets': {},  # secret cache and secrets loaded
+        'except': {},  # exceptions raised (with config)
+        'components': {},  # successful components
+        'secret_cache': {},
+    }
 
-    original_get_component = loader.get_component
-    original_load_yaml = yaml.load_yaml
-
-    def mock_load_yaml(filename):
+    def mock_load(filename):  # pylint: disable=unused-variable
         """Mock hass.util.load_yaml to save config files."""
-        yaml_files[filename] = True
-        return original_load_yaml(filename)
+        res['yaml_files'][filename] = True
+        return MOCKS['load'][1](filename)
 
-    def mock_get_component(comp_name):
+    def mock_get(comp_name):  # pylint: disable=unused-variable
         """Mock hass.loader.get_component to replace setup & setup_platform."""
         def mock_setup(*kwargs):
             """Mock setup, only record the component name & config."""
-            # pylint: disable=cell-var-from-loop
-            components.append((comp_name, kwargs[1].get(comp_name)))
+            if comp_name in res['components']:
+                if not isinstance(res['components'][comp_name], list):
+                    res['components'][comp_name] = [res['components']]
+                res['components'][comp_name].append(kwargs[1].get(comp_name))
+            else:
+                res['components'][comp_name] = kwargs[1].get(comp_name)
             return True
+        module = MOCKS['get'][1](comp_name)
 
-        module = original_get_component(comp_name)
-        # Test if platform/component. Also: '.' in comp_name = platform
-        if hasattr(module, 'setup'):
-            module.setup = mock_setup
-        if hasattr(module, 'setup_platform'):
+        # Test if platform/component and overwrite setup
+        if '.' in comp_name:
             module.setup_platform = mock_setup
+        else:
+            module.setup = mock_setup
 
-        module.setup_platform = mock_setup
         return module
 
-    @patch("homeassistant.util.yaml.load_yaml",
-           side_effect=mock_load_yaml)
-    @patch("homeassistant.loader.get_component",
-           side_effect=mock_get_component)
-    def load_all_the_config(*mocks):
-        """Load the configs with appropriate patching."""
-        # Remove black & white logger, will be replace by hass logger
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-        # Ensure we skip pip for speed
-        bootstrap.from_config_file(config_path, skip_pip=True)
+    def mock_secrets(ldr, node):  # pylint: disable=unused-variable
+        """Mock _get_secrets."""
+        try:
+            val = MOCKS['secrets'][1](ldr, node)
+        except HomeAssistantError:
+            val = None
+        res['secrets'][node.value] = val
+        # pylint: disable=protected-access
+        res['secret_cache'] = ldr._SECRET_CACHE
+        return val
 
-        _LOGGER.info('Load complete')
+    def mock_except(ex, domain, config):  # pylint: disable=unused-variable
+        """Mock bootstrap._log_exception."""
+        MOCKS['except'][1](ex, domain, config)
+        res['except'][domain] = config
 
-        for mock, func in zip(reversed(mocks), ['load_yaml', 'get_component']):
-            if len(mock.call_args_list) == 0:
-                _LOGGER.warning('Function %s never called', func)
+    # Patches to skip functions
+    for sil in SILENCE:
+        PATCHES[sil] = patch(sil)
 
-    load_all_the_config()
+    # Patches with local mock functions
+    for key, val in MOCKS.items():
+        mock_function = locals()['mock_'+key]
+        PATCHES[key] = patch(val[0], side_effect=mock_function)
 
-    return {'yaml_files': yaml_files,
-            'secrets': secrets,
-            'components': components}
+    # Start all patches
+    for pat in PATCHES.values():
+        pat.start()
+    # Ensure !secrets point to the patches function
+    yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
-
-def deep_convert_dict(layer):
-    """Convert an ordereddict to dict."""
-    to_ret = layer
-    if isinstance(layer, OrderedDict):
-        to_ret = dict(layer)
     try:
-        for key, value in to_ret.items():
-            to_ret[key] = deep_convert_dict(value)
-    except AttributeError:
-        pass
-    return to_ret
+        bootstrap.from_config_file(config_path, skip_pip=True)
+        return res
+    finally:
+        # Stop all patches
+        for pat in PATCHES.values():
+            pat.stop()
+
+
+def dump_dict(layer, indent_count=1, listi=False, **kwargs):
+    """Display a dict.
+
+    A friendly version of print yaml.yaml.dump(config).
+    """
+    def line_src(this):
+        """Display line config source."""
+        if hasattr(this, '__config_file__'):
+            return color('cyan', "[source {}:{}]"
+                         .format(this.__config_file__, this.__line__ or '?'),
+                         **kwargs)
+        return ''
+
+    indent_str = indent_count * ' '
+    if listi or isinstance(layer, list):
+        indent_str = indent_str[:-1]+'-'
+    if isinstance(layer, Dict):
+        for key, value in layer.items():
+            if isinstance(value, dict) or isinstance(value, list):
+                print(indent_str, key + ':', line_src(value))
+                dump_dict(value, indent_count+2)
+            else:
+                print(indent_str, key + ':', value)
+            indent_str = indent_count * ' '
+    if isinstance(layer, Sequence):
+        for i in layer:
+            if isinstance(i, dict):
+                dump_dict(i, indent_count, True)
+            else:
+                print(indent_str, i)
