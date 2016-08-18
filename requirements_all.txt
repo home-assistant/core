@@ -85,6 +85,9 @@ freesms==0.1.0
 # homeassistant.components.conversation
 fuzzywuzzy==0.11.1
 
+# homeassistant.components.device_tracker.bluetooth_le_tracker
+# gattlib==0.20150805
+
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
