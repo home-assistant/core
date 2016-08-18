@@ -176,6 +176,7 @@ omit =
     homeassistant/components/notify/group.py
     homeassistant/components/notify/instapush.py
     homeassistant/components/notify/joaoapps_join.py
+    homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nma.py
     homeassistant/components/notify/pushbullet.py
