@@ -23,7 +23,7 @@ GPMDP_CONFIG_FILE = 'gpmpd.conf'
 _CONFIGURING = {}
 
 
-def request_configuration(hass, config, websocket, add_devices_callback):
+def request_configuration(hass, config, url, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
     if 'gpmdp' in _CONFIGURING:
@@ -31,6 +31,10 @@ def request_configuration(hass, config, websocket, add_devices_callback):
             _CONFIGURING['gpmdp'], "Failed to register, please try again.")
 
         return
+    from websocket import create_connection
+    websocket = create_connection((url), timeout=1)
+    websocket.send('{"namespace": "connect", "method": "connect",'
+                   '"arguments": ["Home Assistant"]}')
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
@@ -79,22 +83,19 @@ def request_configuration(hass, config, websocket, add_devices_callback):
 
 def setup_gpmdp(hass, config, code, add_devices_callback):
     """Setup gpmdp."""
-    from websocket import create_connection
     name = config.get("name", "GPM Desktop Player")
     address = config.get("address")
     url = "ws://" + address + ":5672"
+
     if not code:
-        websocket = create_connection((url), timeout=1)
-        websocket.send('{"namespace": "connect", "method": "connect",'
-                       '"arguments": ["Home Assistant"]}')
-        request_configuration(hass, config, websocket, add_devices_callback)
+        request_configuration(hass, config, url, add_devices_callback)
         return
 
     if 'gpmdp' in _CONFIGURING:
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('gpmdp'))
 
-    add_devices_callback([GPMDP(name, url, code, create_connection)])
+    add_devices_callback([GPMDP(name, url, code)])
 
 
 def _load_config(filename):
@@ -146,8 +147,9 @@ class GPMDP(MediaPlayerDevice):
 
     # pylint: disable=too-many-public-methods, abstract-method
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, name, url, code, create_connection):
+    def __init__(self, name, url, code):
         """Initialize the media player."""
+        from websocket import create_connection
         self._connection = create_connection
         self._url = url
         self._authorization_code = code
