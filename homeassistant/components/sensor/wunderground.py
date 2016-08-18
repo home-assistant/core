@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
                                  CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
                                  STATE_UNKNOWN)
@@ -55,7 +56,7 @@ SENSOR_TYPES = {
     'solarradiation': ['Solar Radiation', None]
 }
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): "wunderground",
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
