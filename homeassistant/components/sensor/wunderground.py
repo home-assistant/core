@@ -135,6 +135,16 @@ class WUndergroundData(object):
         self.data = None
         self.unit_system = None
 
+    def _build_url(self):
+        print(self._api_key)
+        url = _RESOURCE + self._api_key + _URL_QUERY
+        if self._pws_id:
+            url = url + 'pws:' + self._pws_id
+        else:
+            url = url + '{},{}'.format(self._latitude, self._longitude)
+
+        return url + '.json'
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from wunderground."""
