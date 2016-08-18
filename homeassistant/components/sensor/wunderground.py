@@ -152,11 +152,7 @@ class WUndergroundData(object):
     def update(self):
         """Get the latest data from wunderground."""
         try:
-            result = requests.get(self._resource + self._api_key +
-                                  '/conditions/q/pws:' + self._pws_id +
-                                  '.json', timeout=10)
-            if "error" in result.json():
-                raise ValueError(result.json()["response"]["error"]
+            result = requests.get(self._build_url(), timeout=10).json()
                                  ["description"])
             else:
                 self.data = result.json()["current_observation"]
