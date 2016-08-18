@@ -55,6 +55,7 @@ SENSOR_TYPES = {
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm', 'in', 'mm', 'mm', 'mm'],
 }
+DEFAULT_NAME = "Forecast.io"
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
@@ -88,11 +89,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         return False
 
+    name = config.get('name', DEFAULT_NAME)
+
     # Initialize and add all of the sensors.
     sensors = []
     for variable in config['monitored_conditions']:
         if variable in SENSOR_TYPES:
-            sensors.append(ForeCastSensor(forecast_data, variable))
+            sensors.append(ForeCastSensor(forecast_data, variable, name))
         else:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
 
@@ -103,9 +106,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
 
-    def __init__(self, forecast_data, sensor_type):
+    def __init__(self, forecast_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = 'Weather'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
