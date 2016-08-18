@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_NAME, CONF_PLATFORM)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -20,8 +21,7 @@ ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
 ICON = 'mdi:pulse'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'cpuspeed',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 

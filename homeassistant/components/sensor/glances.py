@@ -10,8 +10,9 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, STATE_UNKNOWN,
-                                 CONF_PLATFORM, CONF_NAME, CONF_RESOURCES)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -38,12 +39,12 @@ SENSOR_TYPES = {
     'process_sleeping': ['Sleeping', None]
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'glances',
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-    vol.Required(CONF_RESOURCES, default=[]): [vol.In(SENSOR_TYPES)],
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,10 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for resource in var_conf:
-        if resource not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', resource)
-        else:
-            dev.append(GlancesSensor(rest, name, resource))
+        dev.append(GlancesSensor(rest, name, resource))
 
     add_devices(dev)
 
