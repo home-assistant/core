@@ -91,7 +91,6 @@ class WUndergroundSensor(Entity):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
-        self._unit_of_measurement = None
 
     @property
     def name(self):
