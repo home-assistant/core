@@ -38,7 +38,6 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
-            _SECRET_CACHE = {}
             return yaml.load(conf_file, Loader=SafeLineLoader) or {}
     except yaml.YAMLError as exc:
         _LOGGER.error(exc)
