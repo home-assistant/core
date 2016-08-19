@@ -169,7 +169,7 @@ class TestSecrets(unittest.TestCase):
         yaml._SECRET_CACHE = {}
         self._yaml_path = os.path.join(config_dir,
                                        config_util.YAML_CONFIG_FILE)
-        self._secret_path = os.path.join(config_dir, 'secrets.yaml')
+        self._secret_path = os.path.join(config_dir, yaml._SECRET_YAML)
         self._sub_folder_path = os.path.join(config_dir, 'subFolder')
         if not os.path.exists(self._sub_folder_path):
             os.makedirs(self._sub_folder_path)
