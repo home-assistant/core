@@ -145,6 +145,24 @@ def _env_var_yaml(loader: SafeLineLoader,
         raise HomeAssistantError(node.value)
 
 
+def _load_secret_yaml(secret_path: str) -> Dict:
+    """Loads the secrets yaml from path."""
+    _LOGGER.debug('Loading %s', os.path.join(secret_path, _SECRET_YAML))
+    secrets = {}
+    if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
+        secrets = load_yaml(
+            os.path.join(secret_path, _SECRET_YAML))
+        if 'logger' in secrets:
+            logger = str(secrets['logger']).lower()
+            if logger == 'debug':
+                _LOGGER.setLevel(logging.DEBUG)
+            else:
+                _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
+                              " but 'logger: %s' found", logger)
+            del secrets['logger']
+    return secrets
+
+
 # pylint: disable=protected-access
 def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
