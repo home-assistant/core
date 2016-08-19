@@ -168,6 +168,12 @@ class TestSecrets(unittest.TestCase):
         self._yaml_path = os.path.join(config_dir,
                                        config_util.YAML_CONFIG_FILE)
         self._secret_path = os.path.join(config_dir, 'secrets.yaml')
+        self._sub_folder_path = os.path.join(config_dir, 'subFolder')
+        if not os.path.exists(self._sub_folder_path):
+            os.makedirs(self._sub_folder_path)
+        self._unrelated_path = os.path.join(config_dir, 'unrelated')
+        if not os.path.exists(self._unrelated_path):
+            os.makedirs(self._unrelated_path)
 
         load_yaml(self._secret_path,
                   'http_pw: pwhttp\n'
@@ -185,7 +191,8 @@ class TestSecrets(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up secrets."""
-        for path in [self._yaml_path, self._secret_path]:
+        for path in [self._yaml_path, self._secret_path, self._sub_folder_path,
+                     self._unrelated_path]:
             if os.path.isfile(path):
                 os.remove(path)
 
