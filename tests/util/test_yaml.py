@@ -166,7 +166,7 @@ class TestSecrets(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
-        yaml._SECRET_CACHE = {}
+        yaml.clear_secret_cache()
         self._yaml_path = os.path.join(config_dir,
                                        config_util.YAML_CONFIG_FILE)
         self._secret_path = os.path.join(config_dir, yaml._SECRET_YAML)
@@ -193,7 +193,7 @@ class TestSecrets(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up secrets."""
-        yaml.SECRET_CACHE = {}
+        yaml.clear_secret_cache()
         for path in [self._yaml_path, self._secret_path,
                      os.path.join(self._sub_folder_path, 'sub.yaml'),
                      os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
