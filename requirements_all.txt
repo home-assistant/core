@@ -255,7 +255,7 @@ pilight==0.0.2
 plexapi==2.0.2
 
 # homeassistant.components.sensor.serial_pm
-pmsensor==0.2
+pmsensor==0.3
 
 # homeassistant.components.climate.proliphix
 # homeassistant.components.thermostat.proliphix
