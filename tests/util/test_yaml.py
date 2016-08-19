@@ -199,6 +199,22 @@ class TestSecrets(unittest.TestCase):
             'password': 'pw1'}
         self.assertEqual(expected, self._yaml['component'])
 
+    def test_secrets_from_different_folder(self):
+        """Test loading secrets from a different foler."""
+        expected = {'api_password': 'pwhttp'}
+        path = os.path.join(get_test_config_dir(), 'subFolder')
+        if not os.path.exists(path):
+            os.makedirs(path)
+        self._yaml = load_yaml(os.path.join(path, 'sub.yaml'),
+                               'http:\n'
+                               '  api_password: !secret http_pw\n'
+                               'component:\n'
+                               '  username: !secret comp1_un\n'
+                               '  password: !secret comp1_pw\n'
+                               '')
+
+        self.assertEqual(expected, self._yaml['http'])
+
     def test_secrets_keyring(self):
         """Test keyring fallback & get_password."""
         yaml.keyring = None  # Ensure its not there
