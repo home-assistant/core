@@ -206,8 +206,8 @@ class TestSecrets(unittest.TestCase):
             'password': 'pw1'}
         self.assertEqual(expected, self._yaml['component'])
 
-    def test_secrets_from_different_folder(self):
-        """Test loading secrets from a different foler."""
+    def test_secrets_from_parent_folder(self):
+        """Test loading secrets from parent foler."""
         expected = {'api_password': 'pwhttp'}
         path = os.path.join(get_test_config_dir(), 'subFolder')
         if not os.path.exists(path):
