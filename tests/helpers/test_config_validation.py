@@ -48,15 +48,30 @@ def test_longitude():
 
 
 def test_port():
-    """Test tcp/udp network port."""
+    """Test TCP/UDP network port."""
     schema = vol.Schema(cv.port)
 
-    for value in('invalid', None, -1, 0, 80000, '81000'):
+    for value in ('invalid', None, -1, 0, 80000, '81000'):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     for value in ('1000', 21, 24574):
         schema(value)
+
+
+def test_url():
+    """Test URL."""
+    schema = vol.Schema(cv.url)
+
+    for value in ('invalid', None, 100, 'htp://ha.io', 'http//ha.io',
+                  'http://??,**', 'https://??,**'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('http://localhost', 'https://localhost/test/index.html',
+                  'http://home-assistant.io', 'http://home-assistant.io/test/',
+                  'https://community.home-assistant.io/'):
+        assert schema(value)
 
 
 def test_platform_config():
