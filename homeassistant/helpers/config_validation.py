@@ -256,6 +256,7 @@ def time_zone(value):
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
+# pylint: disable=no-value-for-parameter
 def url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
