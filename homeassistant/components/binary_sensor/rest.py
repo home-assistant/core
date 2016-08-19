@@ -12,16 +12,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, SENSOR_CLASSES, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_SENSOR_CLASS)
+    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE)
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'REST Binary Sensor'
+CONF_SENSOR_CLASS = 'sensor_class'
 DEFAULT_METHOD = 'GET'
+DEFAULT_NAME = 'REST Binary Sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): vol.Coerce(url),
+    vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,

@@ -1,5 +1,5 @@
 """
-Support for REST API sensors..
+Support for REST API sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
@@ -17,11 +17,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'REST Sensor'
 DEFAULT_METHOD = 'GET'
+DEFAULT_NAME = 'REST Sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): vol.Coerce(url),
+    vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the REST sensor."""
+    """Setup the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)

@@ -13,14 +13,14 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_RESOURCE)
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'REST Switch'
-CONF_BODY_ON = 'body_on'
 CONF_BODY_OFF = 'body_off'
-DEFAULT_BODY_ON = 'ON'
+CONF_BODY_ON = 'body_on'
 DEFAULT_BODY_OFF = 'OFF'
+DEFAULT_BODY_ON = 'ON'
+DEFAULT_NAME = 'REST Switch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): vol.Coerce(url),
+    vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.string,
     vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument,
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the REST switch."""
+    """Setup the RESTful switch."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     body_on = config.get(CONF_BODY_ON)

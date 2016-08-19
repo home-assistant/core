@@ -1,5 +1,5 @@
 """
-REST platform for notify component.
+RESTful platform for notify component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.rest/
@@ -10,21 +10,20 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, DOMAIN, BaseNotificationService, PLATFORM_SCHEMA,
-    CONF_RESOURCE, CONF_METHOD, CONF_NAME)
+    ATTR_TARGET, ATTR_TITLE, BaseNotificationService, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 CONF_MESSAGE_PARAMETER_NAME = 'message_param_name'
-CONF_TITLE_PARAMETER_NAME = 'title_param_name'
 CONF_TARGET_PARAMETER_NAME = 'target_param_name'
-
-DEFAULT_METHOD = 'GET'
+CONF_TITLE_PARAMETER_NAME = 'title_param_name'
 DEFAULT_MESSAGE_PARAM_NAME = 'message'
-DEFAULT_TITLE_PARAM_NAME = None
+DEFAULT_METHOD = 'GET'
 DEFAULT_TARGET_PARAM_NAME = None
+DEFAULT_TITLE_PARAM_NAME = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): vol.Schema(vol.validators.Url()),
+    vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_MESSAGE_PARAMETER_NAME,
                  default=DEFAULT_MESSAGE_PARAM_NAME): cv.string,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
@@ -40,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config):
-    """Get the REST notification service."""
+    """Get the RESTful notification service."""
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
     message_param_name = config.get(CONF_MESSAGE_PARAMETER_NAME)
@@ -54,7 +53,7 @@ def get_service(hass, config):
 
 # pylint: disable=too-few-public-methods, too-many-arguments
 class RestNotificationService(BaseNotificationService):
-    """Implement the notification service for REST."""
+    """Implementation of a notification service for REST."""
 
     def __init__(self, resource, method, message_param_name, title_param_name,
                  target_param_name):
