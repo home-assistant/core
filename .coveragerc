@@ -109,6 +109,12 @@ omit =
     homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/climate/eq3btsmart.py
+    homeassistant/components/climate/heatmiser.py
+    homeassistant/components/climate/homematic.py
+    homeassistant/components/climate/knx.py
+    homeassistant/components/climate/proliphix.py
+    homeassistant/components/climate/radiotherm.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
     homeassistant/components/device_tracker/asuswrt.py

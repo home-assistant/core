@@ -57,6 +57,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 COMMAND_CLASS_THERMOSTAT_SETPOINT)):
         return
 
+    if value.command_class != COMMAND_CLASS_SENSOR_MULTILEVEL and \
+       value.command_class != COMMAND_CLASS_THERMOSTAT_SETPOINT:
+        return
+
     add_devices([ZWaveThermostat(value)])
     _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
                   discovery_info, zwave.NETWORK)
