@@ -2,7 +2,7 @@
 import glob
 import logging
 import os
-import re
+import sys
 from collections import OrderedDict
 from typing import Union, List, Dict
 
@@ -170,8 +170,8 @@ def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
-    while os.path.exists(secret_path) and not re.match(r'\.homeassistant.?$',
-                                                       secret_path):
+    while os.path.exists(secret_path) and not secret_path == os.path.dirname(
+            sys.path[0]):
         _LOGGER.debug('Checking path %s', secret_path)
         if secret_path not in __SECRET_CACHE:
             __SECRET_CACHE[secret_path] = _load_secret_yaml(secret_path)
@@ -180,7 +180,13 @@ def _secret_yaml(loader: SafeLineLoader,
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
             return secrets[node.value]
-        secret_path = os.path.abspath(os.path.join(secret_path, '..'))
+        next_path = os.path.dirname(secret_path)
+
+        if not next_path or next_path == secret_path:
+            # Somehow we got past the .homeassistant configuration folder...
+            break
+
+        secret_path = next_path
 
     if keyring:
         # do ome keyring stuff
