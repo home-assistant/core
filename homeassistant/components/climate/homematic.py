@@ -6,11 +6,20 @@ https://home-assistant.io/components/climate.homematic/
 """
 import logging
 import homeassistant.components.homematic as homematic
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, STATE_AUTO
 from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
 DEPENDENCIES = ['homematic']
+
+STATE_MANUAL = "manual"
+STATE_BOOST = "boost"
+
+HM_STATE_MAP = {
+    "AUTO_MODE": STATE_AUTO,
+    "MANU_MODE": STATE_MANUAL,
+    "BOOST_MODE": STATE_BOOST,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,24 +44,64 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
         return TEMP_CELSIUS
 
     @property
+    def current_operation(self):
+        """Return current operation ie. heat, cool, idle."""
+        if not self.available:
+            return None
+
+        # read state and search
+        for mode, state in HM_STATE_MAP.items():
+            code = getattr(self._hmdevice, mode, 0)
+            if self._data.get('CONTROL_MODE') == code:
+                return state
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        if not self.available:
+            return None
+        op_list = []
+
+        # generate list
+        for mode in self._hmdevice.ACTIONNODE:
+            if mode in HM_STATE_MAP:
+                op_list.append(HM_STATE_MAP.get(mode))
+
+        return op_list
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        if not self.available:
+            return None
+        return self._data.get('ACTUAL_HUMIDITY', None)
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         if not self.available:
             return None
-        return self._data["ACTUAL_TEMPERATURE"]
+        return self._data.get('ACTUAL_TEMPERATURE', None)
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
         if not self.available:
             return None
-        return self._data["SET_TEMPERATURE"]
+        return self._data.get('SET_TEMPERATURE', None)
 
     def set_temperature(self, temperature):
         """Set new target temperature."""
         if not self.available:
             return None
         self._hmdevice.set_temperature(temperature)
+
+    def set_operation_mode(self, operation_mode):
+        """Set new target operation mode."""
+        for mode, state in HM_STATE_MAP.items():
+            if state == operation_mode:
+                code = getattr(self._hmdevice, mode, 0)
+                self._hmdevice.STATE = code
 
     @property
     def min_temp(self):
@@ -88,3 +137,7 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
         self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
                            "SET_TEMPERATURE": STATE_UNKNOWN,
                            "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
+
+        # support humidity
+        if 'ACTUAL_HUMIDITY' in self._hmdevice.SENSORNODE:
+            self._data.update({'ACTUAL_HUMIDITY': STATE_UNKNOWN})
