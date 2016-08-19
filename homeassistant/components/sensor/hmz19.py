@@ -2,7 +2,7 @@
 Support for CO2 sensor connected to a serial port.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.serial_pm/
+https://home-assistant.io/components/sensor.hmz19/
 """
 import logging
 import voluptuous as vol
@@ -18,21 +18,17 @@ REQUIREMENTS = ['pmsensor==0.3']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERIAL_DEVICE = "serial_device"
+DEFAULT_NAME = 'CO2 Sensor'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=""): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_SERIAL_DEVICE): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available CO2 sensors."""
-    if config.get("name") != "":
-        name = config.get("name")
-    else:
-        name = "CO2"
-        dev = HMZ19Sensor(config.get(CONF_SERIAL_DEVICE), name)
-
+    dev = HMZ19Sensor(config.get(CONF_SERIAL_DEVICE), name)
     add_devices([dev])
 
 
