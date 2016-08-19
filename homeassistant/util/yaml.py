@@ -147,7 +147,7 @@ def _env_var_yaml(loader: SafeLineLoader,
 
 
 def _load_secret_yaml(secret_path: str) -> Dict:
-    """Loads the secrets yaml from path."""
+    """Load the secrets yaml from path."""
     _LOGGER.debug('Loading %s', os.path.join(secret_path, _SECRET_YAML))
     secrets = {}
     if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
