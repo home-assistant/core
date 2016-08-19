@@ -17,37 +17,37 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyloopenergy==0.0.14']
 
-CONFIG_ELEC = 'electricity'
-CONFIG_GAS = 'gas'
+CONF_ELEC = 'electricity'
+CONF_GAS = 'gas'
 
-CONFIG_ELEC_SERIAL = 'electricity_serial'
-CONFIG_ELEC_SECRET = 'electricity_secret'
+CONF_ELEC_SERIAL = 'electricity_serial'
+CONF_ELEC_SECRET = 'electricity_secret'
 
-CONFIG_GAS_SERIAL = 'gas_serial'
-CONFIG_GAS_SECRET = 'gas_secret'
-CONFIG_GAS_CALORIFIC = 'gas_calorific'
+CONF_GAS_SERIAL = 'gas_serial'
+CONF_GAS_SECRET = 'gas_secret'
+CONF_GAS_CALORIFIC = 'gas_calorific'
 
-CONFIG_GAS_TYPE = 'gas_type'
+CONF_GAS_TYPE = 'gas_type'
 
 ELEC_SCHEMA = vol.Schema({
-    vol.Required(CONFIG_ELEC_SERIAL): cv.string,
-    vol.Required(CONFIG_ELEC_SECRET): cv.string,
+    vol.Required(CONF_ELEC_SERIAL): cv.string,
+    vol.Required(CONF_ELEC_SECRET): cv.string,
 })
 
 GAS_TYPE_SCHEMA = vol.In(['imperial', 'metric'])
 
 GAS_SCHEMA = vol.Schema({
-    vol.Required(CONFIG_GAS_SERIAL): cv.string,
-    vol.Required(CONFIG_GAS_SECRET): cv.string,
-    vol.Optional(CONFIG_GAS_TYPE, default='metric'):
+    vol.Required(CONF_GAS_SERIAL): cv.string,
+    vol.Required(CONF_GAS_SECRET): cv.string,
+    vol.Optional(CONF_GAS_TYPE, default='metric'):
         GAS_TYPE_SCHEMA,
-    vol.Optional(CONFIG_GAS_CALORIFIC, default=39.11): vol.Coerce(float)
+    vol.Optional(CONF_GAS_CALORIFIC, default=39.11): vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONFIG_ELEC): vol.All(
+    vol.Required(CONF_ELEC): vol.All(
         dict, ELEC_SCHEMA),
-    vol.Optional(CONFIG_GAS, default={}): vol.All(
+    vol.Optional(CONF_GAS, default={}): vol.All(
         dict, GAS_SCHEMA)
 })
 
@@ -56,17 +56,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Loop Energy sensors."""
     import pyloopenergy
 
-    elec_config = config.get(CONFIG_ELEC)
-    gas_config = config.get(CONFIG_GAS)
+    elec_config = config.get(CONF_ELEC)
+    gas_config = config.get(CONF_GAS)
 
     # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
-        elec_config.get(CONFIG_ELEC_SERIAL),
-        elec_config.get(CONFIG_ELEC_SECRET),
-        gas_config.get(CONFIG_GAS_SERIAL),
-        gas_config.get(CONFIG_GAS_SECRET),
-        gas_config.get(CONFIG_GAS_TYPE),
-        gas_config.get(CONFIG_GAS_CALORIFIC)
+        elec_config.get(CONF_ELEC_SERIAL),
+        elec_config.get(CONF_ELEC_SECRET),
+        gas_config.get(CONF_GAS_SERIAL),
+        gas_config.get(CONF_GAS_SECRET),
+        gas_config.get(CONF_GAS_TYPE),
+        gas_config.get(CONF_GAS_CALORIFIC)
         )
 
     def stop_loopenergy(event):
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = [LoopEnergyElec(controller)]
 
-    if gas_config.get(CONFIG_GAS_SERIAL):
+    if gas_config.get(CONF_GAS_SERIAL):
         sensors.append(LoopEnergyGas(controller))
 
     add_devices(sensors)
