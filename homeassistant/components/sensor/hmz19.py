@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available CO2 sensors."""
-    
+
     if config.get("name") != "":
         name = config.get("name")
     else:
@@ -64,8 +64,8 @@ class HMZ19Sensor(Entity):
     def update(self):
         """Read from sensor and update the state."""
         from pmsensor import co2sensor
-        
-        _LOGGER.debug("Reading data from CO2 sensor")        
+
+        _LOGGER.debug("Reading data from CO2 sensor")
         try:
             ppm = co2sensor.read_mh_z19(self._serial)
             if (ppm >= 0) & (ppm <= 65535):
