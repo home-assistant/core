@@ -194,7 +194,7 @@ def _secret_yaml(loader: SafeLineLoader,
         _LOGGER.debug('Checking path %s', secret_path)
         secrets = _SECRET_CACHE[secret_path]
         if node.value in secrets:
-            _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
+            _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
             return secrets[node.value]
         secret_path = os.path.abspath(os.path.join(secret_path, '..'))
