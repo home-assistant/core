@@ -2,6 +2,7 @@
 import glob
 import logging
 import os
+import re
 from collections import OrderedDict
 from typing import Union, List, Dict
 
@@ -168,31 +169,12 @@ def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
-    if secret_path not in _SECRET_CACHE:
-        if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
-            _SECRET_CACHE[secret_path] = load_yaml(
-                os.path.join(secret_path, _SECRET_YAML))
-            secrets = _SECRET_CACHE[secret_path]
-            if 'logger' in secrets:
-                logger = str(secrets['logger']).lower()
-                if logger == 'debug':
-                    _LOGGER.setLevel(logging.DEBUG)
-                else:
-                    _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
-                                  " but 'logger: %s' found", logger)
-                del secrets['logger']
-        else:
-            _SECRET_CACHE[secret_path] = {}
-    secrets = _SECRET_CACHE[secret_path]
-
-    # Retrieve secret, first from secrets.yaml, then from keyring
-    if secrets is not None and node.value in secrets:
-        _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
-        return secrets[node.value]
-
-    while os.path.exists(secret_path) and secret_path in _SECRET_CACHE:
+    while os.path.exists(secret_path) and not re.match(r'\.homeassistant.?$',
+                                                       secret_path):
         _LOGGER.debug('Checking path %s', secret_path)
-        secrets = _SECRET_CACHE[secret_path]
+        if secret_path not in __SECRET_CACHE:
+            __SECRET_CACHE[secret_path] = _load_secret_yaml(secret_path)
+        secrets = __SECRET_CACHE[secret_path]
         if node.value in secrets:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
