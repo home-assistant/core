@@ -145,7 +145,6 @@ def _env_var_yaml(loader: SafeLineLoader,
 def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
-
     secret_path = os.path.dirname(loader.name)
     if secret_path not in _SECRET_CACHE:
         if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
