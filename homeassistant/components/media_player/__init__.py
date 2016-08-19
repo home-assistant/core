@@ -667,6 +667,7 @@ class MediaPlayerDevice(Entity):
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
+    requires_auth = False
     url = "/api/media_player_proxy/<entity(domain=media_player):entity_id>"
     name = "api:media_player:image"
 
