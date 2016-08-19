@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available CO2 sensors."""
-
     if config.get("name") != "":
         name = config.get("name")
     else:
