@@ -12,6 +12,7 @@ config/panels/*
 !config/panels/react.html
 
 tests/testing_config/deps
+tests/testing_config/subFolder/*
 tests/testing_config/home-assistant.log
 
 # Hide sublime text stuff
