@@ -149,7 +149,8 @@ def _secret_yaml(loader: SafeLineLoader,
     secret_path = os.path.dirname(loader.name)
     if secret_path not in _SECRET_CACHE:
         if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
-            _SECRET_CACHE[secret_path] = load_yaml(os.path.join(secret_path, _SECRET_YAML))
+            _SECRET_CACHE[secret_path] = load_yaml(
+                os.path.join(secret_path, _SECRET_YAML))
             secrets = _SECRET_CACHE[secret_path]
             if 'logger' in secrets:
                 logger = str(secrets['logger']).lower()
