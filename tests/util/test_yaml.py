@@ -226,8 +226,8 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
-        load_yaml(os.path.join(self._unrelated_path, 'secrets.yaml'),
-                               'test: failure')
+        load_yaml(os.path.join(self._unrelated_path, yaml._SECRET_YAML),
+                  'test: failure')
         with self.assertRaises(HomeAssistantError):
             load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
                       'http:\n'
