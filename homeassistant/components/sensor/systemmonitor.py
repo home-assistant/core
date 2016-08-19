@@ -6,11 +6,17 @@ https://home-assistant.io/components/sensor.systemmonitor/
 """
 import logging
 
+import voluptuous as vol
+
 import homeassistant.util.dt as dt_util
-from homeassistant.const import STATE_OFF, STATE_ON
+
+from homeassistant.const import (CONF_RESOURCES, STATE_OFF, STATE_ON)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['psutil==4.3.0']
+
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -33,6 +39,14 @@ SENSOR_TYPES = {
     'since_last_boot': ['Since Last Boot', '', 'mdi:clock']
 }
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required('type'): vol.In(SENSOR_TYPES),
+            vol.Optional('arg'): cv.string,
+        })])
+})
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,13 +54,10 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the System sensors."""
     dev = []
-    for resource in config['resources']:
+    for resource in config[CONF_RESOURCES]:
         if 'arg' not in resource:
             resource['arg'] = ''
-        if resource['type'] not in SENSOR_TYPES:
-            _LOGGER.error('Sensor type: "%s" does not exist', resource['type'])
-        else:
-            dev.append(SystemMonitorSensor(resource['type'], resource['arg']))
+        dev.append(SystemMonitorSensor(resource['type'], resource['arg']))
 
     add_devices(dev)
 
