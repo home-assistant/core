@@ -28,7 +28,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available CO2 sensors."""
-    dev = HMZ19Sensor(config.get(CONF_SERIAL_DEVICE), name)
+    from pmsensor import co2sensor
+
+    try:
+        co2sensor.read_mh_z19(config.get(CONF_SERIAL_DEVICE))
+    except OSError as err:
+        _LOGGER.error("Could not open serial connection to %s (%s)",
+                      config.get(CONF_SERIAL_DEVICE), err)
+        return False
+
+    dev = HMZ19Sensor(config.get(CONF_SERIAL_DEVICE), config.get(CONF_NAME))
     add_devices([dev])
 
 
