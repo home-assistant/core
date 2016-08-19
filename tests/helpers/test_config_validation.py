@@ -74,6 +74,19 @@ def test_url():
         assert schema(value)
 
 
+def test_ipaddress():
+    """Test IPv4 address."""
+    schema = vol.Schema(cv.ipaddress)
+
+    for value in ('invalid', None, 192.168, '192.168.0.0.1', '192.168.0.999',
+                  '192-168-0-1', '192:168:0:1'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in ('127.0.0.1', '0.0.0.0', '192.168.0.1', '254.254.254.254'):
+        assert schema(value)
+
+
 def test_platform_config():
     """Test platform config validation."""
     for value in (
