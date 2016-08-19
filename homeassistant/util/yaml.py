@@ -146,10 +146,10 @@ def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
 
-    secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
+    secret_path = os.path.dirname(loader.name)
     if secret_path not in _SECRET_CACHE:
-        if os.path.isfile(secret_path):
-            _SECRET_CACHE[secret_path] = load_yaml(secret_path)
+        if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
+            _SECRET_CACHE[secret_path] = load_yaml(os.path.join(secret_path, _SECRET_YAML))
             secrets = _SECRET_CACHE[secret_path]
             if 'logger' in secrets:
                 logger = str(secrets['logger']).lower()
@@ -167,11 +167,15 @@ def _secret_yaml(loader: SafeLineLoader,
     if secrets is not None and node.value in secrets:
         _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
         return secrets[node.value]
-    for sname, sdict in _SECRET_CACHE.items():
-        if node.value in sdict:
+
+    while os.path.exists(secret_path) and secret_path in _SECRET_CACHE:
+        _LOGGER.debug('Checking path %s', secret_path)
+        secrets = _SECRET_CACHE[secret_path]
+        if node.value in secrets:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
-                          'folder %s', node.value, sname)
-            return sdict[node.value]
+                          'folder %s', node.value, secret_path)
+            return secrets[node.value]
+        secret_path = os.path.abspath(os.path.join(secret_path, '..'))
 
     if keyring:
         # do ome keyring stuff
