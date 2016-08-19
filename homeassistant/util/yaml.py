@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
 _SECRET_YAML = 'secrets.yaml'
+_SECRET_CACHE = {}
 
 
 # pylint: disable=too-many-ancestors
@@ -37,6 +38,7 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
+            _SECRET_CACHE = {}
             return yaml.load(conf_file, Loader=SafeLineLoader) or {}
     except yaml.YAMLError as exc:
         _LOGGER.error(exc)
@@ -144,17 +146,12 @@ def _env_var_yaml(loader: SafeLineLoader,
 def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
-    # Create secret cache on loader and load secrets.yaml
-    if not hasattr(loader, '_SECRET_CACHE'):
-        loader._SECRET_CACHE = {}
 
     secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
-    print(str(loader._SECRET_CACHE))
-    print(secret_path)
-    if secret_path not in loader._SECRET_CACHE:
+    if secret_path not in _SECRET_CACHE:
         if os.path.isfile(secret_path):
-            loader._SECRET_CACHE[secret_path] = load_yaml(secret_path)
-            secrets = loader._SECRET_CACHE[secret_path]
+            _SECRET_CACHE[secret_path] = load_yaml(secret_path)
+            secrets = _SECRET_CACHE[secret_path]
             if 'logger' in secrets:
                 logger = str(secrets['logger']).lower()
                 if logger == 'debug':
@@ -164,16 +161,14 @@ def _secret_yaml(loader: SafeLineLoader,
                                   " but 'logger: %s' found", logger)
                 del secrets['logger']
         else:
-            loader._SECRET_CACHE[secret_path] = {}
-    secrets = loader._SECRET_CACHE[secret_path]
+            _SECRET_CACHE[secret_path] = {}
+    secrets = _SECRET_CACHE[secret_path]
 
     # Retrieve secret, first from secrets.yaml, then from keyring
     if secrets is not None and node.value in secrets:
         _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
         return secrets[node.value]
-    for sname, sdict in loader._SECRET_CACHE.items():
-        print(str(sname))
-        print(str(sdict))
+    for sname, sdict in _SECRET_CACHE.items():
         if node.value in sdict:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
                           'folder %s', node.value, sname)
