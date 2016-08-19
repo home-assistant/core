@@ -193,9 +193,11 @@ class TestSecrets(unittest.TestCase):
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Clean up secrets."""
-        for path in [self._yaml_path, self._secret_path, self._sub_folder_path,
-                     self._unrelated_path]:
         yaml.SECRET_CACHE = {}
+        for path in [self._yaml_path, self._secret_path,
+                     os.path.join(self._sub_folder_path, 'sub.yaml'),
+                     os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+                     os.path.join(self._unrelated_path, yaml._SECRET_YAML)]:
             if os.path.isfile(path):
                 os.remove(path)
 
