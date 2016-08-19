@@ -149,6 +149,7 @@ def _secret_yaml(loader: SafeLineLoader,
         loader._SECRET_CACHE = {}
 
     secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
+    print(str(loader._SECRET_CACHE))
     print(secret_path)
     if secret_path not in loader._SECRET_CACHE:
         if os.path.isfile(secret_path):
