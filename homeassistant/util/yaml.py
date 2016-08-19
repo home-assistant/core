@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
 _SECRET_YAML = 'secrets.yaml'
-_SECRET_CACHE = {}
+_SECRET_CACHE = {}  # type: Dict
 
 
 # pylint: disable=too-many-ancestors
