@@ -166,6 +166,7 @@ class TestSecrets(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Create & load secrets file."""
         config_dir = get_test_config_dir()
+        yaml._SECRET_CACHE = {}
         self._yaml_path = os.path.join(config_dir,
                                        config_util.YAML_CONFIG_FILE)
         self._secret_path = os.path.join(config_dir, 'secrets.yaml')
