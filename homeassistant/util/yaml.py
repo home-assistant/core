@@ -162,7 +162,7 @@ def _secret_yaml(loader: SafeLineLoader,
                                   " but 'logger: %s' found", logger)
                 del secrets['logger']
         else:
-            loader._SECRET_CACHE[secret_path] = None
+            loader._SECRET_CACHE[secret_path] = {}
     secrets = loader._SECRET_CACHE[secret_path]
 
     # Retrieve secret, first from secrets.yaml, then from keyring
