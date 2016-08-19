@@ -9,6 +9,7 @@ import os
 from datetime import timedelta
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_API_KEY
 from homeassistant.loader import get_component
@@ -25,7 +26,7 @@ REQUIREMENTS = [
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): str,
-        vol.Optional(CONF_HOLD_TEMP): bool
+        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -75,7 +76,7 @@ def setup_ecobee(hass, network, config):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP, False)
+    hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
     discovery.load_platform(hass, 'thermostat', DOMAIN,
                             {'hold_temp': hold_temp}, config)

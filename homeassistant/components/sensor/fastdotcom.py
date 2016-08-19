@@ -25,9 +25,9 @@ CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SECOND, default=0):
+    vol.Optional(CONF_SECOND, default=[0]):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_MINUTE, default=0):
+    vol.Optional(CONF_MINUTE, default=[0]):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
     vol.Optional(CONF_HOUR):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
