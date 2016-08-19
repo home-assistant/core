@@ -72,7 +72,8 @@ class HMZ19Sensor(Entity):
         _LOGGER.debug("Reading data from CO2 sensor")
         try:
             ppm = co2sensor.read_mh_z19(self._serial)
-            if (ppm >= 0) & (ppm <= 65535):
+            # values from sensor can only between 0 and 5000
+            if (ppm >= 0) & (ppm <= 5000):
                 self._state = ppm
         except OSError as err:
             _LOGGER.error("Could not open serial connection to %s (%s)",
