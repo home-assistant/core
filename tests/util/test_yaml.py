@@ -195,6 +195,7 @@ class TestSecrets(unittest.TestCase):
         """Clean up secrets."""
         for path in [self._yaml_path, self._secret_path, self._sub_folder_path,
                      self._unrelated_path]:
+        yaml.SECRET_CACHE = {}
             if os.path.isfile(path):
                 os.remove(path)
 
