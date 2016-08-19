@@ -209,10 +209,6 @@ class TestSecrets(unittest.TestCase):
     def test_secrets_from_parent_folder(self):
         """Test loading secrets from parent foler."""
         expected = {'api_password': 'pwhttp'}
-        path = os.path.join(get_test_config_dir(), 'subFolder')
-        if not os.path.exists(path):
-            os.makedirs(path)
-        self._yaml = load_yaml(os.path.join(path, 'sub.yaml'),
                                'http:\n'
                                '  api_password: !secret http_pw\n'
                                'component:\n'
