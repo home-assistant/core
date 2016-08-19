@@ -209,6 +209,7 @@ class TestSecrets(unittest.TestCase):
     def test_secrets_from_parent_folder(self):
         """Test loading secrets from parent foler."""
         expected = {'api_password': 'pwhttp'}
+        self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
                                'http:\n'
                                '  api_password: !secret http_pw\n'
                                'component:\n'
