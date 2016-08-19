@@ -257,6 +257,9 @@ plexapi==2.0.2
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.2
 
+# homeassistant.components.sensor.hmz19
+pmsensor==0.3
+
 # homeassistant.components.climate.proliphix
 # homeassistant.components.thermostat.proliphix
 proliphix==0.3.1
