@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pmsensor==0.2']
+REQUIREMENTS = ['pmsensor==0.3']
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the available PM sensors."""
-    from pmsensor import serial_data_collector as pm
+    from pmsensor import serial_pm as pm
 
     try:
         coll = pm.PMDataCollector(config.get(CONF_SERIAL_DEVICE),
