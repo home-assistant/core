@@ -49,6 +49,7 @@ def clear_secret_cache() -> None:
     """Clear the secrete cache."""
     __SECRET_CACHE.clear()
 
+
 def _include_yaml(loader: SafeLineLoader,
                   node: yaml.nodes.Node) -> Union[List, Dict]:
     """Load another YAML file and embeds it using the !include tag.
