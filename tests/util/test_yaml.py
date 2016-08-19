@@ -224,6 +224,21 @@ class TestSecrets(unittest.TestCase):
 
         self.assertEqual(expected, self._yaml['http'])
 
+    def test_secret_overrides_parent(self):
+        """Test loading current directory secret overrides the parent."""
+        expected = {'api_password': 'override'}
+        load_yaml(os.path.join(self._sub_folder_path, yaml._SECRET_YAML),
+                  'http_pw: override')
+        self._yaml = load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
+                               'http:\n'
+                               '  api_password: !secret http_pw\n'
+                               'component:\n'
+                               '  username: !secret comp1_un\n'
+                               '  password: !secret comp1_pw\n'
+                               '')
+
+        self.assertEqual(expected, self._yaml['http'])
+
     def test_secrets_from_unrelated_fails(self):
         """Test loading secrets from unrelated folder fails."""
         load_yaml(os.path.join(self._unrelated_path, yaml._SECRET_YAML),
