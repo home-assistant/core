@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch
 from homeassistant import bootstrap
+from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
 import homeassistant.components.http as http
 
@@ -13,6 +14,8 @@ from tests.common import get_test_home_assistant, get_test_instance_port
 
 SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(SERVER_PORT)
+API_PASSWORD = "test1234"
+HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
 hass = None
 
@@ -26,7 +29,8 @@ def setUpModule():   # pylint: disable=invalid-name
     hass = get_test_home_assistant()
     bootstrap.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
-            http.CONF_SERVER_PORT: SERVER_PORT
+            http.CONF_SERVER_PORT: SERVER_PORT,
+            http.CONF_API_PASSWORD: API_PASSWORD,
         },
     })
 
