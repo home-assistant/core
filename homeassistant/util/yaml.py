@@ -170,6 +170,8 @@ def _secret_yaml(loader: SafeLineLoader,
         _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
         return secrets[node.value]
     for sname, sdict in loader._SECRET_CACHE.items():
+        print(str(sname))
+        print(str(sdict))
         if node.value in sdict:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
                           'folder %s', node.value, sname)
