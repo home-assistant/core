@@ -260,10 +260,9 @@ weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 def url(value: Any) -> str:
     """Validate an URL."""
     url_in = str(value)
-    url_schema = vol.Schema(vol.Url())
 
     if urlparse(url_in).scheme in ['http', 'https']:
-        return url_schema(url_in)
+        return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
 
