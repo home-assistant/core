@@ -9,14 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, SENSOR_CLASSES, PLATFORM_SCHEMA)
+    BinarySensorDevice, SENSOR_CLASSES_SCHEMA, PLATFORM_SCHEMA)
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE)
+    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
+    CONF_SENSOR_CLASS)
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 
-CONF_SENSOR_CLASS = 'sensor_class'
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Binary Sensor'
 
@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(['POST', 'GET']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): vol.In(SENSOR_CLASSES),
+    vol.Optional(CONF_SENSOR_CLASS): SENSOR_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
 
@@ -42,10 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     verify_ssl = config.get('verify_ssl', True)
     sensor_class = config.get(CONF_SENSOR_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-
-    if sensor_class not in SENSOR_CLASSES:
-        _LOGGER.warning('Unknown sensor class: %s', sensor_class)
-        sensor_class = None
 
     rest = RestData(method, resource, payload, verify_ssl)
     rest.update()
