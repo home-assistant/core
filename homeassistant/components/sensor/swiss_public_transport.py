@@ -8,22 +8,36 @@ import logging
 from datetime import timedelta
 
 import requests
+import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'
+DEFAULT_NAME = 'Next Departure'
 
 ATTR_DEPARTURE_TIME1 = 'Next departure'
 ATTR_DEPARTURE_TIME2 = 'Next on departure'
 ATTR_START = 'Start'
 ATTR_TARGET = 'Destination'
 ATTR_REMAINING_TIME = 'Remaining time'
+CONF_START = 'from'
+CONF_DESTINATION = 'to'
 ICON = 'mdi:bus'
 
 TIME_STR_FORMAT = "%H:%M"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_START): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
+_LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
@@ -31,11 +45,12 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Get the Swiss public transport sensor."""
+    name = config.get(CONF_NAME)
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination
-    journey = [config.get('from'), config.get('to')]
+    journey = [config.get(CONF_START), config.get(CONF_DESTINATION)]
     try:
-        for location in [config.get('from', None), config.get('to', None)]:
+        for location in [config.get(CONF_START), config.get(CONF_DESTINATION)]:
             # transport.opendata.ch doesn't play nice with requests.Session
             result = requests.get(_RESOURCE + 'locations?query=%s' % location,
                                   timeout=10)
@@ -46,20 +61,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Check your settings and/or the availability of opendata.ch")
         return False
 
-    dev = []
     data = PublicTransportData(journey)
-    dev.append(SwissPublicTransportSensor(data, journey))
-    add_devices(dev)
+    add_devices([SwissPublicTransportSensor(data, journey, name)])
 
 
 # pylint: disable=too-few-public-methods
 class SwissPublicTransportSensor(Entity):
     """Implementation of an Swiss public transport sensor."""
 
-    def __init__(self, data, journey):
+    def __init__(self, data, journey, name):
         """Initialize the sensor."""
         self.data = data
-        self._name = 'Next Departure'
+        self._name = name
         self._from = journey[2]
         self._to = journey[3]
         self.update()
@@ -123,7 +136,7 @@ class PublicTransportData(object):
             'to=' + self.destination + '&' +
             'fields[]=connections/from/departureTimestamp/&' +
             'fields[]=connections/',
-            timeout=30)
+            timeout=10)
         connections = response.json()['connections'][:2]
 
         try:

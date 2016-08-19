@@ -7,12 +7,14 @@ https://home-assistant.io/components/sensor.google_travel_time/
 from datetime import datetime
 from datetime import timedelta
 import logging
+
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_API_KEY, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE)
-
+    CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
+    ATTR_LONGITUDE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
@@ -25,12 +27,12 @@ REQUIREMENTS = ['googlemaps==2.4.4']
 # Return cached results if last update was less then this time ago
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
+DEFAULT_NAME = 'Google Travel Time'
 CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
 CONF_TRAVEL_MODE = 'travel_mode'
 CONF_OPTIONS = 'options'
 CONF_MODE = 'mode'
-CONF_NAME = 'name'
 
 ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
                  'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
@@ -40,35 +42,33 @@ ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
                  'zh-CN', 'zh-TW']
 
 TRANSIT_PREFS = ['less_walking', 'fewer_transfers']
+TRAVEL_MODE = ['driving', 'walking', 'bicycling', 'transit']
+AVOID = ['tolls', 'highways', 'ferries', 'indoor']
+TRANSPORT_TYPE = ['bus', 'subway', 'train', 'tram', 'rail']
+TRAVEL_MODEL = ['best_guess', 'pessimistic', 'optimistic']
+UNITS = ['metric', 'imperial']
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required('platform'): 'google_travel_time',
-    vol.Optional(CONF_NAME): vol.Coerce(str),
-    vol.Required(CONF_API_KEY): vol.Coerce(str),
-    vol.Required(CONF_ORIGIN): vol.Coerce(str),
-    vol.Required(CONF_DESTINATION): vol.Coerce(str),
-    vol.Optional(CONF_TRAVEL_MODE):
-        vol.In(["driving", "walking", "bicycling", "transit"]),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_DESTINATION): cv.string,
+    vol.Required(CONF_ORIGIN): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
     vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
-            vol.Optional(CONF_MODE, default='driving'):
-                vol.In(["driving", "walking", "bicycling", "transit"]),
+            vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
             vol.Optional('language'): vol.In(ALL_LANGUAGES),
-            vol.Optional('avoid'): vol.In(['tolls', 'highways',
-                                           'ferries', 'indoor']),
-            vol.Optional('units'): vol.In(['metric', 'imperial']),
+            vol.Optional('avoid'): vol.In(AVOID),
+            vol.Optional('units'): vol.In(UNITS),
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
-            vol.Optional('traffic_model'): vol.In(['best_guess',
-                                                   'pessimistic',
-                                                   'optimistic']),
-            vol.Optional('transit_mode'): vol.In(['bus', 'subway', 'train',
-                                                  'tram', 'rail']),
+            vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
+            vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
             vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
 })
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone"]
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 
 def convert_time_to_utc(timestr):
@@ -81,10 +81,10 @@ def convert_time_to_utc(timestr):
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the travel time platform."""
+    """Setup the Google travel time platform."""
     # pylint: disable=too-many-locals
     def run_setup(event):
-        """Delay the setup until home assistant is fully initialized.
+        """Delay the setup until Home Assistant is fully initialized.
 
         This allows any entities to be created already
         """
@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-instance-attributes
 class GoogleTravelTimeSensor(Entity):
-    """Representation of a tavel time sensor."""
+    """Representation of a Google travel time sensor."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, hass, name, api_key, origin, destination, options):
@@ -130,6 +130,7 @@ class GoogleTravelTimeSensor(Entity):
         self._hass = hass
         self._name = name
         self._options = options
+        self._unit_of_measurement = 'min'
         self._matrix = None
         self.valid_api_connection = True
 
@@ -192,7 +193,7 @@ class GoogleTravelTimeSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return self._unit_of_measurement
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
