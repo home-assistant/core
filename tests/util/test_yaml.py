@@ -3,6 +3,7 @@ import io
 import unittest
 import os
 import tempfile
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 import homeassistant.config as config_util
 from tests.common import get_test_config_dir
@@ -218,6 +219,15 @@ class TestSecrets(unittest.TestCase):
                                '')
 
         self.assertEqual(expected, self._yaml['http'])
+
+    def test_secrets_from_unrelated_fails(self):
+        """Test loading secrets from unrelated folder fails."""
+        load_yaml(os.path.join(self._unrelated_path, 'secrets.yaml'),
+                               'test: failure')
+        with self.assertRaises(HomeAssistantError):
+            load_yaml(os.path.join(self._sub_folder_path, 'sub.yaml'),
+                      'http:\n'
+                      '  api_password: !secret test')
 
     def test_secrets_keyring(self):
         """Test keyring fallback & get_password."""
