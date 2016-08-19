@@ -2,7 +2,7 @@
 Support for Nest thermostats and protect smoke alarms.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/thermostat.nest/
+https://home-assistant.io/components/climate.nest/
 """
 import logging
 import socket
