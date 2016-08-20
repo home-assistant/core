@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
     doors = []
     doors_conf = config.get('doors')
-    
+
     for door in doors_conf:
         doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
                                        door['state_pin'],
