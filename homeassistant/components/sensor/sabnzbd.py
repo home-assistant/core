@@ -20,8 +20,13 @@ REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
                 'archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip'
                 '#python-sabnzbd==0.1']
 
+_LOGGER = logging.getLogger(__name__)
+_THROTTLED_REFRESH = None
+
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 SENSOR_TYPES = {
     'current_status': ['Status', None],
@@ -38,14 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_VARIABLES, default=['current_status']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
-
-_LOGGER = logging.getLogger(__name__)
-_THROTTLED_REFRESH = None
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 
 # pylint: disable=unused-argument

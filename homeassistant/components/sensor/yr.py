@@ -9,16 +9,15 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION,
-    CONF_MONITORED_CONDITIONS
-)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_ELEVATION, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
 REQUIREMENTS = ['xmltodict==0.10.2']
+
+_LOGGER = logging.getLogger(__name__)
 
 # Sensor types are defined like so:
 SENSOR_TYPES = {
@@ -38,8 +37,7 @@ SENSOR_TYPES = {
     'dewpointTemperature': ['Dewpoint temperature', '°C'],
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'yr',
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         [vol.In(SENSOR_TYPES.keys())],
     vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -58,9 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = dict(lat=latitude,
-                       lon=longitude,
-                       msl=elevation)
+    coordinates = dict(lat=latitude, lon=longitude, msl=elevation)
 
     weather = YrData(coordinates)
 
