@@ -15,6 +15,8 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
+_LOGGER = logging.getLogger(__name__)
+
 TIME_STR_FORMAT = "%H:%M"
 
 OPTION_TYPES = {
@@ -30,8 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DISPLAY_OPTIONS, default=['time']):
         vol.All(cv.ensure_list, [vol.In(OPTION_TYPES)]),
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

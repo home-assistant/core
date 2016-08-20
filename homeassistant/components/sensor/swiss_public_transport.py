@@ -17,18 +17,22 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
+_LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'
-DEFAULT_NAME = 'Next Departure'
 
 ATTR_DEPARTURE_TIME1 = 'Next departure'
 ATTR_DEPARTURE_TIME2 = 'Next on departure'
+ATTR_REMAINING_TIME = 'Remaining time'
 ATTR_START = 'Start'
 ATTR_TARGET = 'Destination'
-ATTR_REMAINING_TIME = 'Remaining time'
-CONF_START = 'from'
+
 CONF_DESTINATION = 'to'
+CONF_START = 'from'
+
+DEFAULT_NAME = 'Next Departure'
 ICON = 'mdi:bus'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 TIME_STR_FORMAT = "%H:%M"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -36,11 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_START): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

@@ -8,39 +8,39 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN, CONF_HOST, CONF_PORT,
+    CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN,
-                                 CONF_HOST, CONF_PORT, CONF_PLATFORM,
-                                 CONF_NAME)
 
 REQUIREMENTS = ['gps3==0.33.2']
 
-DEFAULT_NAME = 'GPS'
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_CLIMB = 'climb'
+ATTR_ELEVATION = 'elevation'
+ATTR_GPS_TIME = 'gps_time'
+ATTR_MODE = 'mode'
+ATTR_SPEED = 'speed'
+
 DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'GPS'
 DEFAULT_PORT = 2947
 
-ATTR_GPS_TIME = 'gps_time'
-ATTR_ELEVATION = 'elevation'
-ATTR_SPEED = 'speed'
-ATTR_CLIMB = 'climb'
-ATTR_MODE = 'mode'
-
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'gpsd',
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.string,
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the GPSD component."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    host = config.get(CONF_HOST, DEFAULT_HOST)
-    port = config.get(CONF_PORT, DEFAULT_PORT)
+    name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
 
     # Will hopefully be possible with the next gps3 update
     # https://github.com/wadda/gps3/issues/11

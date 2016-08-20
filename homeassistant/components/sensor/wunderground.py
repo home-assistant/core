@@ -6,23 +6,23 @@ https://home-assistant.io/components/sensor.wunderground/
 """
 from datetime import timedelta
 import logging
-import requests
 
+import requests
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_PLATFORM, CONF_MONITORED_CONDITIONS,
-                                 CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-                                 STATE_UNKNOWN)
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
+    STATE_UNKNOWN)
 
-CONF_PWS_ID = 'pws_id'
 _RESOURCE = 'http://api.wunderground.com/api/{}/conditions/q/'
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago.
+CONF_PWS_ID = 'pws_id'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 # Sensor types are defined like: Name, units
@@ -57,11 +57,10 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PLATFORM): "wunderground",
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS,
-                 default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 

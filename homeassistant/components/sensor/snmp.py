@@ -6,35 +6,38 @@ https://home-assistant.io/components/sensor.snmp/
 """
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (CONF_HOST, CONF_PLATFORM, CONF_NAME,
-                                 CONF_PORT, ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pysnmp==4.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "SNMP"
-DEFAULT_COMMUNITY = "public"
-DEFAULT_PORT = "161"
-CONF_COMMUNITY = "community"
-CONF_BASEOID = "baseoid"
+CONF_BASEOID = 'baseoid'
+CONF_COMMUNITY = 'community'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'snmp',
-    vol.Optional(CONF_NAME): vol.Coerce(str),
-    vol.Required(CONF_HOST): vol.Coerce(str),
-    vol.Optional(CONF_PORT): vol.Coerce(int),
-    vol.Optional(CONF_COMMUNITY): vol.Coerce(str),
-    vol.Required(CONF_BASEOID): vol.Coerce(str),
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): vol.Coerce(str),
-})
+DEFAULT_COMMUNITY = 'public'
+DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'SNMP'
+DEFAULT_PORT = '161'
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_BASEOID): cv.string,
+    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+})
 
 
 # pylint: disable=too-many-locals
@@ -44,10 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                               UdpTransportTarget, ContextData, ObjectType,
                               ObjectIdentity)
 
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT, DEFAULT_PORT)
-    community = config.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    port = config.get(CONF_PORT)
+    community = config.get(CONF_COMMUNITY)
     baseoid = config.get(CONF_BASEOID)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     errindication, _, _, _ = next(
         getCmd(SnmpEngine(),
@@ -61,9 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     else:
         data = SnmpData(host, port, community, baseoid)
-        add_devices([SnmpSensor(data,
-                                config.get('name', DEFAULT_NAME),
-                                config.get('unit_of_measurement'))])
+        add_devices([SnmpSensor(data, name, unit)])
 
 
 class SnmpSensor(Entity):
