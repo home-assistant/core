@@ -61,6 +61,7 @@ ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
+ATTR_ROOM_NAME = 'room_name'
 
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
@@ -78,7 +79,7 @@ def is_on(hass, entity_id=None):
 
 
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None, gps_accuracy=None, battery=None):
+        gps=None, gps_accuracy=None, battery=None, room_name=None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -87,7 +88,8 @@ def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
              (ATTR_LOCATION_NAME, location_name),
              (ATTR_GPS, gps),
              (ATTR_GPS_ACCURACY, gps_accuracy),
-             (ATTR_BATTERY, battery)) if value is not None}
+             (ATTR_BATTERY, battery),
+             (ATTR_ROOM_NAME, room_name)) if value is not None}
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 

@@ -20,6 +20,10 @@ see:
       description: Name of location where device is located (not_home is away)
       example: 'home'
 
+    room_name:
+      description: Name of room where the device is located
+      example: 'bedroom'
+
     gps:
       description: GPS coordinates where device is located (latitude, longitude)
       example: '[51.509802, -0.086692]'
