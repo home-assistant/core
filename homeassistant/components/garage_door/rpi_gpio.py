@@ -15,6 +15,8 @@ from homeassistant.components.garage_door import GarageDoorDevice
 import homeassistant.components.rpi_gpio as rpi_gpio
 import homeassistant.helpers.config_validation as cv
 
+DEFAULT_PULL_MODE = "UP"
+DEFAULT_RELAY_TIME = .2
 DEPENDENCIES = ['rpi_gpio']
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +27,9 @@ _DOORS_SCHEMA = vol.All(
         vol.Schema({
             'name': str,
             'relay_pin': int,
+            'relay_time': int,
             'state_pin': int,
+	    'state_pull_mode': str,
         })
     ]
 )
@@ -40,24 +44,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
     doors = []
     doors_conf = config.get('doors')
-
+    state_pull_mode = config.get('state_pull_mode', DEFAULT_PULL_MODE)
+    relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
     for door in doors_conf:
         doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
-                                       door['state_pin']))
+                                       door['state_pin'], door['state_pull_mode'], door['relay_time']))
     add_devices(doors)
 
 
 class RPiGPIOGarageDoor(GarageDoorDevice):
     """Representation of a Raspberry garage door."""
 
-    def __init__(self, name, relay_pin, state_pin):
+    def __init__(self, name, relay_pin, state_pin, state_pull_mode, relay_time):
         """Initialize the garage door."""
         self._name = name
         self._state = False
         self._relay_pin = relay_pin
         self._state_pin = state_pin
+        self._state_pull_mode = state_pull_mode
+        self._relay_time = relay_time
         rpi_gpio.setup_output(self._relay_pin)
-        rpi_gpio.setup_input(self._state_pin, 'UP')
+        rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
         rpi_gpio.write_output(self._relay_pin, True)
 
     @property
@@ -82,7 +89,7 @@ class RPiGPIOGarageDoor(GarageDoorDevice):
     def _trigger(self):
         """Trigger the door."""
         rpi_gpio.write_output(self._relay_pin, False)
-        sleep(0.2)
+        sleep(self._relay_time)
         rpi_gpio.write_output(self._relay_pin, True)
 
     def close_door(self):
