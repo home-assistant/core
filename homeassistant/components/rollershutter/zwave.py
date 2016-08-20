@@ -15,6 +15,15 @@ from homeassistant.components.rollershutter import RollershutterDevice
 COMMAND_CLASS_SWITCH_MULTILEVEL = 0x26  # 38
 COMMAND_CLASS_SWITCH_BINARY = 0x25  # 37
 
+SOMFY = 0x47
+SOMFY_ZRTSI = 0x5a52
+SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
+WORKAROUND = 'workaround'
+
+DEVICE_MAPPINGS = {
+    SOMFY_ZRTSI_CONTROLLER: WORKAROUND
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -48,8 +57,18 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         self._lozwmgr.create()
         self._node = value.node
         self._current_position = None
+        self._workaround = None
         dispatcher.connect(
             self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+        if (value.node.manufacturer_id.strip() and
+                value.node.product_id.strip()):
+            specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                                   int(value.node.product_type, 16))
+
+            if specific_sensor_key in DEVICE_MAPPINGS:
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND:
+                    _LOGGER.debug("Controller without positioning feedback")
+                    self._workaround = 1
 
     def value_changed(self, value):
         """Called when a value has changed on the network."""
@@ -71,20 +90,23 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
     @property
     def current_position(self):
         """Return the current position of Zwave roller shutter."""
-        if self._current_position is not None:
-            if self._current_position <= 5:
-                return 100
-            elif self._current_position >= 95:
-                return 0
-            else:
-                return 100 - self._current_position
+        if not self._workaround:
+            if self._current_position is not None:
+                if self._current_position <= 5:
+                    return 100
+                elif self._current_position >= 95:
+                    return 0
+                else:
+                    return 100 - self._current_position
 
     def move_up(self, **kwargs):
         """Move the roller shutter up."""
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Open':
+               and value.label == 'Open' or \
+               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Down':
                 self._lozwmgr.pressButton(value.value_id)
                 break
 
@@ -93,6 +115,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Up' or \
+               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
                and value.label == 'Close':
                 self._lozwmgr.pressButton(value.value_id)
                 break
@@ -106,6 +130,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, RollershutterDevice):
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_SWITCH_MULTILEVEL).values():
             if value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
-               and value.label == 'Open':
+               and value.label == 'Open' or \
+               value.command_class == zwave.COMMAND_CLASS_SWITCH_MULTILEVEL \
+               and value.label == 'Down':
                 self._lozwmgr.releaseButton(value.value_id)
                 break
