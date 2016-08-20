@@ -21,18 +21,14 @@ import homeassistant.helpers.location as location
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['googlemaps==2.4.4']
-
-# Return cached results if last update was less then this time ago
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
-
-DEFAULT_NAME = 'Google Travel Time'
-CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
-CONF_TRAVEL_MODE = 'travel_mode'
-CONF_OPTIONS = 'options'
 CONF_MODE = 'mode'
+CONF_OPTIONS = 'options'
+CONF_ORIGIN = 'origin'
+CONF_TRAVEL_MODE = 'travel_mode'
+DEFAULT_NAME = 'Google Travel Time'
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+REQUIREMENTS = ['googlemaps==2.4.4']
 
 ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
                  'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
@@ -41,10 +37,10 @@ ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
                  'sr', 'sv', 'ta', 'te', 'th', 'tl', 'tr', 'uk', 'vi',
                  'zh-CN', 'zh-TW']
 
-TRANSIT_PREFS = ['less_walking', 'fewer_transfers']
-TRAVEL_MODE = ['driving', 'walking', 'bicycling', 'transit']
 AVOID = ['tolls', 'highways', 'ferries', 'indoor']
+TRANSIT_PREFS = ['less_walking', 'fewer_transfers']
 TRANSPORT_TYPE = ['bus', 'subway', 'train', 'tram', 'rail']
+TRAVEL_MODE = ['driving', 'walking', 'bicycling', 'transit']
 TRAVEL_MODEL = ['best_guess', 'pessimistic', 'optimistic']
 UNITS = ['metric', 'imperial']
 

@@ -18,10 +18,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dweepy==0.2.0']
-
+_LOGGER = logging.getLogger(__name__)
 CONF_DEVICE = 'device'
 DEFAULT_NAME = 'Dweet.io Sensor'
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+REQUIREMENTS = ['dweepy==0.2.0']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
@@ -29,11 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 # pylint: disable=unused-variable, too-many-function-args

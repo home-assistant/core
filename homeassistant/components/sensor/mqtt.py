@@ -9,19 +9,16 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['mqtt']
-
-CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
-
 DEFAULT_NAME = "MQTT Sensor"
+DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
