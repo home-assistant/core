@@ -19,6 +19,7 @@ import homeassistant.config as conf_util
 import homeassistant.core as core
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
+from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -308,6 +309,8 @@ def from_config_file(config_path: str,
         config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
+    finally:
+        clear_secret_cache()
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
