@@ -71,7 +71,7 @@ def setup_scanner(hass, config, see):
                 timediff = dt.utcnow() - device.get('updated')
                 # update if:
                 # device is in the same room OR
-                # device is clsoer to another room OR
+                # device is closer to another room OR
                 # last update from other room was too long ago
                 if device.get('room') == room or \
                   distance < device.get('distance') or \
@@ -126,13 +126,15 @@ def setup_scanner(hass, config, see):
     topic = config.get(CONF_TOPIC) + '/+'
     mqtt.subscribe(hass, topic, room_location_update, 1)
 
+    return True
+
 
 def _parse_update_data(topic, data):
     """Parse the room presence update."""
     parts = topic.split('/')
     room = parts[1]
     name = data.get('name')
-    mac = slugify(data.get('id'))
+    mac = slugify(data.get('id')).upper()
     distance = data.get('distance')
     parsed_data = {
         'mac': mac,
