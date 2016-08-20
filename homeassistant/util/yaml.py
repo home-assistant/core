@@ -2,6 +2,7 @@
 import glob
 import logging
 import os
+import sys
 from collections import OrderedDict
 from typing import Union, List, Dict
 
@@ -16,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
 _SECRET_YAML = 'secrets.yaml'
+__SECRET_CACHE = {}  # type: Dict
 
 
 # pylint: disable=too-many-ancestors
@@ -41,6 +43,11 @@ def load_yaml(fname: str) -> Union[List, Dict]:
     except yaml.YAMLError as exc:
         _LOGGER.error(exc)
         raise HomeAssistantError(exc)
+
+
+def clear_secret_cache() -> None:
+    """Clear the secrete cache."""
+    __SECRET_CACHE.clear()
 
 
 def _include_yaml(loader: SafeLineLoader,
@@ -140,40 +147,44 @@ def _env_var_yaml(loader: SafeLineLoader,
         raise HomeAssistantError(node.value)
 
 
+def _load_secret_yaml(secret_path: str) -> Dict:
+    """Load the secrets yaml from path."""
+    _LOGGER.debug('Loading %s', os.path.join(secret_path, _SECRET_YAML))
+    secrets = {}
+    if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
+        secrets = load_yaml(
+            os.path.join(secret_path, _SECRET_YAML))
+        if 'logger' in secrets:
+            logger = str(secrets['logger']).lower()
+            if logger == 'debug':
+                _LOGGER.setLevel(logging.DEBUG)
+            else:
+                _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
+                              " but 'logger: %s' found", logger)
+            del secrets['logger']
+    return secrets
+
+
 # pylint: disable=protected-access
 def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
-    # Create secret cache on loader and load secrets.yaml
-    if not hasattr(loader, '_SECRET_CACHE'):
-        loader._SECRET_CACHE = {}
+    secret_path = os.path.dirname(loader.name)
+    while os.path.exists(secret_path) and not secret_path == os.path.dirname(
+            sys.path[0]):
+        secrets = __SECRET_CACHE.get(secret_path,
+                                     _load_secret_yaml(secret_path))
+        if node.value in secrets:
+            _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
+                          'folder %s', node.value, secret_path)
+            return secrets[node.value]
+        next_path = os.path.dirname(secret_path)
 
-    secret_path = os.path.join(os.path.dirname(loader.name), _SECRET_YAML)
-    if secret_path not in loader._SECRET_CACHE:
-        if os.path.isfile(secret_path):
-            loader._SECRET_CACHE[secret_path] = load_yaml(secret_path)
-            secrets = loader._SECRET_CACHE[secret_path]
-            if 'logger' in secrets:
-                logger = str(secrets['logger']).lower()
-                if logger == 'debug':
-                    _LOGGER.setLevel(logging.DEBUG)
-                else:
-                    _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
-                                  " but 'logger: %s' found", logger)
-                del secrets['logger']
-        else:
-            loader._SECRET_CACHE[secret_path] = None
-    secrets = loader._SECRET_CACHE[secret_path]
+        if not next_path or next_path == secret_path:
+            # Somehow we got past the .homeassistant configuration folder...
+            break
 
-    # Retrieve secret, first from secrets.yaml, then from keyring
-    if secrets is not None and node.value in secrets:
-        _LOGGER.debug('Secret %s retrieved from secrets.yaml.', node.value)
-        return secrets[node.value]
-    for sname, sdict in loader._SECRET_CACHE.items():
-        if node.value in sdict:
-            _LOGGER.debug('Secret %s retrieved from secrets.yaml in other '
-                          'folder %s', node.value, sname)
-            return sdict[node.value]
+        secret_path = next_path
 
     if keyring:
         # do ome keyring stuff
