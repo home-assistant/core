@@ -29,7 +29,7 @@ DOMAIN = 'mysensors'
 DEPENDENCIES = []
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    'cc5d0b325e13c2b623fa934f69eea7cd4555f110.zip#pymysensors==0.6']
+    'd59e2548f8378371f7fcb0805f7800796a6fa044.zip#pymysensors==0.7']
 _LOGGER = logging.getLogger(__name__)
 ATTR_NODE_ID = 'node_id'
 ATTR_CHILD_ID = 'child_id'
