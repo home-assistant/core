@@ -9,7 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, CONF_NAME)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -18,33 +19,33 @@ REQUIREMENTS = ['fixerio==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Exchange rate"
-ICON = 'mdi:currency'
-
 CONF_BASE = 'base'
 CONF_TARGET = 'target'
 
-STATE_ATTR_BASE = 'Base currency'
-STATE_ATTR_TARGET = 'Target currency'
-STATE_ATTR_EXCHANGE_RATE = 'Exchange rate'
+DEFAULT_BASE = 'USD'
+DEFAULT_NAME = 'Exchange rate'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'fixer',
-    vol.Optional(CONF_BASE): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_TARGET): cv.string,
-})
+ICON = 'mdi:currency'
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
+
+STATE_ATTR_BASE = 'Base currency'
+STATE_ATTR_EXCHANGE_RATE = 'Exchange rate'
+STATE_ATTR_TARGET = 'Target currency'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TARGET): cv.string,
+    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Fixer.io sensor."""
     from fixerio import (Fixerio, exceptions)
 
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    base = config.get(CONF_BASE, 'USD')
+    name = config.get(CONF_NAME)
+    base = config.get(CONF_BASE)
     target = config.get(CONF_TARGET)
 
     try:

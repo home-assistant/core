@@ -17,6 +17,8 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['psutil==4.3.0']
 
+_LOGGER = logging.getLogger(__name__)
+
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
@@ -46,8 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional('arg'): cv.string,
         })])
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
