@@ -48,7 +48,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
                     'devices': {dev_id: topic}
                 }
             })
-            mock_sp.assert_called_once()
+            assert mock_sp.call_count == 1
 
     def test_new_message(self):
         """Test new message."""
