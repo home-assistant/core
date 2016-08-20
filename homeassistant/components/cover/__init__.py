@@ -52,6 +52,20 @@ COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
+SERVICE_TO_METHOD = {
+    SERVICE_OPEN_COVER: {'method': 'open_cover'},
+    SERVICE_CLOSE_COVER: {'method': 'close_cover'},
+    SERVICE_SET_COVER_POSITION: {
+        'method': 'set_cover_position',
+        'schema': COVER_SET_COVER_POSITION_SCHEMA},
+    SERVICE_STOP_COVER: {'method': 'stop_cover'},
+    SERVICE_OPEN_COVER_TILT: {'method': 'open_cover_tilt'},
+    SERVICE_CLOSE_COVER_TILT: {'method': 'close_cover_tilt'},
+    SERVICE_SET_COVER_TILT_POSITION: {
+        'method': 'set_cover_tilt_position',
+        'schema': COVER_SET_COVER_TILT_POSITION_SCHEMA},
+}
+
 
 def is_closed(hass, entity_id=None):
     """Return if the cover is closed based on the statemachine."""
@@ -117,62 +131,25 @@ def setup(hass, config):
 
     def handle_cover_service(service):
         """Handle calls to the cover services."""
-        target_covers = component.extract_from_service(service)
+        method = SERVICE_TO_METHOD.get(service.service)
+        params = service.data.copy()
+        params.pop(ATTR_ENTITY_ID, None)
 
-        for cover in target_covers:
-            if service.service == SERVICE_OPEN_COVER:
-                cover.open_cover()
-            elif service.service == SERVICE_CLOSE_COVER:
-                cover.close_cover()
-            elif service.service == SERVICE_SET_COVER_POSITION:
-                cover.set_position_cover(service.data[ATTR_POSITION])
-            elif service.service == SERVICE_STOP_COVER:
-                cover.stop_cover()
-            elif service.service == SERVICE_OPEN_COVER_TILT:
-                cover.open_cover_tilt()
-            elif service.service == SERVICE_CLOSE_COVER_TILT:
-                cover.close_cover_tilt()
-            elif service.service == SERVICE_SET_COVER_TILT_POSITION:
-                cover.set_cover_tilt_position(service.data[ATTR_TILT_POSITION])
+        if method:
+            for cover in component.extract_from_service(service):
+                getattr(cover, method['method'])(**params)
 
-            if cover.should_poll:
-                cover.update_ha_state(True)
+                if cover.should_poll:
+                    cover.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_OPEN_COVER,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_OPEN_COVER),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_CLOSE_COVER,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_CLOSE_COVER),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_SET_COVER_POSITION,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_SET_COVER_POSITION),
-                           schema=COVER_SET_COVER_POSITION_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_STOP_COVER,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_STOP_COVER),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_OPEN_COVER_TILT,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_OPEN_COVER_TILT),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_CLOSE_COVER_TILT,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_CLOSE_COVER_TILT),
-                           schema=COVER_SERVICE_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_SET_COVER_TILT_POSITION),
-                           schema=COVER_SET_COVER_TILT_POSITION_SCHEMA)
-    hass.services.register(DOMAIN, SERVICE_STOP_COVER_TILT,
-                           handle_cover_service,
-                           descriptions.get(SERVICE_STOP_COVER_TILT),
-                           schema=COVER_SERVICE_SCHEMA)
+    for service_name in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service_name].get(
+            'schema', COVER_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, service_name, handle_cover_service,
+                               descriptions.get(service_name), schema=schema)
     return True
 
 
@@ -230,7 +207,7 @@ class CoverDevice(Entity):
         """Close cover."""
         raise NotImplementedError()
 
-    def set_position_cover(self, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         raise NotImplementedError()
 
