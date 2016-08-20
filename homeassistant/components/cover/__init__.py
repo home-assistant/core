@@ -171,7 +171,7 @@ class CoverDevice(Entity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        raise NotImplementedError()
+        pass
 
     @property
     def state(self):
@@ -209,24 +209,24 @@ class CoverDevice(Entity):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        raise NotImplementedError()
+        pass
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        raise NotImplementedError()
+        pass
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        raise NotImplementedError()
+        pass
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        raise NotImplementedError()
+        pass
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        raise NotImplementedError()
+        pass
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        raise NotImplementedError()
+        pass
