@@ -29,7 +29,7 @@ _DOORS_SCHEMA = vol.All(
             'relay_pin': int,
             'relay_time': int,
             'state_pin': int,
-	    'state_pull_mode': str,
+            'state_pull_mode': str,
         })
     ]
 )
@@ -48,7 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
     for door in doors_conf:
         doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
-                                       door['state_pin'], door['state_pull_mode'], door['relay_time']))
+                                       door['state_pin'], 
+                                       door['state_pull_mode'],
+                                       door['relay_time']))
     add_devices(doors)
 
 
