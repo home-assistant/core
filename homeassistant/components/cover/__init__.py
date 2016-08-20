@@ -166,7 +166,7 @@ class CoverDevice(Entity):
         raise NotImplementedError()
 
     @property
-    def current_tilt_position(self):
+    def current_cover_tilt_position(self):
         """Return current position of cover tilt.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -187,7 +187,7 @@ class CoverDevice(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         current = self.current_cover_position
-        current_tilt = self.current_tilt_position
+        current_tilt = self.current_cover_tilt_position
 
         if current is None:
             return None
