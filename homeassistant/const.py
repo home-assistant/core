@@ -129,13 +129,13 @@ TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Speed units
-SPEED_METERPERSECOND = "m/s" # type: str
-SPEED_KMPERSECOND = "km/s" # type: str
-SPEED_KMPERHOUR = "km/h" # type: str
+SPEED_METERPERSECOND = "m/s"  # type: str
+SPEED_KMPERSECOND = "km/s"  # type: str
+SPEED_KMPERHOUR = "km/h"  # type: str
 
 # Illuminance
-ILLUMINANCE_LUX = "lx" # type: str
-ILLUMINANCE_KELVIN = "K" # type: str
+ILLUMINANCE_LUX = "lx"  # type: str
+ILLUMINANCE_KELVIN = "K"  # type: str
 
 
 # Length units

@@ -1,14 +1,14 @@
 """
-Sensors of a KNX Device
+Sensors of a KNX Device.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-
-from homeassistant.const import TEMP_CELSIUS, SPEED_METERPERSECOND, ILLUMINANCE_LUX
-from homeassistant.components.knx import (
-    KNXConfig, KNXGroupAddress)
 from knxip.conversion import knx2_to_float
+from homeassistant.const import (TEMP_CELSIUS, SPEED_METERPERSECOND,
+                                 ILLUMINANCE_LUX)
+from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
+
 
 DEPENDENCIES = ["knx"]
 
@@ -35,16 +35,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ])
 
 
-class KNXSensorBaseClass():
+class KNXSensorBaseClass():  # pylint: disable=too-few-public-methods
+    """
+    Sensor Base Class for all KNX Sensors
+    """
+
     @property
     def cache(self):
         """We don't want to cache any Sensor Value"""
         return False
 
 
-class KNXIlluminanceSensor(KNXGroupAddress,KNXSensorBaseClass):
+class KNXIlluminanceSensor(KNXGroupAddress, KNXSensorBaseClass):
     """
-    Representation of a KNX Group who receive KNX Lux telegrams by state requests
+    Representation of a KNX Group who receive KNX Lux telegrams
+    by state requests.
+
     KNX Datapoint Type 9.004 - Lux - 2 Byte Float
     """
 
@@ -62,9 +68,11 @@ class KNXIlluminanceSensor(KNXGroupAddress,KNXSensorBaseClass):
         return ILLUMINANCE_LUX
 
 
-class KNXSpeedMSSensor(KNXGroupAddress,KNXSensorBaseClass):
+class KNXSpeedMSSensor(KNXGroupAddress, KNXSensorBaseClass):
     """
-    Representation of a KNX Group who receive KNX Speed telegrams by state requests
+    Representation of a KNX Group who receive KNX Speed telegrams
+    by state requests.
+
     KNX Datapoint Type 9.005 - speed m/s - 2 Byte Float
     """
 
@@ -82,9 +90,11 @@ class KNXSpeedMSSensor(KNXGroupAddress,KNXSensorBaseClass):
         return SPEED_METERPERSECOND
 
 
-class KNXTemperatureSensor(KNXGroupAddress,KNXSensorBaseClass):
+class KNXTemperatureSensor(KNXGroupAddress, KNXSensorBaseClass):
     """
-    Representation of a KNX Group who receive KNX Temp. telegrams by state requests
+    Representation of a KNX Group who receive KNX Temp. telegrams
+    by state requests.
+
     KNX Datapoint Type 9.001 - temperature - 2 Byte Float
     """
 
@@ -100,6 +110,3 @@ class KNXTemperatureSensor(KNXGroupAddress,KNXSensorBaseClass):
     def unit_of_measurement(self):
         """Type of measurement for KNX Datapoint Type 9.001 is C°"""
         return TEMP_CELSIUS
-
-
-
