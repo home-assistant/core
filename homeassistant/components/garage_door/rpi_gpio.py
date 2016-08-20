@@ -44,11 +44,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
     doors = []
     doors_conf = config.get('doors')
-    state_pull_mode = config.get('state_pull_mode', DEFAULT_PULL_MODE)
-    relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
+    
     for door in doors_conf:
         doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
-                                       door['state_pin'], 
+                                       door['state_pin'],
                                        door['state_pull_mode'],
                                        door['relay_time']))
     add_devices(doors)
