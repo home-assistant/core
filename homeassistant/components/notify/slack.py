@@ -52,6 +52,6 @@ class SlackNotificationService(BaseNotificationService):
 
         channel = kwargs.get('target') or self._default_channel
         try:
-            self.slack.chat.post_message(channel, message)
+            self.slack.chat.post_message(channel, message, as_user=True)
         except slacker.Error:
             _LOGGER.exception("Could not send slack notification")
