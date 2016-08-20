@@ -54,7 +54,7 @@ def setup(hass, base_config):
     import pyvera as veraApi
 
     config = base_config.get(DOMAIN)
-    base_url = config.get('vera_controller_url')
+    base_url = config.get(CONF_CONTROLLER)
     VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
 
     def stop_subscription(event):
