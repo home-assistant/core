@@ -4,11 +4,8 @@ import os
 import time
 import unittest
 
-from collections import defaultdict
-
 from homeassistant.components import device_tracker
 from homeassistant.const import (STATE_HOME, CONF_PLATFORM)
-import homeassistant.components.device_tracker.room_tracker as room_tracker
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)

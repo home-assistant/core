@@ -73,9 +73,9 @@ def setup_scanner(hass, config, see):
                 # device is in the same room OR
                 # device is closer to another room OR
                 # last update from other room was too long ago
-                if device.get('room') == room or \
-                  distance < device.get('distance') or \
-                  timediff.seconds >= config.get(CONF_TIMEOUT):
+                if device.get('room') == room \
+                        or distance < device.get('distance') \
+                        or timediff.seconds >= config.get(CONF_TIMEOUT):
                     _LOGGER.debug("Updating device %s", mac)
                     devices[mac] = _create_device_dict(room, distance)
                 else:
@@ -92,7 +92,7 @@ def setup_scanner(hass, config, see):
         see(mac=mac, host_name=name, room_name=room)
 
     def room_location_update(topic, payload, qos):
-        """MQTT message received"""
+        """MQTT message received."""
         data = validate_payload(payload)
         if not data:
             return
