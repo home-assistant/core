@@ -17,19 +17,19 @@ import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['schiene==0.17']
 
-CONF_START = 'from'
+_LOGGER = logging.getLogger(__name__)
+
 CONF_DESTINATION = 'to'
+CONF_START = 'from'
+
 ICON = 'mdi:train'
 
-_LOGGER = logging.getLogger(__name__)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_START): cv.string,
 })
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

@@ -15,17 +15,18 @@ from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['py-cpuinfo==0.2.3']
 
-DEFAULT_NAME = 'CPU speed'
-ATTR_VENDOR = 'Vendor ID'
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
+ATTR_VENDOR = 'Vendor ID'
+
+DEFAULT_NAME = 'CPU speed'
 ICON = 'mdi:pulse'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-variable

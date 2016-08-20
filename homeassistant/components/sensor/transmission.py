@@ -19,6 +19,9 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['transmissionrpc==0.11']
 
+_LOGGER = logging.getLogger(__name__)
+_THROTTLED_REFRESH = None
+
 DEFAULT_NAME = 'Transmission'
 DEFAULT_PORT = 9091
 
@@ -37,10 +40,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_USERNAME): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
-
-_THROTTLED_REFRESH = None
 
 
 # pylint: disable=unused-argument
