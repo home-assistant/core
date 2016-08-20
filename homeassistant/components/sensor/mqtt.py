@@ -17,8 +17,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = "MQTT Sensor"
+
 DEPENDENCIES = ['mqtt']
+
+DEFAULT_NAME = "MQTT Sensor"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -27,9 +29,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup MQTT Sensor."""
-    add_devices_callback([MqttSensor(
+    add_devices([MqttSensor(
         hass,
         config[CONF_NAME],
         config[CONF_STATE_TOPIC],

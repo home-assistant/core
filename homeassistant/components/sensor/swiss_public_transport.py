@@ -19,15 +19,19 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://transport.opendata.ch/v1/'
+
 ATTR_DEPARTURE_TIME1 = 'Next departure'
 ATTR_DEPARTURE_TIME2 = 'Next on departure'
 ATTR_REMAINING_TIME = 'Remaining time'
 ATTR_START = 'Start'
 ATTR_TARGET = 'Destination'
+
 CONF_DESTINATION = 'to'
 CONF_START = 'from'
+
 DEFAULT_NAME = 'Next Departure'
 ICON = 'mdi:bus'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 TIME_STR_FORMAT = "%H:%M"
 

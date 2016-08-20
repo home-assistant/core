@@ -16,15 +16,19 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['pysnmp==4.3.2']
+
 _LOGGER = logging.getLogger(__name__)
+
 CONF_BASEOID = 'baseoid'
 CONF_COMMUNITY = 'community'
+
 DEFAULT_COMMUNITY = 'public'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SNMP'
 DEFAULT_PORT = '161'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-REQUIREMENTS = ['pysnmp==4.3.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BASEOID): cv.string,

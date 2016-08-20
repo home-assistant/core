@@ -13,13 +13,16 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['py-cpuinfo==0.2.3']
+
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
 ATTR_VENDOR = 'Vendor ID'
+
 DEFAULT_NAME = 'CPU speed'
 ICON = 'mdi:pulse'
-REQUIREMENTS = ['py-cpuinfo==0.2.3']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

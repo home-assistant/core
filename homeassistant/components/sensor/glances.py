@@ -17,9 +17,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'Glances'
-DEFAULT_HOST = 'localhost'
+_LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'api/2/all'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
 SENSOR_TYPES = {
@@ -47,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
-_LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)

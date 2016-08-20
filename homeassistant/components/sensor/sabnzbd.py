@@ -22,8 +22,10 @@ REQUIREMENTS = ['https://github.com/jamespcole/home-assistant-nzb-clients/'
 
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
+
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 SENSOR_TYPES = {

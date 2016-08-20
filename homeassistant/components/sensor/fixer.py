@@ -15,14 +15,20 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['fixerio==0.1.1']
+
 _LOGGER = logging.getLogger(__name__)
+
 CONF_BASE = 'base'
 CONF_TARGET = 'target'
+
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange rate'
+
 ICON = 'mdi:currency'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
-REQUIREMENTS = ['fixerio==0.1.1']
+
 STATE_ATTR_BASE = 'Base currency'
 STATE_ATTR_EXCHANGE_RATE = 'Exchange rate'
 STATE_ATTR_TARGET = 'Target currency'

@@ -15,7 +15,9 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
 CONF_SERVER = "server"
+
 DEFAULT_PORT = 993
 ICON = 'mdi:email-outline'
 

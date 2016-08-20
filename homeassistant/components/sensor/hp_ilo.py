@@ -17,11 +17,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['python-hpilo==3.8']
+
 _LOGGER = logging.getLogger(__name__)
+
 DEFAULT_NAME = 'HP ILO'
 DEFAULT_PORT = 443
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-REQUIREMENTS = ['python-hpilo==3.8']
 
 # Each sensor is defined as follows: 'Descriptive name', 'python-ilo function'
 SENSOR_TYPES = {

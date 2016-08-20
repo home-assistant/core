@@ -15,16 +15,19 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['gps3==0.33.2']
+
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_CLIMB = 'climb'
 ATTR_ELEVATION = 'elevation'
 ATTR_GPS_TIME = 'gps_time'
 ATTR_MODE = 'mode'
 ATTR_SPEED = 'speed'
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'GPS'
 DEFAULT_PORT = 2947
-REQUIREMENTS = ['gps3==0.33.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

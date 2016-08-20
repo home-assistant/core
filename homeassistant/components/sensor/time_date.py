@@ -16,6 +16,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
 TIME_STR_FORMAT = "%H:%M"
 
 OPTION_TYPES = {

@@ -16,13 +16,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['xmltodict==0.10.2']
+
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
 
 CONF_STATION = 'station'
 DEFAULT_NAME = 'Water temperature'
 ICON = 'mdi:cup-water'
-REQUIREMENTS = ['xmltodict==0.10.2']
 
 ATTR_LOCATION = 'Location'
 ATTR_UPDATE = 'Update'

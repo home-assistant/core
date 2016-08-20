@@ -18,10 +18,13 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://openexchangerates.org/api/latest.json'
+
 CONF_BASE = 'base'
 CONF_QUOTE = 'quote'
+
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange Rate Sensor'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

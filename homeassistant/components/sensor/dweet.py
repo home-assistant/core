@@ -18,11 +18,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
 from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
-CONF_DEVICE = 'device'
-DEFAULT_NAME = 'Dweet.io Sensor'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 REQUIREMENTS = ['dweepy==0.2.0']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_DEVICE = 'device'
+
+DEFAULT_NAME = 'Dweet.io Sensor'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
