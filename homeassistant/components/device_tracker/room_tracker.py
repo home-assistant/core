@@ -88,6 +88,9 @@ def setup_scanner(hass, config, see):
             _LOGGER.info("Discovered new device %s", mac)
             devs_to_track.append(mac)
             devices[mac] = _create_device_dict(room, distance)
+        else:
+            # do not add new devices
+            return
 
         see(mac=mac, host_name=name, room_name=room)
 
