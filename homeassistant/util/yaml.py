@@ -172,9 +172,8 @@ def _secret_yaml(loader: SafeLineLoader,
     secret_path = os.path.dirname(loader.name)
     while os.path.exists(secret_path) and not secret_path == os.path.dirname(
             sys.path[0]):
-        if secret_path not in __SECRET_CACHE:
-            __SECRET_CACHE[secret_path] = _load_secret_yaml(secret_path)
-        secrets = __SECRET_CACHE[secret_path]
+        secrets = __SECRET_CACHE.get(secret_path,
+                                     _load_secret_yaml(secret_path))
         if node.value in secrets:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
