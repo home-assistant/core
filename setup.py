@@ -34,7 +34,7 @@ setup(
     zip_safe=False,
     platforms='any',
     install_requires=REQUIRES,
-    test_suite='tests',
+    test_suite='',
     keywords=['home', 'automation'],
     entry_points={
         'console_scripts': [
