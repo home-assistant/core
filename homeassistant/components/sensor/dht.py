@@ -13,9 +13,9 @@ from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
-REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
-                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip'
-                '#Adafruit_DHT==1.1.0']
+REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
+                '310c59b0293354d07d94375f1365f7b9b9110c7d.zip'
+                '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {

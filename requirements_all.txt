@@ -113,7 +113,7 @@ heatmiserV3==0.9.1
 hikvision==0.4
 
 # homeassistant.components.sensor.dht
-# http://github.com/mala-zaba/Adafruit_Python_DHT/archive/4101340de8d2457dd194bca1e8d11cbfc237e919.zip#Adafruit_DHT==1.1.0
+# http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.light.flux_led
 https://github.com/Danielhiversen/flux_led/archive/0.6.zip#flux_led==0.6
