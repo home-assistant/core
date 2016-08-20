@@ -469,7 +469,7 @@ urllib3
 uvcclient==0.9.0
 
 # homeassistant.components.verisure
-vsure==0.8.1
+vsure==0.10.1
 
 # homeassistant.components.switch.wake_on_lan
 wakeonlan==0.2.2
