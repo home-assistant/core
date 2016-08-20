@@ -125,7 +125,7 @@ class MailNotificationService(BaseNotificationService):
         mail = self.connect()
         for _ in range(self.tries):
             try:
-                mail.sendmail(self._sender, self.recipient,
+                mail.sendmail(self._sender, msg['To'].split(','),
                               msg.as_string())
                 break
             except smtplib.SMTPException:
