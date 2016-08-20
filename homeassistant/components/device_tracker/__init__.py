@@ -10,8 +10,10 @@ from datetime import timedelta
 import logging
 import os
 import threading
+import voluptuous as vol
 
-from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.bootstrap import (prepare_setup_platform,
+                                     _log_exception)
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
@@ -27,8 +29,7 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME)
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
-DOMAIN = "device_tracker"
+DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
@@ -38,20 +39,17 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 YAML_DEVICES = 'known_devices.yaml'
 
-CONF_TRACK_NEW = "track_new_devices"
-DEFAULT_CONF_TRACK_NEW = True
+CONF_TRACK_NEW = 'track_new_devices'
+DEFAULT_TRACK_NEW = True
 
 CONF_CONSIDER_HOME = 'consider_home'
 DEFAULT_CONSIDER_HOME = 180  # seconds
 
-CONF_SCAN_INTERVAL = "interval_seconds"
+CONF_SCAN_INTERVAL = 'interval_seconds'
 DEFAULT_SCAN_INTERVAL = 12
 
 CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
-
-CONF_HOME_RANGE = 'home_range'
-DEFAULT_HOME_RANGE = 100
 
 SERVICE_SEE = 'see'
 
@@ -61,6 +59,16 @@ ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
+
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
+})
+
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
+    vol.Schema({
+        vol.Optional(CONF_TRACK_NEW): cv.boolean,
+        vol.Optional(CONF_CONSIDER_HOME): cv.positive_int  # seconds
+    }, extra=vol.ALLOW_EXTRA)])}, extra=vol.ALLOW_EXTRA)
 
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
@@ -95,29 +103,42 @@ def setup(hass, config):
     """Setup device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
-    conf = config.get(DOMAIN, {})
+    conf = CONFIG_SCHEMA(config).get(DOMAIN, [])
 
-    # Config can be an empty list. In that case, substitute a dict
-    if isinstance(conf, list):
-        conf = conf[0] if len(conf) > 0 else {}
+    def _get_conf_value(key_name, default):
+        """Retrieve a value from all platforms & rasie error if conflictind."""
+        res = list(set([plat.get(key_name) for plat in conf
+                        if plat.get(key_name) is not None]))
+        if len(res) > 1:
+            _LOGGER.warning('device_tracker: Conflicting %s settings: %s',
+                            key_name, ','.join(res))
+        if len(res) > 0:
+            return res[0]
+        return default
 
+    _LOGGER.warning("CONFIG: from device_tracker.setup() %s", conf)
     consider_home = timedelta(
-        seconds=util.convert(conf.get(CONF_CONSIDER_HOME), int,
-                             DEFAULT_CONSIDER_HOME))
-    track_new = util.convert(conf.get(CONF_TRACK_NEW), bool,
-                             DEFAULT_CONF_TRACK_NEW)
-    home_range = util.convert(conf.get(CONF_HOME_RANGE), int,
-                              DEFAULT_HOME_RANGE)
+        seconds=_get_conf_value(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
+    track_new = _get_conf_value(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
-    devices = load_config(yaml_path, hass, consider_home, home_range)
-    tracker = DeviceTracker(hass, consider_home, track_new, home_range,
-                            devices)
+    devices = load_config(yaml_path, hass, consider_home)
+
+    tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
     def setup_platform(p_type, p_config, disc_info=None):
         """Setup a device tracker platform."""
         platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
+
+        # Apply component & platform specific validation schema
+        try:
+            p_config = PLATFORM_SCHEMA(p_config)
+            if hasattr(platform, 'PLATFORM_SCHEMA'):
+                p_config = platform.PLATFORM_SCHEMA(p_config)
+        except vol.MultipleInvalid as ex:
+            _log_exception(ex, DOMAIN, p_config)
+            return False
 
         try:
             if hasattr(platform, 'get_scanner'):
@@ -170,14 +191,13 @@ def setup(hass, config):
 class DeviceTracker(object):
     """Representation of a device tracker."""
 
-    def __init__(self, hass, consider_home, track_new, home_range, devices):
+    def __init__(self, hass, consider_home, track_new, devices):
         """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
         self.track_new = track_new
-        self.home_range = home_range
         self.lock = threading.Lock()
 
         for device in devices:
@@ -211,7 +231,7 @@ class DeviceTracker(object):
             # If no device can be found, create it
             dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
             device = Device(
-                self.hass, self.consider_home, self.home_range, self.track_new,
+                self.hass, self.consider_home, self.track_new,
                 dev_id, mac, (host_name or dev_id).replace('_', ' '))
             self.devices[dev_id] = device
             if mac is not None:
@@ -257,7 +277,7 @@ class Device(Entity):
     last_update_home = False
     _state = STATE_NOT_HOME
 
-    def __init__(self, hass, consider_home, home_range, track, dev_id, mac,
+    def __init__(self, hass, consider_home, track, dev_id, mac,
                  name=None, picture=None, gravatar=None, away_hide=False):
         """Initialize a device."""
         self.hass = hass
@@ -267,8 +287,6 @@ class Device(Entity):
         # detected anymore.
         self.consider_home = consider_home
 
-        # Distance in meters
-        self.home_range = home_range
         # Device ID
         self.dev_id = dev_id
         self.mac = mac
@@ -286,13 +304,6 @@ class Device(Entity):
             self.config_picture = picture
 
         self.away_hide = away_hide
-
-    @property
-    def gps_home(self):
-        """Return if device is within range of home."""
-        distance = max(
-            0, self.hass.config.distance(*self.gps) - self.gps_accuracy)
-        return self.gps is not None and distance <= self.home_range
 
     @property
     def name(self):
@@ -377,13 +388,13 @@ class Device(Entity):
             self.last_update_home = True
 
 
-def load_config(path, hass, consider_home, home_range):
+def load_config(path, hass, consider_home):
     """Load devices from YAML configuration file."""
     if not os.path.isfile(path):
         return []
     try:
         return [
-            Device(hass, consider_home, home_range, device.get('track', False),
+            Device(hass, consider_home, device.get('track', False),
                    str(dev_id).lower(), str(device.get('mac')).upper(),
                    device.get('name'), device.get('picture'),
                    device.get('gravatar'),
@@ -396,8 +407,7 @@ def load_config(path, hass, consider_home, home_range):
 
 def setup_scanner_platform(hass, config, scanner, see_device):
     """Helper method to connect scanner-based platform to device tracker."""
-    interval = util.convert(config.get(CONF_SCAN_INTERVAL), int,
-                            DEFAULT_SCAN_INTERVAL)
+    interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     # Initial scan of each mac we also tell about host name for config
     seen = set()
@@ -435,5 +445,5 @@ def update_config(path, dev_id, device):
 def get_gravatar_for_email(email):
     """Return an 80px Gravatar for the given email address."""
     import hashlib
-    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
+    url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
     return url.format(hashlib.md5(email.encode('utf-8').lower()).hexdigest())
