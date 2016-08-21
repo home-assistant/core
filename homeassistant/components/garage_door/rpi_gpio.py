@@ -52,9 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                        door['relay_time']))
     add_devices(doors)
 
-
 class RPiGPIOGarageDoor(GarageDoorDevice):
     """Representation of a Raspberry garage door."""
+
     # pylint: disable=too-many-arguments
     def __init__(self, name, relay_pin, state_pin,
                  state_pull_mode, relay_time):
