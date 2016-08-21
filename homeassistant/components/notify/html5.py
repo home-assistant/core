@@ -182,6 +182,30 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         return self.json_message('Push notification subscriber registered.')
 
+    def delete(self, request):
+        """Delete a registration."""
+        subscription = request.json.get(ATTR_SUBSCRIPTION)
+
+        found = None
+
+        for key, registration in self.registrations.items():
+            if registration.get(ATTR_SUBSCRIPTION) == subscription:
+                found = key
+                break
+
+        if not found:
+            # If not found, unregistering was already done. Return 200
+            return self.json_message('Registration not found.')
+
+        reg = self.registrations.pop(found)
+
+        if not _save_config(self.json_path, self.registrations):
+            self.registrations[found] = reg
+            return self.json_message('Error saving registration.',
+                                     HTTP_INTERNAL_SERVER_ERROR)
+
+        return self.json_message('Push notification subscriber unregistered.')
+
 
 class HTML5PushCallbackView(HomeAssistantView):
     """Accepts push registrations from a browser."""
