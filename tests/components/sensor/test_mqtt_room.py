@@ -1,12 +1,14 @@
 """The tests for the MQTT room presence sensor."""
 import json
-import time
+import datetime
 import unittest
+from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS,
                                            DEFAULT_QOS)
 from homeassistant.const import (CONF_NAME, CONF_PLATFORM)
+from homeassistant.util import dt
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
@@ -97,7 +99,9 @@ class TestMQTTRoomSensor(unittest.TestCase):
         self.assert_state(LIVING_ROOM)
         self.assert_distance(1)
 
-        time.sleep(7)
-        self.send_message(BEDROOM_TOPIC, FAR_MESSAGE)
-        self.assert_state(BEDROOM)
-        self.assert_distance(10)
+        time = dt.utcnow() + datetime.timedelta(seconds=7)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=time):
+            self.send_message(BEDROOM_TOPIC, FAR_MESSAGE)
+            self.assert_state(BEDROOM)
+            self.assert_distance(10)
