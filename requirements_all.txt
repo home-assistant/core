@@ -185,7 +185,7 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 https://github.com/sander76/powerviewApi/archive/master.zip#powerviewApi==0.2
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/d59e2548f8378371f7fcb0805f7800796a6fa044.zip#pymysensors==0.7
+https://github.com/theolind/pymysensors/archive/8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1
 
 # homeassistant.components.alarm_control_panel.simplisafe
 https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
