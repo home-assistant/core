@@ -25,7 +25,7 @@ REQUIREMENTS = [
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
