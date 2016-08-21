@@ -4,12 +4,17 @@ Sensors of a KNX Device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-from homeassistant.const import (TEMP_CELSIUS, SPEED_METERPERSECOND,
-                                 ILLUMINANCE_LUX)
+from homeassistant.const import (TEMP_CELSIUS)
 from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
 
 DEPENDENCIES = ["knx"]
+
+# Speed units
+SPEED_METERPERSECOND = "m/s"  # type: str
+
+# Illuminance units
+ILLUMINANCE_LUX = "lx"  # type: str
 
 #  Predefined Minimum, Maximum Values for Sensors
 #  Temperature as defined in KNX Standard 3.10 - 9.001 DPT_Value_Temp
