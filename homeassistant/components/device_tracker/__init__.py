@@ -61,7 +61,6 @@ ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
-ATTR_ROOM_NAME = 'room_name'
 
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
@@ -79,7 +78,7 @@ def is_on(hass, entity_id=None):
 
 
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None, gps_accuracy=None, battery=None, room_name=None):
+        gps=None, gps_accuracy=None, battery=None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -88,8 +87,7 @@ def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
              (ATTR_LOCATION_NAME, location_name),
              (ATTR_GPS, gps),
              (ATTR_GPS_ACCURACY, gps_accuracy),
-             (ATTR_BATTERY, battery),
-             (ATTR_ROOM_NAME, room_name)) if value is not None}
+             (ATTR_BATTERY, battery)) if value is not None}
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
@@ -158,7 +156,7 @@ def setup(hass, config):
         """Service to see a device."""
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ROOM_NAME)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY)}
         tracker.see(**args)
 
     descriptions = load_yaml_config_file(
@@ -189,7 +187,7 @@ class DeviceTracker(object):
         self.group = None
 
     def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
-            gps=None, gps_accuracy=None, battery=None, room_name=None):
+            gps=None, gps_accuracy=None, battery=None):
         """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
@@ -205,7 +203,7 @@ class DeviceTracker(object):
 
             if device:
                 device.seen(host_name, location_name, gps, gps_accuracy,
-                            battery, room_name)
+                            battery)
                 if device.track:
                     device.update_ha_state()
                 return
@@ -219,8 +217,7 @@ class DeviceTracker(object):
             if mac is not None:
                 self.mac_to_dev[mac] = device
 
-            device.seen(host_name, location_name, gps, gps_accuracy, battery,
-                        room_name)
+            device.seen(host_name, location_name, gps, gps_accuracy, battery)
             if device.track:
                 device.update_ha_state()
 
@@ -255,7 +252,6 @@ class Device(Entity):
     gps_accuracy = 0
     last_seen = None
     battery = None
-    room_name = None
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -326,9 +322,6 @@ class Device(Entity):
         if self.battery:
             attr[ATTR_BATTERY] = self.battery
 
-        if self.room_name:
-            attr[ATTR_ROOM_NAME] = self.room_name
-
         return attr
 
     @property
@@ -337,14 +330,13 @@ class Device(Entity):
         return self.away_hide and self.state != STATE_HOME
 
     def seen(self, host_name=None, location_name=None, gps=None,
-             gps_accuracy=0, battery=None, room_name=None):
+             gps_accuracy=0, battery=None):
         """Mark the device as seen."""
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
-        self.room_name = room_name
         if gps is None:
             self.gps = None
         else:
