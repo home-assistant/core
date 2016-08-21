@@ -19,9 +19,9 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     'alarm_control_panel',
     'binary_sensor',
     'camera',
+    'climate',
     'device_tracker',
     'garage_door',
-    'hvac',
     'light',
     'lock',
     'media_player',
@@ -29,7 +29,6 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
     'rollershutter',
     'sensor',
     'switch',
-    'thermostat',
 ]
 
 
