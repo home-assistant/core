@@ -106,7 +106,6 @@ omit =
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
-    homeassistant/components/camera/generic.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/climate/eq3btsmart.py
