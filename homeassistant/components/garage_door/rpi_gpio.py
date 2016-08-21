@@ -42,14 +42,17 @@ PLATFORM_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
+    
+    relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
+    state_pull_mode = config.get('state_pull_mode', DEFAULT_PULL_MODE)
     doors = []
     doors_conf = config.get('doors')
 
     for door in doors_conf:
         doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
                                        door['state_pin'],
-                                       door['state_pull_mode'],
-                                       door['relay_time']))
+                                       state_pull_mode,
+                                       relay_time))
     add_devices(doors)
 
 class RPiGPIOGarageDoor(GarageDoorDevice):
