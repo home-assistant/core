@@ -54,6 +54,8 @@ class SlackNotificationService(BaseNotificationService):
         data = kwargs.get('data')
         if data:
             attachments = data.get('attachments')
+        else:
+            attachments = None
 
         try:
             self.slack.chat.post_message(channel, message,
