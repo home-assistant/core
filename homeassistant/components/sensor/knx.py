@@ -11,26 +11,70 @@ from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
 DEPENDENCIES = ["knx"]
 
+#  Predefined Minimum, Maximum Values for Sensors
+#  Temperature as defined in KNX Standard 3.10 - 9.001 DPT_Value_Temp
+KNX_TEMP_MIN = -273
+KNX_TEMP_MAX = 670760
+
+#  Luminance(LUX) as Defined in KNX Standard 3.10 - 9.004 DPT_Value_Lux
+KNX_LUX_MIN = 0
+KNX_LUX_MAX = 670760
+
+#  Speed m/s as defined in KNX Standard 3.10 - 9.005 DPT_Value_Wsp
+KNX_SPEED_MS_MIN = 0
+KNX_SPEED_MS_MAX = 670760
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup the KNX Sensor platform."""
     # Add KNX Temperature Sensors
-    if config["type"] == 'temperature':
+    # KNX Datapoint 9.001 DPT_Value_Temp
+    if config["type"] == "temperature":
+        minimum_value, maximum_value = \
+            update_and_define_min_max(config, KNX_TEMP_MIN,
+                                      KNX_TEMP_MAX)
+
         add_entities([
-            KNXTemperatureSensor(hass, KNXConfig(config))
+            KNXSensorFloatClass(hass, KNXConfig(config), TEMP_CELSIUS,
+                                minimum_value, maximum_value)
         ])
 
     # Add KNX Speed Sensors(Like Wind Speed)
-    if config["type"] == 'speed_ms':
+    # KNX Datapoint 9.005 DPT_Value_Wsp
+    if config["type"] == "speed_ms":
+        minimum_value, maximum_value = \
+            update_and_define_min_max(config, KNX_SPEED_MS_MIN,
+                                      KNX_SPEED_MS_MAX)
+
         add_entities([
-            KNXSpeedMSSensor(hass, KNXConfig(config))
+            KNXSensorFloatClass(hass, KNXConfig(config), SPEED_METERPERSECOND,
+                                minimum_value, maximum_value)
         ])
 
-    # Add KNX Speed Sensors(Like Wind Speed)
-    if config["type"] == 'illuminance':
+    # Add KNX Illuminance Sensors(Lux)
+    # KNX Datapoint 9.004 DPT_Value_Lux
+    if config["type"] == "illuminance":
+        minimum_value, maximum_value = \
+            update_and_define_min_max(config, KNX_LUX_MIN, KNX_LUX_MAX)
+
         add_entities([
-            KNXIlluminanceSensor(hass, KNXConfig(config))
+            KNXSensorFloatClass(hass, KNXConfig(config), ILLUMINANCE_LUX,
+                                minimum_value, maximum_value)
         ])
+
+
+def update_and_define_min_max(config, minimum_default,
+                              maximum_default):
+    """Function help determinate a min/max value defined in config."""
+    minimum_value = minimum_default
+    maximum_value = maximum_default
+    if config.get('minimum'):
+        minimum_value = config.get('minimum')
+
+    if config.get('maximum'):
+        maximum_value = config.get('maximum')
+
+    return minimum_value, maximum_value
 
 
 class KNXSensorBaseClass():  # pylint: disable=too-few-public-methods
@@ -42,67 +86,34 @@ class KNXSensorBaseClass():  # pylint: disable=too-few-public-methods
         return False
 
 
-class KNXIlluminanceSensor(KNXGroupAddress, KNXSensorBaseClass):
+class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
     """
-    Representation of a KNX Group who receive KNX Lux telegrams.
+    Base Implementation of a 2byte Floating Point KNX Telegram.
 
-    KNX Datapoint Type 9.004 - Lux - 2 Byte Float
+    Defined in KNX 3.7.2 - 3.10
     """
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, hass, config, unit_of_measurement, minimum_sensor_value,
+                 maximum_sensor_value):
+        """Initialize a KNX Float Sensor."""
+        self._unit_of_measurement = unit_of_measurement
+        self._minimum_value = minimum_sensor_value
+        self._maximum_value = maximum_sensor_value
+
+        KNXGroupAddress.__init__(self, hass, config)
 
     @property
     def state(self):
-        """Return the state of the sensor."""
+        """Return the Value of the KNX Sensor."""
         if self._data:
             from knxip.conversion import knx2_to_float
-            return knx2_to_float(self._data)
-
+            value = knx2_to_float(self._data)
+            if self._minimum_value <= value <= self._maximum_value:
+                return value
         return None
 
     @property
     def unit_of_measurement(self):
-        """Type of measurement for KNX Datapoint Type 9.004 is Lux."""
-        return ILLUMINANCE_LUX
-
-
-class KNXSpeedMSSensor(KNXGroupAddress, KNXSensorBaseClass):
-    """
-    Representation of a KNX Group who receive KNX Speed telegrams.
-
-    KNX Datapoint Type 9.005 - speed m/s - 2 Byte Float
-    """
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._data:
-            from knxip.conversion import knx2_to_float
-            return knx2_to_float(self._data)
-
-        return None
-
-    @property
-    def unit_of_measurement(self):
-        """Type of measurement for KNX Datapoint Type 9.005 is m/s."""
-        return SPEED_METERPERSECOND
-
-
-class KNXTemperatureSensor(KNXGroupAddress, KNXSensorBaseClass):
-    """
-    Representation of a KNX Group who receive KNX Temp. telegrams.
-
-    KNX Datapoint Type 9.001 - temperature - 2 Byte Float
-    """
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._data:
-            from knxip.conversion import knx2_to_float
-            return knx2_to_float(self._data)
-
-        return None
-
-    @property
-    def unit_of_measurement(self):
-        """Type of measurement for KNX Datapoint Type 9.001 is C°."""
-        return TEMP_CELSIUS
+        """Return the defined Unit of Measurement for the KNX Sensor."""
+        return self._unit_of_measurement
