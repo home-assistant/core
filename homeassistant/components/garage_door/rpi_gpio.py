@@ -52,6 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                        relay_time))
     add_devices(doors)
 
+
 class RPiGPIOGarageDoor(GarageDoorDevice):
     """Representation of a Raspberry garage door."""
 
