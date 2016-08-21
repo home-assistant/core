@@ -186,18 +186,15 @@ class CoverDevice(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        current = self.current_cover_position
-        current_tilt = self.current_cover_tilt_position
-
-        if current is None:
-            return None
-        if current_tilt is None:
-            return None
-
-        return {
-            ATTR_CURRENT_POSITION: current,
-            ATTR_CURRENT_TILT_POSITION: current_tilt
+        data = {
+            ATTR_CURRENT_POSITION: self.current_cover_position
         }
+
+        current_tilt = self.current_cover_tilt_position
+        if current_tilt is not None:
+            data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
+
+        return data
 
     def open_cover(self, **kwargs):
         """Open the cover."""
