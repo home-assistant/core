@@ -10,6 +10,9 @@ from homeassistant.components.notify import DOMAIN, BaseNotificationService
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import validate_config
 
+from urllib import request
+from PIL import Image
+
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['TwitterAPI==2.4.1']
 
@@ -44,9 +47,25 @@ class TwitterNotificationService(BaseNotificationService):
         self.api = TwitterAPI(consumer_key, consumer_secret, access_token_key,
                               access_token_secret)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message="", data=None, **kwargs):
         """Tweet some message."""
-        resp = self.api.request('statuses/update', {'status': message})
+        payload = { 'status': message }
+        if data:
+          path = data['media']
+          _LOGGER.debug('PATH: ' + path);
+          if 'http' in path:
+            request.urlretrieve(path, "local-twitter-image.jpg")
+            data = Image.open('local-twitter-image.jpg')
+            _LOGGER.debug('IMAGE OPENED')
+          else:
+            file = open(path, 'rb')
+            data = file.read()
+          r = self.api.request('media/upload', None, {'media': data})
+          _LOGGER.debug('RESPONSE: ' + str(r.json()))
+          payload['media_ids'] = r.json()['media_id']
+          _LOGGER.debug('PAYLOAD: ' + str(payload))
+
+        resp = self.api.request('statuses/update', payload)
         if resp.status_code != 200:
             import json
             obj = json.loads(resp.text)

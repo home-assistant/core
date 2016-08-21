@@ -96,6 +96,8 @@ class AlexaView(HomeAssistantView):
         card = config.get(CONF_CARD)
         action = config.get(CONF_ACTION)
 
+        _LOGGER.debug('SPEECH:' +str(speech['text']))
+
         if action is not None:
             action.run(response.variables)
 
@@ -162,6 +164,8 @@ class AlexaResponse(object):
         assert self.speech is None
 
         key = 'ssml' if speech_type == SpeechType.ssml else 'text'
+
+        _LOGGER.debug('RENDERED: ' + str(self._render(text)));
 
         self.speech = {
             'type': speech_type.value,

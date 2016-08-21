@@ -1,0 +1,13 @@
+# Describes the format for available fan services
+
+set_value:
+  description: Sets fan level
+  
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: 'fan.living_room'
+
+    value:
+      description: Speed setting
+      example: 'low'

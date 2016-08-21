@@ -80,6 +80,9 @@ EVENT_SERVICE_REGISTERED = "service_registered"
 # #### STATES ####
 STATE_ON = 'on'
 STATE_OFF = 'off'
+STATE_LOW = 'low'
+STATE_MED = 'med'
+STATE_HIGH = 'high'
 STATE_HOME = 'home'
 STATE_NOT_HOME = 'not_home'
 STATE_UNKNOWN = 'unknown'
@@ -230,6 +233,8 @@ SERVICE_MOVE_UP = 'move_up'
 SERVICE_MOVE_DOWN = 'move_down'
 SERVICE_MOVE_POSITION = 'move_position'
 SERVICE_STOP = 'stop'
+
+SERVICE_SET_VALUE = 'set_value'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123

@@ -170,8 +170,7 @@ def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
-    while os.path.exists(secret_path) and not secret_path == os.path.dirname(
-            sys.path[0]):
+    while os.path.exists(secret_path):
         secrets = __SECRET_CACHE.get(secret_path,
                                      _load_secret_yaml(secret_path))
         if node.value in secrets:
@@ -180,7 +179,8 @@ def _secret_yaml(loader: SafeLineLoader,
             return secrets[node.value]
         next_path = os.path.dirname(secret_path)
 
-        if not next_path or next_path == secret_path:
+        if not next_path or next_path == secret_path \
+                or secret_path == os.path.dirname(sys.path[0]):
             # Somehow we got past the .homeassistant configuration folder...
             break
 
