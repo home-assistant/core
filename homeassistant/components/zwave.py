@@ -8,6 +8,7 @@ import logging
 import os.path
 import time
 from pprint import pprint
+import voluptuous as vol
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -16,6 +17,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
+import homeassistant.config as conf_util
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
@@ -40,6 +43,7 @@ SERVICE_SOFT_RESET = "soft_reset"
 SERVICE_TEST_NETWORK = "test_network"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
+SERVICE_RENAME_NODE = "rename_node"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -187,9 +191,14 @@ DISCOVERY_COMPONENTS = [
 ATTR_NODE_ID = "node_id"
 ATTR_VALUE_ID = "value_id"
 ATTR_OBJECT_ID = "object_id"
-
+ATTR_NAME = "name"
 ATTR_SCENE_ID = "scene_id"
 ATTR_BASIC_LEVEL = "basic_level"
+
+RENAME_NODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_NAME): cv.string,
+})
 
 NETWORK = None
 
@@ -271,6 +280,9 @@ def setup(hass, config):
     """
     # pylint: disable=global-statement, import-error
     global NETWORK
+
+    descriptions = conf_util.load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), "services.yaml"))
 
     try:
         import libopenzwave
@@ -461,6 +473,16 @@ def setup(hass, config):
         NETWORK.stop()
         hass.bus.fire(EVENT_NETWORK_STOP)
 
+    def rename_node(service):
+        """Rename a node."""
+        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
+        node_id = state.attributes.get(ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        name = service.data.get(ATTR_NAME)
+        node.name = name
+        _LOGGER.info(
+            "Renamed ZWave node %d to %s", node_id, name)
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
@@ -505,6 +527,9 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_TEST_NETWORK, test_network)
         hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
         hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
+        hass.services.register(DOMAIN, SERVICE_RENAME_NODE, rename_node,
+                               descriptions[DOMAIN][SERVICE_RENAME_NODE],
+                               schema=RENAME_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
