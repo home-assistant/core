@@ -1,5 +1,5 @@
 """
-The homematic rollershutter platform.
+The homematic cover platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homematic/
@@ -25,19 +25,19 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(HMRollershutter,
+    return homematic.setup_hmdevice_discovery_helper(HMCover,
                                                      discovery_info,
                                                      add_callback_devices)
 
 
 # pylint: disable=abstract-method
-class HMRollershutter(homematic.HMDevice, CoverDevice):
-    """Represents a Homematic Rollershutter in Home Assistant."""
+class HMCover(homematic.HMDevice, CoverDevice):
+    """Represents a Homematic Cover in Home Assistant."""
 
     @property
-    def current_position(self):
+    def current_cover_position(self):
         """
-        Return current position of rollershutter.
+        Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
@@ -46,7 +46,7 @@ class HMRollershutter(homematic.HMDevice, CoverDevice):
         return None
 
     def set_cover_position(self, **kwargs):
-        """Move the roller shutter to a specific position."""
+        """Move the cover to a specific position."""
         if self.available:
             if ATTR_CURRENT_POSITION in kwargs:
                 position = float(kwargs[ATTR_CURRENT_POSITION])
@@ -56,7 +56,7 @@ class HMRollershutter(homematic.HMDevice, CoverDevice):
 
     @property
     def state(self):
-        """Return the state of the rollershutter."""
+        """Return the state of the cover."""
         current = self.current_cover_position
         if current is None:
             return STATE_UNKNOWN
@@ -64,12 +64,12 @@ class HMRollershutter(homematic.HMDevice, CoverDevice):
         return STATE_CLOSED if current == 100 else STATE_OPEN
 
     def open_cover(self, **kwargs):
-        """Open the rollershutter."""
+        """Open the cover."""
         if self.available:
             self._hmdevice.move_up(self._channel)
 
     def close_cover(self, **kwargs):
-        """Close the rollershutter."""
+        """Close the cover."""
         if self.available:
             self._hmdevice.move_down(self._channel)
 
@@ -90,7 +90,7 @@ class HMRollershutter(homematic.HMDevice, CoverDevice):
         if isinstance(self._hmdevice, Blind):
             return True
 
-        _LOGGER.critical("This %s can't be use as rollershutter!", self._name)
+        _LOGGER.critical("This %s can't be use as cover!", self._name)
         return False
 
     def _init_data_struct(self):

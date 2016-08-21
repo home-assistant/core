@@ -79,7 +79,7 @@ class CommandCover(CoverDevice):
 
     @property
     def name(self):
-        """Return the name of the roller shutter."""
+        """Return the name of the cover."""
         return self._name
 
     @property

@@ -2,7 +2,7 @@
 Support for Wink Shades.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/rollershutter.wink/
+https://home-assistant.io/components/cover.wink/
 """
 import logging
 
@@ -14,7 +14,7 @@ REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink rollershutter platform."""
+    """Setup the Wink cover platform."""
     import pywink
 
     if discovery_info is None:
@@ -28,43 +28,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         pywink.set_bearer_token(token)
 
-    add_devices(WinkRollershutterDevice(shade) for shade in
+    add_devices(WinkCoverDevice(shade) for shade, door in
                 pywink.get_shades())
-    add_devices(WinkGarageDoorDevice(door) for door in
-                pywink.get_garage_doors())
 
 
-class WinkGarageDoorDevice(WinkDevice, CoverDevice):
-    """Representation of a Wink garage door."""
+class WinkCoverDevice(WinkDevice, CoverDevice):
+    """Representation of a Wink covers."""
 
     def __init__(self, wink):
-        """Initialize the garage door."""
-        WinkDevice.__init__(self, wink)
-
-    @property
-    def current_cover_position(self):
-        """Return true if door is closed."""
-        if self.wink.state() == 0:
-            return 0
-        elif self.wink.state() == 1:
-            return 100
-        else:
-            return None
-
-    def close_cover(self):
-        """Close the door."""
-        self.wink.set_state(0)
-
-    def open_cover(self):
-        """Open the door."""
-        self.wink.set_state(1)
-
-
-class WinkRollershutterDevice(WinkDevice, CoverDevice):
-    """Representation of a Wink rollershutter (shades)."""
-
-    def __init__(self, wink):
-        """Initialize the rollershutter."""
+        """Initialize the cover."""
         WinkDevice.__init__(self, wink)
 
     @property
@@ -82,7 +54,7 @@ class WinkRollershutterDevice(WinkDevice, CoverDevice):
 
     @property
     def current_cover_position(self):
-        """Return current position of roller shutter.
+        """Return current position of cover.
 
         Wink reports blind shade positions as 0 or 1.
         home-assistant expects:
@@ -97,5 +69,5 @@ class WinkRollershutterDevice(WinkDevice, CoverDevice):
             return None
 
     def stop_cover(self):
-        """Can't stop Wink rollershutter due to API."""
+        """Can't stop Wink cover due to API."""
         pass

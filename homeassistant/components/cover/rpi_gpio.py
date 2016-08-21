@@ -1,5 +1,5 @@
 """
-Support for building a Raspberry Pi garage controller in HA.
+Support for building a Raspberry Pi cover in HA.
 
 Instructions for building the controller can be found here
 https://github.com/andrewshilliday/garage-door-controller
@@ -19,7 +19,7 @@ DEPENDENCIES = ['rpi_gpio']
 
 _LOGGER = logging.getLogger(__name__)
 
-_DOORS_SCHEMA = vol.All(
+_COVERS_SCHEMA = vol.All(
     cv.ensure_list,
     [
         vol.Schema({
@@ -31,28 +31,28 @@ _DOORS_SCHEMA = vol.All(
 )
 PLATFORM_SCHEMA = vol.Schema({
     'platform': str,
-    vol.Required('doors'): _DOORS_SCHEMA,
+    vol.Required('covers'): _COVERS_SCHEMA,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the cover platform."""
-    doors = []
-    doors_conf = config.get('doors')
+    covers = []
+    covers_conf = config.get('covers')
 
-    for door in doors_conf:
-        doors.append(RPiGPIOGarageDoor(door['name'], door['relay_pin'],
-                                       door['state_pin']))
-    add_devices(doors)
+    for cover in covers_conf:
+        covers.append(RPiGPIOCover(cover['name'], cover['relay_pin'],
+                                   cover['state_pin']))
+    add_devices(covers)
 
 
 # pylint: disable=abstract-method
-class RPiGPIOGarageDoor(CoverDevice):
-    """Representation of a Raspberry garage door."""
+class RPiGPIOCover(CoverDevice):
+    """Representation of a Raspberry cover."""
 
     def __init__(self, name, relay_pin, state_pin):
-        """Initialize the garage door."""
+        """Initialize the cover."""
         self._name = name
         self._state = False
         self._relay_pin = relay_pin
@@ -63,25 +63,25 @@ class RPiGPIOGarageDoor(CoverDevice):
 
     @property
     def unique_id(self):
-        """Return the ID of this garage door."""
+        """Return the ID of this cover."""
         return "{}.{}".format(self.__class__, self._name)
 
     @property
     def name(self):
-        """Return the name of the garage door if any."""
+        """Return the name of the cover if any."""
         return self._name
 
     def update(self):
-        """Update the state of the garage door."""
+        """Update the state of the cover."""
         self._state = rpi_gpio.read_input(self._state_pin)
 
     @property
     def is_closed(self):
-        """Return true if door is closed."""
+        """Return true if cover is closed."""
         return self._state
 
     def _trigger(self):
-        """Trigger the door."""
+        """Trigger the cover."""
         rpi_gpio.write_output(self._relay_pin, False)
         sleep(0.2)
         rpi_gpio.write_output(self._relay_pin, True)
@@ -92,6 +92,6 @@ class RPiGPIOGarageDoor(CoverDevice):
             self._trigger()
 
     def open_cover(self):
-        """Open the door."""
+        """Open the cover."""
         if self.is_closed:
             self._trigger()

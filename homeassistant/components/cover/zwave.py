@@ -1,8 +1,8 @@
 """
-Support for Zwave roller shutter components.
+Support for Zwave cover components.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/rollershutter.zwave/
+https://home-assistant.io/components/cover.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave roller shutters."""
+    """Find and return Z-Wave covers."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 

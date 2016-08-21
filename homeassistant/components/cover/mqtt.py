@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Add MQTT Rollershutter."""
+    """Add MQTT Cover."""
     add_devices_callback([MqttCover(
         hass,
         config[CONF_NAME],
@@ -69,12 +69,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class MqttCover(CoverDevice):
-    """Representation of a roller shutter that can be controlled using MQTT."""
+    """Representation of a cover that can be controlled using MQTT."""
 
     def __init__(self, hass, name, state_topic, command_topic, qos,
                  retain, state_open, state_closed, payload_open, payload_close,
                  payload_stop, optimistic, value_template):
-        """Initialize the roller shutter."""
+        """Initialize the cover."""
         self._state = None
         self._hass = hass
         self._name = name
@@ -121,7 +121,7 @@ class MqttCover(CoverDevice):
 
     @property
     def name(self):
-        """Return the name of the roller shutter."""
+        """Return the name of the cover."""
         return self._name
 
     @property
@@ -133,7 +133,7 @@ class MqttCover(CoverDevice):
         return self._state
 
     def open_cover(self, **kwargs):
-        """Move the roller shutter up."""
+        """Move the cover up."""
         mqtt.publish(self.hass, self._command_topic, self._payload_open,
                      self._qos, self._retain)
         if self._optimistic:
@@ -142,7 +142,7 @@ class MqttCover(CoverDevice):
             self.update_ha_state()
 
     def close_cover(self, **kwargs):
-        """Move the roller shutter down."""
+        """Move the cover down."""
         mqtt.publish(self.hass, self._command_topic, self._payload_close,
                      self._qos, self._retain)
         if self._optimistic:

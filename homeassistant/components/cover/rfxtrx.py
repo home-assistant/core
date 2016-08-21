@@ -1,5 +1,5 @@
 """
-Support for RFXtrx roller shutter components.
+Support for RFXtrx cover components.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.rfxtrx/
@@ -14,54 +14,54 @@ PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the RFXtrx roller shutters."""
+    """Setup the RFXtrx cover."""
     import RFXtrx as rfxtrxmod
 
-    # Add rollershutter from config file
-    rollershutters = rfxtrx.get_devices_from_config(config,
-                                                    RfxtrxRollershutter)
-    add_devices_callback(rollershutters)
+    # Add cover from config file
+    covers = rfxtrx.get_devices_from_config(config,
+                                            RfxtrxCover)
+    add_devices_callback(covers)
 
-    def rollershutter_update(event):
-        """Callback for roller shutter updates from the RFXtrx gateway."""
+    def cover_update(event):
+        """Callback for cover updates from the RFXtrx gateway."""
         if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
                 event.device.known_to_be_dimmable or \
                 not event.device.known_to_be_rollershutter:
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxRollershutter)
+        new_device = rfxtrx.get_new_device(event, config, RfxtrxCover)
         if new_device:
             add_devices_callback([new_device])
 
         rfxtrx.apply_received_command(event)
 
     # Subscribe to main rfxtrx events
-    if rollershutter_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(rollershutter_update)
+    if cover_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
+        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
 
 
 # pylint: disable=abstract-method
-class RfxtrxRollershutter(rfxtrx.RfxtrxDevice, CoverDevice):
-    """Representation of an rfxtrx roller shutter."""
+class RfxtrxCover(rfxtrx.RfxtrxDevice, CoverDevice):
+    """Representation of an rfxtrx cover."""
 
     @property
     def should_poll(self):
-        """No polling available in rfxtrx roller shutter."""
+        """No polling available in rfxtrx cover."""
         return False
 
     @property
     def current_cover_position(self):
-        """No position available in rfxtrx roller shutter."""
+        """No position available in rfxtrx cover."""
         return None
 
     def open_cover(self, **kwargs):
-        """Move the roller shutter up."""
+        """Move the cover up."""
         self._send_command("roll_up")
 
     def close_cover(self, **kwargs):
-        """Move the roller shutter down."""
+        """Move the cover down."""
         self._send_command("roll_down")
 
     def stop_cover(self, **kwargs):
-        """Stop the roller shutter."""
+        """Stop the cover."""
         self._send_command("stop_roll")

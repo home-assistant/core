@@ -1,5 +1,5 @@
 """
-Allow to configure a SCSGate roller shutter.
+Allow to configure a SCSGate cover.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.scsgate/
@@ -13,9 +13,9 @@ DEPENDENCIES = ['scsgate']
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the SCSGate roller shutter."""
+    """Setup the SCSGate cover."""
     devices = config.get('devices')
-    rollershutters = []
+    covers = []
     logger = logging.getLogger(__name__)
 
     if devices:
@@ -23,26 +23,26 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             if entity_info['scs_id'] in scsgate.SCSGATE.devices:
                 continue
 
-            logger.info("Adding %s scsgate.rollershutter", entity_info['name'])
+            logger.info("Adding %s scsgate.cover", entity_info['name'])
 
             name = entity_info['name']
             scs_id = entity_info['scs_id']
-            rollershutter = SCSGateRollerShutter(
+            cover = SCSGateCover(
                 name=name,
                 scs_id=scs_id,
                 logger=logger)
-            scsgate.SCSGATE.add_device(rollershutter)
-            rollershutters.append(rollershutter)
+            scsgate.SCSGATE.add_device(cover)
+            covers.append(cover)
 
-    add_devices_callback(rollershutters)
+    add_devices_callback(covers)
 
 
 # pylint: disable=too-many-arguments, too-many-instance-attributes
-class SCSGateRollerShutter(CoverDevice):
-    """Representation of SCSGate rollershutter."""
+class SCSGateCover(CoverDevice):
+    """Representation of SCSGate cover."""
 
     def __init__(self, scs_id, name, logger):
-        """Initialize the roller shutter."""
+        """Initialize the cover."""
         self._scs_id = scs_id
         self._name = name
         self._logger = logger
@@ -59,39 +59,39 @@ class SCSGateRollerShutter(CoverDevice):
 
     @property
     def name(self):
-        """Return the name of the roller shutter."""
+        """Return the name of the cover."""
         return self._name
 
     @property
     def current_cover_position(self):
-        """Return current position of roller shutter.
+        """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
         return None
 
     def open_cover(self, **kwargs):
-        """Move the roller shutter up."""
+        """Move the cover."""
         from scsgate.tasks import RaiseRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             RaiseRollerShutterTask(target=self._scs_id))
 
     def close_cover(self, **kwargs):
-        """Move the rollers hutter down."""
+        """Move the cover down."""
         from scsgate.tasks import LowerRollerShutterTask
 
         scsgate.SCSGATE.append_task(
             LowerRollerShutterTask(target=self._scs_id))
 
     def stop_cover(self, **kwargs):
-        """Stop the device."""
+        """Stop the cover."""
         from scsgate.tasks import HaltRollerShutterTask
 
         scsgate.SCSGATE.append_task(HaltRollerShutterTask(target=self._scs_id))
 
     def process_event(self, message):
-        """Handle a SCSGate message related with this roller shutter."""
+        """Handle a SCSGate message related with this cover."""
         self._logger.debug(
             "Rollershutter %s, got message %s",
             self._scs_id, message.toggled)
