@@ -52,7 +52,7 @@ class TestMQTTRoomSensor(unittest.TestCase):
         mock_mqtt_component(self.hass)
         self.assertTrue(sensor.setup(self.hass, {
             sensor.DOMAIN: {
-                CONF_PLATFORM: 'room',
+                CONF_PLATFORM: 'mqtt_room',
                 CONF_NAME: NAME,
                 CONF_DEVICE_ID: DEVICE_ID,
                 CONF_STATE_TOPIC: 'room_presence',
