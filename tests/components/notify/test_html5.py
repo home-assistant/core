@@ -8,6 +8,34 @@ from werkzeug.test import EnvironBuilder
 from homeassistant.components.http import request_class
 from homeassistant.components.notify import html5
 
+SUBSCRIPTION_1 = {
+    'browser': 'chrome',
+    'subscription': {
+        'endpoint': 'https://google.com',
+        'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+    },
+}
+SUBSCRIPTION_2 = {
+    'browser': 'firefox',
+    'subscription': {
+        'endpoint': 'https://example.com',
+        'keys': {
+            'auth': 'bla',
+            'p256dh': 'bla',
+        },
+    },
+}
+SUBSCRIPTION_3 = {
+    'browser': 'chrome',
+    'subscription': {
+        'endpoint': 'https://example.com/not_exist',
+        'keys': {
+            'auth': 'bla',
+            'p256dh': 'bla',
+        },
+    },
+}
+
 
 class TestHtml5Notify(object):
     """Tests for HTML5 notify platform."""
@@ -40,13 +68,7 @@ class TestHtml5Notify(object):
         hass = MagicMock()
 
         data = {
-            'device': {
-                'browser': 'chrome',
-                'subscription': {
-                    'endpoint': 'https://google.com',
-                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
-                },
-            }
+            'device': SUBSCRIPTION_1
         }
 
         with tempfile.NamedTemporaryFile() as fp:
@@ -63,10 +85,7 @@ class TestHtml5Notify(object):
         assert len(mock_wp.mock_calls) == 2
 
         # WebPusher constructor
-        assert mock_wp.mock_calls[0][1][0] == {'endpoint':
-                                               'https://google.com',
-                                               'keys': {'auth': 'auth',
-                                                        'p256dh': 'p256dh'}}
+        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -92,22 +111,13 @@ class TestHtml5Notify(object):
             assert view.json_path == fp.name
             assert view.registrations == {}
 
-            builder = EnvironBuilder(method='POST', data=json.dumps({
-                'browser': 'chrome',
-                'subscription': {'endpoint': 'https://google.com',
-                                 'keys': {'auth': 'auth',
-                                          'p256dh': 'p256dh'}},
-            }))
+            builder = EnvironBuilder(method='POST',
+                                     data=json.dumps(SUBSCRIPTION_1))
             Request = request_class()
             resp = view.post(Request(builder.get_environ()))
 
             expected = {
-                'unnamed device': {
-                    'browser': 'chrome',
-                    'subscription': {'endpoint': 'https://google.com',
-                                     'keys': {'auth': 'auth',
-                                              'p256dh': 'p256dh'}},
-                },
+                'unnamed device': SUBSCRIPTION_1,
             }
 
             assert resp.status_code == 200, resp.response
@@ -158,27 +168,9 @@ class TestHtml5Notify(object):
         """Test that the HTML unregister view works."""
         hass = MagicMock()
 
-        subscription = {
-            'endpoint': 'https://google.com',
-            'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
-        }
-
         config = {
-            'some device': {
-                'browser': 'chrome',
-                'subscription': subscription,
-            },
-
-            'other device': {
-                'browser': 'firefox',
-                'subscription': {
-                    'endpoint': 'https://example.com',
-                    'keys': {
-                        'auth': 'bla',
-                        'p256dh': 'bla',
-                    },
-                },
-            },
+            'some device': SUBSCRIPTION_1,
+            'other device': SUBSCRIPTION_2,
         }
 
         with tempfile.NamedTemporaryFile() as fp:
@@ -197,7 +189,7 @@ class TestHtml5Notify(object):
             assert view.registrations == config
 
             builder = EnvironBuilder(method='DELETE', data=json.dumps({
-                'subscription': subscription,
+                'subscription': SUBSCRIPTION_1['subscription'],
             }))
             Request = request_class()
             resp = view.delete(Request(builder.get_environ()))
@@ -214,24 +206,8 @@ class TestHtml5Notify(object):
         hass = MagicMock()
 
         config = {
-            'some device': {
-                'browser': 'chrome',
-                'subscription': {
-                    'endpoint': 'https://google.com',
-                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
-                },
-            },
-
-            'other device': {
-                'browser': 'firefox',
-                'subscription': {
-                    'endpoint': 'https://example.com',
-                    'keys': {
-                        'auth': 'bla',
-                        'p256dh': 'bla',
-                    },
-                },
-            },
+            'some device': SUBSCRIPTION_1,
+            'other device': SUBSCRIPTION_2,
         }
 
         with tempfile.NamedTemporaryFile() as fp:
@@ -250,13 +226,7 @@ class TestHtml5Notify(object):
             assert view.registrations == config
 
             builder = EnvironBuilder(method='DELETE', data=json.dumps({
-                'subscription': {
-                    'endpoint': 'https://example.com/not_exist',
-                    'keys': {
-                        'auth': 'bla',
-                        'p256dh': 'bla',
-                    },
-                },
+                'subscription': SUBSCRIPTION_3['subscription']
             }))
             Request = request_class()
             resp = view.delete(Request(builder.get_environ()))
@@ -270,27 +240,9 @@ class TestHtml5Notify(object):
         """Test that the HTML unregister view handles JSON write errors."""
         hass = MagicMock()
 
-        subscription = {
-            'endpoint': 'https://google.com',
-            'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
-        }
-
         config = {
-            'some device': {
-                'browser': 'chrome',
-                'subscription': subscription,
-            },
-
-            'other device': {
-                'browser': 'firefox',
-                'subscription': {
-                    'endpoint': 'https://example.com',
-                    'keys': {
-                        'auth': 'bla',
-                        'p256dh': 'bla',
-                    },
-                },
-            },
+            'some device': SUBSCRIPTION_1,
+            'other device': SUBSCRIPTION_2,
         }
 
         with tempfile.NamedTemporaryFile() as fp:
@@ -309,7 +261,7 @@ class TestHtml5Notify(object):
             assert view.registrations == config
 
             builder = EnvironBuilder(method='DELETE', data=json.dumps({
-                'subscription': subscription,
+                'subscription': SUBSCRIPTION_1['subscription'],
             }))
             Request = request_class()
 
@@ -353,13 +305,7 @@ class TestHtml5Notify(object):
         hass = MagicMock()
 
         data = {
-            'device': {
-                'browser': 'chrome',
-                'subscription': {
-                    'endpoint': 'https://google.com',
-                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
-                },
-            }
+            'device': SUBSCRIPTION_1,
         }
 
         with tempfile.NamedTemporaryFile() as fp:
@@ -379,11 +325,8 @@ class TestHtml5Notify(object):
             assert len(mock_wp.mock_calls) == 2
 
             # WebPusher constructor
-            assert mock_wp.mock_calls[0][1][0] == {'endpoint':
-                                                   'https://google.com',
-                                                   'keys': {'auth': 'auth',
-                                                            'p256dh':
-                                                            'p256dh'}}
+            assert mock_wp.mock_calls[0][1][0] == \
+                SUBSCRIPTION_1['subscription']
 
             # Call to send
             push_payload = json.loads(mock_wp.mock_calls[1][1][0])
