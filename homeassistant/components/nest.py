@@ -73,13 +73,9 @@ def setup(hass, config):
     NEST = nest.Nest(username, password)
 
     if CONF_STRUCTURE not in conf:
-        STRUCTURES_TO_INCLUDE = []
-        for structure in NEST.structures:
-            STRUCTURES_TO_INCLUDE.append(structure.name)
-    elif isinstance(conf[CONF_STRUCTURE], list):
-        STRUCTURES_TO_INCLUDE = conf[CONF_STRUCTURE]
+        STRUCTURES_TO_INCLUDE = [structure.name for structure in NEST.structures]
     else:
-        STRUCTURES_TO_INCLUDE = [conf[CONF_STRUCTURE]]
+        STRUCTURES_TO_INCLUDE = conf[CONF_STRUCTURE]
 
     _LOGGER.debug("Structures to include: %s", STRUCTURES_TO_INCLUDE)
     return True
