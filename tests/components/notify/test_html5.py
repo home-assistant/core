@@ -154,6 +154,174 @@ class TestHtml5Notify(object):
                 resp = view.post(Request(builder.get_environ()))
             assert resp.status_code == 400, resp.response
 
+    def test_unregistering_device_view(self):
+        """Test that the HTML unregister view works."""
+        hass = MagicMock()
+
+        subscription = {
+            'endpoint': 'https://google.com',
+            'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+        }
+
+        config = {
+            'some device': {
+                'browser': 'chrome',
+                'subscription': subscription,
+            },
+
+            'other device': {
+                'browser': 'firefox',
+                'subscription': {
+                    'endpoint': 'https://example.com',
+                    'keys': {
+                        'auth': 'bla',
+                        'p256dh': 'bla',
+                    },
+                },
+            },
+        }
+
+        with tempfile.NamedTemporaryFile() as fp:
+            hass.config.path.return_value = fp.name
+            fp.write(json.dumps(config).encode('utf-8'))
+            fp.flush()
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[1][1][0]
+            assert view.json_path == fp.name
+            assert view.registrations == config
+
+            builder = EnvironBuilder(method='DELETE', data=json.dumps({
+                'subscription': subscription,
+            }))
+            Request = request_class()
+            resp = view.delete(Request(builder.get_environ()))
+
+            config.pop('some device')
+
+            assert resp.status_code == 200, resp.response
+            assert view.registrations == config
+            with open(fp.name) as fpp:
+                assert json.load(fpp) == config
+
+    def test_unregistering_device_view_handles_unknown_subscription(self):
+        """Test that the HTML unregister view handles unknown subscriptions."""
+        hass = MagicMock()
+
+        config = {
+            'some device': {
+                'browser': 'chrome',
+                'subscription': {
+                    'endpoint': 'https://google.com',
+                    'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+                },
+            },
+
+            'other device': {
+                'browser': 'firefox',
+                'subscription': {
+                    'endpoint': 'https://example.com',
+                    'keys': {
+                        'auth': 'bla',
+                        'p256dh': 'bla',
+                    },
+                },
+            },
+        }
+
+        with tempfile.NamedTemporaryFile() as fp:
+            hass.config.path.return_value = fp.name
+            fp.write(json.dumps(config).encode('utf-8'))
+            fp.flush()
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[1][1][0]
+            assert view.json_path == fp.name
+            assert view.registrations == config
+
+            builder = EnvironBuilder(method='DELETE', data=json.dumps({
+                'subscription': {
+                    'endpoint': 'https://example.com/not_exist',
+                    'keys': {
+                        'auth': 'bla',
+                        'p256dh': 'bla',
+                    },
+                },
+            }))
+            Request = request_class()
+            resp = view.delete(Request(builder.get_environ()))
+
+            assert resp.status_code == 200, resp.response
+            assert view.registrations == config
+            with open(fp.name) as fpp:
+                assert json.load(fpp) == config
+
+    def test_unregistering_device_view_handles_json_safe_error(self):
+        """Test that the HTML unregister view handles JSON write errors."""
+        hass = MagicMock()
+
+        subscription = {
+            'endpoint': 'https://google.com',
+            'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+        }
+
+        config = {
+            'some device': {
+                'browser': 'chrome',
+                'subscription': subscription,
+            },
+
+            'other device': {
+                'browser': 'firefox',
+                'subscription': {
+                    'endpoint': 'https://example.com',
+                    'keys': {
+                        'auth': 'bla',
+                        'p256dh': 'bla',
+                    },
+                },
+            },
+        }
+
+        with tempfile.NamedTemporaryFile() as fp:
+            hass.config.path.return_value = fp.name
+            fp.write(json.dumps(config).encode('utf-8'))
+            fp.flush()
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[1][1][0]
+            assert view.json_path == fp.name
+            assert view.registrations == config
+
+            builder = EnvironBuilder(method='DELETE', data=json.dumps({
+                'subscription': subscription,
+            }))
+            Request = request_class()
+
+            with patch('homeassistant.components.notify.html5._save_config',
+                       return_value=False):
+                resp = view.delete(Request(builder.get_environ()))
+
+            assert resp.status_code == 500, resp.response
+            assert view.registrations == config
+            with open(fp.name) as fpp:
+                assert json.load(fpp) == config
+
     def test_callback_view_no_jwt(self):
         """Test that the notification callback view works without JWT."""
         hass = MagicMock()
