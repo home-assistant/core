@@ -37,7 +37,7 @@ def devices():
                 for device in structure.devices:
                     yield (structure, device)
             else:
-                _LOGGER.info("Ignoring structure %s, not in %s",
+                _LOGGER.debug("Ignoring structure %s, not in %s",
                              structure.name, STRUCTURES_TO_INCLUDE)
     except socket.error:
         _LOGGER.error("Connection error logging into the nest web service.")
@@ -80,5 +80,5 @@ def setup(hass, config):
     else:
         STRUCTURES_TO_INCLUDE = [conf[CONF_STRUCTURE]]
 
-    _LOGGER.info("Structures to include: %s", STRUCTURES_TO_INCLUDE)
+    _LOGGER.debug("Structures to include: %s", STRUCTURES_TO_INCLUDE)
     return True
