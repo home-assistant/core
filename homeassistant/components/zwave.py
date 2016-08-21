@@ -45,11 +45,6 @@ SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
 
-RENAME_NODE_SCHEMA = vol.Schema({
-    vol.Required("entityId"): cv.string,
-    vol.Required("name"): cv.string,
-})
-
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
 EVENT_NETWORK_READY = "zwave.network_ready"
@@ -199,6 +194,11 @@ ATTR_OBJECT_ID = "object_id"
 ATTR_NAME = "name"
 ATTR_SCENE_ID = "scene_id"
 ATTR_BASIC_LEVEL = "basic_level"
+
+RENAME_NODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_NAME): cv.string,
+})
 
 NETWORK = None
 
