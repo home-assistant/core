@@ -27,9 +27,7 @@ _DOORS_SCHEMA = vol.All(
         vol.Schema({
             'name': str,
             'relay_pin': int,
-            'relay_time': int,
             'state_pin': int,
-            'state_pull_mode': str,
         })
     ]
 )
@@ -42,7 +40,6 @@ PLATFORM_SCHEMA = vol.Schema({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
-    
     relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
     state_pull_mode = config.get('state_pull_mode', DEFAULT_PULL_MODE)
     doors = []
