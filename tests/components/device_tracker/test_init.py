@@ -63,7 +63,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         dev_id = 'test'
         device = device_tracker.Device(
             self.hass, timedelta(seconds=180), 0, True, dev_id,
-            'AB:CD:EF:GH:IJ', 'Test name', 'http://test.picture', True)
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            away_hide=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
         self.assertTrue(device_tracker.setup(self.hass, {}))
         config = device_tracker.load_config(self.yaml_devices, self.hass,
@@ -93,6 +94,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert len(config) == 1
         assert config[0].dev_id == 'dev1'
         assert config[0].track
+
+    def test_gravatar(self):
+        """Test the Gravatar generation."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
+
+    def test_gravatar_and_picture(self):
+        """Test that Gravatar overrides picture."""
+        dev_id = 'test'
+        device = device_tracker.Device(
+            self.hass, timedelta(seconds=180), 0, True, dev_id,
+            'AB:CD:EF:GH:IJ', 'Test name', picture='http://test.picture',
+            gravatar='test@example.com')
+        gravatar_url = ("https://www.gravatar.com/avatar/"
+                        "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
+        self.assertEqual(device.config_picture, gravatar_url)
 
     def test_discovery(self):
         """Test discovery."""

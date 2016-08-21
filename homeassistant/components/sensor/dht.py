@@ -13,9 +13,9 @@ from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
-REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
-                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip'
-                '#Adafruit_DHT==1.1.0']
+REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
+                '310c59b0293354d07d94375f1365f7b9b9110c7d.zip'
+                '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
@@ -102,12 +102,16 @@ class DHTSensor(Entity):
         data = self.dht_client.data
 
         if self.type == 'temperature':
-            self._state = round(data['temperature'], 1)
-            if self.temp_unit == TEMP_FAHRENHEIT:
-                self._state = round(celsius_to_fahrenheit(data['temperature']),
-                                    1)
+            temperature = round(data['temperature'], 1)
+            if (temperature >= -20) and (temperature < 80):
+                self._state = temperature
+                if self.temp_unit == TEMP_FAHRENHEIT:
+                    self._state = round(celsius_to_fahrenheit(temperature),
+                                        1)
         elif self.type == 'humidity':
-            self._state = round(data['humidity'], 1)
+            humidity = round(data['humidity'], 1)
+            if (humidity >= 0) and (humidity <= 100):
+                self._state = humidity
 
 
 class DHTClient(object):

@@ -88,7 +88,8 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
-            _LOGGER.error("Unable to connect to roku at %s", self.ip_address)
+
+            pass
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""

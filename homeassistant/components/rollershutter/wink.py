@@ -32,6 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pywink.get_shades())
 
 
+# pylint: disable=abstract-method
 class WinkRollershutterDevice(WinkDevice, RollershutterDevice):
     """Representation of a Wink rollershutter (shades)."""
 

@@ -86,7 +86,7 @@ class TestComponentLogbook(unittest.TestCase):
             entries[1], pointC, 'bla', domain='sensor', entity_id=entity_id)
 
     def test_filter_continuous_sensor_values(self):
-        """Test remove continuous sensor events from logbook"""
+        """Test remove continuous sensor events from logbook."""
         entity_id = 'sensor.bla'
         pointA = dt_util.utcnow()
         attributes = {'unit_of_measurement': 'foo'}

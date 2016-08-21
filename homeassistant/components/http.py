@@ -453,6 +453,10 @@ class HomeAssistantView(object):
         """Handle request to url."""
         from werkzeug.exceptions import MethodNotAllowed, Unauthorized
 
+        if request.method == "OPTIONS":
+            # For CORS preflight requests.
+            return self.options(request)
+
         try:
             handler = getattr(self, request.method.lower())
         except AttributeError:

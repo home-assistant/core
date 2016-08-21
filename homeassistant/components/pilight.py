@@ -1,11 +1,8 @@
 """
 Component to create an interface to a Pilight daemon (https://pilight.org/).
 
-Pilight can be used to send and receive signals from a radio frequency
-module (RF receiver).
-
-RF commands received by the daemon are put on the HA event bus.
-RF commands can also be send with a pilight.send service call.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/pilight/
 """
 # pylint: disable=import-error
 import logging
@@ -45,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Setup pilight component."""
+    """Setup the pilight component."""
     from pilight import pilight
 
     try:

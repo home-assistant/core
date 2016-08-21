@@ -4,23 +4,21 @@ Support for Insteon Hub lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
-from homeassistant.components.insteon_hub import (
-    INSTEON,
-    InsteonToggleDevice,
-    filter_devices
-)
+from homeassistant.components.insteon_hub import INSTEON
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 
-DEVICE_CATEGORIES = [{
-    'DevCat': 1,
-    'SubCat': [46]}]
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+SUPPORT_INSTEON_HUB = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
     devs = []
-    for device in filter_devices(INSTEON.devices, DEVICE_CATEGORIES):
-        devs.append(InsteonToggleDevice(device))
+    for device in INSTEON.devices:
+        if device.DeviceCategory == "Switched Lighting Control":
+            devs.append(InsteonToggleDevice(device))
+        if device.DeviceCategory == "Dimmable Lighting Control":
+            devs.append(InsteonToggleDevice(device))
     add_devices(devs)
 
 
@@ -59,6 +57,11 @@ class InsteonToggleDevice(Light):
     def is_on(self):
         """Return the boolean response if the node is on."""
         return self._value != 0
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_INSTEON_HUB
 
     def turn_on(self, **kwargs):
         """Turn device on."""

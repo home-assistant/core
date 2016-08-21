@@ -1,4 +1,9 @@
-"""Register a custom front end panel."""
+"""
+Register a custom front end panel.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/panel_custom/
+"""
 import logging
 import os
 

@@ -9,11 +9,6 @@ from datetime import timedelta
 from requests.exceptions import ConnectionError as ConnectError, \
     HTTPError, Timeout
 
-import homeassistant.core as HA
-from homeassistant.components.sun import (
-    STATE_ABOVE_HORIZON,
-    ENTITY_ID as SUN_ID
-)
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import validate_config
@@ -22,10 +17,6 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-forecastio==1.3.4']
 _LOGGER = logging.getLogger(__name__)
-GET_ICON_URL = (
-    'http://api.met.no/weatherapi/weathericon/1.1/?' +
-    'symbol={};content_type=image/png{}'
-)
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -53,15 +44,21 @@ SENSOR_TYPES = {
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar'],
     'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm'],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU'],
+    'apparent_temperature_max': ['Daily High Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'apparent_temperature_min': ['Daily Low Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C'],
+    'temperature_max': ['Daily High Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'temperature_min': ['Daily Low Temperature',
+                        '°C', '°F', '°C', '°C', '°C'],
+    'precip_intensity_max': ['Daily Max Precip Intensity',
+                             'mm', 'in', 'mm', 'mm', 'mm'],
 }
+DEFAULT_NAME = "Forecast.io"
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
-
-
-def is_daytime():
-    """Determine if it's daytime."""
-    return HA.HomeAssistant().states.is_state(SUN_ID, STATE_ABOVE_HORIZON)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -92,11 +89,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(error)
         return False
 
+    name = config.get('name', DEFAULT_NAME)
+
     # Initialize and add all of the sensors.
     sensors = []
     for variable in config['monitored_conditions']:
         if variable in SENSOR_TYPES:
-            sensors.append(ForeCastSensor(forecast_data, variable))
+            sensors.append(ForeCastSensor(forecast_data, variable, name))
         else:
             _LOGGER.error('Sensor type: "%s" does not exist', variable)
 
@@ -107,25 +106,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ForeCastSensor(Entity):
     """Implementation of a Forecast.io sensor."""
 
-    _icon_enum = ({
-        'clear-day': 1,
-        'clear-night': 1,
-        'cloudy': 4,
-        'fog': 15,
-        'hail': 12,
-        'partly-cloudy-day': 3,
-        'partly-cloudy-night': 3,
-        'rain': 10,
-        'sleet': 12,
-        'snow': 13,
-        'thunderstorm': 11,
-        'tornado': 34,
-        'wind': 6,
-    })
-
-    def __init__(self, forecast_data, sensor_type):
+    def __init__(self, forecast_data, sensor_type, name):
         """Initialize the sensor."""
-        self.client_name = 'Weather'
+        self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.forecast_data = forecast_data
         self.type = sensor_type
@@ -165,23 +148,6 @@ class ForeCastSensor(Entity):
         }.get(self.unit_system, 1)
         self._unit_of_measurement = SENSOR_TYPES[self.type][unit_index]
 
-    @property
-    def entity_picture(self):
-        """Get the entity picture."""
-        if self.type != 'icon':
-            return None
-        else:
-            try:
-                icon = self._icon_enum[self._state]
-                is_night = '' if is_daytime() else ';is_night=1'
-                return (
-                    GET_ICON_URL.format(
-                        str(icon),
-                        is_night))
-            except KeyError:
-                return None
-
-    # pylint: disable=too-many-branches
     def update(self):
         """Get the latest data from Forecast.io and updates the states."""
         # Call the API for new forecast data. Each sensor will re-trigger this
@@ -199,16 +165,26 @@ class ForeCastSensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
-        elif self.type == 'daily_summary':
+        elif self.type in ['daily_summary',
+                           'temperature_min', 'temperature_max',
+                           'apparent_temperature_min',
+                           'apparent_temperature_max',
+                           'precip_intensity_max']:
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
-            self._state = getattr(daily, 'summary', '')
+            if self.type == 'daily_summary':
+                self._state = getattr(daily, 'summary', '')
+            else:
+                if hasattr(daily, 'data'):
+                    self._state = self.get_state(daily.data[0])
+                else:
+                    self._state = 0
         else:
             self.forecast_data.update_currently()
             currently = self.forecast_data.data_currently
-            self._state = self.get_currently_state(currently)
+            self._state = self.get_state(currently)
 
-    def get_currently_state(self, data):
+    def get_state(self, data):
         """
         Helper function that returns a new state based on the type.
 
@@ -222,6 +198,9 @@ class ForeCastSensor(Entity):
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
         elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                            'temperature_min', 'temperature_max',
+                            'apparent_temperature_min',
+                            'apparent_temperature_max',
                             'pressure', 'ozone']):
             return round(state, 1)
         return state

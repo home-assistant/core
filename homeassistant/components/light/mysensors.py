@@ -9,7 +9,8 @@ import logging
 
 from homeassistant.components import mysensors
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
@@ -17,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_RGB_WHITE = 'rgb_white'
 ATTR_VALUE = 'value'
 ATTR_VALUE_TYPE = 'value_type'
+
+SUPPORT_MYSENSORS = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -86,6 +89,11 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_MYSENSORS
 
     def _turn_on_light(self):
         """Turn on light child device."""

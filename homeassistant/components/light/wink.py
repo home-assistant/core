@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.wink/
 import logging
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    Light, ATTR_RGB_COLOR
+    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
+    SUPPORT_RGB_COLOR, Light
 from homeassistant.components.wink import WinkDevice
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import color as color_util
@@ -15,6 +16,8 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
 REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
+
+SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -67,6 +70,11 @@ class WinkLight(WinkDevice, Light):
             return None
         return color_util.color_temperature_kelvin_to_mired(
             self.wink.color_temperature_kelvin())
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_WINK
 
     # pylint: disable=too-few-public-methods
     def turn_on(self, **kwargs):

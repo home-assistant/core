@@ -11,14 +11,15 @@ from types import ModuleType
 from typing import Any, Optional, Dict
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
 from homeassistant.components import group, persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
-import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
+from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -103,7 +104,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
             try:
                 config = component.CONFIG_SCHEMA(config)
             except vol.MultipleInvalid as ex:
-                cv.log_exception(_LOGGER, ex, domain, config)
+                _log_exception(ex, domain, config)
                 return False
 
         elif hasattr(component, 'PLATFORM_SCHEMA'):
@@ -113,7 +114,7 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
                 try:
                     p_validated = component.PLATFORM_SCHEMA(p_config)
                 except vol.MultipleInvalid as ex:
-                    cv.log_exception(_LOGGER, ex, domain, p_config)
+                    _log_exception(ex, domain, p_config)
                     return False
 
                 # Not all platform components follow same pattern for platforms
@@ -134,8 +135,8 @@ def _setup_component(hass: core.HomeAssistant, domain: str, config) -> bool:
                     try:
                         p_validated = platform.PLATFORM_SCHEMA(p_validated)
                     except vol.MultipleInvalid as ex:
-                        cv.log_exception(_LOGGER, ex, '{}.{}'
-                                         .format(domain, p_name), p_validated)
+                        _log_exception(ex, '{}.{}'.format(domain, p_name),
+                                       p_validated)
                         return False
 
                 platforms.append(p_validated)
@@ -232,14 +233,14 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            _mount_local_lib_path(config_dir)
+            mount_local_lib_path(config_dir)
 
     core_config = config.get(core.DOMAIN, {})
 
     try:
         conf_util.process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        cv.log_exception(_LOGGER, ex, 'homeassistant', core_config)
+        _log_exception(ex, 'homeassistant', core_config)
         return None
 
     conf_util.process_ha_config_upgrade(hass)
@@ -300,7 +301,7 @@ def from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    _mount_local_lib_path(config_dir)
+    mount_local_lib_path(config_dir)
 
     enable_logging(hass, verbose, log_rotate_days)
 
@@ -308,6 +309,8 @@ def from_config_file(config_path: str,
         config_dict = conf_util.load_yaml_config_file(config_path)
     except HomeAssistantError:
         return None
+    finally:
+        clear_secret_cache()
 
     return from_config_dict(config_dict, hass, enable_log=False,
                             skip_pip=skip_pip)
@@ -371,6 +374,26 @@ def _ensure_loader_prepared(hass: core.HomeAssistant) -> None:
         loader.prepare(hass)
 
 
-def _mount_local_lib_path(config_dir: str) -> None:
+def _log_exception(ex, domain, config):
+    """Generate log exception for config validation."""
+    message = 'Invalid config for [{}]: '.format(domain)
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join('%s' % m for m in ex.path))
+    else:
+        message += humanize_error(config, ex)
+
+    if hasattr(config, '__line__'):
+        message += " (See {}:{})".format(config.__config_file__,
+                                         config.__line__ or '?')
+
+    _LOGGER.error(message)
+
+
+def mount_local_lib_path(config_dir: str) -> str:
     """Add local library to Python Path."""
-    sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    deps_dir = os.path.join(config_dir, 'deps')
+    if deps_dir not in sys.path:
+        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    return deps_dir

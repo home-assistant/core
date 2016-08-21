@@ -10,8 +10,9 @@ import logging
 from functools import partial
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN,
-                                 CONF_USERNAME, CONF_PASSWORD)
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import discovery
 from homeassistant.config import load_yaml_config_file
@@ -27,7 +28,7 @@ DISCOVER_LIGHTS = 'homematic.light'
 DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_ROLLERSHUTTER = 'homematic.rollershutter'
-DISCOVER_THERMOSTATS = 'homematic.thermostat'
+DISCOVER_THERMOSTATS = 'homematic.climate'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -54,7 +55,8 @@ HM_DEVICE_TYPES = {
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
-    'ACTUAL_TEMPERATURE'
+    'ACTUAL_TEMPERATURE',
+    'ACTUAL_HUMIDITY'
 ]
 
 HM_ATTRIBUTE_SUPPORT = {
@@ -66,7 +68,8 @@ HM_ATTRIBUTE_SUPPORT = {
     'CONTROL_MODE': ['Mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
     'POWER': ['Power', {}],
     'CURRENT': ['Current', {}],
-    'VOLTAGE': ['Voltage', {}]
+    'VOLTAGE': ['Voltage', {}],
+    'WORKING': ['Working', {0: 'No', 1: 'Yes'}],
 }
 
 HM_PRESS_EVENTS = [
@@ -96,26 +99,33 @@ CONF_REMOTE_PORT = 'remote_port'
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_DELAY = 'delay'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_LOCAL_IP): vol.Coerce(str),
-    vol.Optional(CONF_LOCAL_PORT, default=8943):
-        vol.All(vol.Coerce(int),
-                vol.Range(min=1, max=65535)),
-    vol.Required(CONF_REMOTE_IP): vol.Coerce(str),
-    vol.Optional(CONF_REMOTE_PORT, default=2001):
-        vol.All(vol.Coerce(int),
-                vol.Range(min=1, max=65535)),
-    vol.Optional(CONF_RESOLVENAMES, default=False):
-        vol.In(CONF_RESOLVENAMES_OPTIONS),
-    vol.Optional(CONF_USERNAME, default="Admin"): vol.Coerce(str),
-    vol.Optional(CONF_PASSWORD, default=""): vol.Coerce(str),
-    vol.Optional(CONF_DELAY, default=0.5): vol.Coerce(float)
+
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): "homematic",
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_ADDRESS): cv.string,
+    vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
+    vol.Optional(ATTR_PARAM): cv.string,
 })
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_LOCAL_IP): cv.string,
+        vol.Optional(CONF_LOCAL_PORT, default=8943): cv.port,
+        vol.Required(CONF_REMOTE_IP): cv.string,
+        vol.Optional(CONF_REMOTE_PORT, default=2001): cv.port,
+        vol.Optional(CONF_RESOLVENAMES, default=False):
+            vol.In(CONF_RESOLVENAMES_OPTIONS),
+        vol.Optional(CONF_USERNAME, default="Admin"): cv.string,
+        vol.Optional(CONF_PASSWORD, default=""): cv.string,
+        vol.Optional(CONF_DELAY, default=0.5): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
-    vol.Required(ATTR_ADDRESS): vol.Coerce(str),
+    vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-    vol.Required(ATTR_PARAM): vol.Coerce(str)
+    vol.Required(ATTR_PARAM): cv.string,
 })
 
 
@@ -126,14 +136,14 @@ def setup(hass, config):
 
     from pyhomematic import HMConnection
 
-    local_ip = config[DOMAIN][0].get(CONF_LOCAL_IP)
-    local_port = config[DOMAIN][0].get(CONF_LOCAL_PORT)
-    remote_ip = config[DOMAIN][0].get(CONF_REMOTE_IP)
-    remote_port = config[DOMAIN][0].get(CONF_REMOTE_PORT)
-    resolvenames = config[DOMAIN][0].get(CONF_RESOLVENAMES)
-    username = config[DOMAIN][0].get(CONF_USERNAME)
-    password = config[DOMAIN][0].get(CONF_PASSWORD)
-    HOMEMATIC_LINK_DELAY = config[DOMAIN][0].get(CONF_DELAY)
+    local_ip = config[DOMAIN].get(CONF_LOCAL_IP)
+    local_port = config[DOMAIN].get(CONF_LOCAL_PORT)
+    remote_ip = config[DOMAIN].get(CONF_REMOTE_IP)
+    remote_port = config[DOMAIN].get(CONF_REMOTE_PORT)
+    resolvenames = config[DOMAIN].get(CONF_RESOLVENAMES)
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    HOMEMATIC_LINK_DELAY = config[DOMAIN].get(CONF_DELAY)
 
     if remote_ip is None or local_ip is None:
         _LOGGER.error("Missing remote CCU/Homegear or local address")
@@ -205,7 +215,7 @@ def system_callback_handler(hass, config, src, *args):
                     ('rollershutter', DISCOVER_ROLLERSHUTTER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('thermostat', DISCOVER_THERMOSTATS)):
+                    ('climate', DISCOVER_THERMOSTATS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(discovery_type, key_dict)
 
@@ -220,8 +230,9 @@ def system_callback_handler(hass, config, src, *args):
 
 def _get_devices(device_type, keys):
     """Get the Homematic devices."""
-    # run
     device_arr = []
+
+    # pylint: disable=too-many-nested-blocks
     for key in keys:
         device = HOMEMATIC.devices[key]
         class_name = device.__class__.__name__
@@ -247,15 +258,22 @@ def _get_devices(device_type, keys):
                         name = _create_ha_name(name=device.NAME,
                                                channel=channel,
                                                param=param)
-                        device_dict = dict(platform="homematic",
-                                           address=key,
-                                           name=name,
-                                           channel=channel)
+                        device_dict = {
+                            CONF_PLATFORM: "homematic",
+                            ATTR_ADDRESS: key,
+                            ATTR_NAME: name,
+                            ATTR_CHANNEL: channel
+                        }
                         if param is not None:
-                            device_dict[ATTR_PARAM] = param
+                            device_dict.update({ATTR_PARAM: param})
 
                         # Add new device
-                        device_arr.append(device_dict)
+                        try:
+                            DEVICE_SCHEMA(device_dict)
+                            device_arr.append(device_dict)
+                        except vol.MultipleInvalid as err:
+                            _LOGGER.error("Invalid device config: %s",
+                                          str(err))
                 else:
                     _LOGGER.debug("Channel %i not in params", channel)
         else:

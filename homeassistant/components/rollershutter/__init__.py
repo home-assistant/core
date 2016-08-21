@@ -16,7 +16,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
 from homeassistant.const import (
-    SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_STOP,
+    SERVICE_MOVE_UP, SERVICE_MOVE_DOWN, SERVICE_MOVE_POSITION, SERVICE_STOP,
     STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, ATTR_ENTITY_ID)
 
 
@@ -32,9 +32,15 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
+ATTR_POSITION = 'position'
 
 ROLLERSHUTTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+ROLLERSHUTTER_MOVE_POSITION_SCHEMA = ROLLERSHUTTER_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_POSITION):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
 
 
@@ -54,6 +60,13 @@ def move_down(hass, entity_id=None):
     """Move down all or specified roller shutter."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_MOVE_DOWN, data)
+
+
+def move_position(hass, position, entity_id=None):
+    """Move to specific position all or specified roller shutter."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_POSITION] = position
+    hass.services.call(DOMAIN, SERVICE_MOVE_POSITION, data)
 
 
 def stop(hass, entity_id=None):
@@ -77,6 +90,8 @@ def setup(hass, config):
                 rollershutter.move_up()
             elif service.service == SERVICE_MOVE_DOWN:
                 rollershutter.move_down()
+            elif service.service == SERVICE_MOVE_POSITION:
+                rollershutter.move_position(service.data[ATTR_POSITION])
             elif service.service == SERVICE_STOP:
                 rollershutter.stop()
 
@@ -94,6 +109,10 @@ def setup(hass, config):
                            handle_rollershutter_service,
                            descriptions.get(SERVICE_MOVE_DOWN),
                            schema=ROLLERSHUTTER_SERVICE_SCHEMA)
+    hass.services.register(DOMAIN, SERVICE_MOVE_POSITION,
+                           handle_rollershutter_service,
+                           descriptions.get(SERVICE_MOVE_POSITION),
+                           schema=ROLLERSHUTTER_MOVE_POSITION_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_STOP,
                            handle_rollershutter_service,
                            descriptions.get(SERVICE_STOP),
@@ -141,6 +160,10 @@ class RollershutterDevice(Entity):
 
     def move_down(self, **kwargs):
         """Move the roller shutter up."""
+        raise NotImplementedError()
+
+    def move_position(self, **kwargs):
+        """Move the roller shutter to a specific position."""
         raise NotImplementedError()
 
     def stop(self, **kwargs):

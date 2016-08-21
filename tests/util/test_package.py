@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 
-import homeassistant.bootstrap as bootstrap
+from homeassistant.bootstrap import mount_local_lib_path
 import homeassistant.util.package as package
 
 RESOURCE_DIR = os.path.abspath(
@@ -21,7 +21,7 @@ class TestPackageUtil(unittest.TestCase):
     def setUp(self):
         """Create local library for testing."""
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.lib_dir = os.path.join(self.tmp_dir.name, 'deps')
+        self.lib_dir = mount_local_lib_path(self.tmp_dir.name)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -48,8 +48,6 @@ class TestPackageUtil(unittest.TestCase):
             TEST_ZIP_REQ, self.lib_dir))
         self.assertTrue(package.check_package_exists(
             TEST_NEW_REQ, self.lib_dir))
-
-        bootstrap._mount_local_lib_path(self.tmp_dir.name)
 
         try:
             import pyhelloworld3

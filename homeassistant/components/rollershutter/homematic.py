@@ -30,6 +30,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                                                      add_callback_devices)
 
 
+# pylint: disable=abstract-method
 class HMRollershutter(homematic.HMDevice, RollershutterDevice):
     """Represents a Homematic Rollershutter in Home Assistant."""
 
@@ -44,8 +45,8 @@ class HMRollershutter(homematic.HMDevice, RollershutterDevice):
             return int((1 - self._hm_get_state()) * 100)
         return None
 
-    def position(self, **kwargs):
-        """Move to a defined position: 0 (closed) and 100 (open)."""
+    def move_position(self, **kwargs):
+        """Move the roller shutter to a specific position."""
         if self.available:
             if ATTR_CURRENT_POSITION in kwargs:
                 position = float(kwargs[ATTR_CURRENT_POSITION])
