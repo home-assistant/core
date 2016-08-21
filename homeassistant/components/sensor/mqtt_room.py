@@ -35,6 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
+MQTT_PAYLOAD = vol.Schema(json.loads, {
+    vol.Required('id'): cv.string,
+    vol.Required('distance'): vol.Coerce(float)
+}, extra=vol.ALLOW_EXTRA)
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -73,8 +78,11 @@ class MQTTRoomSensor(Entity):
 
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            data = _validate_payload(payload)
-            if not data:
+            try:
+                data = MQTT_PAYLOAD(payload)
+            except vol.MultipleInvalid as error:
+                _LOGGER.debug('skipping update because of malformatted '
+                              'data: %s', error)
                 return
 
             device = _parse_update_data(topic, data)
@@ -108,36 +116,13 @@ class MQTTRoomSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'distance': self._distance,
-            'updated': self._updated
+            'distance': self._distance
         }
 
     @property
     def state(self):
         """Return the current room of the entity."""
         return self._state
-
-
-def _validate_payload(payload):
-    """Validate MQTT payload."""
-    try:
-        data = json.loads(payload)
-    except ValueError:
-        # if invalid JSON
-        _LOGGER.error('Unable to parse payload as JSON: %s', payload)
-        return None
-    if not isinstance(data, dict):
-        _LOGGER.debug('Skipping update for following data '
-                      'because of malformatted data: %s',
-                      data)
-        return None
-    if 'id' not in data or 'distance' not in data:
-        _LOGGER.debug('Skipping update for following data'
-                      'because of missing id or distance: %s',
-                      data)
-        return None
-
-    return data
 
 
 def _parse_update_data(topic, data):
