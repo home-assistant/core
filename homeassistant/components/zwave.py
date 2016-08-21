@@ -8,6 +8,7 @@ import logging
 import os.path
 import time
 from pprint import pprint
+import voluptuous as vol
 
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "zwave"
 REQUIREMENTS = ['pydispatcher==2.0.5']
@@ -42,6 +44,11 @@ SERVICE_TEST_NETWORK = "test_network"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+
+RENAME_NODE_SCHEMA = vol.Schema({
+    vol.Required("entityId"): cv.string,
+    vol.Required("name"): cv.string,
+})
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -468,15 +475,13 @@ def setup(hass, config):
 
     def rename_node(service):
         """Rename a node."""
-        if ATTR_ENTITY_ID in service.data:
-            if ATTR_NAME in service.data:
-                state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
-                node_id = state.attributes.get(ATTR_NODE_ID)
-                node = NETWORK.nodes[node_id]
-                name = service.data.get(ATTR_NAME)
-                node.name = name
-                _LOGGER.info(
-                    "Renamed ZWave node %d to %s", node_id, name)
+        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
+        node_id = state.attributes.get(ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        name = service.data.get(ATTR_NAME)
+        node.name = name
+        _LOGGER.info(
+            "Renamed ZWave node %d to %s", node_id, name)
 
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
@@ -523,7 +528,8 @@ def setup(hass, config):
         hass.services.register(DOMAIN, SERVICE_STOP_NETWORK, stop_zwave)
         hass.services.register(DOMAIN, SERVICE_START_NETWORK, start_zwave)
         hass.services.register(DOMAIN, SERVICE_RENAME_NODE, rename_node,
-                               descriptions[DOMAIN][SERVICE_RENAME_NODE])
+                               descriptions[DOMAIN][SERVICE_RENAME_NODE],
+                               schema=RENAME_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
