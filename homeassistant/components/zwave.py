@@ -23,6 +23,7 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 CONF_USB_STICK_PATH = "usb_path"
 DEFAULT_CONF_USB_STICK_PATH = "/zwaveusbstick"
 CONF_DEBUG = "debug"
+CONF_USE_NODEID_IN_NAMES = "use_nodeid_in_names"
 CONF_POLLING_INTERVAL = "polling_interval"
 CONF_POLLING_INTENSITY = "polling_intensity"
 CONF_AUTOHEAL = "autoheal"
@@ -192,7 +193,7 @@ ATTR_SCENE_ID = "scene_id"
 ATTR_BASIC_LEVEL = "basic_level"
 
 NETWORK = None
-
+USE_NODEID_IN_NAMES = None
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -216,8 +217,11 @@ def _value_name(value):
 
 def _node_object_id(node):
     """Return the object_id of the node."""
-    node_object_id = "{}_{}".format(slugify(_node_name(node)),
+    if USE_NODEID_IN_NAMES :
+        node_object_id = "{}_{}".format(slugify(_node_name(node)),
                                     node.node_id)
+    else :
+        node_object_id = "{}".format(slugify(_node_name(node)))
 
     return node_object_id
 
@@ -228,8 +232,11 @@ def _object_id(value):
     The object_id contains node_id and value instance id
     to not collide with other entity_ids.
     """
-    object_id = "{}_{}".format(slugify(_value_name(value)),
-                               value.node.node_id)
+    if USE_NODEID_IN_NAMES :
+        object_id = "{}_{}".format(slugify(_value_name(value)),
+                                   value.node.node_id)
+    else :
+        object_id = "{}".format(slugify(_value_name(value)))
 
     # Add the instance id if there is more than one instance for the value
     if value.instance > 1:
@@ -271,7 +278,8 @@ def setup(hass, config):
     """
     # pylint: disable=global-statement, import-error
     global NETWORK
-
+    global USE_NODEID_IN_NAMES
+    
     try:
         import libopenzwave
     except ImportError:
@@ -290,6 +298,7 @@ def setup(hass, config):
     use_debug = str(config[DOMAIN].get(CONF_DEBUG)) == '1'
     customize = config[DOMAIN].get(CONF_CUSTOMIZE, {})
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL, DEFAULT_CONF_AUTOHEAL)
+    USE_NODEID_IN_NAMES = str(config[DOMAIN].get(CONF_USE_NODEID_IN_NAMES,"true")) == 'true'
 
     # Setup options
     options = ZWaveOption(
