@@ -35,10 +35,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
-MQTT_PAYLOAD = vol.Schema(json.loads, {
+MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
     vol.Required('id'): cv.string,
     vol.Required('distance'): vol.Coerce(float)
-}, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)))
 
 
 # pylint: disable=unused-argument
