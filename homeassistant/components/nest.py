@@ -8,6 +8,7 @@ import logging
 import socket
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_STRUCTURE
 
@@ -22,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_STRUCTURE): vol.Any(str, list),
+        vol.Optional(CONF_STRUCTURE): vol.All(cv.ensure_list, cv.string)
     })
 }, extra=vol.ALLOW_EXTRA)
 
