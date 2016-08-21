@@ -41,7 +41,7 @@ class DemoClimate(ClimateDevice):
         self._current_swing_mode = current_swing_mode
         self._fan_list = ["On Low", "On High", "Auto Low", "Auto High", "Off"]
         self._operation_list = ["Heat", "Cool", "Auto Changeover", "Off"]
-        self._swing_list = ["Auto", 1, 2, 3, "Off"]
+        self._swing_list = ["Auto", "1", "2", "3", "Off"]
 
     @property
     def should_poll(self):
