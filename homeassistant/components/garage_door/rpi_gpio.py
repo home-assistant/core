@@ -15,7 +15,9 @@ from homeassistant.components.garage_door import GarageDoorDevice
 import homeassistant.components.rpi_gpio as rpi_gpio
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_PULL_MODE = "UP"
+RELAY_TIME = 'relay_time'
+STATE_PULL_MODE = 'state_pull_mode'
+DEFAULT_PULL_MODE = 'UP'
 DEFAULT_RELAY_TIME = .2
 DEPENDENCIES = ['rpi_gpio']
 
@@ -34,14 +36,16 @@ _DOORS_SCHEMA = vol.All(
 PLATFORM_SCHEMA = vol.Schema({
     'platform': str,
     vol.Required('doors'): _DOORS_SCHEMA,
+    vol.Optional(STATE_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
+    vol.Optional(RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.string,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the garage door platform."""
-    relay_time = config.get('relay_time', DEFAULT_RELAY_TIME)
-    state_pull_mode = config.get('state_pull_mode', DEFAULT_PULL_MODE)
+    relay_time = config.get(RELAY_TIME)
+    state_pull_mode = config.get(STATE_PULL_MODE)
     doors = []
     doors_conf = config.get('doors')
 
