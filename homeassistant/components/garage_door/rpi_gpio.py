@@ -55,8 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class RPiGPIOGarageDoor(GarageDoorDevice):
     """Representation of a Raspberry garage door."""
-
-    def __init__(self, name, relay_pin, state_pin,  # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments
+    def __init__(self, name, relay_pin, state_pin,
                  state_pull_mode, relay_time):
         """Initialize the garage door."""
         self._name = name
