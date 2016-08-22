@@ -23,10 +23,11 @@ MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.bootstrap._log_exception",
-               bootstrap._log_exception)
+    'except': ("homeassistant.bootstrap.log_exception",
+               bootstrap.log_exception)
 }
 SILENCE = (
+    'homeassistant.util.yaml.clear_secret_cache',
     'homeassistant.core._LOGGER.info',
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
@@ -159,14 +160,18 @@ def check(config_path):
         """Mock hass.loader.get_component to replace setup & setup_platform."""
         def mock_setup(*kwargs):
             """Mock setup, only record the component name & config."""
-            if comp_name in res['components']:
-                if not isinstance(res['components'][comp_name], list):
-                    res['components'][comp_name] = [res['components']]
-                res['components'][comp_name].append(kwargs[1].get(comp_name))
-            else:
-                res['components'][comp_name] = kwargs[1].get(comp_name)
+            assert comp_name not in res['components'], \
+                "Components should contain a list of platforms"
+            res['components'][comp_name] = kwargs[1].get(comp_name)
             return True
         module = MOCKS['get'][1](comp_name)
+
+        if module is None:
+            # Ensure list
+            res['except']['_error'] = res['except'].get('_error', [])
+            res['except']['_error'].append('{} not found: {}'.format(
+                'Platform' if '.' in comp_name else 'Component', comp_name))
+            return None
 
         # Test if platform/component and overwrite setup
         if '.' in comp_name:
@@ -183,14 +188,12 @@ def check(config_path):
         except HomeAssistantError:
             val = None
         res['secrets'][node.value] = val
-        # pylint: disable=protected-access
-        res['secret_cache'] = ldr._SECRET_CACHE
         return val
 
     def mock_except(ex, domain, config):  # pylint: disable=unused-variable
-        """Mock bootstrap._log_exception."""
+        """Mock bootstrap.log_exception."""
         MOCKS['except'][1](ex, domain, config)
-        res['except'][domain] = config
+        res['except'][domain] = config.get(domain, config)
 
     # Patches to skip functions
     for sil in SILENCE:
@@ -204,16 +207,20 @@ def check(config_path):
     # Start all patches
     for pat in PATCHES.values():
         pat.start()
-    # Ensure !secrets point to the patches function
+    # Ensure !secrets point to the patched function
     yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
         bootstrap.from_config_file(config_path, skip_pip=True)
+        print(dir(yaml))
+        res['secret_cache'] = yaml.__SECRET_CACHE
         return res
     finally:
         # Stop all patches
         for pat in PATCHES.values():
             pat.stop()
+        # Ensure !secrets point to the original function
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
 
 def dump_dict(layer, indent_count=1, listi=False, **kwargs):
