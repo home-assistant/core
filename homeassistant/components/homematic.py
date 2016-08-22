@@ -45,7 +45,7 @@ HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: ['Switch', 'SwitchPowermeter'],
     DISCOVER_LIGHTS: ['Dimmer'],
     DISCOVER_SENSORS: ['SwitchPowermeter', 'Motion', 'MotionV2',
-                       'RemoteMotion', 'ThermostatWall', 'AreaThermostat', 
+                       'RemoteMotion', 'ThermostatWall', 'AreaThermostat',
                        'RotaryHandleSensor', 'WaterSensor', 'PowermeterGas',
                        'LuxSensor', 'WeatherSensor'],
     DISCOVER_THERMOSTATS: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
