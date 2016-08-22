@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.11"]
+REQUIREMENTS = ["pyhomematic==0.1.13"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
@@ -47,10 +47,10 @@ HM_DEVICE_TYPES = {
     DISCOVER_SENSORS: ['SwitchPowermeter', 'Motion', 'MotionV2',
                        'RemoteMotion', 'ThermostatWall', 'AreaThermostat',
                        'RotaryHandleSensor', 'WaterSensor', 'PowermeterGas',
-                       'LuxSensor'],
+                       'LuxSensor', 'WeatherSensor'],
     DISCOVER_THERMOSTATS: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
     DISCOVER_BINARY_SENSORS: ['ShutterContact', 'Smoke', 'SmokeV2', 'Motion',
-                              'MotionV2', 'RemoteMotion'],
+                              'MotionV2', 'RemoteMotion', 'WeatherSensor'],
     DISCOVER_ROLLERSHUTTER: ['Blind']
 }
 
