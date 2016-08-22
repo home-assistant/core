@@ -23,9 +23,9 @@ DEPENDENCIES = ['mqtt']
 CONF_PAYLOAD_LOCK = 'payload_lock'
 CONF_PAYLOAD_UNLOCK = 'payload_unlock'
 
-DEFAULT_NAME = "MQTT Lock"
-DEFAULT_PAYLOAD_LOCK = "LOCK"
-DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
+DEFAULT_NAME = 'MQTT Lock'
+DEFAULT_PAYLOAD_LOCK = 'LOCK'
+DEFAULT_PAYLOAD_UNLOCK = 'UNLOCK'
 DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
@@ -39,9 +39,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MQTT lock."""
-    add_devices_callback([MqttLock(
+    add_devices([MqttLock(
         hass,
         config[CONF_NAME],
         config.get(CONF_STATE_TOPIC),
