@@ -3,6 +3,7 @@ import unittest
 from unittest import mock
 
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
+import homeassistant.bootstrap as bootstrap
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 
@@ -34,8 +35,12 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
-        config = {}
-        result = template.setup_platform(None, config, None)
+        hass = mock.MagicMock()
+        result = bootstrap.setup_component(hass, 'sensor', {
+            'sensor': {
+                'platform': 'template'
+            }
+        })
         self.assertFalse(result)
 
     def test_setup_invalid_device(self):
