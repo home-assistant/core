@@ -11,9 +11,8 @@ import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 
-DOMAIN = "demo"
-
 DEPENDENCIES = ['conversation', 'introduction', 'zone']
+DOMAIN = 'demo'
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     'alarm_control_panel',
