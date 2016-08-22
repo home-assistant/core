@@ -1,4 +1,4 @@
-"""The tests for the Rfxtrx roller shutter platform."""
+"""The tests for the Rfxtrx cover platform."""
 import unittest
 
 from homeassistant.bootstrap import _setup_component

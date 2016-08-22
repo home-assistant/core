@@ -1,11 +1,15 @@
 """The tests for the Demo cover platform."""
 import unittest
 import homeassistant.util.dt as dt_util
+import logging
 
+from datetime import timedelta
 from homeassistant.components import cover
 from tests.common import get_test_home_assistant, fire_time_changed
 
 ENTITY_COVER = 'cover.living_room_window'
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TestCoverDemo(unittest.TestCase):
@@ -27,8 +31,11 @@ class TestCoverDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_COVER)
         self.assertEqual(70, state.attributes.get('current_position'))
         cover.close_cover(self.hass, ENTITY_COVER)
-        fire_time_changed(self.hass, dt_util.utcnow())
+        _LOGGER.info("time=%s", dt_util.utcnow())
+        future = dt_util.utcnow() + timedelta(seconds=7)
+        fire_time_changed(self.hass, future)
         self.hass.pool.block_till_done()
+        _LOGGER.info("time=%s", dt_util.utcnow())
         self.assertEqual(0, state.attributes.get('current_position'))
 
     def test_open_cover(self):
