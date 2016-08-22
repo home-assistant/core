@@ -87,7 +87,8 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir('badcomponent.yaml'))
             self.assertDictEqual({
                 'components': {},
-                'except': {'_error': ['Component not found: beer']},
+                'except': {check_config.ERROR_STR:
+                           ['Component not found: beer']},
                 'secret_cache': {},
                 'secrets': {},
                 'yaml_files': {}
@@ -96,7 +97,8 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir('badplatform.yaml'))
             self.assertDictEqual({
                 'components': {},
-                'except': {'_error': ['Platform not found: light.beer']},
+                'except': {check_config.ERROR_STR:
+                           ['Platform not found: light.beer']},
                 'secret_cache': {},
                 'secrets': {},
                 'yaml_files': {}
