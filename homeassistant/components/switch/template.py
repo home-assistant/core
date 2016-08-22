@@ -47,9 +47,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SWITCHES].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        on_action = device_config.get(ON_ACTION)
-        off_action = device_config.get(OFF_ACTION)
+        state_template = device_config[CONF_VALUE_TEMPLATE]
+        on_action = device_config[ON_ACTION]
+        off_action = device_config[OFF_ACTION]
         entity_ids = device_config.get(ATTR_ENTITY_ID, MATCH_ALL)
 
         switches.append(
