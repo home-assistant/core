@@ -137,7 +137,7 @@ class TelegramNotificationService(BaseNotificationService):
         try:
             document = load_data(**data)
             self.bot.sendDocument(chat_id=self._chat_id,
-                               document=document, caption=caption)
+                                  document=document, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending document.")
             return
