@@ -9,8 +9,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import (EVENT_STATE_CHANGED, STATE_UNKNOWN)
-from homeassistant.const import (CONF_NAME, CONF_WHITELIST)
+from homeassistant.const import (
+    CONF_NAME, CONF_WHITELIST, EVENT_STATE_CHANGED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 from homeassistant.util import Throttle
