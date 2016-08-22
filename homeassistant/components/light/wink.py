@@ -15,7 +15,7 @@ from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
-REQUIREMENTS = ['python-wink==0.7.11', 'pubnub==3.8.2']
+REQUIREMENTS = ['python-wink==0.7.13', 'pubnub==3.8.2']
 
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
