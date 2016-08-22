@@ -7,27 +7,37 @@ https://home-assistant.io/components/sensor.ohmconnect/
 import logging
 from datetime import timedelta
 import xml.etree.ElementTree as ET
-import requests
 
+import requests
+import voluptuous as vol
+
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Return cached results if last scan was less then this time ago.
+CONF_ID = 'id'
+
+DEFAULT_NAME = 'OhmConnect Status'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OhmConnect sensors."""
-    ohmid = config.get("id")
-    if ohmid is None:
-        _LOGGER.error("You must provide your OhmConnect ID!")
-        return False
+    """Setup the OhmConnect sensor."""
+    name = config.get(CONF_NAME)
+    ohmid = config.get(CONF_ID)
 
-    add_devices([OhmconnectSensor(config.get("name", "OhmConnect Status"),
-                                  ohmid)])
+    add_devices([OhmconnectSensor(name, ohmid)])
 
 
 class OhmconnectSensor(Entity):
