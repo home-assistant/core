@@ -107,57 +107,6 @@ REQUIREMENTS = ['Flask==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-# Note that the double newline at the end of
-# this string is required per the SSDP spec
-SSDP_RESPONSE = """HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=60
-EXT:
-LOCATION: http://{0}:{1}/description.xml
-SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
-ST: urn:schemas-upnp-org:device:basic:1
-USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
-
-"""
-
-DESCRIPTION_XML_RESPONSE = """<?xml version="1.0" encoding="UTF-8" ?>
-<root xmlns="urn:schemas-upnp-org:device-1-0">
-<specVersion>
-<major>1</major>
-<minor>0</minor>
-</specVersion>
-<URLBase>http://{0}:{1}/</URLBase>
-<device>
-<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>HA-Echo ({0})</friendlyName>
-<manufacturer>Royal Philips Electronics</manufacturer>
-<manufacturerURL>http://www.philips.com</manufacturerURL>
-<modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
-<modelName>Philips hue bridge 2015</modelName>
-<modelNumber>BSB002</modelNumber>
-<modelURL>http://www.meethue.com</modelURL>
-<serialNumber>1234</serialNumber>
-<UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
-<presentationURL>index.html</presentationURL>
-<iconList>
-<icon>
-<mimetype>image/png</mimetype>
-<height>48</height>
-<width>48</width>
-<depth>24</depth>
-<url>hue_logo_0.png</url>
-</icon>
-<icon>
-<mimetype>image/png</mimetype>
-<height>120</height>
-<width>120</width>
-<depth>24</depth>
-<url>hue_logo_3.png</url>
-</icon>
-</iconList>
-</device>
-</root>
-"""
-
 CONF_HOST_IP = 'host_ip'
 CONF_LISTEN_PORT = 'listen_port'
 CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
@@ -279,7 +228,46 @@ class HueBridgeView(object):
         """Handle requests for the bridge's description.xml."""
         from flask import Response
 
-        resp_text = DESCRIPTION_XML_RESPONSE.format(
+        xml_template = """<?xml version="1.0" encoding="UTF-8" ?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+<specVersion>
+<major>1</major>
+<minor>0</minor>
+</specVersion>
+<URLBase>http://{0}:{1}/</URLBase>
+<device>
+<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
+<friendlyName>HA-Echo ({0})</friendlyName>
+<manufacturer>Royal Philips Electronics</manufacturer>
+<manufacturerURL>http://www.philips.com</manufacturerURL>
+<modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
+<modelName>Philips hue bridge 2015</modelName>
+<modelNumber>BSB002</modelNumber>
+<modelURL>http://www.meethue.com</modelURL>
+<serialNumber>1234</serialNumber>
+<UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
+<presentationURL>index.html</presentationURL>
+<iconList>
+<icon>
+<mimetype>image/png</mimetype>
+<height>48</height>
+<width>48</width>
+<depth>24</depth>
+<url>hue_logo_0.png</url>
+</icon>
+<icon>
+<mimetype>image/png</mimetype>
+<height>120</height>
+<width>120</width>
+<depth>24</depth>
+<url>hue_logo_3.png</url>
+</icon>
+</iconList>
+</device>
+</root>
+"""
+
+        resp_text = xml_template.format(
             self.host_ip_addr, self.listen_port)
 
         return Response(resp_text, mimetype='text/xml')
@@ -475,7 +463,19 @@ class UPNPResponderThread(threading.Thread):
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
 
-        self.upnp_response = SSDP_RESPONSE.format(host_ip_addr, listen_port) \
+        # Note that the double newline at the end of
+        # this string is required per the SSDP spec
+        resp_template = """HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=60
+EXT:
+LOCATION: http://{0}:{1}/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
+ST: urn:schemas-upnp-org:device:basic:1
+USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
+
+"""
+
+        self.upnp_response = resp_template.format(host_ip_addr, listen_port) \
                                           .replace("\n", "\r\n") \
                                           .encode('utf-8')
 
