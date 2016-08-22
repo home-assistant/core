@@ -1,5 +1,5 @@
 """The test for the Template sensor platform."""
-import homeassistant.components.sensor as sensor
+import homeassistant.bootstrap as bootstrap
 
 from tests.common import get_test_home_assistant
 
@@ -17,7 +17,7 @@ class TestTemplateSensor:
 
     def test_template(self):
         """Test template."""
-        assert sensor.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -39,7 +39,7 @@ class TestTemplateSensor:
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
-        assert sensor.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -50,15 +50,11 @@ class TestTemplateSensor:
                 }
             }
         })
-
-        self.hass.states.set('sensor.test_state', 'Works')
-        self.hass.pool.block_till_done()
-        state = self.hass.states.get('sensor.test_template_sensor')
-        assert state.state == 'unknown'
+        assert self.hass.states.all() == []
 
     def test_template_attribute_missing(self):
         """Test missing attribute template."""
-        assert sensor.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -75,7 +71,7 @@ class TestTemplateSensor:
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
-        assert sensor.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -90,7 +86,7 @@ class TestTemplateSensor:
 
     def test_invalid_sensor_does_not_create(self):
         """Test invalid sensor."""
-        assert sensor.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
@@ -102,7 +98,7 @@ class TestTemplateSensor:
 
     def test_no_sensors_does_not_create(self):
         """Test no sensors."""
-        assert sensor.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template'
             }
@@ -111,7 +107,7 @@ class TestTemplateSensor:
 
     def test_missing_template_does_not_create(self):
         """Test missing template."""
-        assert sensor.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'sensor', {
             'sensor': {
                 'platform': 'template',
                 'sensors': {
