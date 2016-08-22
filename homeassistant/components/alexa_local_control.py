@@ -252,7 +252,7 @@ class HueBridgeView(object):
 <URLBase>http://{0}:{1}/</URLBase>
 <device>
 <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>HA-Echo ({0})</friendlyName>
+<friendlyName>Home Assistant Emulated Hue Bridge ({0})</friendlyName>
 <manufacturer>Royal Philips Electronics</manufacturer>
 <manufacturerURL>http://www.philips.com</manufacturerURL>
 <modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
@@ -261,23 +261,6 @@ class HueBridgeView(object):
 <modelURL>http://www.meethue.com</modelURL>
 <serialNumber>1234</serialNumber>
 <UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
-<presentationURL>index.html</presentationURL>
-<iconList>
-<icon>
-<mimetype>image/png</mimetype>
-<height>48</height>
-<width>48</width>
-<depth>24</depth>
-<url>hue_logo_0.png</url>
-</icon>
-<icon>
-<mimetype>image/png</mimetype>
-<height>120</height>
-<width>120</width>
-<depth>24</depth>
-<url>hue_logo_3.png</url>
-</icon>
-</iconList>
 </device>
 </root>
 """
@@ -445,19 +428,14 @@ def entity_to_json(entity, is_on=None, brightness=None):
         {
             'on': is_on,
             'bri': brightness,
-            'hue': 0,
-            'sat': 0,
-            'effect': 'none',
-            'ct': 0,
-            'alert': 'none',
             'reachable': True
         },
         'type': 'Dimmable light',
         'name': name,
-        'modelid': 'LWB004',
-        'manufacturername': 'Philips',
+        'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
-        'swversion': '66012040'}
+        'swversion': '123'
+    }
 
 
 def create_hue_success_response(entity_id, attr, value):
