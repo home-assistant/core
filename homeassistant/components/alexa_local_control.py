@@ -92,6 +92,8 @@ import socket
 import logging
 import json
 
+import voluptuous as vol
+
 from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -100,6 +102,7 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
 )
+import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "alexa_local_control"
 
@@ -123,6 +126,17 @@ DEFAULT_EXPOSED_DOMAINS = [
     'switch', 'light', 'script', 'scene', 'group', 'input_boolean',
     'media_player'
 ]
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_HOST_IP): cv.string,
+        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
+        vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
+        vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -169,8 +183,10 @@ class HueBridgeView(object):
 
     def fill_with_config(self, config):
         """Fill the instance with data from the ocnfiguration file."""
+        conf = config.get(DOMAIN, {})
+
         # Get the IP address that will be passed to the Echo during discovery
-        self.host_ip_addr = config[DOMAIN].get(CONF_HOST_IP)
+        self.host_ip_addr = conf.get(CONF_HOST_IP)
         if self.host_ip_addr is None:
             self.host_ip_addr = util.get_local_ip()
             _LOGGER.warning(
@@ -178,7 +194,7 @@ class HueBridgeView(object):
                 self.host_ip_addr)
 
         # Get the port that the Hue bridge will listen on
-        self.listen_port = config[DOMAIN].get(CONF_LISTEN_PORT)
+        self.listen_port = conf.get(CONF_LISTEN_PORT)
         if not isinstance(type(self.listen_port), int):
             self.listen_port = DEFAULT_LISTEN_PORT
             _LOGGER.warning(
@@ -188,20 +204,19 @@ class HueBridgeView(object):
         # Get domains that cause both "on" and "off" commands to map to "on"
         # This is primarily useful for things like scenes or scripts, which
         # don't really have a concept of being off
-        self.off_maps_to_on_domains = config[DOMAIN].get(
-            CONF_OFF_MAPS_TO_ON_DOMAINS)
+        self.off_maps_to_on_domains = conf.get(CONF_OFF_MAPS_TO_ON_DOMAINS)
         if not isinstance(self.off_maps_to_on_domains, list):
             self.off_maps_to_on_domains = DEFAULT_OFF_MAPS_TO_ON_DOMAINS
 
         # Get whether or not entities should be exposed by default, or if only
         # explicitly marked ones will be exposed
-        self.expose_by_default = config[DOMAIN].get(CONF_EXPOSE_BY_DEFAULT)
+        self.expose_by_default = conf.get(CONF_EXPOSE_BY_DEFAULT)
         if not isinstance(type(self.expose_by_default), bool):
             self.expose_by_default = DEFAULT_EXPOSE_BY_DEFAULT
 
         # Get domains that are exposed by default when expose_by_default is
         # True
-        self.exposed_domains = config[DOMAIN].get(CONF_EXPOSED_DOMAINS)
+        self.exposed_domains = conf.get(CONF_EXPOSED_DOMAINS)
         if not isinstance(self.exposed_domains, list):
             self.exposed_domains = DEFAULT_EXPOSED_DOMAINS
 
