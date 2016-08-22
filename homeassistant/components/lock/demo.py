@@ -5,20 +5,20 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the demo lock platform."""
-    add_devices_callback([
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Demo lock platform."""
+    add_devices([
         DemoLock('Front Door', STATE_LOCKED),
         DemoLock('Kitchen Door', STATE_UNLOCKED)
     ])
 
 
 class DemoLock(LockDevice):
-    """Representation of a demo lock."""
+    """Representation of a Demo lock."""
 
     def __init__(self, name, state):
         """Initialize the lock."""
