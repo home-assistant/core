@@ -100,11 +100,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         if not self._workaround:
             if self._current_position is not None:
                 if self._current_position <= 5:
-                    return 100
-                elif self._current_position >= 95:
                     return 0
+                elif self._current_position >= 95:
+                    return 100
                 else:
-                    return 100 - self._current_position
+                    return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -166,7 +166,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of Zwave garage door."""
-        return not self._state
+        return self._state
 
     def close_cover(self):
         """Close the garage door."""

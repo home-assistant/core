@@ -125,12 +125,15 @@ class DemoCover(CoverDevice):
 
     def _listen_cover(self):
         """Listen for changes in cover."""
+        _LOGGER.info("_listener_cover called")
         if self._listener_cover is None:
+            _LOGGER.info("self._listener_cover is None")
             self._listener_cover = track_utc_time_change(
                 self.hass, self._time_changed_cover)
 
     def _time_changed_cover(self, now):
         """Track time changes."""
+        _LOGGER.info("_time_changed_cover fired now=%s", now)
         if self._closing:
             self._position -= 10
         else:
@@ -138,7 +141,7 @@ class DemoCover(CoverDevice):
 
         if self._position in (100, 0, self._set_position):
             self.stop_cover()
-
+        _LOGGER.info("updating ha state")
         self.update_ha_state()
 
     def _listen_cover_tilt(self):
