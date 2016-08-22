@@ -37,6 +37,7 @@ SILENCE = (
 PATCHES = {}
 
 C_HEAD = 'bold'
+ERROR_STR = 'General Errors'
 
 
 def color(the_color, *args, reset=None):
@@ -102,22 +103,27 @@ def run(script_args: List) -> int:
             print(color(the_color, '-', yfn))
 
     if len(res['except']) > 0:
+        print(color('bold_white', 'Failed config'))
         for domain, config in res['except'].items():
             domain_info.append(domain)
-            print(color('bold_white', 'Failed config'))
-            print(color('red'), domain + ':')
-            dump_dict(config, reset='red', indent_count=2)
+            print(' ', color('bold_red', domain + ':'),
+                  color('red', '', reset='red'))
+            dump_dict(config, reset='red', indent_count=3)
             print(color('reset'))
 
     if domain_info:
         if 'all' in domain_info:
+            print(color('bold_white', 'Successful config (all)'))
             for domain, config in res['components']:
                 print(color(C_HEAD, domain + ':'))
-                dump_dict(config, indent_count=2)
+                dump_dict(config, indent_count=3)
         else:
+            print(color('bold_white', 'Successful config (partial)'))
             for domain in domain_info:
-                print(color(C_HEAD, domain + ':'))
-                dump_dict(res['components'].get(domain, None), indent_count=2)
+                if domain == ERROR_STR:
+                    continue
+                print(' ', color(C_HEAD, domain + ':'))
+                dump_dict(res['components'].get(domain, None), indent_count=3)
 
     if args.secrets:
         flatsecret = {}
@@ -168,8 +174,8 @@ def check(config_path):
 
         if module is None:
             # Ensure list
-            res['except']['_error'] = res['except'].get('_error', [])
-            res['except']['_error'].append('{} not found: {}'.format(
+            res['except'][ERROR_STR] = res['except'].get(ERROR_STR, [])
+            res['except'][ERROR_STR].append('{} not found: {}'.format(
                 'Platform' if '.' in comp_name else 'Component', comp_name))
             return None
 

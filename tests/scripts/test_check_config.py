@@ -1,4 +1,4 @@
-"""Test script init."""
+"""Test check_config script."""
 import unittest
 import logging
 import os
@@ -29,11 +29,11 @@ def tearDownModule(self):  # pylint: disable=invalid-name
 
 
 class TestCheckConfig(unittest.TestCase):
-    """Tests homeassistant.scripts.check_config module."""
+    """Tests for the homeassistant.scripts.check_config module."""
 
     # pylint: disable=no-self-use,invalid-name
     def test_config_platform_valid(self):
-        """Test config per platform method."""
+        """Test a valid platform setup."""
         files = {
             'light.yaml': BASE_CONFIG + 'light:\n  platform: hue',
         }
@@ -47,8 +47,8 @@ class TestCheckConfig(unittest.TestCase):
                 'yaml_files': {}
             }, res)
 
-    def test_config_component_fail_validation(self):
-        """Test error if component not found."""
+    def test_config_component_platform_fail_validation(self):
+        """Test errors if component & platform not found."""
         files = {
             'component.yaml': BASE_CONFIG + 'http:\n  password: err123',
         }
@@ -62,8 +62,23 @@ class TestCheckConfig(unittest.TestCase):
                 'yaml_files': {}
             }, res)
 
+        files = {
+            'platform.yaml': (BASE_CONFIG + 'mqtt:\n\n'
+                              'light:\n  platform: mqtt_json'),
+        }
+        with patch_yaml_files(files):
+            res = check_config.check(get_test_config_dir('platform.yaml'))
+            self.assertDictEqual({
+                'components': {'mqtt': {'keepalive': 60, 'port': 1883,
+                                        'protocol': '3.1.1'}},
+                'except': {'light.mqtt_json': {'platform': 'mqtt_json'}},
+                'secret_cache': {},
+                'secrets': {},
+                'yaml_files': {}
+            }, res)
+
     def test_component_platform_not_found(self):
-        """Test error if component not found."""
+        """Test errors if component or platform not found."""
         files = {
             'badcomponent.yaml': BASE_CONFIG + 'beer:',
             'badplatform.yaml': BASE_CONFIG + 'light:\n  platform: beer',
@@ -88,7 +103,7 @@ class TestCheckConfig(unittest.TestCase):
             }, res)
 
     def test_secrets(self):
-        """Test config per platform method."""
+        """Test secrets config checking method."""
         files = {
             'secret.yaml': (BASE_CONFIG +
                             'http:\n'
