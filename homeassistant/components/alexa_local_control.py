@@ -272,6 +272,9 @@ class HueBridgeView(object):
         app.route('/api/<token>/lights/<entity_id>', methods=['GET'])(
             self.hue_api_individual_light)
 
+        app.route('/api', methods=['POST'])(
+            self.hue_api_create_user)
+
     def description_xml(self):
         """Handle requests for the bridge's description.xml."""
         from flask import Response
@@ -371,6 +374,20 @@ class HueBridgeView(object):
             final_state, final_brightness = cached_state
 
         json_response = entity_to_json(entity, final_state, final_brightness)
+
+        return Response(json.dumps(json_response), mimetype='application/json')
+
+    # pylint: disable=no-self-use
+    def hue_api_create_user(self):
+        """Handle requests to create a new user for the local bridge."""
+        from flask import Response, request, abort
+
+        request_json = request.get_json(force=True)
+
+        if 'devicetype' not in request_json:
+            abort(500)
+
+        json_response = [{'success': {'username': '12345678901234567890'}}]
 
         return Response(json.dumps(json_response), mimetype='application/json')
 
