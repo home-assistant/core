@@ -25,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
     }),
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

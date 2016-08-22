@@ -29,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_WHITELIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
     }),
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 # pylint: disable=too-many-locals
