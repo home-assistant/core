@@ -116,8 +116,8 @@ CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 
-ATTR_EMUHUE_EXPOSED = 'emulated_hue_exposed'
-ATTR_EMUHUE_FRIENDLY_NAME = 'echo_friendly_name'
+ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ['script', 'scene']
@@ -352,7 +352,7 @@ class HueLightsView(HomeAssistantView):
                 continue
 
             domain = entity.domain.lower()
-            explicit_expose = entity.attributes.get(ATTR_EMUHUE_EXPOSED, False)
+            explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
 
             domain_exposed_by_default = \
                 config.expose_by_default and domain in config.exposed_domains
@@ -473,7 +473,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
         brightness = 255 if is_on else 0
 
     name = entity.attributes.get(
-        ATTR_EMUHUE_FRIENDLY_NAME, entity.attributes['friendly_name'])
+        ATTR_EMULATED_HUE_NAME, entity.attributes['friendly_name'])
 
     return {
         'state':
