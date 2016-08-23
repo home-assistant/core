@@ -1,9 +1,9 @@
 """
-Support for local control of entities through Alexa.
+Support for local control of entities via an emulated Hue bridge.
 
 A sample configuration entry is given below:
 
-    alexa_local_control:
+    emulated_hue:
       host_ip: 192.168.1.186
       listen_port: 8300
       off_maps_to_on_domains:
@@ -16,11 +16,12 @@ A sample configuration entry is given below:
     homeassistant:
       customize:
         light.bedroom_light:
-          # Don't allow light.bedroom_light to be controlled by Alexa
-          echo: false
+          # Don't allow light.bedroom_light to be controlled by the
+          # emulated Hue bridge
+          emulated_hue_exposed: false
         light.office_light:
           # Address light.office_light as "back office light"
-          echo_friendly_name: "back office light"
+          emulated_hue_friendly_name: "back office light"
 
 - host_ip defines the IP address that your Home Assistant installation is
   running on. If you do not specify this option, the component will attempt to
@@ -46,20 +47,18 @@ A sample configuration entry is given below:
   following list:
       - 'switch'
       - 'light'
-      - 'script'
-      - 'scene'
       - 'group'
       - 'input_boolean'
       - 'media_player'
 
 The following are attributes that can be applied in the customize section:
 
-- echo specifies whether or not the entity should be discoverable by Alexa. The
-  default for this attribute is controlled with the expose_by_default config
-  option.
+- emulated_hue_exposed specifies whether or not the entity should be
+  exposed by the emulated Hue bridge. Default for this attribute is controlled
+  with the expose_by_default config option.
 
-- echo_friendly_name specifies the name that Alexa will know the entity as. The
-  default for this is the entity's friendly name.
+- emulated_hue_friendly_name specifies the name that the emulated Hue will use.
+  The default for this is the entity's friendly name.
 
 Much of this code is based on work done by Bruce Locke on his ha-local-echo
 project, located at "https://github.com/blocke/ha-local-echo", originally
@@ -107,7 +106,7 @@ from homeassistant.components.http import (
 )
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "alexa_local_control"
+DOMAIN = "emulated_hue"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,8 +116,8 @@ CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 
-ATTR_ECHO = 'echo'
-ATTR_ECHO_FRIENDLY_NAME = 'echo_friendly_name'
+ATTR_EMUHUE_EXPOSED = 'emulated_hue_exposed'
+ATTR_EMUHUE_FRIENDLY_NAME = 'echo_friendly_name'
 
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_OFF_MAPS_TO_ON_DOMAINS = ['script', 'scene']
@@ -140,7 +139,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, yaml_config):
-    """Activate the alexa_local_control component."""
+    """Activate the emulated_hue component."""
     config = Config(yaml_config)
 
     server = HomeAssistantWSGI(
@@ -353,7 +352,7 @@ class HueLightsView(HomeAssistantView):
                 continue
 
             domain = entity.domain.lower()
-            explicit_expose = entity.attributes.get(ATTR_ECHO, False)
+            explicit_expose = entity.attributes.get(ATTR_EMUHUE_EXPOSED, False)
 
             domain_exposed_by_default = \
                 config.expose_by_default and domain in config.exposed_domains
@@ -474,7 +473,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
         brightness = 255 if is_on else 0
 
     name = entity.attributes.get(
-        ATTR_ECHO_FRIENDLY_NAME, entity.attributes['friendly_name'])
+        ATTR_EMUHUE_FRIENDLY_NAME, entity.attributes['friendly_name'])
 
     return {
         'state':
