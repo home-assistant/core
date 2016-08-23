@@ -8,7 +8,7 @@ https://home-assistant.io/components/sleepiq/
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers import validate_config
+from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
 from sleepyq import Sleepyq
@@ -89,3 +89,5 @@ def setup(hass, config):
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+
+    return True
