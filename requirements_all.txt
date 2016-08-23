@@ -381,9 +381,11 @@ python-telegram-bot==5.0.0
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.cover.wink
+python-wink==0.7.11
+
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
-# homeassistant.components.cover.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
