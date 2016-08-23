@@ -78,11 +78,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = sleepiq.DATA
 
     dev = list()
-    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'left', 'sleep_number'))
-    dev.append(SleepIQSensor(sleepiq_data, sleepiq_data.bed_name, 'right', 'sleep_number'))
+    dev.append(SleepIQSensor(data, data.bed_name, 'left', 'sleep_number'))
+    dev.append(SleepIQSensor(data, data.bed_name, 'right', 'sleep_number'))
 
     # TODO move to binary sensor
-    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'left', 'is_in_bed'))
-    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'right', 'is_in_bed'))
+    #dev.append(SleepIQSensor(data, data.bed_name, 'left', 'is_in_bed'))
+    #dev.append(SleepIQSensor(data, data.bed_name, 'right', 'is_in_bed'))
 
     add_devices(dev)
