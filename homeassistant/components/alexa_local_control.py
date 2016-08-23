@@ -169,7 +169,7 @@ def setup(hass, yaml_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
     def stop_emulated_hue_bridge(event):
-        """Stop the WSGI server."""
+        """Stop the emulated hue bridge."""
         upnp_listener.stop()
         server.stop()
 
@@ -272,11 +272,11 @@ class HueUsernameView(HomeAssistantView):
     requires_auth = False
 
     def __init__(self, hass):
-        """Initializ the instance of the view."""
+        """Initialize the instance of the view."""
         super().__init__(hass)
 
     def post(self, request):
-        """Handl a POST request."""
+        """Handle a POST request."""
         data = request.json
 
         if 'devicetype' not in data:
@@ -320,9 +320,9 @@ class HueLightsView(HomeAssistantView):
         if request.base_url.endswith('state'):
             content_type = request.environ.get('CONTENT_TYPE', '')
             if content_type == 'application/x-www-form-urlencoded':
-                # Alexa send JSON data with a form data content type, for
-                # whatever reason. and Werkzeug parses form data automatically,
-                # so we need to do some gymnastics to get the JSON we need
+                # Alexa sends JSON data with a form data content type, for
+                # whatever reason, and Werkzeug parses form data automatically,
+                # so we need to do some gymnastics to get the data we need
                 json_data = None
 
                 for key in request.form:
@@ -343,7 +343,7 @@ class HueLightsView(HomeAssistantView):
         return self.Response("Method not allowed", status=405)
 
     def get_lights_list(self):
-        """Process a request to get thw list of available lights."""
+        """Process a request to get the list of available lights."""
         config = self.config
         json_response = {}
 
@@ -383,7 +383,7 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     def put_light_state(self, request_json, entity_id):
-        """Process a request to set the stat eof an individual light."""
+        """Process a request to set the state of an individual light."""
         config = self.config
 
         # Retrieve the entity from the state machine
@@ -466,7 +466,7 @@ def parse_hue_api_put_light_body(request_json, entity):
 
 
 def entity_to_json(entity, is_on=None, brightness=None):
-    """Convert an entity to its JSON representation."""
+    """Convert an entity to its Hue bridge JSON representation."""
     if is_on is None:
         is_on = entity.state == "on"
 
