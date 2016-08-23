@@ -218,7 +218,6 @@ def check(config_path):
 
     try:
         bootstrap.from_config_file(config_path, skip_pip=True)
-        print(dir(yaml))
         res['secret_cache'] = yaml.__SECRET_CACHE
         return res
     finally:
