@@ -46,7 +46,7 @@ def load_yaml(fname: str) -> Union[List, Dict]:
 
 
 def clear_secret_cache() -> None:
-    """Clear the secrete cache."""
+    """Clear the secret cache."""
     __SECRET_CACHE.clear()
 
 
@@ -150,10 +150,8 @@ def _env_var_yaml(loader: SafeLineLoader,
 def _load_secret_yaml(secret_path: str) -> Dict:
     """Load the secrets yaml from path."""
     _LOGGER.debug('Loading %s', os.path.join(secret_path, _SECRET_YAML))
-    secrets = {}
-    if os.path.isfile(os.path.join(secret_path, _SECRET_YAML)):
-        secrets = load_yaml(
-            os.path.join(secret_path, _SECRET_YAML))
+    try:
+        secrets = load_yaml(os.path.join(secret_path, _SECRET_YAML))
         if 'logger' in secrets:
             logger = str(secrets['logger']).lower()
             if logger == 'debug':
@@ -162,7 +160,9 @@ def _load_secret_yaml(secret_path: str) -> Dict:
                 _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
                               " but 'logger: %s' found", logger)
             del secrets['logger']
-    return secrets
+        return secrets
+    except FileNotFoundError:
+        return {}
 
 
 # pylint: disable=protected-access
@@ -170,24 +170,23 @@ def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
-    while os.path.exists(secret_path):
+    while True:
         secrets = __SECRET_CACHE.get(secret_path,
                                      _load_secret_yaml(secret_path))
         if node.value in secrets:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
             return secrets[node.value]
-        next_path = os.path.dirname(secret_path)
 
-        if not next_path or next_path == secret_path \
-                or secret_path == os.path.dirname(sys.path[0]):
-            # Somehow we got past the .homeassistant configuration folder...
-            break
+        if secret_path == os.path.dirname(sys.path[0]):
+            break  # sys.path[0] set to config/deps folder by bootstrap
 
-        secret_path = next_path
+        secret_path = os.path.dirname(secret_path)
+        if not os.path.exists(secret_path) or len(secret_path) < 5:
+            break  # Somehow we got past the .homeassistant config folder
 
     if keyring:
-        # do ome keyring stuff
+        # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
             _LOGGER.debug('Secret %s retrieved from keyring.', node.value)
