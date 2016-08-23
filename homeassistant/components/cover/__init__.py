@@ -176,12 +176,12 @@ class CoverDevice(Entity):
     @property
     def state(self):
         """Return the state of the cover."""
-        current = self.current_cover_position
+        closed = self.is_closed
 
-        if current is None:
+        if closed is None:
             return STATE_UNKNOWN
 
-        return STATE_CLOSED if current == 0 else STATE_OPEN
+        return STATE_CLOSED if closed else STATE_OPEN
 
     @property
     def state_attributes(self):
@@ -195,6 +195,11 @@ class CoverDevice(Entity):
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
 
         return data
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""

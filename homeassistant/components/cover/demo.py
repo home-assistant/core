@@ -13,7 +13,8 @@ from homeassistant.helpers.event import track_utc_time_change
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo covers."""
     add_devices([
-        DemoCover(hass, 'Kitchen Window', 0),
+        DemoCover(hass, 'Kitchen Window'),
+        DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),
     ])
 
@@ -24,7 +25,7 @@ class DemoCover(CoverDevice):
     """Representation of a demo cover."""
 
     # pylint: disable=no-self-use, too-many-instance-attributes
-    def __init__(self, hass, name, position, tilt_position=None):
+    def __init__(self, hass, name, position=None, tilt_position=None):
         """Initialize the cover."""
         self.hass = hass
         self._name = name

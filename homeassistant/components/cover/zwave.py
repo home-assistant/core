@@ -164,9 +164,9 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
             _LOGGER.debug("Value changed on network %s", value)
 
     @property
-    def current_cover_position(self):
+    def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return self._state
+        return not self._state
 
     def close_cover(self):
         """Close the garage door."""

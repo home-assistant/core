@@ -53,18 +53,13 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         self.wink.set_state(1)
 
     @property
-    def current_cover_position(self):
-        """Return current position of cover.
-
-        Wink reports blind shade positions as 0 or 1.
-        home-assistant expects:
-        None is unknown, 0 is closed, 100 is fully open.
-        """
+    def is_closed(self):
+        """Return if the cover is closed."""
         state = self.wink.state()
         if state == 0:
-            return 0
+            return True
         elif state == 1:
-            return 100
+            return False
         else:
             return None
 

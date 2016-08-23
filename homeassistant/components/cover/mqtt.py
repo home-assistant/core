@@ -75,6 +75,7 @@ class MqttCover(CoverDevice):
                  retain, state_open, state_closed, payload_open, payload_close,
                  payload_stop, optimistic, value_template):
         """Initialize the cover."""
+        self._position = None
         self._state = None
         self._hass = hass
         self._name = name
@@ -95,10 +96,10 @@ class MqttCover(CoverDevice):
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
             if payload == self._state_open:
-                self._state = 100
+                self._position = 100
                 self.update_ha_state()
             elif payload == self._state_closed:
-                self._state = 0
+                self._position = 0
                 self.update_ha_state()
             elif payload.isnumeric() and 0 <= int(payload) <= 100:
                 self._state = int(payload)
@@ -125,12 +126,21 @@ class MqttCover(CoverDevice):
         return self._name
 
     @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        if self._position == 0:
+            return True
+        return self._state
+
+    @property
     def current_cover_position(self):
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._state
+        if self._position is None:
+            return
+        return self._position
 
     def open_cover(self, **kwargs):
         """Move the cover up."""

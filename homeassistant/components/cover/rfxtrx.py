@@ -49,11 +49,6 @@ class RfxtrxCover(rfxtrx.RfxtrxDevice, CoverDevice):
         """No polling available in rfxtrx cover."""
         return False
 
-    @property
-    def current_cover_position(self):
-        """No position available in rfxtrx cover."""
-        return None
-
     def open_cover(self, **kwargs):
         """Move the cover up."""
         self._send_command("roll_up")
