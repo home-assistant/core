@@ -37,10 +37,18 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Setup the Graphite feeder."""
     conf = config[DOMAIN]
-
     host = conf.get(CONF_HOST)
     prefix = conf.get(CONF_PREFIX)
     port = conf.get(CONF_PORT)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect((host, port))
+        sock.shutdown(2)
+        _LOGGER.debug('Connection to Graphite possible')
+    except socket.error:
+        _LOGGER.error('Not able to connect to Graphite')
+        return False
 
     GraphiteFeeder(hass, host, port, prefix)
 

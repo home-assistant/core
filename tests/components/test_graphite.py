@@ -25,13 +25,16 @@ class TestGraphite(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_setup(self, mock_gf):
+    @patch('socket.socket')
+    def test_setup(self, mock_socket):
         """Test setup."""
-        assert not bootstrap.setup_component(self.hass, 'graphite', {})
+        assert bootstrap.setup_component(self.hass, 'graphite',
+                                         {'graphite': {}})
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
+    @patch('socket.socket')
     @patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_full_config(self, mock_gf):
+    def test_full_config(self, mock_gf, mock_socket):
         """Test setup with full configuration."""
         config = {
             'graphite': {
@@ -43,9 +46,11 @@ class TestGraphite(unittest.TestCase):
 
         self.assertTrue(graphite.setup(self.hass, config))
         mock_gf.assert_called_once_with(self.hass, 'foo', 123, 'me')
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
+    @patch('socket.socket')
     @patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_config_port(self, mock_gf):
+    def test_config_port(self, mock_gf, mock_socket):
         """Test setup with invalid port."""
         config = {
             'graphite': {
@@ -56,6 +61,7 @@ class TestGraphite(unittest.TestCase):
 
         self.assertTrue(graphite.setup(self.hass, config))
         self.assertTrue(mock_gf.called)
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
     def test_subscribe(self):
         """Test the subscription."""
