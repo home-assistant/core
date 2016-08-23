@@ -55,6 +55,13 @@ class DemoCover(CoverDevice):
         """Return the current tilt position of the cover."""
         return self._tilt_position
 
+    def is_closed(self):
+        """Return if the cover is closed."""
+        if self.current_cover_position > 0:
+            return False
+        else:
+            return True
+
     def close_cover(self, **kwargs):
         """Close the cover."""
         if self._position == 0:
