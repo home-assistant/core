@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SENSORS].items():
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        entity_ids = device_config[ATTR_ENTITY_ID, MATCH_ALL]
+        entity_ids = device_config[ATTR_ENTITY_ID]
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
 
