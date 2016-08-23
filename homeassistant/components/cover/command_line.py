@@ -83,6 +83,15 @@ class CommandCover(CoverDevice):
         return self._name
 
     @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        if self.current_cover_position is not None:
+            if self.current_cover_position > 0:
+                return False
+            else:
+                return True
+
+    @property
     def current_cover_position(self):
         """Return current position of cover.
 

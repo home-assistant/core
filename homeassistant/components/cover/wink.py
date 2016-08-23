@@ -62,7 +62,3 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
             return False
         else:
             return None
-
-    def stop_cover(self):
-        """Can't stop Wink cover due to API."""
-        pass

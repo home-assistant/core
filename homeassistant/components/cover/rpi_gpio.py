@@ -11,6 +11,7 @@ https://home-assistant.io/components/cover.rpi_gpio/
 import logging
 from time import sleep
 import voluptuous as vol
+
 from homeassistant.components.cover import CoverDevice
 import homeassistant.components.rpi_gpio as rpi_gpio
 import homeassistant.helpers.config_validation as cv

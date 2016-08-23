@@ -199,7 +199,7 @@ class CoverDevice(Entity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        return None
+        return NotImplementedError()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -211,24 +211,24 @@ class CoverDevice(Entity):
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        return None
+        pass
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        return None
+        pass
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        return None
+        pass
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        return None
+        pass
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        return None
+        pass
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        return None
+        pass

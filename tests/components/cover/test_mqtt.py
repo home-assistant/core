@@ -9,7 +9,7 @@ from tests.common import mock_mqtt_component, fire_mqtt_message
 from tests.common import get_test_home_assistant
 
 
-class TestRollershutterMQTT(unittest.TestCase):
+class TestCoverMQTT(unittest.TestCase):
     """Test the MQTT roller shutter."""
 
     def setUp(self):  # pylint: disable=invalid-name

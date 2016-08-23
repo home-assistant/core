@@ -64,6 +64,11 @@ class SCSGateCover(CoverDevice):
         """Return the name of the cover."""
         return self._name
 
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        return None
+
     def open_cover(self, **kwargs):
         """Move the cover."""
         from scsgate.tasks import RaiseRollerShutterTask

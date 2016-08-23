@@ -7,8 +7,8 @@ from homeassistant.components import rfxtrx as rfxtrx_core
 from tests.common import get_test_home_assistant
 
 
-class TestRollershutterRfxtrx(unittest.TestCase):
-    """Test the Rfxtrx roller shutter platform."""
+class TestCoverRfxtrx(unittest.TestCase):
+    """Test the Rfxtrx cover platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -83,14 +83,14 @@ class TestRollershutterRfxtrx(unittest.TestCase):
                            }}}))
 
     def test_default_config(self):
-        """Test with 0 roller shutter."""
+        """Test with 0 cover."""
         self.assertTrue(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'devices': {}}}))
         self.assertEqual(0, len(rfxtrx_core.RFX_DEVICES))
 
-    def test_one_rollershutter(self):
-        """Test with 1 roller shutter."""
+    def test_one_cover(self):
+        """Test with 1 cover."""
         self.assertTrue(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'devices':
@@ -112,8 +112,8 @@ class TestRollershutterRfxtrx(unittest.TestCase):
             entity.close_cover()
             entity.stop_cover()
 
-    def test_several_rollershutters(self):
-        """Test with 3 roller shutters."""
+    def test_several_covers(self):
+        """Test with 3 covers."""
         self.assertTrue(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'signal_repetitions': 3,
@@ -140,8 +140,8 @@ class TestRollershutterRfxtrx(unittest.TestCase):
 
         self.assertEqual(3, device_num)
 
-    def test_discover_rollershutter(self):
-        """Test with discovery of roller shutters."""
+    def test_discover_covers(self):
+        """Test with discovery of covers."""
         self.assertTrue(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': True,
@@ -178,8 +178,8 @@ class TestRollershutterRfxtrx(unittest.TestCase):
             evt_sub(event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
-    def test_discover_rollershutter_noautoadd(self):
-        """Test with discovery of roller shutter when auto add is False."""
+    def test_discover_cover_noautoadd(self):
+        """Test with discovery of cover when auto add is False."""
         self.assertTrue(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
                       'automatic_add': False,

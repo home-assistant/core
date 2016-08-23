@@ -9,11 +9,10 @@ properly configured.
 """
 
 import logging
-from homeassistant.const import (STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.cover import CoverDevice,\
     ATTR_CURRENT_POSITION
 import homeassistant.components.homematic as homematic
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,13 +54,13 @@ class HMCover(homematic.HMDevice, CoverDevice):
                 self._hmdevice.set_level(level, self._channel)
 
     @property
-    def state(self):
-        """Return the state of the cover."""
-        current = self.current_cover_position
-        if current is None:
-            return STATE_UNKNOWN
-
-        return STATE_CLOSED if current == 100 else STATE_OPEN
+    def is_closed(self):
+        """Return if the cover is closed."""
+        if self.current_cover_position is not None:
+            if self.current_cover_position > 0:
+                return False
+            else:
+                return True
 
     def open_cover(self, **kwargs):
         """Open the cover."""
