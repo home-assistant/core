@@ -2,12 +2,16 @@
 import os
 from datetime import timedelta
 from unittest import mock
+from unittest.mock import patch
+from io import StringIO
+import logging
 
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import _setup_component
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
+import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
@@ -15,11 +19,12 @@ from homeassistant.const import (
 from homeassistant.components import sun, mqtt
 
 _TEST_INSTANCE_PORT = SERVER_PORT
+_LOGGER = logging.getLogger(__name__)
 
 
-def get_test_config_dir():
+def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "testing_config")
+    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
 def get_test_home_assistant(num_threads=None):
@@ -65,8 +70,7 @@ def mock_service(hass, domain, service):
     """
     calls = []
 
-    hass.services.register(
-        domain, service, lambda call: calls.append(call))
+    hass.services.register(domain, service, calls.append)
 
     return calls
 
@@ -110,8 +114,8 @@ def ensure_sun_set(hass):
 def load_fixture(filename):
     """Helper to load a fixture."""
     path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
-    with open(path) as fp:
-        return fp.read()
+    with open(path) as fptr:
+        return fptr.read()
 
 
 def mock_state_change_event(hass, new_state, old_state=None):
@@ -147,6 +151,7 @@ def mock_mqtt_component(hass, mock_mqtt):
 class MockModule(object):
     """Representation of a fake module."""
 
+    # pylint: disable=invalid-name,too-few-public-methods,too-many-arguments
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None):
         """Initialize the mock module."""
@@ -170,6 +175,7 @@ class MockModule(object):
 class MockPlatform(object):
     """Provide a fake platform."""
 
+    # pylint: disable=invalid-name,too-few-public-methods
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None):
         """Initialize the platform."""
@@ -234,3 +240,33 @@ class MockToggleDevice(ToggleEntity):
                             if call[0] == method)
             except StopIteration:
                 return None
+
+
+def patch_yaml_files(files_dict, endswith=True):
+    """Patch load_yaml with a dictionary of yaml files."""
+    # match using endswith, start search with longest string
+    matchlist = sorted(list(files_dict.keys()), key=len) if endswith else []
+    # matchlist.sort(key=len)
+
+    def mock_open_f(fname, **_):
+        """Mock open() in the yaml module, used by load_yaml."""
+        # Return the mocked file on full match
+        if fname in files_dict:
+            _LOGGER.debug('patch_yaml_files match %s', fname)
+            return StringIO(files_dict[fname])
+
+        # Match using endswith
+        for ends in matchlist:
+            if fname.endswith(ends):
+                _LOGGER.debug('patch_yaml_files end match %s: %s', ends, fname)
+                return StringIO(files_dict[ends])
+
+        # Fallback for hass.components (i.e. services.yaml)
+        if 'homeassistant/components' in fname:
+            _LOGGER.debug('patch_yaml_files using real file: %s', fname)
+            return open(fname, encoding='utf-8')
+
+        # Not found
+        raise IOError('File not found: {}'.format(fname))
+
+    return patch.object(yaml, 'open', mock_open_f, create=True)
