@@ -357,7 +357,11 @@ class HueLightsView(HomeAssistantView):
             domain_exposed_by_default = \
                 config.expose_by_default and domain in config.exposed_domains
 
-            if domain_exposed_by_default or explicit_expose:
+            # Expose an entity if the entity's domain is exposed by default and
+            # the configuration doesn't explicitly exclude it from being
+            # exposed, or if the entity is explicitly exposed
+            if (domain_exposed_by_default and explicit_expose != False) or \
+                    explicit_expose:
                 json_response[entity.entity_id] = entity_to_json(entity)
 
         return self.json(json_response)
