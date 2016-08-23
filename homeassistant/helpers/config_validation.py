@@ -1,6 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from datetime import timedelta
 from urllib.parse import urlparse
+from ipaddress import IPv4Address, AddressValueError
 
 from typing import Any, Union, TypeVar, Callable, Sequence, List, Dict
 
@@ -265,6 +266,17 @@ def url(value: Any) -> str:
         return vol.Schema(vol.Url())(url_in)
 
     raise vol.Invalid('invalid url')
+
+
+def ipaddress(value: Any) -> str:
+    """Validate an IPv4 address."""
+    address = str(value)
+
+    try:
+        IPv4Address(address)
+        return value
+    except AddressValueError:
+        raise vol.Invalid('invalid ip address')
 
 
 # Validator helpers
