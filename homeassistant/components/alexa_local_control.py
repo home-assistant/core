@@ -97,16 +97,17 @@ import voluptuous as vol
 from homeassistant import util, core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    EVENT_HOMEASSISTANT_START
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
 )
+from homeassistant.components.http import (
+    HomeAssistantView, HomeAssistantWSGI
+)
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "alexa_local_control"
-
-REQUIREMENTS = ['Flask==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,51 +139,50 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+def setup(hass, yaml_config):
     """Activate the alexa_local_control component."""
-    from flask import Flask
+    config = Config(yaml_config)
 
-    app = Flask(__name__)
-    app.url_map.strict_slashes = False
+    server = HomeAssistantWSGI(
+        hass,
+        development=False,
+        server_host=config.host_ip_addr,
+        server_port=config.listen_port,
+        api_password=None,
+        ssl_certificate=None,
+        ssl_key=None,
+        cors_origins=[]
+    )
 
-    view = HueBridgeView(hass, config)
-    view.set_up_routes(app)
+    server.register_view(DescriptionXmlView(hass, config))
+    server.register_view(HueUsernameView(hass))
+    server.register_view(HueLightsView(hass, config))
 
-    def start_listener(event):
-        """Start listening for UPNP/SSDP requests."""
-        upnp_listener = UPNPResponderThread(
-            view.host_ip_addr, view.listen_port)
+    upnp_listener = UPNPResponderThread(
+        config.host_ip_addr, config.listen_port)
+
+    def start_emulated_hue_bridge(event):
+        """Start the emulated hue bridge."""
+        server.start()
         upnp_listener.start()
 
-    def start_web_server():
-        """Start the Hue bridge API web server."""
-        from cherrypy import wsgiserver
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
-        dispatcher = wsgiserver.WSGIPathInfoDispatcher({'/': app})
-        server = wsgiserver.CherryPyWSGIServer(
-            ('0.0.0.0', view.listen_port), dispatcher)
+    def stop_emulated_hue_bridge(event):
+        """Stop the WSGI server."""
+        upnp_listener.stop()
+        server.stop()
 
-        server.start()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_listener)
-    threading.Thread(target=start_web_server, daemon=True, name=DOMAIN).start()
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
     return True
 
 
-class HueBridgeView(object):
-    """An instance of an emulated Hue bridge."""
-
-    def __init__(self, hass_instance, config):
-        """Initialize the instance."""
-        self.hass = hass_instance
-        self.cached_states = {}
-
-        self.fill_with_config(config)
-
-    def fill_with_config(self, config):
-        """Fill the instance with data from the ocnfiguration file."""
-        conf = config.get(DOMAIN, {})
+# pylint: disable=too-few-public-methods
+class Config(object):
+    """Holds configuration variables for the emulated hue bridge."""
+    def __init__(self, yaml_config):
+        conf = yaml_config.get(DOMAIN, {})
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
@@ -219,29 +219,20 @@ class HueBridgeView(object):
         if not isinstance(self.exposed_domains, list):
             self.exposed_domains = DEFAULT_EXPOSED_DOMAINS
 
-    def set_up_routes(self, app):
-        """Set up Flask routes."""
-        app.route('/description.xml', methods=['GET'])(
-            self.description_xml)
 
-        app.route('/api/<token>/lights', methods=['GET'])(
-            self.hue_api_lights)
-        app.route('/api/<token>/lights/', methods=['GET'])(
-            self.hue_api_lights)
+class DescriptionXmlView(HomeAssistantView):
+    """Handles requests for the description.xml file."""
+    url = '/description.xml'
+    name = 'description:xml'
+    requires_auth = False
 
-        app.route('/api/<token>/lights/<entity_id>/state', methods=['PUT'])(
-            self.hue_api_put_light)
+    def __init__(self, hass, config):
+        """Initializes the instance of the view."""
+        super().__init__(hass)
+        self.config = config
 
-        app.route('/api/<token>/lights/<entity_id>', methods=['GET'])(
-            self.hue_api_individual_light)
-
-        app.route('/api', methods=['POST'])(
-            self.hue_api_create_user)
-
-    def description_xml(self):
-        """Handle requests for the bridge's description.xml."""
-        from flask import Response
-
+    def get(self, request):
+        """Handles a GET request."""
         xml_template = """<?xml version="1.0" encoding="UTF-8" ?>
 <root xmlns="urn:schemas-upnp-org:device-1-0">
 <specVersion>
@@ -265,14 +256,90 @@ class HueBridgeView(object):
 """
 
         resp_text = xml_template.format(
-            self.host_ip_addr, self.listen_port)
+            self.config.host_ip_addr, self.config.listen_port)
 
-        return Response(resp_text, mimetype='text/xml')
+        return self.Response(resp_text, mimetype='text/xml')
 
-    def hue_api_lights(self, token):
-        """Handle requests for lights accessible to users of the bridge API."""
-        from flask import Response
 
+class HueUsernameView(HomeAssistantView):
+    """Handles requests to create a username for the emulated hue bridge."""
+    url = '/api'
+    name = 'hue:api'
+    requires_auth = False
+
+    def __init__(self, hass):
+        """Initializes the instance of the view."""
+        super().__init__(hass)
+
+    def post(self, request):
+        """Handles a POST request."""
+        data = request.json
+
+        if 'devicetype' not in data:
+            return self.Response("devicetype not specified", status=400)
+
+        json_response = [{'success': {'username': '12345678901234567890'}}]
+
+        return self.json(json_response)
+
+
+class HueLightsView(HomeAssistantView):
+    """Handles requests for getting and setting info about entities."""
+    url = '/api/<username>/lights'
+    name = 'api:username:lights'
+    extra_urls = ['/api/<username>/lights/<entity_id>',
+                  '/api/<username>/lights/<entity_id>/state']
+    requires_auth = False
+
+    def __init__(self, hass, config):
+        """Initializes the instance of the view."""
+        super().__init__(hass)
+        self.config = config
+        self.cached_states = {}
+
+    def get(self, request, username, entity_id=None):
+        """Handles a GET request."""
+        if entity_id is None:
+            return self.get_lights_list()
+
+        if not request.base_url.endswith('state'):
+            return self.get_light_state(entity_id)
+
+        return self.Response("Method not allowed", status=405)
+
+    def put(self, request, username, entity_id=None):
+        """Handles a PUT request."""
+        if entity_id is None:
+            return self.Response("Not found", status=404)
+
+        if request.base_url.endswith('state'):
+            content_type = request.environ.get('CONTENT_TYPE', '')
+            if content_type == 'application/x-www-form-urlencoded':
+                # Alexa send JSON data with a form data content type, for
+                # whatever reason. and Werkzeug parses form data automatically,
+                # so we need to do some gymnastics to get the JSON we need
+                json_data = None
+
+                for key in request.form:
+                    try:
+                        json_data = json.loads(key)
+                        break
+                    except json.JSONDecodeError:
+                        # Try the next key?
+                        pass
+
+                if json_data is None:
+                    return self.Response("Bad request", status=400)
+            else:
+                json_data = request.json
+
+            return self.put_light_state(json_data, entity_id)
+
+        return self.Response("Method not allowed", status=405)
+
+    def get_lights_list(self):
+        """Processes a request to get thw list of available lights."""
+        config = self.config
         json_response = {}
 
         for entity in self.hass.states.all():
@@ -284,28 +351,46 @@ class HueBridgeView(object):
             explicit_expose = entity.attributes.get(ATTR_ECHO, False)
 
             domain_exposed_by_default = \
-                self.expose_by_default and domain in self.exposed_domains
+                config.expose_by_default and domain in config.exposed_domains
 
             if domain_exposed_by_default or explicit_expose:
                 json_response[entity.entity_id] = entity_to_json(entity)
 
-        return Response(json.dumps(json_response), mimetype='application/json')
+        return self.json(json_response)
 
-    def hue_api_put_light(self, token, entity_id):
-        """Handle requests to change the state of a light."""
-        from flask import Response, abort, request
+    def get_light_state(self, entity_id):
+        """Processes a request to get the state of an individual light."""
+        entity = self.hass.states.get(entity_id)
+        if entity is None:
+            return self.Response("Entity not found", status=404)
+
+        cached_state = self.cached_states.get(entity_id, None)
+
+        if cached_state is None:
+            final_state = entity.state == 'on'
+            final_brightness = entity.attributes.get(
+                ATTR_BRIGHTNESS, 255 if final_state else 0)
+        else:
+            final_state, final_brightness = cached_state
+
+        json_response = entity_to_json(entity, final_state, final_brightness)
+
+        return self.json(json_response)
+
+    def put_light_state(self, request_json, entity_id):
+        """Processes a request to set the stat eof an individual light."""
+        config = self.config
 
         # Retrieve the entity from the state machine
         entity = self.hass.states.get(entity_id)
         if entity is None:
-            abort(404)
+            return self.Response("Entity not found", status=404)
 
         # Parse the request into requested "on" status and brightness
-        parsed = parse_hue_api_put_light_body(
-            request.get_json(force=True), entity)
+        parsed = parse_hue_api_put_light_body(request_json, entity)
 
         if parsed is None:
-            abort(500)
+            return self.Response("Bad request", status=400)
 
         result, brightness = parsed
 
@@ -318,7 +403,7 @@ class HueBridgeView(object):
         if brightness is not None:
             data[ATTR_BRIGHTNESS] = brightness
 
-        if entity.domain.lower() in self.off_maps_to_on_domains:
+        if entity.domain.lower() in config.off_maps_to_on_domains:
             # Map the off command to on
             service = SERVICE_TURN_ON
 
@@ -332,49 +417,13 @@ class HueBridgeView(object):
         # Perform the requested action
         self.hass.services.call(core.DOMAIN, service, data, blocking=True)
 
-        response = [create_hue_success_response(entity_id, 'on', result)]
+        json_response = [create_hue_success_response(entity_id, 'on', result)]
 
         if brightness is not None:
-            response.append(
+            json_response.append(
                 create_hue_success_response(entity_id, 'bri', brightness))
 
-        return Response(
-            json.dumps(response), mimetype='application/json', status=200)
-
-    def hue_api_individual_light(self, token, entity_id):
-        """Handle requests for the status of an individual light."""
-        from flask import Response, abort
-
-        entity = self.hass.states.get(entity_id)
-        if entity is None:
-            abort(404)
-
-        cached_state = self.cached_states.get(entity_id, None)
-
-        if cached_state is None:
-            final_state = entity.state == 'on'
-            final_brightness = entity.attributes.get(
-                ATTR_BRIGHTNESS, 255 if final_state else 0)
-        else:
-            final_state, final_brightness = cached_state
-
-        json_response = entity_to_json(entity, final_state, final_brightness)
-
-        return Response(json.dumps(json_response), mimetype='application/json')
-
-    # pylint: disable=no-self-use
-    def hue_api_create_user(self):
-        """Handle requests to create a new user for the local bridge."""
-        from flask import Response, request, abort
-
-        request_json = request.get_json(force=True)
-
-        if 'devicetype' not in request_json:
-            abort(500)
-
-        json_response = [{'success': {'username': '12345678901234567890'}}]
-
-        return Response(json.dumps(json_response), mimetype='application/json')
+        return self.json(json_response)
 
 
 def parse_hue_api_put_light_body(request_json, entity):
