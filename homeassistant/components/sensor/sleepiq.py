@@ -4,13 +4,14 @@ Support for SleepIQ sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sleepiq/
 """
-from homeassistant.components import ecobee
+from homeassistant.components import sleepiq
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['sleepiq']
 SENSOR_TYPES = {
     'sleep_number': 'SleepNumber',
 }
+
 
 # pylint: disable=too-few-public-methods
 class SleepIQSensor(Entity):
@@ -36,7 +37,8 @@ class SleepIQSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {} {}'.format(self.client_name, self._bed_name, self._sleeper, self._name)
+        return '{} {} {} {}'.format(self.client_name, self._bed_name,
+                                    self._sleeper, self._name)
 
     @property
     def state(self):
@@ -46,7 +48,7 @@ class SleepIQSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        return sleepiq.ICON
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
@@ -76,11 +78,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = sleepiq.DATA
 
     dev = list()
-    dev.append(SleepIQSensor(sleepiq_data, sleepiq_data.bed_name, 'left', 'sleep_number'))
+    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'left', 'sleep_number'))
     dev.append(SleepIQSensor(sleepiq_data, sleepiq_data.bed_name, 'right', 'sleep_number'))
 
     # TODO move to binary sensor
-    dev.append(SleepIQSensor(sleepiq_data, sleepiq_data.bed_name, 'left', 'is_in_bed'))
-    dev.append(SleepIQSensor(sleepiq_data, sleepiq_data.bed_name, 'right', 'is_in_bed'))
+    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'left', 'is_in_bed'))
+    dev.append(SleepIQSensor(sleepiq_data, data.bed_name, 'right', 'is_in_bed'))
 
     add_devices(dev)

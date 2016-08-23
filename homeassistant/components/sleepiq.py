@@ -1,13 +1,16 @@
+"""
+Support for SleepIQ from SleepNumber
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sleepiq/
+"""
+
 import logging
 from datetime import timedelta
-from requests.exceptions import ConnectionError as ConnectError, \
-    HTTPError, Timeout
 
 from homeassistant.helpers import validate_config
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from pprint import pprint
 from sleepyq import Sleepyq
 
 DOMAIN = 'sleepiq'
@@ -26,6 +29,7 @@ ICON = 'mdi:hotel'
 
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
+
     def __init__(self, login, password):
         """Initialize the data object."""
         self._client = Sleepyq(login, password)
@@ -52,7 +56,7 @@ class SleepIQData(object):
         bed = beds[0]
 
         self.bed_name = bed['name']
-        
+
         family_status = bed_family_statuses_by_bed_id[bed['bedId']]
 
         left_sleeper = sleepers_by_id[bed['sleeperLeftId']]
@@ -70,14 +74,13 @@ class SleepIQData(object):
             'is_in_bed': right_status['isInBed'],
             'sleep_number': right_status['sleepNumber'],
         }
-        
+
 def setup(hass, config):
     """Setup SleepIQ.
 
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-
     # pylint: disable=global-statement, import-error
     global DATA
 
