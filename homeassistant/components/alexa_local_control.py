@@ -181,7 +181,9 @@ def setup(hass, yaml_config):
 # pylint: disable=too-few-public-methods
 class Config(object):
     """Holds configuration variables for the emulated hue bridge."""
+
     def __init__(self, yaml_config):
+        """Initialize the instance."""
         conf = yaml_config.get(DOMAIN, {})
 
         # Get the IP address that will be passed to the Echo during discovery
@@ -222,17 +224,18 @@ class Config(object):
 
 class DescriptionXmlView(HomeAssistantView):
     """Handles requests for the description.xml file."""
+
     url = '/description.xml'
     name = 'description:xml'
     requires_auth = False
 
     def __init__(self, hass, config):
-        """Initializes the instance of the view."""
+        """Initialize the instance of the view."""
         super().__init__(hass)
         self.config = config
 
     def get(self, request):
-        """Handles a GET request."""
+        """Handle a GET request."""
         xml_template = """<?xml version="1.0" encoding="UTF-8" ?>
 <root xmlns="urn:schemas-upnp-org:device-1-0">
 <specVersion>
@@ -262,17 +265,18 @@ class DescriptionXmlView(HomeAssistantView):
 
 
 class HueUsernameView(HomeAssistantView):
-    """Handles requests to create a username for the emulated hue bridge."""
+    """Handle requests to create a username for the emulated hue bridge."""
+
     url = '/api'
     name = 'hue:api'
     requires_auth = False
 
     def __init__(self, hass):
-        """Initializes the instance of the view."""
+        """Initializ the instance of the view."""
         super().__init__(hass)
 
     def post(self, request):
-        """Handles a POST request."""
+        """Handl a POST request."""
         data = request.json
 
         if 'devicetype' not in data:
@@ -284,7 +288,8 @@ class HueUsernameView(HomeAssistantView):
 
 
 class HueLightsView(HomeAssistantView):
-    """Handles requests for getting and setting info about entities."""
+    """Handle requests for getting and setting info about entities."""
+
     url = '/api/<username>/lights'
     name = 'api:username:lights'
     extra_urls = ['/api/<username>/lights/<entity_id>',
@@ -292,13 +297,13 @@ class HueLightsView(HomeAssistantView):
     requires_auth = False
 
     def __init__(self, hass, config):
-        """Initializes the instance of the view."""
+        """Initialize the instance of the view."""
         super().__init__(hass)
         self.config = config
         self.cached_states = {}
 
     def get(self, request, username, entity_id=None):
-        """Handles a GET request."""
+        """Handle a GET request."""
         if entity_id is None:
             return self.get_lights_list()
 
@@ -308,7 +313,7 @@ class HueLightsView(HomeAssistantView):
         return self.Response("Method not allowed", status=405)
 
     def put(self, request, username, entity_id=None):
-        """Handles a PUT request."""
+        """Handle a PUT request."""
         if entity_id is None:
             return self.Response("Not found", status=404)
 
@@ -338,7 +343,7 @@ class HueLightsView(HomeAssistantView):
         return self.Response("Method not allowed", status=405)
 
     def get_lights_list(self):
-        """Processes a request to get thw list of available lights."""
+        """Process a request to get thw list of available lights."""
         config = self.config
         json_response = {}
 
@@ -359,7 +364,7 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     def get_light_state(self, entity_id):
-        """Processes a request to get the state of an individual light."""
+        """Process a request to get the state of an individual light."""
         entity = self.hass.states.get(entity_id)
         if entity is None:
             return self.Response("Entity not found", status=404)
@@ -378,7 +383,7 @@ class HueLightsView(HomeAssistantView):
         return self.json(json_response)
 
     def put_light_state(self, request_json, entity_id):
-        """Processes a request to set the stat eof an individual light."""
+        """Process a request to set the stat eof an individual light."""
         config = self.config
 
         # Retrieve the entity from the state machine
