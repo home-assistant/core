@@ -34,7 +34,7 @@ class TestCoverRfxtrx(unittest.TestCase):
                               rfxtrx_core.ATTR_FIREEVENT: True}
                            }}}))
 
-    def test_invalid_config1(self):
+    def test_invalid_config_capital_letters(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
@@ -46,7 +46,7 @@ class TestCoverRfxtrx(unittest.TestCase):
                                'signal_repetitions': 3}
                            }}}))
 
-    def test_invalid_config2(self):
+    def test_invalid_config_extra_key(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
@@ -59,7 +59,7 @@ class TestCoverRfxtrx(unittest.TestCase):
                               rfxtrx_core.ATTR_FIREEVENT: True}
                            }}}))
 
-    def test_invalid_config3(self):
+    def test_invalid_config_capital_packetid(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
@@ -71,7 +71,7 @@ class TestCoverRfxtrx(unittest.TestCase):
                               rfxtrx_core.ATTR_FIREEVENT: True}
                            }}}))
 
-    def test_invalid_config4(self):
+    def test_invalid_config_missing_packetid(self):
         """Test configuration."""
         self.assertFalse(_setup_component(self.hass, 'cover', {
             'cover': {'platform': 'rfxtrx',
