@@ -8,8 +8,10 @@ import logging
 
 import homeassistant.components.scsgate as scsgate
 from homeassistant.components.cover import CoverDevice
+from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['scsgate']
+SCS_ID = 'scs_id'
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -20,13 +22,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if devices:
         for _, entity_info in devices.items():
-            if entity_info['scs_id'] in scsgate.SCSGATE.devices:
+            if entity_info[SCS_ID] in scsgate.SCSGATE.devices:
                 continue
 
-            logger.info("Adding %s scsgate.cover", entity_info['name'])
+            logger.info("Adding %s scsgate.cover", entity_info[CONF_NAME])
 
-            name = entity_info['name']
-            scs_id = entity_info['scs_id']
+            name = entity_info[CONF_NAME]
+            scs_id = entity_info[SCS_ID]
             cover = SCSGateCover(
                 name=name,
                 scs_id=scs_id,
