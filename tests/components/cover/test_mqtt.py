@@ -10,7 +10,7 @@ from tests.common import get_test_home_assistant
 
 
 class TestCoverMQTT(unittest.TestCase):
-    """Test the MQTT roller shutter."""
+    """Test the MQTT cover."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
