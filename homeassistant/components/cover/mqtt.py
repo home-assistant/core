@@ -96,13 +96,14 @@ class MqttCover(CoverDevice):
                 payload = template.render_with_possible_json_value(
                     hass, value_template, payload)
             if payload == self._state_open:
-                self._position = 100
+                self._state = False
                 self.update_ha_state()
             elif payload == self._state_closed:
-                self._position = 0
+                self._state = True
                 self.update_ha_state()
             elif payload.isnumeric() and 0 <= int(payload) <= 100:
                 self._state = int(payload)
+                self._position = int(payload)
                 self.update_ha_state()
             else:
                 _LOGGER.warning(
