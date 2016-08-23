@@ -4,7 +4,6 @@ Demo platform for the cover component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import logging
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
@@ -17,8 +16,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),
     ])
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DemoCover(CoverDevice):
@@ -60,9 +57,7 @@ class DemoCover(CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        _LOGGER.info("closing cover, self._position=%s", self._position)
         if self._position == 0:
-            _LOGGER.info("self._position=0")
             return
 
         self._listen_cover()
@@ -126,15 +121,12 @@ class DemoCover(CoverDevice):
 
     def _listen_cover(self):
         """Listen for changes in cover."""
-        _LOGGER.info("_listener_cover called")
         if self._listener_cover is None:
-            _LOGGER.info("self._listener_cover is None")
             self._listener_cover = track_utc_time_change(
                 self.hass, self._time_changed_cover)
 
     def _time_changed_cover(self, now):
         """Track time changes."""
-        _LOGGER.info("_time_changed_cover fired now=%s", now)
         if self._closing:
             self._position -= 10
         else:
@@ -142,7 +134,6 @@ class DemoCover(CoverDevice):
 
         if self._position in (100, 0, self._set_position):
             self.stop_cover()
-        _LOGGER.info("updating ha state")
         self.update_ha_state()
 
     def _listen_cover_tilt(self):
