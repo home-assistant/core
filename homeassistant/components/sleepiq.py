@@ -81,7 +81,7 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global DATA
 
-    DATA = SleepIQData(config['login'], config['password'])
+    DATA = SleepIQData(config[DOMAIN]['login'], config[DOMAIN]['password'])
     DATA.update()
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
