@@ -70,6 +70,48 @@ class TestConditionHelper:
         self.hass.states.set('sensor.temperature', 100)
         assert test(self.hass)
 
+    def test_invert_numeric_state_condition(self):
+        """Test the 'not numeric_state' condition."""
+        test = condition.from_config({
+            'condition': 'numeric_state',
+            'invert': True,
+            'entity_id': 'sensor.temperature',
+            'below': 100
+        })
+
+        self.hass.states.set('sensor.temperature', 420)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 42)
+        assert not test(self.hass)
+
+    def test_invert_and_condition(self):
+        """Test the 'not and' condition."""
+        test = condition.from_config({
+            'condition': 'and',
+            'invert': True,
+            'conditions': [
+                {
+                    'condition': 'state',
+                    'entity_id': 'sensor.temperature',
+                    'state': '100',
+                }, {
+                    'condition': 'numeric_state',
+                    'entity_id': 'sensor.temperature',
+                    'below': 110,
+                }
+            ]
+        })
+
+        self.hass.states.set('sensor.temperature', 120)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 105)
+        assert test(self.hass)
+
+        self.hass.states.set('sensor.temperature', 100)
+        assert not test(self.hass)
+
     def test_time_window(self):
         """Test time condition windows."""
         sixam = dt.parse_time("06:00:00")
