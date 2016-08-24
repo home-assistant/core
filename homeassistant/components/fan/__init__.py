@@ -37,6 +37,11 @@ SUPPORT_OSCILLATE = 2
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 
+SPEED_OFF = 'off'
+SPEED_LOW = 'low'
+SPEED_MED = 'med'
+SPEED_HIGH = 'high'
+
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATE = 'oscillate'
