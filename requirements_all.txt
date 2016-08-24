@@ -273,6 +273,7 @@ psutil==4.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
+# homeassistant.components.cover.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
@@ -382,6 +383,7 @@ python-twitch==1.3.0
 
 # homeassistant.components.wink
 # homeassistant.components.binary_sensor.wink
+# homeassistant.components.cover.wink
 # homeassistant.components.garage_door.wink
 # homeassistant.components.light.wink
 # homeassistant.components.lock.wink
