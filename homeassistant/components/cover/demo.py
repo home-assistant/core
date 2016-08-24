@@ -55,9 +55,20 @@ class DemoCover(CoverDevice):
         """Return the current tilt position of the cover."""
         return self._tilt_position
 
+    @property
+    def is_closed(self):
+        """Return if the cover is closed."""
+        if self._position is not None:
+            if self.current_cover_position > 0:
+                return False
+            else:
+                return True
+        else:
+            return None
+
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self._position == 0:
+        if self._position in (0, None):
             return
 
         self._listen_cover()
@@ -65,7 +76,7 @@ class DemoCover(CoverDevice):
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        if self._tilt_position == 0:
+        if self._tilt_position in (0, None):
             return
 
         self._listen_cover_tilt()
@@ -73,7 +84,7 @@ class DemoCover(CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self._position == 100:
+        if self._position in (100, None):
             return
 
         self._listen_cover()
@@ -81,7 +92,7 @@ class DemoCover(CoverDevice):
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        if self._tilt_position == 100:
+        if self._tilt_position in (100, None):
             return
 
         self._listen_cover_tilt()
@@ -92,6 +103,7 @@ class DemoCover(CoverDevice):
         self._set_position = round(position, -1)
         if self._position == position:
             return
+
         self._listen_cover()
         self._closing = position < self._position
 
@@ -100,11 +112,14 @@ class DemoCover(CoverDevice):
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
+
         self._listen_cover_tilt()
         self._closing_tilt = tilt_position < self._tilt_position
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
+        if self._position is None:
+            return
         if self._listener_cover is not None:
             self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
                                           self._listener_cover)
@@ -113,6 +128,9 @@ class DemoCover(CoverDevice):
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover tilt."""
+        if self._tilt_position is None:
+            return
+
         if self._listener_cover_tilt is not None:
             self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
                                           self._listener_cover_tilt)
