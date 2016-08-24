@@ -25,7 +25,7 @@ DEVICE_CATEGORIES = [
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Insteon Hub light platform."""
+    """Setup the Insteon Hub fan platform."""
     devs = []
     for device in filter_devices(INSTEON.devices, DEVICE_CATEGORIES):
         devs.append(InsteonFanDevice(device))
