@@ -62,7 +62,7 @@ class InsteonDimmableDevice(InsteonLightDevice):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return self._value / 100 * 255
+        return round(self._value / 100 * 255, 0)  # type: int
 
     @property
     def supported_features(self) -> int:
@@ -73,7 +73,7 @@ class InsteonDimmableDevice(InsteonLightDevice):
         """Turn device on."""
         level = 100  # type: int
         if ATTR_BRIGHTNESS in kwargs:
-            level = kwargs[ATTR_BRIGHTNESS] / 255 * 100  # type: int
+            level = round(kwargs[ATTR_BRIGHTNESS] / 255 * 100, 0)  # type: int
 
         if self._send_command('on', level=level):
             self._value = level
