@@ -10,26 +10,23 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice,
                                                     ENTITY_ID_FORMAT,
-                                                    SENSOR_CLASSES,
-                                                    PLATFORM_SCHEMA)
+                                                    PLATFORM_SCHEMA,
+                                                    SENSOR_CLASSES_SCHEMA)
 
-from homeassistant.const import (ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE,
-                                 ATTR_ENTITY_ID, MATCH_ALL)
+from homeassistant.const import (ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, MATCH_ALL,
+                                 CONF_VALUE_TEMPLATE, CONF_SENSOR_CLASS)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers import template
 from homeassistant.helpers.event import track_state_change
 
 CONF_SENSORS = 'sensors'
-CONF_SENSOR_CLASS = 'sensor_class'
-
-SENSOR_CLASS_SCHEMA = vol.In(SENSOR_CLASSES)
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID, default=MATCH_ALL): cv.entity_ids,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASS_SCHEMA
+    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
