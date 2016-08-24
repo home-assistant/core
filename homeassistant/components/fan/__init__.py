@@ -50,38 +50,38 @@ PROP_TO_ATTR = {
     'speed_list': ATTR_SPEED_LIST,
     'oscillate': ATTR_OSCILLATE,
     'supported_features': ATTR_SUPPORTED_FEATURES,
-}
+}  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_SPEED): cv.string
-})
+})  # type: dict
 
 FAN_TURN_ON_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_SPEED): cv.string
-})
+})  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids
-})
+})  # type: dict
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OSCILLATE): cv.boolean
-})
+})  # type: dict
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_on(hass, entity_id=None):
+def is_on(hass, entity_id: str=None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     return not hass.states.is_state(entity_id, STATE_OFF)
 
 
 # pylint: disable=too-many-arguments
-def turn_on(hass, entity_id=None, speed=None):
+def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value for key, value in [
@@ -93,7 +93,7 @@ def turn_on(hass, entity_id=None, speed=None):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
-def turn_off(hass, entity_id=None):
+def turn_off(hass, entity_id: str=None) -> None:
     """Turn all or specified fan off."""
     data = {
         ATTR_ENTITY_ID: entity_id,
@@ -102,19 +102,19 @@ def turn_off(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-def oscillate(hass, entity_id=None, oscillate=None):
+def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
     """Set oscillation on all or specified fan."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OSCILLATE, oscillate()),
+            (ATTR_OSCILLATE, should_oscillate),
         ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
 
 
-def set_speed(hass, entity_id=None, speed=None):
+def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value for key, value in [
@@ -127,13 +127,13 @@ def set_speed(hass, entity_id=None, speed=None):
 
 
 # pylint: disable=too-many-branches, too-many-locals, too-many-statements
-def setup(hass, config):
+def setup(hass, config: dict) -> None:
     """Expose fan control via statemachine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS)
     component.setup(config)
 
-    def handle_fan_service(service):
+    def handle_fan_service(service: str) -> None:
         """Hande service call for fans."""
         # Get the validated data
         params = service.data.copy()
@@ -185,29 +185,29 @@ class FanEntity(Entity):
 
     # pylint: disable=no-self-use, abstract-method
 
-    def set_speed(self:Entity, speed:str) -> None:
+    def set_speed(self: Entity, speed: str) -> None:
         """Set the speed of the fan."""
         pass
 
-    def turn_on(self:Entity, speed:str=None) -> None:
+    def turn_on(self: Entity, speed: str=None) -> None:
         """Turn on the fan."""
         pass
 
-    def turn_off(self:Entity) -> None:
+    def turn_off(self: Entity) -> None:
         """Turn off the fan."""
         pass
 
-    def oscillate(self:Entity) -> None:
+    def oscillate(self: Entity) -> None:
         """Oscillate the fan."""
         pass
 
     @property
-    def speed_list(self):
-        """Get the list of available speeds"""
+    def speed_list(self: Entity) -> list:
+        """Get the list of available speeds."""
         return []
 
     @property
-    def state_attributes(self:Entity) -> None:
+    def state_attributes(self: Entity) -> dict:
         """Return optional state attributes."""
         data = {}  # type: dict
 
@@ -219,6 +219,6 @@ class FanEntity(Entity):
         return data
 
     @property
-    def supported_features(self:Entity) -> int:
+    def supported_features(self: Entity) -> int:
         """Flag supported features."""
         return 0
