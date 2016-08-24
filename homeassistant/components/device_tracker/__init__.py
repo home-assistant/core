@@ -13,7 +13,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant.bootstrap import (prepare_setup_platform,
-                                     _log_exception)
+                                     log_exception)
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
@@ -62,9 +62,9 @@ ATTR_BATTERY = 'battery'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,  # seconds
-})
+}, extra=vol.ALLOW_EXTRA)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
+_CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.All(cv.ensure_list, [
     vol.Schema({
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_CONSIDER_HOME): cv.positive_int  # seconds
@@ -75,8 +75,6 @@ DISCOVERY_PLATFORMS = {
 }
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=too-many-arguments
-
 
 def is_on(hass, entity_id=None):
     """Return the state if any or a specified device is home."""
@@ -86,7 +84,8 @@ def is_on(hass, entity_id=None):
 
 
 def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None, gps_accuracy=None, battery=None):
+        gps=None, gps_accuracy=None,
+        battery=None):  # pylint: disable=too-many-arguments
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -103,23 +102,16 @@ def setup(hass, config):
     """Setup device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
-    conf = CONFIG_SCHEMA(config).get(DOMAIN, [])
+    try:
+        conf = _CONFIG_SCHEMA(config).get(DOMAIN, [])
+        conf = conf[0] if len(conf) > 0 else {}
+    except vol.Invalid as ex:
+        log_exception(ex, DOMAIN, conf)
+        return False
 
-    def _get_conf_value(key_name, default):
-        """Retrieve a value from all platforms & rasie error if conflictind."""
-        res = list(set([plat.get(key_name) for plat in conf
-                        if plat.get(key_name) is not None]))
-        if len(res) > 1:
-            _LOGGER.warning('device_tracker: Conflicting %s settings: %s',
-                            key_name, ','.join(res))
-        if len(res) > 0:
-            return res[0]
-        return default
-
-    _LOGGER.warning("CONFIG: from device_tracker.setup() %s", conf)
-    consider_home = timedelta(
-        seconds=_get_conf_value(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
-    track_new = _get_conf_value(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    consider_home = timedelta(seconds=conf.get(CONF_CONSIDER_HOME,
+                                               DEFAULT_CONSIDER_HOME))
+    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = load_config(yaml_path, hass, consider_home)
 
@@ -130,15 +122,6 @@ def setup(hass, config):
         platform = prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
-
-        # Apply component & platform specific validation schema
-        try:
-            p_config = PLATFORM_SCHEMA(p_config)
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                p_config = platform.PLATFORM_SCHEMA(p_config)
-        except vol.MultipleInvalid as ex:
-            _log_exception(ex, DOMAIN, p_config)
-            return False
 
         try:
             if hasattr(platform, 'get_scanner'):
@@ -196,6 +179,12 @@ class DeviceTracker(object):
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
+        for dev in devices:
+            if self.devices[dev.dev_id] is not dev:
+                _LOGGER.warning('Duplicate device IDs detected %s', dev.dev_id)
+            if dev.mac and self.mac_to_dev[dev.mac] is not dev:
+                _LOGGER.warning('Duplicate device MAC addresses detected %s',
+                                dev.mac)
         self.consider_home = consider_home
         self.track_new = track_new
         self.lock = threading.Lock()
