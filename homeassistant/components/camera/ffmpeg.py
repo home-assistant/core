@@ -14,7 +14,7 @@ from homeassistant.components.camera.mjpeg import extract_image_from_mjpeg
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
-REQUIREMENTS = ["ha-ffmpeg==0.4"]
+REQUIREMENTS = ["ha-ffmpeg==0.7"]
 
 CONF_INPUT = 'input'
 CONF_FFMPEG_BIN = 'ffmpeg_bin'
