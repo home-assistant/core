@@ -261,7 +261,7 @@ pilight==0.0.2
 # homeassistant.components.sensor.plex
 plexapi==2.0.2
 
-# homeassistant.components.sensor.hmz19
+# homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.3
 
