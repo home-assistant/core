@@ -4,8 +4,7 @@ Support for Insteon Hub lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/insteon_hub/
 """
-from homeassistant.components.insteon_hub import (INSTEON, InsteonDevice,
-                                                  InsteonCommandable)
+from homeassistant.components.insteon_hub import (INSTEON, InsteonDevice)
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 
@@ -26,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class InsteonLightDevice(InsteonDevice, Light):
     """A representation of a light device."""
 
-    def __init__(self: InsteonDevice, node: InsteonCommandable) -> None:
+    def __init__(self: InsteonDevice, node: object) -> None:
         """Initialize the device."""
         super(InsteonLightDevice, self).__init__(node)
         self._value = 0

@@ -6,9 +6,6 @@ https://home-assistant.io/components/insteon_hub/
 """
 import logging
 
-from insteon import Insteon
-from insteon.resources import InsteonCommandable
-
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import Entity
@@ -51,6 +48,8 @@ def setup(hass, config: dict) -> bool:
             _LOGGER):
         return False
 
+    from insteon import Insteon
+
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     api_key = config[DOMAIN][CONF_API_KEY]
@@ -70,7 +69,7 @@ def setup(hass, config: dict) -> bool:
 class InsteonDevice(Entity):
     """Represents an insteon device."""
 
-    def __init__(self: Entity, node: InsteonCommandable) -> None:
+    def __init__(self: Entity, node: object) -> None:
         """Initialize the insteon device."""
         self._node = node
 

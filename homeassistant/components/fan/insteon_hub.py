@@ -11,8 +11,7 @@ from homeassistant.components.fan import (FanEntity, SUPPORT_SET_SPEED,
                                           SPEED_OFF, SPEED_LOW, SPEED_MED,
                                           SPEED_HIGH)
 from homeassistant.components.insteon_hub import (InsteonDevice, INSTEON,
-                                                  filter_devices,
-                                                  InsteonCommandable)
+                                                  filter_devices)
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class InsteonFanDevice(InsteonDevice, FanEntity):
     """Represet an insteon fan device."""
 
-    def __init__(self: InsteonDevice, node: InsteonCommandable) -> None:
+    def __init__(self: InsteonDevice, node: object) -> None:
         """Initialize the device."""
         super(InsteonFanDevice, self).__init__(node)
         self.speed = STATE_UNKNOWN  # Insteon hub can't get state via REST
