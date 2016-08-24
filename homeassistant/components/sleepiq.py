@@ -33,10 +33,6 @@ class SleepIQData(object):
     def __init__(self, login, password):
         """Initialize the data object."""
         self._client = Sleepyq(login, password)
-
-        self.beds = None
-        self.sleepers = None
-        self.statuses = None
         self.sides = {}
 
         self.update()
