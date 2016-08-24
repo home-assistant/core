@@ -28,9 +28,7 @@ class TestTplink4DeviceScanner(unittest.TestCase):
 
     @requests_mock.mock()
     def test_get_mac_addresses_from_both_bands(self, m):
-        """
-        Test grabbing the mac addresses from both 2.4 and 5 GHz clients pages.
-        """
+        """Test grabbing the mac addresses from 2.4 and 5 GHz clients pages."""
         conf_dict = {
             CONF_PLATFORM: 'tplink',
             CONF_HOST: 'fake_host',
