@@ -176,7 +176,7 @@ def setup(hass, config):
     return True
 
 
-class Fan(Entity):
+class FanEntity(Entity):
     """Representation of a fan."""
 
     # pylint: disable=no-self-use, abstract-method
