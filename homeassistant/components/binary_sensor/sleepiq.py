@@ -53,14 +53,12 @@ class SleepIQBinarySensor(BinarySensorDevice):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
-        if self._side == 'right':
-            status = self.sleepiq_data.right
-        else:
-            status = self.sleepiq_data.left
-
+        status = self.sleepiq_data.sides[self._side]
         self._sleeper = status['sleeper']
+
         if self.type == 'is_in_bed':
             self._state = status['is_in_bed']
+        # TODO throw error for anything else
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

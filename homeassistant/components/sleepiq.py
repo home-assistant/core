@@ -37,6 +37,7 @@ class SleepIQData(object):
         self.beds = None
         self.sleepers = None
         self.statuses = None
+        self.sides = {}
 
         self.update()
 
@@ -64,16 +65,17 @@ class SleepIQData(object):
         right_sleeper = sleepers_by_id[bed['sleeperRightId']]
         right_status = family_status['rightSide']
 
-        self.left = {
+        self.sides['left'] = {
             'sleeper': left_sleeper['firstName'],
             'is_in_bed': left_status['isInBed'],
             'sleep_number': left_status['sleepNumber'],
         }
-        self.right = {
+        self.sides['right'] = {
             'sleeper': right_sleeper['firstName'],
             'is_in_bed': right_status['isInBed'],
             'sleep_number': right_status['sleepNumber'],
         }
+
 
 def setup(hass, config):
     """Setup SleepIQ.

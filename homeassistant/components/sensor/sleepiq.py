@@ -53,15 +53,12 @@ class SleepIQSensor(Entity):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
-        if self._side == 'right':
-            status = self.sleepiq_data.right
-        else:
-            status = self.sleepiq_data.left
-
+        status = self.sleepiq_data.sides[self._side]
         self._sleeper = status['sleeper']
 
         if self.type == 'sleep_number':
             self._state = status['sleep_number']
+        # TODO throw error for anything else
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
