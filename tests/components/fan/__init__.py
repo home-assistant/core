@@ -1,0 +1,1 @@
+"""Test fan component plaforms."""
