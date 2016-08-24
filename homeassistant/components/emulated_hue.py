@@ -90,6 +90,8 @@ import threading
 import socket
 import logging
 import json
+import os
+import select
 
 import voluptuous as vol
 
@@ -195,7 +197,7 @@ class Config(object):
 
         # Get the port that the Hue bridge will listen on
         self.listen_port = conf.get(CONF_LISTEN_PORT)
-        if not isinstance(type(self.listen_port), int):
+        if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
             _LOGGER.warning(
                 "Listen port not specified, defaulting to %s",
@@ -211,7 +213,7 @@ class Config(object):
         # Get whether or not entities should be exposed by default, or if only
         # explicitly marked ones will be exposed
         self.expose_by_default = conf.get(CONF_EXPOSE_BY_DEFAULT)
-        if not isinstance(type(self.expose_by_default), bool):
+        if not isinstance(self.expose_by_default, bool):
             self.expose_by_default = DEFAULT_EXPOSE_BY_DEFAULT
 
         # Get domains that are exposed by default when expose_by_default is
@@ -360,8 +362,8 @@ class HueLightsView(HomeAssistantView):
             # Expose an entity if the entity's domain is exposed by default and
             # the configuration doesn't explicitly exclude it from being
             # exposed, or if the entity is explicitly exposed
-            if (domain_exposed_by_default and explicit_expose != False) or \
-                    explicit_expose:
+            if (domain_exposed_by_default and explicit_expose is not False) \
+                    or explicit_expose:
                 json_response[entity.entity_id] = entity_to_json(entity)
 
         return self.json(json_response)
@@ -503,7 +505,7 @@ def create_hue_success_response(entity_id, attr, value):
 class UPNPResponderThread(threading.Thread):
     """Handle responding to UPNP/SSDP discovery requests."""
 
-    stop_thread = False
+    _interrupted = False
 
     def __init__(self, host_ip_addr, listen_port):
         """Initialize the class."""
@@ -528,49 +530,84 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                                           .replace("\n", "\r\n") \
                                           .encode('utf-8')
 
+        # Set up a pipe for signaling to the receiver that it's time to
+        # shutdown. Essentially, we place the SSDP socket into nonblocking
+        # mode and use select() to wait for data to arrive on either the SSDP
+        # socket or the pipe. If data arrives on either one, select() returns
+        # and tells us which filenos have data ready to read.
+        #
+        # When we want to stop the responder, we write data to the pipe, which
+        # causes the select() to return and indicate that said pipe has data
+        # ready to be read, which indicates to us that the responder needs to
+        # be shutdown.
+        self._interrupted_read_pipe, self._interrupted_write_pipe = os.pipe()
+
     def run(self):
         """Run the server."""
         # Listen for UDP port 1900 packets sent to SSDP multicast address
-        ssdpmc_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        ssdp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        ssdp_socket.setblocking(False)
 
         # Required for receiving multicast
-        ssdpmc_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        ssdp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        ssdpmc_socket.setsockopt(
+        ssdp_socket.setsockopt(
             socket.SOL_IP,
             socket.IP_MULTICAST_IF,
             socket.inet_aton(self.host_ip_addr))
 
-        ssdpmc_socket.setsockopt(
+        ssdp_socket.setsockopt(
             socket.SOL_IP,
             socket.IP_ADD_MEMBERSHIP,
             socket.inet_aton("239.255.255.250") +
             socket.inet_aton(self.host_ip_addr))
 
-        ssdpmc_socket.bind(("239.255.255.250", 1900))
+        ssdp_socket.bind(("239.255.255.250", 1900))
 
         while True:
+            if self._interrupted:
+                clean_socket_close(ssdp_socket)
+                return
+
             try:
-                data, addr = ssdpmc_socket.recvfrom(1024)
-            except socket.error as ex:
-                if self.stop_thread:
-                    _LOGGER.error(("UPNP Reponder Thread closing socket and "
-                                   "shutting down..."))
-                    ssdpmc_socket.close()
+                read, _, _ = select.select(
+                    [self._interrupted_read_pipe, ssdp_socket], [],
+                    [ssdp_socket])
+
+                if self._interrupted_read_pipe in read:
+                    # Implies self._interrupted is True
+                    clean_socket_close(ssdp_socket)
                     return
-                _LOGGER.error(
-                    "UPNP Responder socket.error exception occured: %s",
-                    ex.__str__)
+                elif ssdp_socket in read:
+                    data, addr = ssdp_socket.recvfrom(1024)
+                else:
+                    continue
+            except socket.error as ex:
+                if self._interrupted:
+                    clean_socket_close(ssdp_socket)
+                    return
+
+                _LOGGER.error("UPNP Responder socket exception occured: %s",
+                              ex.__str__)
 
             if "M-SEARCH" in data.decode('utf-8'):
                 # SSDP M-SEARCH method received, respond to it with our info
-                ssdpout_socket = socket.socket(
+                resp_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
 
-                ssdpout_socket.sendto(self.upnp_response, addr)
-                ssdpout_socket.close()
+                resp_socket.sendto(self.upnp_response, addr)
+                resp_socket.close()
 
     def stop(self):
         """Stop the server."""
-        # Request for thread to stop
-        self.stop_thread = True
+        # Request for server
+        self._interrupted = True
+        os.write(self._interrupted_write_pipe, bytes([0]))
+        self.join()
+
+
+def clean_socket_close(sock):
+    """Close a socket connection and logs its closure."""
+    _LOGGER.info("UPNP responder shutting down.")
+
+    sock.close()
