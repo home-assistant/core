@@ -201,7 +201,7 @@ class CoverDevice(Entity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
