@@ -4,25 +4,31 @@ Support for EnOcean switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.enocean/
 """
-
 import logging
 
-from homeassistant.const import CONF_NAME
+import voluptuous as vol
+
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, CONF_ID)
 from homeassistant.components import enocean
 from homeassistant.helpers.entity import ToggleEntity
-
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["enocean"]
+DEFAULT_NAME = 'EnOcean Switch'
+DEPENDENCIES = ['enocean']
 
-CONF_ID = "id"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the EnOcean switch platform."""
-    dev_id = config.get(CONF_ID, None)
-    devname = config.get(CONF_NAME, "Enocean actuator")
+    dev_id = config.get(CONF_ID)
+    devname = config.get(CONF_NAME)
 
     add_devices([EnOceanSwitch(dev_id, devname)])
 
