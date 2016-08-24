@@ -56,22 +56,19 @@ class SleepIQData(object):
 
         family_status = bed_family_statuses_by_bed_id[bed['bedId']]
 
-        left_sleeper = sleepers_by_id[bed['sleeperLeftId']]
-        left_status = family_status['leftSide']
-        right_sleeper = sleepers_by_id[bed['sleeperRightId']]
-        right_status = family_status['rightSide']
+        for side in ['left', 'right']:
+            from IPython import embed
+            embed()
+            sleeper_key = 'sleeper' + side.title() + 'Id'
+            sleeper = sleepers_by_id[bed[sleeper_key]]
+            status_key = side + 'Side'
+            status = family_status[status_key]
 
-        self.sides['left'] = {
-            'sleeper': left_sleeper['firstName'],
-            'is_in_bed': left_status['isInBed'],
-            'sleep_number': left_status['sleepNumber'],
-        }
-        self.sides['right'] = {
-            'sleeper': right_sleeper['firstName'],
-            'is_in_bed': right_status['isInBed'],
-            'sleep_number': right_status['sleepNumber'],
-        }
-
+            self.sides[side] = {
+                'sleeper': sleeper['firstName'],
+                'is_in_bed': status['isInBed'],
+                'sleep_number': status['sleepNumber'],
+            }
 
 def setup(hass, config):
     """Setup SleepIQ.
