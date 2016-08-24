@@ -23,6 +23,8 @@ DEVICE_CATEGORIES = [
     }
 ]
 
+DEPENDENCIES = ['insteon_hub']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub fan platform."""

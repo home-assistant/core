@@ -10,6 +10,8 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS,
 
 SUPPORT_INSTEON_HUB = SUPPORT_BRIGHTNESS
 
+DEPENDENCIES = ['insteon_hub']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Insteon Hub light platform."""
