@@ -15,7 +15,7 @@ from sleepyq import Sleepyq
 
 DOMAIN = 'sleepiq'
 
-REQUIREMENTS = ['sleepyq==0.4']
+REQUIREMENTS = ['sleepyq==0.5']
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
