@@ -33,8 +33,9 @@ def request_configuration(hass, config, url, add_devices_callback):
         return
     from websocket import create_connection
     websocket = create_connection((url), timeout=1)
-    websocket.send('{"namespace": "connect", "method": "connect",'
-                   '"arguments": ["Home Assistant"]}')
+    websocket.send(json.dumps({'namespace': 'connect',
+                               'method': 'connect',
+                               'arguments': ['Home Assistant']}))
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
@@ -49,14 +50,14 @@ def request_configuration(hass, config, url, add_devices_callback):
                 continue
             if msg['payload'] != "CODE_REQUIRED":
                 continue
-            websocket.send('{"namespace": "connect",'
-                           '"method": "connect",'
-                           '"arguments": ["Home Assistant",'
-                           ' "' + callback_data.get('pin') + '"]}')
+            pin = callback_data.get('pin')
+            websocket.send(json.dumps({'namespace': 'connect',
+                                       'method': 'connect',
+                                       'arguments': ['Home Assistant', pin]}))
             tmpmsg = json.loads(websocket.recv())
             if tmpmsg['channel'] == 'time':
                 _LOGGER.error('Error setting up GPMDP. Please pause'
-                              'the desktop player and try again.')
+                              ' the desktop player and try again.')
                 break
             code = tmpmsg['payload']
             if code == 'CODE_REQUIRED':
@@ -65,11 +66,11 @@ def request_configuration(hass, config, url, add_devices_callback):
                         add_devices_callback)
             _save_config(hass.config.path(GPMDP_CONFIG_FILE),
                          {"CODE": code})
-            websocket.send('{"namespace": "connect",'
-                           '"method": "connect",'
-                           '"arguments": ["Home Assistant",'
-                           ' "' + code + '"]}')
+            websocket.send(json.dumps({'namespace': 'connect',
+                                       'method': 'connect',
+                                       'arguments': ['Home Assistant', code]}))
             websocket.close()
+            break
 
     _CONFIGURING['gpmdp'] = configurator.request_config(
         hass, "GPM Desktop Player", gpmdp_configuration_callback,
@@ -159,6 +160,9 @@ class GPMDP(MediaPlayerDevice):
         self._title = None
         self._artist = None
         self._albumart = None
+        self._seek_position = None
+        self._duration = None
+        self._request_id = 0
         self.update()
 
     def get_ws(self):
@@ -176,33 +180,46 @@ class GPMDP(MediaPlayerDevice):
                 self._ws = None
         return self._ws
 
+    def send_msg_with_req_id(self, method):
+        """Send ws messages to GPMDP and verify request id in response."""
+        from websocket import _exceptions
+        try:
+            websocket = self.get_ws()
+            if websocket is None:
+                self._status = STATE_OFF
+                return
+            else:
+                self._request_id += 1
+                websocket.send(json.dumps({'namespace': 'playback',
+                                           'method': method,
+                                           'requestID': self._request_id}))
+                while True:
+                    msg = json.loads(websocket.recv())
+                    if 'requestID' in msg:
+                        if msg['requestID'] == self._request_id:
+                            return msg
+        except (_exceptions.WebSocketTimeoutException,
+                _exceptions.WebSocketProtocolException,
+                _exceptions.WebSocketPayloadException):
+            return
+
     def update(self):
         """Get the latest details from the player."""
-        websocket = self.get_ws()
-        if websocket is None:
-            self._status = STATE_OFF
+        playstate = self.send_msg_with_req_id('isPlaying')
+        if playstate is None:
             return
-        else:
-            receiving = True
-            while receiving:
-                from websocket import _exceptions
-                try:
-                    msg = json.loads(websocket.recv())
-                    if msg['channel'] == 'lyrics':
-                        receiving = False  # end of now playing data
-                    elif msg['channel'] == 'playState':
-                        if msg['payload'] is True:
-                            self._status = STATE_PLAYING
-                        else:
-                            self._status = STATE_PAUSED
-                    elif msg['channel'] == 'track':
-                        self._title = (msg['payload']['title'])
-                        self._artist = (msg['payload']['artist'])
-                        self._albumart = (msg['payload']['albumArt'])
-                except (_exceptions.WebSocketTimeoutException,
-                        _exceptions.WebSocketProtocolException,
-                        _exceptions.WebSocketPayloadException):
-                    return
+        self._status = STATE_PLAYING if playstate['value'] else STATE_PAUSED
+        time_data = self.send_msg_with_req_id('getCurrentTime')
+        if time_data is None:
+            return
+        self._seek_position = int(time_data['value'] / 1000)
+        track_data = self.send_msg_with_req_id('getCurrentTrack')
+        if track_data is None:
+            return
+        self._title = track_data['value']['title']
+        self._artist = track_data['value']['artist']
+        self._albumart = track_data['value']['albumArt']
+        self._duration = int(track_data['value']['duration'] / 1000)
 
     @property
     def media_content_type(self):
@@ -228,6 +245,16 @@ class GPMDP(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         return self._albumart
+
+    @property
+    def media_seek_position(self):
+        """Time in seconds of current seek positon."""
+        return self._seek_position
+
+    @property
+    def media_duration(self):
+        """Time in seconds of current song duration."""
+        return self._duration
 
     @property
     def name(self):
