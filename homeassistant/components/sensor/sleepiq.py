@@ -8,10 +8,11 @@ from homeassistant.components import sleepiq
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['sleepiq']
+ICON = 'mdi:hotel'
+
 SENSOR_TYPES = {
     'sleep_number': 'SleepNumber',
 }
-
 
 # pylint: disable=too-few-public-methods
 class SleepIQSensor(Entity):
@@ -26,11 +27,6 @@ class SleepIQSensor(Entity):
         self.sleepiq_data = sleepiq_data
         self.type = sensor_type
         self._state = None
-
-        if self.type == 'sleep_number':
-            self._icon = 'mdi:hotel'
-        elif self.type == 'is_in_bed':
-            self._icon = 'mdi:sleep'
 
         self.update()
 
@@ -48,7 +44,7 @@ class SleepIQSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return sleepiq.ICON
+        return ICON
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
@@ -66,8 +62,6 @@ class SleepIQSensor(Entity):
 
         if self.type == 'sleep_number':
             self._state = status['sleep_number']
-        elif self.type == 'is_in_bed':
-            self._state = status['is_in_bed']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -80,9 +74,4 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = list()
     dev.append(SleepIQSensor(data, data.bed_name, 'left', 'sleep_number'))
     dev.append(SleepIQSensor(data, data.bed_name, 'right', 'sleep_number'))
-
-    # TODO move to binary sensor
-    #dev.append(SleepIQSensor(data, data.bed_name, 'left', 'is_in_bed'))
-    #dev.append(SleepIQSensor(data, data.bed_name, 'right', 'is_in_bed'))
-
     add_devices(dev)
