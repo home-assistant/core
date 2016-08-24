@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         sub_sensors = {}
         data_types = entity_info[ATTR_DATA_TYPE]
         if len(data_types) == 0:
-            data_type = "Unknown"
+            data_types = ["Unknown"]
             for data_type in DATA_TYPES:
                 if data_type in event.values:
                     data_types = [data_type]
@@ -121,7 +121,7 @@ class RfxtrxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.event:
+        if self.event and self.data_type in self.event.values:
             return self.event.values[self.data_type]
         return None
 
