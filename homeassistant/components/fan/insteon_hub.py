@@ -37,35 +37,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class InsteonFanDevice(InsteonDevice, FanEntity):
     """Represet an insteon fan device."""
 
-    def __init__(self: InsteonDevice, node: object) -> None:
+    def __init__(self, node: object) -> None:
         """Initialize the device."""
         super(InsteonFanDevice, self).__init__(node)
         self.speed = STATE_UNKNOWN  # Insteon hub can't get state via REST
 
-    def turn_on(self: InsteonDevice, speed: str=None):
+    def turn_on(self, speed: str=None):
         """Turn the fan on."""
         self.set_speed(speed if speed else SPEED_MED)
 
-    def turn_off(self: InsteonDevice):
+    def turn_off(self):
         """Turn the fan off."""
         self.set_speed(SPEED_OFF)
 
-    def set_speed(self: InsteonDevice, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the fan speed."""
         if self._send_command('fan', payload={'speed', speed}):
             self.speed = speed
 
     @property
-    def supported_features(self: InsteonDevice) -> int:
+    def supported_features(self) -> int:
         """Get the supported features for device."""
         return SUPPORT_SET_SPEED
 
     @property
-    def speed_list(self: InsteonDevice) -> list:
+    def speed_list(self) -> list:
         """Get the available speeds for the fan."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
 
     @property
-    def state(self: InsteonDevice) -> str:
+    def state(self) -> str:
         """Get the current device state."""
         return self.speed

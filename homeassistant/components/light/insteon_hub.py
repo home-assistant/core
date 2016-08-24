@@ -27,12 +27,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class InsteonLightDevice(InsteonDevice, Light):
     """A representation of a light device."""
 
-    def __init__(self: InsteonDevice, node: object) -> None:
+    def __init__(self, node: object) -> None:
         """Initialize the device."""
         super(InsteonLightDevice, self).__init__(node)
         self._value = 0
 
-    def update(self: InsteonDevice) -> None:
+    def update(self) -> None:
         """Update state of the device."""
         resp = self._node.send_command('get_status', wait=True)
         try:
@@ -41,16 +41,16 @@ class InsteonLightDevice(InsteonDevice, Light):
             pass
 
     @property
-    def is_on(self: InsteonDevice) -> None:
+    def is_on(self) -> None:
         """Return the boolean response if the node is on."""
         return self._value != 0
 
-    def turn_on(self: InsteonDevice, **kwargs) -> None:
+    def turn_on(self, **kwargs) -> None:
         """Turn device on."""
         if self._send_command('on'):
             self._value = 100
 
-    def turn_off(self: InsteonDevice, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         if self._send_command('off'):
             self._value = 0
@@ -60,16 +60,16 @@ class InsteonDimmableDevice(InsteonLightDevice):
     """A representation for a dimmable device."""
 
     @property
-    def brightness(self: InsteonLightDevice) -> int:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._value / 100 * 255
 
     @property
-    def supported_features(self: InsteonLightDevice) -> int:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_INSTEON_HUB
 
-    def turn_on(self: InsteonLightDevice, **kwargs) -> None:
+    def turn_on(self, **kwargs) -> None:
         """Turn device on."""
         level = 100  # type: int
         if ATTR_BRIGHTNESS in kwargs:
