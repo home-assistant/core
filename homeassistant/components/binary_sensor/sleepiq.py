@@ -14,6 +14,7 @@ SENSOR_TYPES = {
     'is_in_bed': 'Is In Bed',
 }
 
+
 class SleepIQBinarySensor(BinarySensorDevice):
     """Implementation of a SleepIQ presence sensor."""
 
@@ -26,7 +27,6 @@ class SleepIQBinarySensor(BinarySensorDevice):
         self.sleepiq_data = sleepiq_data
         self.type = sensor_type
         self._state = None
-
         self._sensor_class = 'motion'
 
         self.update()
