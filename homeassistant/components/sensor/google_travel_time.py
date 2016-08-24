@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_ORIGIN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
     vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 options[CONF_MODE] = travel_mode
 
         titled_mode = options.get(CONF_MODE).title()
-        formatted_name = "Google Travel Time - {}".format(titled_mode)
+        formatted_name = "{} - {}".format(DEFAULT_NAME, titled_mode)
         name = config.get(CONF_NAME, formatted_name)
         api_key = config.get(CONF_API_KEY)
         origin = config.get(CONF_ORIGIN)
