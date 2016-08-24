@@ -15,7 +15,7 @@ REQUIREMENTS = ['insteon_hub==0.5.0']  # type: list
 INSTEON = None  # type: Insteon
 DEVCAT = 'DevCat'  # type: str
 SUBCAT = 'SubCat'  # type: str
-DEVICE_CLASSES = ['light', 'fan', 'switch']  # type: list
+DEVICE_CLASSES = ['light', 'fan']  # type: list
 
 _LOGGER = logging.getLogger(__name__)
 
