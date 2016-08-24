@@ -20,7 +20,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 
 
-DOMAIN = "fan"
+DOMAIN = 'fan'
 SCAN_INTERVAL = 30
 
 GROUP_NAME_ALL_FANS = 'all fans'
