@@ -2,8 +2,9 @@
 import unittest
 
 from homeassistant.const import STATE_OFF, STATE_UNKNOWN
-from homeassistant.components.fan import (SPEED_MED, SPEED_HIGH)
-from homeassistant.components.fan.insteon_hub import (InsteonFanDevice)
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH)
+from homeassistant.components.fan.insteon_hub import (InsteonFanDevice,
+                                                      SUPPORT_SET_SPEED)
 
 
 class Node(object):
@@ -39,6 +40,10 @@ class TestInsteonHubFanDevice(unittest.TestCase):
         """Test basic properties."""
         self.assertEqual(self._NODE.DeviceName, self._DEVICE.name)
         self.assertEqual(self._NODE.DeviceID, self._DEVICE.unique_id)
+        self.assertEqual(SUPPORT_SET_SPEED, self._DEVICE.supported_features)
+
+        for speed in [STATE_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]:
+            self.assertIn(speed, self._DEVICE.speed_list)
 
     def test_turn_on(self):
         """Test the turning on device."""
