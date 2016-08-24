@@ -15,17 +15,23 @@ from sleepyq import Sleepyq
 
 DOMAIN = 'sleepiq'
 
-REQUIREMENTS = ['sleepyq==0.5']
+REQUIREMENTS = ['sleepyq==0.6']
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
+ICON = 'mdi:hotel'
+
+IS_IN_BED = 'is_in_bed'
+SLEEP_NUMBER = 'sleep_number'
 SENSOR_TYPES = {
-    'sleep_number': 'SleepNumber',
-    'is_in_bed': 'Is In Bed',
+    SLEEP_NUMBER: 'SleepNumber',
+    IS_IN_BED: 'Is In Bed',
 }
 
-ICON = 'mdi:hotel'
+LEFT = 'left'
+RIGHT = 'right'
+SIDES = [LEFT, RIGHT]
 
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
@@ -33,7 +39,7 @@ class SleepIQData(object):
     def __init__(self, login, password):
         """Initialize the data object."""
         self._client = Sleepyq(login, password)
-        self.sides = {}
+        self.beds = {}
 
         self.update()
 
@@ -42,33 +48,9 @@ class SleepIQData(object):
         """Get the latest data from SleepIQ."""
 
         self._client.login()
-        beds = self._client.beds()
-        sleepers = self._client.sleepers()
-        family_statuses = self._client.bed_family_status()
+        beds = self._client.beds_with_sleeper_status()
 
-        sleepers_by_id = {sleeper['sleeperId']: sleeper for sleeper in sleepers}
-        bed_family_statuses_by_bed_id = {family_status['bedId']: family_status for family_status in family_statuses}
-
-        # FIXME handle 0 and > 1 bed
-        bed = beds[0]
-
-        self.bed_name = bed['name']
-
-        family_status = bed_family_statuses_by_bed_id[bed['bedId']]
-
-        for side in ['left', 'right']:
-            from IPython import embed
-            embed()
-            sleeper_key = 'sleeper' + side.title() + 'Id'
-            sleeper = sleepers_by_id[bed[sleeper_key]]
-            status_key = side + 'Side'
-            status = family_status[status_key]
-
-            self.sides[side] = {
-                'sleeper': sleeper['firstName'],
-                'is_in_bed': status['isInBed'],
-                'sleep_number': status['sleepNumber'],
-            }
+        self.beds = {bed.bed_id: bed for bed in beds}
 
 def setup(hass, config):
     """Setup SleepIQ.

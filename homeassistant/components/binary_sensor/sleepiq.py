@@ -10,20 +10,16 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:sleep'
 
-SENSOR_TYPES = {
-    'is_in_bed': 'Is In Bed',
-}
-
 
 class SleepIQBinarySensor(BinarySensorDevice):
     """Implementation of a SleepIQ presence sensor."""
 
-    def __init__(self, sleepiq_data, bed_name, side, sensor_type):
+    def __init__(self, sleepiq_data, bed_id, side, sensor_type):
         """Initialize the sensor."""
-        self.client_name = 'SleepNumber'
-        self._bed_name = bed_name
+        self.client_name = sleepiq.SLEEP_NUMBER
+        self._bed_id = bed_id
         self._side = side
-        self._name = SENSOR_TYPES[sensor_type]
+        self._name = sleepiq.SENSOR_TYPES[sensor_type]
         self.sleepiq_data = sleepiq_data
         self.type = sensor_type
         self._state = None
@@ -34,8 +30,8 @@ class SleepIQBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {} {}'.format(self.client_name, self._bed_name,
-                                    self._sleeper, self._name)
+        return '{} {} {} {}'.format(self.client_name, self.bed.name,
+                                    self.side.sleeper.first_name, self._name)
     @property
     def is_on(self):
         """Return the status of the sensor."""
@@ -53,11 +49,11 @@ class SleepIQBinarySensor(BinarySensorDevice):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
-        status = self.sleepiq_data.sides[self._side]
-        self._sleeper = status['sleeper']
+        self.bed = self.sleepiq_data.beds[self._bed_id]
+        self.side = getattr(self.bed, self._side)
 
-        if self.type == 'is_in_bed':
-            self._state = status['is_in_bed']
+        if self.type == sleepiq.IS_IN_BED:
+            self._state = self.side.is_in_bed
         # TODO throw error for anything else
 
 
@@ -69,6 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = sleepiq.DATA
 
     dev = list()
-    dev.append(SleepIQBinarySensor(data, data.bed_name, 'left', 'is_in_bed'))
-    dev.append(SleepIQBinarySensor(data, data.bed_name, 'right', 'is_in_bed'))
+    for bed_id, bed in data.beds.items():
+        for side in sleepiq.SIDES:
+            dev.append(SleepIQBinarySensor(data, bed_id, side, sleepiq.IS_IN_BED))
     add_devices(dev)

@@ -10,20 +10,17 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:hotel'
 
-SENSOR_TYPES = {
-    'sleep_number': 'SleepNumber',
-}
 
 # pylint: disable=too-few-public-methods
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
 
-    def __init__(self, sleepiq_data, bed_name, side, sensor_type):
+    def __init__(self, sleepiq_data, bed_id, side, sensor_type):
         """Initialize the sensor."""
-        self.client_name = 'SleepNumber'
-        self._bed_name = bed_name
+        self.client_name = sleepiq.SLEEP_NUMBER
+        self._bed_id = bed_id
         self._side = side
-        self._name = SENSOR_TYPES[sensor_type]
+        self._name = sleepiq.SENSOR_TYPES[sensor_type]
         self.sleepiq_data = sleepiq_data
         self.type = sensor_type
         self._state = None
@@ -33,8 +30,8 @@ class SleepIQSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {} {}'.format(self.client_name, self._bed_name,
-                                    self._sleeper, self._name)
+        return '{} {} {} {}'.format(self.client_name, self.bed.name,
+                                    self.side.sleeper.first_name, self._name)
 
     @property
     def state(self):
@@ -53,11 +50,11 @@ class SleepIQSensor(Entity):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
-        status = self.sleepiq_data.sides[self._side]
-        self._sleeper = status['sleeper']
+        self.bed = self.sleepiq_data.beds[self._bed_id]
+        self.side = getattr(self.bed, self._side)
 
-        if self.type == 'sleep_number':
-            self._state = status['sleep_number']
+        if self.type == sleepiq.SLEEP_NUMBER:
+            self._state = self.side.sleep_number
         # TODO throw error for anything else
 
 
@@ -69,6 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = sleepiq.DATA
 
     dev = list()
-    dev.append(SleepIQSensor(data, data.bed_name, 'left', 'sleep_number'))
-    dev.append(SleepIQSensor(data, data.bed_name, 'right', 'sleep_number'))
+    for bed_id, bed in data.beds.items():
+        for side in sleepiq.SIDES:
+            dev.append(SleepIQSensor(data, bed_id, side, sleepiq.SLEEP_NUMBER))
     add_devices(dev)
