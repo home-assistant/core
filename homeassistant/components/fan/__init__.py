@@ -198,18 +198,19 @@ class Fan(Entity):
         pass
 
     @property
+    def speed_list(self):
+        """Get the list of available speeds"""
+        return []
+
+    @property
     def state_attributes(self:Entity) -> None:
         """Return optional state attributes."""
         data = {}  # type: dict
 
-        if self.is_on:
-            for prop, attr in PROP_TO_ATTR.items():
-                value = getattr(self, prop)
-                if value is not None:
-                    data[attr] = value
-
-        else:
-            data[ATTR_SUPPORTED_FEATURES] = self.supported_features
+        for prop, attr in PROP_TO_ATTR.items():
+            value = getattr(self, prop)
+            if value is not None:
+                data[attr] = value
 
         return data
 
