@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = vol.Schema({
     'platform': str,
     vol.Required('doors'): _DOORS_SCHEMA,
     vol.Optional(STATE_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
-    vol.Optional(RELAY_TIME, default=DEFAULT_RELAY_TIME): cv.string,
+    vol.Optional(RELAY_TIME, default=DEFAULT_RELAY_TIME): vol.Coerce(int),
 })
 
 
