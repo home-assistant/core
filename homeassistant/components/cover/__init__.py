@@ -163,7 +163,7 @@ class CoverDevice(Entity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return None
+        pass
 
     @property
     def current_cover_tilt_position(self):
@@ -171,7 +171,7 @@ class CoverDevice(Entity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return None
+        pass
 
     @property
     def state(self):
@@ -186,9 +186,11 @@ class CoverDevice(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        data = {
-            ATTR_CURRENT_POSITION: self.current_cover_position
-        }
+        data = {}
+
+        current = self.current_cover_position
+        if current is not None:
+            data[ATTR_CURRENT_POSITION] = self.current_cover_position
 
         current_tilt = self.current_cover_tilt_position
         if current_tilt is not None:
