@@ -6,7 +6,6 @@ https://home-assistant.io/components/fan/
 """
 import logging
 import os
-import csv
 
 import voluptuous as vol
 
