@@ -101,6 +101,7 @@ omit =
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/binary_sensor/arest.py
+    homeassistant/components/binary_sensor/ffmpeg.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/bloomsky.py
