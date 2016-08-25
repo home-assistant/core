@@ -20,6 +20,21 @@ BASE_CONFIG = (
 )
 
 
+def change_yaml_files(check_dict):
+    """Change the ['yaml_files'] property and remove the config path.
+
+    Also removes other files like service.yaml that gets loaded
+    """
+    root = get_test_config_dir()
+    keys = check_dict['yaml_files'].keys()
+    check_dict['yaml_files'] = []
+    for key in sorted(keys):
+        if not key.startswith('/'):
+            check_dict['yaml_files'].append(key)
+        if key.startswith(root):
+            check_dict['yaml_files'].append('...' + key[len(root):])
+
+
 def tearDownModule(self):  # pylint: disable=invalid-name
     """Clean files."""
     # .HA_VERSION created during bootstrap's config update
@@ -39,12 +54,13 @@ class TestCheckConfig(unittest.TestCase):
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('light.yaml'))
+            change_yaml_files(res)
             self.assertDictEqual({
                 'components': {'light': [{'platform': 'hue'}]},
                 'except': {},
                 'secret_cache': {},
                 'secrets': {},
-                'yaml_files': {}
+                'yaml_files': ['.../light.yaml']
             }, res)
 
     def test_config_component_platform_fail_validation(self):
@@ -54,12 +70,13 @@ class TestCheckConfig(unittest.TestCase):
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('component.yaml'))
+            change_yaml_files(res)
             self.assertDictEqual({
                 'components': {},
                 'except': {'http': {'password': 'err123'}},
                 'secret_cache': {},
                 'secrets': {},
-                'yaml_files': {}
+                'yaml_files': ['.../component.yaml']
             }, res)
 
         files = {
@@ -68,13 +85,14 @@ class TestCheckConfig(unittest.TestCase):
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('platform.yaml'))
+            change_yaml_files(res)
             self.assertDictEqual({
                 'components': {'mqtt': {'keepalive': 60, 'port': 1883,
                                         'protocol': '3.1.1'}},
                 'except': {'light.mqtt_json': {'platform': 'mqtt_json'}},
                 'secret_cache': {},
                 'secrets': {},
-                'yaml_files': {}
+                'yaml_files': ['.../platform.yaml']
             }, res)
 
     def test_component_platform_not_found(self):
@@ -85,42 +103,52 @@ class TestCheckConfig(unittest.TestCase):
         }
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('badcomponent.yaml'))
+            change_yaml_files(res)
             self.assertDictEqual({
                 'components': {},
                 'except': {check_config.ERROR_STR:
                            ['Component not found: beer']},
                 'secret_cache': {},
                 'secrets': {},
-                'yaml_files': {}
+                'yaml_files': ['.../badcomponent.yaml']
             }, res)
 
             res = check_config.check(get_test_config_dir('badplatform.yaml'))
+            change_yaml_files(res)
             self.assertDictEqual({
                 'components': {},
                 'except': {check_config.ERROR_STR:
                            ['Platform not found: light.beer']},
                 'secret_cache': {},
                 'secrets': {},
-                'yaml_files': {}
+                'yaml_files': ['.../badplatform.yaml']
             }, res)
 
     def test_secrets(self):
         """Test secrets config checking method."""
         files = {
-            'secret.yaml': (BASE_CONFIG +
-                            'http:\n'
-                            '  api_password: !secret http_pw'),
+            get_test_config_dir('secret.yaml'): (
+                BASE_CONFIG +
+                'http:\n'
+                '  api_password: !secret http_pw'),
             'secrets.yaml': ('logger: debug\n'
                              'http_pw: abc123'),
         }
+        self.maxDiff = None
 
         with patch_yaml_files(files):
             res = check_config.check(get_test_config_dir('secret.yaml'))
+            change_yaml_files(res)
+
+            # convert secrets OrderedDict to dict for assertequal
+            for key, val in res['secret_cache'].items():
+                res['secret_cache'][key] = dict(val)
+
             self.assertDictEqual({
                 'components': {'http': {'api_password': 'abc123',
                                         'server_port': 8123}},
                 'except': {},
-                'secret_cache': {},
+                'secret_cache': {'secrets.yaml': {'http_pw': 'abc123'}},
                 'secrets': {'http_pw': 'abc123'},
-                'yaml_files': {'secrets.yaml': True}
+                'yaml_files': ['.../secret.yaml', 'secrets.yaml']
             }, res)
