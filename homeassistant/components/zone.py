@@ -29,7 +29,6 @@ DEFAULT_PASSIVE = False
 ICON_HOME = 'mdi:home'
 ICON_IMPORT = 'mdi:import'
 
-entities = set()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -112,9 +111,11 @@ def setup(hass, config):
 
 # Add a zone to the existing set
 def add_zone(hass, name, latitude, longitude, radius):
-    """Add a zone from other components"""
+    """Add a zone from other components."""
     _LOGGER.info("Adding new zone %s", name)
-    if name not in entities:
+    entities = set()
+
+    if hass.states.get('zone.' + name) is None:
         zone = Zone(hass, name, latitude, longitude, radius, ICON_IMPORT,
                     False, True)
         zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
@@ -123,7 +124,6 @@ def add_zone(hass, name, latitude, longitude, radius):
         entities.add(zone.entity_id)
     else:
         _LOGGER.info("Zone already exists")
-
 
 class Zone(Entity):
     """Representation of a Zone."""
