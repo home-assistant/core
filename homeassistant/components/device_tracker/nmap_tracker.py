@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
+CONF_EXCLUDE = "exclude"
 
 REQUIREMENTS = ['python-nmap==0.6.1']
 
@@ -60,6 +61,8 @@ class NmapDeviceScanner(object):
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
+        if config[CONF_EXCLUDE]:
+            self.exclude = config[CONF_EXCLUDE]
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
 
@@ -93,7 +96,8 @@ class NmapDeviceScanner(object):
         from nmap import PortScanner, PortScannerError
         scanner = PortScanner()
 
-        options = "-F --host-timeout 5s"
+        options = "-F --host-timeout 5s "
+        exclude = "--exclude "
 
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
@@ -102,10 +106,14 @@ class NmapDeviceScanner(object):
             if last_results:
                 # Pylint is confused here.
                 # pylint: disable=no-member
-                options += " --exclude {}".format(",".join(device.ip for device
-                                                           in last_results))
+                exclude_hosts = self.exclude + [device.ip for device
+                                                in last_results]
+            else:
+                exclude_hosts = self.exclude
         else:
             last_results = []
+        exclude = " --exclude {}".format(",".join(exclude_hosts))
+        options += exclude
 
         try:
             result = scanner.scan(hosts=self.hosts, arguments=options)
