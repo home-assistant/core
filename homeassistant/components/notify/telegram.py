@@ -104,7 +104,7 @@ class TelegramNotificationService(BaseNotificationService):
         elif data is not None and ATTR_LOCATION in data:
             return self.send_location(data.get(ATTR_LOCATION))
         elif data is not None and ATTR_DOCUMENT in data:
-            return self.send_document(data.get(ATTR_DOCUMENT, None))
+            return self.send_document(data.get(ATTR_DOCUMENT))
 
         # send message
         try:
