@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'

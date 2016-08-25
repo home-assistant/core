@@ -562,6 +562,6 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(WAYPOINT_TOPIC, waypoints_message)
         # Check if it made it into states
         wayp = self.hass.states.get('zone.exp_wayp1')
-        self.assertTrue(wayp != None)
+        self.assertTrue(wayp is not None)
         wayp = self.hass.states.get('zone.exp_wayp2')
-        self.assertTrue(wayp != None)
+        self.assertTrue(wayp is not None)
