@@ -37,11 +37,6 @@ class SleepIQBinarySensor(BinarySensorDevice):
         """Return the status of the sensor."""
         return self._state == True
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         # Call the API for new sleepiq data. Each sensor will re-trigger this
