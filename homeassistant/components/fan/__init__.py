@@ -196,11 +196,11 @@ class FanEntity(Entity):
 
     def turn_on(self: Entity, speed: str=None) -> None:
         """Turn on the fan."""
-        pass
+        raise NotImplementedError()
 
     def turn_off(self: Entity) -> None:
         """Turn off the fan."""
-        pass
+        raise NotImplementedError()
 
     def oscillate(self: Entity) -> None:
         """Oscillate the fan."""
