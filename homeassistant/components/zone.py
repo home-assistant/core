@@ -32,6 +32,7 @@ ICON_IMPORT = 'mdi:import'
 entities = set()
 _LOGGER = logging.getLogger(__name__)
 
+
 def active_zone(hass, latitude, longitude, radius=0):
     """Find the active zone for given latitude, longitude."""
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
@@ -108,6 +109,7 @@ def setup(hass, config):
 
     return True
 
+
 # Add a zone to the existing set
 def add_zone(hass, name, latitude, longitude, radius):
     """Add a zone from other components"""
@@ -121,6 +123,7 @@ def add_zone(hass, name, latitude, longitude, radius):
         entities.add(zone.entity_id)
     else:
         _LOGGER.info("Zone already exists")
+
 
 class Zone(Entity):
     """Representation of a Zone."""
