@@ -44,5 +44,5 @@ class DemoFan(Entity):
         self.speed = speed
 
     def ocillate(self, should_oscillate: bool) -> None:
-        """Set oscillation"""
+        """Set oscillation."""
         self.is_oscillating = should_oscillate
