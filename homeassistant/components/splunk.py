@@ -1,8 +1,6 @@
 """
 Support to send data to an Splunk instance.
 
-Uses the HTTP Event Collector.
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/splunk/
 """
@@ -10,47 +8,47 @@ import json
 import logging
 
 import requests
+import voluptuous as vol
 
-import homeassistant.util as util
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
-from homeassistant.helpers import validate_config
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "splunk"
-DEPENDENCIES = []
+DOMAIN = 'splunk'
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = '8088'
+DEFAULT_PORT = 8088
 DEFAULT_SSL = False
 
-CONF_HOST = 'host'
-CONF_PORT = 'port'
-CONF_TOKEN = 'token'
-CONF_SSL = 'SSL'
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Setup the Splunk component."""
-    if not validate_config(config, {DOMAIN: ['token']}, _LOGGER):
-        _LOGGER.error("You must include the token for your HTTP "
-                      "Event Collector input in Splunk.")
-        return False
-
     conf = config[DOMAIN]
+    host = conf.get(CONF_HOST)
+    port = conf.get(CONF_PORT)
+    token = conf.get(CONF_TOKEN)
+    use_ssl = conf.get(CONF_SSL)
 
-    host = conf[CONF_HOST]
-    port = util.convert(conf.get(CONF_PORT), int, DEFAULT_PORT)
-    token = util.convert(conf.get(CONF_TOKEN), str)
-    use_ssl = util.convert(conf.get(CONF_SSL), bool, DEFAULT_SSL)
     if use_ssl:
-        uri_scheme = "https://"
+        uri_scheme = 'https://'
     else:
-        uri_scheme = "http://"
-    event_collector = uri_scheme + host + ":" + str(port) + \
-        "/services/collector/event"
-    headers = {'Authorization': 'Splunk ' + token}
+        uri_scheme = 'http://'
+
+    event_collector = '{}{}:{}/services/collector/event'.format(
+        uri_scheme, host, port)
+    headers = {'Authorization': 'Splunk {}'.format(token)}
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
