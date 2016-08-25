@@ -1,4 +1,4 @@
-"""The tests for UVC camera module."""
+"""The tests for local file camera component."""
 from tempfile import NamedTemporaryFile
 import unittest
 from unittest import mock
@@ -12,7 +12,7 @@ from tests.common import get_test_home_assistant
 
 
 class TestLocalCamera(unittest.TestCase):
-    """Test the generic camera platform."""
+    """Test the local file camera component."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
