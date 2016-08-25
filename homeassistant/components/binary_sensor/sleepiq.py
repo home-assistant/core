@@ -31,7 +31,8 @@ class SleepIQBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the sensor."""
         return 'SleepNumber {} {} {}'.format(self.bed.name,
-                                    self.side.sleeper.first_name, self._name)
+                                             self.side.sleeper.first_name,
+                                             self._name)
     @property
     def is_on(self):
         """Return the status of the sensor."""
@@ -44,7 +45,6 @@ class SleepIQBinarySensor(BinarySensorDevice):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
-        self.bed = self.sleepiq_data.beds[self._bed_id]
         self.side = getattr(self.bed, self._side)
 
         if self.type == sleepiq.IS_IN_BED:
