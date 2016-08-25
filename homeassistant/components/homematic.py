@@ -14,11 +14,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN,
                                  CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import discovery
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.11"]
+REQUIREMENTS = ["pyhomematic==0.1.13"]
+
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
@@ -27,8 +30,8 @@ DISCOVER_SWITCHES = 'homematic.switch'
 DISCOVER_LIGHTS = 'homematic.light'
 DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
-DISCOVER_ROLLERSHUTTER = 'homematic.rollershutter'
-DISCOVER_THERMOSTATS = 'homematic.climate'
+DISCOVER_COVER = 'homematic.cover'
+DISCOVER_CLIMATE = 'homematic.climate'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -47,11 +50,12 @@ HM_DEVICE_TYPES = {
     DISCOVER_SENSORS: ['SwitchPowermeter', 'Motion', 'MotionV2',
                        'RemoteMotion', 'ThermostatWall', 'AreaThermostat',
                        'RotaryHandleSensor', 'WaterSensor', 'PowermeterGas',
-                       'LuxSensor'],
-    DISCOVER_THERMOSTATS: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
+                       'LuxSensor', 'WeatherSensor', 'WeatherStation'],
+    DISCOVER_CLIMATE: ['Thermostat', 'ThermostatWall', 'MAXThermostat'],
     DISCOVER_BINARY_SENSORS: ['ShutterContact', 'Smoke', 'SmokeV2', 'Motion',
-                              'MotionV2', 'RemoteMotion'],
-    DISCOVER_ROLLERSHUTTER: ['Blind']
+                              'MotionV2', 'RemoteMotion', 'WeatherSensor',
+                              'TiltSensor'],
+    DISCOVER_COVER: ['Blind']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -133,8 +137,10 @@ SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
 def setup(hass, config):
     """Setup the Homematic component."""
     global HOMEMATIC, HOMEMATIC_LINK_DELAY
-
     from pyhomematic import HMConnection
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hm_hub = HMHub()
 
     local_ip = config[DOMAIN].get(CONF_LOCAL_IP)
     local_port = config[DOMAIN].get(CONF_LOCAL_PORT)
@@ -150,11 +156,13 @@ def setup(hass, config):
         return False
 
     # Create server thread
-    bound_system_callback = partial(system_callback_handler, hass, config)
+    bound_system_callback = partial(_system_callback_handler, hass, config)
+    bound_event_callback = partial(_event_callback_handler, hm_hub)
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
                              remoteport=remote_port,
+                             eventcallback=bound_event_callback,
                              systemcallback=bound_system_callback,
                              resolvenames=resolvenames,
                              rpcusername=username,
@@ -177,11 +185,19 @@ def setup(hass, config):
                            descriptions[DOMAIN][SERVICE_VIRTUALKEY],
                            SCHEMA_SERVICE_VIRTUALKEY)
 
+    hm_hub.init_data()
+    component.add_entities([hm_hub])
     return True
 
 
+def _event_callback_handler(hm_hub, interface_id, address, value_key, value):
+    """Callback handler for events."""
+    if not address:
+        hm_hub.update_hm_variable(value_key, value)
+
+
 # pylint: disable=too-many-branches
-def system_callback_handler(hass, config, src, *args):
+def _system_callback_handler(hass, config, src, *args):
     """Callback handler."""
     if src == 'newDevices':
         _LOGGER.debug("newDevices with: %s", str(args))
@@ -212,10 +228,10 @@ def system_callback_handler(hass, config, src, *args):
             for component_name, discovery_type in (
                     ('switch', DISCOVER_SWITCHES),
                     ('light', DISCOVER_LIGHTS),
-                    ('rollershutter', DISCOVER_ROLLERSHUTTER),
+                    ('rollershutter', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('climate', DISCOVER_THERMOSTATS)):
+                    ('climate', DISCOVER_CLIMATE)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(discovery_type, key_dict)
 
@@ -423,16 +439,74 @@ def _hm_service_virtualkey(call):
     hmdevice.actionNodeData(param, 1, channel)
 
 
+class HMHub(Entity):
+    """The Homematic hub. I.e. CCU2/HomeGear."""
+
+    def __init__(self):
+        """Initialize Homematic hub."""
+        self._data = {}
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return 'Homematic'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        state = HOMEMATIC.getServiceMessages()
+        if state is None:
+            return STATE_UNKNOWN
+
+        return len(state)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._data
+
+    def init_data(self):
+        """Init variable to object."""
+        hm_var = HOMEMATIC.getAllSystemVariables()
+        for var, val in hm_var:
+            self._data[var] = val
+
+    def update_hm_variable(self, variable, value):
+        """Update homematic variable from Homematic."""
+        if variable not in self._data:
+            return
+
+        # if value have change, update HASS
+        if self._data[variable] != value:
+            self._data[variable] = value
+            self.update_ha_state()
+
+    @property
+    def should_poll(self):
+        """Return false. Homematic states are pushed by the XML RPC Server."""
+        return False
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return '#'
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return "mdi:gradient"
+
+
 class HMDevice(Entity):
     """The Homematic device base object."""
 
     # pylint: disable=too-many-instance-attributes
     def __init__(self, config):
         """Initialize a generic Homematic device."""
-        self._name = config.get(ATTR_NAME, None)
-        self._address = config.get(ATTR_ADDRESS, None)
-        self._channel = config.get(ATTR_CHANNEL, 1)
-        self._state = config.get(ATTR_PARAM, None)
+        self._name = config.get(ATTR_NAME)
+        self._address = config.get(ATTR_ADDRESS)
+        self._channel = config.get(ATTR_CHANNEL)
+        self._state = config.get(ATTR_PARAM)
         self._data = {}
         self._hmdevice = None
         self._connected = False
