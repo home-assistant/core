@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sleepiq/
 """
 from homeassistant.components import sleepiq
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['sleepiq']
@@ -55,8 +56,9 @@ class SleepIQSensor(Entity):
 
         if self.type == sleepiq.SLEEP_NUMBER:
             self._state = self.side.sleep_number
-        # TODO throw error for anything else
-
+        else:
+            message = 'Unexpected SleepIQ sensor type: {}'.format(self.type)
+            raise HomeAssistantError(message)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SleepIQ sensors."""

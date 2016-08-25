@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.sleepiq/
 """
 from homeassistant.components import sleepiq
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.exceptions import HomeAssistantError
 
 DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:sleep'
@@ -54,7 +55,9 @@ class SleepIQBinarySensor(BinarySensorDevice):
 
         if self.type == sleepiq.IS_IN_BED:
             self._state = self.side.is_in_bed
-        # TODO throw error for anything else
+        else:
+            message = 'Unexpected SleepIQ binary sensor type: {}'.format(self.type)
+            raise HomeAssistantError(message)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
