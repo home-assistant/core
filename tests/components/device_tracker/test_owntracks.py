@@ -17,6 +17,7 @@ DEVICE = 'phone'
 
 LOCATION_TOPIC = "owntracks/{}/{}".format(USER, DEVICE)
 EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'.format(USER, DEVICE)
 
 DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
 
@@ -24,6 +25,7 @@ IBEACON_DEVICE = 'keys'
 REGION_TRACKER_STATE = "device_tracker.beacon_{}".format(IBEACON_DEVICE)
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
 
 LOCATION_MESSAGE = {
     'batt': 92,
@@ -107,6 +109,28 @@ REGION_LEAVE_INACCURATE_MESSAGE = {
     'lat': 20.0,
     '_type': 'transition'}
 
+WAYPOINTS_EXPORTED_MESSAGE = {
+    "_type": "waypoints",
+    "_creator": "test",
+    "waypoints": [
+        {
+            "_type": "waypoint",
+            "tst": 3,
+            "lat": 47,
+            "lon": 9,
+            "rad": 10,
+            "desc": "exp_wayp1"
+        },
+        {
+            "_type": "waypoint",
+            "tst": 4,
+            "lat": 3,
+            "lon": 9,
+            "rad": 500,
+            "desc": "exp_wayp2"
+        }
+    ]
+}
 
 REGION_ENTER_ZERO_MESSAGE = {
     'lon': 1.0,
@@ -143,7 +167,8 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assertTrue(device_tracker.setup(self.hass, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'owntracks',
-                CONF_MAX_GPS_ACCURACY: 200
+                CONF_MAX_GPS_ACCURACY: 200,
+                CONF_WAYPOINT_IMPORT_USER: USER
             }}))
 
         self.hass.states.set(
@@ -530,3 +555,13 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.send_message(EVENT_TOPIC, exit_message)
 
         self.assertEqual(owntracks.MOBILE_BEACONS_ACTIVE['greg_phone'], [])
+
+    def test_waypoint_import_simple(self):
+        """Test a simple import of list of waypoints."""
+        waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        # Check if it made it into states
+        wayp = self.hass.states.get('zone.exp_wayp1')
+        self.assertTrue(wayp != None)
+        wayp = self.hass.states.get('zone.exp_wayp2')
+        self.assertTrue(wayp != None)
