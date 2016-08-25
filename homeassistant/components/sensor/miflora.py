@@ -110,7 +110,11 @@ class MiFloraSensor(Entity):
         This uses a rolling median to filter out outliers
         """
 
-        data = self.poller.parameter_value(self.parameter)
+        try:
+            data = self.poller.parameter_value(self.parameter)
+        except IOError:
+            return
+
         if data:
             LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
