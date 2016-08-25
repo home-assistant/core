@@ -31,6 +31,7 @@ DEFAULT_TCP_PORT = 5003
 
 DOMAIN = 'mysensors'
 DEPENDENCIES = []
+MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
     '8ce98b7fb56f7921a808eb66845ce8b2c455c81e.zip#pymysensors==0.7.1']
@@ -64,10 +65,10 @@ def setup(hass, config):  # pylint: disable=too-many-locals
                       out_prefix):
         """Return gateway after setup of the gateway."""
         # pylint: disable=too-many-arguments
-        if device in 'mqtt':
-            if not setup_component(hass, 'mqtt', config):
+        if device == MQTT_COMPONENT:
+            if not setup_component(hass, MQTT_COMPONENT, config):
                 return
-            mqtt = get_component('mqtt')
+            mqtt = get_component(MQTT_COMPONENT)
             retain = config[DOMAIN].get(CONF_RETAIN, True)
 
             def pub_callback(topic, payload, qos, retain):
@@ -138,6 +139,11 @@ def setup(hass, config):  # pylint: disable=too-many-locals
             out_prefix)
         if GATEWAYS[device] is None:
             GATEWAYS.pop(device)
+
+    if not GATEWAYS:
+        _LOGGER.error(
+            'No devices could be setup as gateways, check your configuration')
+        return False
 
     for component in 'sensor', 'switch', 'light', 'binary_sensor':
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -228,7 +234,7 @@ class GatewayWrapper(object):
         """Return a new callback function."""
         def node_update(update_type, node_id):
             """Callback for node updates from the MySensors gateway."""
-            _LOGGER.debug('update %s: node %s', update_type, node_id)
+            _LOGGER.debug('Update %s: node %s', update_type, node_id)
             for callback in self.platform_callbacks:
                 callback(self, node_id)
 
@@ -299,7 +305,7 @@ class MySensorsDeviceEntity(object):
             try:
                 attr[set_req(value_type).name] = value
             except ValueError:
-                _LOGGER.error('value_type %s is not valid for mysensors '
+                _LOGGER.error('Value_type %s is not valid for mysensors '
                               'version %s', value_type,
                               self.gateway.version)
         return attr
