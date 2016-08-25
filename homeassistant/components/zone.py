@@ -125,6 +125,7 @@ def add_zone(hass, name, latitude, longitude, radius):
     else:
         _LOGGER.info("Zone already exists")
 
+
 class Zone(Entity):
     """Representation of a Zone."""
 
