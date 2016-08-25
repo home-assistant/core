@@ -187,6 +187,7 @@ class FanEntity(Entity):
 
     @property
     def state(self) -> str:
+        """Get the state of the fan."""
         return self.speed
 
     def set_speed(self: Entity, speed: str) -> None:
