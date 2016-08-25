@@ -43,12 +43,12 @@ SPEED_HIGH = 'high'
 
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
-ATTR_OSCILLATE = 'oscillate'
+ATTR_OSCILLATE = 'is_oscillating'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
-    'oscillate': ATTR_OSCILLATE,
+    'is_oscillating': ATTR_OSCILLATE,
     'supported_features': ATTR_SUPPORTED_FEATURES,
 }  # type: dict
 
@@ -184,6 +184,10 @@ class FanEntity(Entity):
     """Representation of a fan."""
 
     # pylint: disable=no-self-use, abstract-method
+
+    @property
+    def state(self) -> str:
+        return self.speed
 
     def set_speed(self: Entity, speed: str) -> None:
         """Set the speed of the fan."""
