@@ -17,7 +17,6 @@ class SleepIQBinarySensor(BinarySensorDevice):
 
     def __init__(self, sleepiq_data, bed_id, side, sensor_type):
         """Initialize the sensor."""
-        self.client_name = sleepiq.SLEEP_NUMBER
         self._bed_id = bed_id
         self._side = side
         self._name = sleepiq.SENSOR_TYPES[sensor_type]
@@ -31,7 +30,7 @@ class SleepIQBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {} {}'.format(self.client_name, self.bed.name,
+        return 'SleepNumber {} {} {}'.format(self.bed.name,
                                     self.side.sleeper.first_name, self._name)
     @property
     def is_on(self):
