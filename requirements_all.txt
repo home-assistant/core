@@ -321,7 +321,7 @@ pyenvisalink==1.0
 pyfttt==0.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.11
+pyhomematic==0.1.13
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
