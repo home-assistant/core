@@ -32,6 +32,8 @@ LEFT = 'left'
 RIGHT = 'right'
 SIDES = [LEFT, RIGHT]
 
+_LOGGER = logging.getLogger(__name__)
+
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
 
@@ -50,15 +52,17 @@ class SleepIQData(object):
 
         self.beds = {bed.bed_id: bed for bed in beds}
 
+
 def setup(hass, config):
     """Setup SleepIQ.
 
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    logger = logging.getLogger(__name__)
-
-    if not validate_config(config, {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]}, logger):
+    if not validate_config(
+            config,
+            {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]},
+            _LOGGER):
         return False
 
     # pylint: disable=global-statement, import-error
