@@ -32,6 +32,7 @@ LOCK = threading.Lock()
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
 
+
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
@@ -203,7 +204,7 @@ def setup_scanner(hass, config, see):
 
     if waypoint_import_user is not None:
         mqtt.subscribe(hass, WAYPOINT_TOPIC.format(waypoint_import_user),
-                        owntracks_waypoint_update, 1)
+                       owntracks_waypoint_update, 1)
 
     return True
 
