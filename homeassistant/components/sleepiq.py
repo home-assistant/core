@@ -8,7 +8,8 @@ https://home-assistant.io/components/sleepiq/
 import logging
 from datetime import timedelta
 
-from homeassistant.helpers import discovery
+from homeassistant.helpers import validate_config, discovery
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
 from sleepyq import Sleepyq
@@ -58,10 +59,15 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
+    logger = logging.getLogger(__name__)
+
+    if not validate_config(config, {DOMAIN: [CONF_USERNAME, CONF_PASSWORD]}, logger):
+        return False
+
     # pylint: disable=global-statement, import-error
     global DATA
 
-    DATA = SleepIQData(config[DOMAIN]['login'], config[DOMAIN]['password'])
+    DATA = SleepIQData(config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD])
     DATA.update()
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
