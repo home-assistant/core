@@ -20,9 +20,12 @@ REQUIREMENTS = ["ha-ffmpeg==0.8"]
 
 SERVICE_RESTART = 'ffmpeg_restart'
 
+FFMPEG_SENSOR_NOISE = 'noise'
+FFMPEG_SENSOR_MOTION = 'motion'
+
 MAP_FFMPEG_BIN = [
-    'noise',
-    'motion'
+    FFMPEG_SENSOR_NOISE,
+    FFMPEG_SENSOR_MOTION
 ]
 
 CONF_TOOL = 'tool'
@@ -72,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the binary sensor."""
     from haffmpeg import SensorNoise, SensorMotion
 
-    if config.get(CONF_TOOL) == "noise":
+    if config.get(CONF_TOOL) == FFMPEG_SENSOR_NOISE:
         entity = FFmpegNoise(SensorNoise, config)
     else:
         entity = FFmpegMotion(SensorMotion, config)
