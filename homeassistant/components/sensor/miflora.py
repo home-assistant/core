@@ -19,7 +19,8 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 REQUIREMENTS = ['miflora==0.1.2']
 
 LOGGER = logging.getLogger(__name__)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=9)
+# Mi Flora sensor library
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
 CONF_MAC = "mac"
 DEFAULT_NAME = ""
 
@@ -28,7 +29,7 @@ SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
     'light': ['Light intensity', 'lux'],
     'moisture': ['Moisture', '%'],
-    'fertility': ['Fertility', ''],
+    'fertility': ['Fertility', 'us/cm'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,6 +51,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for parameter in config[CONF_MONITORED_CONDITIONS]:
             name = SENSOR_TYPES[parameter][0]
             unit = SENSOR_TYPES[parameter][1]
+
+            prefix = config.get(CONF_NAME)
+
+            if prefix == "":
+                # If no name is given, retrieve the name from the device
+                # TODO: Check if this can be changed by the user
+                prefix = poller.name()
+
+            if len(prefix) > 0:
+                name = prefix + " " + name
             devs.append(MiFloraSensor(poller, parameter, name, unit))
     except KeyError as err:
         LOGGER.error("Sensor type %s unknown", err)
@@ -71,6 +82,9 @@ class MiFloraSensor(Entity):
         self._name = name
         self._state = None
         self.data = []
+        # Median is used to filter out outliers. median of 3 will filter
+        # single outliers, while  median of 5 will filter double outliers
+        # Use median_count = 1 if no filtering is required.
         self.median_count = 3
 
     @property
@@ -90,7 +104,8 @@ class MiFloraSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Update current conditions.
+        """
+        Update current conditions.
 
         This uses a rolling median to filter out outliers
         """
