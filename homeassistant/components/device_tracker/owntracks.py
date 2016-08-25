@@ -12,7 +12,7 @@ from collections import defaultdict
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
 from homeassistant.util import convert, slugify
-from homeassistant.components import zone
+from homeassistant.components import zone as zone_comp
 
 DEPENDENCIES = ['mqtt']
 
@@ -114,9 +114,9 @@ def setup_scanner(hass, config, see):
 
         def enter_event():
             """Execute enter event."""
-            _zone = hass.states.get("zone.{}".format(location))
+            zone = hass.states.get("zone.{}".format(location))
             with LOCK:
-                if _zone is None and data.get('t') == 'b':
+                if zone is None and data.get('t') == 'b':
                     # Not a HA zone, and a beacon so assume mobile
                     beacons = MOBILE_BEACONS_ACTIVE[dev_id]
                     if location not in beacons:
@@ -128,7 +128,7 @@ def setup_scanner(hass, config, see):
                     if location not in regions:
                         regions.append(location)
                     _LOGGER.info("Enter region %s", location)
-                    _set_gps_from_zone(kwargs, location, _zone)
+                    _set_gps_from_zone(kwargs, location, zone)
 
                 see(**kwargs)
                 see_beacons(dev_id, kwargs)
@@ -143,8 +143,8 @@ def setup_scanner(hass, config, see):
 
                 if new_region:
                     # Exit to previous region
-                    _zone = hass.states.get("zone.{}".format(new_region))
-                    _set_gps_from_zone(kwargs, new_region, _zone)
+                    zone = hass.states.get("zone.{}".format(new_region))
+                    _set_gps_from_zone(kwargs, new_region, zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
                     see_beacons(dev_id, kwargs)
@@ -201,7 +201,7 @@ def setup_scanner(hass, config, see):
             lat = wayp['lat']
             lon = wayp['lon']
             rad = wayp['rad']
-            zone.add_zone(hass, name, lat, lon, rad)
+            zone_comp.add_zone(hass, name, lat, lon, rad)
 
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
@@ -240,12 +240,12 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-def _set_gps_from_zone(kwargs, location, _zone):
+def _set_gps_from_zone(kwargs, location, zone):
     """Set the see parameters from the zone parameters."""
-    if _zone is not None:
+    if zone is not None:
         kwargs['gps'] = (
-            _zone.attributes['latitude'],
-            _zone.attributes['longitude'])
-        kwargs['gps_accuracy'] = _zone.attributes['radius']
+            zone.attributes['latitude'],
+            zone.attributes['longitude'])
+        kwargs['gps_accuracy'] = zone.attributes['radius']
         kwargs['location_name'] = location
     return kwargs
