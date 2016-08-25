@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)
         _LOGGER.info("Automatic add rfxtrx.sensor: %s",
-                     device_id)
+                     pkt_id)
 
         data_type = "Unknown"
         for _data_type in DATA_TYPES:
@@ -109,10 +109,8 @@ class RfxtrxSensor(Entity):
         self.event = event
         self._name = name
         self.should_fire_event = should_fire_event
-        if data_type not in DATA_TYPES:
-            data_type = "Unknown"
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES[data_type]
+        self._unit_of_measurement = DATA_TYPES.get(data_type, '')
 
     def __str__(self):
         """Return the name of the sensor."""
