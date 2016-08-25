@@ -73,7 +73,7 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 def setup(hass, config):
     """Setup zone."""
-
+    entities = set()
     for key in extract_domain_configs(config, DOMAIN):
         entries = config[key]
         if not isinstance(entries, list):
@@ -92,7 +92,8 @@ def setup(hass, config):
                     'Each zone needs a latitude and longitude.')
                 continue
 
-            zone = Zone(hass, name, latitude, longitude, radius, icon, passive, False)
+            zone = Zone(hass, name, latitude, longitude, radius, icon,
+                        passive, False)
             zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
                                                 entities)
             zone.update_ha_state()
@@ -100,7 +101,8 @@ def setup(hass, config):
 
     if ENTITY_ID_HOME not in entities:
         zone = Zone(hass, hass.config.location_name, hass.config.latitude,
-                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME, False, False)
+                    hass.config.longitude, DEFAULT_RADIUS, ICON_HOME,
+                    False, False)
         zone.entity_id = ENTITY_ID_HOME
         zone.update_ha_state()
 
@@ -108,12 +110,13 @@ def setup(hass, config):
 
 # Add a zone to the existing set
 def add_zone(hass, name, latitude, longitude, radius):
+    """Add a zone from other components"""
     _LOGGER.info("Adding new zone %s", name)
     if name not in entities:
         zone = Zone(hass, name, latitude, longitude, radius, ICON_IMPORT,
                     False, True)
         zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
-                            entities)
+                                            entities)
         zone.update_ha_state()
         entities.add(zone.entity_id)
     else:
@@ -123,7 +126,8 @@ class Zone(Entity):
     """Representation of a Zone."""
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, hass, name, latitude, longitude, radius, icon, passive, imported):
+    def __init__(self, hass, name, latitude, longitude, radius, icon, passive,
+                 imported):
         """Initialize the zone."""
         self.hass = hass
         self._name = name
