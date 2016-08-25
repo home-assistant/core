@@ -12,8 +12,6 @@ from homeassistant.helpers import validate_config, discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-from sleepyq import Sleepyq
-
 DOMAIN = 'sleepiq'
 
 REQUIREMENTS = ['sleepyq==0.6']
@@ -37,9 +35,9 @@ SIDES = [LEFT, RIGHT]
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
 
-    def __init__(self, login, password):
+    def __init__(self, client):
         """Initialize the data object."""
-        self._client = Sleepyq(login, password)
+        self._client = client
         self.beds = {}
 
         self.update()
@@ -67,7 +65,10 @@ def setup(hass, config):
     # pylint: disable=global-statement, import-error
     global DATA
 
-    DATA = SleepIQData(config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD])
+    from sleepyq import Sleepyq
+    client = Sleepyq(config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD])
+
+    DATA = SleepIQData(client)
     DATA.update()
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
