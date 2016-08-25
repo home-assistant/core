@@ -345,25 +345,10 @@ class HueLightsView(HomeAssistantView):
 
     def get_lights_list(self):
         """Process a request to get the list of available lights."""
-        config = self.config
         json_response = {}
 
         for entity in self.hass.states.all():
-            if ('view' in entity.attributes) and (entity.attributes['view']):
-                # Ignore entities that are views
-                continue
-
-            domain = entity.domain.lower()
-            explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
-            domain_exposed_by_default = \
-                config.expose_by_default and domain in config.exposed_domains
-
-            # Expose an entity if the entity's domain is exposed by default and
-            # the configuration doesn't explicitly exclude it from being
-            # exposed, or if the entity is explicitly exposed
-            if (domain_exposed_by_default and explicit_expose is not False) \
-                    or explicit_expose:
+            if self.is_entity_exposed(entity):
                 json_response[entity.entity_id] = entity_to_json(entity)
 
         return self.json(json_response)
@@ -372,6 +357,9 @@ class HueLightsView(HomeAssistantView):
         """Process a request to get the state of an individual light."""
         entity = self.hass.states.get(entity_id)
         if entity is None:
+            return self.Response("Entity not found", status=404)
+
+        if not self.is_entity_exposed(entity):
             return self.Response("Entity not found", status=404)
 
         cached_state = self.cached_states.get(entity_id, None)
@@ -434,6 +422,28 @@ class HueLightsView(HomeAssistantView):
                 create_hue_success_response(entity_id, 'bri', brightness))
 
         return self.json(json_response)
+
+    def is_entity_exposed(self, entity):
+        """Determine if an entity should be exposed on the emulated bridge."""
+        config = self.config
+
+        if ('view' in entity.attributes) and (entity.attributes['view']):
+            # Ignore entities that are views
+            return False
+
+        domain = entity.domain.lower()
+        explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
+
+        domain_exposed_by_default = \
+            config.expose_by_default and domain in config.exposed_domains
+
+        # Expose an entity if the entity's domain is exposed by default and
+        # the configuration doesn't explicitly exclude it from being
+        # exposed, or if the entity is explicitly exposed
+        is_default_exposed = \
+            domain_exposed_by_default and explicit_expose is not False
+
+        return is_default_exposed or explicit_expose
 
 
 def parse_hue_api_put_light_body(request_json, entity):
