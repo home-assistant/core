@@ -45,7 +45,6 @@ class SleepIQData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from SleepIQ."""
-
         self._client.login()
         beds = self._client.beds_with_sleeper_status()
 
