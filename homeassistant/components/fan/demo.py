@@ -14,8 +14,7 @@ from homeassistant.helpers.entity import Entity
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup demo garage door platform."""
     add_devices_callback([
-        DemoGarageDoor('Left Garage Door', STATE_CLOSED),
-        DemoGarageDoor('Right Garage Door', STATE_OPEN)
+        DemoFan('Living Room Fan', SPEED_LOW),
     ])
 
 
