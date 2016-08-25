@@ -12,7 +12,7 @@ from tests.common import get_test_home_assistant
 
 
 class TestLocalCamera(unittest.TestCase):
-    """Test the local file camera platform."""
+    """Test the local file camera component."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
