@@ -35,8 +35,6 @@ CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
 
-CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
-
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
