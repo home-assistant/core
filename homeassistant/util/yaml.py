@@ -166,7 +166,6 @@ def _load_secret_yaml(secret_path: str) -> Dict:
             del secrets['logger']
     except FileNotFoundError:
         secrets = {}
-        return {}
     __SECRET_CACHE[secret_path] = secrets
     return secrets
 
