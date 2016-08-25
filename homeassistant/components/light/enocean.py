@@ -7,27 +7,34 @@ https://home-assistant.io/components/light.enocean/
 import logging
 import math
 
-from homeassistant.components.light import (Light, ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS)
-from homeassistant.const import CONF_NAME
-from homeassistant.components import enocean
+import voluptuous as vol
 
+from homeassistant.components.light import (
+    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+from homeassistant.const import (CONF_NAME, CONF_ID)
+from homeassistant.components import enocean
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["enocean"]
-
-CONF_ID = "id"
-CONF_SENDER_ID = "sender_id"
+DEPENDENCIES = ['enocean']
+DEFAULT_NAME = 'EnOcean Light'
+CONF_SENDER_ID = 'sender_id'
 
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ID): cv.string,
+    vol.Required(CONF_SENDER_ID): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the EnOcean light platform."""
-    sender_id = config.get(CONF_SENDER_ID, None)
-    devname = config.get(CONF_NAME, "Enocean actuator")
-    dev_id = config.get(CONF_ID, [0x00, 0x00, 0x00, 0x00])
+    sender_id = config.get(CONF_SENDER_ID)
+    devname = config.get(CONF_NAME)
+    dev_id = config.get(CONF_ID)
 
     add_devices([EnOceanLight(sender_id, devname, dev_id)])
 
