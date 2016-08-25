@@ -1,4 +1,4 @@
-"""The tests for generic camera platform."""
+"""The tests for generic camera component."""
 import unittest
 from unittest import mock
 
