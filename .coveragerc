@@ -93,9 +93,7 @@ omit =
     homeassistant/components/*/pilight.py
 
     homeassistant/components/knx.py
-    homeassistant/components/switch/knx.py
-    homeassistant/components/binary_sensor/knx.py
-    homeassistant/components/thermostat/knx.py
+    homeassistant/components/*/knx.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -210,7 +208,6 @@ omit =
     homeassistant/components/sensor/gtfs.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/imap.py
-    homeassistant/components/sensor/knx.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/neurio_energy.py
