@@ -10,20 +10,30 @@ from homeassistant.const import STATE_OFF
 from homeassistant.helpers.entity import Entity
 
 
+FAN_NAME = 'Living Room Fan'
+FAN_ENTITY_ID = 'fan.living_room_fan'
+
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup demo garage door platform."""
     add_devices_callback([
-        DemoFan('Living Room Fan', SPEED_LOW),
+        DemoFan(FAN_NAME, STATE_OFF),
     ])
 
 
 class DemoFan(Entity):
     """A demonstration fan component."""
 
-    def __init__(self, initial_state: str) -> None:
+    def __init__(self, name, initial_state: str) -> None:
         """Initialize the entity."""
         self.speed = initial_state
+        self._name = name
+
+    @property
+    def name(self):
+        """Get entity name."""
+        return self._name
 
     @property
     def speed_list(self) -> list:
