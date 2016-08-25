@@ -13,7 +13,8 @@ DEVICE_TRACKER_DOMAIN = "device_tracker"
 
 
 def get_service(hass, config):
-    """Return push service"""
+    """Return push service."""
+
     name = config.get("name")
     if name is None:
         logging.error("Name must be specified.")
@@ -139,6 +140,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def write_devices(self):
         """Write all known devices to file."""
+
         with open(self.yaml_path, 'w+') as out:
             for _, device in self.devices.items():
                 ApnsNotificationService.write_device(out, device)
