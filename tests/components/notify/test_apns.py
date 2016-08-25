@@ -67,10 +67,10 @@ class TestApns(unittest.TestCase):
         self.assertTrue(hass.services.call('apns',
                                            'test_app',
                                            {'push_id': '1234',
-                                             'name': 'test device'},
+                                            'name': 'test device'},
                                            blocking=True))
 
-        devices = {str(key): value for (key,value) in
+        devices = {str(key): value for (key, value) in
                    load_yaml_config_file(devices_path).items()}
 
         test_device_1 = devices.get('1234')
@@ -162,14 +162,14 @@ class TestApns(unittest.TestCase):
 
         devices_path = hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')
-            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')
+            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')  # nopep8
+            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')  # nopep8
 
         notify.setup(hass, config)
         self.assertTrue(hass.services.call('apns',
                                            'test_app',
-                                           { 'push_id': '1234',
-                                             'name': 'updated device 1'},
+                                           {'push_id': '1234',
+                                            'name': 'updated device 1'},
                                            blocking=True))
 
         devices = {str(key): value for (key, value) in
@@ -240,8 +240,8 @@ class TestApns(unittest.TestCase):
 
         devices_path = hass.config.path('test_app_apns.yaml')
         with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')
-            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')
+            out.write('1234: {name: test device 1, tracking_device_id: tracking123}\n')  # nopep8
+            out.write('5678: {name: test device 2, tracking_device_id: tracking456}\n')  # nopep8
 
         notify.setup(hass, config)
 
