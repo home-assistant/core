@@ -21,13 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
 MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
+    'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
     'except': ("homeassistant.bootstrap.log_exception",
                bootstrap.log_exception)
 }
 SILENCE = (
-    'homeassistant.util.yaml.clear_secret_cache',
+    'homeassistant.bootstrap.clear_secret_cache',
     'homeassistant.core._LOGGER.info',
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
@@ -114,7 +115,7 @@ def run(script_args: List) -> int:
     if domain_info:
         if 'all' in domain_info:
             print(color('bold_white', 'Successful config (all)'))
-            for domain, config in res['components']:
+            for domain, config in res['components'].items():
                 print(color(C_HEAD, domain + ':'))
                 dump_dict(config, indent_count=3)
         else:
@@ -207,7 +208,9 @@ def check(config_path):
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
-        mock_function = locals()['mock_'+key]
+        # The * in the key is removed to find the mock_function (side_effect)
+        # This allows us to use one side_effect to patch multiple locations
+        mock_function = locals()['mock_' + key.replace('*', '')]
         PATCHES[key] = patch(val[0], side_effect=mock_function)
 
     # Start all patches

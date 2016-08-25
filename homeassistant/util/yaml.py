@@ -149,9 +149,13 @@ def _env_var_yaml(loader: SafeLineLoader,
 
 def _load_secret_yaml(secret_path: str) -> Dict:
     """Load the secrets yaml from path."""
-    _LOGGER.debug('Loading %s', os.path.join(secret_path, _SECRET_YAML))
+    secret_path = os.path.join(secret_path, _SECRET_YAML)
+    if secret_path in __SECRET_CACHE:
+        return __SECRET_CACHE[secret_path]
+
+    _LOGGER.debug('Loading %s', secret_path)
     try:
-        secrets = load_yaml(os.path.join(secret_path, _SECRET_YAML))
+        secrets = load_yaml(secret_path)
         if 'logger' in secrets:
             logger = str(secrets['logger']).lower()
             if logger == 'debug':
@@ -160,9 +164,10 @@ def _load_secret_yaml(secret_path: str) -> Dict:
                 _LOGGER.error("secrets.yaml: 'logger: debug' expected,"
                               " but 'logger: %s' found", logger)
             del secrets['logger']
-        return secrets
     except FileNotFoundError:
-        return {}
+        secrets = {}
+    __SECRET_CACHE[secret_path] = secrets
+    return secrets
 
 
 # pylint: disable=protected-access
@@ -171,8 +176,8 @@ def _secret_yaml(loader: SafeLineLoader,
     """Load secrets and embed it into the configuration YAML."""
     secret_path = os.path.dirname(loader.name)
     while True:
-        secrets = __SECRET_CACHE.get(secret_path,
-                                     _load_secret_yaml(secret_path))
+        secrets = _load_secret_yaml(secret_path)
+
         if node.value in secrets:
             _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
                           'folder %s', node.value, secret_path)
