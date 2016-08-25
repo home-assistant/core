@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.miflora/
 from datetime import timedelta
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -17,10 +16,10 @@ from homeassistant.util import Throttle
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 
 
-REQUIREMENTS = ['miflora==0.1']
+REQUIREMENTS = ['miflora==0.1.2']
 
 LOGGER = logging.getLogger(__name__)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=9)
 CONF_MAC = "mac"
 DEFAULT_NAME = ""
 
@@ -42,8 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MiFlora sensor."""
-    from miflora.miflora_poller import MiFloraPoller
-    poller = MiFloraPoller(config.get(CONF_MAC))
+    from miflora import miflora_poller
+
+    poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC))
 
     devs = []
     try:
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             unit = SENSOR_TYPES[parameter][1]
             devs.append(MiFloraSensor(poller, parameter, name, unit))
     except KeyError as err:
-        _LOGGER.error("Sensor type %s unknown", err)
+        LOGGER.error("Sensor type %s unknown", err)
         return False
 
     add_devices(devs)
@@ -63,16 +63,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    def __init__(self, poller, parameter, name, unit, median_count=3):
+    def __init__(self, poller, parameter, name, unit):
         """Initialize the sensor."""
-        self._poller = poller
-        self._parameter = paramater
+        self.poller = poller
+        self.parameter = parameter
         self._unit = unit
         self._name = name
-        self._unit = unit
         self._state = None
-        self._data = []
-        self._median_count = median_count
+        self.data = []
+        self.median_count = 3
 
     @property
     def name(self):
@@ -96,19 +95,20 @@ class MiFloraSensor(Entity):
         This uses a rolling median to filter out outliers
         """
 
-        data = self.poller.parameter_value(self._parameter)
+        data = self.poller.parameter_value(self.parameter)
         if data:
-            LOGGER.debug("%s = %s", self._name, data)
-            self._data.append()
+            LOGGER.debug("%s = %s", self.name, data)
+            self.data.append(data)
         else:
-            LOGGER.debug("Did not receive any data for %s", self._name)
+            LOGGER.debug("Did not receive any data for %s", self.name)
 
-        LOGGER.debug("Data collected: %s", self._data)
-        if (len(self._data) > self._median_count):
-            self._data = self._data[1:]
+        LOGGER.debug("Data collected: %s", self.data)
+        if len(self.data) > self.median_count:
+            self.data = self.data[1:]
 
-        if (len(self._data) == self._median_count):
-            median = sorted(self.data)[int((self._median_count - 1) / 2)]
+        if len(self.data) == self.median_count:
+            median = sorted(self.data)[int((self.median_count - 1) / 2)]
             LOGGER.debug("Median is: %s", median)
+            self._state = median
         else:
-            LOGGER.debug("Not yet enough data for median calculation", median)
+            LOGGER.debug("Not yet enough data for median calculation")
