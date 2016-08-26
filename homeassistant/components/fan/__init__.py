@@ -11,9 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (
-    STATE_OFF, SERVICE_TURN_ON,
-    SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+from homeassistant.const import (STATE_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
+                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -71,6 +70,10 @@ FAN_OSCILLATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_OSCILLATE): cv.boolean
 })  # type: dict
 
+FAN_TOGGLE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -100,6 +103,15 @@ def turn_off(hass, entity_id: str=None) -> None:
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+def toggle(hass, entity_id: str=None) -> None:
+    """Toggle all or specified fans."""
+    data = {
+        ATTR_ENTITY_ID: entity_id
+    }
+
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
