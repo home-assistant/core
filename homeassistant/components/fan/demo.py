@@ -28,6 +28,7 @@ class DemoFan(FanEntity):
     def __init__(self, name, initial_state: str) -> None:
         """Initialize the entity."""
         self.speed = initial_state
+        self.is_oscillating = False
         self._name = name
 
     @property
