@@ -44,6 +44,7 @@ def get_test_home_assistant(num_threads=None):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
+    hass.config.skip_pip = True
 
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         loader.prepare(hass)
