@@ -67,7 +67,7 @@ FAN_TURN_OFF_SCHEMA = vol.Schema({
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_OSCILLATE): cv.boolean
+    vol.Required(ATTR_OSCILLATING): cv.boolean
 })  # type: dict
 
 FAN_TOGGLE_SCHEMA = vol.Schema({
@@ -119,7 +119,7 @@ def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OSCILLATE, should_oscillate),
+            (ATTR_OSCILLATING, should_oscillate),
         ] if value is not None
     }
 
