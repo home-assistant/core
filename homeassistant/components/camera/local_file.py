@@ -1,5 +1,9 @@
-"""Camera that loads a picture from a local file."""
+"""
+Camera that loads a picture from a local file.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/camera.local_file/
+"""
 import logging
 import os
 
@@ -8,16 +12,18 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
+_LOGGER = logging.getLogger(__name__)
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_FILE_PATH = 'file_path'
+
 DEFAULT_NAME = 'Local File'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILE_PATH): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
