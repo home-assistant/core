@@ -6,34 +6,43 @@ https://home-assistant.io/components/camera.netatmo/
 """
 import logging
 from datetime import timedelta
+
 import requests
+import voluptuous as vol
+
 from homeassistant.util import Throttle
-
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
+from homeassistant.helpers import config_validation as cv
 
-DEPENDENCIES = ["netatmo"]
+DEPENDENCIES = ['netatmo']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
-ATTR_CAMERAS = 'cameras'
+CONF_CAMERAS = 'cameras'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOME): cv.string,
+    vol.Optional(CONF_CAMERAS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to Netatmo Welcome cameras."""
     netatmo = get_component('netatmo')
-    home = config.get(CONF_HOME, None)
+    home = config.get(CONF_HOME)
     data = WelcomeData(netatmo.NETATMO_AUTH, home)
 
     for camera_name in data.get_camera_names():
-        if ATTR_CAMERAS in config:
-            if camera_name not in config[ATTR_CAMERAS]:
+        if CONF_CAMERAS in config:
+            if camera_name not in config[CONF_CAMERAS]:
                 continue
-        add_devices_callback([WelcomeCamera(data, camera_name, home)])
+        add_devices([WelcomeCamera(data, camera_name, home)])
 
 
 class WelcomeCamera(Camera):
