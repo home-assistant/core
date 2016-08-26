@@ -102,6 +102,15 @@ class TestEmulatedHue(unittest.TestCase):
         self.assertTrue('success' in success_json)
         self.assertTrue('username' in success_json['success'])
 
+    def test_valid_username_request(self):
+        request_json = {'invalid_key': 'my_device'}
+
+        result = requests.post(
+            BRIDGE_URL_BASE.format('/api'), data=json.dumps(request_json),
+            timeout=5)
+
+        self.assertEqual(result.status_code, 400)
+
 
 class TestEmulatedHueExposedByDefault(unittest.TestCase):
     @classmethod
@@ -216,31 +225,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         self.assertEqual(kitchen_result.status_code, 404)
 
     def test_put_light_state(self):
-        # Turn the office light off first
-        self.hass.services.call(
-            light.DOMAIN, const.SERVICE_TURN_OFF,
-            {const.ATTR_ENTITY_ID: 'light.office_light'},
-            blocking=True)
-
-        office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, 'off')
-
-        # Go through the API to turn it on
-        office_result = self.perform_put_light_state(
-            'light.office_light', True, 56)
-
-        office_result_json = office_result.json()
-
-        self.assertEqual(office_result.status_code, 200)
-        self.assertTrue(
-            'application/json' in office_result.headers['content-type'])
-
-        self.assertEqual(len(office_result_json), 2)
-
-        # Check to make sure the state changed
-        office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, 'on')
-        self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
+        self.perform_put_test_on_office_light()
 
         # Turn the bedroom light on first
         self.hass.services.call(
@@ -274,6 +259,100 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             'light.kitchen_light', True)
         self.assertEqual(kitchen_result.status_code, 404)
 
+    def test_put_with_form_urlencoded_content_type(self):
+        # Needed for Alexa
+        self.perform_put_test_on_office_light(
+            'application/x-www-form-urlencoded')
+
+        # Make sure we fail gracefully when we can't parse the data
+        data = {'key1': 'value1', 'key2': 'value2'}
+        result = requests.put(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}/state'.format("light.office_light")),
+            data=data)
+
+        self.assertEqual(result.status_code, 400)
+
+    def test_entity_not_found(self):
+        result = requests.get(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}'.format("not.existant_entity")),
+            timeout=5)
+
+        self.assertEqual(result.status_code, 404)
+
+        result = requests.put(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}/state'.format("non.existant_entity")),
+            timeout=5)
+
+        self.assertEqual(result.status_code, 404)
+
+    def test_allowed_methods(self):
+        result = requests.get(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}/state'.format("light.office_light")))
+
+        self.assertEqual(result.status_code, 405)
+
+        result = requests.put(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}'.format("light.office_light")),
+            data={'key1': 'value1'})
+
+        self.assertEqual(result.status_code, 405)
+
+        result = requests.put(
+            BRIDGE_URL_BASE.format('/api/username/lights'),
+            data={'key1': 'value1'})
+
+        self.assertEqual(result.status_code, 405)
+
+    def test_proper_put_state_request(self):
+        # Test proper on value parsing
+        result = requests.put(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}'.format("light.office_light")),
+            data={'on': 1234})
+
+        self.assertEqual(result.status_code, 400)
+
+        # Test proper brightness value parsing
+        result = requests.put(
+            BRIDGE_URL_BASE.format(
+                '/api/username/lights/{}'.format("light.office_light")),
+            data={'on': True, 'bri': 'Hello world!'})
+
+        self.assertEqual(result.status_code, 400)
+
+    def perform_put_test_on_office_light(self,
+                                         content_type='application/json'):
+        # Turn the office light off first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.office_light'},
+            blocking=True)
+
+        office_light = self.hass.states.get('light.office_light')
+        self.assertEqual(office_light.state, 'off')
+
+        # Go through the API to turn it on
+        office_result = self.perform_put_light_state(
+            'light.office_light', True, 56, content_type)
+
+        office_result_json = office_result.json()
+
+        self.assertEqual(office_result.status_code, 200)
+        self.assertTrue(
+            'application/json' in office_result.headers['content-type'])
+
+        self.assertEqual(len(office_result_json), 2)
+
+        # Check to make sure the state changed
+        office_light = self.hass.states.get('light.office_light')
+        self.assertEqual(office_light.state, 'on')
+        self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
+
     def perform_get_light_state(self, entity_id, expected_status):
         result = requests.get(
             BRIDGE_URL_BASE.format(
@@ -289,16 +368,20 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         return None
 
-    def perform_put_light_state(self, entity_id, is_on, brightness=None):
+    def perform_put_light_state(self, entity_id, is_on, brightness=None,
+                                content_type='application/json'):
         url = BRIDGE_URL_BASE.format(
             '/api/username/lights/{}/state'.format(entity_id))
+
+        req_headers = {'Content-Type': content_type}
 
         data = {'on': is_on}
 
         if brightness is not None:
             data['bri'] = brightness
 
-        result = requests.put(url, data=json.dumps(data), timeout=5)
+        result = requests.put(
+            url, data=json.dumps(data), timeout=5, headers=req_headers)
         return result
 
 

@@ -315,33 +315,30 @@ class HueLightsView(HomeAssistantView):
 
     def put(self, request, username, entity_id=None):
         """Handle a PUT request."""
-        if entity_id is None:
-            return self.Response("Not found", status=404)
+        if not request.base_url.endswith('state'):
+            return self.Response("Method not allowed", status=405)
 
-        if request.base_url.endswith('state'):
-            content_type = request.environ.get('CONTENT_TYPE', '')
-            if content_type == 'application/x-www-form-urlencoded':
-                # Alexa sends JSON data with a form data content type, for
-                # whatever reason, and Werkzeug parses form data automatically,
-                # so we need to do some gymnastics to get the data we need
-                json_data = None
+        content_type = request.environ.get('CONTENT_TYPE', '')
+        if content_type == 'application/x-www-form-urlencoded':
+            # Alexa sends JSON data with a form data content type, for
+            # whatever reason, and Werkzeug parses form data automatically,
+            # so we need to do some gymnastics to get the data we need
+            json_data = None
 
-                for key in request.form:
-                    try:
-                        json_data = json.loads(key)
-                        break
-                    except json.JSONDecodeError:
-                        # Try the next key?
-                        pass
+            for key in request.form:
+                try:
+                    json_data = json.loads(key)
+                    break
+                except json.JSONDecodeError:
+                    # Try the next key?
+                    pass
 
-                if json_data is None:
-                    return self.Response("Bad request", status=400)
-            else:
-                json_data = request.json
+            if json_data is None:
+                return self.Response("Bad request", status=400)
+        else:
+            json_data = request.json
 
-            return self.put_light_state(json_data, entity_id)
-
-        return self.Response("Method not allowed", status=405)
+        return self.put_light_state(json_data, entity_id)
 
     def get_lights_list(self):
         """Process a request to get the list of available lights."""
