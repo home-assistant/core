@@ -93,6 +93,7 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
 
 REQUIREMENTS = ["apns3==1.0.0"]
 
+
 def get_service(hass, config):
     """Return push service."""
     descriptions = load_yaml_config_file(
