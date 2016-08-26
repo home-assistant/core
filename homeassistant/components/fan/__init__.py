@@ -43,7 +43,7 @@ SPEED_HIGH = 'high'
 
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
-ATTR_OSCILLATE = 'is_oscillating'
+ATTR_OSCILLATE = 'oscillating'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
@@ -202,7 +202,7 @@ class FanEntity(Entity):
         """Turn off the fan."""
         raise NotImplementedError()
 
-    def oscillate(self: Entity) -> None:
+    def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
 
