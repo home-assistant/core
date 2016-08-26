@@ -38,9 +38,13 @@ def trigger(hass, config, action):
     from_state = config.get(CONF_FROM, MATCH_ALL)
     to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
     time_delta = config.get(CONF_FOR)
+    remove_state_for_cancel = None
+    remove_state_for_listener = None
 
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
+        nonlocal remove_state_for_cancel, remove_state_for_listener
+
         def call_action():
             """Call action with right context."""
             action({
@@ -75,7 +79,17 @@ def trigger(hass, config, action):
         remove_state_for_cancel = track_state_change(
             hass, entity, state_for_cancel_listener)
 
-    track_state_change(
-        hass, entity_id, state_automation_listener, from_state, to_state)
+    unsub = track_state_change(hass, entity_id, state_automation_listener,
+                               from_state, to_state)
 
-    return True
+    def remove():
+        """Remove state listeners."""
+        unsub()
+
+        if remove_state_for_cancel is not None:
+            remove_state_for_cancel()
+
+        if remove_state_for_listener is not None:
+            remove_state_for_listener()
+
+    return remove

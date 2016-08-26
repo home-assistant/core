@@ -39,6 +39,4 @@ def trigger(hass, config, action):
                 }
             })
 
-    mqtt.subscribe(hass, topic, mqtt_automation_listener)
-
-    return True
+    return mqtt.subscribe(hass, topic, mqtt_automation_listener)
