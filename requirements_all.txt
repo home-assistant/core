@@ -53,7 +53,7 @@ boto3==1.3.1
 cherrypy==7.1.0
 
 # homeassistant.scripts.check_config
-colorlog>2.1<3
+colorlog>2.1,<3
 
 # homeassistant.components.media_player.directv
 directpy==0.1
