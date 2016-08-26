@@ -18,15 +18,16 @@ FAN_ENTITY_ID = 'fan.living_room_fan'
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup demo garage door platform."""
     add_devices_callback([
-        DemoFan(FAN_NAME, STATE_OFF),
+        DemoFan(hass, FAN_NAME, STATE_OFF),
     ])
 
 
 class DemoFan(FanEntity):
     """A demonstration fan component."""
 
-    def __init__(self, name, initial_state: str) -> None:
+    def __init__(self, hass, name: str, initial_state: str) -> None:
         """Initialize the entity."""
+        self.hass = hass
         self.speed = initial_state
         self.is_oscillating = False
         self._name = name
