@@ -31,6 +31,7 @@ class SleepIQSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return 'SleepNumber {} {} {}'.format(self.bed.name,
                                              self.side.sleeper.first_name,
                                              self._name)
