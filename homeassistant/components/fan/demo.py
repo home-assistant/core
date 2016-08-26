@@ -29,7 +29,7 @@ class DemoFan(FanEntity):
         """Initialize the entity."""
         self.hass = hass
         self.speed = initial_state
-        self.is_oscillating = False
+        self.oscillating = False
         self._name = name
 
     @property
