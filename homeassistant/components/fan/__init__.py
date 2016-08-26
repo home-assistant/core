@@ -43,12 +43,12 @@ SPEED_HIGH = 'high'
 
 ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
-ATTR_OSCILLATE = 'oscillating'
+ATTR_OSCILLATING = 'oscillating'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
-    'is_oscillating': ATTR_OSCILLATE,
+    'oscillating': ATTR_OSCILLATING,
     'supported_features': ATTR_SUPPORTED_FEATURES,
 }  # type: dict
 
