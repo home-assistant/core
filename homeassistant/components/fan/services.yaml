@@ -40,6 +40,6 @@ oscillate:
       description: Name(s) of the entities to oscillate
       example: 'fan.desk_fan'
 
-    oscillate:
+    oscillating:
       description: Flag to turn on/off oscillation
       example: True
