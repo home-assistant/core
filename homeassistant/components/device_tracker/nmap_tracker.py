@@ -61,8 +61,10 @@ class NmapDeviceScanner(object):
         self.last_results = []
 
         self.hosts = config[CONF_HOSTS]
-        if config[CONF_EXCLUDE]:
+        if CONF_EXCLUDE in config:
             self.exclude = config[CONF_EXCLUDE]
+        else:
+            self.exclude = []
         minutes = convert(config.get(CONF_HOME_INTERVAL), int, 0)
         self.home_interval = timedelta(minutes=minutes)
 
@@ -112,8 +114,10 @@ class NmapDeviceScanner(object):
                 exclude_hosts = self.exclude
         else:
             last_results = []
-        exclude = " --exclude {}".format(",".join(exclude_hosts))
-        options += exclude
+            exclude_hosts = self.exclude
+        if exclude_hosts:
+            exclude = " --exclude {}".format(",".join(exclude_hosts))
+            options += exclude
 
         try:
             result = scanner.scan(hosts=self.hosts, arguments=options)
