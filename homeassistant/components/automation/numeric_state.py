@@ -63,7 +63,4 @@ def trigger(hass, config, action):
 
         action(variables)
 
-    track_state_change(
-        hass, entity_id, state_automation_listener)
-
-    return True
+    return track_state_change(hass, entity_id, state_automation_listener)
