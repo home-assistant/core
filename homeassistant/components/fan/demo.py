@@ -53,8 +53,8 @@ class DemoFan(FanEntity):
 
     def turn_off(self) -> None:
         """Turn off the entity."""
-        self.speed = STATE_OFF
         self.oscillate(False)
+        self.set_speed(STATE_OFF)
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
