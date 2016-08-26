@@ -69,30 +69,30 @@ def setup(hass, config: dict) -> bool:
 class InsteonDevice(Entity):
     """Represents an insteon device."""
 
-    def __init__(self: Entity, node: object) -> None:
+    def __init__(self, node: object) -> None:
         """Initialize the insteon device."""
         self._node = node
 
-    def update(self: Entity) -> None:
+    def update(self) -> None:
         """Update state of the device."""
         pass
 
     @property
-    def name(self: Entity) -> str:
+    def name(self) -> str:
         """Name of the insteon device."""
         return self._node.DeviceName
 
     @property
-    def unique_id(self: Entity) -> str:
+    def unique_id(self) -> str:
         """Unique identifier for the device."""
         return self._node.DeviceID
 
     @property
-    def supported_features(self: Entity) -> int:
+    def supported_features(self) -> int:
         """Supported feature flags."""
         return 0
 
-    def _send_command(self: Entity, command: str, level: int=None,
+    def _send_command(self, command: str, level: int=None,
                       payload: dict=None) -> bool:
         """Send command to insteon device."""
         resp = self._node.send_command(command, payload=payload, level=level,
