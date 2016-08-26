@@ -22,6 +22,7 @@ LOGGER = logging.getLogger(__name__)
 # Mi Flora sensor library
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
 CONF_MAC = "mac"
+CONF_FORCE_UPDATE = 'force_update'
 DEFAULT_NAME = ""
 
 # Sensor types are defined like: Name, units
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
 })
 
 
@@ -45,6 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from miflora import miflora_poller
 
     poller = miflora_poller.MiFloraPoller(config.get(CONF_MAC))
+    force_update = config.get(CONF_FORCE_UPDATE)
 
     devs = []
     try:
@@ -61,7 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             if len(prefix) > 0:
                 name = prefix + " " + name
-            devs.append(MiFloraSensor(poller, parameter, name, unit))
+            devs.append(MiFloraSensor(poller,
+                                      parameter,
+                                      name, unit,
+                                      force_update))
     except KeyError as err:
         LOGGER.error("Sensor type %s unknown", err)
         return False
@@ -74,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MiFloraSensor(Entity):
     """Implementing the MiFlora sensor."""
 
-    def __init__(self, poller, parameter, name, unit):
+    def __init__(self, poller, parameter, name, unit, force_update):
         """Initialize the sensor."""
         self.poller = poller
         self.parameter = parameter
@@ -82,6 +88,7 @@ class MiFloraSensor(Entity):
         self._name = name
         self._state = None
         self.data = []
+        self._force_update = force_update
         # Median is used to filter out outliers. median of 3 will filter
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
@@ -101,6 +108,11 @@ class MiFloraSensor(Entity):
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
+
+    @property
+    def force_update(self):
+        """Force update"""
+        return self._force_update
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
