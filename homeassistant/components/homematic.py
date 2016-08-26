@@ -7,24 +7,29 @@ https://home-assistant.io/components/homematic/
 import os
 import time
 import logging
+from datetime import timedelta
 from functools import partial
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN,
-                                 CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM)
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
+                                 ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers import discovery
 from homeassistant.config import load_yaml_config_file
+from homeassistant.util import Throttle
 
 DOMAIN = 'homematic'
 REQUIREMENTS = ["pyhomematic==0.1.13"]
 
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
+HOMEMATIC_VAR = {}
+
+MIN_TIME_BETWEEN_UPDATE_HUB = timedelta(seconds=300)
 
 DISCOVER_SWITCHES = 'homematic.switch'
 DISCOVER_LIGHTS = 'homematic.light'
@@ -38,11 +43,13 @@ ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
 ATTR_NAME = 'name'
 ATTR_ADDRESS = 'address'
+ATTR_VALUE = 'value'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
 
 SERVICE_VIRTUALKEY = 'virtualkey'
+SERVICE_SET_VALUE = 'set_value'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: ['Switch', 'SwitchPowermeter'],
@@ -132,15 +139,40 @@ SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
     vol.Required(ATTR_PARAM): cv.string,
 })
 
+SCHEMA_SERVICE_SET_VALUE = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): vol.Coerce(float),
+})
 
-# pylint: disable=unused-argument
+
+def virtualkey(hass, address, channel, param):
+    """Send virtual keypress to homematic controlller."""
+    data = {
+        ATTR_ADDRESS: address,
+        ATTR_CHANNEL: channel,
+        ATTR_PARAM: param,
+    }
+
+    hass.services.call(DOMAIN, SERVICE_VIRTUALKEY, data)
+
+
+def set_value(hass, entity_id, value):
+    """Change value of homematic system variable."""
+    data = {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_VALUE: value,
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_VALUE, data)
+
+
+# pylint: disable=unused-argument,too-many-locals
 def setup(hass, config):
     """Setup the Homematic component."""
     global HOMEMATIC, HOMEMATIC_LINK_DELAY
     from pyhomematic import HMConnection
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    hm_hub = HMHub()
 
     local_ip = config[DOMAIN].get(CONF_LOCAL_IP)
     local_port = config[DOMAIN].get(CONF_LOCAL_PORT)
@@ -157,12 +189,11 @@ def setup(hass, config):
 
     # Create server thread
     bound_system_callback = partial(_system_callback_handler, hass, config)
-    bound_event_callback = partial(_event_callback_handler, hm_hub)
     HOMEMATIC = HMConnection(local=local_ip,
                              localport=local_port,
                              remote=remote_ip,
                              remoteport=remote_port,
-                             eventcallback=bound_event_callback,
+                             eventcallback=_event_callback_handler,
                              systemcallback=bound_system_callback,
                              resolvenames=resolvenames,
                              rpcusername=username,
@@ -183,17 +214,50 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_VIRTUALKEY,
                            _hm_service_virtualkey,
                            descriptions[DOMAIN][SERVICE_VIRTUALKEY],
-                           SCHEMA_SERVICE_VIRTUALKEY)
+                           schema=SCHEMA_SERVICE_VIRTUALKEY)
 
-    hm_hub.init_data()
-    component.add_entities([hm_hub])
+    entities = []
+
+    ##
+    # init HM variable
+    variables = HOMEMATIC.getAllSystemVariables()
+    if variables is not None:
+        for key, value in variables.items():
+            hm_var = HMVariable(key, value)
+            HOMEMATIC_VAR.update({key: hm_var})
+            entities.append(hm_var)
+
+    # add homematic entites
+    entities.append(HMHub())
+    component.add_entities(entities)
+
+    ##
+    # register set_value service if exists variables
+    if not HOMEMATIC_VAR:
+        return True
+
+    def _service_handle_value(service):
+        """Set value on homematic variable object."""
+        variable_list = component.extract_from_service(service)
+
+        value = service.data[ATTR_VALUE]
+
+        for hm_variable in variable_list:
+            hm_variable.hm_set(value)
+
+    hass.services.register(DOMAIN, SERVICE_SET_VALUE,
+                           _service_handle_value,
+                           descriptions[DOMAIN][SERVICE_SET_VALUE],
+                           schema=SCHEMA_SERVICE_SET_VALUE)
+
     return True
 
 
-def _event_callback_handler(hm_hub, interface_id, address, value_key, value):
+def _event_callback_handler(interface_id, address, value_key, value):
     """Callback handler for events."""
     if not address:
-        hm_hub.update_hm_variable(value_key, value)
+        if value_key in HOMEMATIC_VAR:
+            HOMEMATIC_VAR[value_key].hm_update(value)
 
 
 # pylint: disable=too-many-branches
@@ -444,7 +508,7 @@ class HMHub(Entity):
 
     def __init__(self):
         """Initialize Homematic hub."""
-        self._data = {}
+        self._state = STATE_UNKNOWN
 
     @property
     def name(self):
@@ -454,47 +518,72 @@ class HMHub(Entity):
     @property
     def state(self):
         """Return the state of the entity."""
-        state = HOMEMATIC.getServiceMessages()
-        if state is None:
-            return STATE_UNKNOWN
-
-        return len(state)
+        return self._state
 
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return self._data
+        return {}
 
-    def init_data(self):
-        """Init variable to object."""
-        hm_var = HOMEMATIC.getAllSystemVariables()
-        for var, val in hm_var:
-            self._data[var] = val
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return "mdi:gradient"
 
-    def update_hm_variable(self, variable, value):
-        """Update homematic variable from Homematic."""
-        if variable not in self._data:
+    @property
+    def available(self):
+        """Return true if device is available."""
+        return True if HOMEMATIC is not None else False
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATE_HUB)
+    def update(self):
+        """Retrieve latest state."""
+        if HOMEMATIC is None:
             return
+        state = HOMEMATIC.getServiceMessages()
+        self._state = STATE_UNKNOWN if state is None else len(state)
 
-        # if value have change, update HASS
-        if self._data[variable] != value:
-            self._data[variable] = value
-            self.update_ha_state()
+
+class HMVariable(Entity):
+    """The Homematic system variable."""
+
+    def __init__(self, name, state):
+        """Initialize Homematic hub."""
+        self._state = state
+        self._name = name
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return "mdi:code-string"
 
     @property
     def should_poll(self):
         """Return false. Homematic states are pushed by the XML RPC Server."""
         return False
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return '#'
+    def hm_update(self, value):
+        """Update variable value from event callback."""
+        self._state = value
+        self.update_ha_state()
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:gradient"
+    def hm_set(self, value):
+        """Set variable on homematic controller."""
+        if HOMEMATIC is not None:
+            HOMEMATIC.setSystemVariable(self._name, value)
+
+        # CCU don't send variable updates from own
+        self.hm_update(value)
 
 
 class HMDevice(Entity):
