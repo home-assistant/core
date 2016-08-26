@@ -312,7 +312,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Test proper on value parsing
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}'.format("light.office_light")),
+                '/api/username/lights/{}/state'.format("light.office_light")),
             data={'on': 1234})
 
         self.assertEqual(result.status_code, 400)
@@ -320,7 +320,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         # Test proper brightness value parsing
         result = requests.put(
             BRIDGE_URL_BASE.format(
-                '/api/username/lights/{}'.format("light.office_light")),
+                '/api/username/lights/{}/state'.format("light.office_light")),
             data={'on': True, 'bri': 'Hello world!'})
 
         self.assertEqual(result.status_code, 400)
