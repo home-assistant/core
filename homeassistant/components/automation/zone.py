@@ -58,7 +58,5 @@ def trigger(hass, config, action):
                 },
             })
 
-    track_state_change(
-        hass, entity_id, zone_automation_listener, MATCH_ALL, MATCH_ALL)
-
-    return True
+    return track_state_change(hass, entity_id, zone_automation_listener,
+                              MATCH_ALL, MATCH_ALL)
