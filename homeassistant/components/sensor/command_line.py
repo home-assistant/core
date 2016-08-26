@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.command_line/
 """
 import logging
 import subprocess
-from datetime import timedelta
 
 import voluptuous as vol
 
