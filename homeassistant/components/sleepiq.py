@@ -8,7 +8,6 @@ https://home-assistant.io/components/sleepiq/
 import logging
 from datetime import timedelta
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -102,12 +101,6 @@ class SleepIQSensor(Entity):
 
         self.bed = self.sleepiq_data.beds[self._bed_id]
         self.side = getattr(self.bed, self._side)
-
-        if self.type == SLEEP_NUMBER:
-            self._state = self.side.sleep_number
-        else:
-            message = 'Unexpected SleepIQ sensor type: {}'.format(self.type)
-            raise HomeAssistantError(message)
 
 
 def setup(hass, config):
