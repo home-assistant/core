@@ -49,6 +49,7 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
         sleepiq.SleepIQSensor.update(self)
         self._state = self.side.is_in_bed
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SleepIQ sensors."""
     if discovery_info is None:

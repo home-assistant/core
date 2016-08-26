@@ -58,6 +58,7 @@ class SleepIQData(object):
 
         self.beds = {bed.bed_id: bed for bed in beds}
 
+
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
@@ -68,11 +69,10 @@ class SleepIQSensor(Entity):
         self._side = side
         self.sleepiq_data = sleepiq_data
         self._state = None
-        self._name = None # added by subclass
-        self.type = None # added by subclass
-
         self.side = None
         self.bed = None
+        # added by subclass:
+        self._name = None
 
     @property
     def name(self):
