@@ -8,6 +8,7 @@ https://home-assistant.io/components/sleepiq/
 import logging
 from datetime import timedelta
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -57,7 +58,7 @@ class SleepIQData(object):
 
         self.beds = {bed.bed_id: bed for bed in beds}
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
 
@@ -67,9 +68,15 @@ class SleepIQSensor(Entity):
         self._side = side
         self.sleepiq_data = sleepiq_data
         self._state = None
+        self._name = None # added by subclass
+        self.type = None # added by subclass
+
+        self.side = None
+        self.bed = None
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return 'SleepNumber {} {} {}'.format(self.bed.name,
                                              self.side.sleeper.first_name,
                                              self._name)

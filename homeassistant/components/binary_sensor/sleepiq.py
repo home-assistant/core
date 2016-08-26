@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.sleepiq/
 """
 from homeassistant.components import sleepiq
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.exceptions import HomeAssistantError
 
 DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:sleep'
@@ -19,9 +18,9 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
     def __init__(self, sleepiq_data, bed_id, side):
         """Initialize the sensor."""
         sleepiq.SleepIQSensor.__init__(self,
-                sleepiq_data,
-                bed_id,
-                side)
+                                       sleepiq_data,
+                                       bed_id,
+                                       side)
         self.type = sleepiq.SLEEP_NUMBER
         self._name = sleepiq.SENSOR_TYPES[self.type]
         self._sensor_class = 'motion'
@@ -36,11 +35,13 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
+        # pylint: disable=no-member
         return BinarySensorDevice.state.fget(self)
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        # pylint: disable=no-member
         return BinarySensorDevice.icon.fget(self)
 
     def update(self):
