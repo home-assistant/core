@@ -13,7 +13,7 @@ import homeassistant.config as config_util
 import homeassistant.loader as loader
 import homeassistant.util.yaml as yaml
 
-REQUIREMENTS = ('colorlog>2.1<3',)
+REQUIREMENTS = ('colorlog>2.1,<3',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -116,7 +116,7 @@ def run(script_args: List) -> int:
         if 'all' in domain_info:
             print(color('bold_white', 'Successful config (all)'))
             for domain, config in res['components'].items():
-                print(color(C_HEAD, domain + ':'))
+                print(' ', color(C_HEAD, domain + ':'))
                 dump_dict(config, indent_count=3)
         else:
             print(color('bold_white', 'Successful config (partial)'))
