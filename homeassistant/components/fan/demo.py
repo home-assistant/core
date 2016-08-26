@@ -5,9 +5,9 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.components.fan import SPEED_LOW, SPEED_MED, SPEED_HIGH
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH,
+                                          FanEntity)
 from homeassistant.const import STATE_OFF
-from homeassistant.helpers.entity import Entity
 
 
 FAN_NAME = 'Living Room Fan'
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     ])
 
 
-class DemoFan(Entity):
+class DemoFan(FanEntity):
     """A demonstration fan component."""
 
     def __init__(self, name, initial_state: str) -> None:
