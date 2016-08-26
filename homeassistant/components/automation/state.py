@@ -7,8 +7,7 @@ at https://home-assistant.io/components/automation/#state-trigger
 import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL, CONF_PLATFORM)
+from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import track_state_change, track_point_in_time
 import homeassistant.helpers.config_validation as cv
 
@@ -60,23 +59,20 @@ def trigger(hass, config, action):
 
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
-            hass.bus.remove_listener(
-                EVENT_STATE_CHANGED, attached_state_for_cancel)
+            remove_state_for_cancel()
             call_action()
 
         def state_for_cancel_listener(entity, inner_from_s, inner_to_s):
             """Fire on changes and cancel for listener if changed."""
             if inner_to_s.state == to_s.state:
                 return
-            hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                     attached_state_for_listener)
-            hass.bus.remove_listener(EVENT_STATE_CHANGED,
-                                     attached_state_for_cancel)
+            remove_state_for_listener()
+            remove_state_for_cancel()
 
-        attached_state_for_listener = track_point_in_time(
+        remove_state_for_listener = track_point_in_time(
             hass, state_for_listener, dt_util.utcnow() + time_delta)
 
-        attached_state_for_cancel = track_state_change(
+        remove_state_for_cancel = track_state_change(
             hass, entity, state_for_cancel_listener)
 
     track_state_change(

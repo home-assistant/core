@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.cover import CoverDevice
-from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
 
 
@@ -32,8 +31,8 @@ class DemoCover(CoverDevice):
         self._tilt_position = tilt_position
         self._closing = True
         self._closing_tilt = True
-        self._listener_cover = None
-        self._listener_cover_tilt = None
+        self._unsub_listener_cover = None
+        self._unsub_listener_cover_tilt = None
 
     @property
     def name(self):
@@ -120,10 +119,9 @@ class DemoCover(CoverDevice):
         """Stop the cover."""
         if self._position is None:
             return
-        if self._listener_cover is not None:
-            self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                          self._listener_cover)
-            self._listener_cover = None
+        if self._unsub_listener_cover is not None:
+            self._unsub_listener_cover()
+            self._unsub_listener_cover = None
             self._set_position = None
 
     def stop_cover_tilt(self, **kwargs):
@@ -131,16 +129,15 @@ class DemoCover(CoverDevice):
         if self._tilt_position is None:
             return
 
-        if self._listener_cover_tilt is not None:
-            self.hass.bus.remove_listener(EVENT_TIME_CHANGED,
-                                          self._listener_cover_tilt)
-            self._listener_cover_tilt = None
+        if self._unsub_listener_cover_tilt is not None:
+            self._unsub_listener_cover_tilt()
+            self._unsub_listener_cover_tilt = None
             self._set_tilt_position = None
 
     def _listen_cover(self):
         """Listen for changes in cover."""
-        if self._listener_cover is None:
-            self._listener_cover = track_utc_time_change(
+        if self._unsub_listener_cover is None:
+            self._unsub_listener_cover = track_utc_time_change(
                 self.hass, self._time_changed_cover)
 
     def _time_changed_cover(self, now):
@@ -156,8 +153,8 @@ class DemoCover(CoverDevice):
 
     def _listen_cover_tilt(self):
         """Listen for changes in cover tilt."""
-        if self._listener_cover_tilt is None:
-            self._listener_cover_tilt = track_utc_time_change(
+        if self._unsub_listener_cover_tilt is None:
+            self._unsub_listener_cover_tilt = track_utc_time_change(
                 self.hass, self._time_changed_cover_tilt)
 
     def _time_changed_cover_tilt(self, now):

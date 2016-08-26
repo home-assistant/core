@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.rollershutter import RollershutterDevice
-from homeassistant.const import EVENT_TIME_CHANGED
 from homeassistant.helpers.event import track_utc_time_change
 
 
@@ -27,7 +26,7 @@ class DemoRollershutter(RollershutterDevice):
         self._name = name
         self._position = position
         self._moving_up = True
-        self._listener = None
+        self._unsub_listener = None
 
     @property
     def name(self):
@@ -70,15 +69,15 @@ class DemoRollershutter(RollershutterDevice):
 
     def stop(self, **kwargs):
         """Stop the roller shutter."""
-        if self._listener is not None:
-            self.hass.bus.remove_listener(EVENT_TIME_CHANGED, self._listener)
-            self._listener = None
+        if self._unsub_listener is not None:
+            self._unsub_listener()
+            self._unsub_listener = None
 
     def _listen(self):
         """Listen for changes."""
-        if self._listener is None:
-            self._listener = track_utc_time_change(self.hass,
-                                                   self._time_changed)
+        if self._unsub_listener is None:
+            self._unsub_listener = track_utc_time_change(self.hass,
+                                                         self._time_changed)
 
     def _time_changed(self, now):
         """Track time changes."""
