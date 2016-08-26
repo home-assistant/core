@@ -59,7 +59,9 @@ class DemoFan(FanEntity):
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         self.speed = speed
+        self.update_ha_state()
 
-    def ocillate(self, should_oscillate: bool) -> None:
+    def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        self.is_oscillating = should_oscillate
+        self.is_oscillating = oscillating
+        self.update_ha_state()
