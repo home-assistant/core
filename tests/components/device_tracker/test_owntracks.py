@@ -17,7 +17,10 @@ DEVICE = 'phone'
 
 LOCATION_TOPIC = "owntracks/{}/{}".format(USER, DEVICE)
 EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
-WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'.format(USER, DEVICE)
+WAYPOINT_TOPIC = owntracks.WAYPOINT_TOPIC.format(USER, DEVICE)
+USER_BLACKLIST = 'ram'
+WAYPOINT_TOPIC_BLOCKED = owntracks.WAYPOINT_TOPIC.format(USER_BLACKLIST,
+                                                         DEVICE)
 
 DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
 
@@ -25,7 +28,8 @@ IBEACON_DEVICE = 'keys'
 REGION_TRACKER_STATE = "device_tracker.beacon_{}".format(IBEACON_DEVICE)
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
+CONF_WAYPOINT_IMPORT = owntracks.CONF_WAYPOINT_IMPORT
+CONF_WAYPOINT_WHITELIST = owntracks.CONF_WAYPOINT_WHITELIST
 
 LOCATION_MESSAGE = {
     'batt': 92,
@@ -168,7 +172,8 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'owntracks',
                 CONF_MAX_GPS_ACCURACY: 200,
-                CONF_WAYPOINT_IMPORT_USER: USER
+                CONF_WAYPOINT_IMPORT: True,
+                CONF_WAYPOINT_WHITELIST: ['jon', 'greg']
             }}))
 
         self.hass.states.set(
@@ -565,3 +570,13 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assertTrue(wayp is not None)
         wayp = self.hass.states.get('zone.exp_wayp2')
         self.assertTrue(wayp is not None)
+
+    def test_waypoint_import_blacklist(self):
+        """Test import of list of waypoints for blacklisted user."""
+        waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        # Check if it made it into states
+        wayp = self.hass.states.get('zone.exp_wayp1')
+        self.assertTrue(wayp is None)
+        wayp = self.hass.states.get('zone.exp_wayp2')
+        self.assertTrue(wayp is None)
