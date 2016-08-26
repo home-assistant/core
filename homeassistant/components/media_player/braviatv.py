@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.3.zip'
-    '#braviarc==0.3.3']
+    'https://github.com/aparraga/braviarc/archive/0.3.4.zip'
+    '#braviarc==0.3.4']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 CLIENTID_PREFIX = 'HomeAssistant'
