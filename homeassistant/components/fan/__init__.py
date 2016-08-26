@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (STATE_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID)
+                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -206,17 +207,21 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         pass
 
-    def turn_on(self: ToggleEntity, speed: str=None) -> None:
+    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
-    def turn_off(self: ToggleEntity) -> None:
+    def turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn off the fan."""
         raise NotImplementedError()
 
     def oscillate(self: ToggleEntity, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
+
+    def is_on(self):
+        """Return true if the entity is on."""
+        return self.state not in [STATE_OFF, STATE_UNKNOWN]
 
     @property
     def speed_list(self: ToggleEntity) -> list:
