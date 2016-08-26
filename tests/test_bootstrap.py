@@ -177,6 +177,7 @@ class TestBootstrap:
                 return_value=False)
     def test_component_not_installed_if_requirement_fails(self, mock_install):
         """Component setup should fail if requirement can't install."""
+        self.hass.config.skip_pip = False
         loader.set_component(
             'comp', MockModule('comp', requirements=['package==0.0.1']))
 
