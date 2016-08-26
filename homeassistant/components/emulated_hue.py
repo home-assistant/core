@@ -384,6 +384,9 @@ class HueLightsView(HomeAssistantView):
         if entity is None:
             return self.Response("Entity not found", status=404)
 
+        if not self.is_entity_exposed(entity):
+            return self.Response("Entity not found", status=404)
+
         # Parse the request into requested "on" status and brightness
         parsed = parse_hue_api_put_light_body(request_json, entity)
 
@@ -454,12 +457,12 @@ def parse_hue_api_put_light_body(request_json, entity):
 
         if request_json['on']:
             # Echo requested device be turned on
-            brightness = 100
+            brightness = None
             report_brightness = False
             result = True
         else:
             # Echo requested device be turned off
-            brightness = 0
+            brightness = None
             report_brightness = False
             result = False
 
