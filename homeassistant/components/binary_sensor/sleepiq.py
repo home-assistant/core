@@ -12,6 +12,7 @@ DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:sleep'
 
 
+# pylint: disable=too-many-instance-attributes
 class SleepIQBinarySensor(BinarySensorDevice):
     """Implementation of a SleepIQ presence sensor."""
 
@@ -33,10 +34,11 @@ class SleepIQBinarySensor(BinarySensorDevice):
         return 'SleepNumber {} {} {}'.format(self.bed.name,
                                              self.side.sleeper.first_name,
                                              self._name)
+
     @property
     def is_on(self):
         """Return the status of the sensor."""
-        return self._state == True
+        return self._state is True
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
@@ -45,12 +47,14 @@ class SleepIQBinarySensor(BinarySensorDevice):
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 
+        self.bed = self.sleepiq_data.beds[self._bed_id]
         self.side = getattr(self.bed, self._side)
 
         if self.type == sleepiq.IS_IN_BED:
             self._state = self.side.is_in_bed
         else:
-            message = 'Unexpected SleepIQ binary sensor type: {}'.format(self.type)
+            message = 'Unexpected SleepIQ binary sensor type: {}'.format(
+                self.type)
             raise HomeAssistantError(message)
 
 
@@ -64,5 +68,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = list()
     for bed_id, bed in data.beds.items():
         for side in sleepiq.SIDES:
-            dev.append(SleepIQBinarySensor(data, bed_id, side, sleepiq.IS_IN_BED))
+            dev.append(SleepIQBinarySensor(
+                data,
+                bed_id,
+                side,
+                sleepiq.IS_IN_BED))
     add_devices(dev)

@@ -34,6 +34,10 @@ SIDES = [LEFT, RIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA = None
+
+
+# pylint: disable=too-few-public-methods
 class SleepIQData(object):
     """Gets the latest data from SleepIQ."""
 
@@ -65,12 +69,13 @@ def setup(hass, config):
             _LOGGER):
         return False
 
-    # pylint: disable=global-statement, import-error
+    # pylint: disable=global-statement
     global DATA
 
     from sleepyq import Sleepyq
-    client = Sleepyq(config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD])
-
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
+    client = Sleepyq(username, password)
     DATA = SleepIQData(client)
     DATA.update()
 

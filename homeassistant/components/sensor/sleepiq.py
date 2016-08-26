@@ -12,7 +12,7 @@ DEPENDENCIES = ['sleepiq']
 ICON = 'mdi:hotel'
 
 
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
 class SleepIQSensor(Entity):
     """Implementation of a SleepIQ sensor."""
 
@@ -24,6 +24,8 @@ class SleepIQSensor(Entity):
         self.sleepiq_data = sleepiq_data
         self.type = sensor_type
         self._state = None
+        self.bed = None
+        self.side = None
 
         self.update()
 
@@ -58,6 +60,7 @@ class SleepIQSensor(Entity):
         else:
             message = 'Unexpected SleepIQ sensor type: {}'.format(self.type)
             raise HomeAssistantError(message)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the SleepIQ sensors."""
