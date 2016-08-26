@@ -36,6 +36,11 @@ class DemoFan(FanEntity):
         return self._name
 
     @property
+    def should_poll(self):
+        """No polling needed for a demo fan."""
+        return False
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
