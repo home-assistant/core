@@ -13,7 +13,7 @@ from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (STATE_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -192,46 +192,39 @@ def setup(hass, config: dict) -> None:
     return True
 
 
-class FanEntity(Entity):
+class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
     # pylint: disable=no-self-use, abstract-method
 
     @property
-    def state(self: Entity) -> str:
+    def state(self: ToggleEntity) -> str:
         """Get the state of the fan."""
         return self.__getattribute__(ATTR_SPEED)
 
-    def set_speed(self: Entity, speed: str) -> None:
+    def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
         pass
 
-    def turn_on(self: Entity, speed: str=None) -> None:
+    def turn_on(self: ToggleEntity, speed: str=None) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
-    def turn_off(self: Entity) -> None:
+    def turn_off(self: ToggleEntity) -> None:
         """Turn off the fan."""
         raise NotImplementedError()
 
-    def toggle(self: Entity) -> None:
-        """Toggle the device."""
-        if is_on(self.hass, self.entity_id):
-            self.turn_off()
-        else:
-            self.turn_on()
-
-    def oscillate(self, oscillating: bool) -> None:
+    def oscillate(self: ToggleEntity, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
 
     @property
-    def speed_list(self: Entity) -> list:
+    def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         return []
 
     @property
-    def state_attributes(self: Entity) -> dict:
+    def state_attributes(self: ToggleEntity) -> dict:
         """Return optional state attributes."""
         data = {}  # type: dict
 
@@ -246,6 +239,6 @@ class FanEntity(Entity):
         return data
 
     @property
-    def supported_features(self: Entity) -> int:
+    def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
         return 0
