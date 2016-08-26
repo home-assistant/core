@@ -202,6 +202,13 @@ class FanEntity(Entity):
         """Turn off the fan."""
         raise NotImplementedError()
 
+    def toggle(self: Entity) -> None:
+        """Toggle the device."""
+        if is_on(self.hass, self.entity_id):
+            self.turn_off()
+        else:
+            self.turn_on()
+
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
