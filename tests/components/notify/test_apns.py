@@ -84,7 +84,7 @@ class TestApns(unittest.TestCase):
         os.remove(devices_path)
 
     def test_register_device_without_name(self):
-
+        """Test registering a without a name."""
         config = {
             'notify': {
                 'platform': 'apns',
@@ -114,7 +114,7 @@ class TestApns(unittest.TestCase):
         os.remove(devices_path)
 
     def test_update_existing_device(self):
-
+        """Test updating an existing device."""
         config = {
             'notify': {
                 'platform': 'apns',
@@ -150,7 +150,7 @@ class TestApns(unittest.TestCase):
         os.remove(devices_path)
 
     def test_update_existing_device_with_tracking_id(self):
-
+        """Test updating an existing device that has a tracking id."""
         config = {
             'notify': {
                 'platform': 'apns',
@@ -190,6 +190,7 @@ class TestApns(unittest.TestCase):
 
     @patch('apns3.GatewayConnection.send_notification')
     def test_send(self, mock_send_notification):
+        """Test updating an existing device."""
         config = {
             'notify': {
                 'platform': 'apns',
@@ -229,6 +230,7 @@ class TestApns(unittest.TestCase):
 
     @patch('apns3.GatewayConnection.send_notification')
     def test_send_with_state(self, mock_send_notification):
+        """Test updating an existing device."""
         config = {
             'notify': {
                 'platform': 'apns',
