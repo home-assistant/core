@@ -175,6 +175,7 @@ class Group(Entity):
         self.group_off = None
         self._assumed_state = False
         self._lock = threading.Lock()
+        self._unsub_state_changed = None
 
         if entity_ids is not None:
             self.update_tracked_entity_ids(entity_ids)
@@ -236,15 +237,16 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        track_state_change(
+        self._unsub_state_changed = track_state_change(
             self.hass, self.tracking, self._state_changed_listener)
 
     def stop(self):
         """Unregister the group from Home Assistant."""
         self.hass.states.remove(self.entity_id)
 
-        self.hass.bus.remove_listener(
-            ha.EVENT_STATE_CHANGED, self._state_changed_listener)
+        if self._unsub_state_changed:
+            self._unsub_state_changed()
+            self._unsub_state_changed = None
 
     def update(self):
         """Query all members and determine current group state."""

@@ -170,8 +170,13 @@ def subscribe(hass, topic, callback, qos=DEFAULT_QOS):
             callback(event.data[ATTR_TOPIC], event.data[ATTR_PAYLOAD],
                      event.data[ATTR_QOS])
 
-    hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED, mqtt_topic_subscriber)
+    remove = hass.bus.listen(EVENT_MQTT_MESSAGE_RECEIVED,
+                             mqtt_topic_subscriber)
+
+    # Future: track subscriber count and unsubscribe in remove
     MQTT_CLIENT.subscribe(topic, qos)
+
+    return remove
 
 
 def _setup_server(hass, config):
