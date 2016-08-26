@@ -313,7 +313,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format("light.office_light")),
-            data={'on': 1234})
+            data=json.dumps({'on': 1234}))
 
         self.assertEqual(result.status_code, 400)
 
@@ -321,7 +321,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format("light.office_light")),
-            data={'on': True, 'bri': 'Hello world!'})
+            data=json.dumps({'on': True, 'bri': 'Hello world!'}))
 
         self.assertEqual(result.status_code, 400)
 

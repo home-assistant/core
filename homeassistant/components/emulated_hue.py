@@ -329,7 +329,7 @@ class HueLightsView(HomeAssistantView):
                 try:
                     json_data = json.loads(key)
                     break
-                except:
+                except ValueError:
                     # Try the next key?
                     pass
 
