@@ -8,6 +8,7 @@ from homeassistant.const import STATE_OFF
 
 from tests.common import get_test_home_assistant
 
+
 class TestDemoFan(unittest.TestCase):
     """Test the fan demo platform."""
 
@@ -38,7 +39,7 @@ class TestDemoFan(unittest.TestCase):
         self.hass.pool.block_till_done()
         self.assertEqual(fan.SPEED_HIGH, self.get_entity().state)
 
-    def test_turn_on(self):
+    def test_turn_off(self):
         """Test turning off the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
