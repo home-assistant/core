@@ -27,9 +27,9 @@ REQUIREMENTS = ["pyhomematic==0.1.13"]
 
 HOMEMATIC = None
 HOMEMATIC_LINK_DELAY = 0.5
-HOMEMATIC_VAR = {}
 
 MIN_TIME_BETWEEN_UPDATE_HUB = timedelta(seconds=300)
+MIN_TIME_BETWEEN_UPDATE_VAR = timedelta(seconds=60)
 
 DISCOVER_SWITCHES = 'homematic.switch'
 DISCOVER_LIGHTS = 'homematic.light'
@@ -141,7 +141,7 @@ SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
 
 SCHEMA_SERVICE_SET_VALUE = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): vol.Coerce(float),
+    vol.Required(ATTR_VALUE): cv.match_all,
 })
 
 
@@ -193,7 +193,6 @@ def setup(hass, config):
                              localport=local_port,
                              remote=remote_ip,
                              remoteport=remote_port,
-                             eventcallback=_event_callback_handler,
                              systemcallback=bound_system_callback,
                              resolvenames=resolvenames,
                              rpcusername=username,
@@ -223,9 +222,7 @@ def setup(hass, config):
     variables = HOMEMATIC.getAllSystemVariables()
     if variables is not None:
         for key, value in variables.items():
-            hm_var = HMVariable(key, value)
-            HOMEMATIC_VAR.update({key: hm_var})
-            entities.append(hm_var)
+            entities.append(HMVariable(key, value))
 
     # add homematic entites
     entities.append(HMHub())
@@ -233,7 +230,7 @@ def setup(hass, config):
 
     ##
     # register set_value service if exists variables
-    if not HOMEMATIC_VAR:
+    if not variables:
         return True
 
     def _service_handle_value(service):
@@ -251,13 +248,6 @@ def setup(hass, config):
                            schema=SCHEMA_SERVICE_SET_VALUE)
 
     return True
-
-
-def _event_callback_handler(interface_id, address, value_key, value):
-    """Callback handler for events."""
-    if not address:
-        if value_key in HOMEMATIC_VAR:
-            HOMEMATIC_VAR[value_key].hm_update(value)
 
 
 # pylint: disable=too-many-branches
@@ -567,23 +557,23 @@ class HMVariable(Entity):
         """Return the icon to use in the frontend, if any."""
         return "mdi:code-string"
 
-    @property
-    def should_poll(self):
-        """Return false. Homematic states are pushed by the XML RPC Server."""
-        return False
-
-    def hm_update(self, value):
-        """Update variable value from event callback."""
-        self._state = value
-        self.update_ha_state()
+    @Throttle(MIN_TIME_BETWEEN_UPDATE_VAR)
+    def update(self):
+        """Retrieve latest state."""
+        if HOMEMATIC is None:
+            return
+        self._state = HOMEMATIC.getSystemVariable(self._name)
 
     def hm_set(self, value):
         """Set variable on homematic controller."""
         if HOMEMATIC is not None:
+            if isinstance(self._state, bool):
+                value = cv.boolean(value)
+            else:
+                value = float(value)
             HOMEMATIC.setSystemVariable(self._name, value)
-
-        # CCU don't send variable updates from own
-        self.hm_update(value)
+            self._state = value
+            self.update_ha_state()
 
 
 class HMDevice(Entity):
