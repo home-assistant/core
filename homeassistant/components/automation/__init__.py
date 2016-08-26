@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE)
@@ -46,6 +47,7 @@ METHOD_IF_ACTION = 'if_action'
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 SERVICE_TRIGGER = 'trigger'
+SERVICE_RELOAD = 'reload'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +114,8 @@ TRIGGER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_VARIABLES, default={}): dict,
 })
 
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
 
 def is_on(hass, entity_id=None):
     """
@@ -148,36 +152,17 @@ def trigger(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
 
 
+def reload(hass):
+    """Reload the automation from config."""
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
 def setup(hass, config):
     """Setup the automation."""
     # pylint: disable=too-many-locals
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    success = False
-    for config_key in extract_domain_configs(config, DOMAIN):
-        conf = config[config_key]
-
-        for list_no, config_block in enumerate(conf):
-            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
-                                                                  list_no)
-
-            action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
-
-            if CONF_CONDITION in config_block:
-                cond_func = _process_if(hass, config, config_block)
-
-                if cond_func is None:
-                    continue
-            else:
-                def cond_func(variables):
-                    """Condition will always pass."""
-                    return True
-
-            attach_triggers = partial(_process_trigger, hass, config,
-                                      config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, attach_triggers, cond_func, action)
-            component.add_entities((entity,))
-            success = True
+    success = _process_config(hass, config, component)
 
     if not success:
         return False
@@ -192,8 +177,46 @@ def setup(hass, config):
         for entity in component.extract_from_service(service_call):
             getattr(entity, service_call.service)()
 
+    def reload_service_handler(service_call):
+        """Remove all automations and load new ones from config."""
+        try:
+            path = conf_util.find_config_file(hass.config.config_dir)
+            conf = conf_util.load_yaml_config_file(path)
+        except HomeAssistantError as err:
+            _LOGGER.error(err)
+            return
+
+        # For now copied from bootstrap.py
+        # Depends on work by @Kellerza to split this out
+        from homeassistant.bootstrap import config_per_platform, log_exception
+
+        platforms = []
+        for _, p_config in config_per_platform(conf, DOMAIN):
+            # Validate component specific platform schema
+            try:
+                p_validated = PLATFORM_SCHEMA(p_config)
+            except vol.MultipleInvalid as ex:
+                log_exception(ex, DOMAIN, p_config)
+                return
+
+            platforms.append(p_validated)
+
+        # Create a copy of the configuration with all config for current
+        # component removed and add validated config back in.
+        filter_keys = extract_domain_configs(conf, DOMAIN)
+        conf = {key: value for key, value in conf.items()
+                if key not in filter_keys}
+        conf[DOMAIN] = platforms
+        # End copied from bootstrap
+
+        component.reset()
+        _process_config(hass, conf, component)
+
     hass.services.register(DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
                            schema=TRIGGER_SERVICE_SCHEMA)
+
+    hass.services.register(DOMAIN, SERVICE_RELOAD, reload_service_handler,
+                           schema=RELOAD_SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE):
         hass.services.register(DOMAIN, service, service_handler,
@@ -262,6 +285,43 @@ class AutomationEntity(ToggleEntity):
             self._action(variables)
             self._last_triggered = utcnow()
             self.update_ha_state()
+
+    def remove(self):
+        """Remove automation from HASS."""
+        self.turn_off()
+        super().remove()
+
+
+def _process_config(hass, config, component):
+    """Process config and add automations."""
+    success = False
+
+    for config_key in extract_domain_configs(config, DOMAIN):
+        conf = config[config_key]
+
+        for list_no, config_block in enumerate(conf):
+            name = config_block.get(CONF_ALIAS) or "{} {}".format(config_key,
+                                                                  list_no)
+
+            action = _get_action(hass, config_block.get(CONF_ACTION, {}), name)
+
+            if CONF_CONDITION in config_block:
+                cond_func = _process_if(hass, config, config_block)
+
+                if cond_func is None:
+                    continue
+            else:
+                def cond_func(variables):
+                    """Condition will always pass."""
+                    return True
+
+            attach_triggers = partial(_process_trigger, hass, config,
+                                      config_block.get(CONF_TRIGGER, []), name)
+            entity = AutomationEntity(name, attach_triggers, cond_func, action)
+            component.add_entities((entity,))
+            success = True
+
+    return success
 
 
 def _get_action(hass, config, name):
