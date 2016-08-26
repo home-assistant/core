@@ -236,6 +236,9 @@ class FanEntity(Entity):
         data = {}  # type: dict
 
         for prop, attr in PROP_TO_ATTR.items():
+            if not hasattr(self, prop):
+                continue
+
             value = getattr(self, prop)
             if value is not None:
                 data[attr] = value
