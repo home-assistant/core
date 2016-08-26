@@ -33,7 +33,7 @@ class DemoFan(FanEntity):
         self._name = name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get entity name."""
         return self._name
 
