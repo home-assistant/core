@@ -71,8 +71,10 @@ class SleepIQSensor(Entity):
         self._state = None
         self.side = None
         self.bed = None
-        # added by subclass:
+
+        # added by subclass
         self._name = None
+        self.type = None
 
     @property
     def name(self):
