@@ -43,7 +43,13 @@ class TestAutomationTime(unittest.TestCase):
         })
 
         fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+
+        fire_time_changed(self.hass, dt_util.utcnow().replace(hour=0))
         self.hass.pool.block_till_done()
         self.assertEqual(1, len(self.calls))
 

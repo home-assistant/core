@@ -59,6 +59,12 @@ class TestAutomationState(unittest.TestCase):
             'state - test.entity - hello - world - None',
             self.calls[0].data['some'])
 
+        automation.turn_off(self.hass)
+        self.hass.pool.block_till_done()
+        self.hass.states.set('test.entity', 'planet')
+        self.hass.pool.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_entity_change_with_from_filter(self):
         """Test for firing on entity change with filter."""
         assert _setup_component(self.hass, automation.DOMAIN, {
