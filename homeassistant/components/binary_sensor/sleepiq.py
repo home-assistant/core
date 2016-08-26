@@ -21,7 +21,7 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
                                        sleepiq_data,
                                        bed_id,
                                        side)
-        self.type = sleepiq.SLEEP_NUMBER
+        self.type = sleepiq.IS_IN_BED
         self._name = sleepiq.SENSOR_TYPES[self.type]
         self._sensor_class = 'motion'
 
