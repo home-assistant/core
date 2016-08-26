@@ -1,5 +1,5 @@
 """
-APNS Notificaion platform.
+APNS Notification platform.
 
 The APNS platform uses the Apple Push Notification service (APNS) to deliver
 notifications from Home Assistant.
@@ -91,6 +91,7 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
+REQUIREMENTS = ["apns3==1.0.0"]
 
 def get_service(hass, config):
     """Return push service."""
