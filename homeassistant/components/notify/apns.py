@@ -1,4 +1,6 @@
 """
+APNS Notificaion platform.
+
 The APNS platform uses the Apple Push Notification service (APNS) to deliver
 notifications from Home Assistant.
 
@@ -16,13 +18,18 @@ Sample Configuration:
 
 Configuration Variables:
 
-    name: The name of the app.
-    sandbox: If true notifications will be sent to the sandbox (test) notification service.
-    cert_file: The certificate to use to authenticate with the APNS service.
+    name:
+        The name of the app.
+    sandbox:
+        If true notifications will be sent to the sandbox (test) notification
+        service.
+    cert_file:
+        The certificate to use to authenticate with the APNS service.
 
 Usage:
 
-    The APNS platform will register two services, notify/[app_name] and apns/[app_name].
+    The APNS platform will register two services, notify/[app_name] and
+    apns/[app_name].
 
     apns/app_name:
         This service will register device id's with home assistant. In order to
@@ -30,32 +37,36 @@ Usage:
         device can use this service to send its id during startup, the id will
         be stored in the [app_name]_apns.yaml.
 
-        See didRegisterForRemoteNotificationsWithDeviceToken in the apple developer
-        documentation for more information.
+        See didRegisterForRemoteNotificationsWithDeviceToken in the apple
+        developer documentation for more information.
 
 
     notify/app_name
-        This service will send messages to a registered device. The following parameters can be used:
+        This service will send messages to a registered device. The following
+        parameters can be used:
 
         message:
             The message to send
 
         target:
-            The desired state of the device, only devices that match the state will receive messages.
-            To enable state tracking a registered device must have a device_tracking_id added to the
-            [app_name]_apns.yaml file. If this id matches a device in known_devices.yaml its state
-            will be tracked.
+            The desired state of the device, only devices that match the state
+            will receive messages. To enable state tracking a registered
+            device must have a device_tracking_id added to the
+            [app_name]_apns.yaml file. If this id matches a device in
+            known_devices.yaml its state will be tracked.
 
         data:
             badge:
                 The number to display as the badge of the app ic
             sound:
-                The name of a sound file in the app bundle or in the Library/Sounds folder.
+                The name of a sound file in the app bundle or in the
+                Library/Sounds folder.
             category:
-                Provide this key with a string value that represents the identifier
-                property of the UIMutableUserNotificationCategory
+                Provide this key with a string value that represents the
+                identifier property of the UIMutableUserNotificationCategory
             content_available:
-                Provide this key with a value of 1 to indicate that new content is available.
+                Provide this key with a value of 1 to indicate that new
+                content is available.
 """
 import logging
 import os
@@ -80,9 +91,9 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
+
 def get_service(hass, config):
     """Return push service."""
-
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'apns_services.yaml'))
 
@@ -109,6 +120,8 @@ def get_service(hass, config):
 
 class ApnsDevice(object):
     """
+    Apns Device class.
+
     Stores information about a device that is
     registered for push notifications.
     """
@@ -132,6 +145,8 @@ class ApnsDevice(object):
     @property
     def tracking_device_id(self):
         """
+        Device Id.
+
         The id of a device that is tracked by the device
         tracking component.
         """
@@ -140,6 +155,8 @@ class ApnsDevice(object):
     @property
     def full_tracking_device_id(self):
         """
+        Fully qualified device id.
+
         The full id of a device that is tracked by the device
         tracking component.
         """
@@ -181,6 +198,8 @@ class ApnsNotificationService(BaseNotificationService):
 
         def state_changed_listener(entity_id, from_s, to_s):
             """
+            Listener for sate change.
+
             Track device state change if a device
             has a tracking id specified.
             """
@@ -215,14 +234,12 @@ class ApnsNotificationService(BaseNotificationService):
 
     def write_devices(self):
         """Write all known devices to file."""
-
         with open(self.yaml_path, 'w+') as out:
             for _, device in self.devices.items():
                 ApnsNotificationService.write_device(out, device)
 
     def register(self, call):
         """Register a device to receive push messages."""
-
         push_id = call.data.get(ATTR_PUSH_ID)
         if push_id is None:
             return False
