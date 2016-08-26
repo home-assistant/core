@@ -63,5 +63,5 @@ class DemoFan(FanEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        self.is_oscillating = oscillating
+        self.oscillating = oscillating
         self.update_ha_state()
