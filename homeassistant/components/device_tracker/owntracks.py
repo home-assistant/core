@@ -23,23 +23,28 @@ BEACON_DEV_ID = 'beacon'
 
 LOCATION_TOPIC = 'owntracks/+/+'
 EVENT_TOPIC = 'owntracks/+/+/event'
-WAYPOINT_TOPIC = 'owntracks/{}/+/waypoint'
+WAYPOINT_TOPIC = 'owntracks/{}/{}/waypoint'
 
 _LOGGER = logging.getLogger(__name__)
 
 LOCK = threading.Lock()
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-CONF_WAYPOINT_IMPORT_USER = 'waypoint_import_user'
+CONF_WAYPOINT_IMPORT = 'waypoints'
+CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
+
+WAYPOINT_LAT_KEY = 'lat'
+WAYPOINT_LON_KEY = 'lon'
 
 
 def setup_scanner(hass, config, see):
     """Setup an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
-    waypoint_import_user = config.get(CONF_WAYPOINT_IMPORT_USER)
+    waypoint_import = config.get(CONF_WAYPOINT_IMPORT, True)
+    waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
 
     def validate_payload(payload, data_type):
         """Validate OwnTracks payload."""
@@ -198,10 +203,12 @@ def setup_scanner(hass, config, see):
         _LOGGER.info("Got %d waypoints from %s", len(wayps), topic)
         for wayp in wayps:
             name = wayp['desc']
-            lat = wayp['lat']
-            lon = wayp['lon']
+            lat = wayp[WAYPOINT_LAT_KEY]
+            lon = wayp[WAYPOINT_LON_KEY]
             rad = wayp['rad']
-            zone_comp.add_zone(hass, name, lat, lon, rad)
+            zone = zone_comp.Zone(hass, name, lat, lon, rad,
+                                  zone_comp.ICON_IMPORT, False, True)
+            zone_comp.add_zone(hass, name, zone)
 
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
@@ -216,9 +223,15 @@ def setup_scanner(hass, config, see):
     mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
     mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
 
-    if waypoint_import_user is not None:
-        mqtt.subscribe(hass, WAYPOINT_TOPIC.format(waypoint_import_user),
-                       owntracks_waypoint_update, 1)
+    if waypoint_import:
+        if waypoint_whitelist is None:
+            mqtt.subscribe(hass, WAYPOINT_TOPIC.format('+', '+'),
+                           owntracks_waypoint_update, 1)
+        else:
+            for whitelist_user in waypoint_whitelist:
+                mqtt.subscribe(hass, WAYPOINT_TOPIC.format(whitelist_user,
+                                                           '+'),
+                               owntracks_waypoint_update, 1)
 
     return True
 
@@ -231,7 +244,7 @@ def _parse_see_args(topic, data):
     kwargs = {
         'dev_id': dev_id,
         'host_name': host_name,
-        'gps': (data['lat'], data['lon'])
+        'gps': (data[WAYPOINT_LAT_KEY], data[WAYPOINT_LON_KEY])
     }
     if 'acc' in data:
         kwargs['gps_accuracy'] = data['acc']
