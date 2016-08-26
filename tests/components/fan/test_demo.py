@@ -70,3 +70,11 @@ class TestDemoFan(unittest.TestCase):
         fan.oscillate(self.hass, FAN_ENTITY_ID, False)
         self.hass.pool.block_till_done()
         self.assertFalse(self.get_entity().attributes.get('oscillating'))
+
+    def test_is_on(self):
+        """Test is on service call."""
+        self.assertFalse(fan.is_on(self.hass, FAN_ENTITY_ID))
+
+        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertTrue(fan.is_on(self.hass, FAN_ENTITY_ID))
