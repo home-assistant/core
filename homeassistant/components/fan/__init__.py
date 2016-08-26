@@ -198,7 +198,7 @@ class FanEntity(Entity):
     # pylint: disable=no-self-use, abstract-method
 
     @property
-    def state(self) -> str:
+    def state(self: Entity) -> str:
         """Get the state of the fan."""
         return self.__getattribute__(ATTR_SPEED)
 
