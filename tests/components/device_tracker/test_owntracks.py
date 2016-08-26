@@ -217,6 +217,10 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         except FileNotFoundError:
             pass
 
+    def mock_see(**kwargs):
+        """Fake see method for owntracks."""
+        return
+
     def send_message(self, topic, message):
         """Test the sending of a message."""
         fire_mqtt_message(
@@ -580,3 +584,19 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         self.assertTrue(wayp is None)
         wayp = self.hass.states.get('zone.exp_wayp2')
         self.assertTrue(wayp is None)
+
+    def test_waypoint_import_no_whitelist(self):
+        """Test import of list of waypoints with no whitelist set."""
+        test_config = {
+            CONF_PLATFORM: 'owntracks',
+            CONF_MAX_GPS_ACCURACY: 200,
+            CONF_WAYPOINT_IMPORT: True
+        }
+        owntracks.setup_scanner(self.hass, test_config, self.mock_see)
+        waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
+        # Check if it made it into states
+        wayp = self.hass.states.get('zone.exp_wayp1')
+        self.assertTrue(wayp is not None)
+        wayp = self.hass.states.get('zone.exp_wayp2')
+        self.assertTrue(wayp is not None)
