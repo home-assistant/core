@@ -6,7 +6,8 @@ import asyncio
 import unittest
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import bootstrap, const, core
+import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http, light, mqtt
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -36,6 +37,9 @@ def tearDownModule():
 
 def setup_hass_instance(emulated_hue_config):
     hass = get_test_home_assistant()
+
+    # We need to do this to get access to homeassistant/turn_(on,off)
+    core_components.setup(hass, {core.DOMAIN: {}})
 
     bootstrap.setup_component(
         hass, http.DOMAIN,
@@ -125,8 +129,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
                     'command_topic': 'office/rgb1/light/switch',
                     'brightness_state_topic': 'office/rgb1/brightness/status',
                     'brightness_command_topic': 'office/rgb1/brightness/set',
-                    'payload_on': 'ON',
-                    'payload_off': 'OFF',
                     'optimistic': True
                 },
                 {
@@ -136,8 +138,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
                     'command_topic': 'bedroom/rgb1/light/switch',
                     'brightness_state_topic': 'bedroom/rgb1/brightness/status',
                     'brightness_command_topic': 'bedroom/rgb1/brightness/set',
-                    'payload_on': 'ON',
-                    'payload_off': 'OFF',
                     'optimistic': True
                 },
                 {
@@ -147,8 +147,6 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
                     'command_topic': 'kitchen/rgb1/light/switch',
                     'brightness_state_topic': 'kitchen/rgb1/brightness/status',
                     'brightness_command_topic': 'kitchen/rgb1/brightness/set',
-                    'payload_on': 'ON',
-                    'payload_off': 'OFF',
                     'optimistic': True
                 }
             ]
@@ -217,6 +215,65 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         self.assertEqual(kitchen_result.status_code, 404)
 
+    def test_put_light_state(self):
+        # Turn the office light off first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_OFF,
+            {const.ATTR_ENTITY_ID: 'light.office_light'},
+            blocking=True)
+
+        office_light = self.hass.states.get('light.office_light')
+        self.assertEqual(office_light.state, 'off')
+
+        # Go through the API to turn it on
+        office_result = self.perform_put_light_state(
+            'light.office_light', True, 56)
+
+        office_result_json = office_result.json()
+
+        self.assertEqual(office_result.status_code, 200)
+        self.assertTrue(
+            'application/json' in office_result.headers['content-type'])
+
+        self.assertEqual(len(office_result_json), 2)
+
+        # Check to make sure the state changed
+        office_light = self.hass.states.get('light.office_light')
+        self.assertEqual(office_light.state, 'on')
+        self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
+
+        # Turn the bedroom light on first
+        self.hass.services.call(
+            light.DOMAIN, const.SERVICE_TURN_ON,
+            {const.ATTR_ENTITY_ID: 'light.bedroom_light',
+             light.ATTR_BRIGHTNESS: 153},
+            blocking=True)
+
+        bedroom_light = self.hass.states.get('light.bedroom_light')
+        self.assertEqual(bedroom_light.state, 'on')
+        self.assertEqual(bedroom_light.attributes[light.ATTR_BRIGHTNESS], 153)
+
+        # Go through the API to turn it off
+        bedroom_result = self.perform_put_light_state(
+            'light.bedroom_light', False)
+
+        bedroom_result_json = bedroom_result.json()
+
+        self.assertEqual(bedroom_result.status_code, 200)
+        self.assertTrue(
+            'application/json' in bedroom_result.headers['content-type'])
+
+        self.assertEqual(len(bedroom_result_json), 1)
+
+        # Check to make sure the state changed
+        bedroom_light = self.hass.states.get('light.bedroom_light')
+        self.assertEqual(bedroom_light.state, 'off')
+
+        # Make sure we can't change the kitchen light state
+        kitchen_result = self.perform_put_light_state(
+            'light.kitchen_light', True)
+        self.assertEqual(kitchen_result.status_code, 404)
+
     def perform_get_light_state(self, entity_id, expected_status):
         result = requests.get(
             BRIDGE_URL_BASE.format(
@@ -231,6 +288,18 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             return result.json()
 
         return None
+
+    def perform_put_light_state(self, entity_id, is_on, brightness=None):
+        url = BRIDGE_URL_BASE.format(
+            '/api/username/lights/{}/state'.format(entity_id))
+
+        data = {'on': is_on}
+
+        if brightness is not None:
+            data['bri'] = brightness
+
+        result = requests.put(url, data=json.dumps(data), timeout=5)
+        return result
 
 
 class MQTTBroker(object):
