@@ -9,6 +9,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers import validate_config, discovery
+from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
@@ -55,6 +56,49 @@ class SleepIQData(object):
         beds = self._client.beds_with_sleeper_status()
 
         self.beds = {bed.bed_id: bed for bed in beds}
+
+# pylint: disable=too-few-public-methods
+class SleepIQSensor(Entity):
+    """Implementation of a SleepIQ sensor."""
+
+    def __init__(self, sleepiq_data, bed_id, side):
+        """Initialize the sensor."""
+        self._bed_id = bed_id
+        self._side = side
+        self.sleepiq_data = sleepiq_data
+        self._state = None
+
+    @property
+    def name(self):
+        return 'SleepNumber {} {} {}'.format(self.bed.name,
+                                             self.side.sleeper.first_name,
+                                             self._name)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return ICON
+
+    def update(self):
+        """Get the latest data from SleepIQ and updates the states."""
+        # Call the API for new sleepiq data. Each sensor will re-trigger this
+        # same exact call, but thats fine. We cache results for a short period
+        # of time to prevent hitting API limits.
+        self.sleepiq_data.update()
+
+        self.bed = self.sleepiq_data.beds[self._bed_id]
+        self.side = getattr(self.bed, self._side)
+
+        if self.type == SLEEP_NUMBER:
+            self._state = self.side.sleep_number
+        else:
+            message = 'Unexpected SleepIQ sensor type: {}'.format(self.type)
+            raise HomeAssistantError(message)
 
 
 def setup(hass, config):
