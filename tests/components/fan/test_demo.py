@@ -52,7 +52,7 @@ class TestDemoFan(unittest.TestCase):
 
         fan.turn_off(self.hass, FAN_ENTITY_ID)
         self.hass.pool.block_till_done()
-        self.assertEqual(fan.STATE_OFF, self.get_entity().state)
+        self.assertEqual(STATE_OFF, self.get_entity().state)
 
     def test_set_speed(self):
         """Test setting the speed of the device."""
