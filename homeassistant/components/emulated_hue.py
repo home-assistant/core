@@ -246,7 +246,7 @@ class DescriptionXmlView(HomeAssistantView):
 <URLBase>http://{0}:{1}/</URLBase>
 <device>
 <deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>
-<friendlyName>Home Assistant Emulated Hue Bridge ({0})</friendlyName>
+<friendlyName>HASS Bridge ({0})</friendlyName>
 <manufacturer>Royal Philips Electronics</manufacturer>
 <manufacturerURL>http://www.philips.com</manufacturerURL>
 <modelDescription>Philips hue Personal Wireless Lighting</modelDescription>
