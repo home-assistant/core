@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_class_map = {
             pres.S_DIMMER: MySensorsLightDimmer,
         }
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             # Add V_RGBW when rgb_white is implemented in the frontend
             map_sv_types.update({
                 pres.S_RGB_LIGHT: [set_req.V_RGB],
@@ -169,7 +169,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
 
     def _turn_off_rgb_or_w(self, value_type=None, value=None):
         """Turn off RGB or RGBW child device."""
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             set_req = self.gateway.const.SetReq
             if self.value_type == set_req.V_RGB:
                 value = '000000'
@@ -227,7 +227,6 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
-        self.battery_level = node.battery_level
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 '%s: value_type %s, value = %s', self._name, value_type, value)
