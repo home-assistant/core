@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
-_LOGGER = logging.getLogger(__name__)
 
 _LOGGER = logging.getLogger(__name__)
 
