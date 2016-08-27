@@ -359,7 +359,7 @@ class TestAutomation(unittest.TestCase):
         assert self.calls[1].data['position'] == 1
 
     def test_services(self):
-        """ """
+        """Test the automation services for turning entities on/off."""
         entity_id = 'automation.hello'
 
         assert self.hass.states.get(entity_id) is None
