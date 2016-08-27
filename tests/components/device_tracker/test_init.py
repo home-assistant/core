@@ -16,19 +16,19 @@ import homeassistant.components.device_tracker as device_tracker
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered)
 
-TEST_PLATFORM = {
-    device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
+TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
 
 class TestComponentsDeviceTracker(unittest.TestCase):
     """Test the Device tracker."""
+    hass = None
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def teardown_method(self, _):
         """Stop everything that was started."""
         try:
             os.remove(self.yaml_devices)
@@ -79,12 +79,43 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.away_hide, config.away_hide)
         self.assertEqual(device.consider_home, config.consider_home)
 
+    @patch('homeassistant.components.device_tracker._LOGGER.warning')
+    def test_track_with_duplicate_mac_dev_id(self, mock_warning):
+        """Test adding duplicate MACs or device IDs to DeviceTracker."""
+
+        devices = [
+            device_tracker.Device(self.hass, True, True, 'my_device', 'AB:01',
+                                  'My device', None, None, False),
+            device_tracker.Device(self.hass, True, True, 'your_device',
+                                  'AB:01', 'Your device', None, None, False)]
+        device_tracker.DeviceTracker(self.hass, False, True, devices)
+
+        print(mock_warning.call_args_list)
+        mock_warning.assert_called_once()
+        args, _ = mock_warning.call_args
+        assert 'Duplicate device MAC' in args[0], \
+            'Duplicate MAC warning expected'
+
+        mock_warning.reset_mock()
+        devices = [
+            device_tracker.Device(self.hass, True, True, 'my_device',
+                                  'AB:01', 'My device', None, None, False),
+            device_tracker.Device(self.hass, True, True, 'my_device',
+                                  None, 'Your device', None, None, False)]
+        device_tracker.DeviceTracker(self.hass, False, True, devices)
+
+        print(mock_warning.call_args_list)
+        mock_warning.assert_called_once()
+        args, _ = mock_warning.call_args
+        assert 'Duplicate device IDs' in args[0], \
+            'Duplicate device IDs warning expected'
+
     def test_setup_without_yaml_file(self):
         """Test with no YAML file."""
         self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
 
-    # pylint: disable=invalid-name
-    def test_adding_unknown_device_to_config(self):
+    def test_adding_unknown_device_to_config(self): \
+            # pylint: disable=invalid-name
         """Test the adding of unknown devices to configuration file."""
         scanner = get_component('device_tracker.test').SCANNER
         scanner.reset()
@@ -142,7 +173,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with patch('homeassistant.components.device_tracker.dt_util.utcnow',
                    return_value=register_time):
             self.assertTrue(device_tracker.setup(self.hass, {
-                'device_tracker': {
+                device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'test',
                     device_tracker.CONF_CONSIDER_HOME: 59,
                 }}))
