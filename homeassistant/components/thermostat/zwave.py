@@ -116,6 +116,8 @@ class ZWaveThermostat(zwave.ZWaveDeviceEntity, ThermostatDevice):
             temps.append(int(value.data))
             if value.index == self._index:
                 self._target_temperature = value.data
+                if self._unit is None:
+                    self._unit = value.units
         self._target_temperature_high = max(temps)
         self._target_temperature_low = min(temps)
 
