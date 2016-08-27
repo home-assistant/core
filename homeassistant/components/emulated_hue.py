@@ -15,8 +15,9 @@ import voluptuous as vol
 
 from homeassistant import util, core
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    STATE_ON
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_SUPPORTED_FEATURES, SUPPORT_BRIGHTNESS
@@ -26,7 +27,7 @@ from homeassistant.components.http import (
 )
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "emulated_hue"
+DOMAIN = 'emulated_hue'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,9 @@ DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'switch', 'light', 'group', 'input_boolean', 'media_player'
 ]
+
+HUE_API_STATE_ON = 'on'
+HUE_API_STATE_BRI = 'bri'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -130,15 +134,13 @@ class Config(object):
 
         # Get whether or not entities should be exposed by default, or if only
         # explicitly marked ones will be exposed
-        self.expose_by_default = conf.get(CONF_EXPOSE_BY_DEFAULT)
-        if not isinstance(self.expose_by_default, bool):
-            self.expose_by_default = DEFAULT_EXPOSE_BY_DEFAULT
+        self.expose_by_default = conf.get(
+            CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT)
 
         # Get domains that are exposed by default when expose_by_default is
         # True
-        self.exposed_domains = conf.get(CONF_EXPOSED_DOMAINS)
-        if not isinstance(self.exposed_domains, list):
-            self.exposed_domains = DEFAULT_EXPOSED_DOMAINS
+        self.exposed_domains = conf.get(
+            CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
 
 
 class DescriptionXmlView(HomeAssistantView):
@@ -277,7 +279,7 @@ class HueLightsView(HomeAssistantView):
         cached_state = self.cached_states.get(entity_id, None)
 
         if cached_state is None:
-            final_state = entity.state == 'on'
+            final_state = entity.state == STATE_ON
             final_brightness = entity.attributes.get(
                 ATTR_BRIGHTNESS, 255 if final_state else 0)
         else:
@@ -330,11 +332,12 @@ class HueLightsView(HomeAssistantView):
         # Perform the requested action
         self.hass.services.call(core.DOMAIN, service, data, blocking=True)
 
-        json_response = [create_hue_success_response(entity_id, 'on', result)]
+        json_response = \
+            [create_hue_success_response(entity_id, HUE_API_STATE_ON, result)]
 
         if brightness is not None:
-            json_response.append(
-                create_hue_success_response(entity_id, 'bri', brightness))
+            json_response.append(create_hue_success_response(
+                entity_id, HUE_API_STATE_BRI, brightness))
 
         return self.json(json_response)
 
@@ -363,8 +366,8 @@ class HueLightsView(HomeAssistantView):
 
 def parse_hue_api_put_light_body(request_json, entity):
     """Parse the body of a request to change the state of a light."""
-    if 'on' in request_json:
-        if not isinstance(request_json['on'], bool):
+    if HUE_API_STATE_ON in request_json:
+        if not isinstance(request_json[HUE_API_STATE_ON], bool):
             return None
 
         if request_json['on']:
@@ -378,19 +381,20 @@ def parse_hue_api_put_light_body(request_json, entity):
             report_brightness = False
             result = False
 
-    if 'bri' in request_json:
+    if HUE_API_STATE_BRI in request_json:
         # Make sure the entity actually supports brightness
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
             try:
                 # Clamp brightness from 0 to 255
-                brightness = max(0, min(int(request_json['bri']), 255))
+                brightness = \
+                    max(0, min(int(request_json[HUE_API_STATE_BRI]), 255))
             except ValueError:
                 return None
 
             report_brightness = True
-            result = True if brightness > 0 else False
+            result = (brightness > 0)
 
     return (result, brightness) if report_brightness else (result, None)
 
@@ -398,19 +402,19 @@ def parse_hue_api_put_light_body(request_json, entity):
 def entity_to_json(entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
     if is_on is None:
-        is_on = entity.state == "on"
+        is_on = entity.state == STATE_ON
 
     if brightness is None:
         brightness = 255 if is_on else 0
 
     name = entity.attributes.get(
-        ATTR_EMULATED_HUE_NAME, entity.attributes['friendly_name'])
+        ATTR_EMULATED_HUE_NAME, entity.attributes[ATTR_FRIENDLY_NAME])
 
     return {
         'state':
         {
-            'on': is_on,
-            'bri': brightness,
+            HUE_API_STATE_ON: is_on,
+            HUE_API_STATE_BRI: brightness,
             'reachable': True
         },
         'type': 'Dimmable light',

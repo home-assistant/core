@@ -9,6 +9,10 @@ import requests
 from homeassistant import bootstrap, const, core
 import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http, light, mqtt
+from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.emulated_hue import (
+    HUE_API_STATE_ON, HUE_API_STATE_BRI
+)
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -201,8 +205,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         office_json = self.perform_get_light_state('light.office_light', 200)
 
-        self.assertEqual(office_json['state']['on'], True)
-        self.assertEqual(office_json['state']['bri'], 127)
+        self.assertEqual(office_json['state'][HUE_API_STATE_ON], True)
+        self.assertEqual(office_json['state'][HUE_API_STATE_BRI], 127)
 
         # Turn bedroom light off
         self.hass.services.call(
@@ -214,8 +218,8 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         bedroom_json = self.perform_get_light_state('light.bedroom_light', 200)
 
-        self.assertEqual(bedroom_json['state']['on'], False)
-        self.assertEqual(bedroom_json['state']['bri'], 0)
+        self.assertEqual(bedroom_json['state'][HUE_API_STATE_ON], False)
+        self.assertEqual(bedroom_json['state'][HUE_API_STATE_BRI], 0)
 
         # Make sure kitchen light isn't accessible
         kitchen_url = '/api/username/lights/{}'.format('light.kitchen_light')
@@ -235,7 +239,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             blocking=True)
 
         bedroom_light = self.hass.states.get('light.bedroom_light')
-        self.assertEqual(bedroom_light.state, 'on')
+        self.assertEqual(bedroom_light.state, STATE_ON)
         self.assertEqual(bedroom_light.attributes[light.ATTR_BRIGHTNESS], 153)
 
         # Go through the API to turn it off
@@ -252,7 +256,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         # Check to make sure the state changed
         bedroom_light = self.hass.states.get('light.bedroom_light')
-        self.assertEqual(bedroom_light.state, 'off')
+        self.assertEqual(bedroom_light.state, STATE_OFF)
 
         # Make sure we can't change the kitchen light state
         kitchen_result = self.perform_put_light_state(
@@ -313,7 +317,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format("light.office_light")),
-            data=json.dumps({'on': 1234}))
+            data=json.dumps({HUE_API_STATE_ON: 1234}))
 
         self.assertEqual(result.status_code, 400)
 
@@ -321,7 +325,10 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
         result = requests.put(
             BRIDGE_URL_BASE.format(
                 '/api/username/lights/{}/state'.format("light.office_light")),
-            data=json.dumps({'on': True, 'bri': 'Hello world!'}))
+            data=json.dumps({
+                HUE_API_STATE_ON: True,
+                HUE_API_STATE_BRI: 'Hello world!'
+            }))
 
         self.assertEqual(result.status_code, 400)
 
@@ -334,7 +341,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
             blocking=True)
 
         office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, 'off')
+        self.assertEqual(office_light.state, STATE_OFF)
 
         # Go through the API to turn it on
         office_result = self.perform_put_light_state(
@@ -350,7 +357,7 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         # Check to make sure the state changed
         office_light = self.hass.states.get('light.office_light')
-        self.assertEqual(office_light.state, 'on')
+        self.assertEqual(office_light.state, STATE_ON)
         self.assertEqual(office_light.attributes[light.ATTR_BRIGHTNESS], 56)
 
     def perform_get_light_state(self, entity_id, expected_status):
@@ -375,10 +382,10 @@ class TestEmulatedHueExposedByDefault(unittest.TestCase):
 
         req_headers = {'Content-Type': content_type}
 
-        data = {'on': is_on}
+        data = {HUE_API_STATE_ON: is_on}
 
         if brightness is not None:
-            data['bri'] = brightness
+            data[HUE_API_STATE_BRI] = brightness
 
         result = requests.put(
             url, data=json.dumps(data), timeout=5, headers=req_headers)
