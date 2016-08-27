@@ -82,7 +82,6 @@ def is_on(hass, entity_id: str=None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
-    print(str(state.attributes[ATTR_SPEED]))
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
@@ -219,7 +218,6 @@ class FanEntity(ToggleEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        print(str(self.state_attributes))
         return self.state_attributes.get(ATTR_SPEED, STATE_UNKNOWN) \
             not in [SPEED_OFF, STATE_UNKNOWN]
 
