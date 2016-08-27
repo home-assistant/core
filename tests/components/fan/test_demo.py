@@ -4,7 +4,7 @@ import unittest
 
 from homeassistant.components import fan
 from homeassistant.components.fan.demo import FAN_ENTITY_ID
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.common import get_test_home_assistant
 
@@ -22,6 +22,7 @@ class TestDemoFan(unittest.TestCase):
         self.assertTrue(fan.setup(self.hass, {'fan': {
             'platform': 'demo',
         }}))
+        self.hass.pool.block_till_done()
 
     def tearDown(self):
         """Tear down unit test data."""
@@ -37,7 +38,9 @@ class TestDemoFan(unittest.TestCase):
 
         fan.turn_on(self.hass, FAN_ENTITY_ID, fan.SPEED_HIGH)
         self.hass.pool.block_till_done()
-        self.assertEqual(fan.SPEED_HIGH, self.get_entity().state)
+        self.assertEqual(STATE_ON, self.get_entity().state)
+        self.assertEqual(fan.SPEED_HIGH,
+                         self.get_entity().attributes[fan.ATTR_SPEED])
 
     def test_turn_off(self):
         """Test turning off the device."""
@@ -57,7 +60,8 @@ class TestDemoFan(unittest.TestCase):
 
         fan.set_speed(self.hass, FAN_ENTITY_ID, fan.SPEED_LOW)
         self.hass.pool.block_till_done()
-        self.assertEqual(fan.SPEED_LOW, self.get_entity().state)
+        self.assertEqual(fan.SPEED_LOW,
+                         self.get_entity().attributes.get('speed'))
 
     def test_oscillate(self):
         """Test oscillating the fan."""

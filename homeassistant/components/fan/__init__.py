@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (STATE_OFF, SERVICE_TURN_ON, SERVICE_TOGGLE,
+from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
                                  STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
@@ -81,7 +81,9 @@ _LOGGER = logging.getLogger(__name__)
 def is_on(hass, entity_id: str=None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
-    return not hass.states.is_state(entity_id, STATE_OFF)
+    state = hass.states.get(entity_id)
+    print(str(state.attributes[ATTR_SPEED]))
+    return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
 # pylint: disable=too-many-arguments
@@ -198,11 +200,6 @@ class FanEntity(ToggleEntity):
 
     # pylint: disable=no-self-use, abstract-method
 
-    @property
-    def state(self: ToggleEntity) -> str:
-        """Get the state of the fan."""
-        return self.__getattribute__(ATTR_SPEED)
-
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
         pass
@@ -219,9 +216,12 @@ class FanEntity(ToggleEntity):
         """Oscillate the fan."""
         pass
 
+    @property
     def is_on(self):
         """Return true if the entity is on."""
-        return self.state not in [STATE_OFF, STATE_UNKNOWN]
+        print(str(self.state_attributes))
+        return self.state_attributes.get(ATTR_SPEED, STATE_UNKNOWN) \
+            not in [SPEED_OFF, STATE_UNKNOWN]
 
     @property
     def speed_list(self: ToggleEntity) -> list:
