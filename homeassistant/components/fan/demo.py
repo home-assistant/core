@@ -6,12 +6,15 @@ https://home-assistant.io/components/demo/
 """
 
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH,
-                                          FanEntity)
+                                          FanEntity, SUPPORT_SET_SPEED,
+                                          SUPPORT_OSCILLATE)
 from homeassistant.const import STATE_OFF
 
 
 FAN_NAME = 'Living Room Fan'
 FAN_ENTITY_ID = 'fan.living_room_fan'
+
+DEMO_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
 
 
 # pylint: disable=unused-argument
@@ -65,3 +68,8 @@ class DemoFan(FanEntity):
         """Set oscillation."""
         self.oscillating = oscillating
         self.update_ha_state()
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return DEMO_SUPPORT
