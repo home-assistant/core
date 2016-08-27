@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['python-telegram-bot==5.0.0']
 
 ATTR_PHOTO = "photo"
+ATTR_DOCUMENT = "document"
 ATTR_CAPTION = "caption"
 
 CONF_CHAT_ID = 'chat_id'
@@ -102,6 +103,8 @@ class TelegramNotificationService(BaseNotificationService):
             return
         elif data is not None and ATTR_LOCATION in data:
             return self.send_location(data.get(ATTR_LOCATION))
+        elif data is not None and ATTR_DOCUMENT in data:
+            return self.send_document(data.get(ATTR_DOCUMENT))
 
         # send message
         try:
@@ -123,6 +126,20 @@ class TelegramNotificationService(BaseNotificationService):
                                photo=photo, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending photo.")
+            return
+
+    def send_document(self, data):
+        """Send a document."""
+        import telegram
+        caption = data.pop(ATTR_CAPTION, None)
+
+        # send photo
+        try:
+            document = load_data(**data)
+            self.bot.sendDocument(chat_id=self._chat_id,
+                                  document=document, caption=caption)
+        except telegram.error.TelegramError:
+            _LOGGER.exception("Error sending document.")
             return
 
     def send_location(self, gps):
