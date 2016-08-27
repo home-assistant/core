@@ -13,9 +13,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/rkabadi/temper-python/archive/'
-                '3dbdaf2d87b8db9a3cd6e5585fc704537dd2d09b.zip'
-                '#temperusb==1.2.3']
+REQUIREMENTS = ['temperusb==1.5.1']
 
 CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
@@ -59,6 +57,12 @@ class TemperSensor(Entity):
         self.current_value = None
         self._name = name
 
+        # set calibration data
+        self.temper_device.set_calibration_data(
+            scale=self.scale,
+            offset=self.offset
+        )
+
     @property
     def name(self):
         """Return the name of the temperature sensor."""
@@ -79,8 +83,7 @@ class TemperSensor(Entity):
         try:
             format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
                           else 'celsius')
-            sensor_value = self.temper_device.get_temperature(format_str)
-            self.current_value = self.scale * sensor_value + self.offset
+            self.current_value = self.temper_device.get_temperature(format_str)
         except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')
