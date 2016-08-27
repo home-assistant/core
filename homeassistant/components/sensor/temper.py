@@ -83,7 +83,8 @@ class TemperSensor(Entity):
         try:
             format_str = ('fahrenheit' if self.temp_unit == TEMP_FAHRENHEIT
                           else 'celsius')
-            self.current_value = self.temper_device.get_temperature(format_str)
+            sensor_value = self.temper_device.get_temperature(format_str)
+            self.current_value = round(sensor_value, 1)
         except IOError:
             _LOGGER.error('Failed to get temperature due to insufficient '
                           'permissions. Try running with "sudo"')
