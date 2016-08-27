@@ -10,37 +10,35 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
+    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.helpers import config_validation as cv, template
-
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AUTHENTICATION = 'authentication'
-CONF_STILL_IMAGE_URL = 'still_image_url'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
+CONF_STILL_IMAGE_URL = 'still_image_url'
+
 DEFAULT_NAME = 'Generic Camera'
-BASIC_AUTHENTICATION = 'basic'
-DIGEST_AUTHENTICATION = 'digest'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_STILL_IMAGE_URL): vol.Any(vol.Url(), cv.template),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_AUTHENTICATION, default=BASIC_AUTHENTICATION):
-    vol.In([BASIC_AUTHENTICATION, DIGEST_AUTHENTICATION]),
+    vol.Required(CONF_STILL_IMAGE_URL): vol.Any(cv.url, cv.template),
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a generic IP Camera."""
-    add_devices_callback([GenericCamera(config)])
+    add_devices([GenericCamera(config)])
 
 
 # pylint: disable=too-many-instance-attributes
@@ -58,7 +56,7 @@ class GenericCamera(Camera):
         password = device_info.get(CONF_PASSWORD)
 
         if username and password:
-            if device_info[CONF_AUTHENTICATION] == DIGEST_AUTHENTICATION:
+            if device_info[CONF_AUTHENTICATION] == HTTP_DIGEST_AUTHENTICATION:
                 self._auth = HTTPDigestAuth(username, password)
             else:
                 self._auth = HTTPBasicAuth(username, password)
