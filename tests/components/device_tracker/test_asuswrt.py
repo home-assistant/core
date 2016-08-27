@@ -1,5 +1,4 @@
 """The tests for the ASUSWRT device tracker platform."""
-# pylint: disable=invalid-name
 import os
 import unittest
 from unittest import mock
@@ -18,7 +17,7 @@ from tests.common import get_test_home_assistant, get_test_config_dir
 FAKEFILE = None
 
 
-def setUpModule():
+def setup_module():
     """Setup the test module."""
     global FAKEFILE
     FAKEFILE = get_test_config_dir('fake_file')
@@ -26,27 +25,29 @@ def setUpModule():
         out.write(' ')
 
 
-def tearDownModule():
+def teardown_module():
     """Tear down the module."""
     os.remove(FAKEFILE)
 
 
 class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     """Tests for the ASUSWRT device tracker platform."""
+    hass = None
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.components = ['zone']
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def teardown_method(self, _):
         """Stop everything that was started."""
         try:
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:
             pass
 
-    def test_password_or_pub_key_required(self):
+    def test_password_or_pub_key_required(self): \
+            # pylint: disable=invalid-name
         """Test creating an AsusWRT scanner without a pass or pubkey."""
         self.assertFalse(_setup_component(
             self.hass, DOMAIN, {DOMAIN: {
@@ -58,7 +59,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock):
+    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock):  \
+            # pylint: disable=invalid-name
         """Test creating an AsusWRT scanner with a password and no pubkey."""
         conf_dict = {
             DOMAIN: {
@@ -76,7 +78,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock):
+    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock):  \
+            # pylint: disable=invalid-name
         """Test creating an AsusWRT scanner with a pubkey and no password."""
         conf_dict = {
             device_tracker.DOMAIN: {
@@ -137,7 +140,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         ssh.login.assert_called_once_with('fake_host', 'fake_user',
                                           'fake_pass')
 
-    def test_ssh_login_without_password_or_pubkey(self):
+    def test_ssh_login_without_password_or_pubkey(self):  \
+            # pylint: disable=invalid-name
         """Test that login is not called without password or pub_key."""
         ssh = mock.MagicMock()
         ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)

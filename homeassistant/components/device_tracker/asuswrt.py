@@ -14,11 +14,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
