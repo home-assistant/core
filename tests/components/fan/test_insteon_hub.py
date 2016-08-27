@@ -1,8 +1,9 @@
 """Tests for the insteon hub fan platform."""
 import unittest
 
-from homeassistant.const import STATE_OFF, STATE_UNKNOWN
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH)
+from homeassistant.const import (STATE_OFF, STATE_ON)
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH,
+                                          ATTR_SPEED)
 from homeassistant.components.fan.insteon_hub import (InsteonFanDevice,
                                                       SUPPORT_SET_SPEED)
 
@@ -50,27 +51,23 @@ class TestInsteonHubFanDevice(unittest.TestCase):
         self._NODE.response = {
             'status': 'succeeded'
         }
-        self.assertEqual(STATE_UNKNOWN, self._DEVICE.state)
+        self.assertEqual(STATE_OFF, self._DEVICE.state)
         self._DEVICE.turn_on()
 
-        self.assertNotEqual(STATE_OFF, self._DEVICE.state)
+        self.assertEqual(STATE_ON, self._DEVICE.state)
 
         self._DEVICE.turn_on(SPEED_MED)
 
-        self.assertEqual(SPEED_MED, self._DEVICE.state)
-
-        self._NODE.response = {
-        }
-        self._DEVICE.turn_on(SPEED_HIGH)
-
-        self.assertNotEqual(SPEED_HIGH, self._DEVICE.state)
+        self.assertEqual(STATE_ON, self._DEVICE.state)
+        self.assertEqual(SPEED_MED, self._DEVICE.state_attributes[ATTR_SPEED])
 
     def test_turn_off(self):
         """Test turning off device."""
         self._NODE.response = {
             'status': 'succeeded'
         }
-        self.assertEqual(STATE_UNKNOWN, self._DEVICE.state)
+        self.assertEqual(STATE_OFF, self._DEVICE.state)
+        self._DEVICE.turn_on()
+        self.assertEqual(STATE_ON, self._DEVICE.state)
         self._DEVICE.turn_off()
-
         self.assertEqual(STATE_OFF, self._DEVICE.state)
