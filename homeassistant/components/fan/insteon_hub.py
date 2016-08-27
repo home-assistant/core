@@ -64,8 +64,3 @@ class InsteonFanDevice(InsteonDevice, FanEntity):
     def speed_list(self) -> list:
         """Get the available speeds for the fan."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
-
-    @property
-    def state(self) -> str:
-        """Get the current device state."""
-        return self.speed
