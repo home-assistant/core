@@ -271,10 +271,7 @@ class HueLightsView(HomeAssistantView):
     def get_light_state(self, entity_id):
         """Process a request to get the state of an individual light."""
         entity = self.hass.states.get(entity_id)
-        if entity is None:
-            return self.Response("Entity not found", status=404)
-
-        if not self.is_entity_exposed(entity):
+        if entity is None or not self.is_entity_exposed(entity):
             return self.Response("Entity not found", status=404)
 
         cached_state = self.cached_states.get(entity_id, None)
