@@ -342,7 +342,7 @@ class HueLightsView(HomeAssistantView):
         """Determine if an entity should be exposed on the emulated bridge."""
         config = self.config
 
-        if ('view' in entity.attributes) and (entity.attributes['view']):
+        if entity.attributes.get('view') is not None:
             # Ignore entities that are views
             return False
 
