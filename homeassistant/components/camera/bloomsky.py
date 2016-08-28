@@ -11,15 +11,15 @@ import requests
 from homeassistant.components.camera import Camera
 from homeassistant.loader import get_component
 
-DEPENDENCIES = ["bloomsky"]
+DEPENDENCIES = ['bloomsky']
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to BloomSky cameras."""
     bloomsky = get_component('bloomsky')
     for device in bloomsky.BLOOMSKY.devices.values():
-        add_devices_callback([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
+        add_devices([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
 
 
 class BloomSkyCamera(Camera):
@@ -28,8 +28,8 @@ class BloomSkyCamera(Camera):
     def __init__(self, bs, device):
         """Setup for access to the BloomSky camera images."""
         super(BloomSkyCamera, self).__init__()
-        self._name = device["DeviceName"]
-        self._id = device["DeviceID"]
+        self._name = device['DeviceName']
+        self._id = device['DeviceID']
         self._bloomsky = bs
         self._url = ""
         self._last_url = ""
@@ -42,7 +42,7 @@ class BloomSkyCamera(Camera):
     def camera_image(self):
         """Update the camera's image if it has changed."""
         try:
-            self._url = self._bloomsky.devices[self._id]["Data"]["ImageURL"]
+            self._url = self._bloomsky.devices[self._id]['Data']['ImageURL']
             self._bloomsky.refresh_devices()
             # If the URL hasn't changed then the image hasn't changed.
             if self._url != self._last_url:
