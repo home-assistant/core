@@ -78,7 +78,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_swing_mode = None
         self._swing_list = None
         self._unit = None
-        self._index = None
         self._zxt_120 = None
         self.update_properties()
         # register listener
@@ -107,15 +106,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def update_properties(self):
         """Callback on data change for the registered node/value pair."""
         # Set point
-        temps = []
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
             self._unit = value.units
-            temps.append(int(value.data))
-            if value.index == self._index:
-                self._target_temperature = int(value.data)
-        self._target_temperature_high = max(temps)
-        self._target_temperature_low = min(temps)
+            self._target_temperature = int(value.data)
         # Operation Mode
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_MODE).values():
@@ -209,8 +203,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Set new target temperature."""
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            if value.command_class != 67 and value.index != self._index:
-                continue
             if self._zxt_120:
                 # ZXT-120 does not support get setpoint
                 self._target_temperature = temperature
