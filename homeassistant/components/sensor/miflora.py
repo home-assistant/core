@@ -19,7 +19,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
 REQUIREMENTS = ['miflora==0.1.2']
 
 LOGGER = logging.getLogger(__name__)
-# Mi Flora sensor library
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=900)
 CONF_MAC = "mac"
 CONF_FORCE_UPDATE = 'force_update'
@@ -119,7 +118,7 @@ class MiFloraSensor(Entity):
         """
         Update current conditions.
 
-        This uses a rolling median to filter out outliers
+        This uses a rolling median over 3 values to filter out outliers.
         """
 
         try:
