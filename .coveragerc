@@ -97,9 +97,6 @@ omit =
     homeassistant/components/binary_sensor/knx.py
     homeassistant/components/thermostat/knx.py
 
-    homeassistant/components/sleepiq.py
-    homeassistant/components/*/sleepiq.py
-
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
