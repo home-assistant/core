@@ -47,7 +47,7 @@ SENSOR_TYPES = {
     'wind_string': ['Wind Summary', None],
     'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
     'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
-    'relative_humidity': ['Relative Humidity', '%'],
+    'relative_humidity': ['Relative Humidity', None],
     'visibility_mi': ['Visibility (miles)', 'mi'],
     'visibility_km': ['Visibility (km)', 'km'],
     'precip_today_in': ['Precipation Today', 'in'],
