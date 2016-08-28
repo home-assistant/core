@@ -136,6 +136,26 @@ WAYPOINTS_EXPORTED_MESSAGE = {
     ]
 }
 
+WAYPOINTS_UPDATED_MESSAGE = {
+    "_type": "waypoints",
+    "_creator": "test",
+    "waypoints": [
+        {
+            "_type": "waypoint",
+            "tst": 4,
+            "lat": 9,
+            "lon": 47,
+            "rad": 50,
+            "desc": "exp_wayp1"
+        },
+    ]
+}
+
+WAYPOINT_ENTITY_NAMES = ['zone.greg_phone__exp_wayp1',
+                         'zone.greg_phone__exp_wayp2',
+                         'zone.ram_phone__exp_wayp1',
+                         'zone.ram_phone__exp_wayp2']
+
 REGION_ENTER_ZERO_MESSAGE = {
     'lon': 1.0,
     'event': 'enter',
@@ -159,6 +179,9 @@ REGION_LEAVE_ZERO_MESSAGE = {
     'tst': 2,
     'lat': 20.0,
     '_type': 'transition'}
+
+BAD_JSON_PREFIX = '--$this is bad json#--'
+BAD_JSON_SUFFIX = '** and it ends here ^^'
 
 
 class TestDeviceTrackerOwnTracks(unittest.TestCase):
@@ -221,10 +244,14 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         """Fake see method for owntracks."""
         return
 
-    def send_message(self, topic, message):
+    def send_message(self, topic, message, corrupt=False):
         """Test the sending of a message."""
-        fire_mqtt_message(
-            self.hass, topic, json.dumps(message))
+        str_message = json.dumps(message)
+        if corrupt:
+            mod_message = BAD_JSON_PREFIX + str_message + BAD_JSON_SUFFIX
+        else:
+            mod_message = str_message
+        fire_mqtt_message(self.hass, topic, mod_message)
         self.hass.pool.block_till_done()
 
     def assert_location_state(self, location):
@@ -570,9 +597,9 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC, waypoints_message)
         # Check if it made it into states
-        wayp = self.hass.states.get('zone.exp_wayp1')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
         self.assertTrue(wayp is not None)
-        wayp = self.hass.states.get('zone.exp_wayp2')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[1])
         self.assertTrue(wayp is not None)
 
     def test_waypoint_import_blacklist(self):
@@ -580,9 +607,9 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
-        wayp = self.hass.states.get('zone.exp_wayp1')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is None)
-        wayp = self.hass.states.get('zone.exp_wayp2')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
         self.assertTrue(wayp is None)
 
     def test_waypoint_import_no_whitelist(self):
@@ -596,7 +623,29 @@ class TestDeviceTrackerOwnTracks(unittest.TestCase):
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states
-        wayp = self.hass.states.get('zone.exp_wayp1')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
         self.assertTrue(wayp is not None)
-        wayp = self.hass.states.get('zone.exp_wayp2')
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
         self.assertTrue(wayp is not None)
+
+    def test_waypoint_import_bad_json(self):
+        """Test importing a bad JSON payload."""
+        waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoints_message, True)
+        # Check if it made it into states
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[2])
+        self.assertTrue(wayp is None)
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[3])
+        self.assertTrue(wayp is None)
+
+    def test_waypoint_import_existing(self):
+        """Test importing a zone that exists."""
+        waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        # Get the first waypoint exported
+        wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
+        # Send an update
+        waypoints_message = WAYPOINTS_UPDATED_MESSAGE.copy()
+        self.send_message(WAYPOINT_TOPIC, waypoints_message)
+        new_wayp = self.hass.states.get(WAYPOINT_ENTITY_NAMES[0])
+        self.assertTrue(wayp == new_wayp)
