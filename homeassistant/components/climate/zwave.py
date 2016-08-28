@@ -220,21 +220,22 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Set new target temperature."""
         for value in self._node.get_values(
                 class_id=COMMAND_CLASS_THERMOSTAT_SETPOINT).values():
-            if SET_TEMP_TO_INDEX.get(self._current_operation) \
-                   != value.index:
-                continue
-            _LOGGER.debug("SET_TEMP_TO_INDEX=%s and"
-                          " self._current_operation=%s",
-                          SET_TEMP_TO_INDEX.get(self._current_operation),
-                          self._current_operation)
-            if self._zxt_120:
-                # ZXT-120 does not support get setpoint
-                self._target_temperature = temperature
-                # ZXT-120 responds only to whole int
-                value.data = int(round(temperature, 0))
-            else:
-                value.data = int(temperature)
-            break
+            if self.current_operation is not None:
+                if SET_TEMP_TO_INDEX.get(self._current_operation) \
+                       != value.index:
+                    continue
+                _LOGGER.debug("SET_TEMP_TO_INDEX=%s and"
+                              " self._current_operation=%s",
+                              SET_TEMP_TO_INDEX.get(self._current_operation),
+                              self._current_operation)
+                if self._zxt_120:
+                    # ZXT-120 does not support get setpoint
+                    self._target_temperature = temperature
+                    # ZXT-120 responds only to whole int
+                    value.data = int(round(temperature, 0))
+                else:
+                    value.data = int(temperature)
+                break
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
