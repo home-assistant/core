@@ -203,12 +203,13 @@ def setup_scanner(hass, config, see):
         _LOGGER.info("Got %d waypoints from %s", len(wayps), topic)
         for wayp in wayps:
             name = wayp['desc']
+            pretty_name = parse_topic(topic, True)[1] + ' - ' + name
             lat = wayp[WAYPOINT_LAT_KEY]
             lon = wayp[WAYPOINT_LON_KEY]
             rad = wayp['rad']
-            zone = zone_comp.Zone(hass, name, lat, lon, rad,
+            zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
                                   zone_comp.ICON_IMPORT, False, True)
-            zone_comp.add_zone(hass, name, zone)
+            zone_comp.add_zone(hass, pretty_name, zone)
 
     def see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
@@ -236,11 +237,22 @@ def setup_scanner(hass, config, see):
     return True
 
 
+def parse_topic(topic, pretty=False):
+    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple."""
+    parts = topic.split('/')
+    dev_id_format = ''
+    if pretty:
+        dev_id_format = '{} {}'
+    else:
+        dev_id_format = '{}_{}'
+    dev_id = slugify(dev_id_format.format(parts[1], parts[2]))
+    host_name = parts[1]
+    return (host_name, dev_id)
+
+
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects."""
-    parts = topic.split('/')
-    dev_id = slugify('{}_{}'.format(parts[1], parts[2]))
-    host_name = parts[1]
+    (host_name, dev_id) = parse_topic(topic, False)
     kwargs = {
         'dev_id': dev_id,
         'host_name': host_name,
