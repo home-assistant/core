@@ -11,6 +11,7 @@ import logging
 import os
 import threading
 import voluptuous as vol
+from typing import Sequence
 
 from homeassistant.bootstrap import (prepare_setup_platform,
                                      log_exception)
@@ -23,6 +24,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
+from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
@@ -174,7 +176,8 @@ def setup(hass, config):
 class DeviceTracker(object):
     """Representation of a device tracker."""
 
-    def __init__(self, hass, consider_home, track_new, devices):
+    def __init__(self, hass: HomeAssistant, consider_home: timedelta,
+                 track_new: bool, devices: Sequence):
         """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
@@ -195,14 +198,15 @@ class DeviceTracker(object):
 
         self.group = None
 
-    def see(self, mac=None, dev_id=None, host_name=None, location_name=None,
-            gps=None, gps_accuracy=None, battery=None):
+    def see(self, mac: str=None, dev_id=None, host_name=None,
+            location_name=None, gps=None, gps_accuracy=None,
+            battery=None):
         """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
                 raise HomeAssistantError('Neither mac or device id passed in')
             elif mac is not None:
-                mac = mac.upper()
+                mac = str(mac).upper()
                 device = self.mac_to_dev.get(mac)
                 if not device:
                     dev_id = util.slugify(host_name or '') or util.slugify(mac)
@@ -337,15 +341,13 @@ class Device(Entity):
         self.location_name = location_name
         self.gps_accuracy = gps_accuracy or 0
         self.battery = battery
-        if gps is None:
-            self.gps = None
-        else:
+        self.gps = None
+        if gps is not None:
             try:
-                self.gps = tuple(float(val) for val in gps)
-            except ValueError:
+                self.gps = float(gps[0]), float(gps[1])
+            except (ValueError, TypeError, IndexError):
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
-                self.gps = None
         self.update()
 
     def stale(self, now=None):

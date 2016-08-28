@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
     STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM)
 import homeassistant.components.device_tracker as device_tracker
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered)
@@ -21,7 +22,8 @@ TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
 class TestComponentsDeviceTracker(unittest.TestCase):
     """Test the Device tracker."""
-    hass = None
+    hass = None  # HomeAssistant
+    yaml_devices = None  # type: str
 
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
@@ -80,7 +82,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.consider_home, config.consider_home)
 
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
-    def test_track_with_duplicate_mac_dev_id(self, mock_warning):
+    def test_track_with_duplicate_mac_dev_id(self, mock_warning):  \
+            # pylint: disable=invalid-name
         """Test adding duplicate MACs or device IDs to DeviceTracker."""
 
         devices = [
@@ -250,38 +253,29 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     @patch('homeassistant.components.device_tracker.DeviceTracker.see')
     def test_see_service(self, mock_see):
-        """Test the see service."""
-        self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
-        mac = 'AB:CD:EF:GH'
-        dev_id = 'some_device'
-        host_name = 'example.com'
-        location_name = 'Work'
-        gps = [.3, .8]
-
-        device_tracker.see(self.hass, mac, dev_id, host_name, location_name,
-                           gps)
-
-        self.hass.pool.block_till_done()
-
-        mock_see.assert_called_once_with(
-            mac=mac, dev_id=dev_id, host_name=host_name,
-            location_name=location_name, gps=gps)
-
-    @patch('homeassistant.components.device_tracker.DeviceTracker.see')
-    def test_see_service_unicode_dev_id(self, mock_see):
         """Test the see service with a unicode dev_id and NO MAC."""
         self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
         params = {
-            'dev_id': chr(233),  # e' acute accent from icloud
+            'dev_id': 'some_device',
             'host_name': 'example.com',
             'location_name': 'Work',
             'gps': [.3, .8]
         }
         device_tracker.see(self.hass, **params)
         self.hass.pool.block_till_done()
+        assert mock_see.call_count == 1
         mock_see.assert_called_once_with(**params)
 
-    def test_not_write_duplicate_yaml_keys(self):
+        mock_see.reset_mock()
+        params['dev_id'] += chr(233)  # e' acute accent from icloud
+
+        device_tracker.see(self.hass, **params)
+        self.hass.pool.block_till_done()
+        assert mock_see.call_count == 1
+        mock_see.assert_called_once_with(**params)
+
+    def test_not_write_duplicate_yaml_keys(self): \
+            # pylint: disable=invalid-name
         """Test that the device tracker will not generate invalid YAML."""
         self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
 
@@ -294,7 +288,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 2
 
-    def test_not_allow_invalid_dev_id(self):
+    def test_not_allow_invalid_dev_id(self):  # pylint: disable=invalid-name
         """Test that the device tracker will not allow invalid dev ids."""
         self.assertTrue(device_tracker.setup(self.hass, TEST_PLATFORM))
 
@@ -303,3 +297,27 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         config = device_tracker.load_config(self.yaml_devices, self.hass,
                                             timedelta(seconds=0))
         assert len(config) == 0
+
+    @patch('homeassistant.components.device_tracker._LOGGER.warning')
+    def test_see_failures(self, mock_warning):
+        """Test that the device tracker see failures."""
+        tracker = device_tracker.DeviceTracker(
+            self.hass, timedelta(seconds=60), 0, [])
+
+        # MAC is not a string (but added)
+        tracker.see(mac=567, host_name="Number MAC")
+
+        # No device id or MAC(not added)
+        with self.assertRaises(HomeAssistantError):
+            tracker.see()
+        assert mock_warning.call_count == 0
+
+        # Ignore gps on invalid GPS (both added & warnings)
+        tracker.see(mac='mac_1_bad_gps', gps=1)
+        tracker.see(mac='mac_2_bad_gps', gps=[1])
+        tracker.see(mac='mac_3_bad_gps', gps='gps')
+        config = device_tracker.load_config(self.yaml_devices, self.hass,
+                                            timedelta(seconds=0))
+        assert mock_warning.call_count == 3
+
+        assert len(config) == 4
