@@ -19,7 +19,7 @@ SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_SELECT_SOURCE
 
 DOMAIN = 'snapcast'
-REQUIREMENTS = ['snapcast==1.2.1']
+REQUIREMENTS = ['snapcast==1.2.2']
 HOST = 'host'
 PORT = 'port'
 _LOGGER = logging.getLogger(__name__)
