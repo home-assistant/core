@@ -236,6 +236,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 else:
                     value.data = int(temperature)
                 break
+            else:
+                value.data = int(temperature)
+                break
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
