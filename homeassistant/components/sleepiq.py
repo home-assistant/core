@@ -123,8 +123,8 @@ def setup(hass, config):
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     client = Sleepyq(username, password)
-    DATA = SleepIQData(client)
     try:
+        DATA = SleepIQData(client)
         DATA.update()
     except HTTPError:
         _LOGGER.error("SleepIQ failed to login, double check your username and password")
