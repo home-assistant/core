@@ -18,7 +18,6 @@ class TestSleepIQ(unittest.TestCase):
             'password': self.password,
         }
 
-
     def test_setup(self):
         """Test the setup."""
         sleepiq.setup(self.hass, self.config)
