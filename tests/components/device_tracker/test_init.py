@@ -321,3 +321,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert mock_warning.call_count == 3
 
         assert len(config) == 4
+
+    @patch('homeassistant.components.device_tracker.log_exception')
+    def test_config_failure(self, mock_ex):
+        """Test that the device tracker see failures."""
+        device_tracker.setup(self.hass, {device_tracker.DOMAIN: {
+            device_tracker.CONF_CONSIDER_HOME: -1}})
+        assert mock_ex.call_count == 1

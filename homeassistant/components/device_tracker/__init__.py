@@ -10,21 +10,22 @@ from datetime import timedelta
 import logging
 import os
 import threading
-import voluptuous as vol
-from typing import Sequence
+from typing import Any, Sequence, Callable
 
-from homeassistant.bootstrap import (prepare_setup_platform,
-                                     log_exception)
+import voluptuous as vol
+
+from homeassistant.bootstrap import (
+    prepare_setup_platform, log_exception)
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
-from homeassistant.core import HomeAssistant
 
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
@@ -78,15 +79,16 @@ DISCOVERY_PLATFORMS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_on(hass, entity_id=None):
+def is_on(hass: HomeAssistantType, entity_id: str=None):
     """Return the state if any or a specified device is home."""
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
     return hass.states.is_state(entity, STATE_HOME)
 
 
-def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
-        gps=None, gps_accuracy=None,
+def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
+        host_name: str=None, location_name: str=None,
+        gps: GPSType=None, gps_accuracy=None,
         battery=None):  # pylint: disable=too-many-arguments
     """Call service to notify you see device."""
     data = {key: value for key, value in
@@ -100,20 +102,20 @@ def see(hass, mac=None, dev_id=None, host_name=None, location_name=None,
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistantType, config: ConfigType):
     """Setup device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
     try:
         conf = _CONFIG_SCHEMA(config).get(DOMAIN, [])
-        conf = conf[0] if len(conf) > 0 else {}
     except vol.Invalid as ex:
-        log_exception(ex, DOMAIN, conf)
+        log_exception(ex, DOMAIN, config)
         return False
-
-    consider_home = timedelta(seconds=conf.get(CONF_CONSIDER_HOME,
-                                               DEFAULT_CONSIDER_HOME))
-    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    else:
+        conf = conf[0] if len(conf) > 0 else {}
+        consider_home = timedelta(
+            seconds=conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME))
+        track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = load_config(yaml_path, hass, consider_home)
 
@@ -176,8 +178,8 @@ def setup(hass, config):
 class DeviceTracker(object):
     """Representation of a device tracker."""
 
-    def __init__(self, hass: HomeAssistant, consider_home: timedelta,
-                 track_new: bool, devices: Sequence):
+    def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
+                 track_new: bool, devices: Sequence) -> None:
         """Initialize a device tracker."""
         self.hass = hass
         self.devices = {dev.dev_id: dev for dev in devices}
@@ -196,11 +198,11 @@ class DeviceTracker(object):
             if device.track:
                 device.update_ha_state()
 
-        self.group = None
+        self.group = None  # type: group.Group
 
-    def see(self, mac: str=None, dev_id=None, host_name=None,
-            location_name=None, gps=None, gps_accuracy=None,
-            battery=None):
+    def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
+            location_name: str=None, gps: GPSType=None, gps_accuracy=None,
+            battery: str=None):
         """Notify the device tracker that you see a device."""
         with self.lock:
             if mac is None and dev_id is None:
@@ -247,7 +249,7 @@ class DeviceTracker(object):
         self.group = group.Group(
             self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
-    def update_stale(self, now):
+    def update_stale(self, now: dt_util.dt.datetime):
         """Update stale devices."""
         with self.lock:
             for device in self.devices.values():
@@ -259,19 +261,21 @@ class DeviceTracker(object):
 class Device(Entity):
     """Represent a tracked device."""
 
-    host_name = None
-    location_name = None
-    gps = None
+    host_name = None  # type: str
+    location_name = None  # type: str
+    gps = None  # type: GPSType
     gps_accuracy = 0
-    last_seen = None
-    battery = None
+    last_seen = None  # type: dt_util.dt.datetime
+    battery = None  # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
     _state = STATE_NOT_HOME
 
-    def __init__(self, hass, consider_home, track, dev_id, mac,
-                 name=None, picture=None, gravatar=None, away_hide=False):
+    def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
+                 track: bool, dev_id: str, mac: str, name: str=None,
+                 picture: str=None, gravatar: str=None,
+                 away_hide: bool=False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -333,8 +337,8 @@ class Device(Entity):
         """If device should be hidden."""
         return self.away_hide and self.state != STATE_HOME
 
-    def seen(self, host_name=None, location_name=None, gps=None,
-             gps_accuracy=0, battery=None):
+    def seen(self, host_name: str=None, location_name: str=None,
+             gps: GPSType=None, gps_accuracy=0, battery: str=None):
         """Mark the device as seen."""
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
@@ -350,7 +354,7 @@ class Device(Entity):
                                 self.dev_id, gps)
         self.update()
 
-    def stale(self, now=None):
+    def stale(self, now: dt_util.dt.datetime=None):
         """Return if device state is stale."""
         return self.last_seen and \
             (now or dt_util.utcnow()) - self.last_seen > self.consider_home
@@ -379,7 +383,7 @@ class Device(Entity):
             self.last_update_home = True
 
 
-def load_config(path, hass, consider_home):
+def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
     if not os.path.isfile(path):
         return []
@@ -396,14 +400,15 @@ def load_config(path, hass, consider_home):
         return []
 
 
-def setup_scanner_platform(hass, config, scanner, see_device):
+def setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
+                           scanner: Any, see_device: Callable):
     """Helper method to connect scanner-based platform to device tracker."""
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     # Initial scan of each mac we also tell about host name for config
-    seen = set()
+    seen = set()  # type: Any
 
-    def device_tracker_scan(now):
+    def device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
         for mac in scanner.scan_devices():
             if mac in seen:
@@ -419,7 +424,7 @@ def setup_scanner_platform(hass, config, scanner, see_device):
     device_tracker_scan(None)
 
 
-def update_config(path, dev_id, device):
+def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         out.write('\n')
@@ -433,7 +438,7 @@ def update_config(path, dev_id, device):
             out.write('  {}: {}\n'.format(key, '' if value is None else value))
 
 
-def get_gravatar_for_email(email):
+def get_gravatar_for_email(email: str):
     """Return an 80px Gravatar for the given email address."""
     import hashlib
     url = 'https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar'
