@@ -351,7 +351,7 @@ class ClimateDevice(Entity):
     @property
     def state(self):
         """Return the current state."""
-        return self.current_operation or STATE_UNKNOWN
+        return self.target_temperature or STATE_UNKNOWN
 
     @property
     def state_attributes(self):
