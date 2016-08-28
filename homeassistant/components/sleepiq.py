@@ -127,7 +127,10 @@ def setup(hass, config):
         DATA = SleepIQData(client)
         DATA.update()
     except HTTPError:
-        _LOGGER.error("SleepIQ failed to login, double check your username and password")
+        message = """
+            SleepIQ failed to login, double check your username and password"
+        """
+        _LOGGER.error(message)
         return False
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
