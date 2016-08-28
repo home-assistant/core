@@ -12,6 +12,7 @@ from homeassistant.helpers import validate_config, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
+from requests.exceptions import HTTPError
 
 DOMAIN = 'sleepiq'
 
@@ -123,7 +124,11 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     client = Sleepyq(username, password)
     DATA = SleepIQData(client)
-    DATA.update()
+    try:
+        DATA.update()
+    except HTTPError:
+        _LOGGER.error("SleepIQ failed to login, double check your username and password")
+        return False
 
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)

@@ -1,9 +1,11 @@
 """The tests for the SleepIQ component."""
 import unittest
+import requests_mock
 
-from homeassistant import core as ha
 import homeassistant.components.sleepiq as sleepiq
+from homeassistant import core as ha
 
+from tests.common import load_fixture
 
 class TestSleepIQ(unittest.TestCase):
     """Tests the SleepIQ component."""
@@ -14,10 +16,44 @@ class TestSleepIQ(unittest.TestCase):
         self.username = 'foo'
         self.password = 'bar'
         self.config = {
-            'username': self.username,
-            'password': self.password,
+            'sleepiq': {
+                'username': self.username,
+                'password': self.password,
+            }
         }
 
-    def test_setup(self):
+    @requests_mock.Mocker()
+    def test_setup(self, mock):
         """Test the setup."""
+        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
+                 json=load_fixture('sleepiq-login.json'))
+        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed?_k=0987',
+                 json=load_fixture('sleepiq-bed.json'))
+        mock.get('https://api.sleepiq.sleepnumber.com/rest/sleeper?_k=0987',
+                 json=load_fixture('sleepiq-sleeper.json'))
+        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed/familyStatus?_k=0987',
+                 json=load_fixture('sleepiq-familystatus.json'))
+
+        response = sleepiq.setup(self.hass, self.config)
+        self.assertTrue(response)
+
+    @requests_mock.Mocker()
+    def test_setup_login_failed(self, mock):
+        """Test the setup if a bad username or password is given."""
+        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
+                 status_code=401,
+                 json=load_fixture('sleepiq-login-failed.json'))
+
+        response = sleepiq.setup(self.hass, self.config)
+        self.assertFalse(response)
+
+    def test_setup_no_login(self):
+        """Test the setup when no login is configured."""
+        del self.config['sleepiq']['username']
         sleepiq.setup(self.hass, self.config)
+        self.assertFalse(sleepiq.setup(self.hass, self.config))
+
+    def test_setup_no_password(self):
+        """Test the setup when no password is configured."""
+        del self.config['sleepiq']['password']
+        self.assertFalse(sleepiq.setup(self.hass, self.config))
