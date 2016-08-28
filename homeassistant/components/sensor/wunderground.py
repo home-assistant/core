@@ -47,7 +47,7 @@ SENSOR_TYPES = {
     'wind_string': ['Wind Summary', None],
     'temp_c': ['Temperature (°C)', TEMP_CELSIUS],
     'temp_f': ['Temperature (°F)', TEMP_FAHRENHEIT],
-    'relative_humidity': ['Relative Humidity', None],
+    'relative_humidity': ['Relative Humidity', '%'],
     'visibility_mi': ['Visibility (miles)', 'mi'],
     'visibility_km': ['Visibility (km)', 'km'],
     'precip_today_in': ['Precipation Today', 'in'],
@@ -101,7 +101,10 @@ class WUndergroundSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         if self.rest.data and self._condition in self.rest.data:
-            return self.rest.data[self._condition]
+            if self._condition == 'relative_humidity':
+                return int(self.rest.data[self._condition][:-1])
+            else:
+                return self.rest.data[self._condition]
         else:
             return STATE_UNKNOWN
 
