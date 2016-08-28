@@ -143,7 +143,7 @@ class Thermostat(ClimateDevice):
             return STATE_OFF
 
     @property
-    def operation_mode(self):
+    def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         status = self.thermostat['equipmentStatus']
         if status == '':
@@ -163,11 +163,6 @@ class Thermostat(ClimateDevice):
         return self.thermostat['program']['currentClimateRef']
 
     @property
-    def current_operation(self):
-        """Return current hvac mode ie. auto, auxHeatOnly, cool, heat, off."""
-        return self.thermostat['settings']['hvacMode']
-
-    @property
     def fan_min_on_time(self):
         """Return current fan minimum on time."""
         return self.thermostat['settings']['fanMinOnTime']
@@ -180,7 +175,7 @@ class Thermostat(ClimateDevice):
             "humidity": self.current_humidity,
             "fan": self.fan,
             "mode": self.mode,
-            "operation_mode": self.current_operation,
+            "hvac_mode": self.thermostat['settings']['hvacMode'],
             "fan_min_on_time": self.fan_min_on_time
         }
 
