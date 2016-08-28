@@ -47,12 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_SCENE_CONTROLLER: [set_req.V_SCENE_ON,
                                       set_req.V_SCENE_OFF],
         }
-        if float(gateway.version) < 1.5:
+        if float(gateway.protocol_version) < 1.5:
             map_sv_types.update({
                 pres.S_AIR_QUALITY: [set_req.V_DUST_LEVEL],
                 pres.S_DUST: [set_req.V_DUST_LEVEL],
             })
-        if float(gateway.version) >= 1.5:
+        if float(gateway.protocol_version) >= 1.5:
             map_sv_types.update({
                 pres.S_COLOR_SENSOR: [set_req.V_RGB],
                 pres.S_MULTIMETER: [set_req.V_VOLTAGE,
@@ -99,7 +99,7 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
             set_req.V_VOLTAGE: 'V',
             set_req.V_CURRENT: 'A',
         }
-        if float(self.gateway.version) >= 1.5:
+        if float(self.gateway.protocol_version) >= 1.5:
             if set_req.V_UNIT_PREFIX in self._values:
                 return self._values[
                     set_req.V_UNIT_PREFIX]

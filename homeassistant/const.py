@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 
-__version__ = '0.27.0.dev0'
+__version__ = '0.28.0.dev0'
 REQUIRED_PYTHON_VER = (3, 4)
 
 PLATFORM_FORMAT = '{}.{}'
@@ -23,6 +23,7 @@ CONF_ACCESS_TOKEN = 'access_token'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_AUTHENTICATION = 'authentication'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
 CONF_BLACKLIST = 'blacklist'
@@ -36,6 +37,7 @@ CONF_ELEVATION = 'elevation'
 CONF_ENTITY_ID = 'entity_id'
 CONF_ENTITY_NAMESPACE = 'entity_namespace'
 CONF_EVENT = 'event'
+CONF_FILE_PATH = 'file_path'
 CONF_FILENAME = 'filename'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'
@@ -279,6 +281,9 @@ HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_INTERNAL_SERVER_ERROR = 500
+
+HTTP_BASIC_AUTHENTICATION = 'basic'
+HTTP_DIGEST_AUTHENTICATION = 'digest'
 
 HTTP_HEADER_HA_AUTH = 'X-HA-access'
 HTTP_HEADER_ACCEPT_ENCODING = 'Accept-Encoding'
