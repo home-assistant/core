@@ -148,8 +148,7 @@ class SpeedtestData(object):
         try:
             args = [sys.executable, speedtest_cli.__file__, '--simple']
             if self._server_id:
-                args = args.append('--server')
-                args = args.append(self._server_id)
+                args = args + ['--server', self._server_id]
 
             re_output = _SPEEDTEST_REGEX.split(
                 check_output(args).decode("utf-8"))
