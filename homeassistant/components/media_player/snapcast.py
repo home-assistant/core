@@ -17,7 +17,7 @@ SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_SELECT_SOURCE
 
 DOMAIN = 'snapcast'
-REQUIREMENTS = ['snapcast==1.2.1']
+REQUIREMENTS = ['snapcast==1.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -75,18 +75,18 @@ class SnapcastDevice(MediaPlayerDevice):
         return {
             'idle': STATE_IDLE,
             'playing': STATE_PLAYING,
-            'unkown': STATE_UNKNOWN,
+            'unknown': STATE_UNKNOWN,
         }.get(self._client.stream.status, STATE_UNKNOWN)
 
     @property
     def source(self):
         """Return the current input source."""
-        return self._client.stream.identifier
+        return self._client.stream.name
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._client.available_streams()
+        return list(self._client.streams_by_name().keys())
 
     def mute_volume(self, mute):
         """Send the mute command."""
@@ -98,4 +98,6 @@ class SnapcastDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Set input source."""
-        self._client.stream = source
+        streams = self._client.streams_by_name()
+        if source in streams:
+            self._client.stream = streams[source].identifier
