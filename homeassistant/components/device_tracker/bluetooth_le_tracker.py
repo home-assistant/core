@@ -65,11 +65,11 @@ def setup_scanner(hass, config, see):
     # to 0
     for device in load_config(yaml_path, hass, 0, 0):
         # check if device is a valid bluetooth device
-        if device.mac and device.mac[:3].upper() == BLE_PREFIX:
+        if device.mac and device.mac[:4].upper() == BLE_PREFIX:
             if device.track:
-                devs_to_track.append(device.mac[3:])
+                devs_to_track.append(device.mac[4:])
             else:
-                devs_donot_track.append(device.mac[3:])
+                devs_donot_track.append(device.mac[4:])
 
     # if track new devices is true discover new devices
     # on every scan.
