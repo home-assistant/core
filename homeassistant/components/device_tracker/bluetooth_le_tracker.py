@@ -35,7 +35,6 @@ def setup_scanner(hass, config, see):
     from gattlib import DiscoveryService
 
     new_devices = {}
-    duration = 10
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
