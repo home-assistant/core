@@ -133,7 +133,7 @@ class SpeedtestData(object):
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
-        self._server_id = config.get(CONF_SERVER_ID)
+        self._server_id = str(config.get(CONF_SERVER_ID))
         track_time_change(hass, self.update,
                           second=config.get(CONF_SECOND),
                           minute=config.get(CONF_MINUTE),
