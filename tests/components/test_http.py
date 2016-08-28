@@ -75,8 +75,8 @@ class TestHttp:
     def test_access_with_password_in_header(self, caplog):
         """Test access with password in URL."""
         # Hide logging from requests package that we use to test logging
-        caplog.setLevel(logging.WARNING,
-                        logger='requests.packages.urllib3.connectionpool')
+        caplog.set_level(logging.WARNING,
+                         logger='requests.packages.urllib3.connectionpool')
 
         req = requests.get(
             _url(const.URL_API),
@@ -84,7 +84,7 @@ class TestHttp:
 
         assert req.status_code == 200
 
-        logs = caplog.text()
+        logs = caplog.text
 
         # assert const.URL_API in logs
         assert API_PASSWORD not in logs
@@ -99,15 +99,15 @@ class TestHttp:
     def test_access_with_password_in_url(self, caplog):
         """Test access with password in URL."""
         # Hide logging from requests package that we use to test logging
-        caplog.setLevel(logging.WARNING,
-                        logger='requests.packages.urllib3.connectionpool')
+        caplog.set_level(logging.WARNING,
+                         logger='requests.packages.urllib3.connectionpool')
 
         req = requests.get(_url(const.URL_API),
                            params={'api_password': API_PASSWORD})
 
         assert req.status_code == 200
 
-        logs = caplog.text()
+        logs = caplog.text
 
         # assert const.URL_API in logs
         assert API_PASSWORD not in logs

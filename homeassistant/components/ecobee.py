@@ -7,7 +7,9 @@ https://home-assistant.io/components/ecobee/
 import logging
 import os
 from datetime import timedelta
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import CONF_API_KEY
 from homeassistant.loader import get_component
@@ -15,11 +17,18 @@ from homeassistant.util import Throttle
 
 DOMAIN = "ecobee"
 NETWORK = None
-HOLD_TEMP = 'hold_temp'
+CONF_HOLD_TEMP = 'hold_temp'
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
     '4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6']
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,11 +76,12 @@ def setup_ecobee(hass, network, config):
         configurator = get_component('configurator')
         configurator.request_done(_CONFIGURING.pop('ecobee'))
 
-    hold_temp = config[DOMAIN].get(HOLD_TEMP, False)
+    hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
-    discovery.load_platform(hass, 'thermostat', DOMAIN,
+    discovery.load_platform(hass, 'climate', DOMAIN,
                             {'hold_temp': hold_temp}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
 
 # pylint: disable=too-few-public-methods

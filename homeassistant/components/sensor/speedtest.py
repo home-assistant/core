@@ -8,10 +8,13 @@ import logging
 import re
 import sys
 from subprocess import check_output, CalledProcessError
+import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import recorder
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 
@@ -22,7 +25,6 @@ _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
                               r'Download:\s(\d+\.\d+)\sMbit/s[\r\n]+'
                               r'Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
-CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
@@ -32,6 +34,19 @@ SENSOR_TYPES = {
     'download': ['Download', 'Mbit/s'],
     'upload': ['Upload', 'Mbit/s'],
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
+    vol.Optional(CONF_SECOND, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_MINUTE, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_HOUR):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+    vol.Optional(CONF_DAY):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -97,6 +112,8 @@ class SpeedtestSensor(Entity):
                     ).order_by(states.state_id.desc()).limit(1))
             except TypeError:
                 return
+            except RuntimeError:
+                return
             if not last_state:
                 return
             self._state = last_state[0].state
@@ -115,10 +132,10 @@ class SpeedtestData(object):
         """Initialize the data object."""
         self.data = None
         track_time_change(hass, self.update,
-                          second=config.get(CONF_SECOND, 0),
-                          minute=config.get(CONF_MINUTE, 0),
-                          hour=config.get(CONF_HOUR, None),
-                          day=config.get(CONF_DAY, None))
+                          second=config.get(CONF_SECOND),
+                          minute=config.get(CONF_MINUTE),
+                          hour=config.get(CONF_HOUR),
+                          day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""

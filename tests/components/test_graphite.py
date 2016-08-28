@@ -2,15 +2,15 @@
 import socket
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 import homeassistant.core as ha
 import homeassistant.components.graphite as graphite
 from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     STATE_ON, STATE_OFF)
-
 from tests.common import get_test_home_assistant
+from homeassistant import bootstrap
 
 
 class TestGraphite(unittest.TestCase):
@@ -19,22 +19,22 @@ class TestGraphite(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.latitude = 32.87336
-        self.hass.config.longitude = 117.22743
         self.gf = graphite.GraphiteFeeder(self.hass, 'foo', 123, 'ha')
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_minimal_config(self, mock_gf):
-        """Test setup with minimal configuration."""
-        self.assertTrue(graphite.setup(self.hass, {}))
-        mock_gf.assert_called_once_with(self.hass, 'localhost', 2003, 'ha')
+    @patch('socket.socket')
+    def test_setup(self, mock_socket):
+        """Test setup."""
+        assert bootstrap.setup_component(self.hass, 'graphite',
+                                         {'graphite': {}})
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
-    @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_full_config(self, mock_gf):
+    @patch('socket.socket')
+    @patch('homeassistant.components.graphite.GraphiteFeeder')
+    def test_full_config(self, mock_gf, mock_socket):
         """Test setup with full configuration."""
         config = {
             'graphite': {
@@ -43,20 +43,25 @@ class TestGraphite(unittest.TestCase):
                 'prefix': 'me',
             }
         }
+
         self.assertTrue(graphite.setup(self.hass, config))
         mock_gf.assert_called_once_with(self.hass, 'foo', 123, 'me')
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
-    @mock.patch('homeassistant.components.graphite.GraphiteFeeder')
-    def test_config_bad_port(self, mock_gf):
+    @patch('socket.socket')
+    @patch('homeassistant.components.graphite.GraphiteFeeder')
+    def test_config_port(self, mock_gf, mock_socket):
         """Test setup with invalid port."""
         config = {
             'graphite': {
                 'host': 'foo',
-                'port': 'wrong',
+                'port': 2003,
             }
         }
-        self.assertFalse(graphite.setup(self.hass, config))
-        self.assertFalse(mock_gf.called)
+
+        self.assertTrue(graphite.setup(self.hass, config))
+        self.assertTrue(mock_gf.called)
+        mock_socket.assert_called_once_with(socket.AF_INET, socket.SOCK_STREAM)
 
     def test_subscribe(self):
         """Test the subscription."""
@@ -87,7 +92,7 @@ class TestGraphite(unittest.TestCase):
             self.gf.event_listener('foo')
             mock_queue.put.assert_called_once_with('foo')
 
-    @mock.patch('time.time')
+    @patch('time.time')
     def test_report_attributes(self, mock_time):
         """Test the reporting with attributes."""
         mock_time.return_value = 12345
@@ -96,19 +101,21 @@ class TestGraphite(unittest.TestCase):
                  'baz': True,
                  'bat': 'NaN',
                  }
+
         expected = [
             'ha.entity.state 0.000000 12345',
             'ha.entity.foo 1.000000 12345',
             'ha.entity.bar 2.000000 12345',
             'ha.entity.baz 1.000000 12345',
             ]
+
         state = mock.MagicMock(state=0, attributes=attrs)
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
             actual = mock_send.call_args_list[0][0][0].split('\n')
             self.assertEqual(sorted(expected), sorted(actual))
 
-    @mock.patch('time.time')
+    @patch('time.time')
     def test_report_with_string_state(self, mock_time):
         """Test the reporting with strings."""
         mock_time.return_value = 12345
@@ -116,13 +123,14 @@ class TestGraphite(unittest.TestCase):
             'ha.entity.foo 1.000000 12345',
             'ha.entity.state 1.000000 12345',
             ]
+
         state = mock.MagicMock(state='above_horizon', attributes={'foo': 1.0})
         with mock.patch.object(self.gf, '_send_to_graphite') as mock_send:
             self.gf._report_attributes('entity', state)
             actual = mock_send.call_args_list[0][0][0].split('\n')
             self.assertEqual(sorted(expected), sorted(actual))
 
-    @mock.patch('time.time')
+    @patch('time.time')
     def test_report_with_binary_state(self, mock_time):
         """Test the reporting with binary state."""
         mock_time.return_value = 12345
@@ -142,7 +150,7 @@ class TestGraphite(unittest.TestCase):
             actual = mock_send.call_args_list[0][0][0].split('\n')
             self.assertEqual(sorted(expected), sorted(actual))
 
-    @mock.patch('time.time')
+    @patch('time.time')
     def test_send_to_graphite_errors(self, mock_time):
         """Test the sending with errors."""
         mock_time.return_value = 12345
@@ -153,7 +161,7 @@ class TestGraphite(unittest.TestCase):
             mock_send.side_effect = socket.gaierror
             self.gf._report_attributes('entity', state)
 
-    @mock.patch('socket.socket')
+    @patch('socket.socket')
     def test_send_to_graphite(self, mock_socket):
         """Test the sending of data."""
         self.gf._send_to_graphite('foo')

@@ -19,6 +19,7 @@ class TestSplunk(unittest.TestCase):
                 'use_ssl': 'False',
             }
         }
+
         hass = mock.MagicMock()
         self.assertTrue(splunk.setup(hass, config))
         self.assertTrue(hass.bus.listen.called)
@@ -33,6 +34,7 @@ class TestSplunk(unittest.TestCase):
                 'token': 'secret',
             }
         }
+
         hass = mock.MagicMock()
         self.assertTrue(splunk.setup(hass, config))
         self.assertTrue(hass.bus.listen.called)
@@ -48,8 +50,10 @@ class TestSplunk(unittest.TestCase):
             'splunk': {
                 'host': 'host',
                 'token': 'secret',
+                'port': 8088,
             }
         }
+
         self.hass = mock.MagicMock()
         splunk.setup(self.hass, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
@@ -65,14 +69,16 @@ class TestSplunk(unittest.TestCase):
                  '1.0': 1.0,
                  STATE_ON: 1,
                  STATE_OFF: 0,
-                 'foo': 'foo'}
+                 'foo': 'foo',
+                 }
+
         for in_, out in valid.items():
             state = mock.MagicMock(state=in_,
                                    domain='fake',
                                    object_id='entity',
                                    attributes={})
-            event = mock.MagicMock(data={'new_state': state},
-                                   time_fired=12345)
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+
             body = [{
                 'domain': 'fake',
                 'entity_id': 'entity',
@@ -80,6 +86,7 @@ class TestSplunk(unittest.TestCase):
                 'time': '12345',
                 'value': out,
             }]
+
             payload = {'host': 'http://host:8088/services/collector/event',
                        'event': body}
             self.handler_method(event)

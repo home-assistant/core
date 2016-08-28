@@ -8,24 +8,36 @@ import logging
 from contextlib import closing
 
 import requests
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN, Camera
-from homeassistant.helpers import validate_config
-
-CONTENT_TYPE_HEADER = 'Content-Type'
+from homeassistant.const import (
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
+    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
+from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_MJPEG_URL = 'mjpeg_url'
+CONTENT_TYPE_HEADER = 'Content-Type'
+
+DEFAULT_NAME = 'Mjpeg Camera'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MJPEG_URL): cv.url,
+    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
+        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+})
+
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a MJPEG IP Camera."""
-    if not validate_config({DOMAIN: config}, {DOMAIN: ['mjpeg_url']},
-                           _LOGGER):
-        return None
-
-    add_devices_callback([MjpegCamera(config)])
+    add_devices([MjpegCamera(config)])
 
 
 def extract_image_from_mjpeg(stream):
@@ -47,17 +59,21 @@ class MjpegCamera(Camera):
     def __init__(self, device_info):
         """Initialize a MJPEG camera."""
         super().__init__()
-        self._name = device_info.get('name', 'Mjpeg Camera')
-        self._username = device_info.get('username')
-        self._password = device_info.get('password')
-        self._mjpeg_url = device_info['mjpeg_url']
+        self._name = device_info.get(CONF_NAME)
+        self._authentication = device_info.get(CONF_AUTHENTICATION)
+        self._username = device_info.get(CONF_USERNAME)
+        self._password = device_info.get(CONF_PASSWORD)
+        self._mjpeg_url = device_info[CONF_MJPEG_URL]
 
     def camera_stream(self):
         """Return a MJPEG stream image response directly from the camera."""
         if self._username and self._password:
+            if self._authentication == HTTP_DIGEST_AUTHENTICATION:
+                auth = HTTPDigestAuth(self._username, self._password)
+            else:
+                auth = HTTPBasicAuth(self._username, self._password)
             return requests.get(self._mjpeg_url,
-                                auth=HTTPBasicAuth(self._username,
-                                                   self._password),
+                                auth=auth,
                                 stream=True, timeout=10)
         else:
             return requests.get(self._mjpeg_url, stream=True, timeout=10)
