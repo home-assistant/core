@@ -89,9 +89,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             device_tracker.Device(self.hass, True, True, 'your_device',
                                   'AB:01', 'Your device', None, None, False)]
         device_tracker.DeviceTracker(self.hass, False, True, devices)
-
         print(mock_warning.call_args_list)
-        mock_warning.assert_called_once()
+        assert mock_warning.call_count == 1, \
+            "The only warning call should be duplicates (check stdout)"
         args, _ = mock_warning.call_args
         assert 'Duplicate device MAC' in args[0], \
             'Duplicate MAC warning expected'
@@ -105,7 +105,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         device_tracker.DeviceTracker(self.hass, False, True, devices)
 
         print(mock_warning.call_args_list)
-        mock_warning.assert_called_once()
+        assert mock_warning.call_count == 1, \
+            "The only warning call should be duplicates (check stdout)"
         args, _ = mock_warning.call_args
         assert 'Duplicate device IDs' in args[0], \
             'Duplicate device IDs warning expected'
