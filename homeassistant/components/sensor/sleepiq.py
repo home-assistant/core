@@ -38,6 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     data = sleepiq.DATA
+    data.update()
 
     dev = list()
     for bed_id, _ in data.beds.items():
