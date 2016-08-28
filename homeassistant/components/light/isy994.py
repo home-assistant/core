@@ -8,8 +8,12 @@ import logging
 
 from homeassistant.components.isy994 import (
     HIDDEN_STRING, ISY, SENSOR_STRING, ISYDeviceABC)
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            ATTR_SUPPORTED_FEATURES,
+                                            SUPPORT_BRIGHTNESS)
 from homeassistant.const import STATE_OFF, STATE_ON
+
+SUPPORT_ISY994 = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,9 +40,17 @@ class ISYLightDevice(ISYDeviceABC):
 
     _domain = 'light'
     _dtype = 'analog'
-    _attrs = {ATTR_BRIGHTNESS: 'value'}
+    _attrs = {
+        ATTR_BRIGHTNESS: 'value',
+        ATTR_SUPPORTED_FEATURES: 'supported_features',
+    }
     _onattrs = [ATTR_BRIGHTNESS]
     _states = [STATE_ON, STATE_OFF]
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_ISY994
 
     def _attr_filter(self, attr):
         """Filter brightness out of entity while off."""

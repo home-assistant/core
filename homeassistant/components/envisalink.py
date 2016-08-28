@@ -62,8 +62,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_CODE): cv.string,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
         vol.Optional(CONF_PARTITIONS): {vol.Coerce(int): PARTITION_SCHEMA},
-        vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_EVL_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_EVL_VERSION, default=DEFAULT_EVL_VERSION):
             vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
         vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):

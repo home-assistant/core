@@ -15,19 +15,19 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "conversation"
+REQUIREMENTS = ['fuzzywuzzy==0.11.1']
 
-SERVICE_PROCESS = "process"
+ATTR_TEXT = 'text'
 
-ATTR_TEXT = "text"
+DOMAIN = 'conversation'
+
+REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
+
+SERVICE_PROCESS = 'process'
 
 SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
 })
-
-REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
-
-REQUIREMENTS = ['fuzzywuzzy==0.11.1']
 
 
 def setup(hass, config):

@@ -4,6 +4,7 @@ Component to interface with various media players.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
+import hashlib
 import logging
 import os
 import requests
@@ -32,7 +33,7 @@ SCAN_INTERVAL = 10
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}'
+ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
@@ -645,8 +646,17 @@ class MediaPlayerDevice(Entity):
     @property
     def entity_picture(self):
         """Return image of the media playing."""
-        return None if self.state == STATE_OFF else \
-            ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
+        if self.state == STATE_OFF:
+            return None
+
+        url = self.media_image_url
+
+        if url is None:
+            return None
+
+        return ENTITY_IMAGE_URL.format(
+            self.entity_id, self.access_token,
+            hashlib.md5(url.encode('utf-8')).hexdigest()[:5])
 
     @property
     def state_attributes(self):

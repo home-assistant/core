@@ -6,9 +6,12 @@ https://home-assistant.io/components/light.x10/
 """
 import logging
 from subprocess import check_output, CalledProcessError, STDOUT
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS, Light)
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORT_X10 = SUPPORT_BRIGHTNESS
 
 
 def x10_command(command):
@@ -63,6 +66,11 @@ class X10Light(Light):
     def is_on(self):
         """Return true if light is on."""
         return self._is_on
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_X10
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""

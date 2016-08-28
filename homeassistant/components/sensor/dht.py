@@ -13,14 +13,18 @@ from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
-REQUIREMENTS = ['http://github.com/mala-zaba/Adafruit_Python_DHT/archive/'
-                '4101340de8d2457dd194bca1e8d11cbfc237e919.zip'
-                '#Adafruit_DHT==1.1.0']
+REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
+                '310c59b0293354d07d94375f1365f7b9b9110c7d.zip'
+                '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
+CONF_PIN = 'pin'
+CONF_SENSOR = 'sensor'
+SENSOR_TEMPERATURE = 'temperature'
+SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = {
-    'temperature': ['Temperature', None],
-    'humidity': ['Humidity', '%']
+    SENSOR_TEMPERATURE: ['Temperature', None],
+    SENSOR_HUMIDITY: ['Humidity', '%']
 }
 DEFAULT_NAME = "DHT Sensor"
 # Return cached results if last scan was less then this time ago
@@ -33,15 +37,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=import-error
     import Adafruit_DHT
 
-    SENSOR_TYPES['temperature'][1] = hass.config.units.temperature_unit
+    SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
         "DHT11": Adafruit_DHT.DHT11,
         "DHT22": Adafruit_DHT.DHT22,
         "AM2302": Adafruit_DHT.AM2302
     }
-    sensor = available_sensors[config['sensor']]
-
-    pin = config['pin']
+    sensor = available_sensors.get(config.get(CONF_SENSOR))
+    pin = config.get(CONF_PIN)
 
     if not sensor or not pin:
         _LOGGER.error(
@@ -101,13 +104,17 @@ class DHTSensor(Entity):
         self.dht_client.update()
         data = self.dht_client.data
 
-        if self.type == 'temperature':
-            self._state = round(data['temperature'], 1)
-            if self.temp_unit == TEMP_FAHRENHEIT:
-                self._state = round(celsius_to_fahrenheit(data['temperature']),
-                                    1)
-        elif self.type == 'humidity':
-            self._state = round(data['humidity'], 1)
+        if self.type == SENSOR_TEMPERATURE:
+            temperature = round(data[SENSOR_TEMPERATURE], 1)
+            if (temperature >= -20) and (temperature < 80):
+                self._state = temperature
+                if self.temp_unit == TEMP_FAHRENHEIT:
+                    self._state = round(celsius_to_fahrenheit(temperature),
+                                        1)
+        elif self.type == SENSOR_HUMIDITY:
+            humidity = round(data[SENSOR_HUMIDITY], 1)
+            if (humidity >= 0) and (humidity <= 100):
+                self._state = humidity
 
 
 class DHTClient(object):
@@ -126,6 +133,6 @@ class DHTClient(object):
         humidity, temperature = self.adafruit_dht.read_retry(self.sensor,
                                                              self.pin)
         if temperature:
-            self.data['temperature'] = temperature
+            self.data[SENSOR_TEMPERATURE] = temperature
         if humidity:
-            self.data['humidity'] = humidity
+            self.data[SENSOR_HUMIDITY] = humidity

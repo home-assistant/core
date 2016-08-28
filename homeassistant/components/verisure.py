@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 
 DOMAIN = "verisure"
 
-REQUIREMENTS = ['vsure==0.8.1']
+REQUIREMENTS = ['vsure==0.10.2']
 
 _LOGGER = logging.getLogger(__name__)
 

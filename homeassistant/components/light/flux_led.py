@@ -10,7 +10,8 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            Light)
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR, Light)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/Danielhiversen/flux_led/archive/0.6.zip'
@@ -29,6 +30,8 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional('devices', default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional('automatic_add', default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
+
+SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
@@ -109,6 +112,11 @@ class FluxLight(Light):
     def rgb_color(self):
         """Return the color property."""
         return self._bulb.getRgb()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_FLUX_LED
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""

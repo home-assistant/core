@@ -32,6 +32,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(devices)
 
 
+# pylint: disable=abstract-method
 # pylint: disable=too-many-arguments, too-many-instance-attributes
 class CommandRollershutter(RollershutterDevice):
     """Representation a command line roller shutter."""

@@ -6,14 +6,24 @@ https://home-assistant.io/components/sensor.yweather/
 """
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 
-from homeassistant.const import (CONF_PLATFORM, TEMP_CELSIUS,
-                                 CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["yahooweather==0.6"]
+REQUIREMENTS = ["yahooweather==0.7"]
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_FORECAST = 'forecast'
+CONF_WOEID = 'woeid'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 SENSOR_TYPES = {
     'weather_current': ['Current', None],
@@ -27,18 +37,13 @@ SENSOR_TYPES = {
     'visibility': ['Visibility', "distance"],
 }
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "yweather",
-    vol.Optional("woeid"): vol.Coerce(str),
-    vol.Optional("forecast"): vol.Coerce(int),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_FORECAST, default=0):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        [vol.In(SENSOR_TYPES.keys())],
+        [vol.In(SENSOR_TYPES)],
 })
-
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -46,8 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
     unit = hass.config.units.temperature_unit
-    woeid = config.get("woeid", None)
-    forecast = config.get("forecast", 0)
+    woeid = config.get(CONF_WOEID)
+    forecast = config.get(CONF_FORECAST)
 
     # convert unit
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
@@ -139,6 +144,9 @@ class YahooWeatherSensor(Entity):
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
         self._data.update()
+        if not self._data.yahoo.RawData:
+            _LOGGER.info("Don't receive weather data from yahoo!")
+            return
 
         # default code for weather image
         self._code = self._data.yahoo.Now["code"]

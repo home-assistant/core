@@ -1,6 +1,6 @@
 """The tests for the  Template switch platform."""
+import homeassistant.bootstrap as bootstrap
 import homeassistant.components as core
-import homeassistant.components.switch as switch
 
 from homeassistant.const import (
     STATE_ON,
@@ -18,6 +18,7 @@ class TestTemplateSwitch:
         self.calls = []
 
         def record_call(service):
+            """Track function calls.."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
@@ -28,7 +29,7 @@ class TestTemplateSwitch:
 
     def test_template_state_text(self):
         """"Test the state text of a template."""
-        assert switch.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -62,7 +63,7 @@ class TestTemplateSwitch:
 
     def test_template_state_boolean_on(self):
         """Test the setting of the state with boolean on."""
-        assert switch.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -87,7 +88,7 @@ class TestTemplateSwitch:
 
     def test_template_state_boolean_off(self):
         """Test the setting of the state with off."""
-        assert switch.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -112,7 +113,7 @@ class TestTemplateSwitch:
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -131,15 +132,11 @@ class TestTemplateSwitch:
                 }
             }
         })
-
-        state = self.hass.states.set('switch.test_state', STATE_ON)
-        self.hass.pool.block_till_done()
-        state = self.hass.states.get('switch.test_template_switch')
-        assert state.state == 'unavailable'
+        assert self.hass.states.all() == []
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -161,8 +158,8 @@ class TestTemplateSwitch:
         assert self.hass.states.all() == []
 
     def test_invalid_switch_does_not_create(self):
-        """Test invalid name."""
-        assert switch.setup(self.hass, {
+        """Test invalid switch."""
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -174,7 +171,7 @@ class TestTemplateSwitch:
 
     def test_no_switches_does_not_create(self):
         """Test if there are no switches no creation."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template'
             }
@@ -183,7 +180,7 @@ class TestTemplateSwitch:
 
     def test_missing_template_does_not_create(self):
         """Test missing template."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -206,7 +203,7 @@ class TestTemplateSwitch:
 
     def test_missing_on_does_not_create(self):
         """Test missing on."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -229,7 +226,7 @@ class TestTemplateSwitch:
 
     def test_missing_off_does_not_create(self):
         """Test missing off."""
-        assert switch.setup(self.hass, {
+        assert not bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -252,7 +249,7 @@ class TestTemplateSwitch:
 
     def test_on_action(self):
         """Test on action."""
-        assert switch.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -279,11 +276,11 @@ class TestTemplateSwitch:
         core.switch.turn_on(self.hass, 'switch.test_template_switch')
         self.hass.pool.block_till_done()
 
-        assert 1 == len(self.calls)
+        assert len(self.calls) == 1
 
     def test_off_action(self):
         """Test off action."""
-        assert switch.setup(self.hass, {
+        assert bootstrap.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -311,4 +308,4 @@ class TestTemplateSwitch:
         core.switch.turn_off(self.hass, 'switch.test_template_switch')
         self.hass.pool.block_till_done()
 
-        assert 1 == len(self.calls)
+        assert len(self.calls) == 1

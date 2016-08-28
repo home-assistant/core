@@ -32,7 +32,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 0
+                'pending_time': 0,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -53,7 +54,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 1
+                'pending_time': 1,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -83,7 +85,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 1
+                'pending_time': 1,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -104,7 +107,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 0
+                'pending_time': 0,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -125,7 +129,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 1
+                'pending_time': 1,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -155,7 +160,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'code': CODE,
-                'pending_time': 1
+                'pending_time': 1,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -175,7 +181,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
             'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
-                'trigger_time': 0
+                'trigger_time': 0,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -196,7 +203,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 2,
-                'trigger_time': 3
+                'trigger_time': 3,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -228,13 +236,45 @@ class TestAlarmControlPanelManual(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
+    def test_trigger_with_disarm_after_trigger(self):
+        """Test disarm after trigger."""
+        self.assertTrue(alarm_control_panel.setup(self.hass, {
+            'alarm_control_panel': {
+                'platform': 'manual',
+                'name': 'test',
+                'trigger_time': 5,
+                'pending_time': 0,
+                'disarm_after_trigger': True
+            }}))
+
+        entity_id = 'alarm_control_panel.test'
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
+        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_TRIGGERED,
+                         self.hass.states.get(entity_id).state)
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        with patch(('homeassistant.components.alarm_control_panel.manual.'
+                    'dt_util.utcnow'), return_value=future):
+            fire_time_changed(self.hass, future)
+            self.hass.pool.block_till_done()
+
+        self.assertEqual(STATE_ALARM_DISARMED,
+                         self.hass.states.get(entity_id).state)
+
     def test_disarm_while_pending_trigger(self):
         """Test disarming while pending state."""
         self.assertTrue(alarm_control_panel.setup(self.hass, {
             'alarm_control_panel': {
                 'platform': 'manual',
                 'name': 'test',
-                'trigger_time': 5
+                'trigger_time': 5,
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'
@@ -270,7 +310,8 @@ class TestAlarmControlPanelManual(unittest.TestCase):
                 'platform': 'manual',
                 'name': 'test',
                 'pending_time': 5,
-                'code': CODE + '2'
+                'code': CODE + '2',
+                'disarm_after_trigger': False
             }}))
 
         entity_id = 'alarm_control_panel.test'

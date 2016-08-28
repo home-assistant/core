@@ -9,7 +9,8 @@ import logging
 import requests
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, STATE_ON, STATE_OFF, CONF_HOST)
 from homeassistant.helpers import validate_config
 from homeassistant.helpers.entity import Entity
 
@@ -17,8 +18,6 @@ REQUIREMENTS = ['mficlient==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_ON = 'on'
-STATE_OFF = 'off'
 DIGITS = {
     'volts': 1,
     'amps': 1,
@@ -40,14 +39,14 @@ CONF_VERIFY_TLS = 'verify_tls'
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup mFi sensors."""
     if not validate_config({DOMAIN: config},
-                           {DOMAIN: ['host',
+                           {DOMAIN: [CONF_HOST,
                                      CONF_USERNAME,
                                      CONF_PASSWORD]},
                            _LOGGER):
         _LOGGER.error('A host, username, and password are required')
         return False
 
-    host = config.get('host')
+    host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     use_tls = bool(config.get(CONF_TLS, True))
