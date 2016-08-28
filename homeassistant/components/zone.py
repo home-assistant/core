@@ -116,11 +116,10 @@ def add_zone(hass, name, zone, entities=None):
         _entities = set()
     else:
         _entities = entities
-
-    zone_exists = hass.states.get('zone.' + str(name))
+    zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
+                                        _entities)
+    zone_exists = hass.states.get(zone.entity_id)
     if zone_exists is None:
-        zone.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name,
-                                            _entities)
         zone.update_ha_state()
         _entities.add(zone.entity_id)
         return zone
