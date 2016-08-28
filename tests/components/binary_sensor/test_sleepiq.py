@@ -7,7 +7,7 @@ import requests_mock
 from homeassistant import core as ha
 from homeassistant.components.binary_sensor import sleepiq
 
-from tests.common import load_fixture
+from tests.components.test_sleepiq import mock_responses
 
 
 class TestSleepIQBinarySensorSetup(unittest.TestCase):
@@ -33,16 +33,12 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test for succesfully setting up the SleepIQ platform."""
-        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
-                 text=load_fixture('sleepiq-login.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed?_k=0987',
-                 text=load_fixture('sleepiq-bed.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/sleeper?_k=0987',
-                 text=load_fixture('sleepiq-sleeper.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed/familyStatus?_k=0987',
-                 text=load_fixture('sleepiq-familystatus.json'))
+        mock_responses(mock)
 
-        sleepiq.setup_platform(self.hass, self.config, self.add_devices, MagicMock())
+        sleepiq.setup_platform(self.hass,
+                               self.config,
+                               self.add_devices,
+                               MagicMock())
         self.assertEqual(2, len(self.DEVICES))
 
         left_side = self.DEVICES[1]

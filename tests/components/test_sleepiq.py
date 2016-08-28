@@ -7,6 +7,23 @@ from homeassistant import core as ha
 
 from tests.common import load_fixture
 
+
+def mock_responses(mock):
+    base_url = 'https://api.sleepiq.sleepnumber.com/rest/'
+    mock.put(
+        base_url + 'login',
+        text=load_fixture('sleepiq-login.json'))
+    mock.get(
+        base_url + 'bed?_k=0987',
+        text=load_fixture('sleepiq-bed.json'))
+    mock.get(
+        base_url + 'sleeper?_k=0987',
+        text=load_fixture('sleepiq-sleeper.json'))
+    mock.get(
+        base_url + 'bed/familyStatus?_k=0987',
+        text=load_fixture('sleepiq-familystatus.json'))
+
+
 class TestSleepIQ(unittest.TestCase):
     """Tests the SleepIQ component."""
 
@@ -25,14 +42,7 @@ class TestSleepIQ(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock):
         """Test the setup."""
-        mock.put('https://api.sleepiq.sleepnumber.com/rest/login',
-                 text=load_fixture('sleepiq-login.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed?_k=0987',
-                 text=load_fixture('sleepiq-bed.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/sleeper?_k=0987',
-                 text=load_fixture('sleepiq-sleeper.json'))
-        mock.get('https://api.sleepiq.sleepnumber.com/rest/bed/familyStatus?_k=0987',
-                 text=load_fixture('sleepiq-familystatus.json'))
+        mock_responses(mock)
 
         response = sleepiq.setup(self.hass, self.config)
         self.assertTrue(response)
