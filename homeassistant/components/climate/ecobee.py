@@ -144,6 +144,11 @@ class Thermostat(ClimateDevice):
 
     @property
     def current_operation(self):
+        """Return current operation."""
+        return self.operation_mode
+
+    @property
+    def operation_mode(self):
         """Return current operation ie. heat, cool, idle."""
         status = self.thermostat['equipmentStatus']
         if status == '':
